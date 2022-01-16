@@ -9,7 +9,7 @@
   </parent>
   <artifactId>kogitoq</artifactId>
   <packaging>pom</packaging>
-  <name>Kogito Example :: Travel Agency</name>
+  <name>Genny Kogitoq Example :: Travel Agency</name>
   <modules>
     <module>basic</module>
     <module>extended</module>

@@ -1,6 +1,6 @@
 #!/bin/bash
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
-project=kogitoq
+project=kogitoq-basic
 file="src/main/resources/${project}-git.properties"
 org=gennyproject
 function prop() {
@@ -39,4 +39,4 @@ echo $GENNY_KOGITO_DATAINDEX_WS_URL
 echo $GENNY_KOGITO_JOBSERVICE_URL
 echo $GENNY_KOGITO_SERVICE_URL
 
-./target/kogitoq-${version}-runner  -Dquarkus.http.port=8580
+./target/kogitoq-basic-runner  -Dquarkus.http.port=8580
