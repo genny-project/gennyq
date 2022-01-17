@@ -1,4 +1,4 @@
-version: '2.1'
+version: '2.3'
 
 services:
 
@@ -28,9 +28,9 @@ services:
     environment:
       LOG_DIR: "/tmp/logs"
 
-  kafka0:
+  kafka-1:
     image: strimzi/kafka:0.20.1-kafka-2.6.0
-    container_name: kafka0
+    container_name: kafka-1
     command: [
       "sh", "-c",
       "bin/kafka-server-start.sh config/server.properties --override inter.broker.listener.name=$${KAFKA_INTER_BROKER_LISTENER_NAME} --override listener.security.protocol.map=$${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP} --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}"
@@ -42,8 +42,8 @@ services:
     environment:
       KAFKA_BROKER_ID: 0
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: INTERNAL://kafka0:29092,EXTERNAL://kafka0:9092
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka0:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENERS: INTERNAL://kafka-1:29092,EXTERNAL://kafka-1:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka-1:29092,EXTERNAL://alyson2.genny.life:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
@@ -76,29 +76,30 @@ services:
     container_name: data-index
     image: quay.io/kiegroup/kogito-data-index-infinispan:${KOGITO_VERSION}
     ports:
-      - "8180:8080"
+      - "8582:8080"
     depends_on:
-      kafka0:
+      kafka-1:
         condition: service_started
       infinispan:
         condition: service_healthy
     volumes:
       - ./target/protobuf:/home/kogito/data/protobufs/
     environment:
-      QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: infinispan:11222
+      QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: infinispan:11222 
+      #QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: ${GENNY_INFINISPAN_URL:"alyson.genny.life:11222"}
       QUARKUS_INFINISPAN_CLIENT_USE_AUTH: "false"
-      KAFKA_BOOTSTRAP_SERVERS: kafka0:29092
+      KAFKA_BOOTSTRAP_SERVERS: kafka-1:29092
       KOGITO_DATA_INDEX_PROPS: -Dkogito.protobuf.folder=/home/kogito/data/protobufs/
 
   management-console:
     container_name: management-console
     image: quay.io/kiegroup/kogito-management-console:${KOGITO_VERSION}
     ports:
-      - 8280:8080
+      - 8584:8080
     depends_on:
       - data-index
     volumes:
       - ./svg/:/home/kogito/data/svg/
     environment:
-      KOGITO_DATAINDEX_HTTP_URL: http://${DOCKER_GATEWAY_HOST}:8180
+      KOGITO_DATAINDEX_HTTP_URL: http://${DOCKER_GATEWAY_HOST}:8582
       KOGITO_MANAGEMENT_CONSOLE_PROPS:  -Dkogito.svg.folder.path=/home/kogito/data/svg
