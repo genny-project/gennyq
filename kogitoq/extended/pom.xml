@@ -3,11 +3,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.kie.kogito.examples</groupId>
-    <artifactId>kogito-travel-agency-example</artifactId>
+    <groupId>life.genny</groupId>
+    <artifactId>kogitoq-parent</artifactId>
     <version>1.14.0.Final</version>
   </parent>
-  <artifactId>kogito-travel-agency-example-extended</artifactId>
+  <artifactId>kogitoq-extended</artifactId>
   <packaging>pom</packaging>
   <name>Kogito Example :: Travel Agency :: Extended</name>
   <modules>
