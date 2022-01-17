@@ -6,7 +6,7 @@ export GENNY_API_URL=http://internmatch.genny.life:8280
 export GENNY_KAFKA_URL=alyson2.genny.life:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus
 export GENNY_REALM=internmatch
-export GENNY_KOGITO_SERVICE_URL=http://office.crowtech.com.au:8579
+export GENNY_KOGITO_SERVICE_URL=http://alyson2.genny.life:8580
 echo $GENNY_KEYCLOAK_URL
 echo $GENNY_SERVICE_USERNAME
 echo $GENNY_SERVICE_PASSWORD

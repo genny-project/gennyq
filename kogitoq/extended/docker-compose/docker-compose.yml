@@ -3,13 +3,19 @@ version: '2.3'
 services:
 
   infinispan:
+    #image: quay.io/infinispan/server-native:13.0
     image: infinispan/server:12.1.7.Final
     container_name: infinispan
     ports:
         - 11222:11222
     command: "/opt/infinispan/bin/server.sh -c infinispan-demo.xml"
+#    environment:
+#        - USER=genny
+#        - PASS=password
+    networks:
+     - mainproxy
     volumes:
-      - ./infinispan/infinispan.xml:/opt/infinispan/server/conf/infinispan-demo.xml:z
+      - ./infinispan/infinispan.xml:/opt/infinispan/server/conf/infinispan-demo.xml:delegated
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:11222/rest/v2/cache-managers/default/health/status" ]
       interval: 1s
@@ -25,6 +31,8 @@ services:
     ]
     ports:
       - "2181:2181"
+    networks:
+     - mainproxy
     environment:
       LOG_DIR: "/tmp/logs"
 
@@ -37,6 +45,8 @@ services:
     ]
     depends_on:
       - zookeeper
+    networks:
+     - mainproxy
     ports:
       - "9092:9092"
     environment:
@@ -57,6 +67,8 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:z
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+     - mainproxy
     ports:
       - 9090:9090
 
@@ -65,6 +77,8 @@ services:
     container_name: grafana
     depends_on:
       - prometheus
+    networks:
+     - mainproxy
     ports:
       - 3000:3000
     volumes:
@@ -77,17 +91,21 @@ services:
     image: quay.io/kiegroup/kogito-data-index-infinispan:${KOGITO_VERSION}
     ports:
       - "8582:8080"
+    networks:
+     - mainproxy
     depends_on:
       kafka-1:
         condition: service_started
       infinispan:
         condition: service_healthy
     volumes:
-      - ./target/protobuf:/home/kogito/data/protobufs/
+      - ./target/protobuf:/home/kogito/data/protobufs/:delegated
     environment:
-      QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: infinispan:11222 
-      #QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: ${GENNY_INFINISPAN_URL:"alyson.genny.life:11222"}
+      QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: "infinispan:11222"
+      #QUARKUS_INFINISPAN_CLIENT_SERVER_LIST: ${GENNY_INFINISPAN_URL:"alyson2.genny.life:11222"}
       QUARKUS_INFINISPAN_CLIENT_USE_AUTH: "false"
+      QUARKUS_INFINISPAN_CLIENT_AUTH_USERNAME: "genny"
+      QUARKUS_INFINISPAN_CLIENT_AUTH_PASSWORD: "password"
       KAFKA_BOOTSTRAP_SERVERS: kafka-1:29092
       KOGITO_DATA_INDEX_PROPS: -Dkogito.protobuf.folder=/home/kogito/data/protobufs/
 
@@ -100,6 +118,15 @@ services:
       - data-index
     volumes:
       - ./svg/:/home/kogito/data/svg/
+    networks:
+     - mainproxy
     environment:
-      KOGITO_DATAINDEX_HTTP_URL: http://${DOCKER_GATEWAY_HOST}:8582
+      KOGITO_DATAINDEX_HTTP_URL: http://${DOCKER_GATEWAY_HOST}:8582/graphql
       KOGITO_MANAGEMENT_CONSOLE_PROPS:  -Dkogito.consoles.keycloak.config.client-id=kogito-console-quarkus  -Dkogito.consoles.keycloak.config.realm=internmatch -Dkogito.consoles.keycloak.config.url=https://keycloak.gada.io/auth -Dkogito.consoles.keycloak.config.health-check-url=https://keycloak.gada.io/auth/realms/internmatch/.well-known/openid-configuration -Dkogito.svg.folder.path=/home/kogito/data/svg -Dkogito.consoles.keycloak.config.disable-health-check=false -Dkogito.consoles.keycloak.config.update-token-validity=30
+
+networks:
+  mainproxy:
+    name: mp
+    driver: bridge
+
+

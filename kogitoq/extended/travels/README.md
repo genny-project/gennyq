@@ -211,9 +211,9 @@ This will:
 
 After the build has completed, you can start the Manaagement Console with the following command: `java -jar target/management-console-*-runner.jar`
 
-By default, the **Management Console** will try to connect to the **Data Index Service** at: http://localhost:8180
+By default, the **Management Console** will try to connect to the **Data Index Service** at: http://localhost:8582
 
-The UI of the **Management Console** can be accessed at: http://localhost:8280
+The UI of the **Management Console** can be accessed at: http://localhost:8584
 
 
 ### Start the Kogito Jobs Service

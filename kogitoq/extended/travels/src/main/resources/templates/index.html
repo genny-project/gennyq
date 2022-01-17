@@ -71,7 +71,7 @@
 </div>
 </div>
 <script>
-    const graphql = '{config:property('kogito.dataindex.http.url') or 'http://localhost:8180'}/graphql';
+    const graphql = '{config:property('kogito.dataindex.http.url') or 'http://localhost:8582'}/graphql';
 
     $(function () {
         $.ajaxSetup({
@@ -94,7 +94,7 @@
         if ("WebSocket" in window) {
 
            // Let us open a web socket
-           var ws = new WebSocket('{config:property('kogito.dataindex.ws.url') or 'ws://localhost:8180'}/graphql');
+           var ws = new WebSocket('{config:property('kogito.dataindex.ws.url') or 'ws://localhost:8582'}/graphql');
 
            ws.onopen = function() {
               // Web Socket is connected, send data using send()
