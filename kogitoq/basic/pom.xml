@@ -5,17 +5,17 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq</artifactId>
-    <version>1.14.0.Final</version>
+    <version>1.15.0.Final</version>
   </parent>
   <artifactId>kogitoq-basic</artifactId>
   <name>Kogito Example :: Travel Agency :: Basic</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <quarkus-plugin.version>2.5.0.Final</quarkus-plugin.version>
+    <quarkus-plugin.version>2.6.2.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.5.0.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.6.2.Final</quarkus.platform.version>
     </properties>
     <dependencyManagement>
       <dependencies>
@@ -64,8 +64,19 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>io.smallrye</groupId>
+      <artifactId>smallrye-open-api-core</artifactId>
+      <version>2.1.17</version>
+    </dependency>
+    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.smallrye</groupId>
+          <artifactId>smallrye-open-api-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
   <build>
