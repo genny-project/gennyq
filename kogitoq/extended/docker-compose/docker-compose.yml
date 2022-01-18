@@ -59,6 +59,12 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       LOG_DIR: "/tmp/logs"
+    healthcheck:
+      test: ["CMD", "nc", "-vz", "localhost", "9092"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 4
 
   prometheus:
     image: prom/prometheus:v2.8.0
@@ -126,10 +132,10 @@ services:
 
 
   kogitoq-travels:
-    image: gennyproject/kogitoq-travels:latest
-#    depends_on:
-#      data-index:
-#        condition: service_healthy
+    image: gennyproject/kogitoq-travels:native
+    depends_on:
+      kafka-1:
+        condition: service_healthy
     container_name: kogitoq-travels 
     environment:
       GENNY_SHOW_VALUES: "TRUE"
@@ -152,10 +158,10 @@ services:
       retries: 30
 
   kogitoq-visas:
-    image: gennyproject/kogitoq-visas:latest
-#    depends_on:
-#      data-index:
-#        condition: service_healthy
+    image: gennyproject/kogitoq-visas:native
+    depends_on:
+      kafka-1:
+        condition: service_healthy
     container_name: kogitoq-visas 
     environment:
       GENNY_SHOW_VALUES: "TRUE"
