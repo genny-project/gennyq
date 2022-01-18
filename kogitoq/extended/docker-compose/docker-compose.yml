@@ -13,7 +13,7 @@ services:
 #        - USER=genny
 #        - PASS=password
     networks:
-     - mainproxy
+     - kogitoqproxy
     volumes:
       - ./infinispan/infinispan.xml:/opt/infinispan/server/conf/infinispan-demo.xml:delegated
     healthcheck:
@@ -32,7 +32,7 @@ services:
     ports:
       - "2181:2181"
     networks:
-     - mainproxy
+     - kogitoqproxy
     environment:
       LOG_DIR: "/tmp/logs"
 
@@ -46,7 +46,7 @@ services:
     depends_on:
       - zookeeper
     networks:
-     - mainproxy
+     - kogitoqproxy
     ports:
       - "9092:9092"
     environment:
@@ -68,7 +68,7 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     networks:
-     - mainproxy
+     - kogitoqproxy
     ports:
       - 9090:9090
 
@@ -78,7 +78,7 @@ services:
     depends_on:
       - prometheus
     networks:
-     - mainproxy
+     - kogitoqproxy
     ports:
       - 3000:3000
     volumes:
@@ -92,7 +92,7 @@ services:
     ports:
       - "8582:8080"
     networks:
-     - mainproxy
+     - kogitoqproxy
     depends_on:
       kafka-1:
         condition: service_started
@@ -119,14 +119,68 @@ services:
     volumes:
       - ./svg/:/home/kogito/data/svg/
     networks:
-     - mainproxy
+     - kogitoqproxy
     environment:
       KOGITO_DATAINDEX_HTTP_URL: http://alyson.genny.life:8582/graphql
       KOGITO_MANAGEMENT_CONSOLE_PROPS:  -Dkogito.consoles.keycloak.config.client-id=kogito-console-quarkus  -Dkogito.consoles.keycloak.config.realm=internmatch -Dkogito.consoles.keycloak.config.url=https://keycloak.gada.io/auth -Dkogito.consoles.keycloak.config.health-check-url=https://keycloak.gada.io/auth/realms/internmatch/.well-known/openid-configuration -Dkogito.svg.folder.path=/home/kogito/data/svg -Dkogito.consoles.keycloak.config.disable-health-check=false -Dkogito.consoles.keycloak.config.update-token-validity=30
 
+
+  kogitoq-travels:
+    image: gennyproject/kogitoq-travels:latest
+#    depends_on:
+#      data-index:
+#        condition: service_healthy
+    container_name: kogitoq-travels 
+    environment:
+      GENNY_SHOW_VALUES: "TRUE"
+      GENNY_SERVICE_USERNAME: service
+      GENNY_KEYCLOAK_URL: https://keycloak.gada.io
+      GENNY_API_URL: http://alyson.genny.life:8280
+      GENNY_KAFKA_URL: alyson.genny.life:9092
+      GENNY_CLIENT_ID: kogito-console-quarkus
+      GENNY_REALM: internmatch
+      GENNY_KOGITO_SERVICE_URL: http://alyson.genny.life:8580
+      GENNY_INFINISPAN_URL: alyson.genny.life:11222
+    ports:
+      - "8580:8080"
+    networks:
+      - kogitoqproxy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+
+  kogitoq-visas:
+    image: gennyproject/kogitoq-visas:latest
+#    depends_on:
+#      data-index:
+#        condition: service_healthy
+    container_name: kogitoq-visas 
+    environment:
+      GENNY_SHOW_VALUES: "TRUE"
+      GENNY_SERVICE_USERNAME: service
+      GENNY_KEYCLOAK_URL: https://keycloak.gada.io
+      GENNY_API_URL: http://alyson.genny.life:8280
+      GENNY_KAFKA_URL: alyson.genny.life:9092
+      GENNY_CLIENT_ID: kogito-console-quarkus
+      GENNY_REALM: internmatch
+      GENNY_KOGITO_SERVICE_URL: http://alyson.genny.life:8579
+      GENNY_INFINISPAN_URL: alyson.genny.life:11222
+    ports:
+      - "8579:8080"
+    networks:
+      - kogitoqproxy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+
+
 networks:
-  mainproxy:
-    name: mp
+  kogitoqproxy:
+    name: kp 
     driver: bridge
 
 

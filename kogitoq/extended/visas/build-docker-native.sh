@@ -3,7 +3,7 @@ PROJECT_VERSION=$(cd ../ && mvn help:evaluate -Dexpression=project.version -q -D
 
 echo "Project version: ${PROJECT_VERSION}"
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
-project=kogitoq-travels
+project=kogitoq-visas
 file="src/main/resources/${project}-git.properties"
 org=gennyproject
 function prop() {

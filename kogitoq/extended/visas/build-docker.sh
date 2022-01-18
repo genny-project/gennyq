@@ -1,6 +1,6 @@
 #!/bin/bash
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
-project=kogitoq-travels
+project=kogitoq-visas
 file="src/main/resources/${project}-git.properties"
 org=gennyproject
 function prop() {
