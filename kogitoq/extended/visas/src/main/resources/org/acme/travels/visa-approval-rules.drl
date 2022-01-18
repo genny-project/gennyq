@@ -30,7 +30,7 @@ end
 rule "Visit US with e-visa up to 15 days" ruleflow-group "visa-approvals"
 
 when
-    $application: VisaApplication(duration <= 15, country == "US")
+    $application: VisaApplication(duration <= 80, country == "US")
 then
     $application.setApproved(true);     
 end
