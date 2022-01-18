@@ -10,7 +10,6 @@ function prop() {
 
 if [ -z "${1}" ]; then
   version=$(cat src/main/resources/${project}-git.properties | grep 'git.build.version' | cut -d'=' -f2)
-  version=latest
 else
   version="${1}"
 fi
