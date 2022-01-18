@@ -1,6 +1,6 @@
 #!/bin/bash
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
-project=travels
+project=visas
 file="src/main/resources/${project}-git.properties"
 org=gennyproject
 function prop() {
@@ -39,4 +39,4 @@ echo $GENNY_KOGITO_DATAINDEX_HTTP_URL
 echo $GENNY_KOGITO_DATAINDEX_WS_URL
 echo $GENNY_KOGITO_JOBSERVICE_URL
 echo $GENNY_KOGITO_SERVICE_URL
-./target/${project}-runner  -Dquarkus.http.port=8580
+./target/${project}-runner  -Dquarkus.http.port=8579
