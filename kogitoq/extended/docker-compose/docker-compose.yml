@@ -145,7 +145,7 @@ services:
       KOGITO_MANAGEMENT_CONSOLE_PROPS:  -Dkogito.consoles.keycloak.config.client-id=kogito-console-quarkus  -Dkogito.consoles.keycloak.config.realm=internmatch -Dkogito.consoles.keycloak.config.url=https://keycloak.gada.io/auth -Dkogito.consoles.keycloak.config.health-check-url=https://keycloak.gada.io/auth/realms/internmatch/.well-known/openid-configuration -Dkogito.svg.folder.path=/home/kogito/data/svg -Dkogito.consoles.keycloak.config.disable-health-check=false -Dkogito.consoles.keycloak.config.update-token-validity=30
 
   kogitoq-travels:
-    image: gennyproject/kogitoq-travels:native
+    image: gennyproject/kogitoq-travels:latest
     depends_on:
       kafka-1:
         condition: service_healthy
@@ -177,7 +177,7 @@ services:
       retries: 30
 
   kogitoq-visas:
-    image: gennyproject/kogitoq-visas:native
+    image: gennyproject/kogitoq-visas:latest
     depends_on:
       kafka-1:
         condition: service_healthy
