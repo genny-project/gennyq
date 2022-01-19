@@ -130,6 +130,31 @@ services:
       KOGITO_DATAINDEX_HTTP_URL: http://alyson.genny.life:8582/graphql
       KOGITO_MANAGEMENT_CONSOLE_PROPS:  -Dkogito.consoles.keycloak.config.client-id=kogito-console-quarkus  -Dkogito.consoles.keycloak.config.realm=internmatch -Dkogito.consoles.keycloak.config.url=https://keycloak.gada.io/auth -Dkogito.consoles.keycloak.config.health-check-url=https://keycloak.gada.io/auth/realms/internmatch/.well-known/openid-configuration -Dkogito.svg.folder.path=/home/kogito/data/svg -Dkogito.consoles.keycloak.config.disable-health-check=false -Dkogito.consoles.keycloak.config.update-token-validity=30
 
+  kogitoq-travels2:
+    image: gennyproject/kogitoq-travels:native
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+    container_name: kogitoq-travels2
+    environment:
+      GENNY_SHOW_VALUES: "TRUE"
+      GENNY_SERVICE_USERNAME: service
+      GENNY_KEYCLOAK_URL: https://keycloak.gada.io
+      GENNY_API_URL: http://alyson.genny.life:8280
+      GENNY_KAFKA_URL: alyson.genny.life:9092
+      GENNY_CLIENT_ID: kogito-console-quarkus
+      GENNY_REALM: internmatch
+      GENNY_KOGITO_SERVICE_URL: http://alyson.genny.life:8578
+      GENNY_INFINISPAN_URL: alyson.genny.life:11222
+    ports:
+      - "8578:8080"
+    networks:
+      - kogitoqproxy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
 
   kogitoq-travels:
     image: gennyproject/kogitoq-travels:native
