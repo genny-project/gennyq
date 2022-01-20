@@ -27,7 +27,9 @@
                qop="auth"/>
         </authentication>
       </hotrod-connector>
-      <rest-connector name="rest"/>
+      <rest-connector>
+        <authentication mechanisms="DIGEST-SHA-512 DIGEST-SHA-256 DIGEST-MD5"/>
+      </rest-connector>
     </endpoints>
   </server>
 </infinispan>
