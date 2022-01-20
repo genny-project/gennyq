@@ -28,6 +28,39 @@ else
   KOGITO_VERSION=${PROJECT_VERSION%.*}
 fi
 
+os_type=""
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
+    os_type="ubuntu"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    os_type="mac"
+fi
+
+echo "OS Type is ${os_type}"
+
+if [[ "${os_type}" == "mac" ]]; then
+    IP=$(ifconfig | grep 10.123.123.123)
+elif [[ "${os_type}" == "ubuntu" ]]; then
+    IP=$(ip a | grep 10.123.123.123)
+fi
+echo $IP
+
+#if ping -c 1 10.123.123.123 &> /dev/null
+if [[ -z "$IP" ]]; then
+    if [[ ${os_type} == "mac" ]]; then
+        echo "OS TYPE: macOS"
+        sudo ifconfig lo0 alias 10.123.123.123
+    elif [[ ${os_type} == "ubuntu" ]]; then
+        echo "OS TYPE: Linux"
+        sudo ip address add 10.123.123.123 dev lo
+    else
+        echo "Can't detect OS type, neither Linux nor macOS!"
+        exit -1
+    fi
+else
+    echo "10.123.123.123 exists"
+fi
+
+
 echo "Kogito Image version: ${KOGITO_VERSION}"
 echo "KOGITO_VERSION=${KOGITO_VERSION}" > ".env"
 
@@ -86,7 +119,7 @@ export GENNY_SHOW_VALUES=TRUE
 export GENNY_SERVICE_USERNAME=service
 export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
 export GENNY_API_URL=http://internmatch.genny.life:8280
-export GENNY_KAFKA_URL=localhost:9092
+export GENNY_KAFKA_URL=lyson.genny.life:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus
 export GENNY_REALM=internmatch
 #export GENNY_KOGITO_SERVICE_URL=http://office.crowtech.com.au:8579
@@ -96,7 +129,7 @@ echo $GENNY_SERVICE_PASSWORD
 echo $GENNY_CLIENT_ID
 echo $GENNY_CLIENT_SECRET
 echo $GENNY_REALM
-export GENNY_INFINISPAN_URL=localhost:11222
+export GENNY_INFINISPAN_URL=alyson.genny.life:11222
 echo $GENNY_INFINISPAN_URL
 echo $GENNY_INFINISPAN_USERNAME
 echo $GENNY_INFINISPAN_PASSWORD
