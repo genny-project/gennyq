@@ -18,33 +18,32 @@ services:
  #     - ./infinispan/infinispan.xml:/opt/infinispan/server/conf/infinispan-demo.xml:delegated
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:11222/rest/v2/cache-managers/default/health/status" ]
-      interval: 1s
-      timeout: 1s
-      retries: 50
+      interval: 30s
+      timeout: 10s
+      retries: 4
 
   zookeeper:
     container_name: zookeeper
-    image: strimzi/kafka:0.20.1-kafka-2.6.0
-    command: [
-      "sh", "-c",
-      "bin/zookeeper-server-start.sh config/zookeeper.properties"
-    ]
+    image: confluentinc/cp-zookeeper:7.0.1
     ports:
       - "2181:2181"
     networks:
      - kogitoqproxy
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "2181" ]
+      interval: 30s
+      timeout: 10s
+      retries: 4
     environment:
       LOG_DIR: "/tmp/logs"
+      ZOOKEEPER_CLIENT_PORT: 2181
 
   kafka-1:
-    image: strimzi/kafka:0.20.1-kafka-2.6.0
+    image: confluentinc/cp-kafka:7.0.1
     container_name: kafka-1
-    command: [
-      "sh", "-c",
-      "bin/kafka-server-start.sh config/server.properties --override inter.broker.listener.name=$${KAFKA_INTER_BROKER_LISTENER_NAME} --override listener.security.protocol.map=$${KAFKA_LISTENER_SECURITY_PROTOCOL_MAP} --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}"
-    ]
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     networks:
      - kogitoqproxy
     ports:
@@ -58,7 +57,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_NUM_PARTITIONS: "10"
-      #KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       LOG_DIR: "/tmp/logs"
     healthcheck:
       test: ["CMD", "nc", "-vz", "localhost", "9092"]
@@ -102,7 +101,7 @@ services:
      - kogitoqproxy
     depends_on:
       kafka-1:
-        condition: service_started
+        condition: service_healthy
       infinispan:
         condition: service_healthy
     volumes:
@@ -129,7 +128,8 @@ services:
     ports:
       - 8584:8080
     depends_on:
-      - data-index
+      data-index:
+        condition: service_healthy
     volumes:
       - ./svg/:/home/kogito/data/svg/
     networks:
@@ -147,7 +147,7 @@ services:
   kogitoq-travels:
     image: gennyproject/kogitoq-travels:latest
     depends_on:
-      kafka-1:
+      data-index:
         condition: service_healthy
     container_name: kogitoq-travels 
     environment:
@@ -179,7 +179,7 @@ services:
   kogitoq-visas:
     image: gennyproject/kogitoq-visas:latest
     depends_on:
-      kafka-1:
+      data-index:
         condition: service_healthy
     container_name: kogitoq-visas 
     environment:
