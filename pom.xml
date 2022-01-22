@@ -144,6 +144,7 @@
         <module>flexible-process-quarkus</module>
         <module>flexible-process-springboot</module> -->
         <module>kogitoq</module>
+        <module>kogitoq1</module>
        <!-- <module>onboarding-example</module>
         <module>pmml-incubation-api-quarkus</module>
         <module>pmml-event-driven-quarkus</module>
