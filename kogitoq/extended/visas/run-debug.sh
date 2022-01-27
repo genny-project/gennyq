@@ -6,7 +6,7 @@ export GENNY_API_URL=http://internmatch.genny.life:8280
 export GENNY_KAFKA_URL=alyson.genny.life:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus
 export GENNY_REALM=internmatch
-export GENNY_KOGITO_SERVICE_URL=http://alyson2.genny.life:8579
+export GENNY_KOGITO_SERVICE_URL=http://alyson2.genny.life:9579
 echo $GENNY_KEYCLOAK_URL
 echo $GENNY_SERVICE_USERNAME
 echo $GENNY_SERVICE_PASSWORD
@@ -22,5 +22,5 @@ echo $GENNY_KOGITO_DATAINDEX_HTTP_URL
 echo $GENNY_KOGITO_DATAINDEX_WS_URL
 echo $GENNY_KOGITO_JOBSERVICE_URL
 echo $GENNY_KOGITO_SERVICE_URL
-./mvnw  quarkus:dev -Ddebug=5579 -Dquarkus.http.port=8579 -DskipTests=true
+./mvnw  quarkus:dev -Ddebug=5579 -Dquarkus.http.port=9579 -DskipTests=true
 
