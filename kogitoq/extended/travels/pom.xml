@@ -159,14 +159,14 @@
                                                 </goals>
                                                 <configuration>
                                                         <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                                                        <generateGitPropertiesFilename>target/classes/${project.name}-git.properties</generateGitPropertiesFilename>
+                                                        <generateGitPropertiesFilename>target/classes/${project.artifactId}-git.properties</generateGitPropertiesFilename>
                                                         <dotGitDirectory>${project.basedir}/../.git</dotGitDirectory>
                                                         <prefix>git</prefix>
                                                         <dateFormat>yyyy.MM.dd '@' HH:mm:ss z</dateFormat>
                                                         <dateFormatTimeZone>${user.timezone}</dateFormatTimeZone>
                                                         <verbose>false</verbose>
                                                         <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                                                        <generateGitPropertiesFilename>src/main/resources/${project.name}-git.properties</generateGitPropertiesFilename>
+                                                        <generateGitPropertiesFilename>src/main/resources/${project.artifactId}-git.properties</generateGitPropertiesFilename>
                                                         <format>properties</format>
                                                         <skipPoms>true</skipPoms>
                                                         <injectAllReactorProjects>false</injectAllReactorProjects>
