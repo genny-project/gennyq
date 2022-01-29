@@ -7,7 +7,7 @@
         "documentation" : "Send Message.",
 
         "parameters" : [
-            "Message" : new StringDataType()
+            "messageCode" : new StringDataType()
         ],
         "results" : [
             "Result" : new StringDataType()
