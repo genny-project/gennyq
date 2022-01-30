@@ -3,7 +3,6 @@ package life.genny.kogito.custom.sendmessage.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.acme.messages.MessageCode;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
@@ -18,12 +17,12 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         // Printing task’s parameters, it will also print
         // our value we pass to the task from the process
         for (String parameter : workItem.getParameters().keySet()) {
-           // if ("messageCode".equals(parameter)) {
-           //     MessageCode mc = (MessageCode) workItem.getParameters().get(parameter);
-           //     System.out.println("MessageCode=" + mc);
-           // } else {
-                System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
-           // }
+            // if ("messageCode".equals(parameter)) {
+            //     MessageCode mc = (MessageCode) workItem.getParameters().get(parameter);
+            //     System.out.println("MessageCode=" + mc);
+            // } else {
+            System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
+            // }
         }
 
         Map<String, Object> results = new HashMap<String, Object>();
