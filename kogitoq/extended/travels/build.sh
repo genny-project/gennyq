@@ -1,2 +1,2 @@
 #!/bin/bash
-./mvnw clean install -DskipTests=false
+./mvnw clean install -DskipTests=false -Dcheckstyle.skip

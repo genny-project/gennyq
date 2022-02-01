@@ -5,17 +5,17 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq</artifactId>
-    <version>1.15.0.Final</version>
+    <version>1.16.0.Final</version>
   </parent>
   <artifactId>kogitoq-basic</artifactId>
   <name>Kogito Example :: Travel Agency :: Basic</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <quarkus-plugin.version>2.6.2.Final</quarkus-plugin.version>
+    <quarkus-plugin.version>2.6.3.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.6.2.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.6.3.Final</quarkus.platform.version>
     </properties>
     <dependencyManagement>
       <dependencies>
@@ -26,6 +26,13 @@
           <type>pom</type>
           <scope>import</scope>
         </dependency>
+     <dependency>
+        <groupId>org.kie.kogito</groupId>
+        <artifactId>kogito-quarkus-bom</artifactId>
+        <version>${kogito.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       </dependencies>
     </dependencyManagement>
   <dependencies>
@@ -40,6 +47,7 @@
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>drools-decisiontables</artifactId>
+      <version>1.15.0.Final</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
