@@ -107,8 +107,8 @@
 
   <scm>
     <connection>scm:git:https://github.com/genny-project/kogitoq2.git</connection>
-    <developerConnection>scm:git:git@github.com:genny-project/kogito2.git</developerConnection>
-    <url>https://github.com/genny-project/kogito2</url>
+    <developerConnection>scm:git:git@github.com:genny-project/kogitoq2.git</developerConnection>
+    <url>https://github.com/genny-project/kogitoq2</url>
   </scm>
 
   <developers>
