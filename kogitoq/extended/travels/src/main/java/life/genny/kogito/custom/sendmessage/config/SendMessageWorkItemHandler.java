@@ -25,6 +25,17 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
             // }
         }
 
+        // Test sending message
+
+        // GennyToken userToken = new GennyToken(token);
+        // BaseEntityUtils beUtils = new BaseEntityUtils();
+        // BaseEntity recipient = beUtils.getBaseEntityByCode(userToken.getUserCode())
+
+        // QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_INTERN_LOGBOOK_REMINDER")
+        //         .addRecipient(recipient)
+        //         .setUtils(beUtils)
+        //         .send();
+
         Map<String, Object> results = new HashMap<String, Object>();
         results.put("Result", "Message Returned from Work Item Handler");
         // Don’t forget to finish the work item otherwise the process
