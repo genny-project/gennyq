@@ -33,8 +33,11 @@ export QUARKUS_INFINISPAN_CLIENT_AUTH_USERNAME=genny
 export QUARKUS_INFINISPAN_CLIENT_SASL_MECHANISM=DIGEST-MD5
 export QUARKUS_INFINISPAN_CLIENT_SERVER_LIST=${rawhost}:11222
 export QUARKUS_INFINISPAN_CLIENT_USE_AUTH="true"
-export QUARKUS_OIDC_AUTH-SERVER-URL="${GENNY_KEYCLOAK_URL}"
-export QUARKUS_OIDC_CLIENT-ID=${GENNY_CLIENT_ID}
+export QUARKUS_OIDC_AUTH_SERVER_URL="${GENNY_KEYCLOAK_URL}/auth/realms/${GENNY_REALM}"
+export QUARKUS_OIDC_CLIENT_ID=${GENNY_CLIENT_ID}
+export QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE=BASIC
+export INFINISPAN_CLIENT_HOTROD_SERVER_LIST=alyson.genny.life:11222
+export INFINISPAN_CLIENT_HOTROD_CLIENT_INTELLIGENCE=BASIC
 echo "infinispan url $GENNY_INFINISPAN_URL"
 echo "infinispan username $GENNY_INFINISPAN_USERNAME"
 echo "infinispan password $GENNY_INFINISPAN_PASSWORD"
@@ -43,5 +46,5 @@ echo "genny data-index http $GENNY_KOGITO_DATAINDEX_HTTP_URL"
 echo "genny data-index ws $GENNY_KOGITO_DATAINDEX_WS_URL"
 echo "jobservice $GENNY_KOGITO_JOBSERVICE_URL"
 echo "kogito service $GENNY_KOGITO_SERVICE_URL"
-./mvnw  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=9580 -DskipTests=true
+./mvnw  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=9580 -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 
