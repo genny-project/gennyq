@@ -18,16 +18,14 @@ package org.acme.messages;
 public class MessageCode {
 
     private String code;
-    private String bookingNumber;
 
     public MessageCode() {
 
     }
 
-    public MessageCode(String code, String bookingNumber) {
+    public MessageCode(String code) {
         super();
         this.code = code;
-        this.bookingNumber = bookingNumber;
     }
 
     public String getCode() {
@@ -38,17 +36,9 @@ public class MessageCode {
         this.code = code;
     }
 
-    public String getBookingNumber() {
-        return bookingNumber;
-    }
-
-    public void setBookingNumber(String bookingNumber) {
-        this.bookingNumber = bookingNumber;
-    }
-
     @Override
     public String toString() {
-        return "MessageCode [bookingNumber=" + bookingNumber + ", code=" + code + "]";
+        return "MessageCode [code=" + code + "]";
     }
 
 }
