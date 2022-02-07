@@ -7,7 +7,7 @@
         "documentation" : "Basic minimal custom task.",
 
         "parameters" : [
-            "messageCode" : new StringDataType()
+            "messageCode" : new ObjectDataType()
         ],
         "results" : [
             "Result" : new StringDataType()
