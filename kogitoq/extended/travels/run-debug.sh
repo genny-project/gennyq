@@ -1,5 +1,5 @@
 #!/bin/bash
-host="${1:-http://localhost}"
+host="${1:-http://alyson.genny.life}"
 gennyhost="${2:-http://alyson.genny.life}"
 parser=`echo "$gennyhost" | awk -F/ '{print $3}' `
 echo "Parser = ${parser}"
