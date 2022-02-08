@@ -1,18 +1,28 @@
 package life.genny.kogito.custom.sendmessage.config;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.message.QMessageGennyMSG;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.KeycloakUtils;
+
 public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
+
+    //   private static final Logger log = Logger.getLogger(SendMessageWorkItemHandler.class);
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
         System.out.println("Hello from the custom work item definition2.");
-        System.out.println("Passed parameters:");
+        //log.info("Passed parameters:");
 
         // Printing task’s parameters, it will also print
         // our value we pass to the task from the process
@@ -26,15 +36,37 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         }
 
         // Test sending message
+        GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch", "admin-cli", null,
+                "service", "OhSudsyWhatAPitty@#0&5", null);
+        System.out.println("ServiceToken = " + serviceToken.getToken());
+        BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, serviceToken);
 
-        // GennyToken userToken = new GennyToken(token);
-        // BaseEntityUtils beUtils = new BaseEntityUtils();
-        // BaseEntity recipient = beUtils.getBaseEntityByCode(userToken.getUserCode())
+        SearchEntity searchBE = new SearchEntity("SBE_TESTUSER", "test user Search")
+                .addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
+                .addFilter("PRI_EMAIL", SearchEntity.StringFilter.EQUAL, "cto@gada.io")
+                .addColumn("PRI_CODE", "Code");
 
-        // QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_INTERN_LOGBOOK_REMINDER")
-        //         .addRecipient(recipient)
-        //         .setUtils(beUtils)
-        //         .send();
+        searchBE.setRealm("internmatch");
+
+        searchBE.setPageStart(0);
+        Integer pageSize = 1;
+        searchBE.setPageSize(pageSize);
+
+        List<BaseEntity> recipients = beUtils.getBaseEntitys(searchBE); // load 100 at a time
+        System.out.println("Recipient count = " + recipients.size());
+        BaseEntity recipient = null;
+        if (recipients.size() > 0) {
+
+            recipient = recipients.get(0);
+            System.out.println("Recipient = " + recipient.getCode());
+        }
+
+        // //  BaseEntity recipient = beUtils.getBaseEntityByCode(userToken.getUserCode());
+
+        QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_INTERN_LOGBOOK_REMINDER")
+                .addRecipient(recipient)
+                .setUtils(beUtils)
+                .send();
 
         Map<String, Object> results = new HashMap<String, Object>();
         results.put("Result", "Message Returned from Work Item Handler");
@@ -46,6 +78,6 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
     @Override
     public void abortWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
-        System.err.println("Error happened in the custom work item definition.");
+        //log.error("Error happened in the custom work item definition.");
     }
 }
