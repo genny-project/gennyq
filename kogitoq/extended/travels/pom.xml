@@ -191,6 +191,16 @@
             <goals>
               <goal>jandex</goal>
             </goals>
+            <configuration>
+              <fileSets>
+                <fileSet>
+                  <directory>/Users/acrow/projects/genny/qwandaq/target/classes/life/genny/qwandaq/entity/BaseEntity</directory>
+                </fileSet>
+                <fileSet>
+                  <directory>${project.build.directory}/generated-classes/bar</directory>
+                </fileSet>
+              </fileSets>
+            </configuration>
           </execution>
         </executions>
       </plugin>
