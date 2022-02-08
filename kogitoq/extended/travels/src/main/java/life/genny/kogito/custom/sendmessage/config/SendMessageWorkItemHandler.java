@@ -11,7 +11,7 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
-        System.out.println("Hello from the custom work item definition.");
+        System.out.println("Hello from the custom work item definition2.");
         System.out.println("Passed parameters:");
 
         // Printing task’s parameters, it will also print
