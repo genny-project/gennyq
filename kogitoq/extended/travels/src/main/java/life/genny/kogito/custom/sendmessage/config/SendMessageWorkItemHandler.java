@@ -37,7 +37,7 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
         // Test sending message
         GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch", "admin-cli", null,
-                "service", System.getenv("SERVICE_PASSWORD"), null);
+                "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
         System.out.println("ServiceToken = " + serviceToken.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, serviceToken);
 

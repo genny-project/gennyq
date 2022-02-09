@@ -6,7 +6,7 @@
     "configurations": [     
         {
             "type": "java",
-            "name": "Remote Debug (Attach Quarkus)",
+            "name": "Remote Debug (SendMessage)",
             "request": "attach",
             "hostName": "localhost",
             "port": 5580
