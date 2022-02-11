@@ -53,20 +53,23 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         searchBE.setPageSize(pageSize);
 
         List<BaseEntity> recipients = beUtils.getBaseEntitys(searchBE); // load 100 at a time
-        System.out.println("Recipient count = " + recipients.size());
-        BaseEntity recipient = null;
-        if (recipients.size() > 0) {
+        if (recipients != null) {
+            BaseEntity recipient = null;
+            if (recipients.size() > 0) {
 
-            recipient = recipients.get(0);
-            System.out.println("Recipient = " + recipient.getCode());
+                recipient = recipients.get(0);
+                System.out.println("Recipient = " + recipient.getCode());
+            }
+
+            // //  BaseEntity recipient = beUtils.getBaseEntityByCode(userToken.getUserCode());
+
+            QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_INTERN_LOGBOOK_REMINDER")
+                    .addRecipient(recipient)
+                    .setUtils(beUtils)
+                    .send();
+        } else {
+            System.out.println("No recipients matched search");
         }
-
-        // //  BaseEntity recipient = beUtils.getBaseEntityByCode(userToken.getUserCode());
-
-        QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_INTERN_LOGBOOK_REMINDER")
-                .addRecipient(recipient)
-                .setUtils(beUtils)
-                .send();
 
         Map<String, Object> results = new HashMap<String, Object>();
         results.put("Result", "Message Returned from Work Item Handler");
