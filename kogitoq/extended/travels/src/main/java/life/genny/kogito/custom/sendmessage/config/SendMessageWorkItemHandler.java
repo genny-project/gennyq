@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.acme.messages.MessageCode;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
@@ -17,26 +18,30 @@ import life.genny.qwandaq.utils.KeycloakUtils;
 
 public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
-    //   private static final Logger log = Logger.getLogger(SendMessageWorkItemHandler.class);
+    // private static final Logger log =
+    // Logger.getLogger(SendMessageWorkItemHandler.class);
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
         System.out.println("Hello from the custom work item definition2.");
-        //log.info("Passed parameters:");
+
+        MessageCode mc = null;
+        // log.info("Passed parameters:");
 
         // Printing task’s parameters, it will also print
         // our value we pass to the task from the process
         for (String parameter : workItem.getParameters().keySet()) {
-            // if ("messageCode".equals(parameter)) {
-            //     MessageCode mc = (MessageCode) workItem.getParameters().get(parameter);
-            //     System.out.println("MessageCode=" + mc);
-            // } else {
-            System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
-            // }
+            if ("messageCode".equals(parameter)) {
+                mc = (MessageCode) workItem.getParameters().get(parameter);
+                System.out.println("MessageCode=" + mc);
+            } else {
+                System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
+            }
         }
 
         // Test sending message
-        GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch", "admin-cli", null,
+        GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch", "admin-cli",
+                null,
                 "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
         System.out.println("ServiceToken = " + serviceToken.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, serviceToken);
@@ -61,9 +66,10 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
                 System.out.println("Recipient = " + recipient.getCode());
             }
 
-            // //  BaseEntity recipient = beUtils.getBaseEntityByCode(userToken.getUserCode());
+            // // BaseEntity recipient =
+            // beUtils.getBaseEntityByCode(userToken.getUserCode());
 
-            QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_INTERN_LOGBOOK_REMINDER")
+            QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder(mc.getCode())
                     .addRecipient(recipient)
                     .setUtils(beUtils)
                     .send();
@@ -81,6 +87,6 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
     @Override
     public void abortWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
-        //log.error("Error happened in the custom work item definition.");
+        // log.error("Error happened in the custom work item definition.");
     }
 }
