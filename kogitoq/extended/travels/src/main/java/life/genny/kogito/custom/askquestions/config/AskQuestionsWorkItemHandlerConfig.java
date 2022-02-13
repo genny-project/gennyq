@@ -1,4 +1,4 @@
-package life.genny.kogito.custom.sendmessage.config;
+package life.genny.kogito.custom.askquestions.config;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -13,7 +13,6 @@ import org.kie.kogito.process.impl.DefaultWorkItemHandlerConfig;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
-import life.genny.kogito.custom.askquestions.config.AskQuestionsWorkItemHandler;
 import life.genny.kogito.intf.KafkaBean;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.models.GennyToken;
@@ -24,16 +23,8 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 
 @ApplicationScoped
-public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConfig {
-
-    {
-        register("SendMessage", new SendMessageWorkItemHandler());
-        // log.info("Registered SendMessageWorkItemHandler");
-        register("AskQuestions", new AskQuestionsWorkItemHandler());
-        // log.info("Registered AskQuestionsWorkItemHandler");
-    }
-
-    private static final Logger log = Logger.getLogger(SendMessageWorkItemHandlerConfig.class);
+public class AskQuestionsWorkItemHandlerConfig extends DefaultWorkItemHandlerConfig {
+    private static final Logger log = Logger.getLogger(AskQuestionsWorkItemHandlerConfig.class);
 
     @ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak.gada.io")
     String baseKeycloakUrl;
@@ -68,7 +59,7 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
 
     @Transactional
     void onStart(@Observes StartupEvent ev) {
-        log.info("Kogito SendMessageWorkItemHandlerConfig starting");
+        log.info("Kogito AskQuestionsWorkItemHandlerConfig starting");
         if (cache == null) {
             log.error("GennyCache cache is still NULL!!");
         } else {
@@ -93,15 +84,13 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
             }
 
         }
-        // register("SendMessage", new SendMessageWorkItemHandler());
-        // log.info("Registered SendMessageWorkItemHandler");
         // register("AskQuestions", new AskQuestionsWorkItemHandler());
         // log.info("Registered AskQuestionsWorkItemHandler");
     }
 
     @Transactional
     void onShutdown(@Observes ShutdownEvent ev) {
-        log.info("Kogito SendMessageWorkItemHandlerConfig Shutting down");
+        log.info("Kogito AskQuestionsWorkItemHandlerConfig Shutting down");
 
     }
 
