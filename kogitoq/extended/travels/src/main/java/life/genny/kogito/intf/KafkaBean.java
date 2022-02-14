@@ -36,5 +36,4 @@ public class KafkaBean implements KafkaInterface {
         }
     }
 
-    
 }

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -15,13 +14,9 @@ import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 
 public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {

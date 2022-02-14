@@ -6,7 +6,6 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
-import life.genny.qwandaq.utils.QwandaUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.kie.kogito.process.impl.DefaultWorkItemHandlerConfig;
