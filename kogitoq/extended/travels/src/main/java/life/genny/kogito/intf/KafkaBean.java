@@ -35,4 +35,6 @@ public class KafkaBean implements KafkaInterface {
             log.error("Producer unable to write to channel " + channel);
         }
     }
+
+    
 }

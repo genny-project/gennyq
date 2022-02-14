@@ -15,9 +15,13 @@ import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.message.QCmdMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 
 public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
@@ -90,6 +94,27 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
         // Create the Ask
 
         // Send the Questions to the source user
+        // QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
+        // "QUE_ADMIN_GRP",
+        // userToken.getToken());
+
+        // QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
+        // msg.setToken(beUtils.getGennyToken().getToken());
+
+        // KafkaUtils.writeMsg("webcmds", msg);
+
+        // QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(recipient);
+        // beMsg.setToken(beUtils.getGennyToken().getToken());
+
+        // KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
+
+        // askMsg.setToken(beUtils.getGennyToken().getToken());
+        // KafkaUtils.writeMsg("webcmds", askMsg);
+
+        // QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
+        // msgend.setToken(userToken.getToken());
+        // msgend.setSend(true);
+        // KafkaUtils.writeMsg("webcmds", msgend);
 
         // Set up a UserTask
 
