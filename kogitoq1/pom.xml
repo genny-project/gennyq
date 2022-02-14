@@ -3,7 +3,7 @@
 	<parent>
           <groupId>life.genny</groupId>
           <artifactId>kogitoq-parent</artifactId>
-          <version>1.16.0.Final</version>
+          <version>1.16.1.Final</version>
         </parent>
 
 	<modelVersion>4.0.0</modelVersion>
