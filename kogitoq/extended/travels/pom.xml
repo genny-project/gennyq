@@ -4,17 +4,16 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq-extended</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
+    <version>1.16.1.Final</version>
   </parent>
   <artifactId>travels</artifactId>
   <name>Genny Kogito Example</name>
   <properties>
     <genny.version>9.12.0</genny.version>
-    <quarkus-plugin.version>2.7.1.Final</quarkus-plugin.version>
+    <quarkus-plugin.version>2.6.3.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.7.1.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.6.3.Final</quarkus.platform.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -179,7 +178,7 @@
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-        <version>1.2.1</version>
+        <version>1.2.2</version>
         <executions>
           <execution>
             <id>make-index</id>
