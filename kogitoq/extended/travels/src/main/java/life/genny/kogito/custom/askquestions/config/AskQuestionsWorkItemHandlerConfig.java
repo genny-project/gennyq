@@ -1,9 +1,14 @@
 package life.genny.kogito.custom.askquestions.config;
 
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.transaction.Transactional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -14,13 +19,15 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.kogito.intf.KafkaBean;
+import life.genny.kogito.utils.DatabaseUtils;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class AskQuestionsWorkItemHandlerConfig extends DefaultWorkItemHandlerConfig {
@@ -70,16 +77,19 @@ public class AskQuestionsWorkItemHandlerConfig extends DefaultWorkItemHandlerCon
                     "admin-cli", null,
                     "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
             System.out.println("ServiceToken = " + serviceToken.getToken());
+
             BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
             if (entityManager != null) {
                 log.info("entityManager is NOT NULL!!");
                 CacheUtils.init(cache);
-                DatabaseUtils.init(entityManager);
+                DatabaseUtils.init(entityManager, serviceToken);
 
                 if (kafkaBean != null) {
                     log.info("KafkaBean is NOT NULL!!");
                     KafkaUtils.init(kafkaBean);
-                    // QwandaUtils.init(serviceToken); // This has database class issues
+                   //QwandaUtils.init(serviceToken); // This has database class issues
+                    DatabaseUtils.loadAllAttributes();
+
                 }
             }
 
