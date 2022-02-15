@@ -5,7 +5,8 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq-extended</artifactId>
-    <version>1.16.0.Final</version>
+    <version>2.0.0-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
   <artifactId>visas</artifactId>
   <name>Kogito Example :: Travel Agency :: Visas</name>
@@ -27,7 +28,7 @@
      <dependency>
         <groupId>org.kie.kogito</groupId>
         <artifactId>kogito-quarkus-bom</artifactId>
-        <version>${kogito.version}</version>
+      <version>1.16.1.Final</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -37,18 +38,22 @@
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-quarkus</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-legacy-api</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-addons-quarkus-messaging</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-addons-quarkus-process-svg</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -94,6 +99,7 @@
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-addons-quarkus-monitoring-prometheus</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -102,14 +108,17 @@
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-addons-quarkus-persistence-infinispan</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-addons-quarkus-events-smallrye</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-addons-quarkus-process-management</artifactId>
+      <version>1.16.1.Final</version>
     </dependency>
     <dependency>
 			<groupId>io.quarkus</groupId>
