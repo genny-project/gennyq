@@ -46,5 +46,5 @@ echo "genny data-index http $GENNY_KOGITO_DATAINDEX_HTTP_URL"
 echo "genny data-index ws $GENNY_KOGITO_DATAINDEX_WS_URL"
 echo "jobservice $GENNY_KOGITO_JOBSERVICE_URL"
 echo "kogito service $GENNY_KOGITO_SERVICE_URL"
-./mvnw clean  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=9580 -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
+#./mvnw  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=9580 -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 

@@ -10,10 +10,10 @@
   <name>Genny Kogito Example</name>
   <properties>
     <genny.version>9.12.0</genny.version>
-    <quarkus-plugin.version>2.7.1.Final</quarkus-plugin.version>
+    <quarkus-plugin.version>2.6.3.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.7.1.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.6.3.Final</quarkus.platform.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -142,28 +142,7 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-container-image-docker</artifactId>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.jboss/jandex -->
-    <dependency>
-      <groupId>org.jboss</groupId>
-      <artifactId>jandex</artifactId>
-      <version>2.4.2.Final</version>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-orm</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-envers</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-hibernate-validator</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-jdbc-mysql</artifactId>
-    </dependency>
+
   </dependencies>
   <build>
     <finalName>${project.artifactId}</finalName>
@@ -206,16 +185,6 @@
             <goals>
               <goal>jandex</goal>
             </goals>
-            <configuration>
-              <fileSets>
-                <fileSet>
-                  <directory>/Users/acrow/projects/genny/qwandaq/target/classes/life/genny/qwandaq/entity/BaseEntity</directory>
-                </fileSet>
-                <fileSet>
-                  <directory>${project.build.directory}/generated-classes/bar</directory>
-                </fileSet>
-              </fileSets>
-            </configuration>
           </execution>
         </executions>
       </plugin>
