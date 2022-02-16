@@ -20,15 +20,13 @@ import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.kie.kogito.KogitoGAV;
 import org.kie.kogito.conf.ConfigBean;
-import org.kie.kogito.monitoring.core.common.MonitoringRegistry;
 import org.kie.kogito.process.impl.DefaultProcessEventListenerConfig;
 
 @ApplicationScoped
 public class ProcessEventListenerConfig extends DefaultProcessEventListenerConfig {
 
-    private VisaApplicationPrometheusProcessEventListener listener;
+    //   private VisaApplicationPrometheusProcessEventListener listener;
 
     @Inject
     ConfigBean configBean;
@@ -39,12 +37,12 @@ public class ProcessEventListenerConfig extends DefaultProcessEventListenerConfi
 
     @PostConstruct
     public void setup() {
-        this.listener = new VisaApplicationPrometheusProcessEventListener("acme-travels", configBean.getGav().orElse(KogitoGAV.EMPTY_GAV), MonitoringRegistry.getDefaultMeterRegistry());
-        register(this.listener);
+        //        this.listener = new VisaApplicationPrometheusProcessEventListener("acme-travels", configBean.getGav().orElse(KogitoGAV.EMPTY_GAV), MonitoringRegistry.getDefaultMeterRegistry());
+        //        register(this.listener);
     }
 
     @PreDestroy
     public void close() {
-        this.listener.cleanup();
+        //        this.listener.cleanup();
     }
 }
