@@ -30,6 +30,8 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         log.info("Hello from the custom work item definition2.");
 
         MessageCode mc = null;
+        String realMessageCode = null;
+        BaseEntity be = null;
         // log.info("Passed parameters:");
 
         // Printing task’s parameters, it will also print
@@ -37,7 +39,12 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         for (String parameter : workItem.getParameters().keySet()) {
             if ("messageCode".equals(parameter)) {
                 mc = (MessageCode) workItem.getParameters().get(parameter);
-                System.out.println("MessageCode=" + mc);
+                realMessageCode = mc.getCode()
+;                System.out.println("MessageCode=" + mc);
+            } else  if ("messageCode2".equals(parameter)) {
+                be = (BaseEntity) workItem.getParameters().get(parameter);
+                realMessageCode = be.getCode();
+                System.out.println("BaseENTITYCode=" + mc);
             } else {
                 System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
             }
@@ -77,7 +84,7 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
             // // BaseEntity recipient =
             // beUtils.getBaseEntityByCode(userToken.getUserCode());
 
-            QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder(mc.getCode())
+            QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder(realMessageCode)
                     .addRecipient(recipient)
                     .setUtils(beUtils)
                     .send();
