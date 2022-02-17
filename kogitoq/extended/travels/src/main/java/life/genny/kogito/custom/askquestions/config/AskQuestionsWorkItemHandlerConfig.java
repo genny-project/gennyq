@@ -26,6 +26,11 @@ import life.genny.qwandaq.utils.KeycloakUtils;
 public class AskQuestionsWorkItemHandlerConfig extends DefaultWorkItemHandlerConfig {
     private static final Logger log = Logger.getLogger(AskQuestionsWorkItemHandlerConfig.class);
 
+    {
+        register("AskQuestions", new AskQuestionsWorkItemHandler());
+        log.info("Registered AskQuestionsWorkItemHandler");
+    }
+
     @ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak.gada.io")
     String baseKeycloakUrl;
 
@@ -80,7 +85,7 @@ public class AskQuestionsWorkItemHandlerConfig extends DefaultWorkItemHandlerCon
                 if (kafkaBean != null) {
                     log.info("KafkaBean is NOT NULL!!");
                     KafkaUtils.init(kafkaBean);
-                    //QwandaUtils.init(serviceToken); // This has database class issues
+                    // QwandaUtils.init(serviceToken); // This has database class issues
                     DatabaseUtils.loadAllAttributes();
 
                 }
