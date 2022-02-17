@@ -36,15 +36,17 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
         // Printing task’s parameters, it will also print
         // our value we pass to the task from the process
+          System.out.println("MessageCodes being checked" );
         for (String parameter : workItem.getParameters().keySet()) {
             if ("messageCode".equals(parameter)) {
                 mc = (MessageCode) workItem.getParameters().get(parameter);
                 realMessageCode = mc.getCode()
 ;                System.out.println("MessageCode=" + mc);
-            } else  if ("messageCode2".equals(parameter)) {
+            } else  if ("messageCodeBE".equals(parameter)) {
+                System.out.println("BaseEntity detected");
                 be = (BaseEntity) workItem.getParameters().get(parameter);
                 realMessageCode = be.getCode();
-                System.out.println("BaseENTITYCode=" + mc);
+                System.out.println("BaseENTITYCode=" + be.getCode());
             } else {
                 System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
             }
