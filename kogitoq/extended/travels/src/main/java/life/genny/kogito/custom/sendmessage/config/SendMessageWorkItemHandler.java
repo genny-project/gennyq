@@ -16,14 +16,18 @@ import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import org.jboss.logging.Logger;
+
 public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
-    // private static final Logger log =
-    // Logger.getLogger(SendMessageWorkItemHandler.class);
+     private static final Logger log =
+     Logger.getLogger(SendMessageWorkItemHandler.class);
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
-        System.out.println("Hello from the custom work item definition2.");
+        log.info("Hello from the custom work item definition2.");
 
         MessageCode mc = null;
         // log.info("Passed parameters:");
@@ -65,6 +69,10 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
                 recipient = recipients.get(0);
                 System.out.println("Recipient = " + recipient.getCode());
             }
+
+              Jsonb jsonb = JsonbBuilder.create();
+
+              log.info(jsonb.toJson(recipient));
 
             // // BaseEntity recipient =
             // beUtils.getBaseEntityByCode(userToken.getUserCode());
