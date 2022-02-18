@@ -33,12 +33,13 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         String realMessageCode = null;
         BaseEntity be = null;
         QDataBaseEntityMessage msg = null;
-        // log.info("Passed parameters:");
+        log.info("Passed parameters:");
 
         // Printing task’s parameters, it will also print
         // our value we pass to the task from the process
         System.out.println("MessageCodes being checked");
         for (String parameter : workItem.getParameters().keySet()) {
+            log.info("Parameter = "+parameter+"--->");
             if ("messageCode".equals(parameter)) {
                 mc = (MessageCode) workItem.getParameters().get(parameter);
                 realMessageCode = mc.getCode();
@@ -48,9 +49,9 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
                 be = (BaseEntity) workItem.getParameters().get(parameter);
                 if (be != null) {
                     realMessageCode = be.getCode();
-                    System.out.println("BaseENTITYCode=" + be.getCode());
+                    log.info("BaseENTITYCode=" + be.getCode());
                 } else if ("messageCodeQ".equals(parameter)) {
-                    System.out.println("QDataBaseEntity detected");
+                    log.info("QDataBaseEntity detected");
                     msg = (QDataBaseEntityMessage) workItem.getParameters().get(parameter);
                     if (msg != null) {
                         // Get BaseEntities
@@ -58,21 +59,23 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
                             if (msg.getItems().size() > 0) {
                                 be = msg.getItems().get(0);
                                 realMessageCode = be.getCode();
-                                System.out.println("BaseEntityCode=" + be.getCode() + " from QDAtabaseEntity:" + msg);
+                                log.info("BaseEntityCode=" + be.getCode() + " from QDAtabaseEntity:" + msg);
                             }
                         }
                     }
                 }
             } else {
-                System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
+                log.info(parameter + " = " + workItem.getParameters().get(parameter));
             }
         }
 
+        System.out.println("realMessageCode= " + realMessageCode);
         // Test sending message
         GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch", "admin-cli",
                 null,
                 "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
         System.out.println("ServiceToken = " + serviceToken.getToken());
+        log.info("realMessageCode = " + serviceToken.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, serviceToken);
 
         SearchEntity searchBE = new SearchEntity("SBE_TESTUSER", "test user Search")
@@ -100,8 +103,8 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
             log.info(jsonb.toJson(recipient));
 
             // Now test QDataBaseEntityMessage
-            msg = new QDataBaseEntityMessage(recipient);
-            msg.setToken(serviceToken.getToken());
+            // msg = new QDataBaseEntityMessage(recipient);
+            // msg.setToken(serviceToken.getToken());
             log.info(jsonb.toJson(msg));
             // // BaseEntity recipient =
             // beUtils.getBaseEntityByCode(userToken.getUserCode());
