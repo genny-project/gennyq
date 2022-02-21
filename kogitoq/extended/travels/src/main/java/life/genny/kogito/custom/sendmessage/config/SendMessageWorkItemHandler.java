@@ -39,31 +39,32 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         // our value we pass to the task from the process
         System.out.println("MessageCodes being checked");
         for (String parameter : workItem.getParameters().keySet()) {
-            log.info("Parameter = " + parameter + "--->");
+            log.info("Parameter = [" + parameter + "]");
             if ("messageCode".equals(parameter)) {
                 mc = (MessageCode) workItem.getParameters().get(parameter);
                 realMessageCode = mc.getCode();
-                System.out.println("MessageCode=" + mc);
+                log.info("MessageCode=" + mc);
             } else if ("messageCodeBE".equals(parameter)) {
-                System.out.println("BaseEntity detected");
+                log.info("BaseEntity detected");
                 be = (BaseEntity) workItem.getParameters().get(parameter);
                 if (be != null) {
                     realMessageCode = be.getCode();
                     log.info("BaseENTITYCode=" + be.getCode());
-                } else if ("messageCodeQ".equals(parameter)) {
-                    log.info("QDataBaseEntity detected");
-                    msg = (QDataBaseEntityMessage) workItem.getParameters().get(parameter);
-                    if (msg != null) {
-                        // Get BaseEntities
-                        if (msg.getItems() != null) {
-                            if (msg.getItems().size() > 0) {
-                                be = msg.getItems().get(0);
-                                realMessageCode = be.getCode();
-                                log.info("BaseEntityCode=" + be.getCode() + " from QDAtabaseEntity:" + msg);
-                            }
+                }
+            } else if ("messageCodeQ".equals(parameter)) {
+                log.info("QDataBaseEntity detected");
+                msg = (QDataBaseEntityMessage) workItem.getParameters().get(parameter);
+                if (msg != null) {
+                    // Get BaseEntities
+                    if (msg.getItems() != null) {
+                        if (msg.getItems().size() > 0) {
+                            be = msg.getItems().get(0);
+                            realMessageCode = be.getCode();
+                            log.info("BaseEntityCode=" + be.getCode() + " from QDAtabaseEntity:" + msg);
                         }
                     }
                 }
+
             } else {
                 log.info(parameter + " = " + workItem.getParameters().get(parameter));
             }
@@ -100,7 +101,7 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
             Jsonb jsonb = JsonbBuilder.create();
 
-            log.info(jsonb.toJson(recipient));
+            log.info("Recipient=" + jsonb.toJson(recipient));
 
             // Now test QDataBaseEntityMessage
             // msg = new QDataBaseEntityMessage(recipient);
