@@ -4,22 +4,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
 import org.acme.messages.MessageCode;
+import org.jboss.logging.Logger;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
-
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import org.jboss.logging.Logger;
 
 public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
@@ -39,7 +39,7 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
         // our value we pass to the task from the process
         System.out.println("MessageCodes being checked");
         for (String parameter : workItem.getParameters().keySet()) {
-            log.info("Parameter = "+parameter+"--->");
+            log.info("Parameter = " + parameter + "--->");
             if ("messageCode".equals(parameter)) {
                 mc = (MessageCode) workItem.getParameters().get(parameter);
                 realMessageCode = mc.getCode();
