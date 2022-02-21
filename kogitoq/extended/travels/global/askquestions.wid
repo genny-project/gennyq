@@ -7,7 +7,7 @@
         "documentation" : "Ask a set of Questions and wait for all mandatory questions to be completed..",
 
         "parameters" : [
-            "questionCode" : new ObjectDataType()
+            "questionCode" : new StringDataType()
         ],
         "results" : [
             "Result" : new StringDataType()

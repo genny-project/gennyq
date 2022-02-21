@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.acme.messages.MessageCode;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
@@ -30,15 +29,15 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
         System.out.println("Hello from the custom AskQuestions work item .");
 
-        MessageCode mc = null;
+        String qc = null;
         // log.info("Passed parameters:");
 
         // Printing task’s parameters, it will also print
         // our value we pass to the task from the process
         for (String parameter : workItem.getParameters().keySet()) {
-            if ("messageCode".equals(parameter)) {
-                mc = (MessageCode) workItem.getParameters().get(parameter);
-                System.out.println("MessageCode=" + mc);
+            if ("questionCode".equals(parameter)) {
+                qc = (String) workItem.getParameters().get(parameter);
+                System.out.println("QuestionCode=" + qc);
             } else {
                 System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
             }
