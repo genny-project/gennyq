@@ -70,13 +70,12 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
             }
         }
 
-        System.out.println("realMessageCode= " + realMessageCode);
+        log.info("realMessageCode= " + realMessageCode);
         // Test sending message
         GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch", "admin-cli",
                 null,
                 "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
-        System.out.println("ServiceToken = " + serviceToken.getToken());
-        log.info("realMessageCode = " + serviceToken.getToken());
+        log.info("ServiceToken = " + serviceToken.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, serviceToken);
 
         SearchEntity searchBE = new SearchEntity("SBE_TESTUSER", "test user Search")
@@ -96,7 +95,7 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
             if (recipients.size() > 0) {
 
                 recipient = recipients.get(0);
-                System.out.println("Recipient = " + recipient.getCode());
+                log.info("Recipient = " + recipient.getCode());
             }
 
             Jsonb jsonb = JsonbBuilder.create();
