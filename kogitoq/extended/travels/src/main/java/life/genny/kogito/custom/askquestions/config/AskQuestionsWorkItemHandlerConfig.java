@@ -71,9 +71,9 @@ public class AskQuestionsWorkItemHandlerConfig extends DefaultWorkItemHandlerCon
             log.info("GennyCache cache is NOT NULL!!");
             CacheUtils.init(cache);
 
-            GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch",
+            GennyToken serviceToken = KeycloakUtils.getToken("https://keycloak.gada.io", "internmatch",
                     "admin-cli", null,
-                    "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
+                    "service", System.getenv("GENNY_SERVICE_PASSWORD"));
             System.out.println("ServiceToken = " + serviceToken.getToken());
 
             BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);

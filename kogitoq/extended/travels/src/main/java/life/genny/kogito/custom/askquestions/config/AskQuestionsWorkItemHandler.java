@@ -44,9 +44,8 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
         }
 
         // Test sending Questions
-        GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch", "admin-cli",
-                null,
-                "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
+        GennyToken serviceToken = KeycloakUtils.getToken("https://keycloak.gada.io", "internmatch", "admin-cli",
+                null, "service", System.getenv("GENNY_SERVICE_PASSWORD"));
         System.out.println("ServiceToken = " + serviceToken.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, serviceToken);
 

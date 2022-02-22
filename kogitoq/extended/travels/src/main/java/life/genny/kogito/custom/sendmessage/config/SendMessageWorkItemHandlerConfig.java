@@ -70,9 +70,9 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
         } else {
             log.info("GennyCache cache is NOT NULL!!");
 
-            GennyToken serviceToken = new KeycloakUtils().getToken("https://keycloak.gada.io", "internmatch",
+            GennyToken serviceToken = KeycloakUtils.getToken("https://keycloak.gada.io", "internmatch",
                     "admin-cli", null,
-                    "service", System.getenv("GENNY_SERVICE_PASSWORD"), null);
+                    "service", System.getenv("GENNY_SERVICE_PASSWORD"));
             log.info("ServiceToken = " + serviceToken.getToken());
             BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
             if (entityManager != null) {
