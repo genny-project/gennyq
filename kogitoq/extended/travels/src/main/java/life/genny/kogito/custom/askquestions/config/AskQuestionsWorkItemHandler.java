@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.jboss.logging.Logger;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
@@ -20,14 +21,13 @@ import life.genny.qwandaq.utils.KeycloakUtils;
 
 public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
-    // private static final Logger log =
-    // Logger.getLogger(SendMessageWorkItemHandler.class);
+    private static final Logger log = Logger.getLogger(AskQuestionsWorkItemHandler.class);
 
     Jsonb jsonb = JsonbBuilder.create();
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
-        System.out.println("Hello from the custom AskQuestions work item .");
+        log.info("Hello from the custom AskQuestions work item .");
 
         String qc = null;
         // log.info("Passed parameters:");
@@ -43,18 +43,14 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
             }
         }
 
-        // Test sending Questions
         GennyToken serviceToken = KeycloakUtils.getToken("https://keycloak.gada.io", "internmatch", "admin-cli",
                 null, "service", System.getenv("GENNY_SERVICE_PASSWORD"));
-        System.out.println("ServiceToken = " + serviceToken.getToken());
+        log.info("ServiceToken = " + serviceToken.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, serviceToken);
-
-        // Get the remote alyson token
-        // Test sending message
 
         SearchEntity searchBE = new SearchEntity("SBE_TESTUSER", "test user Search")
                 .addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
-                .addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, "PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943")
+                .addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, "PER_C9E55D68-20FE-4CDC-A1D3-EE36468461DB")
                 .addColumn("PRI_CODE", "Code");
 
         searchBE.setRealm("internmatch");
@@ -62,54 +58,61 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
         searchBE.setPageStart(0);
         Integer pageSize = 1;
         searchBE.setPageSize(pageSize);
-        BaseEntity recipient = null;
+
         List<BaseEntity> recipients = beUtils.getBaseEntitys(searchBE); // load 100 at a time
         if (recipients != null) {
-
+            BaseEntity recipient = null;
             if (recipients.size() > 0) {
 
                 recipient = recipients.get(0);
-                System.out.println("Recipient = " + recipient.getCode() + " with size = " + recipients.size());
+                log.info("Recipient = " + recipient.getCode());
             }
+
+            Jsonb jsonb = JsonbBuilder.create();
+
+            log.info("Recipient=" + jsonb.toJson(recipient));
+
+            String userCode = recipient.getCode();
+            String username = "testuser@gada.io";
+
+            String userTokenStr = (String) CacheUtils.readCache("internmatch", "TOKEN:" + userCode);
+            log.info("usercode = " + userCode + " CacheJsonStr=[" + userTokenStr + "]");
+            GennyToken userToken = new GennyToken("userToken", userTokenStr);
+            log.info(
+                    "User " + username + " is logged in! " + userToken.getAdecodedTokenMap().get("session_state"));
+
+            // Fetch the Questions
+
+            // Create the Ask
+
+            // Send the Questions to the source user
+            // QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
+            // "QUE_ADMIN_GRP",
+            // userToken.getToken());
+
+            // QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
+            // msg.setToken(beUtils.getGennyToken().getToken());
+
+            // KafkaUtils.writeMsg("webcmds", msg);
+
+            // QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(recipient);
+            // beMsg.setToken(beUtils.getGennyToken().getToken());
+
+            // KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
+
+            // askMsg.setToken(beUtils.getGennyToken().getToken());
+            // KafkaUtils.writeMsg("webcmds", askMsg);
+
+            // QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
+            // msgend.setToken(userToken.getToken());
+            // msgend.setSend(true);
+            // KafkaUtils.writeMsg("webcmds", msgend);
+
+            // Set up a UserTask
+
+        } else {
+            System.out.println("No recipients matched search");
         }
-
-        String userCode = recipient.getCode();
-        String username = "testuser@gada.io";
-
-        String userTokenStr = (String) CacheUtils.readCache("internmatch", "TOKEN:" + userCode);
-        System.out.println("usercode = " + userCode + " CacheJsonStr=[" + userTokenStr + "]");
-        GennyToken userToken = new GennyToken("userToken", userTokenStr);
-        System.out.println(
-                "User " + username + " is logged in! " + userToken.getAdecodedTokenMap().get("session_state"));
-
-        // Fetch the Questions
-
-        // Create the Ask
-
-        // Send the Questions to the source user
-        // QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
-        // "QUE_ADMIN_GRP",
-        // userToken.getToken());
-
-        // QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
-        // msg.setToken(beUtils.getGennyToken().getToken());
-
-        // KafkaUtils.writeMsg("webcmds", msg);
-
-        // QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(recipient);
-        // beMsg.setToken(beUtils.getGennyToken().getToken());
-
-        // KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
-
-        // askMsg.setToken(beUtils.getGennyToken().getToken());
-        // KafkaUtils.writeMsg("webcmds", askMsg);
-
-        // QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
-        // msgend.setToken(userToken.getToken());
-        // msgend.setSend(true);
-        // KafkaUtils.writeMsg("webcmds", msgend);
-
-        // Set up a UserTask
 
         Map<String, Object> results = new HashMap<String, Object>();
         results.put("Result", "Message Returned from Work Item Handler");

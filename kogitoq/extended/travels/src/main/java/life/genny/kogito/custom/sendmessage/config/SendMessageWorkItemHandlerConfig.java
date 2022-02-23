@@ -14,6 +14,7 @@ import org.kie.kogito.process.impl.DefaultWorkItemHandlerConfig;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+
 import life.genny.kogito.custom.askquestions.config.AskQuestionsWorkItemHandler;
 import life.genny.kogito.intf.KafkaBean;
 import life.genny.qwandaq.data.GennyCache;
