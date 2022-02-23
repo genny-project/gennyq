@@ -1,5 +1,7 @@
 package life.genny.kogito.custom.sendmessage.config;
 
+import java.util.Collection;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -12,7 +14,7 @@ import org.kie.kogito.process.impl.DefaultWorkItemHandlerConfig;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-
+import life.genny.kogito.custom.askquestions.config.AskQuestionsWorkItemHandler;
 import life.genny.kogito.intf.KafkaBean;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.models.GennyToken;
@@ -29,6 +31,7 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
     public SendMessageWorkItemHandlerConfig() {
         super();
         register("SendMessage", new SendMessageWorkItemHandler());
+        register("AskQuestions", new AskQuestionsWorkItemHandler());
         log.info("Registered SendMessageWorkItemHandler");
     }
 
@@ -89,6 +92,12 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
             }
         }
         // register("SendMessage", new SendMessageWorkItemHandler());
+
+        Collection<String> names = this.names();
+        for (String name : names) {
+            log.info("Registered ---> " + name);
+        }
+
     }
 
     @Transactional
