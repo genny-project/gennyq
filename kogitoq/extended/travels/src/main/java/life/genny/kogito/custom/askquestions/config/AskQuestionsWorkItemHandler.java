@@ -51,7 +51,7 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
         SearchEntity searchBE = new SearchEntity("SBE_TESTUSER", "test user Search")
                 .addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
-                .addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, "PER_C9E55D68-20FE-4CDC-A1D3-EE36468461DB")
+                .addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, "PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943") // testuser
                 .addColumn("PRI_CODE", "Code");
 
         searchBE.setRealm("internmatch");
