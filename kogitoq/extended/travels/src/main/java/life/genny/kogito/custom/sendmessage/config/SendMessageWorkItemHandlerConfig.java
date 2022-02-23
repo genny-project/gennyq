@@ -26,7 +26,8 @@ import life.genny.qwandaq.utils.KeycloakUtils;
 public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConfig {
     private static final Logger log = Logger.getLogger(SendMessageWorkItemHandlerConfig.class);
 
-    {
+    public SendMessageWorkItemHandlerConfig() {
+        super();
         register("SendMessage", new SendMessageWorkItemHandler());
         log.info("Registered SendMessageWorkItemHandler");
     }
