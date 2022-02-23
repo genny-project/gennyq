@@ -27,7 +27,7 @@ public class AskQuestionsWorkItemHandlerConfig extends DefaultWorkItemHandlerCon
     private static final Logger log = Logger.getLogger(AskQuestionsWorkItemHandlerConfig.class);
 
     {
-        register("AskQuestions", new AskQuestionsWorkItemHandler());
+        // register("AskQuestions", new AskQuestionsWorkItemHandler());
         log.info("Registered AskQuestionsWorkItemHandler");
     }
 

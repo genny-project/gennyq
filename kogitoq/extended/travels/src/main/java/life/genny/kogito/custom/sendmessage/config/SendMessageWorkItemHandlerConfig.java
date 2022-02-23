@@ -87,7 +87,7 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
                 }
             }
         }
-        register("SendMessage", new SendMessageWorkItemHandler());
+        // register("SendMessage", new SendMessageWorkItemHandler());
     }
 
     @Transactional
