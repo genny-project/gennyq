@@ -75,11 +75,11 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
             String userCode = recipient.getCode();
             String username = "testuser@gada.io";
-
+            log.info("usercode = " + userCode + " usernamer=[" + username + "]");
             String userTokenStr = (String) CacheUtils.readCache("internmatch", "TOKEN:" + userCode);
-
+            log.info("fetching from internmatch cache [" + "TOKEN:" + userCode + "]");
             if (StringUtils.isBlank(userTokenStr)) {
-                log.error("Make sure you log into your target genny system as testuser@gada.io");
+                log.error("Make sure you log into your target genny system as testuser@gada.io ");
             } else {
 
                 log.info("usercode = " + userCode + " CacheJsonStr=[" + userTokenStr + "]");
