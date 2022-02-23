@@ -7,6 +7,7 @@ import java.util.Map;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
@@ -76,39 +77,45 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
             String username = "testuser@gada.io";
 
             String userTokenStr = (String) CacheUtils.readCache("internmatch", "TOKEN:" + userCode);
-            log.info("usercode = " + userCode + " CacheJsonStr=[" + userTokenStr + "]");
-            GennyToken userToken = new GennyToken("userToken", userTokenStr);
-            log.info(
-                    "User " + username + " is logged in! " + userToken.getAdecodedTokenMap().get("session_state"));
 
-            // Fetch the Questions
+            if (StringUtils.isBlank(userTokenStr)) {
+                log.error("Make sure you log into your target genny system as testuser@gada.io");
+            } else {
 
-            // Create the Ask
+                log.info("usercode = " + userCode + " CacheJsonStr=[" + userTokenStr + "]");
+                GennyToken userToken = new GennyToken("userToken", userTokenStr);
+                log.info(
+                        "User " + username + " is logged in! " + userToken.getAdecodedTokenMap().get("session_state"));
 
-            // Send the Questions to the source user
-            // QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
-            // "QUE_ADMIN_GRP",
-            // userToken.getToken());
+                // Fetch the Questions
 
-            // QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
-            // msg.setToken(beUtils.getGennyToken().getToken());
+                // Create the Ask
 
-            // KafkaUtils.writeMsg("webcmds", msg);
+                // Send the Questions to the source user
+                // QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
+                // "QUE_ADMIN_GRP",
+                // userToken.getToken());
 
-            // QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(recipient);
-            // beMsg.setToken(beUtils.getGennyToken().getToken());
+                // QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
+                // msg.setToken(beUtils.getGennyToken().getToken());
 
-            // KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
+                // KafkaUtils.writeMsg("webcmds", msg);
 
-            // askMsg.setToken(beUtils.getGennyToken().getToken());
-            // KafkaUtils.writeMsg("webcmds", askMsg);
+                // QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(recipient);
+                // beMsg.setToken(beUtils.getGennyToken().getToken());
 
-            // QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
-            // msgend.setToken(userToken.getToken());
-            // msgend.setSend(true);
-            // KafkaUtils.writeMsg("webcmds", msgend);
+                // KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
 
-            // Set up a UserTask
+                // askMsg.setToken(beUtils.getGennyToken().getToken());
+                // KafkaUtils.writeMsg("webcmds", askMsg);
+
+                // QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
+                // msgend.setToken(userToken.getToken());
+                // msgend.setSend(true);
+                // KafkaUtils.writeMsg("webcmds", msgend);
+
+                // Set up a UserTask
+            }
 
         } else {
             System.out.println("No recipients matched search");
