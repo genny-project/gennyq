@@ -35,7 +35,7 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
     public SendMessageWorkItemHandlerConfig() {
         super();
         register("SendMessage", new SendMessageWorkItemHandler());
-        register("AskQuestions", new AskQuestionsWorkItemHandler(entityManager));
+        register("AskQuestions", new AskQuestionsWorkItemHandler());
         log.info("Registered SendMessageWorkItemHandler");
     }
 

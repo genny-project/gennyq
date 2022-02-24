@@ -29,13 +29,9 @@ import life.genny.qwandaq.utils.QuestionUtils;
 public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
     private static final Logger log = Logger.getLogger(AskQuestionsWorkItemHandler.class);
-    private EntityManager entityManager;
+    public EntityManager entityManager;
 
     Jsonb jsonb = JsonbBuilder.create();
-
-    public AskQuestionsWorkItemHandler(EntityManager entityManager) {
-        this.entityManager = entityManager;
-    }
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
