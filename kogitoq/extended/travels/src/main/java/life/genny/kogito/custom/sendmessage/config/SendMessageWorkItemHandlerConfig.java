@@ -29,11 +29,13 @@ import life.genny.qwandaq.utils.KeycloakUtils;
 public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConfig {
     private static final Logger log = Logger.getLogger(SendMessageWorkItemHandlerConfig.class);
 
-    // public SendMessageWorkItemHandlerConfig()
-    {
-        // super();
+    @Inject
+    EntityManager entityManager;
+
+    public SendMessageWorkItemHandlerConfig() {
+        super();
         register("SendMessage", new SendMessageWorkItemHandler());
-        register("AskQuestions", new AskQuestionsWorkItemHandler());
+        register("AskQuestions", new AskQuestionsWorkItemHandler(entityManager));
         log.info("Registered SendMessageWorkItemHandler");
     }
 
@@ -54,9 +56,6 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
 
     @ConfigProperty(name = "genny.oidc.credentials.secret", defaultValue = "secret")
     String secret;
-
-    @Inject
-    EntityManager entityManager;
 
     @Inject
     GennyCache cache;

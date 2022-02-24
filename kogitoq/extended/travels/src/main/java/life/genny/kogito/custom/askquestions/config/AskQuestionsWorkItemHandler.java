@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -28,8 +29,13 @@ import life.genny.qwandaq.utils.QuestionUtils;
 public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
     private static final Logger log = Logger.getLogger(AskQuestionsWorkItemHandler.class);
+    private EntityManager entityManager;
 
     Jsonb jsonb = JsonbBuilder.create();
+
+    public AskQuestionsWorkItemHandler(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
@@ -97,9 +103,9 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
                 // Create the Ask
 
                 // Send the Questions to the source user
-                QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
+                QDataAskMessage askMsg = QuestionUtils.getAsks(entityManager, userCode, recipient.getCode(),
                         "QUE_ADMIN_GRP",
-                        userToken.getToken());
+                        beUtils);
 
                 log.info("AskMsg=" + askMsg);
 
