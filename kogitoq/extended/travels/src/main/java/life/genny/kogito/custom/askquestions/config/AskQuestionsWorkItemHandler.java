@@ -101,17 +101,19 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
                         "QUE_ADMIN_GRP",
                         userToken.getToken());
 
+                log.info("AskMsg=" + askMsg);
+
                 QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
-                msg.setToken(beUtils.getGennyToken().getToken());
+                msg.setToken(userToken.getToken());
 
                 KafkaUtils.writeMsg("webcmds", msg);
 
                 QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(recipient);
-                beMsg.setToken(beUtils.getGennyToken().getToken());
+                beMsg.setToken(userToken.getToken());
 
                 KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
 
-                askMsg.setToken(beUtils.getGennyToken().getToken());
+                askMsg.setToken(userToken.getToken());
                 KafkaUtils.writeMsg("webcmds", askMsg);
 
                 QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");

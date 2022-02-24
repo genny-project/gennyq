@@ -22,6 +22,7 @@ public class KafkaBean implements KafkaInterface {
      * @param channel
      * @param payload
      */
+    @Override
     public void write(String channel, String payload) {
 
         if ("webcmds".equals(channel)) {
