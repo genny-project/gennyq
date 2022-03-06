@@ -43,7 +43,7 @@
   
 
 	<properties>
-		<genny.version>9.12.0</genny.version>
+		<genny.version>10.0.0</genny.version>
 		<kogito.version>2.0.0-SNAPSHOT</kogito.version>
 		<checkstyle.skip>true</checkstyle.skip>
 		<compiler-plugin.version>3.9.0</compiler-plugin.version>
@@ -54,8 +54,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
-		<quarkus-plugin.version>2.6.3.Final</quarkus-plugin.version>
-		<quarkus.platform.version>2.6.3.Final</quarkus.platform.version>
+		<quarkus-plugin.version>2.7.3.Final</quarkus-plugin.version>
+		<quarkus.platform.version>2.7.3.Final</quarkus.platform.version>
 		<quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
 		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
 		<version.surefire.plugin>3.0.0-M5</version.surefire.plugin>

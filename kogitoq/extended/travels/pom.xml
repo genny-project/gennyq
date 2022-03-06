@@ -9,11 +9,11 @@
   <artifactId>travels</artifactId>
   <name>Genny Kogito Example</name>
   <properties>
-    <genny.version>9.12.0</genny.version>
-    <quarkus-plugin.version>2.7.2.Final</quarkus-plugin.version>
+    <genny.version>10.0.0</genny.version>
+    <quarkus-plugin.version>2.7.3.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.7.2.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.7.3.Final</quarkus.platform.version>
   </properties>
   <dependencyManagement>
     <dependencies>
