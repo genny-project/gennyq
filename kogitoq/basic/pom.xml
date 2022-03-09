@@ -5,7 +5,7 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>1.18.0.Final</version>
   </parent>
   <artifactId>kogitoq-basic</artifactId>
   <name>Kogito Example :: Travel Agency :: Basic</name>
