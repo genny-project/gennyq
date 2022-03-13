@@ -48,7 +48,7 @@ public class InternalProducer {
     }
 
     @Inject
-    @Channel("messagesout")
+    @Channel("messages")
     Emitter<String> messages;
 
     public Emitter<String> getToMessages() {
