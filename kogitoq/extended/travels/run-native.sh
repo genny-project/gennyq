@@ -10,13 +10,13 @@ function prop() {
 
 if [ -z "${1}" ]; then
   version=$(cat src/main/resources/${project}-git.properties | grep 'git.build.version' | cut -d'=' -f2)
-  version=1.14.0.Final
+  version=1.18.0.Final
 else
   version="${1}"
 fi
 
 echo "Project version: ${version}"
-host="${1:-http://localhost}"
+host="${1:-http://alyson2.genny.life}"
 gennyhost="${2:-http://alyson.genny.life}"
 parser=`echo "$gennyhost" | awk -F/ '{print $3}' `
 echo "Parser = ${parser}"
