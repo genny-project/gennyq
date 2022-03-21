@@ -1,26 +1,27 @@
 package life.genny.kogito.live.data;
 
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
-import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
+
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.HttpUtils;
-import java.net.http.HttpResponse;
+import life.genny.qwandaq.utils.KogitoUtils;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -28,6 +29,9 @@ public class InternalConsumer {
     static final Logger log = Logger.getLogger(InternalConsumer.class);
 
     static Jsonb jsonb = JsonbBuilder.create();
+
+    @Inject
+    KogitoUtils kogitoUtils;
 
     @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
     String myUrl;
@@ -93,22 +97,43 @@ public class InternalConsumer {
                             JsonObject idJson = jsonb.fromJson(response.body(), JsonObject.class);
                             String id = idJson.getString("id");
                             log.info("processId = " + id);
+
+                            String test = kogitoUtils.fetchGraphQL("Application", "internCode", "PER_A%",
+                                    gToken.getToken(), "id", "internCode");
+                            log.info(test);
                         } else {
                             log.error(response.statusCode());
                         }
+                    } else if ("ACT_PRI_EVENT_VIEW".equals(code)) {
+                        // Now signal the process
+                        String targetCode = dataJson.getString("targetCode");
+                        log.info("Intern VIEW - targetCode:" + targetCode);
+                        String internCode = dataJson.getString("targetCode");
+
+                        String test = kogitoUtils.fetchGraphQL("Application", "internCode", internCode,
+                                gToken.getToken(), "id", "internCode");
+                        log.info(test);
+                        String sourceCode = gToken.getUserCode();
+                        if ("PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943".equals(sourceCode)) {
+                            try {
+                                String processId = kogitoUtils.fetchProcessId("Application", "internCode",
+                                        internCode,
+                                        gToken.getToken()); // fetchProcessId("Application", "internCode",
+                                                                                                                                                   // internCode,
+                                                                                                                                                   // gToken.getToken());
+                                                                                                                                                   // Send signal
+                                log.info("ProcessId=" + processId);
+                                String result = kogitoUtils.sendSignal("Application", processId, "ARCHIVE",
+                                        gToken.getToken());
+                                log.info(result);
+                            } catch (Exception e) {
+                                log.info(e.getLocalizedMessage());
+                            }
+                        }
+
                     }
                 } else {
 
-                    if (dataJson.containsKey("sourceCode")) {
-                        String sourceCode = dataJson.getString("sourceCode");
-                        if ("PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943".equals(sourceCode)) {
-                            String internCode = dataJson.getString("targetCode");
-                            String agentCode = sourceCode;
-                            String appParms = "{\"internCode\":\"" + internCode + "\",\"agentCode\":\"" + agentCode
-                                    + "\" }";
-                            log.info("appParms=" + appParms);
-                        }
-                    }
                 }
             }
         }

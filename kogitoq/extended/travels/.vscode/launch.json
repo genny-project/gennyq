@@ -6,11 +6,11 @@
     "configurations": [     
         {
             "type": "java",
-            "name": "Remote Debug (SendMessage)",
+            "name": "Remote Debug (Kogito)",
             "request": "attach",
             "hostName": "localhost",
             "port": 5580,
-            "sourcePaths": ["../../../../qwandaq/target/qwandaq-9.12.0-sources.jar"],
+            "sourcePaths": ["../../../../qwandaq/target/qwandaq-10.0.0-sources.jar"],
             "java.project.referencedLibraries": {
     "           include": [
                     "library/**/*.jar",
@@ -23,7 +23,7 @@
         "   library/bar.jar": "library/sources/bar-src.jar",
         "java.project.referencedLibraries": [
         "lib/**/*.jar",
-        "../../../../qwandaq/target/qwandaq-9.12.0-sources.jar"
+        "../../../../qwandaq/target/qwandaq-10.0.0-sources.jar"
     ]
     }
 }
