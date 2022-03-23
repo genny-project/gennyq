@@ -8,7 +8,7 @@
     <version>1.19.0.Final</version>
   </parent>
   <artifactId>visas</artifactId>
-  <name>Kogito Example :: Travel Agency :: Visas</name>
+  <name>Genny Kogito Example :: Travel Agency :: extended/visas</name>
   <properties>
     <quarkus-plugin.version>2.7.5.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
