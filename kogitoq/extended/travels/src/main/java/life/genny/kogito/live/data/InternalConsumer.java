@@ -15,6 +15,8 @@ import javax.json.bind.JsonbBuilder;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieSession;
+import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
@@ -36,13 +38,13 @@ public class InternalConsumer {
     @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
     String myUrl;
 
-    // @Inject
-    // KieRuntimeBuilder ruleRuntime;
+    @Inject
+    KieRuntimeBuilder ruleRuntime;
 
     // @Inject
     // Service service;
 
-    // KieSession ksession;
+    KieSession ksession;
 
     /**
      * Execute on start up.
@@ -119,9 +121,9 @@ public class InternalConsumer {
                                 String processId = kogitoUtils.fetchProcessId("Application", "internCode",
                                         internCode,
                                         gToken.getToken()); // fetchProcessId("Application", "internCode",
-                                                                                                                                                   // internCode,
-                                                                                                                                                   // gToken.getToken());
-                                                                                                                                                   // Send signal
+                                                            // internCode,
+                                                            // gToken.getToken());
+                                                            // Send signal
                                 log.info("ProcessId=" + processId);
                                 String result = kogitoUtils.sendSignal("Application", processId, "ARCHIVE",
                                         gToken.getToken());
