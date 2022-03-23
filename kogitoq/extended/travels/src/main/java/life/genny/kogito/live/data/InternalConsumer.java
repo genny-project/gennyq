@@ -106,20 +106,20 @@ public class InternalConsumer {
                         String internCode = dataJson.getString("targetCode");
 
                         String test = kogitoUtils.fetchGraphQL("Application", "internCode", internCode,
-                                userToken.getToken(), "id", "internCode");
+                                userToken, "id", "internCode");
                         log.info(test);
                         String sourceCode = userToken.getUserCode();
                         if ("PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943".equals(sourceCode)) {
                             try {
                                 String processId = kogitoUtils.fetchProcessId("Application", "internCode",
                                         internCode,
-                                        userToken.getToken()); // fetchProcessId("Application", "internCode",
-                                                                                                                                                      // internCode,
-                                                                                                                                                      // gToken.getToken());
-                                                                                                                                                      // Send signal
+                                        userToken); // fetchProcessId("Application", "internCode",
+                                                    // internCode,
+                                                    // gToken.getToken());
+                                                    // Send signal
                                 log.info("ProcessId=" + processId);
                                 String result = kogitoUtils.sendSignal("Application", processId, "ARCHIVE",
-                                        userToken.getToken());
+                                        userToken);
                                 log.info(result);
                             } catch (Exception e) {
                                 log.info(e.getLocalizedMessage());
