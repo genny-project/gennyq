@@ -18,6 +18,7 @@ fi
 echo "Project version: ${version}"
 host="${1:-http://alyson2.genny.life}"
 gennyhost="${2:-http://alyson.genny.life}"
+port="${3:-9580}"
 parser=`echo "$gennyhost" | awk -F/ '{print $3}' `
 echo "Parser = ${parser}"
 rawhost=${parser}
@@ -33,7 +34,7 @@ export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus
 export GENNY_REALM=internmatch
-export GENNY_KOGITO_SERVICE_URL=${host}:9580
+export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
 export GENNY_KOGITO_DATAINDEX_WS_URL=ws://${rawhost}:8582
 export GENNY_INFINISPAN_URL=${rawhost}:11222
@@ -59,4 +60,4 @@ echo "genny data-index http $GENNY_KOGITO_DATAINDEX_HTTP_URL"
 echo "genny data-index ws $GENNY_KOGITO_DATAINDEX_WS_URL"
 echo "jobservice $GENNY_KOGITO_JOBSERVICE_URL"
 echo "kogito service $GENNY_KOGITO_SERVICE_URL"
-./target/${project}-runner  -Dquarkus.http.port=9580
+./target/${project}-runner  -Dquarkus.http.port=${port}

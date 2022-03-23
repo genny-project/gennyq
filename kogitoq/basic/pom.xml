@@ -5,17 +5,17 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq</artifactId>
-    <version>1.18.0.Final</version>
+    <version>1.19.0.Final</version>
   </parent>
   <artifactId>kogitoq-basic</artifactId>
   <name>Kogito Example :: Travel Agency :: Basic</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <quarkus-plugin.version>2.7.4.Final</quarkus-plugin.version>
+    <quarkus-plugin.version>2.7.5.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.7.4.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.7.5.Final</quarkus.platform.version>
     </properties>
     <dependencyManagement>
       <dependencies>
