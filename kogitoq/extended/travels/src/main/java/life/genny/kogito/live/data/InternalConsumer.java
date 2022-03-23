@@ -114,9 +114,9 @@ public class InternalConsumer {
                                 String processId = kogitoUtils.fetchProcessId("Application", "internCode",
                                         internCode,
                                         userToken); // fetchProcessId("Application", "internCode",
-                                                    // internCode,
-                                                    // gToken.getToken());
-                                                    // Send signal
+                                                                                                                                           // internCode,
+                                                                                                                                           // gToken.getToken());
+                                                                                                                                           // Send signal
                                 log.info("ProcessId=" + processId);
                                 String result = kogitoUtils.sendSignal("Application", processId, "ARCHIVE",
                                         userToken);
