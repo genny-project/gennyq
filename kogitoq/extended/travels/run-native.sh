@@ -52,7 +52,10 @@ export QUARKUS_INFINISPAN_CLIENT_AUTH_USERNAME=genny
 export QUARKUS_INFINISPAN_CLIENT_SASL_MECHANISM=DIGEST-MD5
 export QUARKUS_INFINISPAN_CLIENT_SERVER_LIST=${rawhost}:11222
 export QUARKUS_INFINISPAN_CLIENT_USE_AUTH="true"
-
+export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
+export MYSQL_USER=genny
+export MYSQL_PASSWORD=password
+export FYODOR_SERVICE_API=http://alyson.genny.life:4242
 echo "infinispan url $GENNY_INFINISPAN_URL"
 echo "infinispan username $GENNY_INFINISPAN_CLIENT_AUTH_USERNAME"
 echo "infinispan password $GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD"

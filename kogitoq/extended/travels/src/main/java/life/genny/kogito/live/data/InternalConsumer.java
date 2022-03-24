@@ -24,7 +24,6 @@ import life.genny.kogito.utils.KogitoUtils;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -42,8 +41,8 @@ public class InternalConsumer {
     @Inject
     KieRuntimeBuilder kieRuntimeBuilder;
 
-    @Inject
-    Service service;
+    //    @Inject
+    //   Service service;
 
     KieSession ksession;
 
@@ -54,7 +53,7 @@ public class InternalConsumer {
      */
     void onStart(@Observes StartupEvent ev) {
 
-        service.fullServiceInit();
+        // service.fullServiceInit();
         log.info("[*] Finished Events Startup!");
     }
 
