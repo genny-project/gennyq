@@ -54,8 +54,8 @@ export QUARKUS_INFINISPAN_CLIENT_SERVER_LIST=${rawhost}:11222
 export QUARKUS_INFINISPAN_CLIENT_USE_AUTH="true"
 
 echo "infinispan url $GENNY_INFINISPAN_URL"
-echo "infinispan username $GENNY_INFINISPAN_USERNAME"
-echo "infinispan password $GENNY_INFINISPAN_PASSWORD"
+echo "infinispan username $GENNY_INFINISPAN_CLIENT_AUTH_USERNAME"
+echo "infinispan password $GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD"
 echo "genny kafka url $GENNY_KAFKA_URL"
 echo "genny data-index http $GENNY_KOGITO_DATAINDEX_HTTP_URL"
 echo "genny data-index ws $GENNY_KOGITO_DATAINDEX_WS_URL"
