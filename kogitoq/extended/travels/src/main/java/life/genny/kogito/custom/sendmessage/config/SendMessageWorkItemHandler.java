@@ -27,6 +27,7 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
+
         log.info("Hello from the custom work item definition2.");
 
         MessageCode mc = null;
