@@ -73,7 +73,7 @@ public class KogitoUtils implements Serializable {
 
             String responseBody = response.body();
             log.info("responseBody:" + responseBody);
-            if (responseBody.contains("Error id")) {
+            if (!responseBody.contains("Error id")) {
                 // isolate the id
                 JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
                 log.info(responseJson);
