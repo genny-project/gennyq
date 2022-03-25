@@ -1,6 +1,6 @@
 #!/bin/bash
 messageCode="${1:-MSG_IM_INTERN_LOGBOOK_REMINDER}"
-port="${2:-9580}"
+port="${2:-8580}"
 bookingNumber=123
 TOKEN=`./gettoken-prod.sh`
 echo ''
