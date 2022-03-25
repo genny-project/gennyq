@@ -67,18 +67,28 @@ public class KogitoUtils implements Serializable {
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
         log.info("graphQL url=" + graphQlUrl);
         log.info("queryJson->" + data);
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
-        String responseBody = response.body();
-        log.info("responseBody:" + responseBody);
-        // isolate the id
-        JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
-        log.info(responseJson);
-        JsonObject json = responseJson.getJsonObject("data");
-        JsonArray jsonArray = json.getJsonArray(graphTable);
-        if (!jsonArray.isEmpty()) {
-            JsonObject firstItem = jsonArray.getJsonObject(0);
-            idStr = firstItem.getString("id");
 
+        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
+        if (response != null) {
+
+            String responseBody = response.body();
+            log.info("responseBody:" + responseBody);
+            if (!responseBody.contains("Error id")) {
+                // isolate the id
+                JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
+                log.info(responseJson);
+                JsonObject json = responseJson.getJsonObject("data");
+                JsonArray jsonArray = json.getJsonArray(graphTable);
+                if (jsonArray != null && (!jsonArray.isEmpty())) {
+                    JsonObject firstItem = jsonArray.getJsonObject(0);
+                    idStr = firstItem.getString("id");
+
+                } else {
+                    throw new Exception("No processId found");
+                }
+            } else {
+                throw new Exception("No processId found");
+            }
         } else {
             throw new Exception("No processId found");
         }

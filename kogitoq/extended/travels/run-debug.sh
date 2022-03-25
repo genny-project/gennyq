@@ -41,6 +41,10 @@ export QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE=BASIC
 export INFINISPAN_CLIENT_HOTROD_SERVER_LIST=alyson.genny.life:11222
 export INFINISPAN_CLIENT_HOTROD_CLIENT_INTELLIGENCE=BASIC
 export FYODOR_SERVICE_API=http://alyson.genny.life:4242
+export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
+export FULL_MYSQL_URL=jdbc:mysql://alyson.genny.life:3310/gennydb?allowPublicKeyRetrieval=true&syscharacterEncoding=utf8mb4&useSSL=FALSE&serverTimezone=UTC&rewriteBatchedStatements=true
+export MYSQL_USER=genny
+export MYSQL_PASSWORD=password
 echo "infinispan url $GENNY_INFINISPAN_URL"
 echo "infinispan username $GENNY_INFINISPAN_CLIENT_AUTH_USERNAME"
 echo "infinispan password $GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD"
