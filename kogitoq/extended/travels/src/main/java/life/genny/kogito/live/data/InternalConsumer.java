@@ -86,54 +86,6 @@ public class InternalConsumer {
         session.fireAllRules();
         session.dispose();
 
-        // Convert to Json and identify the application
-        JsonObject eventJson = jsonb.fromJson(data, JsonObject.class);
-        if (eventJson.containsKey("token")) {
-            String tokenStr = eventJson.getString("token");
-            // log.info("token=" + tokenStr);
-            userToken = new GennyToken(tokenStr);
-            log.info("Token username " + userToken.getUsername());
-
-            if (eventJson.containsKey("data")) {
-                JsonObject dataJson = eventJson.getJsonObject("data");
-                if (dataJson.containsKey("code")) {
-                    String code = dataJson.getString("code");
-                    if ("ACT_PRI_EVENT_APPLY".equals(code)) {
-
-                    } else if ("ACT_PRI_EVENT_VIEW".equals(code)) {
-                        // Now signal the process
-                        String targetCode = dataJson.getString("targetCode");
-                        log.info("Intern VIEW - targetCode:" + targetCode);
-                        String internCode = dataJson.getString("targetCode");
-
-                        String test = kogitoUtils.fetchGraphQL("Application", "internCode", internCode,
-                                userToken, "id", "internCode");
-                        log.info(test);
-                        String sourceCode = userToken.getUserCode();
-                        if ("PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943".equals(sourceCode)) {
-                            try {
-                                String processId = kogitoUtils.fetchProcessId("Application", "internCode",
-                                        internCode,
-                                        userToken); // fetchProcessId("Application", "internCode",
-                                                                                                                                           // internCode,
-                                                                                                                                           // gToken.getToken());
-                                                                                                                                           // Send signal
-                                log.info("ProcessId=" + processId);
-                                String result = kogitoUtils.sendSignal("Application", processId, "ARCHIVE",
-                                        userToken);
-                                log.info(result);
-                            } catch (Exception e) {
-                                log.info(e.getLocalizedMessage());
-                            }
-                        }
-
-                    }
-                } else {
-
-                }
-            }
-        }
-
         Instant end = Instant.now();
         log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
     }
