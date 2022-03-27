@@ -50,7 +50,7 @@ public class WorkflowEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/legacy/processids/{sourcecode}/{interncode}")
     public String getProcessId(@PathParam("sourcecode") String sourceCode, @PathParam("interncode") String internCode) {
-        log.warn("Getting kogito ProcessId for legacy");
+        log.info("Getting kogito ProcessId for legacy");
 
         String processId = null;
         // String token = jwtUserToken.getRawToken();
