@@ -106,6 +106,9 @@ public class KogitoUtils implements Serializable {
         log.info("graphQL url=" + graphQlUrl);
         log.info("queryJson->" + graphQL);
 
+        if (userToken == null) {
+            log.error("userToken supplied is null");
+        }
         java.net.http.HttpResponse<String> response2 = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL",
                 userToken.getToken());
         if (response2 != null) {
