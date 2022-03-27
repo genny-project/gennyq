@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
@@ -60,12 +61,26 @@ public class WorkflowEndpoint {
                 + "\" }, sourceCode: { like: \"" + sourceCode + "\" }, newApplication: { equal: true}}) {   id  }}";
         log.warn("Getting kogito ProcessId for legacy - " + graphQL);
 
-        try {
-            processId = kogitoUtils.fetchProcessId("Application", graphQL, null);
-        } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } // Send null token for now
+        Boolean done = false;
+        int count = 5;
+        while ((!done) && (count > 0)) {
+
+            try {
+                processId = kogitoUtils.fetchProcessId("Application", graphQL, null);
+                if (!StringUtils.isBlank(processId)) {
+                    done = true;
+                } else {
+                    Thread.sleep(1000);
+                }
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } // Send null token for now
+            if (count <= 0) {
+                done = true;
+            }
+        }
+        log.info("Returned processId from WorkflowEndpoint is " + processId);
         return processId;
     }
 
