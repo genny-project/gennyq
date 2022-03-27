@@ -106,11 +106,11 @@ public class KogitoUtils implements Serializable {
         log.info("graphQL url=" + graphQlUrl);
         log.info("queryJson->" + graphQL);
 
-        java.net.http.HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL",
+        java.net.http.HttpResponse<String> response2 = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL",
                 userToken.getToken());
-        if (response != null) {
+        if (response2 != null) {
 
-            String responseBody = response.body();
+            String responseBody = response2.body();
             log.info("responseBody:" + responseBody);
             if (!responseBody.contains("Error id")) {
                 // isolate the id
