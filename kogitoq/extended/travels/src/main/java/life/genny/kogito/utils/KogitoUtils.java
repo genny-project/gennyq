@@ -50,7 +50,8 @@ public class KogitoUtils implements Serializable {
                 + "}";
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
         log.info("graphQL url=" + graphQlUrl);
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
+        java.net.http.HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL",
+                userToken.getToken());
         return response.body();
     }
 
@@ -68,7 +69,45 @@ public class KogitoUtils implements Serializable {
         log.info("graphQL url=" + graphQlUrl);
         log.info("queryJson->" + data);
 
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
+        java.net.http.HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL",
+                userToken.getToken());
+        if (response != null) {
+
+            String responseBody = response.body();
+            log.info("responseBody:" + responseBody);
+            if (!responseBody.contains("Error id")) {
+                // isolate the id
+                JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
+                log.info(responseJson);
+                JsonObject json = responseJson.getJsonObject("data");
+                JsonArray jsonArray = json.getJsonArray(graphTable);
+                if (jsonArray != null && (!jsonArray.isEmpty())) {
+                    JsonObject firstItem = jsonArray.getJsonObject(0);
+                    idStr = firstItem.getString("id");
+
+                } else {
+                    throw new Exception("No processId found");
+                }
+            } else {
+                throw new Exception("No processId found");
+            }
+        } else {
+            throw new Exception("No processId found");
+        }
+        return idStr;
+
+    }
+
+    public String fetchProcessId(final String graphTable, final String graphQL,
+            final GennyToken userToken) throws Exception {
+        String idStr = null;
+
+        String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
+        log.info("graphQL url=" + graphQlUrl);
+        log.info("queryJson->" + graphQL);
+
+        java.net.http.HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL",
+                userToken.getToken());
         if (response != null) {
 
             String responseBody = response.body();
@@ -102,7 +141,8 @@ public class KogitoUtils implements Serializable {
         String kogitoUrl = System.getenv("GENNY_KOGITO_SERVICE_URL") + "/" + graphTable.toLowerCase() + "/" + processId
                 + "/" + signalCode;
         log.info("signal endpoint url=" + kogitoUrl);
-        HttpResponse<String> response = HttpUtils.post(kogitoUrl, "", "application/json", userToken.getToken());
+        java.net.http.HttpResponse<String> response = HttpUtils.post(kogitoUrl, "", "application/json",
+                userToken.getToken());
         String responseBody = response.body();
         return responseBody;
     }
@@ -113,7 +153,7 @@ public class KogitoUtils implements Serializable {
         String jsonStr = jsonb.toJson(message);
         // log.info("triggerWorkFLow:json:" + json);
         String workflowJsonStr = "{\"eventMessage\":" + jsonStr + "}";
-        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
+        java.net.http.HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
         int responseCode = response.statusCode();
         if (responseCode == 201) {
             JsonObject idJson = jsonb.fromJson(response.body(), JsonObject.class);
