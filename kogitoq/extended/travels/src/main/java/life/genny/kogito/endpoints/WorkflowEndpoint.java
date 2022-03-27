@@ -1,5 +1,5 @@
 package life.genny.kogito.endpoints;
-
+ 
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
