@@ -31,8 +31,8 @@ public class WorkflowEndpoint {
     @Inject
     KogitoUtils kogitoUtils;
 
-    @Inject
-    JsonWebToken jwtUserToken;
+    // @Inject
+    // JsonWebToken jwtUserToken;
 
     @OPTIONS
     public Response opt() {
@@ -53,8 +53,8 @@ public class WorkflowEndpoint {
         log.warn("Getting kogito ProcessId for legacy");
 
         String processId = null;
-        String token = jwtUserToken.getRawToken();
-        GennyToken userToken = new GennyToken(token);
+        // String token = jwtUserToken.getRawToken();
+        // GennyToken userToken = new GennyToken(token);
 
         String graphQL = "query {  Application (where: {      internCode: { like: \"" + internCode
                 + "\" }, sourceCode: { like: \"" + sourceCode + "\" }, newApplication: { equal: true}}) {   id  }}";
