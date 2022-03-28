@@ -76,7 +76,7 @@ public class InternalConsumer {
 
         try {
             msg = jsonb.fromJson(data, QEventMessage.class);
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             log.warn("Cannot parse this data ..");
             return;
         }
