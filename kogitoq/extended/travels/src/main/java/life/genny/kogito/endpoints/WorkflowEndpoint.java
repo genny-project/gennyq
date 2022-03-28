@@ -49,7 +49,7 @@ public class WorkflowEndpoint {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/legacy/processids/{sourcecode}/{interncode}")
     public String getProcessId(@PathParam("sourcecode") String sourceCode, @PathParam("interncode") String internCode) {
-        log.info("Getting kogito ProcessId for legacy");
+        // log.info("Getting kogito ProcessId for legacy");
 
         String processId = null;
         // String token = jwtUserToken.getRawToken();
@@ -57,7 +57,7 @@ public class WorkflowEndpoint {
 
         String graphQL = "query {  Application (where: {      internCode: { like: \"" + internCode
                 + "\" }, sourceCode: { like: \"" + sourceCode + "\" }, newApplication: { equal: true}}) {   id  }}";
-        log.warn("Getting kogito ProcessId for legacy - " + graphQL);
+        // log.warn("Getting kogito ProcessId for legacy - " + graphQL);
 
         Boolean done = false;
         int count = 5;
@@ -78,7 +78,7 @@ public class WorkflowEndpoint {
                 done = true;
             }
         }
-        log.info("Returned processId from WorkflowEndpoint is " + processId);
+        // log.info("Returned processId from WorkflowEndpoint is " + processId);
         return processId;
     }
 

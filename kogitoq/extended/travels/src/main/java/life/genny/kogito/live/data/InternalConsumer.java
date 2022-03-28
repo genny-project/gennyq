@@ -65,7 +65,7 @@ public class InternalConsumer {
     @Blocking
     public void getEvent(String data) {
 
-        log.info("Incoming Event :" + data);
+        // log.info("Incoming Event :" + data);
         Instant start = Instant.now();
 
         KieSession session = kieRuntimeBuilder.newKieSession();
@@ -82,7 +82,7 @@ public class InternalConsumer {
         }
         GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
-        log.info("Token username " + userToken.getUsername());
+        // log.info("Token username " + userToken.getUsername());
 
         session.insert(kogitoUtils);
         session.insert(beUtils);

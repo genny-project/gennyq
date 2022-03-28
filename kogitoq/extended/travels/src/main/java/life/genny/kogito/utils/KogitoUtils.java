@@ -49,7 +49,7 @@ public class KogitoUtils implements Serializable {
         data += "  }"
                 + "}";
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
-        log.info("graphQL url=" + graphQlUrl);
+        // log.info("graphQL url=" + graphQlUrl);
         java.net.http.HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL",
                 userToken.getToken());
         return response.body();
@@ -66,15 +66,15 @@ public class KogitoUtils implements Serializable {
         data += "  }"
                 + "}";
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
-        log.info("graphQL url=" + graphQlUrl);
-        log.info("queryJson->" + data);
+        // log.info("graphQL url=" + graphQlUrl);
+        // log.info("queryJson->" + data);
 
         java.net.http.HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL",
                 userToken.getToken());
         if (response != null) {
 
             String responseBody = response.body();
-            log.info("responseBody:" + responseBody);
+            // log.info("responseBody:" + responseBody);
             if (!responseBody.contains("Error id")) {
                 // isolate the id
                 JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
@@ -103,8 +103,8 @@ public class KogitoUtils implements Serializable {
         String idStr = null;
 
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
-        log.info("graphQL url=" + graphQlUrl);
-        log.info("queryJson->" + graphQL);
+        // log.info("graphQL url=" + graphQlUrl);
+        // log.info("queryJson->" + graphQL);
 
         String token = null;
         if (userToken == null) {
@@ -117,7 +117,7 @@ public class KogitoUtils implements Serializable {
         if (response2 != null) {
 
             String responseBody = response2.body();
-            log.info("responseBody:" + responseBody);
+            // log.info("responseBody:" + responseBody);
             if (!responseBody.contains("Error id")) {
                 // isolate the id
                 JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
@@ -146,7 +146,7 @@ public class KogitoUtils implements Serializable {
         // http://alyson2.genny.life:${port}/travels/${id}/${abortCode}
         String kogitoUrl = System.getenv("GENNY_KOGITO_SERVICE_URL") + "/" + graphTable.toLowerCase() + "/" + processId
                 + "/" + signalCode;
-        log.info("signal endpoint url=" + kogitoUrl);
+        // log.info("signal endpoint url=" + kogitoUrl);
         java.net.http.HttpResponse<String> response = HttpUtils.post(kogitoUrl, "", "application/json",
                 userToken.getToken());
         String responseBody = response.body();
@@ -164,7 +164,7 @@ public class KogitoUtils implements Serializable {
         if (responseCode == 201) {
             JsonObject idJson = jsonb.fromJson(response.body(), JsonObject.class);
             processId = idJson.getString("id");
-            log.info("processId = " + processId);
+            // log.info("processId = " + processId);
         } else {
             log.error("TriggerWorkflow " + response.statusCode());
         }
