@@ -30,6 +30,60 @@ then
    kogitoUtils.sendSignal("application", processId, "SHORTLIST",  beUtils.getGennyToken()) ;
 end
 
+
+
+rule RouteEventTriggerInterview when
+    msg: QEventMessage( data.code == "ACT_PRI_EVENT_INTERVIEW_APPLICATION" )
+    beUtils : BaseEntityUtils()
+    kogitoUtils : KogitoUtils()
+then
+   System.out.println("Rule: RouteEventTriggerInterview:Detected Intern Interview Event ");
+   System.out.println("Rule: RouteEventTriggerInterview:Detected:msg:"+msg);
+   String processId = msg.getData().getTargetCode().substring("APP_".length()).toLowerCase();
+
+   System.out.println("ProcessId in rules found to be "+processId);
+   kogitoUtils.sendSignal("application", processId, "INTERVIEW",  beUtils.getGennyToken()) ;
+end
+
+rule RouteEventTriggerOffered when
+    msg: QEventMessage( data.code == "ACT_PRI_EVENT_OFFERED_APPLICATION" )
+    beUtils : BaseEntityUtils()
+    kogitoUtils : KogitoUtils()
+then
+   System.out.println("Rule: RouteEventTriggerOffered:Detected Intern Offered Event ");
+   System.out.println("Rule: RouteEventTriggerOffered:Detected:msg:"+msg);
+   String processId = msg.getData().getTargetCode().substring("APP_".length()).toLowerCase();
+
+   System.out.println("ProcessId in rules found to be "+processId);
+   kogitoUtils.sendSignal("application", processId, "OFFER",  beUtils.getGennyToken()) ;
+end
+
+rule RouteEventTriggerPlaced when
+    msg: QEventMessage( data.code == "ACT_PRI_EVENT_PLACED_APPLICATION" )
+    beUtils : BaseEntityUtils()
+    kogitoUtils : KogitoUtils()
+then
+   System.out.println("Rule: RouteEventTriggerPlaced:Detected Intern Placed Event ");
+   System.out.println("Rule: RouteEventTriggerPlaced:Detected:msg:"+msg);
+   String processId = msg.getData().getTargetCode().substring("APP_".length()).toLowerCase();
+
+   System.out.println("ProcessId in rules found to be "+processId);
+   kogitoUtils.sendSignal("application", processId, "PLACED",  beUtils.getGennyToken()) ;
+end
+
+rule RouteEventTriggerProgress when
+    msg: QEventMessage( data.code == "ACT_PRI_EVENT_INPROGRESS_APPLICATION " )
+    beUtils : BaseEntityUtils()
+    kogitoUtils : KogitoUtils()
+then
+   System.out.println("Rule: RouteEventTriggerProgress:Detected Intern Progress Event ");
+   System.out.println("Rule: RouteEventTriggerProgress:Detected:msg:"+msg);
+   String processId = msg.getData().getTargetCode().substring("APP_".length()).toLowerCase();
+
+   System.out.println("ProcessId in rules found to be "+processId);
+   kogitoUtils.sendSignal("application", processId, "PROGRESS",  beUtils.getGennyToken()) ;
+end
+
 rule RouteEventTriggerSignal when
     msg: QEventMessage( data.code == "ACT_PRI_EVENT_VIEW" )
     beUtils : BaseEntityUtils()
