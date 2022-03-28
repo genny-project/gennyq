@@ -13,14 +13,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.kogito.utils.KogitoUtils;
-import life.genny.qwandaq.models.GennyToken;
 
 @Path("/workflows")
 @Produces(MediaType.APPLICATION_JSON)
