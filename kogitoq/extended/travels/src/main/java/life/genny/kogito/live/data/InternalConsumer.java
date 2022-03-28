@@ -1,6 +1,5 @@
 package life.genny.kogito.live.data;
 
-import java.time.Duration;
 import java.time.Instant;
 
 import javax.enterprise.context.ApplicationScoped;
