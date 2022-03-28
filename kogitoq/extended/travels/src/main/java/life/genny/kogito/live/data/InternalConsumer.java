@@ -53,6 +53,7 @@ public class InternalConsumer {
      * @param ev
      */
     void onStart(@Observes StartupEvent ev) {
+        service.fullServiceInit();
         log.info("[*] Finished Events Startup!");
     }
 
