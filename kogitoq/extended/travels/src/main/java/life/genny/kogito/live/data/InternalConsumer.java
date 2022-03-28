@@ -92,7 +92,7 @@ public class InternalConsumer {
         session.dispose();
 
         Instant end = Instant.now();
-        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+        // log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
     }
 
     /**
@@ -118,11 +118,11 @@ public class InternalConsumer {
                 }
             }
         }
-        log.info("Incoming Data :" + data);
+        log.info("Incoming Data :");
         Instant start = Instant.now();
 
         Instant end = Instant.now();
-        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+        // log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
     }
 
 }

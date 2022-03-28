@@ -72,7 +72,7 @@ then
 end
 
 rule RouteEventTriggerProgress when
-    msg: QEventMessage( data.code == "ACT_PRI_EVENT_INPROGRESS_APPLICATION " )
+    msg: QEventMessage( data.code == "ACT_PRI_EVENT_INPROGRESS_APPLICATION" )
     beUtils : BaseEntityUtils()
     kogitoUtils : KogitoUtils()
 then
