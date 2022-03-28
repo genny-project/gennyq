@@ -72,7 +72,14 @@ public class InternalConsumer {
 
         // session.setGlobal("maxAmount", loanDto.getMaxAmount());
 
-        QEventMessage msg = jsonb.fromJson(data, QEventMessage.class);
+        QEventMessage msg = null;
+
+        try {
+            msg = jsonb.fromJson(data, QEventMessage.class);
+        } catch (IllegalStateException e) {
+            log.warn("Cannot parse this data ..");
+            return;
+        }
         GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
         BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
         log.info("Token username " + userToken.getUsername());

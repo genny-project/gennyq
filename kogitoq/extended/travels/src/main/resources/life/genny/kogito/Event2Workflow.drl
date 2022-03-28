@@ -17,6 +17,19 @@ then
    kogitoUtils.triggerWorkflow("application",msg, beUtils.getGennyToken()) ;
 end
 
+rule RouteEventTriggerShortlist when
+    msg: QEventMessage( data.code == "ACT_PRI_EVENT_SHORTLIST_APPLICATION" )
+    beUtils : BaseEntityUtils()
+    kogitoUtils : KogitoUtils()
+then
+   System.out.println("Rule: RouteEventTriggerApply:Detected Intern Shortlist Event ");
+   System.out.println("Rule: RouteEventTriggerShortlist:Detected:msg:"+msg);
+   String processId = msg.getData().getTargetCode().substring("APP_".length()).toLowerCase();
+
+   System.out.println("ProcessId in rules found to be "+processId);
+   kogitoUtils.sendSignal("application", processId, "SHORTLIST",  beUtils.getGennyToken()) ;
+end
+
 rule RouteEventTriggerSignal when
     msg: QEventMessage( data.code == "ACT_PRI_EVENT_VIEW" )
     beUtils : BaseEntityUtils()
@@ -29,6 +42,10 @@ then
     System.out.println("ProcessId in rules found to be "+processId);
    kogitoUtils.sendSignal("application", processId, "ARCHIVE",  beUtils.getGennyToken()) ;
 end
+
+
+
+
 
 // rule SmallDepositReject when
 //     $l: LoanApplication( applicant.age >= 20, deposit < 1000, amount > 2000 )
