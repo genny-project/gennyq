@@ -109,7 +109,7 @@ public class KogitoUtils implements Serializable {
         String token = null;
         if (userToken == null) {
             log.error("userToken supplied is null");
-            throw new Exception("No processId found because userToken is null");
+            // throw new Exception("No processId found because userToken is null");
         } else {
             token = userToken.getToken();
         }
