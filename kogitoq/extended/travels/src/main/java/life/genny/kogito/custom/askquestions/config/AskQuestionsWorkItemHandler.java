@@ -99,9 +99,10 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
                 // Create the Ask
 
                 // Send the Questions to the source user
-                QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
-                        "QUE_ADMIN_GRP",
-                        beUtils);
+                // QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
+                //         "QUE_ADMIN_GRP", beUtils);
+
+                QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(), "QUE_ADMIN_GRP", beUtils);
 
                 log.info("AskMsg=" + askMsg);
 

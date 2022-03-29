@@ -43,7 +43,7 @@
   
 
 	<properties>
-		<genny.version>10.0.0</genny.version>
+		<genny.version>10.1.0</genny.version>
 		<kogito.version>1.18.0.Final</kogito.version>
 		<checkstyle.skip>true</checkstyle.skip>
 		<compiler-plugin.version>3.9.0</compiler-plugin.version>
