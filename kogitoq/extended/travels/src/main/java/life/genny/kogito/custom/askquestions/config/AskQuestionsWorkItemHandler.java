@@ -8,12 +8,14 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
+import life.genny.qwandaq.Ask;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
+import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.models.GennyToken;
@@ -95,7 +97,9 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
                 // Create the Ask
 
-                questionUtils.sendQuestions(recipient, userToken);
+                // questionUtils.sendQuestions(recipient, userToken);
+                List<Ask> asks = findAsksByQuestionGroupCode("internmatch", "QUE_ADMIN_GRP");
+                log.info("asks:" + asks);
 
                 // Set up a UserTask
             }
