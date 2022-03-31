@@ -10,12 +10,6 @@ echo ''
 #curl -H "Content-Type: application/json"  -H "Accept: application/json" -X POST http://localhost:9580/messages -d @- << EOF
 #curl  --header "Authorization: Bearer $TOKEN"  -d "messageCode={\"code\":\"${messageCode}\",\"bookingNumber\":\"${bookingNumber}\"}" -H "Content-Type: application/json" -X POST http://localhost:9580/messages?businessKey=123
 #curl  -H "Content-Type: application/json"  -H "Accept: application/json" -X POST http://alyson.genny.life:9580/messages?businessKey=${bookingNumber} -d @- << EOF
-curl   -H "Content-Type: application/json"  -H "Accept: application/json" -X POST http://alyson2.genny.life:${port}/messages?businessKey=${bookingNumber} -d @- << EOF
-{
-	"messageCode" : {
-        	"code" : "${messageCode}"
-	}
-}
-EOF
+curl   -H "Content-Type: application/json"  -H "Accept: application/json" -X GET http://alyson2.genny.life:${port}/workitemhelper/questions
 
 echo ""

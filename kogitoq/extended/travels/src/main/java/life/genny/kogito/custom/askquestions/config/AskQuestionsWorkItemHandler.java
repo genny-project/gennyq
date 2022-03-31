@@ -1,5 +1,6 @@
 package life.genny.kogito.custom.askquestions.config;
 
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 
@@ -33,6 +36,7 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
         log.info("Hello from the custom AskQuestions work item .");
         QuestionUtils questionUtils = new QuestionUtils();
+        DatabaseUtils databaseUtils = new DatabaseUtils();
 
         String qc = null;
         // log.info("Passed parameters:");
@@ -96,9 +100,10 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
                 // Create the Ask
 
                 // questionUtils.sendQuestions(recipient, userToken);
-                // List<Ask> asks = databaseUtils.findAsksByQuestionGroupCode("internmatch",
-                // "QUE_ADMIN_GRP");
-                // log.info("asks:" + asks);
+
+                java.net.http.HttpResponse<String> results = HttpUtils
+                        .get("http://localhost:8080/workitemhelper/questions", userTokenStr);
+                // log.info("ask results = " + results.body());
 
                 // Set up a UserTask
             }
