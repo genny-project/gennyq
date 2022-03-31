@@ -54,6 +54,7 @@ public class WorkItemHelperEndpoint {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/questions")
+
     public QDataAskMessage getQuestions() {
         log.info("Got to getQuestions API");
 
@@ -61,15 +62,16 @@ public class WorkItemHelperEndpoint {
 
         log.info("qq:" + qqs);
 
-        for (QuestionQuestion qq : qqs) {
-            log.info("QQ:" + qq + " --> " + qq.getWeight());
-        }
+        // for (QuestionQuestion qq : qqs) {
+        // log.info("QQ:" + qq + " --> " + qq.getWeight());
+        // }
 
         // Now we need to build the ask
 
         return null;
     }
 
+    // @Transactional
     List<QuestionQuestion> getQuestionQuestions(final String realm, final String sourceCode) {
         List<QuestionQuestion> qqs = null;
         try {
@@ -92,7 +94,7 @@ public class WorkItemHelperEndpoint {
 
         for (QuestionQuestion qq : qqs) {
             log.info("QQ:" + qq + " --> " + qq.getWeight());
-            if (qq.getPk().getTargetCode().endsWith("GRP")) {
+            if (qq.getPk().getTargetCode().endsWith("_GRP")) {
                 // This is a directory
                 List<QuestionQuestion> childQQs = getQuestionQuestions(realm, qq.getPk().getTargetCode());
                 // Update their sorting
