@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import org.acme.messages.MessageCode;
 import org.jboss.logging.Logger;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
@@ -16,7 +15,7 @@ import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
@@ -112,9 +111,9 @@ public class SendMessageWorkItemHandler implements KogitoWorkItemHandler {
 
             life.genny.qwandaq.message.QMessageGennyMSG sendGridMsg = new life.genny.qwandaq.message.QMessageGennyMSG.Builder(
                     realMessageCode)
-                    .addRecipient(recipient)
-                    .setUtils(beUtils)
-                    .send();
+                            .addRecipient(recipient)
+                            .setUtils(beUtils)
+                            .send();
         } else {
             log.info("No recipients matched search");
         }

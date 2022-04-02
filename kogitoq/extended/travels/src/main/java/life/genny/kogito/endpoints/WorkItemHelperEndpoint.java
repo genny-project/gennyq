@@ -19,13 +19,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
@@ -56,7 +55,6 @@ public class WorkItemHelperEndpoint {
     QuestionUtils questionUtils;
 
     Jsonb jsonb = JsonbBuilder.create();
-    
 
     // @Inject
     // JsonWebToken jwtUserToken;
