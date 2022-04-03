@@ -29,13 +29,10 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.HttpUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.serviceq.Service;
 
