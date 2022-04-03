@@ -11,7 +11,8 @@ curl   -H "Content-Type: application/json"  -H "Accept: application/json" -X POS
 	"questionCode" : "${questionCode}",
 	"sourceCode"   : "PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943",
         "targetCode"   : "PER_34EB0455-1DC0-4121-80ED-90C0B9EEA413",
-        "pcmCode"      : "PCM_INTERN"
+        "pcmCode"      : "PCM_INTERN",
+        "userTokenStr" : "${TOKEN}"
 }
 EOF
 
