@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_ZtIUQJWJEDqUMbc7Mi4NVQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_8xhJ0JXmEDqUMbc7Mi4NVQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_travellerItem" structureRef="org.acme.travels.Traveller"/>
   <bpmn2:itemDefinition id="_tripItem" structureRef="org.acme.travels.Trip"/>
   <bpmn2:itemDefinition id="_hotelItem" structureRef="org.acme.travels.Hotel"/>
@@ -53,9 +53,9 @@
   <bpmn2:itemDefinition id="__25574196-603C-42DA-B16C-726BEF406351_NotCompletedNotifyInputXItem" structureRef="Object"/>
   <bpmn2:itemDefinition id="__25574196-603C-42DA-B16C-726BEF406351_flightInputXItem" structureRef="org.acme.travels.Flight"/>
   <bpmn2:itemDefinition id="__25574196-603C-42DA-B16C-726BEF406351_hotelInputXItem" structureRef="org.acme.travels.Hotel"/>
-  <bpmn2:message id="_ZtlnQJWJEDqUMbc7Mi4NVQ" itemRef="visaapplicationsType" name="visaapplications"/>
-  <bpmn2:message id="_ZtmOUJWJEDqUMbc7Mi4NVQ" itemRef="visasapprovedType" name="visasapproved"/>
-  <bpmn2:message id="_Ztm1YJWJEDqUMbc7Mi4NVQ" itemRef="visasrejectedType" name="visasrejected"/>
+  <bpmn2:message id="_8xvMQJXmEDqUMbc7Mi4NVQ" itemRef="visaapplicationsType" name="visaapplications"/>
+  <bpmn2:message id="_8xvzUJXmEDqUMbc7Mi4NVQ" itemRef="visasapprovedType" name="visasapproved"/>
+  <bpmn2:message id="_8xwaYJXmEDqUMbc7Mi4NVQ" itemRef="visasrejectedType" name="visasrejected"/>
   <bpmn2:error id="VisaRejected" errorCode="VisaRejected"/>
   <bpmn2:signal id="_1027567064" name="abortsignal"/>
   <bpmn2:process id="travels" drools:packageName="org.acme.travels" drools:version="1.0" drools:adHoc="true" name="travels" isExecutable="true" processType="Public">
@@ -372,7 +372,7 @@
         <bpmn2:outputSet>
           <bpmn2:dataOutputRefs>_9250A5A9-82F3-4071-9E02-5F9DB399E3A6_Message_3_OutputOutputX</bpmn2:dataOutputRefs>
         </bpmn2:outputSet>
-        <bpmn2:messageEventDefinition drools:msgref="visasrejected" messageRef="_Ztm1YJWJEDqUMbc7Mi4NVQ"/>
+        <bpmn2:messageEventDefinition drools:msgref="visasrejected" messageRef="_8xwaYJXmEDqUMbc7Mi4NVQ"/>
       </bpmn2:intermediateCatchEvent>
       <bpmn2:exclusiveGateway id="_849725DC-E2E5-40CA-BC55-D56D5C23AAFA" gatewayDirection="Converging">
         <bpmn2:incoming>_BCDA315E-75BB-4CFE-99C6-EA59B610C3E4</bpmn2:incoming>
@@ -395,7 +395,7 @@
         <bpmn2:outputSet>
           <bpmn2:dataOutputRefs>_05721AB6-F4FF-4790-AF3D-BC8C34558A80_Message_4_OutputOutputX</bpmn2:dataOutputRefs>
         </bpmn2:outputSet>
-        <bpmn2:messageEventDefinition drools:msgref="visasapproved" messageRef="_ZtmOUJWJEDqUMbc7Mi4NVQ"/>
+        <bpmn2:messageEventDefinition drools:msgref="visasapproved" messageRef="_8xvzUJXmEDqUMbc7Mi4NVQ"/>
       </bpmn2:intermediateCatchEvent>
       <bpmn2:eventBasedGateway id="_DF2C5CA5-8D43-4C81-8D3C-F9E603099C6D" name="wait for visa decision" gatewayDirection="Diverging">
         <bpmn2:extensionElements>
@@ -423,7 +423,7 @@
         <bpmn2:inputSet>
           <bpmn2:dataInputRefs>_7BEC0442-0BCA-4401-893A-A883D158A1EF_Message_5_InputInputX</bpmn2:dataInputRefs>
         </bpmn2:inputSet>
-        <bpmn2:messageEventDefinition drools:msgref="visaapplications" messageRef="_ZtlnQJWJEDqUMbc7Mi4NVQ"/>
+        <bpmn2:messageEventDefinition drools:msgref="visaapplications" messageRef="_8xvMQJXmEDqUMbc7Mi4NVQ"/>
       </bpmn2:intermediateThrowEvent>
       <bpmn2:userTask id="_8BB92E43-B9A1-4C14-90E7-A5DF40B638AB" name="Apply for visa">
         <bpmn2:extensionElements>
@@ -562,7 +562,7 @@
         <dc:Bounds height="56.00000000000006" width="56" x="1353.9999999999998" y="469.3333333333334"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__05721AB6-F4FF-4790-AF3D-BC8C34558A80" bpmnElement="_05721AB6-F4FF-4790-AF3D-BC8C34558A80">
-        <dc:Bounds height="56" width="56" x="1353.9999999999998" y="591.3333333333335"/>
+        <dc:Bounds height="56" width="56" x="1354" y="592"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__849725DC-E2E5-40CA-BC55-D56D5C23AAFA" bpmnElement="_849725DC-E2E5-40CA-BC55-D56D5C23AAFA">
         <dc:Bounds height="56" width="56" x="1353.9999999999998" y="727.3333333333335"/>
@@ -633,10 +633,10 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__DF2C5CA5-8D43-4C81-8D3C-F9E603099C6D_to_shape__05721AB6-F4FF-4790-AF3D-BC8C34558A80" bpmnElement="_4CE642D2-B303-4070-9716-5B227737EFA0">
         <di:waypoint x="1381.9999999999998" y="497.3333333333334"/>
-        <di:waypoint x="1381.9999999999998" y="591.3333333333335"/>
+        <di:waypoint x="1382" y="592"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__05721AB6-F4FF-4790-AF3D-BC8C34558A80_to_shape__849725DC-E2E5-40CA-BC55-D56D5C23AAFA" bpmnElement="_B5CEF900-732C-4748-98EA-49F1A3914B29">
-        <di:waypoint x="1381.9999999999998" y="619.3333333333335"/>
+        <di:waypoint x="1382" y="620"/>
         <di:waypoint x="1381.9999999999998" y="727.3333333333335"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__849725DC-E2E5-40CA-BC55-D56D5C23AAFA_to_shape__5776C0E1-E8F8-493A-BFF0-E784D67D7B9C" bpmnElement="_A3969D3C-26D8-4022-8FBA-35AF02896729">
@@ -755,7 +755,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_ZtIUQJWJEDqUMbc7Mi4NVQ</bpmn2:source>
-    <bpmn2:target>_ZtIUQJWJEDqUMbc7Mi4NVQ</bpmn2:target>
+    <bpmn2:source>_8xhJ0JXmEDqUMbc7Mi4NVQ</bpmn2:source>
+    <bpmn2:target>_8xhJ0JXmEDqUMbc7Mi4NVQ</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

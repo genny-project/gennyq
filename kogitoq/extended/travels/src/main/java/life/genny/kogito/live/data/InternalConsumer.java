@@ -81,7 +81,7 @@ public class InternalConsumer {
             return;
         }
         GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
-        BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
         // log.info("Token username " + userToken.getUsername());
 
         session.insert(kogitoUtils);

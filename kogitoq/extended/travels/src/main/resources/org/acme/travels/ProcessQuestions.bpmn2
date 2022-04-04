@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_TyCckJWOEDqZKIpxHgYgEg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_XbE30JXmEDqZKIpxHgYgEg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -27,7 +27,7 @@
   <bpmn2:interface id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_ServiceInterface" name="org.acme.travels.service.SendQuestionsService" implementationRef="org.acme.travels.service.SendQuestionsService">
     <bpmn2:operation id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_ServiceOperation" name="sendQuestions" implementationRef="sendQuestions"/>
   </bpmn2:interface>
-  <bpmn2:message id="_TyGuAJWOEDqZKIpxHgYgEg" itemRef="life.genny.qwandaq.AnswerTokenType" name="life.genny.qwandaq.AnswerToken"/>
+  <bpmn2:message id="_XbOBwJXmEDqZKIpxHgYgEg" itemRef="life.genny.qwandaq.AnswerTokenType" name="life.genny.qwandaq.AnswerToken"/>
   <bpmn2:process id="processquestions" drools:packageName="life.genny.kogito" drools:version="1.0" drools:adHoc="false" name="Process Questions" isExecutable="true" processType="Public">
     <bpmn2:property id="questionCode" itemSubjectRef="_questionCodeItem" name="questionCode">
       <bpmn2:extensionElements>
@@ -102,7 +102,7 @@
     <bpmn2:property id="answerToken" itemSubjectRef="_answerTokenItem" name="answerToken">
       <bpmn2:extensionElements>
         <drools:metaData name="customTags">
-          <drools:metaValue><![CDATA[required,input,internal]]></drools:metaValue>
+          <drools:metaValue><![CDATA[required,input]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:property>
@@ -222,7 +222,7 @@
       <bpmn2:outputSet>
         <bpmn2:dataOutputRefs>_9EF7A762-512C-4942-9C64-3E457FEFDCCC_answerTokenOutputX</bpmn2:dataOutputRefs>
       </bpmn2:outputSet>
-      <bpmn2:messageEventDefinition drools:msgref="life.genny.qwandaq.AnswerToken" messageRef="_TyGuAJWOEDqZKIpxHgYgEg"/>
+      <bpmn2:messageEventDefinition drools:msgref="life.genny.qwandaq.AnswerToken" messageRef="_XbOBwJXmEDqZKIpxHgYgEg"/>
     </bpmn2:intermediateCatchEvent>
     <bpmn2:exclusiveGateway id="_C4468446-37AE-474F-A606-5B2A2E9FAF36" gatewayDirection="Converging">
       <bpmn2:incoming>_E345E1F3-65FB-4837-8A9B-0B55351B5834</bpmn2:incoming>
@@ -671,7 +671,7 @@ kcontext.setVariable("mandatoryFieldsCompleted",mandatoryFieldsCompleted);</bpmn
         <dc:Bounds height="56" width="56" x="880" y="367.3693158254425"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__9EF7A762-512C-4942-9C64-3E457FEFDCCC" bpmnElement="_9EF7A762-512C-4942-9C64-3E457FEFDCCC">
-        <dc:Bounds height="56" width="56" x="1001" y="367.3693158254425"/>
+        <dc:Bounds height="56" width="56" x="1001" y="368"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__739343E0-4C30-4F26-BD3F-0351F4A7C6EE" bpmnElement="_739343E0-4C30-4F26-BD3F-0351F4A7C6EE">
         <dc:Bounds height="102" width="154" x="1132" y="344.3693158254425"/>
@@ -746,10 +746,10 @@ kcontext.setVariable("mandatoryFieldsCompleted",mandatoryFieldsCompleted);</bpmn
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__C4468446-37AE-474F-A606-5B2A2E9FAF36_to_shape__9EF7A762-512C-4942-9C64-3E457FEFDCCC" bpmnElement="_63F3BA08-9D81-4BA3-914B-568375E086E0">
         <di:waypoint x="908" y="395.3693158254425"/>
-        <di:waypoint x="1001" y="395.3693158254425"/>
+        <di:waypoint x="1001" y="396"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__9EF7A762-512C-4942-9C64-3E457FEFDCCC_to_shape__739343E0-4C30-4F26-BD3F-0351F4A7C6EE" bpmnElement="_D7E0473A-61A7-4BA6-8E60-EEC5416AFED4">
-        <di:waypoint x="1029" y="395.3693158254425"/>
+        <di:waypoint x="1029" y="396"/>
         <di:waypoint x="1132" y="395.3693158254425"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__739343E0-4C30-4F26-BD3F-0351F4A7C6EE_to_shape__48CFA2C5-C8F9-4520-91D7-308318A2FC6F" bpmnElement="_0F12C12C-B750-4326-80DD-6A8A63DE7E83">
@@ -950,7 +950,7 @@ kcontext.setVariable("mandatoryFieldsCompleted",mandatoryFieldsCompleted);</bpmn
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_TyCckJWOEDqZKIpxHgYgEg</bpmn2:source>
-    <bpmn2:target>_TyCckJWOEDqZKIpxHgYgEg</bpmn2:target>
+    <bpmn2:source>_XbE30JXmEDqZKIpxHgYgEg</bpmn2:source>
+    <bpmn2:target>_XbE30JXmEDqZKIpxHgYgEg</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
