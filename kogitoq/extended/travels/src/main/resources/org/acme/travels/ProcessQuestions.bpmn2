@@ -22,8 +22,6 @@
   <bpmn2:signal id="_108387174" name="reask"/>
   <bpmn2:signal id="_-891535336" name="submit"/>
   <bpmn2:signal id="_-1367724422" name="cancel"/>
-  <bpmn2:signal id="_37119769" name="requestion"/>
-  <bpmn2:signal id="_108387174" name="reask"/>
   <bpmn2:interface id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_ServiceInterface" name="org.acme.travels.service.SendQuestionsService" implementationRef="org.acme.travels.service.SendQuestionsService">
     <bpmn2:operation id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_ServiceOperation" name="sendQuestions" implementationRef="sendQuestions"/>
   </bpmn2:interface>
