@@ -1,18 +1,4 @@
-/*
- * Copyright 2020 Red Hat, Inc. and/or its affiliates.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package org.acme.travels.service;
 
 import java.util.List;
@@ -22,7 +8,6 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 
 import org.jboss.logging.Logger;
 
@@ -37,9 +22,9 @@ import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
-public class SendQuestionsService {
+public class FrontendService {
 
-    private static final Logger log = Logger.getLogger(SendQuestionsService.class);
+    private static final Logger log = Logger.getLogger(FrontendService.class);
 
     Jsonb jsonb = JsonbBuilder.create();
     @Inject
@@ -56,8 +41,6 @@ public class SendQuestionsService {
 
     public void sendQuestions(final String questionCode, final String sourceCode,
             final String targetCode, final String userTokenStr) {
-
-        // service.fullServiceInit();
 
         GennyToken userToken = new GennyToken(userTokenStr); // work out how to pass the userToken directly
         log.info("Sending Question using Service! " + userToken.getUsername() + " : " + questionCode + ":" + sourceCode
@@ -76,13 +59,15 @@ public class SendQuestionsService {
         // target = beUtils.getBaseEntityByCode(targetCode);
 
         source = entityManager.createQuery(
-                "SELECT u from BaseEntity u WHERE u.code = :code", BaseEntity.class)
+                "SELECT u from BaseEntity u WHERE u.code = :code  and u.realm = :realm", BaseEntity.class)
                 .setParameter("code", sourceCode)
+                .setParameter("realm", userToken.getRealm())
                 .getSingleResult();
 
         target = entityManager.createQuery(
-                "SELECT u from BaseEntity u WHERE u.code = :code", BaseEntity.class)
+                "SELECT u from BaseEntity u WHERE u.code = :code  and u.realm = :realm", BaseEntity.class)
                 .setParameter("code", targetCode)
+                .setParameter("realm", userToken.getRealm())
                 .getSingleResult();
 
         if (source == null) {
@@ -98,7 +83,7 @@ public class SendQuestionsService {
 
         // Fetch the Asks
 
-        msg = this.getQDataAskMessage(beUtils, questionCode, source, target);
+        msg = this.getQDataAskMessage(userTokenStr, questionCode, source, target);
 
         questionUtils.sendQuestions(msg, target, userToken);
 
@@ -106,34 +91,17 @@ public class SendQuestionsService {
 
     }
 
-    Question getQuestion(final String realm, final String questionCode) {
-        Question question = null;
-        try {
-
-            question = entityManager
-                    .createQuery(
-                            "FROM Question WHERE realm=:realmStr AND code = :code",
-                            Question.class)
-                    .setParameter("realmStr", realm)
-                    .setParameter("code", questionCode)
-                    .getSingleResult();
-
-        } catch (NoResultException e) {
-            log.error("No Question found in DB for " + questionCode);
-        }
-
-        return question;
-    }
-
-    public QDataAskMessage getQDataAskMessage(BaseEntityUtils beUtils,
+    public QDataAskMessage getQDataAskMessage(final String userTokenStr,
             String questionGroupCode,
             BaseEntity sourceBE,
             BaseEntity targetBE) {
         log.info("Got to getQuestions API");
         log.info("Sending Question using Service!  : " + questionGroupCode + ":" + sourceBE.getCode()
                 + ":" + targetBE.getCode());
+        GennyToken userToken = new GennyToken(userTokenStr);
+        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
 
-        Question rootQuestion = getQuestion(beUtils.getGennyToken().getRealm(), questionGroupCode);
+        Question rootQuestion = questionUtils.getQuestion(questionGroupCode, beUtils);
 
         // test with testuser and testuser
 
@@ -143,5 +111,55 @@ public class SendQuestionsService {
         msg.setToken(beUtils.getGennyToken().getToken());
 
         return msg;
+    }
+
+    public void sendBaseEntity(final String beCode, final QDataAskMessage qDataAskMessage) {
+
+        // String userTokenStr = qDataAskMessage.getToken();
+        // GennyToken userToken = new GennyToken(userTokenStr);
+        // BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(),
+        // userToken);
+
+        // // only send the attribute values that are in the questions
+        // BaseEntity be = beUtils.getBaseEntityByCode(beCode);
+        // Set<String> allowedAttributeCodes = new HashSet<>();
+        // for (Ask ask : qDataAskMessage.getItems()) {
+        // allowedAttributeCodes.add(ask.getAttributeCode());
+        // }
+        // // Now delete any attribute that is not in the allowed Set
+        // for (EntityAttribute ea : be.getBaseEntityAttributes()) {
+        // if (!allowedAttributeCodes.contains(ea.getAttributeCode())) {
+        // be.removeAttribute(ea.getAttributeCode())
+        // }
+        // }
+
+        // // Send to front end
+        // KafkaUtils.writeMsg("webcmds", be);
+
+    }
+
+    public QDataAskMessage getAsks(final String questionGroupCode, final String sourceCode, final String targetCode,
+            final String userTokenStr) {
+        GennyToken userToken = new GennyToken(userTokenStr);
+
+        BaseEntity sourceBE = null;
+        BaseEntity targetBE = null;
+
+        sourceBE = entityManager.createQuery(
+                "SELECT u from BaseEntity u WHERE u.code = :code and u.realm = :realm", BaseEntity.class)
+                .setParameter("code", sourceCode)
+                .setParameter("realm", userToken.getRealm())
+                .getSingleResult();
+
+        targetBE = entityManager.createQuery(
+                "SELECT u from BaseEntity u WHERE u.code = :code  and u.realm = :realm", BaseEntity.class)
+                .setParameter("code", targetCode)
+                .setParameter("realm", userToken.getRealm())
+                .getSingleResult();
+
+        return getQDataAskMessage(userTokenStr,
+                questionGroupCode,
+                sourceBE,
+                targetBE);
     }
 }
