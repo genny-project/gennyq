@@ -50,7 +50,11 @@ public class FrontendService {
     @Inject
     Service service;
 
-    public void sendQDataAskMessage(final QDataAskMessage msg, final String targetCode, final String userTokenStr) {
+    public void sendQDataAskMessage(final QDataAskMessage askMsg) {
+        KafkaUtils.writeMsg("webcmds", askMsg);
+    }
+
+    public void sendQDataAskMessage2(final QDataAskMessage msg, final String targetCode, final String userTokenStr) {
         GennyToken userToken = new GennyToken(userTokenStr);
         BaseEntity targetBE = entityManager.createQuery(
                 "SELECT u from BaseEntity u WHERE u.code = :code  and u.realm = :realm", BaseEntity.class)
