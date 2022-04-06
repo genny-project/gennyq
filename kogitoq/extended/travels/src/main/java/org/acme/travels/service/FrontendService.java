@@ -12,10 +12,6 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -49,6 +45,10 @@ public class FrontendService {
 
     @Inject
     Service service;
+
+    public void sendQDataAskMessageJson(final String askMsgJson) {
+        KafkaUtils.writeMsg("webcmds", askMsgJson);
+    }
 
     public void sendQDataAskMessage(final QDataAskMessage askMsg) {
         KafkaUtils.writeMsg("webcmds", askMsg);
@@ -120,7 +120,6 @@ public class FrontendService {
             String questionGroupCode,
             BaseEntity sourceBE,
             BaseEntity targetBE) {
-        log.info("Got to FrontendService API");
         log.info("getting QDataAskMessage using Service!  : " + questionGroupCode + ":" + sourceBE.getCode()
                 + ":" + targetBE.getCode());
         GennyToken userToken = new GennyToken(userTokenStr);
@@ -171,6 +170,13 @@ public class FrontendService {
 
     }
 
+    public String getAsksJson(final String questionGroupCode, final String sourceCode, final String targetCode,
+            final String userTokenStr) {
+        QDataAskMessage askMsg = getAsks(questionGroupCode, sourceCode, targetCode, userTokenStr);
+        String askMsgJson = jsonb.toJson(askMsg);
+        return askMsgJson;
+    }
+
     public QDataAskMessage getAsks(final String questionGroupCode, final String sourceCode, final String targetCode,
             final String userTokenStr) {
 
@@ -192,10 +198,12 @@ public class FrontendService {
                 .setParameter("realm", userToken.getRealm())
                 .getSingleResult();
 
-        return getQDataAskMessage(userTokenStr,
+        QDataAskMessage askMsg = getQDataAskMessage(userTokenStr,
                 questionGroupCode,
                 sourceBE,
                 targetBE);
+
+        return askMsg;
     }
 
     public void sendPCM(final String pcmCode, final String userTokenStr) {

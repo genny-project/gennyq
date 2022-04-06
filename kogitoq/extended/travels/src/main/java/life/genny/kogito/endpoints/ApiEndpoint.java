@@ -14,6 +14,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+
 import life.genny.serviceq.Service;
 
 @Path("/kogito/api/init")
@@ -34,11 +35,8 @@ public class ApiEndpoint {
     @Transactional
     void onStart(@Observes StartupEvent ev) {
         log.info("Kogito Endpoint starting");
-        service.initToken();
-        service.initDatabase();
-        service.initCache();
-        service.initAttributes();
-        service.initKafka();
+        service.fullServiceInit();
+
     }
 
     @Transactional

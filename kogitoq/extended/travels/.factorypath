@@ -1,5 +1,6 @@
 <factorypath>
     <factorypathentry kind="VARJAR" id="M2_REPO/life/genny/serviceq/10.0.0/serviceq-10.0.0.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/life/genny/qwandaq/10.0.0/qwandaq-10.0.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-hibernate-orm/2.7.5.Final/quarkus-hibernate-orm-2.7.5.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-agroal/2.7.5.Final/quarkus-agroal-2.7.5.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-datasource/2.7.5.Final/quarkus-datasource-2.7.5.Final.jar" enabled="true" runInBatchMode="false"/>
@@ -450,7 +451,7 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-container-image/2.7.5.Final/quarkus-container-image-2.7.5.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.13.2/jackson-datatype-jsr310-2.13.2.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.13.1/jackson-annotations-2.13.1.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-jsonb/2.8.0.Final/quarkus-jsonb-2.8.0.Final.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-jsonb/2.7.5.Final/quarkus-jsonb-2.7.5.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/eclipse/yasson/1.0.11/yasson-1.0.11.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/jakarta/json/bind/jakarta.json.bind-api/1.0.2/jakarta.json.bind-api-1.0.2.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-smallrye-health/2.7.5.Final/quarkus-smallrye-health-2.7.5.Final.jar" enabled="true" runInBatchMode="false"/>
