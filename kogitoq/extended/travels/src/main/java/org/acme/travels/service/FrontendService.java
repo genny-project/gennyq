@@ -47,26 +47,32 @@ public class FrontendService {
     Service service;
 
     public void sendQDataAskMessageJson(final String askMsgJson) {
+        log.info("Entering sendQDataAskMessageJson");
         KafkaUtils.writeMsg("webcmds", askMsgJson);
+        log.info("Exiting sendQDataAskMessageJson");
     }
 
     public void sendQDataAskMessage(final QDataAskMessage askMsg) {
+        log.info("Entering sendQDataAskMessage");
         KafkaUtils.writeMsg("webcmds", askMsg);
+        log.info("Leaving sendQDataAskMessage");
     }
 
-    public void sendQDataAskMessage2(final QDataAskMessage msg, final String targetCode, final String userTokenStr) {
-        GennyToken userToken = new GennyToken(userTokenStr);
-        BaseEntity targetBE = entityManager.createQuery(
-                "SELECT u from BaseEntity u WHERE u.code = :code  and u.realm = :realm", BaseEntity.class)
-                .setParameter("code", targetCode)
-                .setParameter("realm", userToken.getRealm())
-                .getSingleResult();
-        questionUtils.sendQuestions(msg, targetBE, userToken);
-    }
+    // public void sendQDataAskMessage2(final QDataAskMessage msg, final String
+    // targetCode, final String userTokenStr) {
+    // GennyToken userToken = new GennyToken(userTokenStr);
+    // BaseEntity targetBE = entityManager.createQuery(
+    // "SELECT u from BaseEntity u WHERE u.code = :code and u.realm = :realm",
+    // BaseEntity.class)
+    // .setParameter("code", targetCode)
+    // .setParameter("realm", userToken.getRealm())
+    // .getSingleResult();
+    // questionUtils.sendQuestions(msg, targetBE, userToken);
+    // }
 
     public void sendQuestions(final String questionCode, final String sourceCode,
             final String targetCode, final String userTokenStr) {
-
+        log.info("Entering sendQuestions");
         GennyToken userToken = new GennyToken(userTokenStr); // work out how to pass the userToken directly
         log.info("Sending Question using Service! " + userToken.getUsername() + " : " + questionCode + ":" + sourceCode
                 + ":" + targetCode);
@@ -111,7 +117,7 @@ public class FrontendService {
         msg = this.getQDataAskMessage(userTokenStr, questionCode, source, target);
 
         questionUtils.sendQuestions(msg, target, userToken);
-
+        log.info("Leaving sendQuestions");
         // return msg;
 
     }
@@ -137,8 +143,13 @@ public class FrontendService {
         return msg;
     }
 
-    public void sendBaseEntity(final String beCode, final QDataAskMessage qDataAskMessage) {
+    public void sendBaseEntityJson(final String beCode, final String qDataAskMessageJson) {
+        QDataAskMessage askMsg = jsonb.fromJson(qDataAskMessageJson, QDataAskMessage.class);
+        sendBaseEntity(beCode, askMsg);
+    }
 
+    public void sendBaseEntity(final String beCode, final QDataAskMessage qDataAskMessage) {
+        log.info("Entering sendBaseEntity");
         String userTokenStr = qDataAskMessage.getToken();
         GennyToken userToken = new GennyToken(userTokenStr);
         BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(),
@@ -147,8 +158,21 @@ public class FrontendService {
         // only send the attribute values that are in the questions
         BaseEntity be = beUtils.getBaseEntityByCode(beCode);
         Set<String> allowedAttributeCodes = new HashSet<>();
+        // FIX TODO
         for (Ask ask : qDataAskMessage.getItems()) {
             allowedAttributeCodes.add(ask.getAttributeCode());
+            if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+                // dumb single level
+                for (Ask childAsk : ask.getChildAsks()) {
+                    if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
+                        for (Ask grandChildAsk : childAsk.getChildAsks()) {
+                            allowedAttributeCodes.add(grandChildAsk.getAttributeCode());
+                        }
+                    } else {
+                        allowedAttributeCodes.add(childAsk.getAttributeCode());
+                    }
+                }
+            }
         }
 
         Set<EntityAttribute> eas = ConcurrentHashMap.newKeySet(be.getBaseEntityAttributes().size());
@@ -167,19 +191,25 @@ public class FrontendService {
         msg.setToken(qDataAskMessage.getToken());
         msg.setReplace(true);
         KafkaUtils.writeMsg("webcmds", msg);
-
+        log.info("Leaving sendBaseEntity");
     }
 
     public String getAsksJson(final String questionGroupCode, final String sourceCode, final String targetCode,
             final String userTokenStr) {
+        log.info("Entering getAsksJson");
         QDataAskMessage askMsg = getAsks(questionGroupCode, sourceCode, targetCode, userTokenStr);
+        log.info("About to json QDataAskMessage");
+
         String askMsgJson = jsonb.toJson(askMsg);
+        askMsg = jsonb.fromJson(askMsgJson, QDataAskMessage.class);
+        askMsg.setToken(userTokenStr);
+        log.info("Leaving getAsksJson");
         return askMsgJson;
     }
 
     public QDataAskMessage getAsks(final String questionGroupCode, final String sourceCode, final String targetCode,
             final String userTokenStr) {
-
+        log.info("Entering getAsks");
         GennyToken userToken = new GennyToken(userTokenStr);
         log.info("Getting Asks using Service! " + userToken.getUsername() + " : " + questionGroupCode + ":" + sourceCode
                 + ":" + targetCode);
@@ -202,12 +232,12 @@ public class FrontendService {
                 questionGroupCode,
                 sourceBE,
                 targetBE);
-
+        log.info("Leaving getAsks");
         return askMsg;
     }
 
     public void sendPCM(final String pcmCode, final String userTokenStr) {
-        log.info("Sending PCM -> " + pcmCode);
+        log.info("Entering sendPCM  PCM -> " + pcmCode);
         if (pcmCode.startsWith("PCM")) {
             QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
             msg.setToken(userTokenStr);
@@ -219,11 +249,12 @@ public class FrontendService {
             msg.setToken(userTokenStr);
             KafkaUtils.writeMsg("webcmds", msg);
         }
+        log.info("Leaving sendPCM");
     }
 
     public void sendQuestions(QDataAskMessage askMsg, BaseEntity target, GennyToken userToken) {
 
-        log.info("AskMsg=" + askMsg);
+        log.info("Entering sendQuestions - AskMsg=" + askMsg);
 
         QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
         msg.setToken(userToken.getToken());
@@ -242,5 +273,6 @@ public class FrontendService {
         msgend.setToken(userToken.getToken());
         msgend.setSend(true);
         KafkaUtils.writeMsg("webcmds", msgend);
+        log.info("LEaving sendQuestions ");
     }
 }
