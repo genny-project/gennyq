@@ -5,12 +5,12 @@ TOKEN=`./gettoken-cache.sh`
 echo ''
 echo $TOKEN
 echo ''
-askId=352177
+askId=cc47d749-24fc-4ccc-8e73-0e41de14ad5b
 attributeCode=PRI_LASTNAME
 questionCode=QUE_LASTNAME
 sourceCode=PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943
 targetCode=PER_34EB0455-1DC0-4121-80ED-90C0B9EEA413
-echo "{\"items\":[{\"askId\":${askId},\"attributeCode\":\"${attributeCode}\",\"sourceCode\":\"${sourceCode}\",\"targetCode\":\"${targetCode}\",\"code\":\"${questionCode}\",\"identifier\":\"${questionCode}\",\"weight\":1,\"value\":\"\",\"inferred\":false}],\"token\":\"${TOKEN}\",\"msg_type\":\"DATA_MSG\",\"event_type\":false,\"redirect\":false,\"data_type\":\"Answer\",\"175fda8b-dcef-4906-bee3-42c0c332d352\":\"822ca960-f7d3-4c63-9bf7-59d5d269f472\"}" > answer.json
+echo "{\"id\":\"${askId}\",\"items\":[{\"askId\":${askId},\"attributeCode\":\"${attributeCode}\",\"sourceCode\":\"${sourceCode}\",\"targetCode\":\"${targetCode}\",\"code\":\"${questionCode}\",\"identifier\":\"${questionCode}\",\"weight\":1,\"value\":\"\",\"inferred\":false}],\"token\":\"${TOKEN}\",\"msg_type\":\"DATA_MSG\",\"event_type\":false,\"redirect\":false,\"data_type\":\"Answer\",\"ecad2c0e-7299-4f82-9e97-a6e7c6a612b4\":\"ecad2c0e-7299-4f82-9e97-a6e7c6a612b4\"}" > answer.json
 
 
 
