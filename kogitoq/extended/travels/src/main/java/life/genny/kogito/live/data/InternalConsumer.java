@@ -20,6 +20,8 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 
 import life.genny.kogito.utils.KogitoUtils;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -116,6 +118,20 @@ public class InternalConsumer {
                     log.info("Alyson Heartbeat");
                     return;
                 }
+                QDataAnswerMessage msg = null;
+
+                try {
+                    msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+                } catch (Exception e) {
+                    log.warn("Cannot parse this data ..");
+                    return;
+                }
+                GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
+                BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
+                Answer ans0 = msg.getItems()[0];
+                String processId = ans0.getProcessId();
+
+                kogitoUtils.sendSignal("processquestions", processId, "answer", beUtils.getGennyToken());
             }
         }
         log.info("Incoming Data :");
