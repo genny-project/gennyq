@@ -105,6 +105,7 @@ public class InternalConsumer {
     @Incoming("valid_data")
     @Blocking
     public void getData(String data) {
+        log.info("Incoming Data into Java Kafka Listener:");
         // Convert to Json and identify the application
         JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
         if (dataJson.containsKey("items")) {
@@ -131,10 +132,10 @@ public class InternalConsumer {
                 Answer ans0 = msg.getItems()[0];
                 String processId = ans0.getProcessId();
 
-                kogitoUtils.sendSignal("processquestions", processId, "answer", beUtils.getGennyToken());
+                kogitoUtils.sendSignal("processquestions", processId, "answer", data, beUtils.getGennyToken());
             }
         }
-        log.info("Incoming Data :");
+
         Instant start = Instant.now();
 
         Instant end = Instant.now();

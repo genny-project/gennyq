@@ -144,11 +144,17 @@ public class KogitoUtils implements Serializable {
 
     public String sendSignal(final String graphTable, final String processId, final String signalCode,
             GennyToken userToken) {
+        return sendSignal(graphTable, processId, signalCode, "", userToken);
+    }
+
+    public String sendSignal(final String graphTable, final String processId, final String signalCode,
+            final String entity,
+            GennyToken userToken) {
         // http://alyson2.genny.life:${port}/travels/${id}/${abortCode}
         String kogitoUrl = System.getenv("GENNY_KOGITO_SERVICE_URL") + "/" + graphTable.toLowerCase() + "/" + processId
                 + "/" + signalCode;
         // log.info("signal endpoint url=" + kogitoUrl);
-        java.net.http.HttpResponse<String> response = HttpUtils.post(kogitoUrl, "", "application/json",
+        java.net.http.HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json",
                 userToken.getToken());
         String responseBody = response.body();
         return responseBody;
