@@ -16,6 +16,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QCmdMessage;
@@ -26,6 +27,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
@@ -39,6 +41,9 @@ public class FrontendService {
 
     @Inject
     DatabaseUtils databaseUtils;
+
+    @Inject
+    QwandaUtils qwandaUtils;
 
     @Inject
     EntityManager entityManager;
@@ -120,6 +125,46 @@ public class FrontendService {
         log.info("Leaving sendQuestions");
         // return msg;
 
+    }
+
+    public BaseEntity setupProcessBE(final String targetCode, final BaseEntity processBE,
+            final String qDataAskMessageJson) {
+        log.info("Updating processBE with latest Target");
+
+        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken());
+
+        // only copy the entityAttributes used in the Asks
+        BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+        Set<String> allowedAttributeCodes = new HashSet<>();
+        QDataAskMessage qDataAskMessage = jsonb.fromJson(qDataAskMessageJson, QDataAskMessage.class);
+        // FIX TODO
+        for (Ask ask : qDataAskMessage.getItems()) {
+            allowedAttributeCodes.add(ask.getAttributeCode());
+            if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+                // dumb single level
+                for (Ask childAsk : ask.getChildAsks()) {
+                    if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
+                        for (Ask grandChildAsk : childAsk.getChildAsks()) {
+                            allowedAttributeCodes.add(grandChildAsk.getAttributeCode());
+                        }
+                    } else {
+                        allowedAttributeCodes.add(childAsk.getAttributeCode());
+                    }
+                }
+            }
+        }
+
+        for (String attributeCode : allowedAttributeCodes) {
+            EntityAttribute ea = target.findEntityAttribute(attributeCode).orElse(null);
+            if (ea == null) {
+                Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+                ea = new EntityAttribute(processBE, attribute, 1.0, null);
+            }
+            processBE.getBaseEntityAttributes().add(ea);
+        }
+
+        log.info("Leaving updateProcessBE");
+        return processBE;
     }
 
     public QDataAskMessage getQDataAskMessage(final String userTokenStr,
