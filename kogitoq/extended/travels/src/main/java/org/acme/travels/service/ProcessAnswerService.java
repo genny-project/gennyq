@@ -46,7 +46,7 @@ public class ProcessAnswerService {
         BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
         BaseEntity retBE = processBaseEntity(qDataAnswerMessageJson, qDataAskMessageJson, processBE);
         String beJson = jsonb.toJson(retBE);
-        log.info("beJson=" + beJson);
+        // log.info("beJson=" + beJson);
         return beJson;
     }
 
@@ -54,7 +54,7 @@ public class ProcessAnswerService {
             BaseEntity processBE) {
         Boolean allMandatoryAttributesAnswered = false;
         log.info("In processBaseEntity :");
-        log.info("AnswerMsg " + qDataAnswerMessageJson);
+        // log.info("AnswerMsg " + qDataAnswerMessageJson);
         QDataAnswerMessage answerMessage = jsonb.fromJson(qDataAnswerMessageJson, QDataAnswerMessage.class);
         Answer answer = null;
         if (answerMessage.getItems().length > 0) {

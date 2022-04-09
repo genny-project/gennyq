@@ -199,7 +199,7 @@ public class FrontendService {
 
         QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[0]));
         msg.setToken(beUtils.getGennyToken().getToken());
-        log.info("QDataAskMessage--->" + msg);
+        // log.info("QDataAskMessage--->" + msg);
         return msg;
     }
 
