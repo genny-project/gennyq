@@ -127,6 +127,16 @@ public class FrontendService {
 
     }
 
+    public String setupProcessBEJson(final String targetCode, BaseEntity processBE,
+            final String qDataAskMessageJson) {
+        log.info("Updating processBEJson with latest Target");
+        // BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+
+        processBE = setupProcessBE(targetCode, processBE, qDataAskMessageJson);
+        String processBEJson = jsonb.toJson(processBE);
+        return processBEJson;
+    }
+
     public BaseEntity setupProcessBE(final String targetCode, final BaseEntity processBE,
             final String qDataAskMessageJson) {
         log.info("Updating processBE with latest Target");
@@ -259,7 +269,11 @@ public class FrontendService {
 
     public QDataAskMessage getAsks(final String questionGroupCode, final String sourceCode, final String targetCode,
             final String userTokenStr) {
-        log.info("Entering getAsks");
+        log.info("Entering getAsks with ");
+        log.info("questionGroupCode :" + questionGroupCode);
+        log.info("sourceCode :" + sourceCode);
+        log.info("targetCode :" + targetCode);
+        log.info("userTokenStr :" + userTokenStr);
         GennyToken userToken = new GennyToken(userTokenStr);
         log.info("Getting Asks using Service! " + userToken.getUsername() + " : " + questionGroupCode + ":" + sourceCode
                 + ":" + targetCode);

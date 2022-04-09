@@ -131,7 +131,7 @@ public class InternalConsumer {
                 BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
                 Answer ans0 = msg.getItems()[0];
                 String processId = ans0.getProcessId();
-
+                log.info("processID to jump to identified as " + processId);
                 kogitoUtils.sendSignal("processquestions", processId, "answer", data, beUtils.getGennyToken());
             }
         }
