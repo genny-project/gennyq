@@ -133,11 +133,15 @@ public class FrontendService {
 
         BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken());
 
+        // Force the realm
+        processBE.setRealm(service.getServiceToken().getRealm());
+
         // only copy the entityAttributes used in the Asks
         BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
         Set<String> allowedAttributeCodes = new HashSet<>();
         QDataAskMessage qDataAskMessage = jsonb.fromJson(qDataAskMessageJson, QDataAskMessage.class);
         // FIX TODO
+
         for (Ask ask : qDataAskMessage.getItems()) {
             allowedAttributeCodes.add(ask.getAttributeCode());
             if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
@@ -153,7 +157,7 @@ public class FrontendService {
                 }
             }
         }
-
+        log.info("Number of Asks = " + allowedAttributeCodes.size());
         for (String attributeCode : allowedAttributeCodes) {
             EntityAttribute ea = target.findEntityAttribute(attributeCode).orElse(null);
             if (ea == null) {
@@ -162,6 +166,7 @@ public class FrontendService {
             }
             processBE.getBaseEntityAttributes().add(ea);
         }
+        log.info("Number of BE eas = " + processBE.getBaseEntityAttributes().size());
 
         log.info("Leaving updateProcessBE");
         return processBE;
