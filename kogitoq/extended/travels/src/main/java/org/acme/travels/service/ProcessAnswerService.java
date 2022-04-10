@@ -10,6 +10,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -97,18 +98,19 @@ public class ProcessAnswerService {
         log.info("Current ProcessQuestion Results for: " + processBE.getCode());
 
         for (Ask ask : qDataAskMessage.getItems()) {
-            mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
             if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
                 // dumb single level
                 for (Ask childAsk : ask.getChildAsks()) {
                     if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
                         for (Ask grandChildAsk : childAsk.getChildAsks()) {
-                            mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
+                            mandatoryAttributeMap.put(grandChildAsk.getAttributeCode(), grandChildAsk.getMandatory());
                         }
                     } else {
-                        mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
+                        mandatoryAttributeMap.put(childAsk.getAttributeCode(), childAsk.getMandatory());
                     }
                 }
+            } else {
+                mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
             }
         }
 
@@ -139,6 +141,11 @@ public class ProcessAnswerService {
                     + ea.getAttributeCode() + ":"
                     + ":" + value;
             log.info("===>" + resultLine);
+
+            if ((StringUtils.isBlank(value)) && (mandatory)) {
+                log.info("Mandatory Unaswered! " + ea.getAttributeCode());
+                mandatoryUnanswered = true;
+            }
         }
 
         // for (Ask ask : qDataAskMessage.getItems()) {
@@ -150,7 +157,7 @@ public class ProcessAnswerService {
         // }
         // }
         // }
-
+        log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " filled in ");
         return !mandatoryUnanswered;
     }
 
