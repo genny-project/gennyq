@@ -158,6 +158,7 @@ public class ProcessAnswerService {
         // }
         // }
         log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " filled in ");
+        // taskUtils.enableTaskQuestion(Ask ask, Boolean enabled, String userTokenStr)
         return !mandatoryUnanswered;
     }
 
