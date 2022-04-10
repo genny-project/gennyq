@@ -8,11 +8,11 @@ TOKEN=`./gettoken-cache.sh`
 echo ''
 #echo $TOKEN
 echo ''
-questionCode=QUE_LASTNAME
+questionCode=QUE_SUBMIT
 sourceCode=PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943
 targetCode=PER_34EB0455-1DC0-4121-80ED-90C0B9EEA413
 
-payload="{\"items\":[{\"askId\":349572,\"processId\":\"${processId}\",\"attributeCode\":\"${attributeCode}\",\"sourceCode\":\"PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943\",\"targetCode\":\"${targetCode}\",\"code\":\"${questionCode}\",\"identifier\":\"${questionCode}\",\"weight\":1,\"value\":\"${value}\",\"inferred\":false}],\"token\":\"${TOKEN}\",\"msg_type\":\"DATA_MSG\",\"event_type\":false,\"redirect\":false,\"data_type\":\"Answer\"}"
+payload="{\"items\":[{\"askId\":349572,\"processId\":\"${processId}\",\"attributeCode\":\"${attributeCode}\",\"sourceCode\":\"${sourceCode}\",\"targetCode\":\"${targetCode}\",\"code\":\"${questionCode}\",\"identifier\":\"${questionCode}\",\"weight\":1,\"value\":\"${value}\",\"inferred\":false}],\"token\":\"${TOKEN}\",\"msg_type\":\"DATA_MSG\",\"event_type\":false,\"redirect\":false,\"data_type\":\"Answer\"}"
 #echo $payload
 echo  $payload > answer.json
 

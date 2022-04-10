@@ -1,28 +1,16 @@
 
 package org.acme.travels.service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
