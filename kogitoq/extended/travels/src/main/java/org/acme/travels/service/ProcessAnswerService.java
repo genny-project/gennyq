@@ -42,6 +42,9 @@ public class ProcessAnswerService {
     QwandaUtils qwandaUtils;
 
     @Inject
+    TaskService taskService;
+
+    @Inject
     EntityManager entityManager;
 
     @Inject
@@ -85,7 +88,7 @@ public class ProcessAnswerService {
         return processBE;
     }
 
-    public Boolean checkMandatory(String qDataAskMessageJson, String processBEJson) {
+    public Boolean checkMandatory(String qDataAskMessageJson, String processBEJson, String userTokenStr) {
 
         QDataAskMessage qDataAskMessage = jsonb.fromJson(qDataAskMessageJson, QDataAskMessage.class);
         BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
@@ -97,6 +100,8 @@ public class ProcessAnswerService {
         // Show the Current Answer List
         log.info("Current ProcessQuestion Results for: " + processBE.getCode());
 
+        Ask submitAsk = null; // identify the submit ask
+
         for (Ask ask : qDataAskMessage.getItems()) {
             if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
                 // dumb single level
@@ -104,13 +109,22 @@ public class ProcessAnswerService {
                     if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
                         for (Ask grandChildAsk : childAsk.getChildAsks()) {
                             mandatoryAttributeMap.put(grandChildAsk.getAttributeCode(), grandChildAsk.getMandatory());
+                            if (grandChildAsk.getAttributeCode().equals("PRI_SUBMIT")) {
+                                submitAsk = grandChildAsk;
+                            }
                         }
                     } else {
                         mandatoryAttributeMap.put(childAsk.getAttributeCode(), childAsk.getMandatory());
+                        if (childAsk.getAttributeCode().equals("PRI_SUBMIT")) {
+                            submitAsk = childAsk;
+                        }
                     }
                 }
             } else {
                 mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
+                if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
+                    submitAsk = ask;
+                }
             }
         }
 
@@ -158,7 +172,9 @@ public class ProcessAnswerService {
         // }
         // }
         log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " filled in ");
-        // taskUtils.enableTaskQuestion(Ask ask, Boolean enabled, String userTokenStr)
+        if (submitAsk != null) {
+            taskService.enableTaskQuestion(submitAsk, !mandatoryUnanswered, userTokenStr);
+        }
         return !mandatoryUnanswered;
     }
 
