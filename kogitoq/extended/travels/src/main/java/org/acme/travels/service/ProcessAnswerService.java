@@ -1,6 +1,9 @@
 
 package org.acme.travels.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -85,17 +88,68 @@ public class ProcessAnswerService {
 
         QDataAskMessage qDataAskMessage = jsonb.fromJson(qDataAskMessageJson, QDataAskMessage.class);
         BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+
+        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken());
         Boolean mandatoryUnanswered = false;
+        Map<String, Boolean> mandatoryAttributeMap = new HashMap<>();
+
+        // Show the Current Answer List
+        log.info("Current ProcessQuestion Results for: " + processBE.getCode());
 
         for (Ask ask : qDataAskMessage.getItems()) {
-            Object val = processBE.getValue(ask.getAttributeCode(), null);
-            if (val == null) {
-                if (ask.getMandatory().equals(Boolean.TRUE)) {
-                    mandatoryUnanswered = true;
-                    return false;
+            mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
+            if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+                // dumb single level
+                for (Ask childAsk : ask.getChildAsks()) {
+                    if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
+                        for (Ask grandChildAsk : childAsk.getChildAsks()) {
+                            mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
+                        }
+                    } else {
+                        mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
+                    }
                 }
             }
         }
+
+        String targetCode = qDataAskMessage.getItems()[0].getTargetCode();
+        BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+        if (target == null) {
+            log.error("Target is null : targetCode=" + targetCode);
+        }
+        for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
+            Boolean mandatory = mandatoryAttributeMap.get(ea.getAttributeCode());
+            if (mandatory == null) {
+                mandatory = false;
+            }
+            String oldValue = target.getValue(ea.getAttributeCode(), null);
+            String value = ea.getAsString();
+            if (oldValue == null) {
+                oldValue = "";
+            }
+            if (value == null) {
+                value = "";
+            }
+            Boolean changed = !oldValue.equals(value);
+
+            String resultLine = (mandatory ? "M" : "o") + ":"
+                    + (changed ? "X"
+                            : ".")
+                    + ":"
+                    + ea.getAttributeCode() + ":"
+                    + ":" + value;
+            log.info("===>" + resultLine);
+        }
+
+        // for (Ask ask : qDataAskMessage.getItems()) {
+        // Object val = processBE.getValue(ask.getAttributeCode(), null);
+        // if (val == null) {
+        // if (ask.getMandatory().equals(Boolean.TRUE)) {
+        // mandatoryUnanswered = true;
+        // return false;
+        // }
+        // }
+        // }
 
         return !mandatoryUnanswered;
     }

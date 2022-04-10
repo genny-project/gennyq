@@ -1,14 +1,14 @@
 #!/bin/bash
 processId="${1:-4e580190-43f7-4842-9b0f-4080734f5d6f}"
 echo "processId=${processId}"
-value="${2:-Sharon}"
+attributeCode="${2:-PRI_FIRSTNAME}"
+value="${3:-Shazzy}"
 echo "Value=${value}"
 #TOKEN=`./gettoken-prod.sh`
 TOKEN=`./gettoken-cache.sh`
 echo ''
 #echo $TOKEN
 echo ''
-attributeCode=PRI_LASTNAME
 questionCode=QUE_LASTNAME
 sourceCode=PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943
 targetCode=PER_34EB0455-1DC0-4121-80ED-90C0B9EEA413
