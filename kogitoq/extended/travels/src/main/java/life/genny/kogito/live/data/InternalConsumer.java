@@ -131,7 +131,7 @@ public class InternalConsumer {
                 BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
                 Answer ans0 = msg.getItems()[0];
                 String processId = ans0.getProcessId();
-                log.info(ans0.getAttributeCode() + "processID to jump to identified as " + processId);
+                log.info(ans0.getAttributeCode() + " -> processID to jump to identified as " + processId);
                 // check if PRI_SUBMIT
                 if (ans0.getAttributeCode().equals("PRI_SUBMIT")) {
                     kogitoUtils.sendSignal("processquestions", processId, "submit", data, beUtils.getGennyToken());

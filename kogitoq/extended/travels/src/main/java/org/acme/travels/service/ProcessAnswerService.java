@@ -10,17 +10,20 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
+import life.genny.qwandaq.exception.BadDataException;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -157,7 +160,7 @@ public class ProcessAnswerService {
             log.info("===>" + resultLine);
 
             if ((StringUtils.isBlank(value)) && (mandatory)) {
-                log.info("Mandatory Unaswered! " + ea.getAttributeCode());
+                // log.info("Mandatory Unaswered! " + ea.getAttributeCode());
                 mandatoryUnanswered = true;
             }
         }
@@ -179,7 +182,7 @@ public class ProcessAnswerService {
     }
 
     public void saveAllAnswers(String sourceCode, String targetCode, String processBEJson) {
-        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken());
+        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), service.getServiceToken());
 
         BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 
@@ -188,15 +191,20 @@ public class ProcessAnswerService {
         // Now to go through all the fields and override them in the target BE
         for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
             // try {
-            Answer ans = new Answer(source, target, ea.getAttribute(), ea.getValueString());
+            Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
+            Answer ans = new Answer(source, target, attribute, ea.getValueString());
             ans.setWeight(ea.getWeight());
-            beUtils.saveAnswer(ans);
-            // target.setValue(ea.getAttributeCode(), ea.getValue(), ea.getValueDouble());
-            // } catch (BadDataException e) {
-            // // TODO Auto-generated catch block
-            // e.printStackTrace();
-            // }
+            try {
+                target.addAnswer(ans);
+            } catch (BadDataException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
+        CacheUtils.putObject(target.getRealm(), target.getCode(), target);
+
+        // update target in the DB
+        databaseUtils.saveBaseEntity(target);
 
     }
 
