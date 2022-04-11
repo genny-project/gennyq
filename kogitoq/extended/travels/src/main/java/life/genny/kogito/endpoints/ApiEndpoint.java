@@ -1,6 +1,7 @@
 package life.genny.kogito.endpoints;
 
 import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.OPTIONS;
@@ -14,12 +15,17 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
+import life.genny.serviceq.Service;
+
 @Path("/kogito/api/init")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class ApiEndpoint {
 
     private static final Logger log = Logger.getLogger(ApiEndpoint.class);
+
+    @Inject
+    Service service;
 
     @OPTIONS
     public Response opt() {
@@ -29,6 +35,7 @@ public class ApiEndpoint {
     @Transactional
     void onStart(@Observes StartupEvent ev) {
         log.info("Kogito Endpoint starting");
+        service.fullServiceInit();
 
     }
 

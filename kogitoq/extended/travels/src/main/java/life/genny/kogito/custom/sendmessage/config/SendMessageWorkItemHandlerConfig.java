@@ -21,15 +21,13 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
 
     private static final Logger log = Logger.getLogger(SendMessageWorkItemHandlerConfig.class);
 
-    @Inject
-    Service service;
-
-    public SendMessageWorkItemHandlerConfig() {
-        super();
+    {
         register("SendMessage", new SendMessageWorkItemHandler());
         register("AskQuestions", new AskQuestionsWorkItemHandler());
-        log.info("Registered SendMessageWorkItemHandler");
     }
+
+    @Inject
+    Service service;
 
     @Transactional
     void onStart(@Observes StartupEvent ev) {
@@ -38,6 +36,7 @@ public class SendMessageWorkItemHandlerConfig extends DefaultWorkItemHandlerConf
 
         log.info("Kogito SendMessageWorkItemHandlerConfig starting");
         // register("SendMessage", new SendMessageWorkItemHandler());
+        // register("AskQuestions", new AskQuestionsWorkItemHandler());
         Collection<String> names = this.names();
         for (String name : names) {
             log.info("Registered ---> " + name);

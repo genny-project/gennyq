@@ -1,12 +1,12 @@
 package life.genny.kogito.custom.askquestions.config;
 
+import java.net.http.HttpResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -16,26 +16,29 @@ import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 
 public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
     private static final Logger log = Logger.getLogger(AskQuestionsWorkItemHandler.class);
-    public EntityManager entityManager;
+    // public EntityManager entityManager;
 
     Jsonb jsonb = JsonbBuilder.create();
+
+    QuestionUtils questionUtils = new QuestionUtils();
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
         log.info("Hello from the custom AskQuestions work item .");
+
+        DatabaseUtils databaseUtils = new DatabaseUtils();
 
         String qc = null;
         // log.info("Passed parameters:");
@@ -45,9 +48,9 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
         for (String parameter : workItem.getParameters().keySet()) {
             if ("questionCode".equals(parameter)) {
                 qc = (String) workItem.getParameters().get(parameter);
-                System.out.println("QuestionCode=" + qc);
+                log.info("QuestionCode=" + qc);
             } else {
-                System.out.println(parameter + " = " + workItem.getParameters().get(parameter));
+                log.info(parameter + " = " + workItem.getParameters().get(parameter));
             }
         }
 
@@ -98,31 +101,20 @@ public class AskQuestionsWorkItemHandler implements KogitoWorkItemHandler {
 
                 // Create the Ask
 
-                // Send the Questions to the source user
-                // QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(),
-                //         "QUE_ADMIN_GRP", beUtils);
+                // questionUtils.sendQuestions(recipient, userToken);
+                String selfUrl = System.getenv("GENNY_KOGITO_SERVICE_URL"); // Config does not work in this function
+                String url = selfUrl + "/workitemhelper/questions/" + userToken.getRealm() + "/" + qc + "/"
+                        + userCode + "/" + userCode;
+                log.info("fetching asks from " + url);
+                java.net.http.HttpResponse<String> results = HttpUtils
+                        .get(url, userTokenStr);
+                if (results != null) {
+                    log.info("ask results = " + results.body());
+                    QDataAskMessage msg = jsonb.fromJson(results.body(), QDataAskMessage.class);
+                    msg.setToken(userToken.getToken());
+                    questionUtils.sendQuestions(msg, recipient, userToken);
 
-                QDataAskMessage askMsg = QuestionUtils.getAsks(userCode, recipient.getCode(), "QUE_ADMIN_GRP", beUtils);
-
-                log.info("AskMsg=" + askMsg);
-
-                QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
-                msg.setToken(userToken.getToken());
-
-                KafkaUtils.writeMsg("webcmds", msg);
-
-                QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(recipient);
-                beMsg.setToken(userToken.getToken());
-
-                KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
-
-                askMsg.setToken(userToken.getToken());
-                KafkaUtils.writeMsg("webcmds", askMsg);
-
-                QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
-                msgend.setToken(userToken.getToken());
-                msgend.setSend(true);
-                KafkaUtils.writeMsg("webcmds", msgend);
+                }
 
                 // Set up a UserTask
             }

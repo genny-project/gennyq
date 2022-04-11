@@ -1,18 +1,31 @@
 package life.genny.kogito.live.data;
 
-import java.time.Duration;
 import java.time.Instant;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieSession;
+import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
+
+import life.genny.kogito.utils.KogitoUtils;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -21,13 +34,19 @@ public class InternalConsumer {
 
     static Jsonb jsonb = JsonbBuilder.create();
 
-    // @Inject
-    // KieRuntimeBuilder ruleRuntime;
+    @Inject
+    KogitoUtils kogitoUtils;
 
-    // @Inject
-    // Service service;
+    @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
+    String myUrl;
 
-    // KieSession ksession;
+    @Inject
+    KieRuntimeBuilder kieRuntimeBuilder;
+
+    @Inject
+    Service service;
+
+    KieSession ksession;
 
     /**
      * Execute on start up.
@@ -35,9 +54,8 @@ public class InternalConsumer {
      * @param ev
      */
     void onStart(@Observes StartupEvent ev) {
-
-        // service.fullServiceInit();
-        log.info("[*] Finished Startup!");
+        service.fullServiceInit();
+        log.info("[*] Finished Events Startup!");
     }
 
     /**
@@ -49,52 +67,86 @@ public class InternalConsumer {
     @Blocking
     public void getEvent(String data) {
 
-        log.info("Incoming Event : {}" + data);
+        // log.info("Incoming Event :" + data);
         Instant start = Instant.now();
 
-        // BaseEntityUtils beUtils = service.getBeUtils();
-        // GennyToken serviceToken = beUtils.getServiceToken();
-        // GennyToken userToken = null;
+        KieSession session = kieRuntimeBuilder.newKieSession();
 
-        // // deserialise to msg
-        // QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+        // session.setGlobal("maxAmount", loanDto.getMaxAmount());
 
-        // // check the token
-        // String token = msg.getToken();
-        // try {
-        // userToken = new GennyToken(token);
-        // } catch (Exception e) {
-        // log.error("Invalid Token!");
-        // return;
-        // }
+        QEventMessage msg = null;
 
-        // // update the token of our utility
-        // beUtils.setGennyToken(userToken);
+        try {
+            msg = jsonb.fromJson(data, QEventMessage.class);
+        } catch (Exception e) {
+            log.warn("Cannot parse this data ..");
+            return;
+        }
+        GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
+        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
+        // log.info("Token username " + userToken.getUsername());
 
-        // Answer answer = msg.getItems()[0];
-        // Answers answersToSave = new Answers();
-
-        // // init session and activate DataProcessing
-        // KieSession ksession = ruleRuntime.newKieSession();
-        // ((InternalAgenda)
-        // ksession.getAgenda()).activateRuleFlowGroup("DataProcessing");
-
-        // // insert facts into session
-        // ksession.insert(beUtils);
-        // ksession.insert(serviceToken);
-        // ksession.insert(userToken);
-        // ksession.insert(answer);
-        // ksession.insert(answersToSave);
-
-        // // fire rules and dispose of session
-        // ksession.fireAllRules();
-        // ksession.dispose();
-
-        // // TODO: ensure that answersToSave has been updated by our rules
-        // beUtils.saveAnswers(answersToSave);
+        session.insert(kogitoUtils);
+        session.insert(beUtils);
+        session.insert(userToken);
+        session.insert(msg);
+        session.fireAllRules();
+        session.dispose();
 
         Instant end = Instant.now();
-        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+        // log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+    }
+
+    /**
+     * Consume from the valid_data topic.
+     *
+     * @param data
+     */
+    @Incoming("valid_data")
+    @Blocking
+    public void getData(String data) {
+        log.info("Incoming Data into Java Kafka Listener:");
+        // Convert to Json and identify the application
+        JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
+        if (dataJson.containsKey("items")) {
+            JsonArray itemsArray = dataJson.getJsonArray("items");
+            if (!itemsArray.isEmpty()) {
+
+                JsonObject item0 = itemsArray.getJsonObject(0);
+                String item0Str = item0.toString();
+                // log.info("item0=" + item0Str);
+                if ("{}".equals(item0Str)) {
+                    log.info("Alyson Heartbeat");
+                    return;
+                }
+                QDataAnswerMessage msg = null;
+
+                try {
+                    msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+                } catch (Exception e) {
+                    log.warn("Cannot parse this data ..");
+                    return;
+                }
+                GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
+                BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
+                Answer ans0 = msg.getItems()[0];
+                String processId = ans0.getProcessId();
+                log.info(ans0.getAttributeCode() + " -> processID to jump to identified as " + processId);
+                // check if PRI_SUBMIT
+                if (ans0.getAttributeCode().equals("PRI_SUBMIT")) {
+                    kogitoUtils.sendSignal("processquestions", processId, "submit", data, beUtils.getGennyToken());
+                } else if (ans0.getAttributeCode().equals("PRI_CANCEL")) {
+                    kogitoUtils.sendSignal("processquestions", processId, "cancel", data, beUtils.getGennyToken());
+                } else {
+                    kogitoUtils.sendSignal("processquestions", processId, "answer", data, beUtils.getGennyToken());
+                }
+            }
+        }
+
+        Instant start = Instant.now();
+
+        Instant end = Instant.now();
+        // log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
     }
 
 }

@@ -5,15 +5,15 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq-extended</artifactId>
-    <version>1.18.0.Final</version>
+    <version>1.19.0.Final</version>
   </parent>
   <artifactId>visas</artifactId>
-  <name>Kogito Example :: Travel Agency :: Visas</name>
+  <name>Genny Kogito Example :: Travel Agency :: extended/visas</name>
   <properties>
-    <quarkus-plugin.version>2.7.4.Final</quarkus-plugin.version>
+    <quarkus-plugin.version>2.7.5.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.7.4.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.7.5.Final</quarkus.platform.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -27,7 +27,7 @@
       <dependency>
         <groupId>org.kie.kogito</groupId>
         <artifactId>kogito-quarkus-bom</artifactId>
-        <version>1.18.0.Final</version>
+        <version>1.19.0.Final</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
