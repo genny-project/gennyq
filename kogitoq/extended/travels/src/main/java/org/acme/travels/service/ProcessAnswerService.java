@@ -9,7 +9,9 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.exception.BadDataException;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -141,7 +143,7 @@ public class ProcessAnswerService {
             if (mandatory == null) {
                 mandatory = false;
             }
-            String oldValue = target.getValue(ea.getAttributeCode(), null);
+            String oldValue = target.getValueAsString(ea.getAttributeCode());
             String value = ea.getAsString();
             if (oldValue == null) {
                 oldValue = "";
@@ -181,30 +183,54 @@ public class ProcessAnswerService {
         return !mandatoryUnanswered;
     }
 
+    @Transactional
     public void saveAllAnswers(String sourceCode, String targetCode, String processBEJson) {
         BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), service.getServiceToken());
 
         BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 
         BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-        BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+        BaseEntity target = databaseUtils.findBaseEntityByCode(processBE.getRealm(), targetCode); // .getBaseEntityByCode(targetCode);
         // Now to go through all the fields and override them in the target BE
         for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
-            // try {
             Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
-            Answer ans = new Answer(source, target, attribute, ea.getValueString());
-            ans.setWeight(ea.getWeight());
-            try {
-                target.addAnswer(ans);
-            } catch (BadDataException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+
+            if (target.containsEntityAttribute(ea.getAttributeCode())) {
+                try {
+                    target.setValue(attribute, ea.getValue());
+                } catch (BadDataException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            } else {
+                // try {
+                EntityAttribute newEA = new EntityAttribute(target, attribute, ea.getWeight(), ea.getValue());
+                newEA.setRealm(target.getRealm());
+                entityManager.persist(newEA);
+                target.getBaseEntityAttributes().add(newEA);
+                // Answer ans = new Answer(source, target, attribute, ea.getValueString());
+                // ans.setWeight(ea.getWeight());
+                // ans.setRealm(target.getRealm());
+                // ans.setAttribute(attribute);
+                // try {
+                // target.addAnswer(ans);
+                // } catch (BadDataException e) {
+                // // TODO Auto-generated catch block
+                // e.printStackTrace();
+                // }
             }
         }
         CacheUtils.putObject(target.getRealm(), target.getCode(), target);
 
         // update target in the DB
-        databaseUtils.saveBaseEntity(target);
+        if (target.getId() == null) {
+            entityManager.persist(target);
+        } else {
+            entityManager.merge(target);
+        }
+        log.info("Saved target " + target.getCode());
+        // databaseUtils.saveBaseEntity(target); // TODO, should not be needed with
+        // infinispan persist
 
     }
 

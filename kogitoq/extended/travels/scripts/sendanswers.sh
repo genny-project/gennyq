@@ -1,8 +1,8 @@
 #!/bin/bash
 processId="${1:-4e580190-43f7-4842-9b0f-4080734f5d6f}"
 echo "processId=${processId}"
-./sendanswer.sh ${processId} PRI_FIRSTNAME Shaz
-./sendanswer.sh ${processId} PRI_LASTNAME Bot
+./sendanswer.sh ${processId} PRI_FIRSTNAME Scott 
+./sendanswer.sh ${processId} PRI_LASTNAME Morrison 
 ./sendanswer.sh ${processId} PRI_EMAIL shaz@bot.com
 ./sendanswer.sh ${processId} PRI_STUDENT_ID 8876876
 ./sendanswer.sh ${processId} PRI_MOBILE 61434321230 

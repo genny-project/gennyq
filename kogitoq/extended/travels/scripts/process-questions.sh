@@ -7,7 +7,7 @@ echo ''
 echo $TOKEN
 echo "QuestionCode passed is $questionCode"
 echo ''
-curl   -H "Content-Type: application/json"  -H "Accept: application/json" -X POST http://alyson2.genny.life:${port}/processquestions -d @- << EOF
+curl -s   -H "Content-Type: application/json"  -H "Accept: application/json" -X POST http://alyson2.genny.life:${port}/processquestions -d @- << EOF
 {
 	"questionCode" : "${questionCode}",
 	"sourceCode"   : "PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943",
