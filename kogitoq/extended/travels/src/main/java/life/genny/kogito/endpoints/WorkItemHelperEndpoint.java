@@ -108,7 +108,7 @@ public class WorkItemHelperEndpoint {
 
         source = beUtils.getBaseEntityByCode(beUtils.getGennyToken().getUserCode());
         target = source;
-        List<Ask> asks = questionUtils.findAsks2(rootQuestion, source, target, beUtils);
+        List<Ask> asks = questionUtils.findAsks(rootQuestion, source, target, beUtils);
 
         QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[0]));
         // Convert to json

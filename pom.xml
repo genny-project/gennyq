@@ -2,27 +2,23 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.kie.kogito</groupId>
-    <artifactId>kogito-build-parent</artifactId>
-    <version>1.19.0.Final</version>
-  </parent>
 
   <groupId>life.genny</groupId>
-  <artifactId>kogitoq-parent</artifactId>
+  <artifactId>gennyq</artifactId>
+  <version>10.1.0</version>
   <packaging>pom</packaging>
 
-  <name>Genny Kogito</name>
-  <description>Genny Kogito</description>
-
+  <name>GennyQ</name>
+  <description>Genny Quarkus Services Repository</description>
   <url>http://www.gada.io</url>
   <inceptionYear>2022</inceptionYear>
+
   <organization>
     <name>GADA Technology</name>
     <url>http://www.gada.io/</url>
   </organization>
+
   <licenses>
     <license>
       <name>Apache Software License, Version 2.0</name>
@@ -32,8 +28,39 @@
   </licenses>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <!-- Quarkus Properties -->
+    <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+    <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+    <quarkus.platform.version>2.7.5.Final</quarkus.platform.version>
+
+    <!-- Maven Properties -->
+    <maven.version>3.8.4</maven.version>
+    <maven.compiler.parameters>true</maven.compiler.parameters>
+    <maven.compiler.version>3.8.1</maven.compiler.version>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.release>11</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+    <enforcer-plugin.version>3.0.0</enforcer-plugin.version>
+    <jar-plugin.version>3.2.2</jar-plugin.version>
+    <source-plugin.version>3.2.0</source-plugin.version>
+    <deploy-plugin.version>3.0.0-M2</deploy-plugin.version>
+    <version.compiler.plugin>3.0.0-M5</version.compiler.plugin>
+
+    <!-- Global properties -->
+    <genny.version>${project.version}</genny.version>
+
+    <jackson.version>2.13.0</jackson.version>
+    <jandex.version>1.0.7</jandex.version>
+    <jjwt.version>0.7.0</jjwt.version>
+
+    <querydsl.version>4.4.0</querydsl.version>
+    <testcontainers.version>1.16.0</testcontainers.version>
+
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.forkCount>1</surefire.forkCount>
     <failsafe.include>**/*IT.java</failsafe.include>
     <failsafe.exclude>**/Native*IT.java</failsafe.exclude>
@@ -43,9 +70,11 @@
     <tests.quarkus.http.port>0</tests.quarkus.http.port>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
     <!-- kogito -->
-    <kogito.version>${project.version}</kogito.version>
+    <kogito.version>1.19.0.Final</kogito.version>
     <version.org.optaplanner>8.14.0.Final</version.org.optaplanner>
+
     <!-- override default to fast-jar packaging for forward-compatibility -->
     <quarkus.package.type>fast-jar</quarkus.package.type>
     <!-- dependencies version -->
@@ -87,9 +116,9 @@
   </pluginRepositories>
 
   <scm>
-    <connection>scm:git:https://github.com/genny-project/kogitoq2.git</connection>
-    <developerConnection>scm:git:git@github.com:genny-project/kogitoq2.git</developerConnection>
-    <url>https://github.com/genny-project/kogitoq2</url>
+    <connection>scm:git:https://github.com/genny-project/gennyq.git</connection>
+    <developerConnection>scm:git:git@github.com:genny-project/gennyq.git</developerConnection>
+    <url>https://github.com/genny-project/gennyq</url>
   </scm>
 
   <developers>
@@ -100,162 +129,26 @@
   </developers>
 
   <profiles>
+
+    <!-- Default Profile -->
     <profile>
       <id>default</id>
       <activation>
         <activeByDefault>true</activeByDefault>
       </activation>
       <modules>
- <!--       <module>decisiontable-quarkus-example</module>
-        <module>decisiontable-springboot-example</module>
-        <module>dmn-event-driven-quarkus</module>
-        <module>dmn-event-driven-springboot</module>
-        <module>dmn-incubation-api-quarkus</module>
-        <module>dmn-knative-quickstart-quarkus</module>
-        <module>dmn-listener-quarkus</module>
-        <module>dmn-listener-springboot</module>
-        <module>dmn-pmml-quarkus-example</module>
-        <module>dmn-pmml-springboot-example</module>
-        <module>dmn-quarkus-example</module>
-        <module>dmn-drools-quarkus-metrics</module>
-        <module>dmn-drools-springboot-metrics</module>
-        <module>dmn-springboot-example</module>
-        <module>dmn-tracing-quarkus</module>
-        <module>dmn-tracing-springboot</module>
-        <module>flexible-process-quarkus</module>
-        <module>flexible-process-springboot</module> -->
         <module>kogitoq</module>
-        <module>kogitoq1</module>
-       <!-- <module>onboarding-example</module>
-        <module>pmml-incubation-api-quarkus</module>
-        <module>pmml-event-driven-quarkus</module>
-        <module>pmml-event-driven-springboot</module>
-        <module>pmml-quarkus-example</module>
-        <module>pmml-springboot-example</module>
-        <module>process-business-rules-quarkus</module>
-        <module>process-business-rules-springboot</module>
-        <module>process-decisions-quarkus</module>
-        <module>process-decisions-rest-quarkus</module>
-        <module>process-decisions-springboot</module>
-        <module>process-decisions-rest-springboot</module>
-        <module>process-error-handling</module>
-        <module>process-incubation-api-quarkus</module>
-        <module>process-infinispan-persistence-quarkus</module>
-        <module>process-infinispan-persistence-springboot</module>
-        <module>process-kafka-persistence-quarkus</module>
-        <module>process-kafka-quickstart-quarkus</module>
-        <module>process-kafka-multi-quarkus</module>
-        <module>process-kafka-multi-springboot</module>
-        <module>process-kafka-quickstart-springboot</module>
-        <module>process-knative-quickstart-quarkus</module>
-        <module>process-monitoring-quarkus</module>
-        <module>process-monitoring-springboot</module>
-        <module>process-mongodb-persistence-quarkus</module>
-        <module>process-mongodb-persistence-springboot</module>
-        <module>process-outbox-mongodb-quarkus</module>
-        <module>process-outbox-mongodb-springboot</module>
-        <module>process-optaplanner-quarkus</module>
-        <module>process-optaplanner-springboot</module>
-        <module>process-performance-quarkus</module>
-        <module>process-performance-springboot</module>
-        <module>process-postgresql-persistence-quarkus</module>
-        <module>process-postgresql-persistence-springboot</module>
-        <module>process-quarkus-example</module>
-        <module>process-springboot-example</module>
-        <module>process-scripts-quarkus</module>
-        <module>process-scripts-springboot</module>
-        <module>process-service-calls-quarkus</module>
-        <module>process-service-calls-springboot</module>
-        <module>process-rest-workitem-multi-quarkus</module>
-        <module>process-rest-workitem-quarkus</module>
-        <module>process-rest-service-call-quarkus</module>
-        <module>process-rest-service-call-springboot</module>
-        <module>process-timer-quarkus</module>
-        <module>process-timer-springboot</module>
-        <module>process-usertasks-custom-lifecycle-quarkus</module>
-        <module>process-usertasks-custom-lifecycle-springboot</module>
-        <module>process-usertasks-quarkus</module>
-        <module>process-usertasks-quarkus-with-console</module>
-        <module>process-usertasks-springboot</module>
-        <module>process-usertasks-timer-quarkus-with-console</module>
-        <module>process-usertasks-springboot-with-console</module>
-        <module>process-usertasks-with-security-oidc-quarkus</module>
-        <module>process-usertasks-with-security-oidc-quarkus-with-console</module>
-        <module>process-usertasks-with-security-oidc-springboot</module>
-        <module>process-usertasks-with-security-oidc-springboot-with-console</module>
-        <module>process-usertasks-with-security-quarkus</module>
-        <module>process-usertasks-with-security-springboot</module>
-        <module>rules-incubation-api-quarkus</module>
-        <module>rules-quarkus-helloworld</module>
-        <module>ruleunit-event-driven-quarkus</module>
-        <module>ruleunit-event-driven-springboot</module>
-        <module>ruleunit-quarkus-example</module>
-        <module>ruleunit-springboot-example</module>
-        <module>rules-legacy-quarkus-example</module>
-        <module>rules-legacy-springboot-example</module>
-        <module>serverless-workflow-greeting-quarkus</module>
-        <module>serverless-workflow-greeting-springboot</module>
-        <module>serverless-workflow-service-calls-quarkus</module>
-        <module>serverless-workflow-service-calls-springboot</module>
-        <module>serverless-workflow-events-quarkus</module>
-        <module>serverless-workflow-expression-quarkus</module>
-        <module>serverless-workflow-error-quarkus</module>
-        <module>serverless-workflow-callback-quarkus</module>
-        <module>serverless-workflow-functions-quarkus</module>
-        <module>serverless-workflow-functions-events-quarkus</module>
-        <module>serverless-workflow-github-showcase</module>
-        <module>serverless-workflow-order-processing</module>
-        <module>serverless-workflow-funqy</module>
-        <module>serverless-workflow-temperature-conversion</module>-->
+        <module>qwandaq</module>
+        <module>serviceq</module>
+        <module>bridge</module>
+        <module>fyodor</module>
+        <module>dropkick</module>
+        <module>lauchy</module>
+        <module>messages</module>
       </modules>
     </profile>
 
-    <profile>
-      <id>persistence</id>
-      <activation>
-        <property>
-          <name>persistence</name>
-        </property>
-      </activation>
-      <properties>
-        <tests.category>persistence</tests.category>
-      </properties>
-      <modules>
-     <!--   <module>onboarding-example</module>
-        <module>process-quarkus-example</module>
-        <module>process-springboot-example</module>
-        <module>process-postgresql-persistence-quarkus</module>
-        <module>process-postgresql-persistence-springboot</module>-->
-      </modules>
-    </profile>
-
-    <profile>
-      <id>jdbc-persistence</id>
-      <activation>
-        <property>
-          <name>jdbc-persistence</name>
-        </property>
-      </activation>
-
-      <modules>
-     <!--   <module>process-postgresql-persistence-quarkus</module>
-        <module>process-postgresql-persistence-springboot</module>-->
-      </modules>
-    </profile>
-
-    <profile>
-      <id>events</id>
-      <activation>
-        <property>
-          <name>events</name>
-        </property>
-      </activation>
-      <modules>
-      <!--  <module>process-quarkus-example</module>
-        <module>process-springboot-example</module>-->
-      </modules>
-    </profile>
-
+    <!-- Native Profile -->
     <profile>
       <id>native</id>
       <properties>
@@ -271,51 +164,45 @@
         </property>
       </activation>
       <modules>
-     <!--   <module>decisiontable-quarkus-example</module>
-        <module>dmn-event-driven-quarkus</module>
-        <module>dmn-knative-quickstart-quarkus</module>
-        <module>dmn-listener-quarkus</module>
-        <module>dmn-pmml-quarkus-example</module>
-        <module>dmn-quarkus-example</module>
-        <module>dmn-drools-quarkus-metrics</module>
-        <module>dmn-tracing-quarkus</module>
-        <module>flexible-process-quarkus</module>-->
         <module>kogitoq</module>
-     <!--   <module>onboarding-example</module>
-        <module>pmml-event-driven-quarkus</module>
-        <module>pmml-quarkus-example</module>
-        <module>process-business-rules-quarkus</module>
-        <module>process-infinispan-persistence-quarkus</module>
-        <module>process-kafka-persistence-quarkus</module>
-        <module>process-kafka-quickstart-quarkus</module>
-        <module>process-knative-quickstart-quarkus</module>
-        <module>process-monitoring-quarkus</module>
-        <module>process-mongodb-persistence-quarkus</module>
-        <module>process-outbox-mongodb-quarkus</module>
-        <module>process-optaplanner-quarkus</module>
-        <module>process-postgresql-persistence-quarkus</module>
-        <module>process-quarkus-example</module>
-        <module>process-scripts-quarkus</module>
-        <module>process-service-calls-quarkus</module>
-        <module>process-rest-workitem-multi-quarkus</module>
-        <module>process-rest-workitem-quarkus</module>
-        <module>process-rest-service-call-quarkus</module>
-        <module>process-timer-quarkus</module>
-        <module>process-usertasks-custom-lifecycle-quarkus</module>
-        <module>process-usertasks-quarkus</module>
-        <module>process-usertasks-quarkus-with-console</module>
-        <module>process-usertasks-timer-quarkus-with-console</module>
-        <module>process-usertasks-with-security-oidc-quarkus</module>
-        <module>process-usertasks-with-security-oidc-quarkus-with-console</module>
-        <module>process-usertasks-with-security-quarkus</module>
-        <module>rules-quarkus-helloworld</module>
-        <module>ruleunit-event-driven-quarkus</module>
-        <module>ruleunit-quarkus-example</module>
-        <module>serverless-workflow-greeting-quarkus</module>
-        <module>serverless-workflow-service-calls-quarkus</module>
-        <module>serverless-workflow-events-quarkus</module>
-        <module>serverless-workflow-temperature-conversion</module>-->
+        <module>qwandaq</module>
+        <module>serviceq</module>
+        <module>bridge</module>
+        <module>fyodor</module>
+        <module>dropkick</module>
+        <module>lauchy</module>
+        <module>messages</module>
       </modules>
+    </profile>
+
+    <profile>
+      <id>persistence</id>
+      <activation>
+        <property>
+          <name>persistence</name>
+        </property>
+      </activation>
+      <properties>
+        <tests.category>persistence</tests.category>
+      </properties>
+    </profile>
+
+    <profile>
+      <id>jdbc-persistence</id>
+      <activation>
+        <property>
+          <name>jdbc-persistence</name>
+        </property>
+      </activation>
+    </profile>
+
+    <profile>
+      <id>events</id>
+      <activation>
+        <property>
+          <name>events</name>
+        </property>
+      </activation>
     </profile>
 
     <profile>
@@ -325,49 +212,7 @@
           <name>productized</name>
         </property>
       </activation>
-      <modules>
-     <!--   <module>dmn-event-driven-quarkus</module>
-        <module>dmn-event-driven-springboot</module>
-        <module>dmn-listener-quarkus</module>
-        <module>dmn-listener-springboot</module>
-        <module>dmn-pmml-quarkus-example</module>
-        <module>dmn-pmml-springboot-example</module>
-        <module>dmn-quarkus-example</module>
-        <module>dmn-drools-quarkus-metrics</module>
-        <module>dmn-drools-springboot-metrics</module>
-        <module>dmn-springboot-example</module>
-        <module>pmml-event-driven-quarkus</module>
-        <module>pmml-event-driven-springboot</module>
-        <module>pmml-quarkus-example</module>
-        <module>pmml-springboot-example</module>
-        <module>rules-legacy-quarkus-example</module>
-        <module>rules-legacy-springboot-example</module>
-        <module>rules-quarkus-helloworld</module>
-        <module>ruleunit-event-driven-quarkus</module>
-        <module>ruleunit-event-driven-springboot</module>
-        <module>ruleunit-quarkus-example</module>
-        <module>ruleunit-springboot-example</module>
-        <module>process-decisions-quarkus</module>
-        <module>process-decisions-springboot</module>
-        <module>process-decisions-rest-quarkus</module>
-        <module>process-decisions-rest-springboot</module>
-        <module>process-kafka-quickstart-quarkus</module>
-        <module>process-kafka-multi-quarkus</module>
-        <module>process-kafka-multi-springboot</module>
-        <module>process-kafka-quickstart-springboot</module>
-        <module>process-monitoring-quarkus</module>
-        <module>process-monitoring-springboot</module>
-        <module>process-scripts-quarkus</module>
-        <module>process-scripts-springboot</module>
-        <module>process-service-calls-quarkus</module>
-        <module>process-service-calls-springboot</module>
-        <module>process-rest-workitem-multi-quarkus</module>
-        <module>process-rest-workitem-quarkus</module>
-        <module>process-rest-service-call-quarkus</module>
-        <module>process-rest-service-call-springboot</module>-->
-      </modules>
     </profile>
-
    
     <profile>
       <id>optaplanner-downstream</id>
@@ -381,6 +226,7 @@
         <module>process-optaplanner-springboot</module>
       </modules>
     </profile>
+
     <profile>
       <id>optaplanner-downstream-native</id>
       <activation>
@@ -399,10 +245,12 @@
         <module>process-optaplanner-quarkus</module>
       </modules>
     </profile>
+
   </profiles>
 
   <dependencyManagement>
     <dependencies>
+
       <dependency>
          <groupId>org.drools</groupId>
          <artifactId>drools-bom</artifactId>
@@ -410,33 +258,39 @@
          <type>pom</type>
          <scope>import</scope>
       </dependency>
+
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-spring-boot-starter-remote</artifactId>
         <version>${version.org.infinispan}</version>
       </dependency>
+
       <dependency>
         <groupId>org.skyscreamer</groupId>
         <artifactId>jsonassert</artifactId>
         <version>${version.org.skyscreamer}</version>
         <scope>test</scope>
       </dependency>
+
     </dependencies>
   </dependencyManagement>
 
   <build>
     <pluginManagement>
       <plugins>
+
         <plugin>
           <groupId>io.quarkus</groupId>
           <artifactId>quarkus-maven-plugin</artifactId>
           <version>${version.io.quarkus}</version>
         </plugin>
+
         <plugin>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${version.org.springframework.boot}</version>
         </plugin>
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
@@ -459,10 +313,11 @@
             </execution>
           </executions>
         </plugin>
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
-          <version>${version.surefire.plugin}</version>
+          <version>${surefire-plugin.version}</version>
           <configuration>
             <forkCount>${surefire.forkCount}</forkCount>
             <reuseForks>true</reuseForks>
@@ -496,10 +351,11 @@
             </execution>
           </executions>
         </plugin>
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>${version.enforcer.plugin}</version>
+          <version>${enforcer-plugin.version}</version>
           <executions>
             <execution>
               <id>enforce-versions</id>
@@ -509,7 +365,7 @@
               <configuration>
                 <rules>
                   <requireMavenVersion>
-                    <version>${version.maven}</version>
+                    <version>${maven.version}</version>
                   </requireMavenVersion>
                   <requireJavaVersion>
                     <version>${maven.compiler.release}</version>
@@ -519,24 +375,27 @@
             </execution>
           </executions>
         </plugin>
+
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
-          <version>${version.deploy.plugin}</version>
+          <version>${deploy-plugin.version}</version>
           <configuration>
             <retryFailedDeploymentCount>10</retryFailedDeploymentCount>
           </configuration>
         </plugin>
+
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>${version.compiler.plugin}</version>
+          <version>${maven.compiler.version}</version>
           <configuration>
             <release>${maven.compiler.release}</release>
           </configuration>
         </plugin>
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>${version.surefire.plugin}</version>
+          <version>${surefire-plugin.version}</version>
           <configuration>
             <forkCount>${surefire.forkCount}</forkCount>
             <reuseForks>true</reuseForks>
@@ -550,23 +409,24 @@
         <plugin>
           <groupId>org.kie.kogito</groupId>
           <artifactId>kogito-maven-plugin</artifactId>
-          <version>${project.version}</version>
+          <version>${kogito.version}</version>
         </plugin>
+
         <!-- Packaging -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>${version.jar.plugin}</version>
+          <version>${jar-plugin.version}</version>
           <executions>
             <execution>
               <id>default-jar</id>
-              <configuration>
-                <archive>
-                  <manifestEntries combine.children="append">
-                    <Automatic-Module-Name>${java.module.name}</Automatic-Module-Name>
-                  </manifestEntries>
-                </archive>
-              </configuration>
+              <!-- <configuration> -->
+              <!--   <archive> -->
+              <!--     <manifestEntries combine.children="append"> -->
+              <!--       <Automatic-Module-Name>${java.module.name}</Automatic-Module-Name> -->
+              <!--     </manifestEntries> -->
+              <!--   </archive> -->
+              <!-- </configuration> -->
             </execution>
             <!-- No OSGi manifestEntries for <goal>jar</goal>: if it supported, then felix has already added them -->
             <execution>
@@ -600,10 +460,11 @@
             </archive>
           </configuration>
         </plugin>
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>${version.source.plugin}</version>
+          <version>${source-plugin.version}</version>
           <executions>
             <execution>
               <id>attach-sources</id>
@@ -643,48 +504,58 @@
             </execution>
           </executions>
         </plugin>
+
         <!-- Image build / Kubernetes deployment -->
         <plugin>
           <groupId>org.eclipse.jkube</groupId>
           <artifactId>kubernetes-maven-plugin</artifactId>
           <version>${version.org.eclipse.jkube}</version>
         </plugin>
+
         <plugin>
           <groupId>org.eclipse.jkube</groupId>
           <artifactId>openshift-maven-plugin</artifactId>
           <version>${version.org.eclipse.jkube}</version>
         </plugin>
+
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
           <version>${version.docker.plugin}</version>
         </plugin>
+
       </plugins>
     </pluginManagement>
     <plugins>
+
       <!-- need at least maven 3.6.2, fail fast with actionable error rather than obscure errors like [ Error injecting: private org.eclipse.aether.spi.log.Logger org.apache.maven.repository.internal.DefaultVersionRangeResolver.logger ] -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
+
       <plugin>
         <!-- Entry needed to create test-jars even for packaging types war, bundle, ... -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
       </plugin>
+
       <plugin>
         <!-- Entry needed to create, install and deploy sources jars -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
       </plugin>
+
     </plugins>
   </build>
 

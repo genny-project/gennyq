@@ -1,4 +1,3 @@
-# kogitoq2
-testing out workflows!
-Extended Maven version to test out examples
-test
+# gennyq
+
+A consolidation of Genny Quarkus services, and necessary dependencies.

@@ -138,7 +138,7 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/com/google/j2objc/j2objc-annotations/1.3/j2objc-annotations-1.3.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/protostream/protostream/4.4.1.Final/protostream-4.4.1.Final.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-mutiny-vertx-web-client/2.18.1/smallrye-mutiny-vertx-web-client-2.18.1.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-mutiny-vertx-web-client/2.19.0/smallrye-mutiny-vertx-web-client-2.19.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-mutiny-vertx-auth-common/2.19.0/smallrye-mutiny-vertx-auth-common-2.19.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-mutiny-vertx-web-common/2.19.0/smallrye-mutiny-vertx-web-common-2.19.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-oidc/2.7.5.Final/quarkus-oidc-2.7.5.Final.jar" enabled="true" runInBatchMode="false"/>
@@ -205,7 +205,7 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.13.1/jackson-core-2.13.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.13.1/jackson-databind-2.13.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/kie/kogito/kogito-legacy-api/1.19.0.Final/kogito-legacy-api-1.19.0.Final.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/org/slf4j/slf4j-api/1.7.33/slf4j-api-1.7.33.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/kie/kogito/kogito-api/1.19.0.Final/kogito-api-1.19.0.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/kie/kie-api/8.18.0-SNAPSHOT/kie-api-8.18.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/drools/drools-ruleunits-api/8.18.0-SNAPSHOT/drools-ruleunits-api-8.18.0-SNAPSHOT.jar" enabled="true" runInBatchMode="false"/>
@@ -338,8 +338,8 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/org/wildfly/security/wildfly-elytron-mechanism-oauth2/1.18.3.Final/wildfly-elytron-mechanism-oauth2-1.18.3.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/wildfly/security/wildfly-elytron-sasl-scram/1.18.3.Final/wildfly-elytron-sasl-scram-1.18.3.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/wildfly/security/wildfly-elytron-mechanism-scram/1.18.3.Final/wildfly-elytron-mechanism-scram-1.18.3.Final.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-client-hotrod/13.0.2.Final/infinispan-client-hotrod-13.0.2.Final.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-commons/13.0.2.Final/infinispan-commons-13.0.2.Final.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-client-hotrod/13.0.6.Final/infinispan-client-hotrod-13.0.6.Final.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-commons/13.0.6.Final/infinispan-commons-13.0.6.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/wildfly/security/wildfly-elytron-sasl-gs2/1.18.3.Final/wildfly-elytron-sasl-gs2-1.18.3.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/wildfly/security/wildfly-elytron-mechanism-gssapi/1.18.3.Final/wildfly-elytron-mechanism-gssapi-1.18.3.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/wildfly/security/wildfly-elytron-security-manager-action/1.18.3.Final/wildfly-elytron-security-manager-action-1.18.3.Final.jar" enabled="true" runInBatchMode="false"/>
@@ -350,8 +350,8 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/io/netty/netty-transport-classes-epoll/4.1.74.Final/netty-transport-classes-epoll-4.1.74.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/jakarta/transaction/jakarta.transaction-api/1.3.3/jakarta.transaction-api-1.3.3.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/eclipse/microprofile/metrics/microprofile-metrics-api/3.0.1/microprofile-metrics-api-3.0.1.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-remote-query-client/13.0.2.Final/infinispan-remote-query-client-13.0.2.Final.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-query-dsl/13.0.2.Final/infinispan-query-dsl-13.0.2.Final.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-remote-query-client/13.0.6.Final/infinispan-remote-query-client-13.0.6.Final.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/infinispan-query-dsl/13.0.6.Final/infinispan-query-dsl-13.0.6.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/protostream/protostream-processor/4.4.1.Final/protostream-processor-4.4.1.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/infinispan/protostream/protostream-types/4.4.1.Final/protostream-types-4.4.1.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/kie/kogito/kogito-addons-persistence-infinispan/1.19.0.Final/kogito-addons-persistence-infinispan-1.19.0.Final.jar" enabled="true" runInBatchMode="false"/>

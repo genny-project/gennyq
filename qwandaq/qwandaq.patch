@@ -1,0 +1,653 @@
+diff --git a/src/main/java/life/genny/qwandaq/AnswerLink.java b/src/main/java/life/genny/qwandaq/AnswerLink.java
+index 2702917..8c63406 100755
+--- a/src/main/java/life/genny/qwandaq/AnswerLink.java
++++ b/src/main/java/life/genny/qwandaq/AnswerLink.java
+@@ -130,9 +130,9 @@ public class AnswerLink implements java.io.Serializable {
+ 	 * Stores the sale value in local currency.
+ 	 */
+ 
+-	@Column(name = "money", length = 128)
+-	@Convert(converter = MoneyConverter.class)
+-	Money valueMoney;
++	// @Column(name = "money", length = 128)
++	// @Convert(converter = MoneyConverter.class)
++	// Money valueMoney;
+ 
+ 	/**
+ 	 * Store the BaseEntity Code value of the attribute for the baseEntity
+@@ -358,23 +358,23 @@ public class AnswerLink implements java.io.Serializable {
+ 			} 
+ 
+ 			break;
+-		case "org.javamoney.moneta.Money":
+-		case "Money":
+-			result = answer.getValue();
+-			if (!StringUtils.isBlank(result)) {
+-				JsonReader reader = Json.createReader(new StringReader(result));
+-				JsonObject obj = reader.readObject();
+-
+-				CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
+-				Double amount = Double.valueOf(obj.getString("amount"));
+-
+-				Money money = Money.of(amount, currency);
+-				setValueMoney(money);
+-			} else {
+-				setValueMoney(Money.zero(null));
+-			}
+-
+-			break;
++		// case "org.javamoney.moneta.Money":
++		// case "Money":
++		// 	result = answer.getValue();
++		// 	if (!StringUtils.isBlank(result)) {
++		// 		JsonReader reader = Json.createReader(new StringReader(result));
++		// 		JsonObject obj = reader.readObject();
++
++		// 		CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
++		// 		Double amount = Double.valueOf(obj.getString("amount"));
++
++		// 		Money money = Money.of(amount, currency);
++		// 		setValueMoney(money);
++		// 	} else {
++		// 		setValueMoney(Money.zero(null));
++		// 	}
++
++		// 	break;
+ 		case "java.lang.String":
+ 		default:
+ 			setValueString(answer.getValue());
+@@ -503,6 +503,22 @@ public class AnswerLink implements java.io.Serializable {
+ 		return version;
+ 	}
+ 
++	public Boolean isExpired() {
++		return getExpired();
++	}
++
++	public Boolean isInferred() {
++		return getInferred();
++	}
++
++	public Boolean isRefused() {
++		return getRefused();
++	}
++
++	public Boolean isValueBoolean() {
++		return getValueBoolean();
++	}
++
+ 	/**
+ 	 * @param version the version to set
+ 	 */
+@@ -633,16 +649,16 @@ public class AnswerLink implements java.io.Serializable {
+ 	/**
+ 	 * @return the valueMoney
+ 	 */
+-	public Money getValueMoney() {
+-		return valueMoney;
+-	}
++	// public Money getValueMoney() {
++	// 	return valueMoney;
++	// }
+ 
+ 	/**
+ 	 * @param valueMoney the valueMoney to set
+ 	 */
+-	public void setValueMoney(Money valueMoney) {
+-		this.valueMoney = valueMoney;
+-	}
++	// public void setValueMoney(Money valueMoney) {
++	// 	this.valueMoney = valueMoney;
++	// }
+ 
+ 	/**
+ 	 * @return the valueBaseEntityCode
+@@ -797,9 +813,9 @@ public class AnswerLink implements java.io.Serializable {
+ 		case "java.lang.Boolean":
+ 		case "Boolean":
+ 			return (T) getValueBoolean();
+-		case "org.javamoney.moneta.Money":
+-		case "Money":
+-			return (T) getValueMoney();
++		// case "org.javamoney.moneta.Money":
++		// case "Money":
++		// 	return (T) getValueMoney();
+ 		case "java.lang.String":
+ 		default:
+ 			return (T) getValueString();
+@@ -853,9 +869,9 @@ public class AnswerLink implements java.io.Serializable {
+ 			setValueBoolean((Boolean) value);
+ 			break;
+ 		case "org.javamoney.moneta.Money":
+-		case "Money":
+-			setValueMoney((Money) value);
+-			break;
++		// case "Money":
++		// 	setValueMoney((Money) value);
++		// 	break;
+ 		case "java.lang.String":
+ 		default:
+ 			setValueString((String) value);
+diff --git a/src/main/java/life/genny/qwandaq/attribute/Attribute.java b/src/main/java/life/genny/qwandaq/attribute/Attribute.java
+index 730413a..1367c8f 100755
+--- a/src/main/java/life/genny/qwandaq/attribute/Attribute.java
++++ b/src/main/java/life/genny/qwandaq/attribute/Attribute.java
+@@ -118,7 +118,7 @@ public class Attribute extends CodedEntity implements Serializable {
+ 	  * @param none
+ 	  */
+ 	@SuppressWarnings("unused")
+-	protected Attribute()
++	public Attribute()
+ 	{
+ 		super();
+ 		// dummy for hibernate
+@@ -168,6 +168,10 @@ public class Attribute extends CodedEntity implements Serializable {
+ 		return defaultPrivacyFlag;
+ 	}
+ 
++	public Boolean isDefaultPrivacyFlag() {
++		return getDefaultPrivacyFlag();
++	}
++
+ 
+ 	/**
+ 	 * @param defaultPrivacyFlag the defaultPrivacyFlag to set
+diff --git a/src/main/java/life/genny/qwandaq/attribute/EntityAttribute.java b/src/main/java/life/genny/qwandaq/attribute/EntityAttribute.java
+index 540c389..23266d0 100755
+--- a/src/main/java/life/genny/qwandaq/attribute/EntityAttribute.java
++++ b/src/main/java/life/genny/qwandaq/attribute/EntityAttribute.java
+@@ -212,9 +212,9 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 	@Column
+ 	private String valueString;
+ 
+-	@Column(name = "money", length = 128)
+-	@Convert(converter = MoneyConverter.class)
+-	Money valueMoney;
++	// @Column(name = "money", length = 128)
++	// @Convert(converter = MoneyConverter.class)
++	// Money valueMoney;
+ 	
+ 	/**
+ 	 * Store the relative importance of the attribute for the baseEntity
+@@ -349,6 +349,26 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 		this.attributeName = attribute.getName();
+ 	}
+ 
++	public Boolean isConfirmationFlag() {
++		return getConfirmationFlag();
++	}
++
++	public Boolean isInferred() {
++		return getInferred();
++	}
++
++	public Boolean isPrivacyFlag() {
++		return getPrivacyFlag();
++	}
++
++	public Boolean isReadonly() {
++		return getReadonly();
++	}
++
++	public Boolean isValueBoolean() {
++		return getValueBoolean();
++	}
++
+ 	/**
+ 	 * @return the created
+ 	 */
+@@ -535,16 +555,16 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 	/**
+ 	 * @return the valueMoney
+ 	 */
+-	public Money getValueMoney() {
+-		return valueMoney;
+-	}
++	// public Money getValueMoney() {
++	// 	return valueMoney;
++	// }
+ 
+ 	/**
+ 	 * @param valueMoney the valueMoney to set
+ 	 */
+-	public void setValueMoney(Money valueMoney) {
+-		this.valueMoney = valueMoney;
+-	}
++	// public void setValueMoney(Money valueMoney) {
++	// 	this.valueMoney = valueMoney;
++	// }
+ 
+ 	/**
+ 	 * @return the privacyFlag
+@@ -683,9 +703,9 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 		case "java.time.LocalDate":
+ 		case "LocalDate":
+ 			return (T) getValueDate();
+-		case "org.javamoney.moneta.Money":
+-		case "Money":
+-			return (T) getValueMoney();
++		// case "org.javamoney.moneta.Money":
++		// case "Money":
++		// 	return (T) getValueMoney();
+ //		case "range.LocalDate":
+ //			return (T) getValueDateRange();
+ 		case "java.lang.String":
+@@ -759,16 +779,16 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+ 					final LocalTime date = LocalTime.parse(result, formatter);
+ 					setValueTime(date);
+-				} else if (getAttribute().getDataType().getClassName()
+-						.equalsIgnoreCase(Money.class.getCanonicalName())) {
+-					JsonReader reader = Json.createReader(new StringReader(result));
+-					JsonObject obj = reader.readObject();
++				// } else if (getAttribute().getDataType().getClassName()
++				// 		.equalsIgnoreCase(Money.class.getCanonicalName())) {
++				// 	JsonReader reader = Json.createReader(new StringReader(result));
++				// 	JsonObject obj = reader.readObject();
+ 
+-					CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
+-					Double amount = Double.valueOf(obj.getString("amount"));
++				// 	CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
++				// 	Double amount = Double.valueOf(obj.getString("amount"));
+ 
+-					Money money = Money.of(amount, currency);
+-					setValueMoney(money);
++				// 	Money money = Money.of(amount, currency);
++				// 	setValueMoney(money);
+ 				} else if (getAttribute().getDataType().getClassName()
+ 						.equalsIgnoreCase(Integer.class.getCanonicalName())) {
+ 					final Integer integer = Integer.parseInt(result);
+@@ -821,10 +841,10 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 			case "LocalTime":
+ 				setValueTime((LocalTime) value);
+ 				break;
+-			case "org.javamoney.moneta.Money":
+-			case "Money":
+-				setValueMoney((Money) value);
+-				break;
++			// case "org.javamoney.moneta.Money":
++			// case "Money":
++			// 	setValueMoney((Money) value);
++			// 	break;
+ 			case "java.lang.Double":
+ 			case "Double":
+ 				if (value instanceof BigDecimal)
+@@ -875,9 +895,10 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 			return; 
+ 		}
+ 
+-		if (value instanceof Money)
+-			setValueMoney((Money) value);
+-		else if (value instanceof Integer)
++		// if (value instanceof Money)
++		// 	setValueMoney((Money) value);
++		// else 
++		if (value instanceof Integer)
+ 			setValueInteger((Integer) value);
+ 		else if (value instanceof LocalDateTime)
+ 			setValueDateTime((LocalDateTime) value);
+@@ -940,11 +961,11 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 			DateFormat df2 = new SimpleDateFormat("HH:mm");			
+ 			String dout2 = df2.format(getValueTime());
+ 			return dout2;
+-		case "org.javamoney.moneta.Money":
+-		case "Money":
+-			   DecimalFormat decimalFormat = new DecimalFormat("###############0.00");		        
+-		    	String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
+-				return "{\"amount\":"+amount+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}";
++		// case "org.javamoney.moneta.Money":
++		// case "Money":
++		// 	   DecimalFormat decimalFormat = new DecimalFormat("###############0.00");		        
++		//     	String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
++		// 		return "{\"amount\":"+amount+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}";
+ 		case "java.lang.Double":
+ 		case "Double":
+ 			return getValueDouble().toString();
+@@ -974,11 +995,11 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 		if( getValueString() != null) {
+ 			return getValueString();
+ 		}
+-		if(getValueMoney() != null) {
+-			   DecimalFormat decimalFormat = new DecimalFormat("###############0.00");		        
+-		    	String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
+-				return "{\"amount\":"+amount+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}";
+-		}
++		// if(getValueMoney() != null) {
++		// 	   DecimalFormat decimalFormat = new DecimalFormat("###############0.00");		        
++		//     	String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
++		// 		return "{\"amount\":"+amount+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}";
++		// }
+ 		if(getValueInteger() != null) {
+ 			return getValueInteger().toString();
+ 		}
+@@ -1032,9 +1053,9 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 			return (T)  getValueInteger();
+ 		}else if(getValueDate() != null) {
+ 			return  (T) getValueDate();
+-		} else if(getValueMoney() != null) {
+-			//return  (T) ("{\"amount\":"+getValueMoney().getNumber()+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}");
+-			return (T) getValueMoney();
++		// } else if(getValueMoney() != null) {
++		// 	//return  (T) ("{\"amount\":"+getValueMoney().getNumber()+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}");
++		// 	return (T) getValueMoney();
+ 		} else if(getValueTime() != null) {
+ 			return  (T) getValueTime();
+ 		} else if(getValueLong() != null) {
+@@ -1094,9 +1115,9 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 		case "java.time.LocalDate":
+ 		case "LocalDate":
+ 			return new CompareToBuilder().append(this.getValueDate(), myClass.getValueDate()).toComparison();
+-		case "org.javamoney.moneta.Money":
+-		case "Money":
+-			return new CompareToBuilder().append(this.getValueMoney(), myClass.getValueMoney()).toComparison();
++		// case "org.javamoney.moneta.Money":
++		// case "Money":
++		// 	return new CompareToBuilder().append(this.getValueMoney(), myClass.getValueMoney()).toComparison();
+ //		case "range.LocalDate":
+ //			return new CompareToBuilder().append(this.getValueDateRange(), myClass.getValueDateRange()).toComparison();
+ 		case "java.lang.String":
+@@ -1257,9 +1278,9 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 			return (T) getValueString();
+ 		}
+ 
+-		if (getValueMoney() != null) {
+-			return (T) getValueMoney();
+-		}
++		// if (getValueMoney() != null) {
++		// 	return (T) getValueMoney();
++		// }
+ 		
+ //		if (getValueDateRange() != null) {
+ //			return (T) getValueDateRange();
+@@ -1285,11 +1306,11 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
+ 			return dout;
+ 		}
+ 
+-		if (getValueMoney() != null) {
+-			   DecimalFormat decimalFormat = new DecimalFormat("###############0.00");		        
+-		    	String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
+-				return "{\"amount\":"+amount+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}";
+-		}
++		// if (getValueMoney() != null) {
++		// 	   DecimalFormat decimalFormat = new DecimalFormat("###############0.00");		        
++		//     	String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
++		// 		return "{\"amount\":"+amount+",\"currency\":\""+getValueMoney().getCurrency().getCurrencyCode()+"\"}";
++		// }
+ 		
+ 		if (getValueLong() != null) {
+ 			return "" + getValueLong();
+diff --git a/src/main/java/life/genny/qwandaq/datatype/DataType.java b/src/main/java/life/genny/qwandaq/datatype/DataType.java
+index 3f88836..1898ff5 100644
+--- a/src/main/java/life/genny/qwandaq/datatype/DataType.java
++++ b/src/main/java/life/genny/qwandaq/datatype/DataType.java
+@@ -123,7 +123,7 @@ public class DataType implements Serializable {
+ 	 * @param none
+ 	 */
+ 	@SuppressWarnings("unused")
+-	protected DataType() {
++	public DataType() {
+ 		super();
+ 		// dummy for hibernate
+ 	}
+diff --git a/src/main/java/life/genny/qwandaq/entity/BaseEntity.java b/src/main/java/life/genny/qwandaq/entity/BaseEntity.java
+index 995d074..a7b9573 100644
+--- a/src/main/java/life/genny/qwandaq/entity/BaseEntity.java
++++ b/src/main/java/life/genny/qwandaq/entity/BaseEntity.java
+@@ -49,6 +49,9 @@ import org.hibernate.annotations.FilterDefs;
+ import org.hibernate.annotations.Filters;
+ import org.hibernate.annotations.ParamDef;
+ 
++import org.infinispan.protostream.annotations.ProtoFactory;
++import org.infinispan.protostream.annotations.ProtoField;
++
+ import com.fasterxml.jackson.annotation.JsonBackReference;
+ import com.fasterxml.jackson.annotation.JsonIgnore;
+ import com.fasterxml.jackson.annotation.JsonInclude;
+@@ -148,7 +151,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 	@JsonIgnore
+ 	@XmlTransient
+ 	@Transient
+-	private Map<String,EntityAttribute> attributeMap = null;
++	private transient Map<String,EntityAttribute> attributeMap = null;
+ 	
+ 	
+ 	
+@@ -156,7 +159,9 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 		return attributeMap;
+ 	}
+ 
+-	
++	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
++		this.attributeMap = attributeMap;
++	}
+ 
+ 	/**
+ 	 * Constructor.
+@@ -164,7 +169,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 	 * @param none
+ 	 */
+ 	@SuppressWarnings("unused")
+-	protected BaseEntity() {
++	public BaseEntity() {
+ 		super();
+ 		// dummy
+ 	}
+@@ -185,6 +190,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 	 * @param Code the unique code of the core entity
+ 	 * @param Name the summary name of the core entity
+ 	 */
++	@ProtoFactory
+ 	public BaseEntity(final String aCode, final String aName) {
+ 		super(aCode, aName);
+ 
+@@ -204,6 +210,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 		this.answers = answers;
+ 	}
+ 
++	public void setAnswers(final List<AnswerLink> answers) {
++		this.answers.addAll(answers);
++	}
++
+ 	/**
+ 	 * @return the baseEntityAttributes
+ 	 */
+@@ -219,6 +229,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 		this.baseEntityAttributes = baseEntityAttributes;
+ 	}
+ 
++	public void setBaseEntityAttributes(final List<EntityAttribute> baseEntityAttributes) {
++		this.baseEntityAttributes.addAll(baseEntityAttributes);
++	}
++
+ 	/**
+ 	 * @return the links
+ 	 */
+@@ -237,6 +251,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 		this.links = links;
+ 	}
+ 
++	public void setLinks(final List<EntityEntity> links) {
++		this.links.addAll(links);
++	}
++
+ 	/**
+ 	 * @return the questions
+ 	 */
+@@ -254,6 +272,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 		this.questions = questions;
+ 	}
+ 
++	public void setQuestions(final List<EntityQuestion> questions) {
++		this.questions.addAll(questions);
++	}
++
+ 	/**
+ 	 * getDefaultCodePrefix This method is expected to be overridden in specialised
+ 	 * child classes.
+@@ -877,6 +899,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+ 		return fromCache;
+ 	}
+ 
++	public Boolean isFromCache() {
++		return getFromCache();
++	}
++
+ 	/**
+ 	 * @param fromCache the fromCache to set
+ 	 */
+diff --git a/src/main/java/life/genny/qwandaq/entity/EntityEntity.java b/src/main/java/life/genny/qwandaq/entity/EntityEntity.java
+index 883b943..94f579a 100755
+--- a/src/main/java/life/genny/qwandaq/entity/EntityEntity.java
++++ b/src/main/java/life/genny/qwandaq/entity/EntityEntity.java
+@@ -149,9 +149,9 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
+ //  @XmlJavaTypeAdapter(LocalTimeAdapter.class)
+   private LocalTime valueTime;
+  
+-	@Column(name = "money", length = 128)
+-	@Convert(converter = MoneyConverter.class)
+-	Money valueMoney;
++	// @Column(name = "money", length = 128)
++	// @Convert(converter = MoneyConverter.class)
++	// Money valueMoney;
+ 
+   /**
+    * Store the String value of the attribute for the baseEntity
+@@ -405,16 +405,16 @@ public void setValueTime(LocalTime valueTime) {
+ /**
+  * @return the valueMoney
+  */
+-public Money getValueMoney() {
+-	return valueMoney;
+-}
++// public Money getValueMoney() {
++// 	return valueMoney;
++// }
+ 
+ /**
+  * @param valueMoney the valueMoney to set
+  */
+-public void setValueMoney(Money valueMoney) {
+-	this.valueMoney = valueMoney;
+-}
++// public void setValueMoney(Money valueMoney) {
++// 	this.valueMoney = valueMoney;
++// }
+ 
+ /**
+  * @param link the link to set
+@@ -469,7 +469,7 @@ public void setLink(Link link) {
+ @Override
+ 	public int hashCode() {
+ 		return Objects.hash(link, realm, valueBoolean, valueDate, valueDateTime, valueDouble, valueInteger,
+-				valueLong, valueMoney, valueString, valueTime, weight);
++				valueLong, /*valueMoney,*/ valueString, valueTime, weight);
+ 	}
+ 
+ 	@Override
+@@ -488,7 +488,7 @@ public void setLink(Link link) {
+ 				&& Objects.equals(realm, other.realm) && Objects.equals(valueBoolean, other.valueBoolean)
+ 				&& Objects.equals(valueDate, other.valueDate) && Objects.equals(valueDateTime, other.valueDateTime)
+ 				&& Objects.equals(valueDouble, other.valueDouble) && Objects.equals(valueInteger, other.valueInteger)
+-				&& Objects.equals(valueLong, other.valueLong) && Objects.equals(valueMoney, other.valueMoney)
++				// && Objects.equals(valueLong, other.valueLong) && Objects.equals(valueMoney, other.valueMoney)
+ 				&& Objects.equals(valueString, other.valueString) && Objects.equals(valueTime, other.valueTime)
+ 				&& Objects.equals(weight, other.weight);
+ 	}
+@@ -529,6 +529,10 @@ public Boolean getValueBoolean() {
+ 	return valueBoolean;
+ }
+ 
++public Boolean isValueBoolean() {
++	return getValueBoolean();
++}
++
+ /**
+  * @param valueBoolean the valueBoolean to set
+  */
+@@ -650,10 +654,10 @@ public <T> void setValue(final Object value) {
+ 		case "LocalTime":
+ 			setValueTime((LocalTime) value);
+ 			break;
+-		case "org.javamoney.moneta.Money":
+-		case "Money":
+-			setValueMoney((Money) value);
+-			break;
++		// case "org.javamoney.moneta.Money":
++		// case "Money":
++		// 	setValueMoney((Money) value);
++		// 	break;
+ 		case "java.lang.Double":
+ 		case "Double":
+ 			setValueDouble((Double) value);
+@@ -694,8 +698,8 @@ public String getAsString() {
+ 		return "" + getValueLong();
+ 	case "java.time.LocalTime":
+ 		return getValueTime().toString();
+-	case "org.javamoney.moneta.Money":
+-		return getValueMoney().toString();
++	// case "org.javamoney.moneta.Money":
++	// 	return getValueMoney().toString();
+ 
+ 	case "java.lang.Double":
+ 		return getValueDouble().toString();
+diff --git a/src/main/java/life/genny/qwandaq/entity/EntityQuestion.java b/src/main/java/life/genny/qwandaq/entity/EntityQuestion.java
+index b8b3ec0..7a21e18 100755
+--- a/src/main/java/life/genny/qwandaq/entity/EntityQuestion.java
++++ b/src/main/java/life/genny/qwandaq/entity/EntityQuestion.java
+@@ -29,4 +29,28 @@ public class EntityQuestion implements java.io.Serializable, Comparable<Object>
+ 	public int compareTo(Object o) {
+ 		return 0;
+ 	}
++
++	public Link getLink() {
++		return link;
++	}
++
++	public void setLink(Link link) {
++		this.link = link;
++	}
++
++	public Double getWeight() {
++		return weight;
++	}
++
++	public void setWeight(Double weight) {
++		this.weight = weight;
++	}
++
++	public String getValueString() {
++		return valueString;
++	}
++
++	public void setValueString(String valueString) {
++		this.valueString = valueString;
++	}
+ }
+diff --git a/src/main/java/life/genny/qwandaq/validation/Validation.java b/src/main/java/life/genny/qwandaq/validation/Validation.java
+index e492d11..0617179 100644
+--- a/src/main/java/life/genny/qwandaq/validation/Validation.java
++++ b/src/main/java/life/genny/qwandaq/validation/Validation.java
+@@ -147,7 +147,7 @@ public class Validation extends CodedEntity implements Serializable {
+ 	  * @param none
+ 	  */
+ 	@SuppressWarnings("unused")
+-	protected Validation()
++	public Validation()
+ 	{
+ 		super();
+ 		// dummy for hibernate
+@@ -264,6 +264,14 @@ public class Validation extends CodedEntity implements Serializable {
+ 		return multiAllowed;
+ 	}
+ 
++	public Boolean isMultiAllowed() {
++		return getMultiAllowed();
++	}
++
++	public Boolean isRecursiveGroup() {
++		return getRecursiveGroup();
++	}
++
+ 	/**
+ 	 * @param multiAllowed the multiAllowed to set
+ 	 */

@@ -195,7 +195,7 @@ public class FrontendService {
 
         // test with testuser and testuser
 
-        List<Ask> asks = questionUtils.findAsks2(rootQuestion, sourceBE, targetBE, beUtils);
+        List<Ask> asks = questionUtils.findAsks(rootQuestion, sourceBE, targetBE, beUtils);
 
         QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[0]));
         msg.setToken(beUtils.getGennyToken().getToken());
