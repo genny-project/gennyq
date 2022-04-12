@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION=$( mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+VERSION=$( ./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 echo "Project Version: $VERSION"
 
 if [ "$#" -eq 1 ]; then
