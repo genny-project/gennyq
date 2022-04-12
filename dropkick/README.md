@@ -1,2 +1,3 @@
 # dropkick
-Dropdown Menu Stream Processor
+
+Dropdown Menu Stream Processing Service.
