@@ -10,12 +10,12 @@ buildNativeImage()
 
 	PATH=$(find . -type d -name $PROJECT | head -n 1)
 
-	docker build -f ${PATH}/src/main/docker/Dockerfile.native -t  gennyproject/${PROJECT}:${VERSION}-native $PATH
+	docker build -f ${PATH}/src/main/docker/Dockerfile.native -t gennyproject/${PROJECT}:${VERSION}-native $PATH
 }
 
 if [ "$#" -eq 1 ]; then
 	./mvnw clean package -Pnative -Dquarkus.native.remote-container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11 -DskipTests=true -pl :$1
-	buildNativeImage $1 $VERSION
+	# buildNativeImage $1 $VERSION
 	exit 0
 fi
 
@@ -24,6 +24,6 @@ fi
 for project in kogitoq-travels kogitoq-visas adi bridge fyodor dropkick lauchy messages
 do
     echo "Tagging $project"
-	buildNativeImage $project $VERSION
+	# buildNativeImage $project $VERSION
 done
 
