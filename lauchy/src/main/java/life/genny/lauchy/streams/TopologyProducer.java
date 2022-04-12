@@ -107,6 +107,11 @@ public class TopologyProducer {
 		BaseEntityUtils beUtils = service.getBeUtils();
 		JsonObject json = jsonb.fromJson(data, JsonObject.class);
 
+		if(json.containsKey("empty")) {
+			log.info("Detected a payload with empty=false.. ignoring & proceding..");
+			return false;
+		}
+
 		// create GennyToken from token in message
 		String token = json.getString("token");
 		GennyToken userToken = null;

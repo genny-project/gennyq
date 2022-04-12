@@ -184,12 +184,12 @@ public class ExternalConsumer {
 		if (body.getString("msg_type").equals("DATA_MSG")) {
 
 			log.info("Sending payload from user " + gennyToken.getUserCode() + " to data");
-			KafkaUtils.writeMsg("data", body);
+			KafkaUtils.writeMsg("data", body.toString());
 
 		} else if (body.getString("msg_type").equals("EVT_MSG")) {
 
 			log.info("Sending payload from user " + gennyToken.getUserCode() + " to events");
-			KafkaUtils.writeMsg("events", body);
+			KafkaUtils.writeMsg("events", body.toString());
 
 		} else if ((body.getJsonObject("data").getString("code") != null)
 				&& (body.getJsonObject("data").getString("code").equals("QUE_SUBMIT"))) {
