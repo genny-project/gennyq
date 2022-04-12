@@ -14,8 +14,8 @@ buildNativeImage()
 }
 
 if [ "$#" -eq 1 ]; then
-	buildNativeImage $1 $VERSION
 	./mvnw clean package -Pnative -Dquarkus.native.remote-container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11 -DskipTests=true -pl :$1
+	buildNativeImage $1 $VERSION
 	exit 0
 fi
 
