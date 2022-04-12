@@ -35,17 +35,17 @@
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-quarkus</artifactId>
-	  <version>1.18.0.Final</version>
+	  <version>1.19.0.Final</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-legacy-api</artifactId>
-	  <version>1.18.0.Final</version>
+	  <version>1.19.0.Final</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-addons-quarkus-messaging</artifactId>
-	  <version>1.18.0.Final</version>
+	  <version>1.19.0.Final</version>
     </dependency>
   </dependencies>
 
