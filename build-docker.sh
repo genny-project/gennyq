@@ -2,6 +2,8 @@
 VERSION=$( mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 echo "Project Version: $VERSION"
 
+# Usage: ./build-docker.sh [project] 
+
 if [ "$#" -eq 1 ]; then
 	./mvnw clean  package -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always -pl :$1
 	docker tag gennyproject/${1}:${VERSION} gennyproject/${1}:latest
