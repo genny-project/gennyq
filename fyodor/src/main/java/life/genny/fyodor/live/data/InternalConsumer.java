@@ -46,6 +46,7 @@ public class InternalConsumer {
 		service.initAttributes();
 		service.initKafka();
 		log.info("[*] Finished Startup!");
+		log.info("THIS IS A TEST LOG");
     }
 
 	@Incoming("search_events")
