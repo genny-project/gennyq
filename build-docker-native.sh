@@ -1,11 +1,11 @@
 #!/bin/bash
 
-VERSION=$( mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+VERSION=$( ./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 echo "Project Version: $VERSION"
 
 if [ "$#" -eq 1 ]; then
 	./mvnw clean package -Pnative -Dquarkus.native.remote-container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11 -DskipTests=true -pl :$1
-	docker tag gennyproject/${1}:${VERSION} gennyproject/${1}:${VERSION}-native
+	# docker tag gennyproject/${1}:${VERSION} gennyproject/${1}:${VERSION}-native
 	exit 0
 fi
 
