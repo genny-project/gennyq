@@ -8,4 +8,3 @@ A natively compiled repository for all the Genny Qwanda classes and utilities.
 - Java Classes
 - Settings Classes
 - Utilities
-- Work Item Handlers
