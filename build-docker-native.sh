@@ -14,7 +14,7 @@ fi
 for project in kogitoq-travels kogitoq-visas adi bridge fyodor dropkick lauchy messages
 do
     echo "Tagging $project"
-	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:latest
+	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:${VERSION}-native
 done
 
 
