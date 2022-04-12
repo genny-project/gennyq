@@ -1,3 +1,5 @@
 # dropkick
 
-Dropdown Menu Stream Processing Service.
+Genny Dropdown Menu Stream Processing Service.
+
+
