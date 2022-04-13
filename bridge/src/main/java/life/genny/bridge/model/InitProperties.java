@@ -14,7 +14,6 @@ import life.genny.bridge.exception.BridgeException;
  * the keycloak server it needs to use and which is trusted in the backends etcs.
  *
  * @author    hello@gada.io
- *
  */
 @RegisterForReflection
 public class InitProperties {
@@ -27,7 +26,7 @@ public class InitProperties {
     String mediaProxyUrl;
     @JsonbProperty("api_url")
     String apiUrl;
-    @JsonProperty
+    @JsonbProperty
     String clientId;
 
     public InitProperties(String url) throws BridgeException {
@@ -87,6 +86,10 @@ public class InitProperties {
         this.apiUrl = url;
     }
 
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
+	}
+
     /**
      * It will throw an BridgeException error it the required field is null or empty
      *
@@ -97,7 +100,7 @@ public class InitProperties {
      *
      * @throws BridgeException A error if the field is null or empty along with a NullPointerException
      */
-    public String throwIfNull(String val,String fieldName) throws BridgeException{
+    public String throwIfNull(String val,String fieldName) throws BridgeException {
 
         return Optional.ofNullable(val).orElseThrow(
                 () -> new BridgeException("GEN_000", "The value {"+fieldName+"} is compulsary "
