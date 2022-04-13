@@ -35,6 +35,13 @@ public class TaskBean {
 	Service service;
 
     void onStart(@Observes StartupEvent event) {
+
+		service.showConfiguration();
+
+		service.initToken();
+		service.initDatabase();
+		service.initKafka();
+		log.info("[*] Finished Startup!");
     }
 
     public void abortSchedule(String uniqueCode, GennyToken userToken) throws SchedulerException {
