@@ -17,123 +17,113 @@ import org.quartz.*;
 import life.genny.shleemy.endpoints.ScheduleResource;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.message.QScheduleMessage;
-import life.genny.shleemy.live.data.InternalProducer;
+import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class TaskBean {
 
-    private static final Logger log = Logger.getLogger(ScheduleResource.class);
-
-    @Inject
-    org.quartz.Scheduler quartz;
-
-    @Inject
-    InternalProducer producer;
+	private static final Logger log = Logger.getLogger(TaskBean.class);
 
 	@Inject
-	Service service;
+	org.quartz.Scheduler quartz;
 
-    void onStart(@Observes StartupEvent event) {
+	/**
+	 * A new instance of ShleemyJob is created by Quartz for every job execution
+	 */
+	public static class ShleemyJob implements Job {
 
-		service.showConfiguration();
+		@Inject
+		TaskBean taskBean;
 
-		service.initToken();
-		service.initDatabase();
-		service.initKafka();
-		log.info("[*] Finished Startup!");
-    }
+		public void execute(JobExecutionContext context) throws JobExecutionException {
+			taskBean.performTask(context);
+		}
+	}
 
-    public void abortSchedule(String uniqueCode, GennyToken userToken) throws SchedulerException {
+	public void addSchedule(QScheduleMessage scheduleMessage, GennyToken userToken) throws SchedulerException {
 
-        JobKey jobKey = new JobKey(uniqueCode, userToken.getRealm());
-        quartz.deleteJob(jobKey);
-    }
+		scheduleMessage.id = null;
+		scheduleMessage.realm = userToken.getRealm();
+		scheduleMessage.sourceCode = userToken.getUserCode();
+		scheduleMessage.token = userToken.getToken();
 
-    public String addSchedule(QScheduleMessage scheduleMessage, GennyToken userToken) throws SchedulerException {
+		log.info("Persisting new Schedule -> " + scheduleMessage.code + ":" 
+				+ scheduleMessage.triggertime + " from " + scheduleMessage.sourceCode);
 
-        scheduleMessage.token = userToken.getToken();
+		scheduleMessage.persist();
 
-        String messageJson = scheduleMessage.jsonMessage;
+		String messageJson = scheduleMessage.jsonMessage;
 
-        JobDataMap jobDataMap = new JobDataMap();
-        jobDataMap.put("message", messageJson);
-        jobDataMap.put("sourceCode", userToken.getUserCode());
-        jobDataMap.put("token", userToken.getToken());
-        jobDataMap.put("channel", scheduleMessage.channel);
-        jobDataMap.put("code", scheduleMessage.code);
+		JobDataMap jobDataMap = new JobDataMap();
+		jobDataMap.put("message", messageJson);
+		jobDataMap.put("sourceCode", userToken.getUserCode());
+		jobDataMap.put("token", userToken.getToken());
+		jobDataMap.put("channel", scheduleMessage.channel);
+		jobDataMap.put("code", scheduleMessage.code);
 
-        String uniqueCode = scheduleMessage.code;
+		JobDetail job = JobBuilder.newJob(ShleemyJob.class)
+			.withIdentity(scheduleMessage.code, userToken.getRealm())
+			.setJobData(jobDataMap)
+			.build();
 
-        JobDetail job = JobBuilder.newJob(MyJob.class).withIdentity(uniqueCode, userToken.getRealm())
-                .setJobData(jobDataMap).build();
-
-        Trigger trigger = null;
-        log.info("scheduleMessage: " + scheduleMessage);
+		Trigger trigger = null;
+		String scheduledFor = null;
 
 		// handle cron trigger
-        if (!scheduleMessage.cron.isBlank()) {
+		if (!scheduleMessage.cron.isBlank()) {
 
 			CronScheduleBuilder cronSchedule = CronScheduleBuilder.cronSchedule(scheduleMessage.cron);
-            trigger = TriggerBuilder.newTrigger()
-					.withIdentity(uniqueCode, userToken.getRealm())
-					.startNow()
-                    .withSchedule(cronSchedule)
-                    .build();
+			trigger = TriggerBuilder.newTrigger()
+				.withIdentity(scheduleMessage.code, userToken.getRealm())
+				.startNow()
+				.withSchedule(cronSchedule)
+				.build();
 
-            log.info("Scheduled " + userToken.getUserCode() + ":" + userToken.getEmail() + " for " + userToken.getRealm()
-                            + " for trigger at " + scheduleMessage.cron + " and now is " + LocalDateTime.now());
+			scheduledFor = scheduleMessage.cron;
 
-		// handle time trigger
-        } else if (scheduleMessage.triggertime != null) {
+			// handle time trigger
+		} else if (scheduleMessage.triggertime != null) {
 
-            Date scheduledDateTime = Date.from(scheduleMessage.triggertime.atZone(ZoneId.systemDefault()).toInstant());
-            trigger = TriggerBuilder.newTrigger()
-					.withIdentity(uniqueCode, userToken.getRealm())
-                    .startAt(scheduledDateTime)
-                    .forJob(uniqueCode, userToken.getRealm())
-                    .build();
+			Date scheduledDateTime = Date.from(scheduleMessage.triggertime.atZone(ZoneId.systemDefault()).toInstant());
+			trigger = TriggerBuilder.newTrigger()
+				.withIdentity(scheduleMessage.code, userToken.getRealm())
+				.startAt(scheduledDateTime)
+				.forJob(scheduleMessage.code, userToken.getRealm())
+				.build();
 
-            log.info("Scheduled " + userToken.getUserCode() + ":" + uniqueCode + ":" + userToken.getEmail() + " for " + userToken.getRealm()
-                            + " for trigger at " + scheduledDateTime + " and now is " + LocalDateTime.now());
-        }
+			scheduledFor = scheduledDateTime.toString();
+		}
 
-        quartz.scheduleJob(job, trigger);
+		log.info("Scheduled " + userToken.getUserCode() + ":" + scheduleMessage.code + ":" + userToken.getEmail() + " for " + userToken.getRealm()
+				+ ", Trigger: " + scheduledFor + ", Current time: " + LocalDateTime.now());
 
-        return uniqueCode;
-    }
+		quartz.scheduleJob(job, trigger);
+	}
 
-    @Transactional
-    void performTask(JobExecutionContext context) {
+	public void abortSchedule(String code, GennyToken userToken) throws SchedulerException {
 
-        log.info("Executing Scheduler Task: " + context.getFireTime());
-        String bridgeUrl = ConfigProvider.getConfig().getValue("bridge.service.url", String.class);
+		JobKey jobKey = new JobKey(code, userToken.getRealm());
+		quartz.deleteJob(jobKey);
+	}
 
-        String sourceCode = context.getJobDetail().getJobDataMap().getString("sourceCode");
-        String channel = context.getJobDetail().getJobDataMap().getString("channel");
-        String code = context.getJobDetail().getJobDataMap().getString("code");
-        String token = context.getJobDetail().getJobDataMap().getString("token");
-        GennyToken userToken = new GennyToken(token);
+	@Transactional
+	void performTask(JobExecutionContext context) {
 
-        String scheduleMsgJson = (String) context.getJobDetail().getJobDataMap().get("message");
+		log.info("Executing Task: " + context.getFireTime());
 
-        log.info(scheduleMsgJson);
+		String sourceCode = context.getJobDetail().getJobDataMap().getString("sourceCode");
+		String channel = context.getJobDetail().getJobDataMap().getString("channel");
+		String code = context.getJobDetail().getJobDataMap().getString("code");
+		String token = context.getJobDetail().getJobDataMap().getString("token");
+		GennyToken userToken = new GennyToken(token);
 
-        producer.getToEvents().send(scheduleMsgJson);
+		String scheduleMsgJson = (String) context.getJobDetail().getJobDataMap().get("message");
 
-        log.info("Executing Schedule " + sourceCode + ":" + code + ":" + userToken.getEmail() + " for " + userToken.getRealm()
-                + " at " + LocalDateTime.now() + " sending through bridgeUrl=" + bridgeUrl + ", scheduleMsgJson:" + scheduleMsgJson);
-    }
+		log.info("Sending event " + sourceCode + ":" + code + ":" + userToken.getEmail() + " for " 
+				+ userToken.getRealm() + " at " + LocalDateTime.now() + ", scheduleMsgJson:" + scheduleMsgJson);
 
-    // A new instance of MyJob is created by Quartz for every job execution
-    public static class MyJob implements Job {
+		KafkaUtils.writeMsg("events", scheduleMsgJson);
+	}
 
-        @Inject
-        TaskBean taskBean;
-
-        public void execute(JobExecutionContext context) throws JobExecutionException {
-            taskBean.performTask(context);
-        }
-
-    }
 }

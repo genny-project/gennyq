@@ -56,35 +56,22 @@ public class ScheduleResource {
 		log.info("ScheduleResource Endpoint Shutting down");
 	}
 
-	@OPTIONS
-	public Response opt() {
-		return Response.ok().build();
-	}
-
 	@POST
 	@Transactional
-	public Response newQScheduleMessage(@Context UriInfo uriInfo, @Valid QScheduleMessage scheduleMessage) {
+	public Response scheduleMessage(@Context UriInfo uriInfo, @Valid QScheduleMessage scheduleMessage) {
 
-		String uniqueScheduleCode = "";
-
-		scheduleMessage.id = null;
 		GennyToken userToken = new GennyToken(accessToken.getRawToken());
 		log.info("User is " + userToken.getEmail());
 
-		scheduleMessage.realm = userToken.getRealm();
-		scheduleMessage.sourceCode = userToken.getUserCode();
-		scheduleMessage.token = userToken.getToken();
-		scheduleMessage.persist();
-		
-		log.info("Persisting new Schedule -> "+scheduleMessage.code+":"+scheduleMessage.triggertime+" from "+scheduleMessage.sourceCode);
-		
 		try {
-			uniqueScheduleCode = taskBean.addSchedule(scheduleMessage, userToken);
+			taskBean.addSchedule(scheduleMessage, userToken);
+
 			URI uri = uriInfo.getAbsolutePathBuilder().path(ScheduleResource.class, "findById")
 					.build(scheduleMessage.id);
-			return Response.created(uri).entity(uniqueScheduleCode).build();
 
-		} catch (SchedulerException e) {
+			return Response.created(uri).entity(scheduleMessage.code).build();
+
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
@@ -93,8 +80,8 @@ public class ScheduleResource {
 
 	@GET
 	@Path("/code/{code}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response findByCode(@PathParam("code") final String code) {
+
 		GennyToken userToken = new GennyToken(accessToken.getRawToken());
 		log.info("User is " + userToken.getEmail());
 
@@ -113,7 +100,6 @@ public class ScheduleResource {
 	
 	@GET
 	@Path("/id/{id}")
-	@Produces(MediaType.APPLICATION_JSON)
 	public Response findById(@PathParam("id") final Long id) {
 
 		GennyToken userToken = new GennyToken(accessToken.getRawToken());

@@ -27,17 +27,31 @@ public class InitProperties {
     String mediaProxyUrl;
     @JsonbProperty("api_url")
     String apiUrl;
+    @JsonProperty
+    String clientId;
 
     public InitProperties(String url) throws BridgeException {
+
         this();
-        url = Optional.ofNullable(System.getenv("SERVER_URL")).orElse(url);
         setMediaProxyUrl(url);
         setApiUrl(url);
+
+		// TODO: Find another way of doing this
+		if (url.contains("internmatch") || url.contains("alyson")) {
+			setClientId("alyson");
+		} else if (url.contains("mentormatch") || url.contains("mentor-match")) {
+			setClientId("mentormatch");
+		} else if (url.contains("lojing")) {
+			setClientId("lojing");
+		} else if (url.contains("credmatch") || url.contains("cred-match")) {
+			setClientId("credmatch");
+		}
     }
 
     public InitProperties() throws BridgeException {
+
     	// TODO: fetch these values from Kafka dependent upon the project url
-        setRealm(System.getenv("realm"));
+        setRealm("internmatch");
         setKeycloakRedirectUri(System.getenv("ENV_KEYCLOAK_REDIRECTURI"));
     }
 
