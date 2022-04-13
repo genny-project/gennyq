@@ -137,10 +137,10 @@
         <activeByDefault>true</activeByDefault>
       </activation>
       <modules>
-        <module>kogitoq</module>
         <module>qwandaq</module>
         <module>serviceq</module>
         <module>bridge</module>
+        <module>kogitoq</module>
         <module>fyodor</module>
         <module>dropkick</module>
         <module>lauchy</module>

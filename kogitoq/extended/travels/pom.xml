@@ -10,7 +10,7 @@
   </parent>
 
   <artifactId>travels</artifactId>
-  <name>Genny Kogito :: Travels :: Extended</name>
+  <name>Genny-Kogitoq</name>
 
   <dependencyManagement>
     <dependencies>
