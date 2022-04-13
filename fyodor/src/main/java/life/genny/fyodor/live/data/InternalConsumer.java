@@ -46,18 +46,18 @@ public class InternalConsumer {
 		service.initAttributes();
 		service.initKafka();
 		log.info("[*] Finished Startup!");
-		log.info("THIS IS A TEST LOG");
     }
 
 	@Incoming("search_events")
 	@Blocking
 	public void getSearchEvents(String data) {
+
 		log.info("Received incoming Search Event... ");
 		log.debug(data);
 
 		Instant start = Instant.now();
 
-		// Deserialize with null values to avoid deserialisation errors
+		// Deserialize msg
 		QSearchMessage msg = jsonb.fromJson(data, QSearchMessage.class);
 		GennyToken userToken = new GennyToken(msg.getToken());
 

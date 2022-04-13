@@ -14,7 +14,6 @@ import life.genny.bridge.exception.BridgeException;
  * the keycloak server it needs to use and which is trusted in the backends etcs.
  *
  * @author    hello@gada.io
- *
  */
 @RegisterForReflection
 public class InitProperties {
@@ -27,17 +26,31 @@ public class InitProperties {
     String mediaProxyUrl;
     @JsonbProperty("api_url")
     String apiUrl;
+    @JsonbProperty
+    String clientId;
 
     public InitProperties(String url) throws BridgeException {
+
         this();
-        url = Optional.ofNullable(System.getenv("SERVER_URL")).orElse(url);
         setMediaProxyUrl(url);
         setApiUrl(url);
+
+		// TODO: Find another way of doing this
+		if (url.contains("internmatch") || url.contains("alyson")) {
+			setClientId("alyson");
+		} else if (url.contains("mentormatch") || url.contains("mentor-match")) {
+			setClientId("mentormatch");
+		} else if (url.contains("lojing")) {
+			setClientId("lojing");
+		} else if (url.contains("credmatch") || url.contains("cred-match")) {
+			setClientId("credmatch");
+		}
     }
 
     public InitProperties() throws BridgeException {
+
     	// TODO: fetch these values from Kafka dependent upon the project url
-        setRealm(System.getenv("realm"));
+        setRealm("internmatch");
         setKeycloakRedirectUri(System.getenv("ENV_KEYCLOAK_REDIRECTURI"));
     }
 
@@ -73,6 +86,10 @@ public class InitProperties {
         this.apiUrl = url;
     }
 
+	public void setClientId(String clientId) {
+		this.clientId = clientId;
+	}
+
     /**
      * It will throw an BridgeException error it the required field is null or empty
      *
@@ -83,7 +100,7 @@ public class InitProperties {
      *
      * @throws BridgeException A error if the field is null or empty along with a NullPointerException
      */
-    public String throwIfNull(String val,String fieldName) throws BridgeException{
+    public String throwIfNull(String val,String fieldName) throws BridgeException {
 
         return Optional.ofNullable(val).orElseThrow(
                 () -> new BridgeException("GEN_000", "The value {"+fieldName+"} is compulsary "
