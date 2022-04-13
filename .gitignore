@@ -11,7 +11,4 @@ buildNumber.properties
 .mvn/timing.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
-kogitoq/extended/travels/src/main/resources/travels-git.properties
-kogitoq/extended/visas/src/main/resources/visas-git.properties
-kogitoq1/src/main/resources/KogitoQ-git.properties
 !**/.vscode/launch.json
