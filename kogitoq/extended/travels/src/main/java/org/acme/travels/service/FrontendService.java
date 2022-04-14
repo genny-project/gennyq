@@ -255,9 +255,9 @@ public class FrontendService {
     }
 
     public String getAsksJson(final String questionGroupCode, final String sourceCode, final String targetCode,
-            final String userTokenStr) {
+            final String userTokenStr, final String processId) {
         log.info("Entering getAsksJson");
-        QDataAskMessage askMsg = getAsks(questionGroupCode, sourceCode, targetCode, userTokenStr);
+        QDataAskMessage askMsg = getAsks(questionGroupCode, sourceCode, targetCode, userTokenStr, processId);
         log.info("About to json QDataAskMessage");
 
         String askMsgJson = jsonb.toJson(askMsg);
