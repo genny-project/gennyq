@@ -84,27 +84,16 @@ public class QScheduleMessage extends PanacheEntity {
 		this.sourceCode = sourceCode;
 	}
 
-	/**
-	* Set the realm
-	*
-	* @param realm The realm to set
-	 */
 	public void setRealm(String realm) {
 		this.realm = realm;
 	}
 
-	/**
-	* Get the realm
-	*
-	* @return The realm
-	 */
 	public String getRealm() {
 		return realm;
 	}
 
 	/**
 	* Set the source code
-	*
 	* @param sourceCode The source code to set
 	 */
 	public void setSourceCode(String sourceCode) {

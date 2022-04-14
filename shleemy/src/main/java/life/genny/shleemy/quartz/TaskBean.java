@@ -49,7 +49,8 @@ public class TaskBean {
 		scheduleMessage.token = userToken.getToken();
 
 		log.info("Persisting new Schedule -> " + scheduleMessage.code + ":" 
-				+ scheduleMessage.triggertime + " from " + scheduleMessage.sourceCode);
+				+ (scheduleMessage.trigger != null ? scheduleMessage.trigger : scheduleMessage.cron) 
+				+ " from " + scheduleMessage.sourceCode);
 
 		scheduleMessage.persist();
 
@@ -83,9 +84,9 @@ public class TaskBean {
 			scheduledFor = scheduleMessage.cron;
 
 			// handle time trigger
-		} else if (scheduleMessage.triggertime != null) {
+		} else if (scheduleMessage.trigger != null) {
 
-			Date scheduledDateTime = Date.from(scheduleMessage.triggertime.atZone(ZoneId.systemDefault()).toInstant());
+			Date scheduledDateTime = Date.from(scheduleMessage.trigger.atZone(ZoneId.systemDefault()).toInstant());
 			trigger = TriggerBuilder.newTrigger()
 				.withIdentity(scheduleMessage.code, userToken.getRealm())
 				.startAt(scheduledDateTime)
