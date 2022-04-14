@@ -268,12 +268,13 @@ public class FrontendService {
     }
 
     public QDataAskMessage getAsks(final String questionGroupCode, final String sourceCode, final String targetCode,
-            final String userTokenStr) {
+            final String userTokenStr, final String processId) {
         log.info("Entering getAsks with ");
         log.info("questionGroupCode :" + questionGroupCode);
         log.info("sourceCode :" + sourceCode);
         log.info("targetCode :" + targetCode);
         log.info("userTokenStr :" + userTokenStr);
+        log.info("processId :" + processId);
         GennyToken userToken = new GennyToken(userTokenStr);
         log.info("Getting Asks using Service! " + userToken.getUsername() + " : " + questionGroupCode + ":" + sourceCode
                 + ":" + targetCode);
@@ -296,6 +297,11 @@ public class FrontendService {
                 questionGroupCode,
                 sourceBE,
                 targetBE);
+
+        for (Ask ask : askMsg.getItems()) {
+            ask.setProcessId(processId);
+        }
+
         log.info("Leaving getAsks");
         return askMsg;
     }
