@@ -10,10 +10,9 @@ public class QEventMessage extends QMessage implements Serializable {
 	private String event_type;
 	public MessageData data;
 
-	public QEventMessage()
-        {
-	   super();
-        }
+	public QEventMessage() {
+		super();
+	}
 	
 	/** 
 	 * @return String
