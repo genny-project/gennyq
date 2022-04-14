@@ -174,7 +174,6 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-smallrye-reactive-messaging-kotlin/2.8.0.Final/quarkus-smallrye-reactive-messaging-kotlin-2.8.0.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/common/smallrye-common-annotation/1.10.0/smallrye-common-annotation-1.10.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-reactive-messaging-health/3.15.0/smallrye-reactive-messaging-health-3.15.0.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/org/eclipse/microprofile/health/microprofile-health-api/3.1/microprofile-health-api-3.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-reactive-messaging-provider/3.15.0/smallrye-reactive-messaging-provider-3.15.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-reactive-messaging-api/3.15.0/smallrye-reactive-messaging-api-3.15.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/reactive/smallrye-mutiny-vertx-core/2.19.0/smallrye-mutiny-vertx-core-2.19.0.jar" enabled="true" runInBatchMode="false"/>
@@ -187,6 +186,11 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/org/eclipse/microprofile/jwt/microprofile-jwt-auth-api/1.2/microprofile-jwt-auth-api-1.2.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/bitbucket/b_c/jose4j/0.7.9/jose4j-0.7.9.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/smallrye-jwt-common/3.3.3/smallrye-jwt-common-3.3.3.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-smallrye-health/2.8.0.Final/quarkus-smallrye-health-2.8.0.Final.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/smallrye-health/3.2.1/smallrye-health-3.2.1.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/org/eclipse/microprofile/health/microprofile-health-api/3.1/microprofile-health-api-3.1.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/smallrye-health-api/3.2.1/smallrye-health-api-3.2.1.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="VARJAR" id="M2_REPO/io/smallrye/smallrye-health-provided-checks/3.2.1/smallrye-health-provided-checks-3.2.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-infinispan-client/2.8.0.Final/quarkus-infinispan-client-2.8.0.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/quarkus/quarkus-netty/2.8.0.Final/quarkus-netty-2.8.0.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/netty/netty-codec/4.1.74.Final/netty-codec-4.1.74.Final.jar" enabled="true" runInBatchMode="false"/>

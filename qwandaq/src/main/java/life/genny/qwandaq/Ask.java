@@ -126,6 +126,9 @@ public class Ask extends CoreEntity implements Serializable {
 	@JsonInclude(Include.NON_NULL)
 	private ContextList contextList;
 
+	@Transient
+	private String processId = "no-idq";
+
 	/**
 	 * Constructor.
 	 * dummy for hibernate
@@ -417,6 +420,14 @@ public class Ask extends CoreEntity implements Serializable {
 	 */
 	public void setTargetCode(final String targetCode) {
 		this.targetCode = targetCode;
+	}
+
+	public String getProcessId() {
+		return processId;
+	}
+
+	public void setProcessId(String processId) {
+		this.processId = processId;
 	}
 
 	/**
