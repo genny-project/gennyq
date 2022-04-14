@@ -93,6 +93,10 @@ public class InitProperties {
 		this.clientId = clientId;
 	}
 
+    public String getClientId() {
+        return clientId;
+    }
+
     /**
      * It will throw an BridgeException error it the required field is null or empty
      *
