@@ -44,7 +44,10 @@ public class InitProperties {
 			setClientId("lojing");
 		} else if (url.contains("credmatch") || url.contains("cred-match")) {
 			setClientId("credmatch");
-		}
+		} else {
+            System.err.println("INITPROPS Fallback to alyson from url: [" + url + "] !");
+            setClientId("alyson");
+        }
     }
 
     public InitProperties() throws BridgeException {
@@ -89,6 +92,10 @@ public class InitProperties {
 	public void setClientId(String clientId) {
 		this.clientId = clientId;
 	}
+
+    public String getClientId() {
+        return clientId;
+    }
 
     /**
      * It will throw an BridgeException error it the required field is null or empty
