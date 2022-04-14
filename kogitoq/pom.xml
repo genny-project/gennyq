@@ -5,7 +5,7 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq-parent</artifactId>
-    <version>1.19.0.Final</version>
+    <version>1.20.0.Final</version>
   </parent>
   <artifactId>kogitoq</artifactId>
   <packaging>pom</packaging>

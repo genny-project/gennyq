@@ -11,8 +11,6 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.exception.BadDataException;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
