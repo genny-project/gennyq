@@ -1,9 +1,14 @@
 package life.genny.fyodor.endpoints;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.UUID;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -20,13 +25,13 @@ import io.vertx.core.http.HttpServerRequest;
 
 import life.genny.fyodor.utils.SearchUtility;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.message.QScheduleMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennyToken;
 
 /**
  * Search - Endpoints providing classic Genny Search functionality
  */
-
 @Path("/")
 @ApplicationScoped
 public class Search {
@@ -47,8 +52,42 @@ public class Search {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/api/schedule")
+	public Response schedule() {
+
+		String uuid = UUID.randomUUID().toString().toUpperCase();
+
+		log.info("Scheduling test event for " + uuid);
+
+		GennyToken userToken = null;
+
+		try {
+			String token = request.getHeader("authorization").split("Bearer ")[1];
+			if (token != null) {
+				userToken = new GennyToken(token);
+			} else {
+				log.error("Bad token in Search GET provided");
+				return Response.status(Response.Status.FORBIDDEN).build();
+			}
+		} catch (Exception e) {
+			log.error("Bad or no header token in Search POST provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+
+		QScheduleMessage msg = new QScheduleMessage.Builder("SCHEDULE_TEST")
+			.setEventMessage("TEST_EVENT", uuid)
+			.setTrigger(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(20))
+			.setGennyToken(userToken)
+			.schedule();
+
+		log.info("Done!");
+
+		return Response.ok().build();
+	}
+
 	/**
-	 * 
 	 * A POST request for search results based on a 
 	 * {@link SearchEntity}. Will only fetch codes.
 	 *
@@ -60,10 +99,9 @@ public class Search {
 	public Response search(SearchEntity searchEntity) {
 
 		log.info("Search POST received..");
-		String token = null;
 
 		try {
-			token = request.getHeader("authorization").split("Bearer ")[1];
+			String token = request.getHeader("authorization").split("Bearer ")[1];
 			if (token != null) {
 				GennyToken userToken = new GennyToken(token);
 			} else {
