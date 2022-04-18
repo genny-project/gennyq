@@ -122,7 +122,8 @@ public class QScheduleMessage extends PanacheEntity {
 
 	/**
 	* Set the targeted channel
-	* @param channel
+	*
+	* @param channel The channel to set
 	 */
 	public void setChannel(String channel) {
 		this.channel = channel;
@@ -138,6 +139,8 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/** 
+	 * Set the code
+	 *
 	 * @param code the code to set
 	 */
 	public void setCode(String code) {
@@ -145,13 +148,17 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/** 
-	 * @return String
+	 * Get the code
+	 *
+	 * @return The code
 	 */
 	public String getCode() {
 		return code;
 	}
 
 	/** 
+	 * Set the token
+	 *
 	 * @param token the token to set
 	 */
 	public void setToken(String token) {
@@ -159,6 +166,8 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/** 
+	 * Get the token
+	 *
 	 * @return String
 	 */
 	public String getToken() {

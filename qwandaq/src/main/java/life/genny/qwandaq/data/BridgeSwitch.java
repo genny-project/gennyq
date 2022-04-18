@@ -30,7 +30,8 @@ public class BridgeSwitch {
 	/**
 	* Cache active Bridge Ids
 	*
-	* @param gennyToken
+	* @param gennyToken The users gennyToken
+	* @param bridgeId The id to add to active ids
 	 */
 	public static void addActiveBridgeId(GennyToken gennyToken, String bridgeId) {
 

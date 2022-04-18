@@ -48,6 +48,10 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-hibernate-orm</artifactId>
+    </dependency>
+    <dependency>
       <groupId>life.genny</groupId>
       <artifactId>qwandaq</artifactId>
       <version>${genny.version}</version>
