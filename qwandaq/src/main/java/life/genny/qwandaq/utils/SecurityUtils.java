@@ -4,7 +4,9 @@ import org.jboss.logging.Logger;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.crypto.spec.SecretKeySpec;
 import javax.ws.rs.core.Response;
@@ -14,6 +16,7 @@ import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.InvalidKeyException;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.GennyToken;
 
 /**
@@ -148,5 +151,17 @@ public class SecurityUtils {
 
 		// Builds the JWT and serializes it to a compact, URL-safe string
 		return builder.compact();
+	}
+
+	public static BaseEntity privacyFilter(BaseEntity be, List<String> allowed) {
+
+		// Filter out unwanted attributes
+		be.setBaseEntityAttributes(
+				be.getBaseEntityAttributes()
+						.stream()
+						.filter(x -> allowed.contains(x.getAttributeCode()))
+						.collect(Collectors.toSet()));
+
+		return be;
 	}
 }

@@ -19,6 +19,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.validation.Validation;
 
@@ -491,7 +492,6 @@ public class DatabaseUtils {
 	 * @param targetCode   the targetCode to find by
 	 * @return List list of asks
 	 */
-
 	public List<Ask> findAsksByQuestionCode(String realm, String questionCode, String sourceCode,
 			String targetCode) {
 
@@ -574,6 +574,28 @@ public class DatabaseUtils {
 	}
 
 	/**
+	 * Save a {@link EntityAttribute} to the database.
+	 *
+	 * @param entityAttribute A {@link EntityAttribute} object to save
+	 */
+	@Transactional
+	public void saveEntityAttribute(EntityAttribute entityAttribute) {
+
+		log.info("Saving EntityAttribute " + entityAttribute.getAttributeCode());
+
+		checkEntityManager();
+
+		try {
+
+			entityManager.persist(entityAttribute);
+			log.info("Successfully saved EntityAttribute " + entityAttribute.getAttributeCode());
+
+		} catch (Exception e) {
+			log.error(e);
+		}
+	}
+
+	/**
 	 * Save a {@link BaseEntity} to the database.
 	 *
 	 * @param entity A {@link BaseEntity} object to save
@@ -585,11 +607,9 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 
-		BaseEntity existingEntity = findBaseEntityByCode(entity.getRealm(), entity.getCode());
-
 		try {
 
-			if (existingEntity == null) {
+			if (entity.getId() == null) {
 				entityManager.persist(entity);
 			} else {
 				entityManager.merge(entity);

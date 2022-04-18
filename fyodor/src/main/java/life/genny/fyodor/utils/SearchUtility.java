@@ -54,6 +54,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SecurityUtils;
 
 @ApplicationScoped
 public class SearchUtility {
@@ -146,7 +147,7 @@ public class SearchUtility {
 		}
 
 		// Find Allowed Columns
-		List<String> allowed = getSearchColumnFilterArray(searchBE);
+		List<String> allowedAttributes = getSearchColumnFilterArray(searchBE);
 		// Used to disable the column privacy
 		EntityAttribute columnWildcard = searchBE.findEntityAttribute("COL_*").orElse(null);
 
@@ -159,8 +160,8 @@ public class SearchUtility {
 
 					// Filter unwanted attributes
 					if (columnWildcard == null) {
-						be = privacyFilter(be, allowed);
-						be = handleSpecialAttributes(be, allowed);
+						be = SecurityUtils.privacyFilter(be, allowedAttributes);
+						be = qwandaUtils.handleSpecialAttributes(be, allowedAttributes);
 					}
 
 					for (EntityAttribute calEA : cals) {
@@ -716,9 +717,9 @@ public class SearchUtility {
 					BaseEntity be = entities.get(i);
 
 					if (!columnWildcard) {
-						be = privacyFilter(be, allowed);
+						be = SecurityUtils.privacyFilter(be, allowed);
 					}
-					be = handleSpecialAttributes(be, allowed);
+					be = qwandaUtils.handleSpecialAttributes(be, allowed);
 
 					be.setIndex(i);
 					beArray[i] = be;
@@ -1114,59 +1115,6 @@ public class SearchUtility {
 		}
 		attributeFilter.addAll(assocAttributeFilter);
 		return attributeFilter;
-	}
-
-	public static BaseEntity privacyFilter(BaseEntity be, List<String> allowed) {
-
-		// Filter out unwanted attributes
-		be.setBaseEntityAttributes(
-				be.getBaseEntityAttributes()
-						.stream()
-						.filter(x -> allowed.contains(x.getAttributeCode()))
-						.collect(Collectors.toSet()));
-
-		return be;
-	}
-
-	public static BaseEntity handleSpecialAttributes(BaseEntity be, List<String> allowed) {
-
-		try {
-			// Handle Created and Updated attributes
-			if (allowed.contains("PRI_CREATED")) {
-				Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
-				EntityAttribute created = new EntityAttribute(be, createdAttr, 1.0);
-				created.setValueDateTime(be.getCreated());
-				be.addAttribute(created);
-			}
-			if (allowed.contains("PRI_CREATED_DATE")) {
-				Attribute createdAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
-				EntityAttribute created = new EntityAttribute(be, createdAttr, 1.0);
-				created.setValueDate(be.getCreated().toLocalDate());
-				be.addAttribute(created);
-			}
-			if (allowed.contains("PRI_UPDATED")) {
-				Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
-				EntityAttribute updated = new EntityAttribute(be, updatedAttr, 1.0);
-				updated.setValueDateTime(be.getUpdated());
-				be.addAttribute(updated);
-			}
-			if (allowed.contains("PRI_UPDATED_DATE")) {
-				Attribute updatedAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
-				EntityAttribute updated = new EntityAttribute(be, updatedAttr, 1.0);
-				updated.setValueDate(be.getUpdated().toLocalDate());
-				be.addAttribute(updated);
-			}
-			if (allowed.contains("PRI_CODE")) {
-				Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
-				EntityAttribute code = new EntityAttribute(be, codeAttr, 1.0);
-				code.setValueString(be.getCode());
-				be.addAttribute(code);
-			}
-		} catch (BadDataException e) {
-			log.error("could not add special attributes to entity");
-		}
-
-		return be;
 	}
 
 	public Answer getAssociatedColumnValue(BaseEntity baseBE, String calEACode) {

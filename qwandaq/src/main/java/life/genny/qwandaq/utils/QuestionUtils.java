@@ -8,6 +8,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,45 +75,45 @@ public class QuestionUtils implements Serializable {
 	@Inject
 	EntityManager entityManager;
 
-	/**
-	 * Check if a Question group exists in the database and cache.
-	 *
-	 * @param sourceCode   the sourceCode to check
-	 * @param targetCode   the targetCode to check
-	 * @param questionCode the questionCode to check
-	 * @param beUtils      the beUtils to use
-	 * @return Boolean
-	 */
-	public Boolean doesQuestionGroupExist(
-			String sourceCode,
-			String targetCode,
-			final String questionCode,
-			BaseEntityUtils beUtils) {
+	// /**
+	//  * Check if a Question group exists in the database and cache.
+	//  *
+	//  * @param sourceCode   the sourceCode to check
+	//  * @param targetCode   the targetCode to check
+	//  * @param questionCode the questionCode to check
+	//  * @param beUtils      the beUtils to use
+	//  * @return Boolean
+	//  */
+	// public Boolean doesQuestionGroupExist(
+	// 		String sourceCode,
+	// 		String targetCode,
+	// 		final String questionCode,
+	// 		BaseEntityUtils beUtils) {
 
-		// we grab the question group using the questionCode
-		QDataAskMessage questions = getAsks(sourceCode, targetCode, questionCode, beUtils);
+	// 	// we grab the question group using the questionCode
+	// 	QDataAskMessage questions = getAsks(sourceCode, targetCode, questionCode, beUtils);
 
-		// we check if the question payload is not empty
-		if (questions != null) {
+	// 	// we check if the question payload is not empty
+	// 	if (questions != null) {
 
-			// we check if the question group contains at least one question
-			if (questions.getItems() != null && questions.getItems().length > 0) {
+	// 		// we check if the question group contains at least one question
+	// 		if (questions.getItems() != null && questions.getItems().length > 0) {
 
-				Ask firstQuestion = questions.getItems()[0];
+	// 			Ask firstQuestion = questions.getItems()[0];
 
-				// we check if the question is a question group and contains at least one
-				// question
-				if (firstQuestion.getAttributeCode().contains("QQQ_QUESTION_GROUP_BUTTON_SUBMIT")) {
-					return firstQuestion.getChildAsks().length > 0;
-				} else {
-					// if it is an ask we return true
-					return true;
-				}
-			}
-		}
+	// 			// we check if the question is a question group and contains at least one
+	// 			// question
+	// 			if (firstQuestion.getAttributeCode().contains("QQQ_QUESTION_GROUP_BUTTON_SUBMIT")) {
+	// 				return firstQuestion.getChildAsks().length > 0;
+	// 			} else {
+	// 				// if it is an ask we return true
+	// 				return true;
+	// 			}
+	// 		}
+	// 	}
 
-		return false;
-	}
+	// 	return false;
+	// }
 
 	/**
 	 * Deserialize a json {@link String} to a {@link JsonObject}.
@@ -165,64 +166,45 @@ public class QuestionUtils implements Serializable {
 	}
 
 	/**
-	 * @param rootQuestion the rootQuestion to find with
-	 * @param source       the source to use
-	 * @param target       the target to use
-	 * @param beUtils      the beUtils to use
-	 * @return List&lt;Ask&gt;
-	 */
-	public List<Ask> findAsks(final Question rootQuestion, final BaseEntity source,
-			final BaseEntity target, BaseEntityUtils beUtils) {
-
-		return findAsks(rootQuestion, source, target, false, false, false, false, beUtils);
-	}
-
-	/**
 	 * @param rootQuestion                   the rootQuestion to find with
 	 * @param source                         the source to use
 	 * @param target                         the target to use
-	 * @param childQuestionIsMandatory       the childQuestionIsMandatory to use
-	 * @param childQuestionIsReadonly        the childQuestionIsReadonly to use
-	 * @param childQuestionIsFormTrigger     the childQuestionIsFormTrigger to use
-	 * @param childQuestionIsCreateOnTrigger the childQuestionIsCreateOnTrigger to
-	 *                                       use
-	 * @param beUtils                        the beUtils to use
+	 * @param beUtils                        the Utils
 	 * @return List&lt;Ask&gt;
 	 */
-	public List<Ask> findAsks(final Question rootQuestion, final BaseEntity source, final BaseEntity target,
-			Boolean childQuestionIsMandatory, Boolean childQuestionIsReadonly, Boolean childQuestionIsFormTrigger,
-			Boolean childQuestionIsCreateOnTrigger, BaseEntityUtils beUtils) {
+	public QDataAskMessage findAsks(final Question rootQuestion, final BaseEntity source, final BaseEntity target, BaseEntityUtils beUtils) {
+
+		String realm = beUtils.getRealm();
 
 		if (rootQuestion == null) {
-			log.error(
-					"rootQuestion for findAsks is null - source=" + source.getCode() + ": target " + target.getCode());
-			return new ArrayList<Ask>();
+			log.error("rootQuestion for findAsks is null - source=" + source.getCode() + ": target=" + target.getCode());
+			return new QDataAskMessage();
 		}
 
 		List<Ask> asks = new ArrayList<>();
-		Boolean mandatory = rootQuestion.getMandatory() || childQuestionIsMandatory;
-		Boolean readonly = rootQuestion.getReadonly() || childQuestionIsReadonly;
+		Boolean mandatory = rootQuestion.getMandatory();
+		Boolean readonly = rootQuestion.getReadonly();
 		Ask ask = null;
 
 		// check if this already exists?
-		List<Ask> myAsks = databaseUtils.findAsksByQuestionCode(beUtils.getRealm(), rootQuestion.getCode(),
-				source.getCode(), target.getCode());
-		if (!(myAsks == null || myAsks.isEmpty())) {
-			ask = myAsks.get(0);
+		List<Ask> savedAsks = databaseUtils.findAsksByQuestionCode(realm, rootQuestion.getCode(), source.getCode(), target.getCode());
+
+		if (savedAsks != null && !savedAsks.isEmpty()) {
+			ask = savedAsks.get(0);
 			ask.setMandatory(mandatory);
 			ask.setReadonly(readonly);
-			ask.setFormTrigger(childQuestionIsFormTrigger);
-			ask.setCreateOnTrigger(childQuestionIsCreateOnTrigger);
+			ask.setCreateOnTrigger(false);
 
 		} else {
 			ask = new Ask(rootQuestion, source.getCode(), target.getCode(), mandatory, 1.0, false, false, readonly);
-			ask.setCreateOnTrigger(childQuestionIsMandatory);
-			ask.setFormTrigger(childQuestionIsFormTrigger);
-			ask.setRealm(beUtils.getRealm());
+			ask.setCreateOnTrigger(mandatory);
+			ask.setRealm(realm);
 
 			// Now merge ask name if required
 			ask = performMerge(ask);
 		}
+
+		ask.setFormTrigger(false);
 
 		// create one
 		if (rootQuestion.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
@@ -233,52 +215,36 @@ public class QuestionUtils implements Serializable {
 			for (QuestionQuestion qq : qqList) {
 				String qCode = qq.getPk().getTargetCode();
 				log.info(qq.getPk().getSourceCode() + " -> Child Question -> " + qCode);
-				Question childQuestion = databaseUtils.findQuestionByCode(beUtils.getRealm(), qCode);
+				Question childQuestion = databaseUtils.findQuestionByCode(realm, qCode);
 				// Grab whatever icon the QuestionQuestion has set
 				childQuestion.setIcon(qq.getIcon());
 				if (childQuestion != null) {
-					List<Ask> askChildren = null;
+					QDataAskMessage askChildren = null;
 					try {
-						askChildren = findAsks(childQuestion, source, target, qq.getMandatory(),
-								qq.getReadonly(),
-								qq.getFormTrigger(), qq.getCreateOnTrigger(), beUtils);
-						for (Ask child : askChildren) {
+						askChildren = findAsks(childQuestion, source, target, beUtils);
+						for (Ask child : askChildren.getItems()) {
 							child.setQuestion(childQuestion);
 							child.setHidden(qq.getHidden());
 							child.setDisabled(qq.getDisabled());
 							child.setReadonly(qq.getReadonly());
 						}
 					} catch (Exception e) {
-						log.error("Error with QuestionQuestion: " + rootQuestion.getCode());
-						log.error("Problem Question: " + childQuestion.getCode());
+						log.error("Error with QuestionQuestion: " + rootQuestion.getCode() + ":" + childQuestion.getCode());
 						e.printStackTrace();
 					}
-					childAsks.addAll(askChildren);
+					childAsks.addAll(Arrays.asList(askChildren.getItems()));
 				}
 			}
 			Ask[] asksArray = childAsks.toArray(new Ask[0]);
 			ask.setChildAsks(asksArray);
 
-			ask.setRealm(beUtils.getRealm());
+			ask.setRealm(realm);
 		}
 
 		asks.add(ask);
-		return asks;
-	}
+        QDataAskMessage msg = new QDataAskMessage(asks);
 
-	/**
-	 * @param rootQuestion the rootQuestion to create with
-	 * @param source       the source to use
-	 * @param target       the target to use
-	 * @param beUtils      the beUtils to use
-	 * @return List&lt;Ask&gt;
-	 */
-	public List<Ask> createAsksByQuestion2(final Question rootQuestion, final BaseEntity source,
-			final BaseEntity target, BaseEntityUtils beUtils) {
-
-		List<Ask> asks = findAsks(rootQuestion, source, target, beUtils);
-
-		return asks;
+		return msg;
 	}
 
 	/**
@@ -288,8 +254,7 @@ public class QuestionUtils implements Serializable {
 	 * @param beUtils      the beUtils to use
 	 * @return List&lt;Ask&gt;
 	 */
-	public List<Ask> createAsksByQuestionCode2(final String questionCode, final String sourceCode,
-			final String targetCode, BaseEntityUtils beUtils) {
+	public QDataAskMessage createAsksByQuestionCode(final String questionCode, final String sourceCode, final String targetCode, BaseEntityUtils beUtils) {
 
 		Question rootQuestion = databaseUtils.findQuestionByCode(beUtils.getRealm(), questionCode);
 		BaseEntity source = null;
@@ -303,227 +268,7 @@ public class QuestionUtils implements Serializable {
 			target = beUtils.getBaseEntityByCode(targetCode);
 		}
 
-		return createAsksByQuestion2(rootQuestion, source, target, beUtils);
-	}
-
-	/**
-	 * @param sourceCode   the sourceCode to use
-	 * @param targetCode   the targetCode to use
-	 * @param questionCode the questionCode to use
-	 * @param beUtils      the beUtils to use
-	 * @return QDataAskMessage
-	 */
-	public QDataAskMessage getDirectAsks(String sourceCode, String targetCode, String questionCode,
-			BaseEntityUtils beUtils) {
-		List<Ask> asks = null;
-
-		asks = createAsksByQuestionCode2(questionCode, sourceCode, targetCode, beUtils);
-		log.debug("Number of asks=" + asks.size());
-		log.debug("Number of asks=" + asks);
-		final QDataAskMessage askMsgs = new QDataAskMessage(asks.toArray(new Ask[0]));
-
-		return askMsgs;
-	}
-
-	/**
-	 * @param sourceCode   the sourceCode to use
-	 * @param targetCode   the targetCode to use
-	 * @param questionCode the questionCode to use
-	 * @param beUtils      the beUtils to use
-	 * @return QDataAskMessage
-	 */
-	public QDataAskMessage getAsks(String sourceCode, String targetCode, String questionCode,
-			BaseEntityUtils beUtils) {
-
-		// TODO: Ensure migration from api to Database worked fine
-		List<Ask> asks = databaseUtils.findAsksByQuestionCode(beUtils.getRealm(), questionCode, sourceCode, targetCode);
-		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[0]));
-
-		// Identify all the attributeCodes and build up a working active Set
-		Set<String> activeAttributeCodes = new HashSet<String>();
-		for (Ask ask : msg.getItems()) {
-			activeAttributeCodes.addAll(getAttributeCodes(ask));
-
-			// Go down through the child asks and get cached questions
-			setCachedQuestionsRecursively(ask, beUtils);
-		}
-		// Now fetch the set from cache and add it....
-		Type type = new TypeToken<Set<String>>() {
-		}.getType();
-
-		Set<String> activeAttributesSet = CacheUtils.getObject(beUtils.getRealm(), "ACTIVE_ATTRIBUTES", type);
-
-		if (activeAttributesSet == null) {
-			activeAttributesSet = new HashSet<String>();
-		}
-		activeAttributesSet.addAll(activeAttributeCodes);
-
-		CacheUtils.putObject(beUtils.getRealm(), "ACTIVE_ATTRIBUTES", activeAttributesSet);
-
-		log.debug("Total Active AttributeCodes = " + activeAttributesSet.size());
-
-		return msg;
-	}
-
-	/**
-	 * Get all attributes used by an {@link Ask} and its children.
-	 *
-	 * @param ask The ask to traverse.
-	 * @return A set of Strings containing the attribute codes.
-	 */
-	private Set<String> getAttributeCodes(Ask ask) {
-
-		// grab attribute code of current ask
-		Set<String> activeCodes = new HashSet<String>();
-		activeCodes.add(ask.getAttributeCode());
-
-		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
-
-			// grab all child ask attribute codes
-			for (Ask childAsk : ask.getChildAsks()) {
-
-				activeCodes.addAll(getAttributeCodes(childAsk));
-			}
-		}
-		return activeCodes;
-	}
-
-	/**
-	 * @param sourceCode   the sourceCode to use
-	 * @param targetCode   the targetCode to use
-	 * @param questionCode the questionCode to get
-	 * @param beUtils      the beUtils to use
-	 * @return QwandaMessage
-	 * @throws ClientProtocolException if something went wrong
-	 * @throws IOException             if something went wrong
-	 */
-	public QwandaMessage getQuestions(String sourceCode, String targetCode,
-			String questionCode, BaseEntityUtils beUtils) throws ClientProtocolException, IOException {
-
-		return getQuestions(sourceCode, targetCode, questionCode, beUtils, null, true);
-	}
-
-	/**
-	 * Get Questions for a given souce, target and code.
-	 *
-	 * @param sourceCode      the sourceCode to use
-	 * @param targetCode      the targetCode to use
-	 * @param questionCode    the questionCode to get
-	 * @param beUtils         the beUtils to use
-	 * @param stakeholderCode the stakeholderCode to use
-	 * @param pushSelection   push the selection
-	 * @return QwandaMessage
-	 * @throws ClientProtocolException if something went wrong
-	 * @throws IOException             if something went wrong
-	 */
-	public QwandaMessage getQuestions(
-			String sourceCode,
-			String targetCode,
-			String questionCode,
-			BaseEntityUtils beUtils,
-			String stakeholderCode,
-			Boolean pushSelection) throws ClientProtocolException, IOException {
-
-		QBulkMessage bulk = new QBulkMessage();
-		QwandaMessage qwandaMessage = new QwandaMessage();
-
-		Instant start = Instant.now();
-
-		// get the ask data
-		QDataAskMessage questions = getAsks(sourceCode, targetCode, questionCode, beUtils);
-
-		Instant middle = Instant.now();
-		log.info("getAsks duration = " + Duration.between(start, middle).toMillis() + " ms");
-
-		if (questions == null) {
-			log.error("Questions Msg is null " + sourceCode + "/asks2/" + questionCode + "/" + targetCode);
-			return null;
-		}
-
-		// if we have the questions, loop through the asks and send required data to
-		// front end
-		Ask[] asks = questions.getItems();
-		if (asks != null && pushSelection) {
-			QBulkMessage askData = sendAsksRequiredData(asks, beUtils, stakeholderCode);
-			for (QDataBaseEntityMessage message : askData.getMessages()) {
-				bulk.add(message);
-			}
-		}
-
-		Instant end = Instant.now();
-		log.info("sendAsksRequiredData duration = " + Duration.between(middle, end).toMillis() + " ms");
-
-		qwandaMessage.askData = bulk;
-		qwandaMessage.asks = questions;
-
-		return qwandaMessage;
-	}
-
-	/**
-	 * @param sourceCode        the sourceCode to use
-	 * @param targetCode        the targetCode to use
-	 * @param questionGroupCode the questionGroupCode to use
-	 * @param beUtils           the beUtils to use
-	 * @return QwandaMessage
-	 */
-	public QwandaMessage askQuestions(final String sourceCode,
-			final String targetCode,
-			final String questionGroupCode, BaseEntityUtils beUtils) {
-		return askQuestions(sourceCode, targetCode, questionGroupCode, beUtils, null,
-				true);
-	}
-
-	/**
-	 * @param sourceCode        the sourceCode to use
-	 * @param targetCode        the targetCode to use
-	 * @param questionGroupCode the questionGroupCode to use
-	 * @param beUtils           the beUtils to use
-	 * @param stakeholderCode   the stakeholderCode to use
-	 * @return QwandaMessage
-	 */
-	public QwandaMessage askQuestions(final String sourceCode, final String targetCode,
-			final String questionGroupCode, BaseEntityUtils beUtils, String stakeholderCode) {
-		return askQuestions(sourceCode, targetCode, questionGroupCode, beUtils, stakeholderCode, true);
-	}
-
-	/**
-	 * @param sourceCode        the sourceCode to use
-	 * @param targetCode        the targetCode to use
-	 * @param questionGroupCode the questionGroupCode to use
-	 * @param pushSelection     push selection
-	 * @param beUtils           the beUtils to use
-	 * @return QwandaMessage
-	 */
-	public QwandaMessage askQuestions(final String sourceCode, final String targetCode,
-			final String questionGroupCode, Boolean pushSelection, BaseEntityUtils beUtils) {
-		return askQuestions(sourceCode, targetCode, questionGroupCode, beUtils, null, pushSelection);
-	}
-
-	/**
-	 * @param sourceCode        the sourceCode to use
-	 * @param targetCode        the targetCode to use
-	 * @param questionGroupCode the questionGroupCode to use
-	 * @param beUtils           the beUtils to use
-	 * @param stakeholderCode   the stakeholderCode to use
-	 * @param pushSelection     push selection
-	 * @return QwandaMessage
-	 */
-	public QwandaMessage askQuestions(final String sourceCode,
-			final String targetCode,
-			final String questionGroupCode, final BaseEntityUtils beUtils, final String stakeholderCode,
-			final Boolean pushSelection) {
-
-		try {
-
-			// if sending the questions worked, we ask user
-			return getQuestions(sourceCode, targetCode, questionGroupCode, beUtils,
-					stakeholderCode, pushSelection);
-
-		} catch (Exception e) {
-			log.info("Ask questions exception: ");
-			e.printStackTrace();
-			return null;
-		}
+		return findAsks(rootQuestion, source, target, beUtils);
 	}
 
 	/**
@@ -681,41 +426,6 @@ public class QuestionUtils implements Serializable {
 	}
 
 	/**
-	 * Create a question for a BaseEntity.
-	 * 
-	 * @param be              the be to create for
-	 * @param isQuestionGroup the isQuestionGroup status
-	 * @param beUtils         the beUtils to use
-	 * @param sourceAlias     the sourceAlias to create with
-	 * @param targetAlias     the targetAlias to create with
-	 * @return Ask
-	 */
-	public Ask createQuestionForBaseEntity2(BaseEntity be, Boolean isQuestionGroup, BaseEntityUtils beUtils,
-			final String sourceAlias, final String targetAlias) {
-
-		// create attribute code using isQuestionGroup and fetch attribute
-		String attributeCode = isQuestionGroup ? "QQQ_QUESTION_GROUP_INPUT" : "PRI_EVENT";
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-
-		// create temporary attribute if not fetched
-		if (attribute == null) {
-			log.error("Attribute DOES NOT EXIST! " + attributeCode + " creating temp");
-			attribute = new Attribute(attributeCode, attributeCode, new DataType("DTT_THEME"));
-		}
-
-		// generate the question
-		Question newQuestion = new Question(be.getCode(), be.getName(), attribute, false);
-
-		// generate question and return
-		Ask ask = new Ask(newQuestion, (sourceAlias != null ? sourceAlias : be.getCode()),
-				(targetAlias != null ? targetAlias : be.getCode()), false, 1.0, false, false, true);
-		ask.setRealm(beUtils.getRealm());
-
-		return ask;
-
-	}
-
-	/**
 	 * Create a virtual link between a {@link BaseEntity} and an {@link Ask}.
 	 *
 	 * @param source    the source to create with
@@ -754,8 +464,7 @@ public class QuestionUtils implements Serializable {
 		String realm = beUtils.getRealm();
 
 		// fetch from cache
-		Question question = getQuestion(realm, code);
-		// Question question = CacheUtils.getObject(realm, code, Question.class);
+		Question question = CacheUtils.getObject(realm, code, Question.class);
 
 		if (question != null) {
 			return question;
@@ -828,13 +537,12 @@ public class QuestionUtils implements Serializable {
 
 	}
 
-	public void sendQuestions(final String rootQuestionCode, BaseEntity recipient, GennyToken userToken) {
-		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
-		QDataAskMessage askMsg = getAsks(userToken.getUserCode(), recipient.getCode(),
-				rootQuestionCode,
-				beUtils);
-		sendQuestions(askMsg, recipient, userToken);
-	}
+	// public void sendQuestions(final String rootQuestionCode, BaseEntity recipient, GennyToken userToken) {
+
+	// 	BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+	// 	QDataAskMessage askMsg = findAsks(userToken.getUserCode(), recipient.getCode(), rootQuestionCode, beUtils);
+	// 	sendQuestions(askMsg, recipient, userToken);
+	// }
 
 	public void sendQuestions(QDataAskMessage askMsg, BaseEntity target, GennyToken userToken) {
 
@@ -848,7 +556,7 @@ public class QuestionUtils implements Serializable {
 		QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(target);
 		beMsg.setToken(userToken.getToken());
 
-		KafkaUtils.writeMsg("webcmds", beMsg); // should be webdata
+		KafkaUtils.writeMsg("webdata", beMsg);
 
 		askMsg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("webcmds", askMsg);
@@ -859,22 +567,4 @@ public class QuestionUtils implements Serializable {
 		KafkaUtils.writeMsg("webcmds", msgend);
 	}
 
-	public Question getQuestion(final String realm, final String questionCode) {
-		Question question = null;
-		try {
-
-			question = entityManager
-					.createQuery(
-							"FROM Question WHERE realm=:realmStr AND code = :code",
-							Question.class)
-					.setParameter("realmStr", realm)
-					.setParameter("code", questionCode)
-					.getSingleResult();
-
-		} catch (NoResultException e) {
-			log.error("No Question found in DB for " + questionCode);
-		}
-
-		return question;
-	}
 }

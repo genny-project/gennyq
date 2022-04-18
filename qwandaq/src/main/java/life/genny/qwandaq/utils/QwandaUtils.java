@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +28,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -259,39 +261,45 @@ public class QwandaUtils {
 		return question;
 	}
 
-	/**
-	 * Send a {@link QEventMessage} to shleemy for scheduling.
-	 *
-	 * @param userToken       the userToken to schedule for
-	 * @param eventMsgCode    the eventMsgCode to set
-	 * @param scheduleMsgCode the scheduleMsgCode to set
-	 * @param triggertime     the triggertime to set
-	 * @param targetCode      the targetCode to set
-	 */
-	public void scheduleEvent(GennyToken userToken, String eventMsgCode, String scheduleMsgCode,
-			LocalDateTime triggertime, String targetCode) {
+	public static BaseEntity handleSpecialAttributes(BaseEntity be, List<String> allowed) {
 
-		// create the event message
-		QEventMessage evtMsg = new QEventMessage("SCHEDULE_EVT", eventMsgCode);
-		evtMsg.setToken(userToken.getToken());
-		evtMsg.getData().setTargetCode(targetCode);
+		try {
+			// Handle Created and Updated attributes
+			if (allowed.contains("PRI_CREATED")) {
+				Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
+				EntityAttribute created = new EntityAttribute(be, createdAttr, 1.0);
+				created.setValueDateTime(be.getCreated());
+				be.addAttribute(created);
+			}
+			if (allowed.contains("PRI_CREATED_DATE")) {
+				Attribute createdAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
+				EntityAttribute created = new EntityAttribute(be, createdAttr, 1.0);
+				created.setValueDate(be.getCreated().toLocalDate());
+				be.addAttribute(created);
+			}
+			if (allowed.contains("PRI_UPDATED")) {
+				Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
+				EntityAttribute updated = new EntityAttribute(be, updatedAttr, 1.0);
+				updated.setValueDateTime(be.getUpdated());
+				be.addAttribute(updated);
+			}
+			if (allowed.contains("PRI_UPDATED_DATE")) {
+				Attribute updatedAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
+				EntityAttribute updated = new EntityAttribute(be, updatedAttr, 1.0);
+				updated.setValueDate(be.getUpdated().toLocalDate());
+				be.addAttribute(updated);
+			}
+			if (allowed.contains("PRI_CODE")) {
+				Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
+				EntityAttribute code = new EntityAttribute(be, codeAttr, 1.0);
+				code.setValueString(be.getCode());
+				be.addAttribute(code);
+			}
+		} catch (BadDataException e) {
+			log.error("could not add special attributes to entity");
+		}
 
-		// create a recipient list
-		String[] rxList = new String[2];
-		rxList[0] = "SUPERUSER";
-		rxList[1] = userToken.getUserCode();
-		evtMsg.setRecipientCodeArray(rxList);
-
-		log.info("Scheduling event: " + eventMsgCode + ", Trigger time: " + triggertime.toString());
-
-		// create schedule message
-		QScheduleMessage scheduleMessage = new QScheduleMessage(scheduleMsgCode, jsonb.toJson(evtMsg),
-				userToken.getUserCode(), "project", triggertime, userToken.getRealm());
-		log.info("Sending message " + scheduleMessage.getCode() + " to shleemy for scheduling");
-
-		// send msg to shleemy
-		String json = jsonb.toJson(scheduleMessage);
-		KafkaUtils.writeMsg("schedule", json);
+		return be;
 	}
 
 	/**
@@ -304,7 +312,6 @@ public class QwandaUtils {
 
 		String uri = GennySettings.shleemyServiceUrl() + "/api/schedule/code/" + code;
 		HttpUtils.delete(uri, userToken.getToken());
-
 	}
 
 	/**

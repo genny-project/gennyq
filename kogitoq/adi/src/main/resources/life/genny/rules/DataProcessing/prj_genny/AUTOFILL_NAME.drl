@@ -2,10 +2,12 @@ package life.genny.rules;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Answers;
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.rules.RuleDetails;
@@ -24,6 +26,7 @@ when
 	beUtils : BaseEntityUtils()
 	qwandaUtils : QwandaUtils()
 	questionUtils : QuestionUtils()
+	databaseUtils : DatabaseUtils()
 then
 	System.out.println(drools.getRule().getName() + " triggered");
 	System.out.println("answer  ::  " + answer); 
@@ -90,7 +93,11 @@ then
 		if(attributeCode.equals("PRI_NAME")) questionCode="QUE_TRADING_NAME";
 		if(attributeCode.equals("PRI_LEGAL_NAME")) questionCode="QUE_LEGAL_NAME";
 
-		QDataAskMessage askMsg = questionUtils.getAsks(userToken.getUserCode(), targetCode, "QUE_HOST_CPY_GRP", beUtils);
+        Question rootQuestion = questionUtils.getQuestion("QUE_HOST_CPY_GRP", beUtils);
+        BaseEntity source = databaseUtils.findBaseEntityByCode(userToken.getRealm(), userToken.getUserCode());
+        BaseEntity target = databaseUtils.findBaseEntityByCode(userToken.getRealm(), targetCode);
+		QDataAskMessage askMsg = questionUtils.findAsks(rootQuestion, source, target, beUtils);
+
 		if (askMsg != null) {
 
 			Ask[] items = askMsg.getItems();
