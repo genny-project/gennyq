@@ -176,7 +176,7 @@ public class KeycloakUtils {
 	public static String fetchOIDCToken(String keycloakUrl, String realm, HashMap<String, String> params) {
 
         String uri = keycloakUrl + "/auth/realms/" + realm + "/protocol/openid-connect/token";
-		log.debug("Fetching OIDC Token from " + uri);
+		log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
 
