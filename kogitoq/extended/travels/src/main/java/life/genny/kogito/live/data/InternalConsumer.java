@@ -1,7 +1,9 @@
 package life.genny.kogito.live.data;
 
+import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
+import java.time.Duration;
 import java.time.Instant;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
@@ -9,16 +11,6 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.jboss.logging.Logger;
-import org.kie.api.runtime.KieSession;
-import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
-
-import io.quarkus.runtime.StartupEvent;
-import io.smallrye.reactive.messaging.annotations.Blocking;
-
 import life.genny.kogito.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
@@ -26,6 +18,15 @@ import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieSession;
+import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
+
+
+
+
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -86,17 +87,17 @@ public class InternalConsumer {
         BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
         // log.info("Token username " + userToken.getUsername());
 
-		kogitoUtils.triggerWorkflow(graphTable, message, userToken);
+		//kogitoUtils.triggerWorkflow(graphTable, message, userToken);
 
         session.insert(kogitoUtils);
         session.insert(beUtils);
         session.insert(userToken);
         session.insert(msg);
-        // session.fireAllRules();
-        // session.dispose();
+        session.fireAllRules();
+        session.dispose();
 
         Instant end = Instant.now();
-        // log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
     }
 
     /**
