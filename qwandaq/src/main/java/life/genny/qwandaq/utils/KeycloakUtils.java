@@ -1,21 +1,6 @@
 package life.genny.qwandaq.utils;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.keycloak.representations.account.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -31,6 +16,21 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.net.ssl.HttpsURLConnection;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.GennyToken;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+import org.keycloak.representations.account.UserRepresentation;
+import org.keycloak.util.JsonSerialization;
+
 
 /**
  * A static utility class used for standard requests and
@@ -65,7 +65,7 @@ public class KeycloakUtils {
 		params.put("grant_type", "password");
         params.put("client_id", clientId);
 
-        if (!StringUtils.isBlank(secret)) {
+        if ((!StringUtils.isBlank(secret))&&(!"nosecret".equals(secret))) {
             params.put("client_secret", secret);
         }
 
