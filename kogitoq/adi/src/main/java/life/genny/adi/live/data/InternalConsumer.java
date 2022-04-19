@@ -29,6 +29,9 @@ import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
@@ -36,81 +39,96 @@ public class InternalConsumer {
 
 	static final Logger log = Logger.getLogger(InternalConsumer.class);
 
-    static Jsonb jsonb = JsonbBuilder.create();
+	static Jsonb jsonb = JsonbBuilder.create();
 
-    @Inject
-    KieRuntimeBuilder ruleRuntime;
+	@Inject
+	KieRuntimeBuilder ruleRuntime;
 
 	@Inject
 	Service service;
 
+	@Inject
+	DatabaseUtils databaseUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
+
+	@Inject
+	SearchUtils searchUtils;
+
 	KieSession ksession;
 
 	/**
-	* Execute on start up.
-	*
-	* @param ev
+	 * Execute on start up.
+	 *
+	 * @param ev
 	 */
-    void onStart(@Observes StartupEvent ev) {
+	void onStart(@Observes StartupEvent ev) {
 
 		service.fullServiceInit();
 		log.info("[*] Finished Startup!");
-    }
+	}
 
 	/**
-	* Consume from the valid_data topic.
-	*
-	* @param data
+	 * Consume from the valid_data topic.
+	 *
+	 * @param data
 	 */
-    @Incoming("valid_data")
-    @Blocking
-    public void getValidData(String data) {
+	@Incoming("valid_data")
+	@Blocking
+	public void getValidData(String data) {
 
-        log.infov("Incoming Valid Data : {}", data);
-        Instant start = Instant.now();
+		log.infov("Incoming Valid Data : {}", data);
+		Instant start = Instant.now();
 
 		BaseEntityUtils beUtils = service.getBeUtils();
 		GennyToken serviceToken = beUtils.getServiceToken();
 		GennyToken userToken = null;
 
-        // deserialise to msg
-        QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+		// deserialise to msg
+		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
-        // check the token
-        String token = msg.getToken();
-        try {
-            userToken = new GennyToken(token);
-        } catch (Exception e) {
-            log.error("Invalid Token!");
-            return;
-        }
+		// check the token
+		String token = msg.getToken();
+		try {
+			userToken = new GennyToken(token);
+		} catch (Exception e) {
+			log.error("Invalid Token!");
+			return;
+		}
 
-        // update the token of our utility
-        beUtils.setGennyToken(userToken);
+		// update the token of our utility
+		beUtils.setGennyToken(userToken);
+		service.setBeUtils(beUtils);
 
 		Answer answer = msg.getItems()[0];
 		Answers answersToSave = new Answers();
 
-        // init session and activate DataProcessing
-        KieSession ksession = ruleRuntime.newKieSession();
-        ((InternalAgenda) ksession.getAgenda()).activateRuleFlowGroup("DataProcessing");
+		// init session and activate DataProcessing
+		KieSession ksession = ruleRuntime.newKieSession();
+		((InternalAgenda) ksession.getAgenda()).activateRuleFlowGroup("DataProcessing");
 
-        // insert facts into session
-		ksession.insert(beUtils);
-        ksession.insert(serviceToken);
-        ksession.insert(userToken);
+		// insert important facts into session
+		ksession.insert(serviceToken);
+		ksession.insert(userToken);
 		ksession.insert(answer);
 		ksession.insert(answersToSave);
 
-        // fire rules and dispose of session
-        ksession.fireAllRules();
-        ksession.dispose();
+		// insert utils into session
+		ksession.insert(beUtils);
+		ksession.insert(databaseUtils);
+		ksession.insert(qwandaUtils);
+		ksession.insert(searchUtils);
+
+		// fire rules and dispose of session
+		ksession.fireAllRules();
+		ksession.dispose();
 
 		// TODO: ensure that answersToSave has been updated by our rules
 		beUtils.saveAnswers(answersToSave);
 
-        Instant end = Instant.now();
-        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-    }
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+	}
 
 }

@@ -5,12 +5,12 @@ echo "Project Version: $VERSION"
 # Usage: ./build-docker.sh [project] 
 
 if [ "$#" -eq 1 ]; then
-	./mvnw clean  package -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always -pl :$1
+	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always -pl :$1
 	docker tag gennyproject/${1}:${VERSION} gennyproject/${1}:latest
 	exit 0
 fi
 
-./mvnw clean package -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always
+./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always
 
 for project in kogitoq-travels kogitoq-visas adi bridge fyodor dropkick lauchy messages shleemy
 do

@@ -54,7 +54,7 @@ public class QScheduleMessage extends PanacheEntity {
 
 	public String cron;
 
-	public LocalDateTime trigger;
+	public LocalDateTime triggerTime;
 
 	@NotEmpty
 	@Column(name = "jsonMessage", columnDefinition = "LONGTEXT")
@@ -75,10 +75,10 @@ public class QScheduleMessage extends PanacheEntity {
 		this.sourceCode = sourceCode;
 	}
 
-	public QScheduleMessage(final String code,final String jsonMessage, final String sourceCode, final String channel, final LocalDateTime trigger, final String realm) {
+	public QScheduleMessage(final String code,final String jsonMessage, final String sourceCode, final String channel, final LocalDateTime triggerTime, final String realm) {
 
 		this.code = code;
-		this.trigger = trigger;
+		this.triggerTime = triggerTime;
 		this.jsonMessage = jsonMessage;
 		this.channel = channel;
 		this.sourceCode = sourceCode;
@@ -122,7 +122,8 @@ public class QScheduleMessage extends PanacheEntity {
 
 	/**
 	* Set the targeted channel
-	* @param channel
+	*
+	* @param channel The channel to set
 	 */
 	public void setChannel(String channel) {
 		this.channel = channel;
@@ -138,6 +139,8 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/** 
+	 * Set the code
+	 *
 	 * @param code the code to set
 	 */
 	public void setCode(String code) {
@@ -145,13 +148,17 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/** 
-	 * @return String
+	 * Get the code
+	 *
+	 * @return The code
 	 */
 	public String getCode() {
 		return code;
 	}
 
 	/** 
+	 * Set the token
+	 *
 	 * @param token the token to set
 	 */
 	public void setToken(String token) {
@@ -159,6 +166,8 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/** 
+	 * Get the token
+	 *
 	 * @return String
 	 */
 	public String getToken() {
@@ -184,21 +193,21 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/**
-	 * Set the trigger datetime
+	 * Set the triggerTime datetime
 	 *
-	 * @param trigger the datetime to set
+	 * @param triggerTime the datetime to set
 	 */
-	public void setTrigger(LocalDateTime trigger) {
-		this.trigger = trigger;
+	public void setTriggerTime(LocalDateTime triggerTime) {
+		this.triggerTime = triggerTime;
 	}
 
 	/**
-	 * Get the trigger datetime
+	 * Get the triggerTime datetime
 	 *
-	 * @return the trigger datetime
+	 * @return the triggerTime datetime
 	 */
-	public LocalDateTime getTrigger() {
-		return trigger;
+	public LocalDateTime getTriggerTime() {
+		return triggerTime;
 	}
 
 	/**
@@ -232,7 +241,7 @@ public class QScheduleMessage extends PanacheEntity {
 		this.code = builder.msg.code;
 		this.token = builder.msg.token;
 		this.cron = builder.msg.cron;
-		this.trigger = builder.msg.trigger;
+		this.triggerTime = builder.msg.triggerTime;
 		this.jsonMessage = builder.msg.jsonMessage;
 	}
 
@@ -298,14 +307,14 @@ public class QScheduleMessage extends PanacheEntity {
 		}
 
 		/**
-		 * Set the scheduled trigger datetime
+		 * Set the scheduled triggerTime datetime
 		 *
-		 * @param trigger The datetime to trigger at
+		 * @param triggerTime The datetime to triggerTime at
 		 * @return The builder
 		 */
-		public Builder setTrigger(LocalDateTime trigger) {
+		public Builder setTriggerTime(LocalDateTime triggerTime) {
 
-			this.msg.setTrigger(trigger);
+			this.msg.setTriggerTime(triggerTime);
 			return this;
 		}
 
@@ -371,6 +380,7 @@ public class QScheduleMessage extends PanacheEntity {
 
 				String[] rxList = new String[]{ "SUPERUSER", gennyToken.getUserCode() };
 				this.eventMessage.setRecipientCodeArray(rxList);
+				this.eventMessage.setToken(this.gennyToken.getToken());
 
 				this.msg.setJsonMessage(jsonb.toJson(this.eventMessage));
 
@@ -382,6 +392,7 @@ public class QScheduleMessage extends PanacheEntity {
 
 			// handle comms message
 			if (this.commsMessage != null) {
+				this.commsMessage.setToken(this.gennyToken.getToken());
 				this.msg.setJsonMessage(jsonb.toJson(this.commsMessage));
 
 				// set channel to send to messages of not otherwise set

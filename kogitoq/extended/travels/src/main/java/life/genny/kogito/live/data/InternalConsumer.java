@@ -86,12 +86,14 @@ public class InternalConsumer {
         BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
         // log.info("Token username " + userToken.getUsername());
 
+		kogitoUtils.triggerWorkflow(graphTable, message, userToken);
+
         session.insert(kogitoUtils);
         session.insert(beUtils);
         session.insert(userToken);
         session.insert(msg);
-        session.fireAllRules();
-        session.dispose();
+        // session.fireAllRules();
+        // session.dispose();
 
         Instant end = Instant.now();
         // log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");

@@ -15,6 +15,7 @@ buildNativeImage()
 
 if [ "$#" -eq 1 ]; then
 	./mvnw clean package -Pnative -Dquarkus.native.remote-container-build=true -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel:21.3-java11 -DskipTests=true -Dstyle.color=always -pl :$1
+	docker tag gennyproject/${1}:${VERSION} gennyproject/${1}:${VERSION}-native
 	# buildNativeImage $1 $VERSION
 	exit 0
 fi
@@ -25,5 +26,6 @@ for project in kogitoq-travels kogitoq-visas adi bridge fyodor dropkick lauchy m
 do
     echo "Tagging $project"
 	# buildNativeImage $project $VERSION
+	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:${VERSION}-native
 done
 
