@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
 import io.quarkus.runtime.StartupEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -25,6 +28,8 @@ public class TaskBean {
 
 	private static final Logger log = Logger.getLogger(TaskBean.class);
 
+	private static Jsonb jsonb = JsonbBuilder.create();
+
 	@Inject
 	org.quartz.Scheduler quartz;
 
@@ -41,7 +46,10 @@ public class TaskBean {
 		}
 	}
 
+	@Transactional
 	public void addSchedule(QScheduleMessage scheduleMessage, GennyToken userToken) throws SchedulerException {
+
+		log.info(jsonb.toJson(scheduleMessage));
 
 		// setup message for persistance
 		scheduleMessage.id = null;
@@ -56,11 +64,11 @@ public class TaskBean {
 		String channel = scheduleMessage.getChannel();
 
 		String cron = scheduleMessage.getCron();
-		LocalDateTime trigger = scheduleMessage.getTrigger();
+		LocalDateTime triggerTime = scheduleMessage.getTriggerTime();
 		String messageJson = scheduleMessage.getJsonMessage();
 
 		log.info("Persisting new Schedule -> " + code + ":"
-				+ (trigger != null ? trigger : cron) + " from " + sourceCode);
+				+ (triggerTime != null ? triggerTime : cron) + " from " + sourceCode);
 
 		scheduleMessage.persist();
 
@@ -81,7 +89,7 @@ public class TaskBean {
 		String scheduledFor = null;
 
 		// handle cron trigger
-		if (!cron.isBlank()) {
+		if (!StringUtils.isBlank(cron)) {
 
 			CronScheduleBuilder cronSchedule = CronScheduleBuilder.cronSchedule(cron);
 			jobTrigger = TriggerBuilder.newTrigger()
@@ -93,9 +101,9 @@ public class TaskBean {
 			scheduledFor = cron;
 
 		// handle time trigger
-		} else if (trigger != null) {
+		} else if (triggerTime != null) {
 
-			Date scheduledDateTime = Date.from(trigger.atZone(ZoneId.systemDefault()).toInstant());
+			Date scheduledDateTime = Date.from(triggerTime.atZone(ZoneId.systemDefault()).toInstant());
 			jobTrigger = TriggerBuilder.newTrigger()
 				.withIdentity(code, realm)
 				.startAt(scheduledDateTime)
@@ -103,6 +111,8 @@ public class TaskBean {
 				.build();
 
 			scheduledFor = scheduledDateTime.toString();
+		} else {
+			log.error("No valid triggerTime or cron was provided!");
 		}
 
 		log.info("Scheduling " + userToken.getUserCode() + ":" + code + ":" + userToken.getEmail() + " for Realm: " + realm
@@ -118,7 +128,6 @@ public class TaskBean {
 		quartz.deleteJob(jobKey);
 	}
 
-	@Transactional
 	void performTask(JobExecutionContext context) {
 
 		log.info("Executing Task: " + context.getFireTime());

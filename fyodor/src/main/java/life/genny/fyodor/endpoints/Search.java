@@ -78,7 +78,7 @@ public class Search {
 
 		QScheduleMessage msg = new QScheduleMessage.Builder("SCHEDULE_TEST")
 			.setEventMessage("TEST_EVENT", uuid)
-			.setTrigger(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(20))
+			.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(20))
 			.setGennyToken(userToken)
 			.schedule();
 
