@@ -16,6 +16,11 @@ echo $GENNY_SERVICE_PASSWORD
 # echo $GENNY_MYSQL_URL
 # echo $GENNY_MYSQL_PORT
 # echo $GENNY_MYSQL_DB
+export GENNY_REALM=internmatch
+export GENNY_CLIENT_ID=mentormatch
+export GENNY_CLIENT_SECRET=nosecret
+export PROJECT_REALM=mentormatch
+export realm=mentormatch
 
 ./mvnw  quarkus:dev -Ddebug=5558
 

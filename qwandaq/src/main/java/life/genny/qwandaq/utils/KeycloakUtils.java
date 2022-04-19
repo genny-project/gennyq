@@ -58,7 +58,14 @@ public class KeycloakUtils {
 	 */
     public static GennyToken getToken(String keycloakUrl, String realm, String clientId, String secret, String username, String password) {
 
-        HashMap<String, String> params = new HashMap<>();
+        Map<String, String> params = new HashMap<>();
+
+        log.info("keycloakUrl:"+keycloakUrl);
+        log.info("realm:"+realm);
+        log.info("clientId:"+clientId);
+        log.info("secret:"+secret);
+        log.info("username:"+username);
+        log.info("password:"+password);
 
 		params.put("username", username);
 		params.put("password", password);
@@ -68,6 +75,7 @@ public class KeycloakUtils {
         if ((!StringUtils.isBlank(secret))&&(!"nosecret".equals(secret))) {
             params.put("client_secret", secret);
         }
+        log.info("parms:"+params);
 
 		String token = fetchOIDCToken(keycloakUrl, realm, params);
 
@@ -173,13 +181,13 @@ public class KeycloakUtils {
 	* @param params the params to use
 	* @return String
 	 */
-	public static String fetchOIDCToken(String keycloakUrl, String realm, HashMap<String, String> params) {
+	public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
 
         String uri = keycloakUrl + "/auth/realms/" + realm + "/protocol/openid-connect/token";
 		log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
-
+        log.info("encodedPostRequest:["+str+"]");
         JsonObject json = jsonb.fromJson(str, JsonObject.class);
         String token = json.getString("access_token");
 
@@ -193,7 +201,7 @@ public class KeycloakUtils {
      * @param postDataParams the postDataParams to use in rquest
      * @return String
      */
-    public static String executeEncodedPostRequest(String uri, HashMap<String, String> postDataParams) {
+    public static String executeEncodedPostRequest(String uri, Map<String, String> postDataParams) {
 
         try {
 
@@ -241,7 +249,7 @@ public class KeycloakUtils {
      * @param params the params to construct the query with
      * @return String
      */
-    public static String getPostDataString(HashMap<String, String> params) {
+    public static String getPostDataString(Map<String, String> params) {
         StringBuilder result = new StringBuilder();
         boolean first = true;
 
