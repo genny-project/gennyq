@@ -380,6 +380,7 @@ public class QScheduleMessage extends PanacheEntity {
 
 				String[] rxList = new String[]{ "SUPERUSER", gennyToken.getUserCode() };
 				this.eventMessage.setRecipientCodeArray(rxList);
+				this.eventMessage.setToken(this.gennyToken.getToken());
 
 				this.msg.setJsonMessage(jsonb.toJson(this.eventMessage));
 
@@ -391,6 +392,7 @@ public class QScheduleMessage extends PanacheEntity {
 
 			// handle comms message
 			if (this.commsMessage != null) {
+				this.commsMessage.setToken(this.gennyToken.getToken());
 				this.msg.setJsonMessage(jsonb.toJson(this.commsMessage));
 
 				// set channel to send to messages of not otherwise set
