@@ -53,7 +53,7 @@ public class UtilsResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/realms")
 	public Response read(@HeaderParam("Authorization") String token) {
-
+		log.info("Called api realms");
 		Boolean authorized = SecurityUtils.isAuthorizedToken(token);
 		if (!authorized) {
 			return Response.status(Response.Status.BAD_REQUEST)
