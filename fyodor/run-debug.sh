@@ -18,9 +18,10 @@ echo $GENNY_SERVICE_PASSWORD
 # echo $GENNY_MYSQL_DB
 export GENNY_REALM=internmatch
 export GENNY_CLIENT_ID=mentormatch
-export GENNY_CLIENT_SECRET=nosecret
+#export GENNY_CLIENT_SECRET=nosecret
 export PROJECT_REALM=mentormatch
 export realm=mentormatch
-
+export KEYCLOAK_CLIENT_ID=backend
+export KEYCLOAK_SECRET=${GENNY_CLIENT_SECRET}
 ./mvnw  quarkus:dev -Ddebug=5558
 
