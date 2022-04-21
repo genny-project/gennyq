@@ -18,6 +18,7 @@
     <module>basic</module>
     <module>extended</module>
     <module>adi</module>
+    <module>gadaq</module>
   </modules>
 
   <dependencyManagement>

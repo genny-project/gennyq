@@ -1,0 +1,155 @@
+package life.genny.kogito.live.data;
+
+import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
+import java.time.Duration;
+import java.time.Instant;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import life.genny.kogito.utils.KogitoUtils;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.serviceq.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieSession;
+import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
+
+
+
+
+
+@ApplicationScoped
+public class InternalConsumer {
+
+    static final Logger log = Logger.getLogger(InternalConsumer.class);
+
+    static Jsonb jsonb = JsonbBuilder.create();
+
+    @Inject
+    KogitoUtils kogitoUtils;
+
+    @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
+    String myUrl;
+
+    @Inject
+    KieRuntimeBuilder kieRuntimeBuilder;
+
+    @Inject
+    Service service;
+
+    KieSession ksession;
+
+    /**
+     * Execute on start up.
+     *
+     * @param ev
+     */
+    void onStart(@Observes StartupEvent ev) {
+        service.fullServiceInit();
+        log.info("[*] Finished Events Startup!");
+    }
+
+    /**
+     * Consume from the valid_data topic.
+     *
+     * @param data
+     */
+    @Incoming("events")
+    @Blocking
+    public void getEvent(String data) {
+
+        // log.info("Incoming Event :" + data);
+        Instant start = Instant.now();
+
+        KieSession session = kieRuntimeBuilder.newKieSession();
+
+        // session.setGlobal("maxAmount", loanDto.getMaxAmount());
+
+        QEventMessage msg = null;
+
+        try {
+            msg = jsonb.fromJson(data, QEventMessage.class);
+        } catch (Exception e) {
+            log.warn("Cannot parse this data ..");
+            return;
+        }
+        GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
+        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
+        // log.info("Token username " + userToken.getUsername());
+
+		//kogitoUtils.triggerWorkflow(graphTable, message, userToken);
+
+        session.insert(kogitoUtils);
+        session.insert(beUtils);
+        session.insert(userToken);
+        session.insert(msg);
+        session.fireAllRules();
+        session.dispose();
+
+        Instant end = Instant.now();
+        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+    }
+
+    /**
+     * Consume from the valid_data topic.
+     *
+     * @param data
+     */
+    @Incoming("valid_data")
+    @Blocking
+    public void getData(String data) {
+        log.info("Incoming Data into Java Kafka Listener:");
+        // Convert to Json and identify the application
+        JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
+        if (dataJson.containsKey("items")) {
+            JsonArray itemsArray = dataJson.getJsonArray("items");
+            if (!itemsArray.isEmpty()) {
+
+                JsonObject item0 = itemsArray.getJsonObject(0);
+                String item0Str = item0.toString();
+                // log.info("item0=" + item0Str);
+                if ("{}".equals(item0Str)) {
+                    log.info("Alyson Heartbeat");
+                    return;
+                }
+                QDataAnswerMessage msg = null;
+
+                try {
+                    msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+                } catch (Exception e) {
+                    log.warn("Cannot parse this data ..");
+                    return;
+                }
+                GennyToken userToken = new GennyToken("USERTOKEN", msg.getToken());
+                BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
+                Answer ans0 = msg.getItems()[0];
+                String processId = ans0.getProcessId();
+                log.info(ans0.getAttributeCode() + " -> processID to jump to identified as " + processId);
+                // check if PRI_SUBMIT
+                if (ans0.getAttributeCode().equals("PRI_SUBMIT")) {
+                    kogitoUtils.sendSignal("processquestions", processId, "submit", data, beUtils.getGennyToken());
+                } else if (ans0.getAttributeCode().equals("PRI_CANCEL")) {
+                    kogitoUtils.sendSignal("processquestions", processId, "cancel", data, beUtils.getGennyToken());
+                } else {
+                    kogitoUtils.sendSignal("processquestions", processId, "answer", data, beUtils.getGennyToken());
+                }
+            }
+        }
+
+        Instant start = Instant.now();
+
+        Instant end = Instant.now();
+        // log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+    }
+
+}
