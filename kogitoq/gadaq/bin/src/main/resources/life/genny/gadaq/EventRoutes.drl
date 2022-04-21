@@ -1,0 +1,15 @@
+package life.genny.gadaq;
+
+import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.gadaq.utils.KogitoUtils;
+
+rule RouteEvent when
+    msg: QEventMessage()
+    userToken : GennyToken()
+    kogitoUtils : KogitoUtils()
+then
+   System.out.println("Routing Event!");
+   kogitoUtils.triggerWorkflow(msg.getData().getCode(), msg, userToken);
+end
+
