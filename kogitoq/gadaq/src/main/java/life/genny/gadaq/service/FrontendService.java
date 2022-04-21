@@ -1,5 +1,4 @@
-
-package org.acme.travels.service;
+package life.genny.gadaq.service;
 
 import java.util.HashSet;
 import java.util.List;

@@ -1,5 +1,4 @@
-
-package org.acme.travels.service;
+package life.genny.gadaq.service;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

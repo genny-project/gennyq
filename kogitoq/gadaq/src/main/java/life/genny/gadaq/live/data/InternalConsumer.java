@@ -62,7 +62,7 @@ public class InternalConsumer {
     @Blocking
     public void getEvent(String data) {
 
-        // log.info("Incoming Event :" + data);
+        log.info("Incoming Event : " + data);
         Instant start = Instant.now();
 
 		// is data a valid event
