@@ -1,0 +1,158 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.rule.RuleDetails;
+import org.apache.commons.lang3.StringUtils;
+import life.genny.qwandautils.KeycloakUtils;
+
+rule "KILL_DUPLICATE_EMAIL"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "kill" && data.parentCode matches "DUPLICATE_EMAILS" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		allowed: Allowed(code == "AGENT")
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println("KILL_DUPLICATE_EMAIL fired");
+				
+		String sourceCode = $message.getData().getSourceCode();
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode :: " + targetCode);
+		
+		String rootCode = $message.getData().getRootCode();
+		System.out.println("rootCode :: " + rootCode);
+		
+		if (rootCode == null || rootCode.equals("") || rootCode.equals(" ")) {
+			if (rootCode == null) {System.out.println("Hmmmm: rootCode == null");}
+			if (rootCode.equals("	")) {System.out.println("Hmmmm: rootCode.equals()");}
+			if (rootCode.equals(" ")) {System.out.println("Hmmmm: rootCode.equals( )");}
+		
+			BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+			System.out.println("targetBe :: " + targetBe);
+			if (targetBe != null) {
+				rootCode = targetBe.getValue("PRI_EMAIL", null);
+				System.out.println("rootCode :: " + rootCode);
+				if (rootCode == null) {
+					QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+					toastMsg.setMessage("This Base Entity is very old and corrupted so it cannot be removed by this widget. Please talk to Chris to remove.");
+					toastMsg.setToken(beUtils.getGennyToken().getToken());
+					toastMsg.setSend(true);
+					VertxUtils.writeMsg("webcmds", toastMsg);
+				}
+			} else {
+				System.out.println("ERROR: targetBe is null");
+			}
+		} else {
+			System.out.println("FYI: rootCode is not null");
+		}
+		
+		/*
+		code: kill
+		parentCode: DUPLICATE_EMAILS
+		sourceCode: PER_
+		targetCode: PER_
+		rootCode: c.pyke@gmail.com
+		*/
+		
+		String type = beUtils.whoAreYou(targetCode);
+		System.out.println("type :: " + type);
+		
+		
+		/* Kill the target email*/
+		if (type == null) {
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "PRI_EMAIL", "dummy@gada.io"));
+		} else {
+					/* change any keycloak associated email */
+			Integer atPosition = rootCode.indexOf("@");
+			String newEmail = rootCode.substring(0,atPosition)+"DED"+rootCode.substring(atPosition);
+			
+			String keycloakUUID = targetCode.substring("PER_".length());
+			System.out.println("New 'DED' email in keycloak is "+newEmail+" for uuid "+keycloakUUID);
+			KeycloakUtils.updateUserEmail(keycloakUUID,serviceToken.getToken(), serviceToken.getRealm(),newEmail);
+		
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, type, false));
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "PRI_IS_DELETED", true));
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "PRI_EMAIL", newEmail));
+			
+			
+		}
+		System.out.println("Killed the target email :: " + targetCode);
+		
+	
+		/* Duplicate check again */	
+		JsonObject resultJson = null;
+		String duplicateCodes = null;
+		String number = null; 
+		
+		/* check if email is already in use for a person */
+		
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Email People")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%") 
+				.addFilter("PRI_EMAIL", SearchEntity.StringFilter.EQUAL, rootCode) 
+				.addColumn("PRI_NAME", "Name")
+				.setPageStart(0)
+				.setPageSize(100);
+		
+		searchBE.setRealm(beUtils.getServiceToken().getRealm());
+			
+		/* Check number of duplicates */
+		Tuple2<String, List<String>> data = beUtils.getHql(searchBE);
+		String hql = data._1;
+
+		hql = Base64.getUrlEncoder().encodeToString(hql.getBytes());
+		try {
+					String resultJsonStr = QwandaUtils.apiGet(
+					GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/count24/" + hql ,
+					beUtils.getServiceToken().getToken(), 120);
+
+					System.out.println("Search EMAIL result is "+resultJsonStr);
+			
+			
+					List<BaseEntity> duplicateBes = beUtils.getBaseEntitys(searchBE);
+					System.out.println("duplicateBE's: " + duplicateBes);
+					
+					QDataBaseEntityMessage msg = new QDataBaseEntityMessage(duplicateBes);
+					msg.setToken(userToken.getToken());
+					msg.setReplace(true);
+					VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msg));
+					
+					if (!resultJsonStr.equals("0")) {
+						for (BaseEntity duplicateBe : duplicateBes) {
+								duplicateCodes = duplicateCodes + "," + duplicateBe.getCode();
+						}
+						
+						duplicateCodes = duplicateCodes.substring(5);
+						System.out.println("Final duplicateCodes: " + duplicateCodes);
+					} else {
+						System.out.println("Zero duplicates. resultJsonStr: " + resultJsonStr);
+					}
+
+					QCmdMessage duplicateEmailMsg = new QCmdMessage("DUPLICATE_EMAILS", duplicateCodes);
+					duplicateEmailMsg.setMessage(number);
+					duplicateEmailMsg.setToken(beUtils.getGennyToken().getToken());
+					duplicateEmailMsg.setSend(true);
+					VertxUtils.writeMsg("webcmds", duplicateEmailMsg);
+					
+					System.out.println("Sent QCmdMessage to the FE");
+					
+		} catch (Exception e) {
+		
+		}	
+		
+		/* Send same email back as an answer to the source */
+		Answer answer = new Answer(userToken.getUserCode(), sourceCode, "PRI_EMAIL", rootCode);
+		beUtils.saveAnswer(answer);		
+		VertxUtils.sendToFrontEnd(userToken, answer);		
+
+		retract($message);
+end

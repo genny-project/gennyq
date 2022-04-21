@@ -1,0 +1,164 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.SearchUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import java.util.Arrays;
+import java.util.HashMap;
+import life.genny.qwandautils.PDFHelper;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.Answer;
+
+import java.util.Comparator;
+import java.util.Collections;
+
+rule "PDF_JOURNAL_DOWNLOAD"
+	ruleflow-group 'TableEvents'
+	salience 2
+	no-loop
+	when
+		journalCode : String(journalCode.equals("DOWNLOAD"))
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		internBe : BaseEntity( code matches "PER_\\S+" )
+
+	then
+		System.out.println("Processing PDF_JOURNAL_DOWNLOAD EVENT rule");
+		
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		TableUtils tableUtils = new TableUtils(beUtils);
+		
+		String targetCode =  internBe.getCode();
+		String internCode = "[\"" + targetCode + "\"]";
+		
+		System.out.println("targetCode :: " +targetCode);
+		System.out.println("internCode :: " +internCode);
+		
+		String journalTemplate = "https://raw.githubusercontent.com/genny-project/layouts/2020-05-25-journal-report-update/internmatch-new/document_templates/journal-row-template.html";
+		String journalHeaderTemplate = "https://raw.githubusercontent.com/genny-project/layouts/2020-05-25-journal-report-update/internmatch-new/document_templates/journal-header-template.html";
+
+	/* 	SearchEntity searchBE = new SearchEntity("Journals", "Journals")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%")
+				.addFilter("LNK_INTERN", SearchEntity.StringFilter.EQUAL, internCode)
+				.addSort("PRI_JOURNAL_DATE", "Date", SearchEntity.Sort.ASC)
+				.setPageStart(0).setPageSize(10000); */
+		System.out.println("Realm :: " + serviceToken.getRealm());
+		SearchEntity searchBE = VertxUtils.getObject(serviceToken.getRealm(), "", "SBE_LOGBOOK",SearchEntity.class, serviceToken.getToken());
+		if(searchBE != null) {
+			
+			searchBE.addFilter("LNK_INTERN", SearchEntity.StringFilter.EQUAL, internCode);
+			searchBE.setPageSize(1000);
+
+			try{
+				List<BaseEntity> journals = beUtils.getBaseEntitys(searchBE);
+
+				Comparator<BaseEntity> compareByDate = (BaseEntity a, BaseEntity b) -> ((LocalDate) a.getValue("PRI_JOURNAL_DATE", LocalDate.now())).compareTo((LocalDate)b.getValue("PRI_JOURNAL_DATE", LocalDate.now()));
+				Collections.sort(journals, compareByDate);
+
+
+				System.out.println("The number of journals is " + (journals == null ? "NULL" : journals.size()));
+				
+				if ((journals != null) && (journals.size() > 0)) {
+
+					HashMap<String, Object> contextMap = new HashMap<String, Object>();
+					contextMap.put("INTERN", internBe);
+					
+					String eduProviderCode = internBe.getValue("LNK_EDU_PROVIDER", null);
+					if(eduProviderCode != null)
+					{
+						eduProviderCode = beUtils.cleanUpAttributeValue(eduProviderCode);
+						System.out.println("eduProviderCode   ::   " + eduProviderCode);
+						BaseEntity eduProviderBe = beUtils.getBaseEntityByCode(eduProviderCode);
+							if(eduProviderBe != null) {
+								contextMap.put("EDU_PROVIDER", eduProviderBe);
+							}else{
+								System.out.println("eduProviderBe is null");
+							}
+					}
+					/* get the apps of the intern where status = COMPLETED || PROGRESS  */
+					SearchEntity appSearch = new SearchEntity("SBE_APP", "SBE_APP")
+						.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+						.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%") 
+						.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, targetCode) 
+						.addFilter("PRI_STATUS",SearchEntity.StringFilter.EQUAL, "PROGRESS") 
+						.addOr("PRI_STATUS",SearchEntity.StringFilter.EQUAL, "COMPLETED") 
+						.addColumn("PRI_NAME", "Name")
+						.addColumn("LNK_HOST_COMPANY", "Host Company Code")
+						.addColumn("PRI_ASSOC_HC","Host Company Name")
+						.setPageStart(0)
+						.setPageSize(1000);
+
+					try{
+						List<BaseEntity> apps = beUtils.getBaseEntitys(appSearch);
+						System.out.println("The number of apps is " + (apps == null ? "NULL" : apps.size()));
+						
+						if ((apps != null) && (apps.size() > 0)) {
+							BaseEntity app = apps.get(0); 
+							
+							if(app != null){
+								System.out.println("App Code   ::   " + app.getCode());
+								String hostCpyCode = app.getValue("LNK_HOST_COMPANY", null);
+								
+								if(hostCpyCode != null){
+									hostCpyCode = beUtils.cleanUpAttributeValue(hostCpyCode);
+									System.out.println("hostCpyCode   ::   " + hostCpyCode);
+
+									BaseEntity hostCpyBe = beUtils.getBaseEntityByCode(hostCpyCode);
+									if(hostCpyBe != null) {
+										contextMap.put("HOST_CPY", hostCpyBe);
+									}else{
+										System.out.println("hostCpyBe is null");
+									}
+								}else{
+									System.out.println("app doesn't have LNK_HOST_COMPANY attribute");
+								}
+							}
+						}
+					}catch (Exception ex) {
+						ex.printStackTrace();
+					}
+					
+					List<HashMap<String, Object>> contextMapList = new ArrayList<HashMap<String, Object>>();
+			
+					for(BaseEntity jnl: journals) {
+						HashMap<String, Object> jnlContextMap = new HashMap<String, Object>();
+						jnlContextMap.put("JOURNAL", jnl);
+						contextMapList.add(jnlContextMap);
+					}
+					
+					String pdfUrl = PDFHelper.getDownloadablePdfLinkForHtml(journalHeaderTemplate, journalTemplate, contextMap,contextMapList);
+					System.out.println("Journal Pdf URL :: " + pdfUrl);
+
+					/* Send QCmdMessage to FE */
+					QCmdMessage cmdMsg = new QCmdMessage("DOWNLOAD_FILE",pdfUrl);
+					cmdMsg.setToken(beUtils.getGennyToken().getToken());
+					cmdMsg.setExec(false);
+					VertxUtils.writeMsg("webcmds", cmdMsg);
+				
+				}else{
+					/* send cmd msg */
+					QCmdMessage msg = new QCmdMessage("TOAST", "INFO");
+					msg.setMessage("The intern hasn't filled up any logbook yet!");
+					msg.setToken(beUtils.getGennyToken().getToken());
+					msg.setSend(true);
+					VertxUtils.writeMsg("webcmds", msg);
+				}
+			}	catch (Exception e) {
+				e.printStackTrace();
+			}
+		}else{
+			System.out.println("searchBE is null");
+		}
+		
+	end

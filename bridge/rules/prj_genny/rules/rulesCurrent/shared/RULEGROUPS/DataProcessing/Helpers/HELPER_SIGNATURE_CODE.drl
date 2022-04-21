@@ -1,0 +1,65 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.QwandaUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import life.genny.utils.DropdownUtils;
+import java.time.format.DateTimeFormatter;
+
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "HELPER_SIGNATURE_CODE"
+	ruleflow-group 'DataProcessing'
+		salience 10000
+		no-loop
+	when
+		beUtils : BaseEntityUtils()
+		answer : Answer( 
+							attributeCode == "PRI_OHS_SIGNATURE" &&
+							sourceCode matches "PER_.*" &&
+							targetCode matches "DOC_.*" 
+						)
+		answersToSave : Answers()
+		ruleDetails : RuleDetails()
+		output : OutputParam( )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		userToken : GennyToken( code != "PER_SERVICE")
+
+	then
+		System.out.println(drools.getRule().getName() + " fired!");
+		
+		String sourceCode = beUtils.getGennyToken().getUserCode();	
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		String targetCode = answer.getTargetCode();					
+		System.out.println("targetCode :: " + targetCode);
+		
+		String attributeCode = answer.getAttributeCode();			
+		System.out.println("attributeCode :: " + attributeCode);
+
+		/* Add this user as the host company rep */
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "LNK_HOST_COMPANY_REP", "[\""+sourceCode+"\"]"));
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  
+end

@@ -1,0 +1,119 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+
+rule "MOVE_BUCKET_CLICK_EVENT_SHORTLIST"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_SHORTLIST_APPLICATION" || data.code matches "ACT_PRI_EVENT_ACCEPT_APPLY" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+        beUtils : BaseEntityUtils( )
+
+    then
+		System.out.println("Processing SHORTLIST CLICK EVENT : " + $message );
+
+		
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		String code = $message.getData().getCode(); 
+		String workflowSignalCode = "SHORTLIST";
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode: " +targetCode);
+	
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_"+workflowSignalCode);
+		output.setTargetCode($message.getData().getTargetCode());
+		
+		String workflowBeCode = $message.getData().getTargetCode();
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ workflowBeCode: " + workflowBeCode);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING THE MOVE FROM APPLIED TO SHORTLIST WITH: " +output);
+
+
+		/* If user is accepting application offer, then send a TOAST to inform them */
+
+		if (code.equals("ACT_PRI_EVENT_ACCEPT_APPLY")) {
+
+            String msgText = "Congrats, you have been shortlisted for this internship.";
+
+			/* Change the text if not user moving their own application */
+			String internCode = beUtils.getBaseEntityValueAsString(targetCode, "PRI_INTERN_CODE");
+			System.out.println("internCode = " + internCode);
+			if (internCode != null) {
+				if (!userToken.getUserCode().equals(internCode)) {
+					msgText = "Application was shortlisted.";
+				}
+			}
+
+            QCmdMessage msg = new QCmdMessage("TOAST", "INFO");
+            msg.setMessage(msgText);
+            msg.setToken(beUtils.getGennyToken().getToken());
+            msg.setSend(true);
+            VertxUtils.writeMsg("webcmds", msg);
+            
+            /* CHANGE CARD COLOUR */
+				Answer answerColour = new Answer(serviceToken.getUserCode(), targetCode, "PRI_STATUS_COLOR", "default");
+				beUtils.saveAnswer(answerColour);
+				System.out.println("Answer done" +answerColour);
+				
+				VertxUtils.sendToFrontEnd(userToken, answerColour);
+				System.out.println("sendToFrontEnd done");
+            
+            /* PUBLISH CARD COLOUR */
+				BaseEntity targetBE  = beUtils.getBaseEntityByCode(targetCode);
+		
+				QDataBaseEntityMessage msgCard = new QDataBaseEntityMessage(targetBE);
+				msgCard.setToken(userToken.getToken());
+				
+				SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Agents")
+					.addSort("PRI_NAME","Name",SearchEntity.Sort.ASC)
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+					.addFilter("PRI_IS_AGENT", true)
+					.addColumn("PRI_NAME", "Name")
+		
+					.setPageStart(0).setPageSize(1000);
+		
+				searchBE.setRealm(serviceToken.getRealm());
+				
+				List<BaseEntity> results = beUtils.getBaseEntitys(searchBE);
+				System.out.println("results: " +results);
+				
+				String[] rxList = new String[2];
+				rxList[0] = "SUPERUSER";
+				rxList[1] = "AGENT";
+				msgCard.setRecipientCodeArray(rxList);
+				
+				VertxUtils.writeMsg("project", JsonUtils.toJson(msgCard));
+				System.out.println("writeMsg done");
+        }
+	
+
+		retract( $message);
+	end

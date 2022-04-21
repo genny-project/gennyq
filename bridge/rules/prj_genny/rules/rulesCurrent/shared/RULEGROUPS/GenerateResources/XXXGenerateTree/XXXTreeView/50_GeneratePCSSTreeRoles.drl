@@ -1,0 +1,37 @@
+// package life.genny.rules;
+// import life.genny.qwanda.message.QEventMessage;
+// import life.genny.rules.QRules;
+
+// /* TODO: Need to remove this pcss specific rules to pcss prj folder later, its kept here in shared folder only because
+//  * there is issue with startup rules being fired only from shared folder.
+//  * It will be moved once this issue is solved.
+//  */
+
+// rule "Generate pcss Tree Roles"
+
+//     ruleflow-group 'GenerateTree'
+//     salience 5
+
+//      when
+//        rules: QRules(   realm() == "pcss" &&
+//                         isState("GENERATE_TREE_RULES") &&
+//                         !isState("LOOP_GENERATE_TREE_RULES") )
+//      then
+
+//      	rules.header();
+//         rules.setState("LOOP_GENERATE_TREE_RULES");
+// 	    rules.println("Generating specific Tree Roles for PCSS IN GENNY");
+
+//         /* Roles related to TreeView Root */
+
+//         List<Answer> answers = new ArrayList<Answer>();
+//         answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_DASHBOARD", "PRI_IS_BUYER, PRI_IS_JOHN_HOLLAND"));
+//         answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_REPORTS", "PRI_IS_BUYER, PRI_IS_JOHN_HOLLAND"));
+// 		answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_APPLICATIONS", "PRI_IS_BUYER, PRI_IS_JOHN_HOLLAND"));
+// 		answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_STAFFS", "PRI_IS_BUYER, PRI_IS_JOHN_HOLLAND"));
+// 		answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_LEGAL", "PRI_IS_BUYER, PRI_IS_JOHN_HOLLAND"));
+
+//         rules.baseEntity.saveAnswers(answers,false);
+
+//         rules.footer();
+// end

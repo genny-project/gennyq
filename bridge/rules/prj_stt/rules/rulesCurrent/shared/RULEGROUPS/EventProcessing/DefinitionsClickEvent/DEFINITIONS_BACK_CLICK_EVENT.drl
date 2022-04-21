@@ -1,0 +1,37 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "DEFINITIONS_BACK_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		message : QEventMessage(data.code matches "ACT_PRI_BACK" && data.parentCode matches "SBE_DEFINITIONS_.*" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " + message );
+		
+		Boolean cache = true;
+
+		long totalTime = TableUtils.searchTable(beUtils, "APPENDIX_DEFINITIONS", cache);
+		System.out.println("total took " + (totalTime) + " ms"); 
+
+		retract(message);
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+	end

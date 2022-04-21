@@ -1,0 +1,37 @@
+package life.genny.rules;
+
+rule "GENERATE_ADD_ITEMS"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+    when
+		not  SearchEntity (code == "GENERATE_ADD_ITEMS")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		LinkedHashMap<String, String> addItemsMap = new LinkedHashMap<>();
+
+		addItemsMap.put("PROPERTY", "Property");
+		addItemsMap.put("PROPERTY_LISTING", "Property Listing");
+		addItemsMap.put("CUSTOMER", "Customer");
+		addItemsMap.put("TENANT_APPLICATION", "Tenant Application");
+		addItemsMap.put("PASSPORT", "Passport");
+		addItemsMap.put("VISA", "Visa");
+		addItemsMap.put("REFERRAL_PARTNER", "Referral Partner");
+		addItemsMap.put("DEVELOPER", "BTR Developer");
+		addItemsMap.put("SUPER_ADMIN", "Super Admin");
+		addItemsMap.put("ADMIN", "Admin");
+		addItemsMap.put("MIGRATION_AGENT", "Migration Agent");
+		addItemsMap.put("INSPECTION", "Inspection");
+		addItemsMap.put("GUARANTOR", "Guarantor");
+		addItemsMap.put("BTR_PRINCIPAL", "BTR Principal");
+		addItemsMap.put("BTR_MANAGER", "BTR Manager");
+		addItemsMap.put("AMENITY", "Amenity");
+		addItemsMap.put("LEVEL", "Level");
+		addItemsMap.put("BUILDING", "Building");
+
+
+
+		VertxUtils.putObject(serviceToken.getRealm(), "", "ADD_ITEMS", addItemsMap, serviceToken.getToken());
+end

@@ -1,0 +1,46 @@
+package life.genny.rules;
+
+
+global org.apache.logging.log4j.Logger log;
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.qwanda.Answer;
+
+rule "Generate Tree Roles"
+
+    ruleflow-group 'GenerateTree'
+    salience 690
+
+     when
+
+      $process : WorkflowProcessInstance( )
+
+     then
+
+        QRules rules = (QRules)$process.getVariable("rules");
+
+		rules.println("Generating Base Tree Roles for "+rules.realm());
+
+        List<Answer> answers = new ArrayList<Answer>();
+
+        answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_DASHBOARD", "PRI_IS_ADMIN,PRI_IS_SELLER,PRI_IS_BUYER"));
+        answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_BEGS", "PRI_IS_ADMIN"));
+        answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_CONTACTS", "PRI_IS_ADMIN"));
+        answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_STAFFS", "PRI_IS_ADMIN"));
+        answers.add(new Answer("GRP_ROOT", "GRP_ROOT", "GRP_COMPANIES", "PRI_IS_ADMIN"));
+
+        rules.baseEntity.saveAnswers(answers,false);
+end

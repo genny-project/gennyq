@@ -1,0 +1,212 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+import life.genny.qwanda.EEntityStatus;
+
+rule "EASY_CLICK_EVENT_DELETE"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_DELETE_.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+"  Processing DELETE CLICK EVENT : " + $message );
+
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" targetCode = " + targetCode);
+		
+		String user = userToken.getUserCode();
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" user: " + user);
+		
+		String searchString = "SBE_INTERNSHIPS";
+
+		if (targetCode != null) {
+			BaseEntity targetBE = beUtils.getBaseEntityByCode(targetCode);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" targetBE: " +targetBE);
+			
+			BaseEntity defBe = beUtils.getDEF(targetBE);
+			
+			
+			Boolean isI = targetBE.getValue("PRI_IS_INTERN", false);
+			Boolean isIS = targetBE.getValue("PRI_IS_INTERNSHIP", false);
+			Boolean isEPR = targetBE.getValue("PRI_IS_EDU_PRO_REP", false);
+			Boolean isEP = targetBE.getValue("PRI_IS_EDU_PROVIDER", false);
+			Boolean isHCR = targetBE.getValue("PRI_IS_HOST_CPY_REP", false);
+			Boolean isHC = targetBE.getValue("PRI_IS_HOST_CPY", false);
+			Boolean isA = targetBE.getValue("PRI_IS_AGENT", false);
+			Boolean isAG = targetBE.getValue("PRI_IS_AGENCY", false);
+				
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" ===== Which type of user =====");
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Intern:" + isI);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Internship:" + isIS);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" EPR:" + isEPR);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" EP:" + isEP);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" HCR:" + isHCR);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" HC:" + isHC);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Agent:" + isA);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Agency:" + isAG);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" ==============================");
+			
+			
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" DEF identified as "+defBe.getCode()+" "+defBe.getName());
+			
+			
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" ==============================");
+			
+			
+			String attribute = null;
+			String deleted = null;
+			
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" ===== This took me 8 sec =====");
+			
+			if (isI) {attribute = "PRI_IS_INTERN"; searchString = "SBE_INTERNS";}
+			if (isIS) {attribute = "PRI_IS_INTERNSHIP"; searchString = "SBE_INTERNSHIPS";}
+			if (isEPR) {attribute = "PRI_IS_EDU_PRO_REP"; searchString = "SBE_EPRS";}
+			if (isEP) {attribute = "PRI_IS_EDU_PROVIDER"; searchString = "SBE_EDU_PROVIDERS";}
+			if (isHCR) {attribute = "PRI_IS_HOST_CPY_REP"; searchString = "SBE_HCRS";}
+			if (isHC) {attribute = "PRI_IS_HOST_CPY"; searchString = "SBE_HOST_COMPANIES";}
+			System.out.println("attribute: " + attribute + " === searchString: " + searchString);
+			
+			/*
+			SPC:		PER_987AF351-9036-4AB0-BFDB-C1FA274F1DBC
+			Chris:		PER_5A666E64-021F-48CE-8111-BE3D66901F9C
+			Test User: 	PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943
+			Gerard: 	PER_9658A1EA-C03A-4919-9537-2EB5650780E6
+			*/
+			
+			Boolean key =  	user.startsWith("PER_5A666E64-021F-48CE-8111-BE3D66901F9C") ||
+							user.startsWith("PER_987AF351-9036-4AB0-BFDB-C1FA274F1DBC") ||
+							user.startsWith("PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943") ||
+							user.startsWith("PER_9658A1EA-C03A-4919-9537-2EB5650780E6");
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" key:" + key);
+			
+			if (key != true) {
+				targetCode = null;
+				
+				QCmdMessage msg = new QCmdMessage("TOAST", "ERROR");
+				msg.setMessage("You do not have the ability to Delete from this table");
+				msg.setToken(userToken.getToken());
+				msg.setSend(true);
+				VertxUtils.writeMsg("webcmds", msg);
+			} else {
+			
+			if (targetCode.startsWith("CPY_")){
+					System.out.println(ruleDetails+" "+drools.getRule().getName()+" Deleting a Company");
+					
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, attribute, false));
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "PRI_IS_DELETED", true));	
+					
+			}		
+			
+			if (targetCode.startsWith("PER_")){
+					System.out.println(ruleDetails+" "+drools.getRule().getName()+" Deleting a Person");
+					
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, attribute, false));
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "PRI_IS_DELETED", true));
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "PRI_EMAIL", "NULL"));
+					
+					if (isHCR) {
+					
+						BaseEntity hcrBe = beUtils.getBaseEntityByCode(targetCode);
+						System.out.println(ruleDetails+" "+drools.getRule().getName()+" hcrBe = " + hcrBe);
+					
+						String assocHC = hcrBe.getValue("LNK_HOST_COMPANY", null);
+						assocHC = assocHC.replace("\"", "").replace("[", "").replace("]", "");
+						System.out.println("assocHC = " +assocHC);
+					
+						beUtils.removeQuantumLinkElement(userToken.getUserCode(), assocHC, targetCode, "LNK_HCRS");
+					}
+					
+					/* remove from keycloak */
+					Boolean allowedToChange = true;
+					String keycloakUUID = targetCode.substring("PER_".length());
+					keycloakUUID = keycloakUUID.toLowerCase();
+					if (allowedToChange) {
+						String statusCode =  KeycloakUtils.removeUser(serviceToken.getToken(), userToken.getRealm(),keycloakUUID);
+						System.out.println(ruleDetails+" "+drools.getRule().getName()+"  deleting keycloak entry for "+targetCode +"  result ="+statusCode);
+						if ("Failed".equals(statusCode)) {
+							System.out.println(ruleDetails+" "+drools.getRule().getName()+"  Error in deleting user."+targetCode);
+						}
+					}
+					
+					
+			}
+			
+			if (targetCode.startsWith("BEG_")){
+					System.out.println(ruleDetails+" "+drools.getRule().getName()+" Deleting an Internship");
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, attribute, false));
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode, "PRI_IS_DELETED", true));
+					
+					/* ========== Remove the Internships from the HC and HCR ========== */
+					BaseEntity begBe = beUtils.getBaseEntityByCode(targetCode);
+					System.out.println(ruleDetails+" "+drools.getRule().getName()+" begBe = " + begBe);
+					
+					String assocHC = begBe.getValue("LNK_HOST_COMPANY", null);
+					assocHC = assocHC.replace("\"", "").replace("[", "").replace("]", "");
+					System.out.println(ruleDetails+" "+drools.getRule().getName()+" assocHC = " +assocHC);
+					
+					String assocHCR = begBe.getValue("LNK_INTERN_SUPERVISOR", null);
+					assocHCR = assocHCR.replace("\"", "").replace("[", "").replace("]", "");
+					System.out.println("assocHCR = " +assocHCR);
+					
+					
+					
+					beUtils.removeQuantumLinkElement(userToken.getUserCode(), assocHC, targetCode, "LNK_INTERNSHIPS");
+					beUtils.removeQuantumLinkElement(userToken.getUserCode(), assocHCR, targetCode, "LNK_INTERNSHIPS");
+					/* ============================================================================ */
+					
+		
+					/* SAVE STATUS OF MOST PROGRESSED APPLICATION OR DEFAULT TO AVAILABLE */
+			 		Answer answerActive = new Answer(userToken.getUserCode(), targetCode, "PRI_STATUS", "ACTIVE");
+			 		beUtils.saveAnswer(answerActive);
+					
+					VertxUtils.sendToFrontEnd(userToken, answerActive);
+					
+					TableUtils.moveEntity(targetCode, "SBE_AVAILABLE_INTERNS", null, beUtils);
+			
+			}
+			
+			
+			/* Resend table command */
+			TableUtils tableUtils = new TableUtils(beUtils);
+			String sessionSearchCode = searchString + "_" + beUtils.getGennyToken().getJTI().toUpperCase();
+			SearchEntity searchBE = VertxUtils.getObject(serviceToken.getRealm(), "", sessionSearchCode, SearchEntity.class, serviceToken.getToken());
+			
+			if(searchBE != null){
+				long totalTime = TableUtils.searchTable(beUtils,searchBE, true);
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" total took " + (totalTime) + " ms"); 
+
+				/* Send out the Filter question group */
+				TableUtils.sendFilterQuestions(beUtils, searchBE.getCode());
+
+			}else{
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" "+sessionSearchCode + " is not in cache");	
+			}
+			}
+		}		
+		
+		retract( $message);
+		
+	end

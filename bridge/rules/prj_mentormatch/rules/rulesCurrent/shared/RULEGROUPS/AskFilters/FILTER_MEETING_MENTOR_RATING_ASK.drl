@@ -1,0 +1,67 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_MEETING_MENTOR_RATING_ASK"
+	ruleflow-group 'AskFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" )
+		ask: Ask( 	ask.getQuestion().getCode() == "QUE_MENTOR_UPDATE_ON_MEETING_GRP" )
+		beUtils : BaseEntityUtils( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		System.out.println("question code   :: " + ask.getQuestion().getCode());
+		System.out.println("userToken Code   :: " + userToken.getUserCode());
+
+		Boolean isSpecifyAbnDisabled = true;
+		Boolean isAbnDisabled = true;
+
+		/* SET REPLACE TRUE */
+		for (Ask childAsk : ask.getChildAsks()) {
+
+			String attrCode = childAsk.getQuestionCode();
+
+			if (!attrCode.equals("QUE_SUBMIT") && !attrCode.equals("QUE_DID_YOU_MEET_YOUR_MENTEE")) {
+				System.out.println("Setting " + attrCode + " field to ::  " + isSpecifyAbnDisabled);
+				childAsk.setHidden(true);
+			}
+		}
+
+		QDataAskMessage filteredAskMsg = new QDataAskMessage(ask);
+		filteredAskMsg.setToken(userToken.getToken());
+		filteredAskMsg.setReplace(true);
+		VertxUtils.writeMsg("webcmds", filteredAskMsg);
+
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setAliasCode("ASK");
+		payload.add(msg);
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload);
+end

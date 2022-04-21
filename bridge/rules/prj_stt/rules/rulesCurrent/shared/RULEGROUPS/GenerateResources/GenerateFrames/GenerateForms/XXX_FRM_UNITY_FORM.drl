@@ -1,0 +1,143 @@
+package life.genny.rules;
+
+import life.genny.qwanda.validation.Validation;
+import life.genny.qwanda.validation.ValidationList;
+import life.genny.qwanda.datatype.DataType;
+
+import life.genny.models.ThemePosition;
+global org.apache.logging.log4j.Logger log;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwandautils.QwandaMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import life.genny.models.Frame3;
+import life.genny.models.FramePosition;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.FramePosition;
+import life.genny.utils.FrameUtils2;
+import life.genny.models.Frame3;
+import life.genny.models.FramePosition;
+import life.genny.models.GennyToken;
+import life.genny.models.Theme;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwanda.VisualControlType;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwandautils.QwandaUtils;
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.ContextList;
+import life.genny.qwanda.ContextType;
+import life.genny.qwanda.Question;
+import java.util.Map;
+import java.util.Set;
+
+
+rule "FRM_UNITY_FORM"
+    ruleflow-group 'GenerateFrames'
+
+    when
+      not  Frame3(code == "FRM_QUE_UNITY_ASK_GRP")
+
+      serviceToken : GennyToken( code == "PER_SERVICE")
+
+    then
+
+        System.out.println(" Generate  FRM_UNITY_FORM  RULE TEST (PRJ_STT)" + serviceToken.getUserCode());
+
+		Validation validation = new Validation("VLD_ANYTHING", "Anything", ".*");
+		Validation validationImage = new Validation("VLD_IMAGE_URL", "Text", ".*");
+		Validation validationEvent = new Validation("VLD_ANYTHING", "Anything", ".*");
+
+		List<Validation> validations = new ArrayList<>();
+		validations.add(validation);
+
+		ValidationList buttonValidationList = new ValidationList();
+		buttonValidationList.setValidationList(validations);
+
+		List<Validation> imageValidations = new ArrayList<>();
+		imageValidations.add(validationImage);
+
+		ValidationList imageValidationsList = new ValidationList();
+		imageValidationsList.setValidationList(imageValidations);
+
+		List<Validation> validationsEvent = new ArrayList<>();
+		validations.add(validationEvent);
+
+		ValidationList eventValidationList = new ValidationList();
+		eventValidationList.setValidationList(validationsEvent);
+
+		DataType buttonDataType = new DataType("DTT_BUTTON_EVENT", buttonValidationList, "buttonEvent", "");
+		DataType unityButtonDataType = new DataType("DTT_UNITY_BUTTON", buttonValidationList, "unitybuttons", "");
+		DataType imageDataType = new DataType("DTT_IMAGE",imageValidationsList,"Image", "");
+		DataType eventDataType = new DataType("DTT_EVENT",eventValidationList,"Button", "");
+		
+		System.out.println("STT UNITY FRAME");
+		
+		
+		Frame3	frame2 = Frame3.builder("FRM_CONTENT_QUE_UNITY_ASK_GRP")
+			/*.addTheme("THM_FORM_ATTRIBUTES_GENNY", serviceToken).end()*/
+			.question("QUE_UNITY_ASK_GRP")
+				/*.addTheme("THM_IS_UNITY_GRP", serviceToken).end()
+				.addTheme("THM_PROJECT_COLOR_PRIMARY_VARIANT_LIGHT", serviceToken).dataType(buttonDataType).end()
+				.addTheme("THM_FORM_BUTTONS", serviceToken).dataType(buttonDataType).vcl(VisualControlType.INPUT_WRAPPER).end()
+				.addTheme("THM_FORM_BUTTONS_BEHAVIOUR", serviceToken).dataType(buttonDataType).end()
+				.addTheme("THM_FORM_EVENT_BUTTONS_BEHAVIOUR", serviceToken).dataType(eventDataType).end()
+				.addTheme("THM_FORM_BUTTONS_BORDER", serviceToken).dataType(buttonDataType).vcl(VisualControlType.INPUT_FIELD).end()
+				.addTheme("THM_FORM_IMAGE_RESTRICTIONS", serviceToken).dataType(imageDataType).vcl(VisualControlType.VCL_INPUT).end()
+				.addTheme("THM_FORM_IMAGE_RESTRICTIONS_DIMENSION", serviceToken).dataType(imageDataType).vcl(VisualControlType.INPUT_SELECTED).end()
+				.addTheme("THM_FORM_VCL_INPUT_GENNY", serviceToken).vcl(VisualControlType.VCL_INPUT).weight(2.0).end()
+				.addTheme("THM_FORM_VCL_LABEL_GENNY", serviceToken).vcl(VisualControlType.VCL_LABEL).end()
+				.addTheme("THM_FORM_VCL_WRAPPER_GENNY", serviceToken).vcl(VisualControlType.VCL_WRAPPER).end()
+				.addTheme("THM_FORM_VCL_ERROR_GENNY", serviceToken).vcl(VisualControlType.VCL_ERROR).end()
+				.addTheme("THM_FORM_BEHAVIOUR_GENNY", serviceToken).weight(3.0).end()
+				.addTheme("THM_FORM_GROUP_LABEL_GENNY", serviceToken).vcl(VisualControlType.GROUP_LABEL).weight(3.0).end()
+				.addTheme("THM_BACKGROUND_NONE", serviceToken).weight(3.0).end()
+				.addTheme("THM_FORM_GROUP_WRAPPER_UNITY", serviceToken).vcl(VisualControlType.GROUP_WRAPPER).weight(2.0).end()
+				.addTheme("THM_PROJECT_COLOR_SURFACE", serviceToken).vcl(VisualControlType.INPUT_ITEM_WRAPPER).end()
+				.addTheme("THM_PROFILE_IMAGE_FORM", serviceToken).dataType(imageDataType).vcl(VisualControlType.INPUT_SELECTED).end()
+				.addTheme("THM_PROFILE_IMAGE_PLACEHOLDER_FORM", serviceToken).dataType(imageDataType).vcl(VisualControlType.INPUT_PLACEHOLDER).end()
+				.addTheme("THM_PROFILE_IMAGE_FIELD_FORM", serviceToken).dataType(imageDataType).vcl(VisualControlType.INPUT_FIELD).end()
+				.addTheme("THM_PROJECT_COLOR_PRIMARY_VARIANT_LIGHT", serviceToken).dataType(imageDataType).vcl(VisualControlType.INPUT_FIELD).end()
+				.addTheme("THM_FORM_BUTTONS", serviceToken).dataType(imageDataType).vcl(VisualControlType.INPUT_FIELD).end()
+				.addTheme("THM_FORM_BUTTONS_BORDER", serviceToken).dataType(imageDataType).vcl(VisualControlType.INPUT_FIELD).end()
+				 .addTheme("THM_FORM_GROUP_UNITY_BUTTONS_INPUT_FIELD", serviceToken).dataType(unityButtonDataType).vcl(VisualControlType.INPUT_FIELD).end() */ /* old */
+				/*.addTheme("THM_FORM_GROUP_UNITY_BUTTONS_INPUT_FIELD", serviceToken).vcl(VisualControlType.VCL_DEFAULT).end()*/ /* new */
+			.end().build();
+				
+		frame2.setRealm(serviceToken.getRealm());
+
+		Frame3 frame = Frame3.builder("FRM_QUE_UNITY_ASK_GRP")
+				.addFrame(frame2,FramePosition.CENTRE)
+				.end()
+				.build();
+		
+		frame.setRealm(serviceToken.getRealm());
+		System.out.println(frame.getCode());
+		
+		/* QDataBaseEntityMessage frameMsg = FrameUtils2.toMessage(frame, serviceToken); */
+		FrameUtils2.toMessage(frame, serviceToken);
+
+		/* cache the frame */
+		VertxUtils.putObject(serviceToken.getRealm(), "", frame.getCode(), frame, serviceToken.getToken());
+
+		/* cache the QDataBaseEntityMessage */
+		/*
+		Set<QDataAskMessage> askSet = new HashSet<QDataAskMessage>();
+		QDataBaseEntityMessage frameMsg = FrameUtils2.toMessage(frame, serviceToken, askSet);
+		VertxUtils.putObject(serviceToken.getRealm(), "", frame.getCode() + "_MSG", frameMsg, serviceToken.getToken());
+		*/
+		
+
+end

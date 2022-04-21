@@ -1,0 +1,38 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "REJECT_APPLICATION_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 100
+	no-loop
+	when
+		$message : QEventMessage(
+            data.code == "ACT_PRI_EVENT_REJECT_APPLY" ||
+            data.code == "ACT_PRI_EVENT_REJECT_SHORTLIST"
+		)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		output.setAskSourceCode(userToken.getUserCode());	
+		output.setTargetCode($message.getData().getTargetCode());
+		output.setTypeOfResult("SIGNAL");
+		output.setSuitCase("START_REJECT_APPLICATION");
+
+		retract($message);
+	end

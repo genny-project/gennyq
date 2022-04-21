@@ -1,0 +1,83 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+
+rule "EASY_SET_STATUS_AS_ARCHIVE"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_ARCHIVE_INTERNSHIP" || data.code matches "ACT_PRI_EVENT_ARCHIVE_HOST_CPY_REP" 
+									|| data.code matches "ACT_PRI_EVENT_ARCHIVE_EDU_PRO_REP" || data.code matches "ACT_PRI_EVENT_ARCHIVE_REF_PART_REP")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+    then
+		System.out.println("Processing ARCHIVE CLICK EVENT : " + $message );
+		
+		/*
+		code: "ACT_PRI_EVENT_ARCHIVE_INTERN"
+		parentCode: "SBE_AVAILABLE_INTERNS_44DF96ED-5B59-4C6B-A1CE-F37ADA80C63C"
+		targetCode: "PER_DF407E12-6DD5-46E3-ADF4-4A5280AF20E4"
+		*/
+		
+		String code = $message.getData().getCode();
+		System.out.println("code = " + code);
+		
+		String[] splitCode = code.split("_");
+		
+		String key = splitCode[4];
+		System.out.println("key = " + key);
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode = " + targetCode);
+		
+		String parentCode = $message.getData().getParentCode();
+		System.out.println("parentCode = " + parentCode);
+		
+		if(key.equals("HOST_CPY_REP") || key.equals("EDU_PRO_REP") || key.equals("INTERN") || key.equals("INTERNSHIP") || key.equals("AGENT") || key.equals("REF_PART_REP")) {
+				
+				System.out.println("Got through strainer with key = " + key);
+				
+				Answer answer = new Answer(userToken.getUserCode(), targetCode, "PRI_STATUS", "ARCHIVED");
+ 				BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+ 				beUtils.saveAnswer(answer);
+ 				
+ 				TableUtils.moveEntity(targetCode, "SBE_INTERNSHIPS_ACTIVE", null, beUtils);
+ 				
+
+ 				
+ 		
+ 		
+ 				if(key.equals("INTERN")) {
+ 						Answer answerDisable = new Answer(userToken.getUserCode(), targetCode, "PRI_DISABLED", true);
+ 						beUtils.saveAnswer(answerDisable);
+ 				
+						TableUtils.moveEntity(targetCode, "SBE_AVAILABLE_INTERNS", null, beUtils);
+ 				}
+		
+		} else {
+			System.out.println("Cannot archive yet becauase of dowstream effects!!!");
+		}
+
+ 		
+		retract( $message);
+		
+	end

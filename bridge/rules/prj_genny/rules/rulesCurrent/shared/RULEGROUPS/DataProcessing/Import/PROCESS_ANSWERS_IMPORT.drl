@@ -1,0 +1,40 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+
+rule "PROCESS_ANSWERS_IMPORT"
+    ruleflow-group 'DataProcessing'
+     salience 10000
+     no-loop true
+    when
+	  userToken : GennyToken ( code != "PER_SERVICE" ) 
+	  serviceToken : GennyToken ( code == "PER_SERVICE" ) 
+	  dataMsg : QDataAnswerMessage( (items != null) && (items.length > 0)  && (aliasCode == "IMPORT"))
+	  dom : OutputParamTreeSet()
+	  beUtils : BaseEntityUtils() /* This is not present initially and so does not conflict with the original */
+    then
+ 		System.out.println("Rule -> PROCESS_ANSWERS Import Processing Answer/Data!!!! :  user=" + userToken.getUserCode()); 
+
+
+		if (dataMsg.getItems()!=null) {
+			Integer count = dataMsg.getItems().length;
+			Integer index=0;
+		
+ 			for (Answer answer : dataMsg.getItems()) {
+ 				answer.setInferred(false); /* force inference from the user to be off. This ensures that if this flag is set it is from internal */
+ 				answer.setChangeEvent(false); 
+ 				insert(answer);
+ 				System.out.println("Process Answers Import: inserted answer "+index+" of "+count+"  "+answer.getTargetCode()+":"+answer.getAttributeCode()+":"+answer);  
+ 				index++;
+ 			}
+ 		}
+
+		retract(dataMsg); /* stop this rule from firing again */
+
+end

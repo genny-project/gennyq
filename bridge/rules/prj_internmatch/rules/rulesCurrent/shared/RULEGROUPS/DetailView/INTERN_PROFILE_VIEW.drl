@@ -1,0 +1,69 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "INTERN_PROFILE_VIEW"
+	ruleflow-group 'DetailView'
+	salience 6
+	when
+		$message : QEventMessage(	data.code == "ACT_PRI_EVENT_VIEW"	&&
+															data.targetCode matches "APP_.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+	
+		if(targetCode != null){
+
+			BaseEntity app = beUtils.getBaseEntityByCode(targetCode);
+			
+			if(app != null){
+				
+				String internCode = app.getValue("PRI_INTERN_CODE", null);
+				if(internCode == null){
+					internCode = app.getValue("PRI_APPLICANT_CODE", null);
+				}
+				
+				if(internCode != null){
+					/* Get Search from cache and add filter */
+					SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", "SBE_INTERN", SearchEntity.class, beUtils.getGennyToken().getToken());
+					searchBE.addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, internCode);
+					/* This hack helps us keep track of the application for later */
+					searchBE.setDropdownTarget(targetCode);
+
+					long totalTime = TableUtils.searchTable(beUtils, searchBE, true);
+					System.out.println("total took " + (totalTime) + " ms"); 
+				}
+
+			}else{
+				System.out.println("internCode code is null. App doesn't have internCode attribute ");
+			}
+		}else{
+			System.out.println("TARGET code is null. Check FE console !");
+		}
+
+		
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		retract( $message);
+
+end

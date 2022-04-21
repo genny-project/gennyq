@@ -1,0 +1,52 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "SBE_JNLS"
+    ruleflow-group 'GenerateSearches'
+     no-loop true
+    when
+       not  SearchEntity (code == "SBE_JNLS")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Journals")
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%")
+			.addSort("PRI_JOURNAL_DATE", "Date", SearchEntity.Sort.ASC)
+			.addColumn("PRI_JOURNAL_DATE", "Date")
+			.addColumn("PRI_JOURNAL_HOURS", "Hours")
+			.addColumn("PRI_JOURNAL_TASKS", "Tasks")
+			.addColumn("PRI_JOURNAL_LEARNING_OUTCOMES", "Outcomes")
+			.addColumn("PRI_STATUS", "Status")
+			.addColumn("PRI_HAS_DOWNLOAD_LINK", " ")
+			.setDisplayMode("journal")
+
+			.setPageStart(0)
+			.setPageSize(GennySettings.defaultPageSize);
+
+		searchBE.setRealm(serviceToken.getRealm());
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

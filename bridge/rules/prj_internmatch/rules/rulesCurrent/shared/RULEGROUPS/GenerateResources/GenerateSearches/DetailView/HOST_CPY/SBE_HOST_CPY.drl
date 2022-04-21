@@ -1,0 +1,69 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "SBE_HOST_CPY"
+    ruleflow-group 'GenerateSearches'
+     no-loop true
+    when
+       not  SearchEntity (code == "SBE_HOST_CPY")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Host Company Details")
+			.addFilter("PRI_IS_HOST_CPY", true)
+			
+			/*Media & Downloads*/
+			.addColumn("PRI_IMAGE_URL", " ")
+			.addColumn("PRI_VIDEO_INTRO", "Video Introduction")
+			
+			/*Company Details*/
+			.addColumn("PRI_LEGAL_NAME", "Legal Name")
+			.addColumn("PRI_COMPANY_WEBSITE_URL", "Website")
+			.addColumn("PRI_ADDRESS_FULL", "Address")
+			.addColumn("PRI_ASSOC_INDUSTRY", "Industry")
+			.addColumn("LNK_COMPANY_INC", "Year Incorporated")
+			.addColumn("PRI_NUMBER_STAFF", "Number of Employee")
+			.addColumn("PRI_COMPANY_DESCRIPTION", "About Us")
+			.addColumn("PRI_LINKEDIN_URL", "LinkedIn")
+			
+			/*Downloads*/
+			.addColumn("PRI_OHS_DOC", "OH&S Document")
+			.addColumn("PRI_TC_DOC", "Terms and Conditions Document")
+			.addColumn("PRI_VALIDATION", "HC Validation Document")
+			.addColumn("PRI_HC_VALIDATION_DOC_URL", "HC Validation DOC")
+			
+			/*LNK_HCRS*/
+			.addLinkedSearch("SBE_LINKED_INTERN_SUPERVISOR", "Company Supervisors")
+			.addLinkedSearch("SBE_LINKED_INTERNSHIP_OPP", "Open Opportunities")
+
+			.setDisplayMode("DETAIL_VIEW:COMPANY")
+
+			.setPageStart(0).setPageSize(GennySettings.defaultPageSize);
+
+		searchBE.setRealm(serviceToken.getRealm());
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

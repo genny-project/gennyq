@@ -1,0 +1,146 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.ShleemyUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwandautils.GennySettings;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.utils.validation.MessageValidator;
+import java.time.LocalDateTime;
+
+rule "REMIND_HCR_COMPLETE_DOCS_96HR"
+    ruleflow-group 'EventProcessing'
+    no-loop true
+    salience 5
+    when
+   		$message : QEventMessage(data.code == "SCHEDULE_REMIND_HCR_COMPLETE_DOCS_96HR")
+   		userToken : GennyToken  ()
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+    then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+        System.out.println(drools.getRule().getName() + " : Rule fired at "+ LocalDateTime.now());
+        BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode: " +targetCode);
+
+		String user = userToken.getUserCode();
+		System.out.println("user: " +user);
+
+		BaseEntity hcrBe = beUtils.getBaseEntityByCode(targetCode);
+        System.out.println("hcrBe: "+ hcrBe);
+
+		if (hcrBe != null) {
+            /* Fetching host company from host company representative */
+            BaseEntity hcBe = beUtils.getBaseEntityFromLNKAttr(hcrBe, "LNK_HOST_COMPANY");
+            System.out.println("hcBe: "+ hcrBe);
+
+            if (hcBe != null) {
+
+                String validation = hcBe.getValue("PRI_VALIDATION", null);
+                System.out.println("validation: " + validation);
+
+                if (!validation.equals("Ready") && !validation.equals("Validated")) {
+
+                    Boolean sendEmail = hcBe.getValue("PRI_EMAIL_FLAG", false);
+                    System.out.println("sendEmail:  " + sendEmail);
+
+                    Boolean isHcrEmailBlank = MessageValidator.isEmailBlank(hcrBe);
+                    System.out.println("isHcrEmailBlank: "+ isHcrEmailBlank);
+
+                    if (!isHcrEmailBlank && sendEmail) {
+                        /* Default to prompting for both docs */
+                        String templateCode = "MSG_IM_HC_REP_COMPLETE_HC_DOCS_REMINDER_96HRS";
+                        if (validation.equals("OHS")) {
+                            /* Prompt for HCS doc */
+                            templateCode = "MSG_IM_HC_REP_SERVICES_AGREEMENT_REMINDER_96HRS";
+                        } else if (validation.equals("HCS")) {
+                            /* Prompt for OHS doc */
+                            templateCode = "MSG_IM_HC_REP_OHS_DOCUMENT_REMINDER_96HRS";
+                        }
+
+                        QMessageGennyMSG hcrSendGridMsg = new QMessageGennyMSG.Builder(templateCode)
+                            .addRecipient(hcrBe)
+                            .addContext("HC", hcBe)
+                            .addContext("URL:ENCODE","") /* is empty though it appends the base with token */
+                            .setUtils(beUtils)
+                            .send();
+
+                        System.out.println("Sendgrid msg: "+ JsonUtils.toJson(hcrSendGridMsg));
+                        System.out.println("Sendgrid email sent to host company representative!!");
+                    }
+
+                    Boolean isHcrMobileBlank = MessageValidator.isMobileBlank(hcrBe);
+                    System.out.println("isHcrMobileBlank: "+ isHcrMobileBlank);
+
+                    if (!isHcrMobileBlank && !GennySettings.projectUrl.contains("dev")) {
+                        /* Building sms msg and sending it */
+                        QMessageGennyMSG smsMsg =  new QMessageGennyMSG.Builder("MSG_IM_SMS_HC_COMPLETE_DOCS_REMINDER_96HRS")
+                           .addRecipient(hcrBe)
+                           .setUtils(beUtils)
+                           .send();
+                        System.out.println("Sms msg: "+ JsonUtils.toJson(smsMsg));
+                        System.out.println("Sms sent to intern!!");
+                    }
+
+                    /* SEND EMAIL TO AGENT */
+                    String url = new StringBuilder()
+                        .append("SBE_HOST_COMPANIES_")
+                        .append(userToken.getJTI().toUpperCase())
+                        .append("/")
+                        .append("ACT_PRI_EVENT_VIEW")
+                        .append("/")
+                        .append(hcrBe.getCode())
+                        .toString();
+
+                    System.out.println("url: " + url);
+                    QMessageGennyMSG agentSendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_AGENT_INCOMPLETE_HC_SERVICES_AGREEMENT")
+                        .addRecipient("internmatch@outcomelife.com.au")
+                        .addContext("HC", hcBe)
+                        .addContext("HCR",hcrBe)
+                        .setUtils(beUtils)
+                        .send();
+
+                    System.out.println("Sendgrid msg: "+ JsonUtils.toJson(agentSendGridMsg));
+                    System.out.println("Sendgrid email sent to agent!");
+
+                } else {
+                    /* DELETE SCHEDULES */
+                    ShleemyUtils.deleteSchedule(serviceToken, hcrBe.getCode()+"_HCR_COMPLETE_DOCS_48HR");
+                    ShleemyUtils.deleteSchedule(serviceToken, hcrBe.getCode()+"_HCR_COMPLETE_DOCS_96HR");
+                }
+            } else {
+                System.out.println("Host company is NULL!!");
+            }
+        } else {
+            System.out.println("Host company representative is NULL");
+        }
+    retract($message)
+end

@@ -1,0 +1,80 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import org.json.JSONObject;
+
+
+rule "DASHBOARD_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage( data.code matches "QUE_DASHBOARD_VIEW" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		BaseEntity personBE = beUtils.getBaseEntityByCode(userToken.getUserCode());
+
+		Boolean isHostCpyRep = personBE.getValue("PRI_IS_HOST_CPY_REP", null);
+		System.out.println("isHostCpyRep = " + isHostCpyRep);
+
+		if (isHostCpyRep != null && isHostCpyRep) {
+
+			String profileComplete = personBE.getValue("PRI_PROFILE", null);
+			System.out.println("profileComplete = " + profileComplete);
+
+			if (profileComplete != null) {
+				if (profileComplete.equals("Incomplete")) {
+					/* WE ARE SENDING THEM TO COMPLETE THEIR PROFILE */
+					output.setTypeOfResult("SIGNAL");
+					output.setResultCode("START_ADD_ENTITY");
+
+					output.setSuitCase("FRESH_HOST_CPY_REP");
+					output.setAskSourceCode(userToken.getUserCode());
+					output.setTargetCode(userToken.getUserCode());
+
+					System.out.println("**************************************************");
+					System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+					System.out.println("ResultCode: "    + output.getResultCode());
+					System.out.println("SuitCase: "      + output.getSuitCase());
+					System.out.println("AskSourceCode: " + output.getAskSourceCode());
+					System.out.println("TargetCode: "    + output.getTargetCode());
+					System.out.println("**************************************************");
+
+					System.out.println("STARTING ADD_ENTITY WORKFLOW WITH: " +output);
+
+					System.out.println("Redirecting to FORM:DETAIL");
+					QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM:DETAIL");
+					msg.setToken(beUtils.getGennyToken().getToken());
+					msg.setSend(true); 
+					VertxUtils.writeMsg("webcmds",msg);
+
+				} else {
+					drools.setFocus("SendSummary");
+				}
+			} else {
+				System.out.println("profileComplete is NULL");
+				drools.setFocus("SendSummary");
+			}
+		} else {
+			System.out.println("isHostCpy is NULL");
+			drools.setFocus("SendSummary");
+		}
+		
+		retract( $message);
+	end

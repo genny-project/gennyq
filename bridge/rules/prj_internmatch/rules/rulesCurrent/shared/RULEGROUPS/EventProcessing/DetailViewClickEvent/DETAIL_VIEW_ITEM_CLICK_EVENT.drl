@@ -1,0 +1,35 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "DETAIL_VIEW_ITEM_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 100
+	no-loop
+	when
+		$message : QEventMessage(
+			data.code == "ACT_PRI_EVENT_VIEW" ||
+			data.code == "ACT_PRI_EVENT_VIEW_PROFILE" ||
+			data.code == "ACT_PRI_EVENT_VIEW_APPLICATION"
+		)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		drools.setFocus("DetailView");
+		/*QCmdMessage msg = new QCmdMessage("DISPLAY","PCM_TEST1");*/
+	   /* msg.setToken(beUtils.getGennyToken().getToken()); */
+	    /*VertxUtils.writeMsg("webcmds",msg);*/
+	end

@@ -1,0 +1,74 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "APPLICATION_DETAIL_VIEW"
+	ruleflow-group 'DetailView'
+	salience 6
+	when
+		$message : QEventMessage( data.code == "ACT_PRI_EVENT_VIEW_APPLICATION"	&& data.targetCode matches "APP_.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+    allowed: Allowed(	code == "AGENT" ||
+                      code == "INTERN" ||
+                      code == "EDU_PRO_REP" ||
+                      code == "HOST_CPY_REP")
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+	
+		if(targetCode != null){
+
+      String searchCode = "SBE_APPLICATION";
+			TableUtils tableUtils = new TableUtils(beUtils);
+      SearchEntity searchBE = tableUtils.getSessionSearch(searchCode);
+
+      if(searchBE != null) {
+        if(allowed.code.equals("INTERN")){
+    
+    			String parentCode = $message.getData().getParentCode();
+		      System.out.println("PARENT code ::  " + parentCode);
+
+          if(parentCode != null){
+            if(parentCode.startsWith("SBE_APPLIED_APPLICATIONS_") || parentCode.startsWith("SBE_SHORTLISTED_APPLICATIONS_") || parentCode.startsWith("SBE_APPLICATIONS_APPLIED_")){
+              searchBE.removeAttribute("COL_PRI_SUPER_JOB_TITLE");
+              searchBE.removeAttribute("COL_PRI_SUPER_NAME");
+              searchBE.removeAttribute("COL_PRI_SUPER_EMAIL");
+              searchBE.removeAttribute("COL_PRI_SUPER_MOBILE");
+              
+              /* cache the session search */
+              VertxUtils.putObject(beUtils.getGennyToken().getRealm(), "", searchBE.getCode(), searchBE, beUtils.getGennyToken().getToken());
+            }
+          }else{
+            System.out.println("PARENT code is null. Check FE console !");
+          }
+        }
+			  /* long totalTime = TableUtils.searchTable(beUtils,"SBE_APPLICATION", true, "PRI_CODE", targetCode); */
+        long totalTime = TableUtils.searchTable(beUtils, searchBE, true, "PRI_CODE", targetCode, true);
+  			System.out.println("total took " + (totalTime) + " ms"); 
+
+      }else{
+        System.out.println("searchBE is null"); 
+			  TableUtils.searchTable(beUtils,"SBE_APPLICATION", true, "PRI_CODE", targetCode);
+      }
+		}else{
+			System.out.println("TARGET code is null. Check FE console !");
+		}
+		retract( $message);
+end

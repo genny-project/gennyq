@@ -1,0 +1,303 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+import java.time.LocalDate;
+
+rule "UPDATE_APPLICATION_PROGRESS"
+	ruleflow-group 'EventProcessing'
+	salience 10
+	no-loop true
+	when
+		$message : QEventMessage(data.code == "SCHEDULE_REPEAT_UPDATE_APPLICATION_PROGRESS" || data.code == "S_R_U_A_P_TRIGGER" || data.code == "S_R_U_A_P_OFF")
+   		userToken : GennyToken ()
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+	    /* get all the apps from PROGRESS bucket */
+	    SearchEntity appSearch = new SearchEntity("SBE_APP", "SBE_APP")
+	            .addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+	            .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+	            .addFilter("PRI_STATUS", SearchEntity.StringFilter.EQUAL, "PROGRESS")
+	            .addColumn("PRI_NAME", "Name")
+	            .addColumn("PRI_CODE", "Code")
+	            .addColumn("PRI_START_DATE", "Start Date")
+	            .addColumn("PRI_END_DATE", "Start Date")
+	            .addColumn("PRI_DAYS_PER_WEEK", "DPW")
+	            .addColumn("PRI_ASSOC_DURATION", "DurationWeeks")
+	            .addColumn("LNK_DAYS_PER_WEEK", "LNK Days Per Week")
+	            .addColumn("LNK_INTERNSHIP_DURATION", "LNK Internship Duration")
+	            .setPageStart(0).setPageSize(1000);
+	
+	    appSearch.setRealm(serviceToken.getRealm());
+	
+	    List<String> noStartDate = new ArrayList<String>();
+	    List<String> noEndDate = new ArrayList<String>();
+	    List<String> noInternCode = new ArrayList<String>();
+	    List<String> noAssocDuration = new ArrayList<String>();
+	    List<String> goodApps = new ArrayList<String>();
+	
+	    Double completedPercentage = 0.0;
+	
+	    try{
+	        List<BaseEntity> apps = beUtils.getBaseEntitys(appSearch);
+	        System.out.println("The number of apps is " + (apps == null ? "NULL" : apps.size()));
+	        if ((apps != null) && (apps.size() > 0)) {
+						
+						Integer appIndex = 1;
+	          for (BaseEntity app : apps) {
+
+				BaseEntity internBE = beUtils.getBaseEntityFromLNKAttr(app, "PRI_INTERN_CODE");
+				String internName = internBE.getValue("PRI_NAME", "");
+	
+	            String internCode = app.getValue("PRI_INTERN_CODE", null);
+	            if(internCode == null){
+	                noInternCode.add(app.getCode()+" "+internName);
+	            }
+							System.out.println( appIndex + ") appCode   ::   " + app.getCode());
+							appIndex++;
+	
+	            /* get the start daten end date of the internship and the duration weeks */
+	            Optional<LocalDate> optStartDate = app.getValue("PRI_START_DATE");
+	            Optional<LocalDate> optEndDate = app.getValue("PRI_END_DATE");
+	            Optional<String> optInternshipWeek = app.getValue("PRI_ASSOC_DURATION");
+	
+	            /* get days per week and internship wee */
+	            Optional<String> optDaysPerWeek = app.getValue("PRI_DAYS_PER_WEEK");
+	
+	            if (optStartDate.isPresent() && optEndDate.isPresent() && optInternshipWeek.isPresent()) {
+	
+	              LocalDate startDate = optStartDate.get();
+	              LocalDate endDate = optEndDate.get();
+	              String internshipWeek = optInternshipWeek.get();
+	
+	              /* calculate internship days*/
+	              Long internshipDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate);
+	
+	              /* make internshipDays inclusive*/
+	              internshipDays++;
+	
+	              /* get the current date*/
+	              LocalDate currentDate = LocalDate.now();
+	
+	              /* check if currentDate has passed endDate*/
+	              Long hasCompletedInternship = java.time.temporal.ChronoUnit.DAYS.between(currentDate, endDate);
+	
+	              /* check if internship is yet to be started*/
+	              Long hasNotStartedInternship = java.time.temporal.ChronoUnit.DAYS.between(startDate, currentDate);
+	
+	              /* if  it's negative, intern has completed the internship*/
+	              if(hasCompletedInternship < 0){
+	
+	                /*set internship completed*/
+	                completedPercentage = 100.0;
+	
+	              /* if  it's negative, internship has not started*/
+	              }else if(hasNotStartedInternship < 0){
+	
+	                /*set internship not started at all*/
+	                completedPercentage = 0.0;
+	
+	              }else{
+	
+	                /* calculate how many days intern has done internship*/
+	                Long daysInInternship = java.time.temporal.ChronoUnit.DAYS.between(startDate, currentDate);
+	
+	                /* make days inclusive ??*/
+	                daysInInternship++;
+	
+	                /* calculate completedPercentage*/
+	                completedPercentage = (100.0 * daysInInternship) / internshipDays;
+	
+	              }
+	
+	              JsonObject appProgress = new JsonObject();
+	              appProgress.put("completedPercentage", completedPercentage);
+	              appProgress.put("steps", Integer.decode(internshipWeek));
+	
+	              /* if days per week exists, calculate completedJournals */
+	              if ((optDaysPerWeek.isPresent())) {
+	
+	                Integer totalJournals = Integer.decode(optDaysPerWeek.get())
+	                        * Integer.decode(optInternshipWeek.get());
+	
+	                /* get the intern be */
+	                BaseEntity intern = beUtils.getBaseEntityByCode(internCode);
+	                if (intern != null) {
+	
+											/* find the completedJournals count from sbe */
+											SearchEntity completedJnlSbe = new SearchEntity("SBE_JOURNAL_COUNT",
+															"SBE_JOURNAL_COUNT").addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+																			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%")
+																			.addFilter("LNK_INTERN", SearchEntity.StringFilter.LIKE,
+																							"%" + internCode + "%")
+																			.addColumn("PRI_CODE", "Name");
+
+											Tuple2<String, List<String>> results = beUtils.getHql(completedJnlSbe);
+											String hql = results._1;
+											String hql2 = Base64.getUrlEncoder().encodeToString(hql.getBytes());
+											Integer count = 0;
+											Integer completedJournals = 0;
+
+											try {
+													String resultJsonStr = QwandaUtils.apiGet(
+																	GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/count24/" + hql2,
+																	serviceToken.getToken(), 120);
+
+													completedJournals = Integer.decode(resultJsonStr);
+
+													/* save PRI_NUM_JOURNALS to app and intern */
+													beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), internCode,
+																	"PRI_NUM_JOURNALS", completedJournals));
+													beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(),
+																	app.getCode(), "PRI_NUM_JOURNALS", completedJournals));
+													/* System.out.println("Saved PRI_NUM_JOURNALS to intern " + internCode); */
+
+											} catch (Exception e1) {
+													completedJournals = 0;
+													System.out.println("No journals yet for " + internCode);
+											}
+
+	                    String journalStatus = completedJournals.toString() + "/" + totalJournals.toString();
+	
+	                    Answer journalStatusAnswer = new Answer(beUtils.getGennyToken().getUserCode(),
+	                            internCode, "PRI_JOURNAL_STATUS", journalStatus);
+	                    beUtils.saveAnswer(journalStatusAnswer);
+											/* System.out.println("Saved PRI_JOURNAL_STATUS to intern " + internCode); */
+
+	
+	                    /* add completedJournals to json */
+	                    appProgress.put("completedJournals", journalStatus);
+	
+	                    goodApps.add(app.getCode() + " " + internName);
+	
+	                }
+	              }
+	
+	              beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), internCode, "PRI_PROGRESS",
+	                      appProgress.toString(), false, true));
+	              beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), app.getCode(), "PRI_PROGRESS",
+	                      appProgress.toString(), false, true));
+								/* System.out.println("Saved PRI_PROGRESS to intern " + internCode);
+								System.out.println("Saved PRI_PROGRESS to app " + app.getCode()); */
+
+	
+	            }else{
+	              
+	              if(!optStartDate.isPresent()){
+	                  noStartDate.add(app.getCode()+" "+internName);
+	              }
+	              if(!optEndDate.isPresent()){
+	                  noEndDate.add(app.getCode()+" "+internName);
+	              }
+	              if(!optInternshipWeek.isPresent()){
+	                  noAssocDuration.add(app.getCode()+" "+internName);
+	              }
+	            }
+	          }
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	
+	    System.out.println("============= Missing PRI_START_DATE=============");
+	    for (String sd : noStartDate) {
+	        System.out.println(sd);
+	    }
+	    System.out.println("============= Missing PRI_END_DATE=============");
+	    for (String sd : noEndDate) {
+	        System.out.println(sd);
+	    }
+	    System.out.println("============= Missing PRI_ASSOC_DURATION=============");
+	    for (String sd : noAssocDuration) {
+	        System.out.println(sd);
+	    }
+	    System.out.println("============= Missing PRI_INTERN_CODE=============");
+	    for (String sd : noInternCode) {
+	        System.out.println(sd);
+	    }
+	    System.out.println("============= Good APPS=============");
+	    for (String sd : goodApps) {
+	        System.out.println(sd);
+	    }
+	
+			output.setTypeOfResult("NONE");
+			output.setResultCode("NONE");  /* dont display anything new */
+		
+		
+	
+	/* Shleemy Repeat Scheduling 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	*/	
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+		
+		String toggle = $message.getData().getCode();
+		System.out.println("toggle: " + toggle);
+		
+		if (toggle.equals("S_R_U_A_P_TRIGGER") || toggle.equals("SCHEDULE_REPEAT_UPDATE_APPLICATION_PROGRESS")) {
+		
+				System.out.println("Toggle: " + toggle);
+		
+				System.out.println("################## START Reapeat Shleemy ##################");
+				System.out.println("Current Time is " + LocalDateTime.now());
+				LocalDateTime triggertime = LocalDateTime.now(ZoneOffset.UTC);
+				System.out.println("Setting trigger Time to " + triggertime.toString());
+				
+				String shleemyEndPoint = GennySettings.projectUrl+"/api/schedule";
+				System.out.println("shleemyEndPoint: "+shleemyEndPoint);
+				
+						
+		        System.out.println("Setting schedules");
+		        
+		        QEventMessage msg = new QEventMessage("TEST_EVT", "TEST");
+		        
+		       
+		        msg.getData().setTargetCode(user);
+		        msg.setToken(userToken.getToken());
+		        String[] rxList = new String[2];
+		        rxList[0] = "SUPERUSER";
+		        rxList[1] = user;
+		        msg.setRecipientCodeArray(rxList);
+		        
+		        String code = user + "_REPEAT_UPDATE";
+		        System.out.println("code " + code);
+		        
+		
+		        System.out.println("################## Shleemy ##################");
+		        
+		        triggertime = LocalDateTime.now(ZoneOffset.UTC).plusHours(24);
+		        System.out.println("Setting trigger Time to " + triggertime.toString());	
+		
+		        QScheduleMessage scheduleMessage = new QScheduleMessage(code, JsonUtils.toJson(msg), userToken.getUserCode(), "project", triggertime, userToken.getRealm());
+		        System.out.println("msgOrange" + scheduleMessage);
+		        
+		        try {
+		            QwandaUtils.apiPostEntity(shleemyEndPoint, JsonUtils.toJson(scheduleMessage), userToken.getToken());
+		        } catch (IOException e) {
+		            e.printStackTrace();
+		        }		
+				
+				System.out.println("################## END Shleemy ##################");	
+		} else {
+			System.out.println("Toggle is set to off: " +toggle);
+		}
+	
+		retract($message);
+end

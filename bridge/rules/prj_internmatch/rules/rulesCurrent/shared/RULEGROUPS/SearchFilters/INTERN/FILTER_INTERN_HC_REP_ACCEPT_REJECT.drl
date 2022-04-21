@@ -1,0 +1,106 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_INTERN_HC_REP_ACCEPT_REJECT"
+	ruleflow-group 'SearchFilters'
+	salience 1000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		searchBE: SearchEntity(code matches "SBE_INTERN_.*" )
+		allowed: Allowed(code == "HOST_CPY_REP" )
+		beUtils : BaseEntityUtils( )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("searchCode   :: " + searchBE.getCode());
+
+		EntityAttribute dropdownTarget = searchBE.findEntityAttribute("SCH_DROPDOWN_TARGET").orElse(null);
+		System.out.println("dropdownTarget = " + dropdownTarget);
+		if (dropdownTarget == null) {
+			System.out.println("dropdownTarget is null");
+			return;
+		}
+
+		BaseEntity applicationBE = beUtils.getBaseEntityByCode(dropdownTarget.getValue());
+		System.out.println("applicationBE = " + applicationBE);
+		if(applicationBE == null){
+			System.out.println("applicationBE is null");
+			return;
+		}
+
+		String status = applicationBE.getValue("PRI_STATUS", null);		
+		System.out.println("status = " + status);
+		if(status == null){
+			System.out.println("status is null");
+			return;
+		}
+
+		String userHostCompany = beUtils.getBaseEntityValueAsString(userToken.getUserCode(), "LNK_HOST_COMPANY");
+		System.out.println("userHostCompany = " + userHostCompany);
+
+		if (userHostCompany == null) {
+			System.out.println("userHostCompany is NULL");
+			return;
+		}
+			
+		String appHostCompany = applicationBE.getValue("LNK_HOST_COMPANY", null);
+		System.out.println("appHostCompany = " + appHostCompany);
+
+		if (appHostCompany == null) {
+			System.out.println("appHostCompany is NULL for " + applicationBE.getCode());
+			return;
+		}
+		
+		/* Ensure this user is with the correct HC */
+		if (!appHostCompany.equals(userHostCompany)) {
+			return;
+		} else {
+			System.out.println("Found a matching LNK_HOST_COMPANY for " + applicationBE.getCode());
+		}
+
+		String appStatus = applicationBE.getValue("PRI_STATUS", null);
+		System.out.println("appStatus = " + appStatus);
+
+		if (appStatus == null) {
+			return;
+		}
+
+		if (appStatus.equals("SHORTLISTED")) {
+			System.out.println("All conditions were met, adding actions...");
+			searchBE.addAction("PRI_EVENT_ACCEPT_SHORTLIST", "Offer Interview");
+			searchBE.addAction("PRI_EVENT_REJECT_SHORTLIST", "Reject");
+		}
+
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(searchBE);
+		msg.setAliasCode("SBE");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+		retract(allowed); 
+end

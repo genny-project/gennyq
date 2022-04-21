@@ -1,0 +1,162 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "EDIT_FORM_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop true
+	when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_EDIT" || data.code matches "ACT_PRI_EVENT_EDIT_APPLICATION")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+	then
+		System.out.println("Processing EDIT FORM CLICK EVENT : " + $message );
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		/*
+			Example of the message
+			=======================
+			code: "ACT_PRI_EVENT_EDIT"
+			parentCode: "SBE_INTERN_4BD9D683-E0AF-4043-8C5C-F4058EC74E04"
+			targetCode: "PER_AFCACF0F-2618-4C5C-A292-2026A974D602"
+			========================		
+		
+		
+			Example of the message
+			=======================
+			code: "ACT_PRI_EVENT_EDIT_APPLICATION"
+			parentCode: "SBE_APPLIED_4BD9D683-E0AF-4043-8C5C-F4058EC74E04"
+			targetCode: "APP_AFCACF0F-2618-4C5C-A292-2026A974D602"
+			========================		
+		*/
+
+		String targetCode = $message.getData().getTargetCode();
+		if(targetCode == null){
+			System.err.println("targetCode is null");
+			return;
+		}
+
+		String searchCode = $message.getData().getParentCode();
+		if(searchCode == null){
+			System.err.println("parentCode is null");
+			return;
+		}
+
+		System.out.println("searchCode with sessionCode      ::   " + searchCode);
+
+		String sessionCode = beUtils.getGennyToken().getJTI().toUpperCase();
+		if(sessionCode == null){
+			System.err.println("sessionCode is null");
+			return;
+		}
+
+		/* if the searchCode contains sessionCode, remove it */
+		if (searchCode.contains(sessionCode)) {
+			
+			searchCode = searchCode.replaceAll("_"+sessionCode.toUpperCase(), "");
+			System.out.println("searchCode without sessionCode   ::   " + searchCode);
+
+		}
+
+		/* if the searchCode contains _SUMMARY keyword, remove it */
+		if (searchCode.contains("_SUMMARY_")) 	{
+			searchCode = searchCode.replaceAll("_SUMMARY", "");
+			System.out.println("searchCode without summaryCode   ::   " + searchCode);
+		}
+
+		/* remove SBE_ prefix */
+		searchCode = searchCode.substring(4);
+		System.out.println("searchCode      ::   " + searchCode);
+		
+		
+		/* Handle Application type */
+		String code = $message.getData().getCode();
+		System.out.println("code      ::   " + code);
+		
+		if (code.equals("ACT_PRI_EVENT_EDIT_APPLICATION")) {
+				searchCode = "APP_AGREEMENT_DOC";
+				System.out.println("searchCode      ::   " + searchCode);
+		}
+		
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_EDIT_ENTITY");
+		output.setTargetCode(targetCode);
+		output.setSuitCase(searchCode);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());	
+
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());	
+		
+		System.out.println("START SIGNAL: START_EDIT_ENTITY");
+		System.out.println("STARTING EDIT FORMS PROCEDURE WITH: " +output);
+
+
+
+		System.out.println("targetCode   ::   " + targetCode);
+
+		BaseEntity be = beUtils.getBaseEntityByCode(targetCode);
+		
+		if(be != null){
+
+			System.out.println("be   ::   " + be.getCode());
+			
+			/* if be has LNK_INDUSTRY attr, we send  LNK_OCCUPATION */
+			String industryCode = be.getValue("LNK_INDUSTRY", null);
+			if(industryCode != null){
+
+				industryCode = industryCode.replace("\"", "").replace("[", "").replace("]", "");
+				System.out.println("industryCode   ::   " + industryCode);
+			
+				/* dropdown search for occupations */
+				DropdownUtils dropdown = new DropdownUtils(serviceToken);
+				
+				dropdown.setNewSearch("Dropdown", "Fetch Dropdown Items")
+								.addColumn("PRI_NAME","Name")
+								.setSourceCode(industryCode)
+								.setPageStart(0)
+								.setPageSize(1000);
+
+				/* Send the dropdown options */
+				dropdown.sendSearchResults("GRP_OCCUPATION_SELECTION", "LNK_ITEM", "ITEM", true, false, userToken, false);
+			}
+
+			/* if be has LNK_HOST_COMPANY attr, we send  LNK_HOST_COMPANY_REP */
+			String hostCompanyCode = be.getValue("LNK_HOST_COMPANY", null);
+			if(hostCompanyCode != null){
+
+				System.out.println("hostCompanyCode   ::   " + hostCompanyCode);
+
+				/* dropdown search for companyRep */
+				DropdownUtils dropdownHcReps = new DropdownUtils(serviceToken);
+				
+				dropdownHcReps.setNewSearch("HCR Dropdown", "Fetch HCR Dropdown Items")
+								.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+								.addFilter("PRI_IS_HOST_CPY_REP", true)
+								.addFilter("PRI_STATUS", SearchEntity.StringFilter.EQUAL, "ACTIVE")
+								.addFilter("LNK_HOST_COMPANY", SearchEntity.StringFilter.EQUAL, hostCompanyCode)
+								.setPageStart(0)
+								.setPageSize(1000);
+
+				/* Send the dropdown options */
+				dropdownHcReps.sendSearchResults("GRP_HOST_COMPANY_REP_SELECTION", "LNK_ITEM", "ITEM", true, false, userToken, false);
+
+			}
+		}
+
+		retract( $message);
+	end

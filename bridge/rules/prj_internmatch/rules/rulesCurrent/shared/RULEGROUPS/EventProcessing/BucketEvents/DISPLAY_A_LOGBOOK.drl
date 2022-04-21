@@ -1,0 +1,45 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "DISPLAY_A_LOGBOOK"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "QUE_LOGBOOKS")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+    then
+		System.out.println("Processing DISPLAY A LOGBOOK : " + $message );
+		
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		String code = $message.getData().getCode();
+		String workflowSignalCode = "LOGBOOK";
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_"+workflowSignalCode);
+		output.setTargetCode($message.getData().getTargetCode());
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING THE MOVE FROM PLACED TO IN_PROGRESS WITH: " +output);
+	
+		retract( $message);
+	end

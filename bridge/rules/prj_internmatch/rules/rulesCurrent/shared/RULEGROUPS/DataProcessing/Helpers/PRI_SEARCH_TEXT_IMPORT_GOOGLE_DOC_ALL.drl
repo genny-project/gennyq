@@ -1,0 +1,97 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+
+
+
+rule "PRI_SEARCH_TEXT_IMPORT_GOOGLE_DOC_ALL"
+    ruleflow-group 'DataProcessing'
+        salience 500
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "IMPORT_INTERNS" || code == "TEST") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("googleid:all:")) )   /* this is a pure search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+   		retract(answer);
+   		
+				/* Now import a google doc xls file and generate a List of BaseEntityImports */
+				String googleDocId = null;
+				String sheetId = "Sheet1"; /* default */
+				Integer start=0;
+				Integer finish=10000;
+				String[] split = answer.getValue().split(":");
+				
+				if (split.length == 3) {
+					googleDocId = split[2];
+				} else if (split.length == 4) {
+					googleDocId = split[2];
+					sheetId = split[3].trim();
+				}
+				if  (split.length == 6) {
+					googleDocId = split[2];
+					sheetId = split[3].trim();
+					start = Integer.parseInt(split[4]);
+					finish = Integer.parseInt(split[5]);
+				}
+		
+			googleDocId = googleDocId.trim();
+		
+		String searchBarUsers = "googleid:users:"+googleDocId+":"+"Users";  /* Hard Wired */
+
+		String searchBarHC = "googleid:hc:"+googleDocId+":"+"Host Company List";  /* Hard Wired */
+		String searchBarHCR = "googleid:hcr:"+googleDocId+":"+"Host Company List";  /* Hard Wired */
+		String searchBarInternships = "googleid:internships:"+googleDocId+":"+"CQU T1";  /* Hard Wired */
+		String searchBarInterns = "googleid:interns:"+googleDocId+":"+"CQU T1";  /* Hard Wired */
+		String searchBarApplications = "googleid:applications:"+googleDocId+":"+"CQU T1";  /* Hard Wired */
+		
+		List<Answer> answers = new ArrayList<Answer>();
+		
+		answers.add(new Answer(beUtils.getGennyToken().getUserCode(),beUtils.getGennyToken().getUserCode(),"PRI_SEARCH_TEXT",searchBarUsers));
+		answers.add(new Answer(beUtils.getGennyToken().getUserCode(),beUtils.getGennyToken().getUserCode(),"PRI_SEARCH_TEXT",searchBarHC));
+		answers.add(new Answer(beUtils.getGennyToken().getUserCode(),beUtils.getGennyToken().getUserCode(),"PRI_SEARCH_TEXT",searchBarHCR));
+		answers.add(new Answer(beUtils.getGennyToken().getUserCode(),beUtils.getGennyToken().getUserCode(),"PRI_SEARCH_TEXT",searchBarInternships));
+		answers.add(new Answer(beUtils.getGennyToken().getUserCode(),beUtils.getGennyToken().getUserCode(),"PRI_SEARCH_TEXT",searchBarInterns));
+		answers.add(new Answer(beUtils.getGennyToken().getUserCode(),beUtils.getGennyToken().getUserCode(),"PRI_SEARCH_TEXT",searchBarApplications));
+		
+		QDataAnswerMessage msg = new QDataAnswerMessage(answers);
+		msg.setToken(beUtils.getGennyToken().getToken());
+		VertxUtils.writeMsg("data",JsonUtils.toJson(msg));
+
+		System.out.println("Setup and Queued imports insertion of QDataAnswerMessage containing imported");		
+		output.setTypeOfResult("NONE");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+end

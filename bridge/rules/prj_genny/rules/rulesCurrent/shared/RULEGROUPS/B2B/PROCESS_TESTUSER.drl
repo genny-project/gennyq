@@ -1,0 +1,79 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.message.QDataB2BMessage;
+import life.genny.qwanda.EEntityStatus;
+import life.genny.qwanda.AttributeCodeValueString;
+import life.genny.qwanda.GennyItem;
+
+rule "PROCESS_TEST_USER"
+    ruleflow-group 'DataProcessing'
+     salience 10000
+     no-loop true
+    when
+	  userToken : GennyToken ( code != "PER_SERVICE"  && username == "test@genny.life") 
+	  serviceToken : GennyToken ( code == "PER_SERVICE" ) 
+	  dataMsg : QDataB2BMessage()
+	  beUtils : BaseEntityUtils()
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode());
+ 		String firstname = dataMsg.getValue("PRI_FIRSTNAME");
+		String lastname = dataMsg.getValue("PRI_LASTNAME");			
+        String name = firstname+" "+lastname;
+        String email = dataMsg.getValue("PRI_EMAIL");
+        String phone = dataMsg.getValue("PRI_MOBILE");
+        String entityCode = null;
+        String defBECode = "DEF_USER";
+
+	 System.out.println("GOT TO HERE "+firstname+":"+lastname+":"+name+":"+email+":"+phone);
+
+        /* Create User */
+
+        /* CREATE BE FROM DEF */
+        BaseEntity defBE = beUtils.getDEFByCode(defBECode);
+        if (defBE == null) {
+            System.out.println("ERROR: could not find DEF for code " + defBECode);
+
+        } else {
+        	System.out.println("Found DEF code -> " + defBECode);
+            BaseEntity newBe = beUtils.create(defBE);
+            if(newBe != null) {
+            	System.out.println("Created BaseEntity code -> " + newBe.getCode());
+            
+				/* TODO: Need to handle multiple different be codes */
+            	for (GennyItem gennyItem : dataMsg.getItems()) {
+            		for (AttributeCodeValueString acvs : gennyItem.getB2bdata()) {
+            					System.out.println("Creating EntityAttribute BaseEntity code -> " + newBe.getCode()+" : "+acvs.getAttributeCode()+"-->"+acvs.getValue());          					
+            		           	try {
+            		           		
+            		           		Answer answer = new Answer(userToken.getUserCode(), newBe.getCode(), acvs.getAttributeCode(), acvs.getValue());
+ 									newBe = beUtils.saveAnswer(answer);
+ 									insert(answer); 
+ 								} catch (Exception e) {
+ 									System.out.println("Error in saving answer "+newBe.getCode()+" : "+acvs.getAttributeCode()+"-->"+acvs.getValue()+":"+e.getLocalizedMessage());
+ 								}        		
+            		}              
+                }               
+            }
+
+ 
+            if (newBe != null) {
+                /* Set Status to Pending */
+                newBe.setStatus(EEntityStatus.PENDING);
+                beUtils.saveBaseEntity(defBE,newBe);
+            }
+        }
+
+  
+		retract(dataMsg); /* stop this rule from firing again */
+
+       System.out.println("End of" + drools.getRule().getName());					
+ 
+end

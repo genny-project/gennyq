@@ -1,0 +1,45 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.attribute.AttributeInteger;
+
+
+rule "VIEW_STUDENTS_CLICK_EVENT"
+  ruleflow-group 'EventProcessing'
+  salience 3
+  no-loop
+  when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_VIEW_STUDENTS")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		beUtils : BaseEntityUtils()
+  then
+
+		System.out.println(drools.getRule().getName()+" - Rule fired!");
+
+		String targetCode = $message.getData().getTargetCode();
+		String teamName = beUtils.getBaseEntityValueAsString(targetCode, "PRI_NAME");
+
+		SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", "SBE_STUDENTS", SearchEntity.class, beUtils.getGennyToken().getToken());
+		
+		searchBE.addFilter("PRI_TEAM_LIST", SearchEntity.StringFilter.LIKE, "%"+targetCode+"%");
+		searchBE.setTitle(teamName + " - Students");
+
+        	long totalTime = TableUtils.searchTable(beUtils, searchBE, true);
+		System.out.println("total took " + (totalTime) + " ms");
+
+		retract( $message);
+	end

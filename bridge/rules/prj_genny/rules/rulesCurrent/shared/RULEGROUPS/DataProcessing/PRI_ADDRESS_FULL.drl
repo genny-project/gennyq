@@ -1,0 +1,131 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.List;
+import java.util.ArrayList;
+
+rule "PRI_ADDRESS_FULL"
+    ruleflow-group 'DataProcessing'
+        salience 500
+    when
+      beUtils : BaseEntityUtils()
+	  serviceToken : GennyToken( code == "PER_SERVICE")
+	  userToken : GennyToken( code != "PER_SERVICE")
+	  answer : Answer( attributeCode == "PRI_ADDRESS_FULL" )
+	  output : OutputParam( )
+	  answersToSave : Answers()
+     then
+ 		System.out.println("Rule -> PRI_ADDRESS_FULL :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		String targetCode = answer.getTargetCode();
+
+		/* Parse json answer and save the individual answers */
+
+			JsonObject addressDataJson = null;
+			try {
+
+				addressDataJson = new JsonObject(answer.getValue());
+				String postcode = addressDataJson.getString("postal_code");
+				if (postcode == null) {
+					postcode = addressDataJson.getString("postcode");
+				}
+
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_JSON", answer.getValue(),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_COUNTRY", addressDataJson.getString("country"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_POSTCODE",postcode,false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_SUBURB", addressDataJson.getString("suburb"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_CITY", addressDataJson.getString("suburb"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_STATE", addressDataJson.getString("state"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_ADDRESS1", addressDataJson.getString("street_address"),false,true));
+
+				String address = addressDataJson.getString("full_address");
+
+				/* check if PRI_ADDRESS_EXTRA exists */
+				BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+				if(targetBe != null){
+
+					Optional<String> optAddressExtra = targetBe.getValue("PRI_ADDRESS_EXTRA");
+					if (optAddressExtra.isPresent()){
+						System.out.println("PRI_ADDRESS_EXTRA is present");
+						String addressExtra = optAddressExtra.get().trim();
+						System.out.println("addressExtra  :: " + addressExtra);
+
+						if(!addressExtra.isEmpty()){
+							System.out.println("PRI_ADDRESS_EXTRA is NOT EMPTY");
+							address = addressExtra + "/" + address;
+						}
+						System.out.println("address  :: " + address);
+
+					}else{
+						System.out.println("PRI_ADDRESS_EXTRA is NOT present");
+					}
+				}
+
+				Answer addressFull = new Answer(sourceCode, targetCode, "PRI_ADDRESS_FULL", address, false, false);
+				answersToSave.add(addressFull);
+				VertxUtils.sendToFrontEnd(userToken, addressFull);
+
+				/*answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_JSON", answer.getValue(),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_COUNTRY", addressDataJson.getString("country"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_POSTCODE",postcode,false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_SUBURB", addressDataJson.getString("suburb"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_CITY", addressDataJson.getString("suburb"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_STATE", addressDataJson.getString("state"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_ADDRESS1", addressDataJson.getString("street_address"),false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_FULL", addressDataJson.getString("full_address"),false,true));
+					*/
+
+				Double latitude = addressDataJson.getDouble("latitude");
+				Double longitude = addressDataJson.getDouble("longitude");
+
+
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_LATITUDE", latitude+"",false,true));
+				answersToSave.add(new Answer(sourceCode, targetCode, "PRI_ADDRESS_LONGITUDE", longitude+"",false,true));
+
+
+				/* update timezone from GPS */
+						BaseEntity project = beUtils.getBaseEntityByCode("PRJ_"+serviceToken.getRealm().toUpperCase());
+							String googleApiKey = project.getValueAsString("ENV_GOOGLE_MAPS_APIKEY");
+							String url = "https://maps.googleapis.com/maps/api/timezone/json?location="+latitude+","+longitude+"&timestamp="+java.time.Instant.now().getEpochSecond()+"&key="+googleApiKey;
+
+							url = GennySettings.projectUrl+"/googleapi/v1/timezone?location="+latitude+","+longitude+"&timestamp="+java.time.Instant.now().getEpochSecond();
+							System.out.println("GennyProxy url = "+url);
+							String timezoneJsonStr =  QwandaUtils.apiGet(url , userToken.getToken());
+							System.out.println("timezoneJsonStr = " + timezoneJsonStr);
+							/*JsonObject json = new JsonObject(timezoneJsonStr);
+							String timezoneID = json.getString("timeZoneId");
+							System.out.println("timezoneID :: " + timezoneID);*/
+							Answer fixedTimezone = new Answer(sourceCode,targetCode, "PRI_TIMEZONE_ID", timezoneJsonStr,false,true);
+							answersToSave.add(fixedTimezone);
+							Answer fixedTimezoneOld = new Answer(sourceCode,targetCode, "PRI_TIME_ZONE", timezoneJsonStr,false,true);
+							answersToSave.add(fixedTimezoneOld);
+							VertxUtils.sendToFrontEnd(userToken, fixedTimezone);
+							VertxUtils.sendToFrontEnd(userToken, fixedTimezoneOld);
+
+			} catch (Exception e) {
+				System.out.println("BAD JSON => "+answer.getValue());
+			}
+
+
+
+		output.setTypeOfResult("NONE");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+
+
+
+		retract(answer);
+		update(answersToSave);
+
+		System.out.println("End of " + drools.getRule().getName());
+end

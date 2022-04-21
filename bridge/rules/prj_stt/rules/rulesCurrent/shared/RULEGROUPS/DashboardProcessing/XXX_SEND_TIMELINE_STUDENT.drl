@@ -1,0 +1,59 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "SEND_TIMELINE_STUDENT"
+	ruleflow-group 'DashboardProcessing'
+	salience 5
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		allowed : Allowed(code == "STUDENT" ||
+							code == "ADMIN" ||
+							code == "EDU_PRO_REP"
+							)
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		Boolean cache = true;
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		/* Send TIMELINE QCmdMessage to FE */
+		QCmdMessage cmdMsg = new QCmdMessage("TIMELINE", "TIMELINE");
+		cmdMsg.setToken(userToken.getToken());
+		String cmdJson = JsonUtils.toJson(cmdMsg);
+		VertxUtils.writeMsg("webcmds", cmdJson);
+		
+		/* Get Timeline Ask GRP */
+		QwandaMessage newAskMsg= QuestionUtils.getQuestions(userToken.getUserCode(), userToken.getUserCode(), "QUE_DASHBOARD_TIMELINE_GRP", serviceToken.getToken());
+		Ask newAskGrp = newAskMsg.asks.getItems()[0];
+		
+		/* CREATE QDataMessage AND SEND TO FRONTEND */
+		QDataAskMessage askMsg = new QDataAskMessage(newAskGrp);
+		
+		askMsg.setToken(userToken.getToken());
+		askMsg.setReplace(true);
+		String askJson = JsonUtils.toJson(askMsg);
+		
+		VertxUtils.writeMsg("webcmds", askJson);
+
+		System.out.println(drools.getRule().getName() + ": ask grp sent, finishing rule");
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+end

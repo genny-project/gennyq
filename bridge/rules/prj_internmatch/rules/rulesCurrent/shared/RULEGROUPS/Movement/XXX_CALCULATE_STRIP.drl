@@ -1,0 +1,196 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+
+import org.json.JSONArray
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "CALCULATE_STRIP"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1 
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity( code matches "APP_\\S+" )
+		bucketCode : String(bucketCode.equals("OFFERED"))
+		controlSignalCode : String(controlSignalCode.equals("CALCULATE"))
+
+
+
+	  
+     then
+ 		System.out.println("CALCULATE_STRIP: Rule fired" ); 
+ 		System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" );
+ 		System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" );
+ 		System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" );
+ 		System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" );
+ 		System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" );
+ 		System.out.println("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&" );
+ 		
+ 		
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+ 		
+		
+		System.out.println("CALCULATE_STRIP: newApplication = " + newApplication); 
+	
+	
+
+		String muddleDuration = newApplication.getValue("LNK_INTERNSHIP_DURATION", null);
+		System.out.println("muddleDuration : " + muddleDuration);
+		muddleDuration = muddleDuration.replace("\"", "").replace("[", "").replace("]", "");
+		BaseEntity compass_Be = beUtils.getBaseEntityByCode(lnk_compass);
+		String compass = compass_Be.getValue("PRI_NAME", null);
+		
+		
+		String muddleWhichDays = newApplication.getValue("LNK_WHICH_DAYS", null);
+		System.out.println("muddleWhichDays : " + muddleWhichDays);
+
+
+		lnk_compass = lnk_compass.replace("\"", "").replace("[", "").replace("]", "");
+
+JSONArray jsonArrayDuration = new JSONArray(beUtilsTwo.getBaseEntityValue(newBe.getCode(), "LNK_INTERNSHIP_DURATION").toString());
+BaseEntity durationEntity = beUtilsTwo.getBaseEntityByCode(jsonArrayDuration.get(0).toString());
+duration = durationEntity.getName();
+
+JSONArray jsonArrayWhichDays = new JSONArray(beUtilsTwo.getBaseEntityValue(newBe.getCode(), "LNK_WHICH_DAYS").toString());
+jsonArrayWhichDaysLength = jsonArrayWhichDays.length();
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ jsonArrayWhichDaysLength: " + jsonArrayWhichDaysLength);
+
+whichDays = "";
+
+for(int i=0; i<jsonArrayWhichDaysLength; i++)
+{
+	BaseEntity whichDaysEntity = beUtilsTwo.getBaseEntityByCode(jsonArrayWhichDays.get(i).toString());
+	System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ whichDaysEntity: " + whichDaysEntity);
+	if(i==0)
+	{
+		whichDays = whichDaysEntity.getName();
+	}
+	else {
+		whichDays = whichDays + ", " + whichDaysEntity.getName();
+	}
+	System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ whichDays: " + whichDays);
+}
+
+/*BaseEntity whichDaysEntity = beUtilsTwo.getBaseEntityByCode(jsonArrayWhichDays.get(0).toString());
+whichDays = whichDaysEntity.getName();*/
+
+/*whichDays = whichDays.replace('\"', '').replace("[", "").replace("]", "").replace("SEL_WHICH_DAYS_", "").replace(",", ", ").toString();
+
+duration = muddleDuration.split("_")[2];*/
+
+kcontext.setVariable("duration", duration);
+kcontext.setVariable("whichDays", whichDays);
+
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Just before answer - duration: " + duration);
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Just before answer - whichDays: " + whichDays);
+
+Answer answer = new Answer(userToken.getUserCode(), newBe.getCode(),"PRI_INTERNSHIP_DURATION_STRIPPED", duration);
+Answer answer2 = new Answer(userToken.getUserCode(), newBe.getCode(),"PRI_WHICH_DAYS_STRIPPED", whichDays);
+
+kcontext.setVariable("answer", answer);
+kcontext.setVariable("answer2", answer2);
+
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ answer: " + answer);
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ answer2: " + answer2);
+
+beUtilsTwo.saveAnswer(answer);
+beUtilsTwo.saveAnswer(answer2);
+
+System.out.println("##################################### PRI_INTERNSHIP_DURATION_STRIPPED: ANSWER = " +answer);
+System.out.println("##################################### PRI_WHICH_DAYS_STRIPPED: ANSWER = " +answer2);
+
+
+
+System.out.println("@@@@@@@@@@@@@ INTERNSHIP: CALCULATING DATES AND TIMES");
+
+String str_newBeCode = newBe.getCode().toString();
+System.out.println("##################################### str_newBeCode" +str_newBeCode);
+/*startDate = newBe.getValue("PRI_START_DATE", null);*/
+
+startDateTime = beUtilsTwo.getBaseEntityValueAsLocalDate(str_newBeCode, "PRI_START_DATE");
+System.out.println("##################################### startDateTime = " +startDateTime);
+
+startDate = startDateTime.toString();
+
+daysPerWeekString = newBe.getValue("PRI_DAYS_PER_WEEK", null);
+
+daysPerWeek = Double.parseDouble(daysPerWeekString);
+longDuration = Long.parseLong(duration);
+
+kcontext.setVariable("startDate", startDate);
+kcontext.setVariable("daysPerWeek", daysPerWeek);
+
+System.out.println("@@@@@@@@@@@@@ startDate : " + startDate);
+System.out.println("@@@@@@@@@@@@@ daysPerWeek : " + daysPerWeek);
+
+hoursPerWeek = 7.5 * daysPerWeek;
+strHoursPerWeek = hoursPerWeek+"";
+kcontext.setVariable("hoursPerWeek", hoursPerWeek);
+System.out.println("@@@@@@@@@@@@@ hoursPerWeek : " + hoursPerWeek);
+
+String str_year = "";
+String str_month = "";
+String str_day = "";
+System.out.println(str_year + " " + str_month + " " + str_day);
+
+int int_year = 0;
+int int_month = 0;
+int int_day = 0;
+System.out.println(int_year + " " + int_month + " " + int_day);
+
+str_year = startDate.split("-")[0];
+str_month = startDate.split("-")[1];
+str_day = startDate.split("-")[2];
+System.out.println(str_year + " " + str_month + " " + str_day);
+
+int_year = Integer.parseInt(str_year);
+int_month = Integer.parseInt(str_month);
+int_day = Integer.parseInt(str_day);
+System.out.println(int_year + " " + int_month + " " + int_day);
+
+kcontext.setVariable("int_year", int_year);
+kcontext.setVariable("int_month", int_month);
+kcontext.setVariable("int_day", int_day);
+
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ int_year: " + int_year);
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ int_month: " + int_month);
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ int_day: " + int_day);
+
+
+dumbStartDate = localDate.of(int_year, int_month, int_day);
+dumbEndDate = dumbStartDate.plusWeeks(longDuration);
+
+kcontext.setVariable("dumbEndDate", dumbEndDate);
+System.out.println("@@@@@@@@@@@@@ dumbEndDate : " + dumbEndDate);
+
+
+Answer answer3 = new Answer(userToken.getUserCode(), newBe.getCode(),"PRI_HOURS_PER_WEEK", strHoursPerWeek);
+Answer answer4 = new Answer(userToken.getUserCode(), newBe.getCode(),"PRI_END_DATE", dumbEndDate.toString());
+
+kcontext.setVariable("answer3", answer3);
+kcontext.setVariable("answer4", answer4);
+
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ answer3: " + answer3);
+System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ answer4: " + answer4);
+
+beUtilsTwo.saveAnswer(answer3);
+beUtilsTwo.saveAnswer(answer4);
+
+System.out.println("##################################### PRI_HOURS_PER_WEEK: ANSWER = " +answer3);
+System.out.println("##################################### PRI_INTERNSHIP_END_DATE: ANSWER = " +answer4);
+
+	
+		retract(newBe)
+		retract(hcrHCBe)
+		retract(newCode)
+		
+end

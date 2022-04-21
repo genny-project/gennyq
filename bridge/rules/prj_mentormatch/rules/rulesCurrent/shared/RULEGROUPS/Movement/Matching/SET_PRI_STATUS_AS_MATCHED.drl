@@ -1,0 +1,102 @@
+package life.genny.rules;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.TableUtils;
+import life.genny.message.QMessageGennyMSG;
+
+rule "SET_PRI_STATUS_AS_MATCHED"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		bucketCode : String(bucketCode.equals("TRAINING"))
+		controlSignalCode : String(controlSignalCode.equals("MATCH"))
+		targetBaseEntity : BaseEntity( code matches "PER_\\S+" )
+
+    then
+        System.out.println(drools.getRule().getName() + " :: Rule fired");
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		/* Refresh the BaseEntity because mysterious reasons told to me by Chris... */
+ 		targetBaseEntity = beUtils.getBaseEntityByCode(targetBaseEntity.getCode());
+		System.out.println(drools.getRule().getName() + " :: targetBaseEntity : " + targetBaseEntity);
+
+		/* Get APP Code */
+		BaseEntity applicationBe = beUtils.getBaseEntityFromLNKAttr(targetBaseEntity.getCode(), "LNK_APPLICATION");
+		System.out.println(drools.getRule().getName() + " :: applicationCode : " + applicationBe.getCode());
+
+		/* Get Mentee Details */
+		BaseEntity associatedMenteeBe = beUtils.getBaseEntityFromLNKAttr(applicationBe.getCode(), "LNK_MENTEE");
+		System.out.println(drools.getRule().getName() + " :: associatedMenteeBeCode : " + associatedMenteeBe.getCode());
+
+		/* Check if Mentor has agreed */
+		String mentorResponse = beUtils.quantumStrip(applicationBe, "LNK_AGREE_TO_MENTOR", "mentorResponse");
+		System.out.println(drools.getRule().getName() + " :: mentorResponse : " + mentorResponse);
+
+        if (applicationBe.getCode() != null) {
+
+            if (mentorResponse.contains("SEL_YES")) {
+                System.out.println("## Inside Mentor Response as YES ##");
+                Answer answerMenteeStatus = new Answer(userToken.getUserCode(), associatedMenteeBe.getCode(), "PRI_MATCHED_WITH_MENTOR", "COMPLETE");
+                beUtils.saveAnswer(answerMenteeStatus);
+
+                System.out.println("## SENDING MESSAGE TO FRONTEND ##");
+                QDataBaseEntityMessage menteeMsg = new QDataBaseEntityMessage(associatedMenteeBe);
+                menteeMsg.setToken(userToken.getToken());
+                menteeMsg.setReplace(true);
+                VertxUtils.writeMsg("webcmds", JsonUtils.toJson(menteeMsg));
+
+                /* Remove from Training bucket */
+                System.out.println("## Removing from Training Bucket ##");
+                Answer answer = new Answer(userToken.getUserCode(), applicationBe.getCode(), "PRI_STATUS", "MATCHED");
+                beUtils.saveAnswer(answer);
+                beUtils.saveAnswer(new Answer(userToken.getUserCode(), applicationBe.getCode(), "PRI_DISABLED", "false"));
+
+                Answer answerDisable = new Answer(userToken.getUserCode(), associatedMenteeBe.getCode(), "PRI_DISABLED", true);
+                beUtils.saveAnswer(answerDisable);
+
+                QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(applicationBe);
+                beMsg.setToken(userToken.getToken());
+                beMsg.setReplace(true);
+                VertxUtils.writeMsg("webcmds", JsonUtils.toJson(beMsg));
+
+                TableUtils.moveEntity(associatedMenteeBe.getCode(), "SBE_MENTEE_TRAINING", null, beUtils);
+                TableUtils.moveEntity(applicationBe.getCode(), null, "SBE_MATCHED", beUtils);
+            }
+
+            if (mentorResponse.contains("SEL_NO")) {
+                System.out.println("## Inside Mentor Response as NO ##");
+                Answer answerMenteeStatus = new Answer(userToken.getUserCode(), associatedMenteeBe.getCode(), "PRI_MATCHED_WITH_MENTOR", "INCOMPLETE");
+			    beUtils.saveAnswer(answerMenteeStatus);
+                beUtils.saveAnswer(new Answer(userToken.getUserCode(), associatedMenteeBe.getCode(), "PRI_STATUS", "AVAILABLE"));
+
+                System.out.println("#### Sending email to Mentee informing, mentorship rejected for M&G1 invite ####");
+
+                QMessageGennyMSG menteeMsg = new QMessageGennyMSG.Builder("MSG_MENTOR_REJECT_MENTEE_MG1")
+                    .addRecipient(associatedMenteeBe)
+                    .addContext("APPLICATION", applicationBe)
+                    .addContext("URL:ENCODE", "QUE_FAKE_PARENT/QUE_MENTOR_AGREE_TO_MENTOR_GRP")
+                    .addContext("BCC", "PRJ_MENTORMATCH")
+                    .setUtils(beUtils)
+                    .send();
+
+                System.out.println("MSG_MENTOR_REJECT_MENTEE_MG1: menteeMsg " + JsonUtils.toJson(menteeMsg));
+            }
+        } else {
+            System.out.println("Error: applicationBe is NULL");
+        }
+
+		retract(targetBaseEntity)
+		retract(bucketCode)
+		retract(controlSignalCode)
+end

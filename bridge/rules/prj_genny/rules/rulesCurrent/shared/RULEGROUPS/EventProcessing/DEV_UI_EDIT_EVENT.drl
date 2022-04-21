@@ -1,0 +1,78 @@
+package life.genny.rules;
+
+import org.apache.commons.lang3.StringUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import life.genny.utils.SearchCallable;
+import life.genny.utils.TableFrameCallable;
+import life.genny.utils.CacheSearchUtils;
+
+rule "DEV_UI_EDIT_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 2
+    no-loop
+    when
+		message : QEventMessage( data.parentCode matches "SBE_DEV_UI.*" && data.code == "ACT_EDIT" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " Processings : " + message);
+
+		String targetCode = message.getData().getTargetCode();
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+
+		QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
+		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setSend(true);  		
+		VertxUtils.writeMsg("webcmds", msg);
+
+		QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(target);
+		beMsg.setToken(userToken.getToken());
+		beMsg.setReplace(true);
+		VertxUtils.writeMsg("webdata", beMsg);
+
+		Ask ask = QuestionUtils.generateAskGroupUsingBaseEntity(target, beUtils);
+
+		QDataAskMessage askMsg = new QDataAskMessage(ask);
+		askMsg.setToken(userToken.getToken());
+		askMsg.setReplace(true);
+		VertxUtils.writeMsg("webdata", askMsg);
+
+		retract(message);
+	end

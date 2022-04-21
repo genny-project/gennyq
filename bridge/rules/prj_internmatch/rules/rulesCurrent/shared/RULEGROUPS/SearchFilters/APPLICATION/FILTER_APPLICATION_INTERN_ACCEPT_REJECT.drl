@@ -1,0 +1,127 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_APPLICATION_INTERN_ACCEPT_REJECT"
+	ruleflow-group 'SearchFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		searchBE: SearchEntity(code matches "SBE_APPLICATION_.*" )
+		allowed: Allowed(code == "INTERN" )
+		beUtils : BaseEntityUtils( )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("searchCode   :: " + searchBE.getCode());
+		System.out.println("userToken Code   :: " + userToken.getUserCode());
+
+		String applicationCode = null;
+
+		/* Find the targeted Internship code */
+		for (EntityAttribute attr : searchBE.getBaseEntityAttributes()) {
+			if (attr.getAttributeCode().equals("PRI_CODE") && attr.getAttributeName().equals("_EQ_")) {
+				applicationCode = attr.getValue();
+			}
+		}
+
+		System.out.println("ApplicationCode = " + applicationCode);
+
+		if (applicationCode == null) {
+			System.out.println("ApplicationCode is NULL");
+			return;
+		}
+
+		BaseEntity application = beUtils.getBaseEntityByCode(applicationCode);
+		if (application == null) {
+			System.out.println("application is NULL");
+			return;
+		}
+
+		String userCode = application.getValue("PRI_INTERN_CODE", null);
+		System.out.println("userCode = " + userCode);
+
+		if (userCode == null) {
+			System.out.println("UserCode is NULL");
+			return;
+		}
+
+		/* Ensure that the user is allowed to accept/reject the application */
+		if (!userCode.equals(userToken.getUserCode())) {
+			System.out.println("This User does not have permission to view these actions... Aborting!");
+			return;
+		}
+
+		String appliedBy = application.getValue("PRI_APPLIED_BY", null);
+		System.out.println("appliedBy = " + appliedBy);
+
+		if (appliedBy == null) {
+			System.out.println("appliedBy is NULL");
+			return;
+		}
+		String appStatus = application.getValue("PRI_STATUS", null);
+		System.out.println("appStatus = " + appStatus);
+
+		if (appStatus == null) {
+			System.out.println("Application PRI_STATUS is NULL");
+			return;
+		}
+		searchBE.removeAttribute("COL__LNK_INTERNSHIP__LNK_INTERN_SUPERVISOR__PRI_NAME");
+		if(!(appStatus.equals("PLACED") || appStatus.equals("PROGRESS")))
+		{
+			System.out.println("application is in " + appStatus + " status. Removing superviser details");
+			/* remove supervisor details */		
+			searchBE.removeAttribute("COL__LNK_INTERNSHIP__LNK_INTERN_SUPERVISOR__PRI_LINKEDIN_URL");
+			searchBE.removeAttribute("COL__LNK_INTERNSHIP__LNK_INTERN_SUPERVISOR__PRI_EMAIL");
+			searchBE.removeAttribute("COL__LNK_INTERNSHIP__LNK_INTERN_SUPERVISOR__PRI_MOBILE");
+		}
+		
+		/* Ensure that the intern did not apply themself */
+		if (userCode.equals(appliedBy)) {
+			System.out.println("This User does not have permission to view these actions... Aborting!");
+			return;
+		}
+
+		if (appStatus.equals("APPLIED")) {
+			searchBE.addAction("PRI_EVENT_ACCEPT_APPLY", "Proceed");
+			searchBE.addAction("PRI_EVENT_REJECT_APPLY", "Reject");
+
+		} else if (appStatus.equals("INTERVIEWED")) {
+			searchBE.addAction("PRI_EVENT_ACCEPT_INTERVIEW", "Proceed");
+			searchBE.addAction("PRI_EVENT_REJECT_INTERVIEW", "Reject");
+		} else {
+			System.out.println("application " + application.getCode() + " is not in the APPLIED bucket");
+		}
+		
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(searchBE);
+		msg.setAliasCode("SBE");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+		retract(allowed); 
+end

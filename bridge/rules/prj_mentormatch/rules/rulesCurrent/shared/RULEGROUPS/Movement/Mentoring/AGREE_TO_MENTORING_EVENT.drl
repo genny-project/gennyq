@@ -1,0 +1,88 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import org.json.JSONObject;
+
+import life.genny.notifications.EmailHelper;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.notifications.SmsHelper;
+import java.util.Arrays;
+import java.time.ZoneOffset;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import java.time.LocalDateTime;
+import life.genny.notifications.EmailHelper;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.notifications.SmsHelper;
+import java.util.Arrays;
+import java.time.ZoneOffset;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+
+rule "AGREE_TO_MENTORING_EVENT"
+	ruleflow-group 'Movement'
+	salience 2
+	no-loop
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		targetBaseEntity : BaseEntity( code matches "PER_\\S+" )
+		output : OutputParam( )
+		controlSignalCode : String(controlSignalCode.equals("SCHEDULE_MENTORING_SESSION"))
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " : Rule fired" );
+
+		BaseEntity menteeBe = beUtils.getBaseEntityByCode(targetBaseEntity.getCode());
+		System.out.println("AGREE_TO_MENTORING_EVENT:: targetBaseEntityCode: " + targetBaseEntity.getCode());
+
+ 		BaseEntity applicationBe = null;
+
+ 		if (targetBaseEntity.getCode() != null) {
+			applicationBe = beUtils.getBaseEntityFromLNKAttr(menteeBe, "LNK_APPLICATION");
+			System.out.println(drools.getRule().getName() + " :: applicationCode: " + applicationBe.getCode());
+		}
+
+		String meetingTime = applicationBe.getValue("PRI_MEET_AND_GREET_TIME", null);
+
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy, E, hh:mm:ss a");
+		LocalDateTime dateTime = LocalDateTime.parse(meetingTime, dtf);
+
+		System.out.println("################## START Shleemy ##################");
+		System.out.println("AGREE_TO_MENTORING_EVENT :: meetingTime : " + meetingTime);
+
+		String scheduleMsgCode = applicationBe.getCode() + "_AGREE_TO_MENTORING";
+
+
+		LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    	String prettyNow = dtf.format(now);
+    	System.out.println("AGREE_TO_MENTORING_EVENT :: The current date and time is ~ " + prettyNow);
+
+    	/* LocalDateTime orangeTimer = meetingTime.plusHours(2); */
+		LocalDateTime orangeTimer = now.plusSeconds(20);
+		String prettyOrange = dtf.format(orangeTimer);
+		System.out.println("MEETING_REMINDER_EVENT :: The Shleemy timer is set for ~ " + prettyOrange);
+
+		ShleemyUtils.scheduleMessage(userToken, "SCHEDULE_AGREE_TO_MENTORING_EMAIL", scheduleMsgCode,  orangeTimer, applicationBe.getCode());
+
+		System.out.println("################## END Shleemy ##################");
+
+
+
+		retract(controlSignalCode);
+		retract(targetBaseEntity);
+
+		System.out.println("End of " + drools.getRule().getName());
+	end

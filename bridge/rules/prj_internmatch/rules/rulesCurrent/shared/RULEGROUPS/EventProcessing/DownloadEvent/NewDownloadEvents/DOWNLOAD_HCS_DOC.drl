@@ -1,0 +1,178 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.SearchUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import java.util.Arrays;
+import java.util.HashMap;
+import life.genny.qwandautils.PDFHelper;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.Answer;
+import java.util.Date;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+
+rule "DOWNLOAD_HCS_DOC"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage(data.code == "ACT_HCS_DOC" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		allowed: Allowed(	code == "AGENT" ||
+							code == "INTERN" ||
+							code == "EDU_PRO_REP" ||
+							code == "HOST_CPY_REP" )
+	then
+		System.out.println(drools.getRule().getName() + " rule fired");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String companyCode =  $message.getData().getTargetCode();
+		System.out.println("companyCode :: " +companyCode);
+
+		if(companyCode == null){
+			System.out.println("targetCode is null in the event messsage");
+			return;
+		}
+
+		BaseEntity companyBe = beUtils.getBaseEntityByCode(companyCode);
+		if(companyBe == null){
+			System.out.println("companyBe is null");
+			return;
+		}
+
+		/* send Loading TOAST msg */
+		QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+		toastMsg.setMessage("Please wait while we prepare your Document!");
+		toastMsg.setToken(beUtils.getGennyToken().getToken());
+		toastMsg.setSend(true);
+		VertxUtils.writeMsg("webcmds", toastMsg);
+
+		/* Check here if the services document is completed */
+		String validation = companyBe.getValue("PRI_VALIDATION", null);
+		System.out.println("PRI_VALIDATION :: " + validation);
+
+		Boolean downloadFile = false;
+		if( !allowed.code.equals("HOST_CPY_REP")){
+			System.out.println("Current User is :: " + allowed.code);
+			downloadFile = true;
+
+		}else{
+
+			if(validation != null && (validation.equals("HCS") || validation.equals("Ready") || validation.equals("Validated"))){
+			/*if(validation != null && (validation.equals("HCS") || validation.equals("Ready"))){ */
+				downloadFile = true;
+			}
+		}
+
+		if(downloadFile){
+			String pdfUrl="";
+
+			System.out.println("downloadFile is " + downloadFile);
+			
+			/* check if the document was uploaded by user */
+			Optional<String> optTCDoc = companyBe.getValue("PRI_TC_DOC");
+			System.out.println(drools.getRule().getName()+" Document upload checking for companyBe.getValue(PRI_TC_DOC)");
+			if (optTCDoc.isPresent() && !StringUtils.isBlank(optTCDoc.get())) {
+				System.out.println(drools.getRule().getName()+" Document was present !");
+
+				String tcDoc = optTCDoc.get();
+				if(tcDoc != null && !tcDoc.trim().isEmpty()){
+					System.out.println(drools.getRule().getName()+" Document was uploaded!. Sending this to Frontend");
+					System.out.println(drools.getRule().getName()+" tcDoc      :: " + tcDoc);
+					String projectUrl = GennySettings.projectUrl;
+					if(projectUrl == null) projectUrl = "https://m.internmatch.io";
+					System.out.println(drools.getRule().getName()+" projectUrl  :: " + projectUrl);
+					pdfUrl = projectUrl+ "/camelot/docs/" + tcDoc + ".pdf";
+					System.out.println("pdfUrl      :: " + pdfUrl);
+
+				} else {
+					System.out.println(drools.getRule().getName()+" Document was present but failed test tcDoc != null && !tcDoc.trim().isEmpty()");
+				}
+			}else{
+                String companyAddress = companyBe.getValue("PRI_ADDRESS_COUNTRY", null);
+                BaseEntity projectBe = beUtils.getBaseEntityByCode("PRJ_INTERNMATCH");
+                String template = "";
+                if (companyAddress != null) {
+                        System.out.println("*********************** entityAddress " + companyAddress);
+                    if (companyAddress.equals("United Kingdom")) {
+                        template = projectBe.getValue("PRI_LOCS_2_HC_SERVICES_AGREEMENT_URL","");
+                      System.out.println("*********************** PRI_LOCS_2_HC_SERVICES_AGREEMENT_URL UK: agreementHtml " + template );
+                    } else if (companyAddress.equals("South Africa")) {
+                         template = projectBe.getValue("PRI_LOCS_3_HC_SERVICES_AGREEMENT_URL","");
+                         System.out.println("*********************** PRI_LOCS_3_HC_SERVICES_AGREEMENT_URL South Africa: agreementHtml " + template );
+                    } else {
+                        template = projectBe.getValue("PRI_LOCS_1_HC_SERVICES_AGREEMENT_URL","");
+                        System.out.println("*********************** PRI_LOCS_1_HC_SERVICES_AGREEMENT_URL Others: agreementHtml " + template );
+                    }
+                    BaseEntity hcrBe = beUtils.getBaseEntityFromLNKAttr(companyBe, "LNK_HOST_COMPANY_REP");
+                    System.out.println("hcrBe: "+ hcrBe);
+                    HashMap<String, Object> contextMap = new HashMap<String, Object>();
+                    contextMap.put("HC", companyBe);
+                    contextMap.put("HCR", hcrBe);
+                    try{
+                        System.out.println("template :: " + template);
+                        pdfUrl = PDFHelper.getDownloadablePdfLinkForHtml(template, contextMap);
+                        if(pdfUrl != null){
+                           String dataz[] = pdfUrl.split("/");
+                           if(dataz!= null && dataz.length > 0){
+                               String objectId = dataz[dataz.length-1];
+                               objectId = objectId.replace(".pdf","");
+                               beUtils.saveAnswer(new Answer(userToken.getUserCode(), companyBe.getCode(), "PRI_TC_DOC", objectId));
+                           }
+                        }
+                        System.out.println("PDF url :: " + pdfUrl);
+                    }catch(Exception e){
+                        System.out.println("Exception while PDFHelper.getDownloadablePdfLinkForHtml :: " + e);
+                    }
+                }
+            }
+			/* Send Download QCmdMessage to FE */
+			QCmdMessage downloadMsg = new QCmdMessage("DOWNLOAD_FILE", pdfUrl);
+			downloadMsg.setToken(beUtils.getGennyToken().getToken());
+			downloadMsg.setSend(true);
+
+			VertxUtils.writeMsg("webcmds", downloadMsg);
+
+		}else{
+			System.out.println("downloadFile is " + downloadFile);
+
+			QCmdMessage displayMsg = new QCmdMessage("DISPLAY", "FORM");
+			displayMsg.setToken(beUtils.getGennyToken().getToken());
+			displayMsg.setSend(true);
+			VertxUtils.writeMsg("webcmds",displayMsg);
+
+			/* send the QUE_HC_SERVICES_AGREEMENT_FORM_GRP to hc rep  */
+			output.setAskSourceCode(userToken.getUserCode());
+			output.setTypeOfResult("SIGNAL");
+			output.setResultCode("START_HC_SERVICES");
+			output.setTargetCode(companyCode);
+			output.setSuitCase(companyCode);
+			update(output);
+
+			System.out.println("**************************************************");
+			System.out.println("AskSourceCode: " + output.getAskSourceCode());
+			System.out.println("TargetCode: "    + output.getTargetCode());
+			System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+			System.out.println("ResultCode: "    + output.getResultCode());
+			System.out.println("SuitCase: "      + output.getSuitCase());
+			System.out.println("**************************************************");
+
+		}
+		retract($message);
+
+		System.out.println("End of " + drools.getRule().getName());
+	end

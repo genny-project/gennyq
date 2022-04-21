@@ -1,0 +1,45 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "DETAIL_VIEW_ITEM_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 100
+	no-loop
+	when
+		$message : QEventMessage(
+			data.code matches "ACT_PRI_EVENT_VIEW" ||
+			data.code matches "ACT_PRI_EVENT_VIEW_PROFILE" ||
+			data.code matches "ACT_PRI_EVENT_VIEW_APPLICATION"
+		)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+		beUtils.setServiceToken(serviceToken);
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+
+		if(targetCode != null){
+			String prefixCode = targetCode.substring(0,3);
+			System.out.println("PREFIX code ::  " + prefixCode);
+
+			long totalTime = TableUtils.searchTable(beUtils, prefixCode, true, "PRI_CODE", targetCode);
+			System.out.println("total took " + (totalTime) + " ms"); 
+		
+		}
+		retract( $message);
+	end

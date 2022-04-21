@@ -1,0 +1,43 @@
+package life.genny.rules;
+
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "SBE_SAMS"
+	ruleflow-group 'GenerateSearches'
+	no-loop true
+	when
+		not  SearchEntity (code == "SBE_SAMS")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+		beUtils.setServiceToken(serviceToken);
+
+		String projectCode = "PRJ_"+serviceToken.getRealm().toUpperCase();
+
+		BaseEntity project = beUtils.getBaseEntityByCode(projectCode);
+
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(),"Standard Association Mappings")
+			.addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
+
+			.addFilter("PRI_CODE",SearchEntity.StringFilter.LIKE,"PER_%")
+
+			.addAction("EDIT", "Edit")
+
+			.addColumn("*", "Wildcard")
+			.setPageStart(0)
+			.setPageSize(10000);
+
+
+		searchBE.setRealm(serviceToken.getRealm());
+
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

@@ -1,0 +1,86 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.qwanda.message.QCmdTableMessage;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.rules.QRules;
+import life.genny.models.GennyToken;
+import java.util.ArrayList;
+import java.util.List;
+import org.json.JSONObject;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.Answer;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
+import life.genny.models.TableData;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+
+rule "VIEW_REMOTE_JOBS_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 100
+	no-loop
+	when
+		$message : QEventMessage(
+			data.code == "ACT_PRI_EVENT_VIEW_REMOTE_JOBS"
+		)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		beUtils : BaseEntityUtils()
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		String targetCode = $message.getData().getTargetCode();
+        String searchCode = "SBE_REMOTE_JOB";
+        TableUtils tableUtils = new TableUtils(beUtils);
+        SearchEntity searchBE = tableUtils.getSessionSearch(searchCode);
+		if(searchBE != null) {
+
+		        /* set RMSCode as the parentCode of the SBE */
+		        searchBE.addFilter("LNK_REMOTE_SERVICE", SearchEntity.StringFilter.LIKE, targetCode);
+		        searchBE.addAssociatedColumn("LNK_REMOTE_SERVICE", "PRI_CODE", "Remote Service Code");
+
+				/* cache the session search */
+				VertxUtils.putObject(beUtils.getGennyToken().getRealm(), "", searchBE.getCode(), searchBE, beUtils.getGennyToken().getToken());
+
+				/* send the table display message out  */
+                /*
+                QCmdMessage msg = new QCmdMessage("DISPLAY", "TABLE");
+                msg.setToken(beUtils.getGennyToken().getToken());
+                VertxUtils.writeMsg("webcmds",msg);
+                */
+
+                /* send out the display message */
+                JsonObject msgJson = new JsonObject();
+                msgJson.put("cmd_type","DISPLAY");
+                msgJson.put("code","TABLE");
+                msgJson.put("exec",true);
+                msgJson.put("msg_type","CMD_MSG");
+                msgJson.put("option","EXEC");
+                msgJson.put("send",true);
+                msgJson.put("token",beUtils.getGennyToken().getToken());
+
+                VertxUtils.writeMsg("webcmds",msgJson.toString());
+
+                long totalTime = TableUtils.searchTable(beUtils,searchBE,true);
+                VertxUtils.writeMsgEnd(beUtils.getGennyToken());
+			}else{
+				System.out.println("searchBE is null");
+			}
+		retract($message);
+	end

@@ -1,0 +1,65 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.CapabilityMode;
+
+import org.apache.commons.lang3.text.WordUtils;
+
+rule "ROL_ADMIN"
+    ruleflow-group 'GenerateCapabilities'
+     no-loop true
+    when
+       not  BaseEntity (code == "ROL_ADMIN")
+        capabilityUtils : CapabilityUtils()
+        user : BaseEntity (code == "ROL_USER")  
+        beUtils : BaseEntityUtils()       
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+ 		 
+		 BaseEntity defBE = beUtils.getDEFByCode("DEF_ROLE");
+   	     BaseEntity role = capabilityUtils.getBeUtils().create(defBE, WordUtils.capitalize(drools.getRule().getName().substring(4)), drools.getRule().getName());
+   	     
+   	     capabilityUtils.inheritRole(role,user);
+ 
+ 		 /* CACHED SEARCHES */
+		 capabilityUtils.addCapabilityToRole(role,"USE_CACHE",CapabilityMode.VIEW);
+ 
+ 
+   	     capabilityUtils.addCapabilityToRole(role,"VERIFY_EMAIL",CapabilityMode.DELETE);
+      	 capabilityUtils.addCapabilityToRole(role,"LOGIN",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"LOGOUT",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"READ_INTERNSHIPS",CapabilityMode.DELETE);
+   	     
+ 
+  	     role = capabilityUtils.getBeUtils().getBaseEntityByCode(role.getCode());
+ 		
+ 		 beUtils.saveAnswer(new Answer(capabilityUtils.getBeUtils().getServiceToken().getUserCode(), role.getCode(), "PRI_WEIGHT", 800.0,false,true));
+ 
+ 		 insert(role);
+ 		 		 
+ 		 VertxUtils.writeCachedJson(capabilityUtils.getBeUtils().getServiceToken().getRealm(), role.getCode(), JsonUtils.toJson(role), capabilityUtils.getBeUtils().getServiceToken().getToken());
+ 		 
+
+
+end

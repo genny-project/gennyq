@@ -1,0 +1,52 @@
+package life.genny.rules;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+
+rule "STATELESS_SETUP_DATA"
+    ruleflow-group 'Stateless'
+     salience 10000
+     no-loop true
+    when
+	  userToken : GennyToken ( code != "PER_SERVICE" ) 
+	  serviceToken : GennyToken ( code == "PER_SERVICE" ) 
+	  dataMsg : QDataAnswerMessage( (items != null) && (items.length > 0) && (aliasCode == "STATELESS"))
+
+    then
+   		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + userToken.getUserCode());
+    		
+		BaseEntityUtils beUtils = new BaseEntityUtils(userToken); 
+		beUtils.setServiceToken(serviceToken);
+		insert(beUtils); 
+				
+		/* Now set up capability for the user and make it available to all the rules */
+		CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
+		insert(capabilityUtils); 
+		
+		System.out.println(drools.getRule().getName()+" Capabilitys are "+capabilityUtils.getCapabilityManifest()); 
+		
+		BaseEntity user = beUtils.getBaseEntityByCode(userToken.getUserCode()); 
+		System.out.println(drools.getRule().getName()+" User is "+user);
+		insert(user);				
+				
+		String projectCode = "PRJ_"+userToken.getRealm().toUpperCase();
+		BaseEntity project = beUtils.getBaseEntityByCode(projectCode); 
+		insert(project);		
+		
+		
+		retract(dataMsg); /* stop this rule from firing again */
+		
+
+end

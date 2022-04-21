@@ -1,0 +1,122 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.text.WordUtils;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+
+
+
+
+rule "PRI_ATMC_ADDRESS_GROUP"
+    ruleflow-group 'DataProcessing'
+        salience 1000 
+        no-loop
+    when
+      beUtils : BaseEntityUtils()
+	  serviceToken : GennyToken( code == "PER_SERVICE") 
+	  address : Answer( attributeCode == "PRI_IMPORT_ADDRESS" )
+	  state : Answer( attributeCode == "PRI_IMPORT_STATE" )
+	  postcode : Answer( attributeCode == "PRI_IMPORT_POSTCODE" )
+	  city : Answer( attributeCode == "PRI_IMPORT_SUBURB" )
+	  answersToSave : Answers()
+	  output : OutputParam( )
+     then
+ 		System.out.println("Rule -> PRI_FIRSTNAME :  user=" + beUtils.getGennyToken().getUserCode()+" : "+address); 
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		String targetCode = address.getTargetCode();
+		
+		String fullAddress = address.getValue()+" ," + city.getValue() + " ," + state.getValue() + " ,"+ postcode.getValue() + " ," ;
+		System.out.println("IMPORT ADDRESS: fullAddress="+fullAddress);
+		String encodedAddress = null;
+		try {
+            encodedAddress =  URLEncoder.encode(fullAddress, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+		System.out.println("IMPORT ADDRESS: encodedAddress="+encodedAddress);
+		
+		String googleApiUrl = "https://maps.googleapis.com/maps/api/geocode/json?address="+encodedAddress;
+		
+		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_"+serviceToken.getRealm().toUpperCase());
+		String googleApiKey = project.getValue("PRI_GOOGLE_API_KEY","");
+		System.out.println("IMPORT ADDRESS: google api key="+googleApiKey);
+        googleApiUrl  = googleApiUrl  + "&key="+googleApiKey;
+ 
+		String addressJsonStr =  QwandaUtils.apiGet(googleApiUrl , null);
+		JsonObject json = new JsonObject(addressJsonStr);
+	if ("OK".equals(json.getString("status"))) {
+		JsonObject results = json.getJsonArray("results").getJsonObject(0);
+		System.out.println(results);
+		JsonArray address_components = results.getJsonArray("address_components");
+		
+		/* loop through address_components */
+		Integer index = 0;
+		Integer count = address_components.size();
+		Map<String,String> addressMap = new HashMap<String,String>();
+		for (index=0;index<count;index++) {
+			
+			JsonObject addressComponent = address_components.getJsonObject(index);
+			JsonArray types = addressComponent.getJsonArray("types");
+			String mainType = types.getString(0);
+			addressMap.put(mainType, addressComponent.getString("short_name"));
+		}
+		
+		String streetNumber = (addressMap.get("street_number")==null)?"":addressMap.get("street_number");
+		String streetName = (addressMap.get("route")==null)?"":addressMap.get("route");
+		
+		String street_address = (streetNumber+" "+streetName).trim();
+		
+		JsonObject geometry = results.getJsonObject("geometry");
+		JsonObject location = geometry.getJsonObject("location");
+		Double lat = location.getDouble("lat");
+		Double lng = location.getDouble("lng");
+		String full_address = results.getString("formatted_address");
+		System.out.println(address_components);
+		
+		JsonObject address_json = new JsonObject();
+		address_json.put("street_address", street_address);
+		address_json.put("suburb", (addressMap.get("locality")==null?"":addressMap.get("locality")));
+		address_json.put("state",  (addressMap.get("administrative_area_level_1")==null?"":addressMap.get("administrative_area_level_1")));
+		address_json.put("country",  (addressMap.get("country")==null?"":addressMap.get("country")));
+		address_json.put("postcode",  (addressMap.get("postal_code")==null?"":addressMap.get("postal_code")));
+		address_json.put("full_address", full_address);
+		address_json.put("latitude", lat);
+		address_json.put("longitude", lng);
+		
+		String PRI_ADDRESS_JSON = address_json.toString();
+		System.out.println("PRI_ADDRESS_JSON="+PRI_ADDRESS_JSON);		
+		Answer fixedAddress = new Answer(sourceCode, targetCode, "PRI_ADDRESS_JSON", PRI_ADDRESS_JSON,false,true);			
+			insert(fixedAddress);
+		}
+		output.setTypeOfResult("NONE");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+		
+
+		retract(address); 
+		retract(state);
+		retract(postcode);
+		retract(city);
+		update(answersToSave);
+	
+end

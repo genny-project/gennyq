@@ -1,0 +1,37 @@
+package life.genny.rules;
+
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "SBE_DEV_UI"
+	ruleflow-group 'GenerateSearches'
+	no-loop true
+	when
+		not  SearchEntity (code == "SBE_DEV_UI")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Dev UI")
+			.addSort("PRI_CODE", "Created", SearchEntity.Sort.DESC)
+
+			.addColumn("PRI_CODE", "Code")
+			.addColumn("PRI_NAME", "Name")
+
+			.addAction("EDIT", "Edit")
+
+			.setPageStart(0)
+			.setPageSize(50);
+
+
+		searchBE.setRealm(serviceToken.getRealm());
+
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

@@ -1,0 +1,90 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_DISPLAY_CODES"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not  SearchEntity (code == "GENERATE_DISPLAY_CODES")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		Map<String, String> displayCodes = new HashMap<String, String>();
+
+		/* dashboard */
+		displayCodes.put("QUE_DASHBOARD_VIEW", "DASHBOARD");
+		
+		/* process */
+		displayCodes.put("QUE_TAB_BUCKET_VIEW", "PROCESS");
+
+		/* unity */
+		displayCodes.put("QUE_UNITY_PLAYER", "UNITY");
+
+		/* results */
+		displayCodes.put("QUE_RESULTS_GRP", "RESULTS");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_RESULTS", "RESULTS");
+		
+		/* detail */
+		displayCodes.put("ACT_PRI_EVENT_VIEW", "DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_PROFILE", "DETAIL");
+		displayCodes.put("QUE_ADMIN_GRP", "DETAIL");
+		displayCodes.put("QUE_EDU_PRO_GRP", "DETAIL");
+		displayCodes.put("QUE_STUDENT_GRP", "DETAIL");
+		displayCodes.put("QUE_EDU_PRO_REP_GRP", "DETAIL");
+		displayCodes.put("QUE_TEAM_GRP", "DETAIL");
+		
+		/* bulk add */
+		displayCodes.put("QUE_STUDENT_BULK_GRP", "BULK_ADD");
+
+		/* forms */
+		displayCodes.put("QUE_AVATAR_PROFILE_GRP", "FORM");
+		displayCodes.put("QUE_ADMIN_MENU", "FORM");
+		displayCodes.put("QUE_EDU_PRO_MENU", "FORM");
+		displayCodes.put("QUE_EDU_PRO_REP_MENU", "FORM");
+		displayCodes.put("QUE_STUDENT_MENU", "FORM");
+		displayCodes.put("QUE_TEAM_MENU", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_EDIT", "FORM");
+
+		/* table */
+		displayCodes.put("QUE_TREE_ITEM_ADMINS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_EPRS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_STUDENTS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_TEAMS", "TABLE");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_STUDENTS", "TABLE");
+		
+		/* definitions */
+		displayCodes.put("QUE_STT_DEFINTIONS", "DRAWER:TABLE");
+
+		/* warnings */
+		displayCodes.put("QUE_STT_WARNINGS", "DRAWER:TABLE");
+		
+
+		insert(displayCodes);
+		VertxUtils.putObject(serviceToken.getRealm(), "", "DISPLAY_CODES", displayCodes, serviceToken.getToken());
+end

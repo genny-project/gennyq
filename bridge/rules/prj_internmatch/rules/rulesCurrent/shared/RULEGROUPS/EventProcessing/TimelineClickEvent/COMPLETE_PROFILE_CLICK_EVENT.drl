@@ -1,0 +1,48 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+
+
+rule "COMPLETE_PROFILE_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 1
+    no-loop
+    when
+		$message : QEventMessage( data.code == "QUE_DASHBOARD_COMPLETE_PROFILE" && data.parentCode == "QUE_DASHBOARD_REGISTER_GRP")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+    then
+
+		System.out.println("prj_internmatch - " + drools.getRule().getName() + ": " + $message );
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+
+		BaseEntity targetedBe;
+		
+		/* Get an instance of BaseEntityUtils */
+        BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+		
+		targetedBe = new BaseEntityUtils(userToken).getBaseEntityByCode("GRP_DASHBOARD_COUNTS");
+		
+		
+		QDataBaseEntityMessage targetedBeMsg = new QDataBaseEntityMessage(targetedBe);
+		targetedBeMsg.setToken(userToken.getToken());
+		targetedBeMsg.setReplace(true);
+		
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(targetedBeMsg));
+
+		retract( $message);
+	end

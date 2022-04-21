@@ -1,0 +1,40 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "RESULTS_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+			message : QEventMessage(data.code matches "QUE_RESULTS_GRP" )
+			userToken : GennyToken (code != "PER_SERVICE" )
+			serviceToken : GennyToken( code == "PER_SERVICE")
+			output : OutputParam( )
+			ruleDetails : RuleDetails()
+			beUtils : BaseEntityUtils()
+    then
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " + message );
+
+			String selectionString = "RENDER_RESULTS_S1" + ":" + userToken.getUserCode();
+			
+			insert(selectionString);
+
+			drools.setFocus("ResultsProcessing");
+
+			/* Set to NONE */
+			output.setTypeOfResult("NONE");
+			output.setResultCode("NONE");
+
+			retract(message);
+		end

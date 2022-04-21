@@ -1,0 +1,72 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+import life.genny.utils.RulesUtils;
+
+import life.genny.qwanda.validation.Validation;
+import life.genny.qwanda.validation.ValidationList;
+
+rule "GENERATE_BUCKET_PAGE_ASKS"
+    ruleflow-group 'GenerateAsks'
+     no-loop true
+    when
+       not  SearchEntity (code == "GENERATE_BUCKET_PAGE_ASKS")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		String sourceCode = "PER_SERVICE";
+		String targetCode = "BKT_APPLICATIONS";
+		
+		Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+		Attribute personAttribute = RulesUtils.getAttribute("LNK_PERSON", serviceToken);
+
+		Validation validation = new Validation("VLD_LINK", "dropdown", ".*");
+		List<String> selectionBaseEntityGroupList = Arrays.asList("GRP_BUCKET_INTERNS");
+		validation.setSelectionBaseEntityGroupList(selectionBaseEntityGroupList);
+		ValidationList validationsList = new ValidationList();
+		List<Validation> validations = new ArrayList();
+		validations.add(validation);
+		validationsList.setValidationList(validations);
+		DataType dttLink = new DataType("DTT_LINK", validationsList, "Link Type", "");
+		dttLink.setComponent("dropdown");
+
+		personAttribute.setDataType(dttLink);
+
+		if (personAttribute != null) {
+
+			Question bucketPageQues = new Question("QUE_BUCKET_INTERNS_GRP", "Bucket Page", questionAttribute, true);
+			Ask bucketPageAsk = new Ask(bucketPageQues, sourceCode, targetCode);
+
+			Question selectPersonQues = new Question("QUE_SELECT_INTERN", "Select Person", personAttribute, true);
+			Ask selectPersonAsk = new Ask(selectPersonQues, sourceCode, targetCode);
+		
+			Ask[] childAsks = { selectPersonAsk };
+			bucketPageAsk.setChildAsks(childAsks);
+
+			VertxUtils.putObject(serviceToken.getRealm(), "", "BUCKET_PAGE", bucketPageAsk, serviceToken.getToken());
+		} else {
+			System.out.println("personAttribute (LNK_PERSON) is NULL");
+		}
+
+end

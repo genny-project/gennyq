@@ -1,0 +1,76 @@
+package life.genny.rules;
+
+
+
+global org.apache.logging.log4j.Logger log;
+import java.util.Map;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwandautils.JsonUtils;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import life.genny.qwanda.ContextList;
+import java.util.HashSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.Frame3;
+import life.genny.models.Theme;
+import life.genny.utils.FrameUtils2;
+
+rule "FRM_COMPANY_DETAIL_VIEW"
+    ruleflow-group 'GenerateFrames'
+
+    when
+      not  Frame3(code == "FRM_COMPANY_DETAIL_VIEW")
+      serviceToken : GennyToken( code == "PER_SERVICE")
+      FRM_DETAIL_VIEW_TOP_CARD : Frame3 ( code == "FRM_DETAIL_VIEW_TOP_CARD" )
+      FRM_DETAIL_VIEW_CARD : Frame3 ( code == "FRM_DETAIL_VIEW_CARD" )
+      
+    then
+        System.out.println("   Generate FRM_COMPANY_DETAIL_VIEW Rule  "+serviceToken.getUserCode());
+		
+		/*
+			Setting appropriate question code !!!!
+			
+			For top FRM_DETAIL_VIEW_TOP_CARD send questions with groupCode QUE_DETAIL_VIEW_TOP_SUMMARY_GRP
+			For FRM_DETAIL_VIEW_CARD send questions with groupCode QUE_DETAIL_VIEW_SUMMARY_GRP or change the targetCode to desire question group code
+		*/
+		
+		/*Question code be exact same as the SBE questiongroup code*/
+		
+		FRM_DETAIL_VIEW_CARD.setQuestionCode("QUE_COMPANY_DETAIL_GRP");
+		FRM_DETAIL_VIEW_CARD.getQuestionGroup().setCode("QUE_COMPANY_DETAIL_GRP");
+		
+ 	  	Frame3 FRM_COMPANY_DETAIL_VIEW = Frame3.builder("FRM_COMPANY_DETAIL_VIEW_CONTENT")
+						.addFrame(FRM_DETAIL_VIEW_TOP_CARD,FramePosition.CENTRE).end()
+						.addFrame(FRM_DETAIL_VIEW_CARD, FramePosition.CENTRE).end()
+						.build();
+
+		Frame3 frame = Frame3.builder("FRM_COMPANY_DETAIL_VIEW")
+						.addFrame(FRM_COMPANY_DETAIL_VIEW).end()
+						.build();
+						
+		frame.setRealm(serviceToken.getRealm());
+		insert (frame);
+		
+		/* Process and save to cache */
+		Set<QDataAskMessage> askSet = new HashSet<QDataAskMessage>();
+		Map<String, ContextList> contextListMap = new HashMap<String, ContextList>();
+		
+		FrameUtils2.toMessage(frame, serviceToken,askSet,contextListMap);
+		
+		VertxUtils.putObject(serviceToken.getRealm(), "", frame.getCode(), frame, serviceToken.getToken());
+		System.out.println("Writing to cache");
+		VertxUtils.writeCachedJson(serviceToken.getRealm(),"ASK_" + frame.getCode(), JsonUtils.toJson(askSet.toArray()),serviceToken.getToken());
+	
+	end

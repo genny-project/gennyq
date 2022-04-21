@@ -1,0 +1,99 @@
+package life.genny.rules;
+
+import org.apache.commons.lang3.StringUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import life.genny.utils.SearchCallable;
+import life.genny.utils.TableFrameCallable;
+import life.genny.utils.CacheSearchUtils;
+
+rule "FIX_ALL_EMAILS"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+			message : QEventMessage(data.code == "QUE_FIX_ALL_EMAILS" && data.parentCode == "QUE_FIX_ALL_EMAILS_GRP" && data.targetCode matches "SAVE_.*" )
+			userToken : GennyToken (code != "PER_SERVICE" )
+			serviceToken : GennyToken( code == "PER_SERVICE")
+			output : OutputParam( )
+			ruleDetails : RuleDetails()
+			beUtils : BaseEntityUtils()
+    then
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " + message );
+
+			List<Answer> answers = new ArrayList<>();
+
+			System.out.println("Fixing All HCR Send Emails'");
+
+			String targetCode = message.getData().getTargetCode();
+
+			SearchEntity searchBE = new SearchEntity("SBE_GET_HCRS", "Get All HCRS")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+				.addFilter("PRI_STATUS", SearchEntity.StringFilter.LIKE, "%")
+				.addFilter("PRI_IS_HOST_CPY_REP", true)
+				.setPageStart(0).setPageSize(100000);
+	
+			searchBE.setRealm(serviceToken.getRealm());
+			List<BaseEntity> hcrBEs = beUtils.getBaseEntitys(searchBE);
+
+			System.out.println("Found " + hcrBEs.size() + " HCR BEs");
+
+			Integer changeCount = 0;
+			for (BaseEntity hcr : hcrBEs) {
+				changeCount += 1;
+				String allEmails = hcr.getValue("LNK_ALL_EMAILS",null);
+				System.out.println("LNK_ALL_EMAILS : " +allEmails);
+
+				Boolean allEmailsBool = false;
+				if (allEmails != null && allEmails.contains("SEL_YES")) {
+					allEmailsBool = true;
+				}
+				if (targetCode.equals("SAVE_YES")) {
+					answers.add(new Answer(userToken.getUserCode(), hcr.getCode(), "PRI_EMAIL_FLAG", allEmailsBool));
+				} else {
+					System.out.println("NOT SAVING");
+				}
+			}
+			System.out.println("Number of Changed HCR All emails' = " + changeCount.toString());
+
+			beUtils.saveAnswers(answers);
+
+			retract(message);
+			output.setTypeOfResult("NONE");
+			output.setResultCode("NONE");  /* dont display anything new */
+		end

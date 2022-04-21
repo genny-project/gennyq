@@ -1,0 +1,38 @@
+package life.genny.rules;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+
+rule "AC_SIDEBAR_INTERNS_TABLE"
+    ruleflow-group 'ActionCaches'
+     salience 5000
+     no-loop true
+    when
+	  userToken : GennyToken ( code != "PER_SERVICE" ) 
+	  serviceToken : GennyToken ( code == "PER_SERVICE" )
+	  not QCmdMessage( code == "LOGOUT")
+    then
+   		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + userToken.getUserCode());
+   		
+ 		QCmdMessage msg = new QCmdMessage("LOGOUT", "LOGOUT");
+ 		msg.setSend(true);
+ 		msg.setCache("QUE_TREE_ITEM_CONTACTS_GRP:QUE_TREE_ITEM_CONTACTS_GRP:QUE_TREE_ITEM_INTERNS_GRP"); /* trigger codes */
+		msg.setToken(userToken.getToken());
+  		
+  		VertxUtils.writeMsg("webcmds",msg);
+  		
+		
+		insert(msg); /* to stop refire */
+end

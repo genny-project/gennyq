@@ -1,0 +1,103 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.message.QDataB2BMessage;
+import life.genny.qwanda.EEntityStatus;
+import life.genny.qwanda.AttributeCodeValueString;
+import life.genny.qwanda.GennyItem;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.message.QMessageGennyMSG;
+
+rule "PROCESS_ROTARY_MENTOR"
+    ruleflow-group 'DataProcessing'
+     salience 10000
+     no-loop true
+    when
+	  userToken : GennyToken ( code != "PER_SERVICE"  && username == "simon@lifeisdigital.com.au")
+	  serviceToken : GennyToken ( code == "PER_SERVICE" )
+	  dataMsg : QDataB2BMessage()
+	  beUtils : BaseEntityUtils()
+
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode());
+  		System.out.println("Rule -> "+drools.getRule().getName()+" userUUID="+userToken.getUsername());
+
+		String firstname = dataMsg.getValue("PRI_FIRSTNAME");
+		String lastname = dataMsg.getValue("PRI_LASTNAME");
+        String name = firstname+" "+lastname;
+        String email = dataMsg.getValue("PRI_EMAIL");
+        String phone = dataMsg.getValue("PRI_MOBILE");
+        String entityCode = null;
+        String defBECode = "DEF_MENTOR";
+		Boolean sendEmail = false;
+		BaseEntity newBe = null;
+
+	 	System.out.println("GOT TO HERE "+firstname+": "+lastname+": "+name+": "+email+": "+phone);
+
+        /* Create User */
+        BaseEntity defBE = beUtils.getDEFByCode(defBECode);
+        if (defBE == null) {
+            System.out.println("ERROR: could not find DEF for code " + defBECode);
+
+        } else {
+        	System.out.println("Found DEF code -> " + defBECode);
+            newBe = beUtils.create(defBE);
+            if(newBe != null) {
+            	System.out.println("Created BaseEntity code -> " + newBe.getCode());
+ 
+				/* TODO: Need to handle multiple different be codes */
+            	for (GennyItem gennyItem : dataMsg.getItems()) {
+            		for (AttributeCodeValueString acvs : gennyItem.getB2bdata()) {
+						System.out.println("Creating EntityAttribute BaseEntity code -> " + newBe.getCode()+" : "+acvs.getAttributeCode()+"-->"+acvs.getValue());
+						try {
+							Answer answer = new Answer(userToken.getUserCode(), newBe.getCode(), acvs.getAttributeCode(), acvs.getValue());
+							newBe = beUtils.saveAnswer(defBE,answer);
+							beUtils.saveBaseEntity(defBE,newBe); 
+							insert(answer);
+						} catch (Exception e) {
+							System.out.println("Error in saving answer "+newBe.getCode()+" : "+acvs.getAttributeCode()+"-->"+acvs.getValue()+":"+e.getLocalizedMessage());
+						}
+            		}
+                }
+                Answer answer = new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_STATUS", "ACTIVE");
+				newBe = beUtils.saveAnswer(defBE,answer);
+                answer = new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_USERCODE",newBe.getCode());
+				newBe = beUtils.saveAnswer(defBE,answer);
+				answer = new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_USERNAME",email);
+				newBe = beUtils.saveAnswer(defBE,answer);
+            } else {
+				System.out.println("ERROR: newBe is null");
+
+			}
+        }
+
+        /* Confirmation Message */
+ 		newBe = beUtils.getBaseEntityByCode(newBe.getCode());
+		email = newBe.getValue("PRI_EMAIL", null);
+		System.out.println("Email is "+email);
+		sendEmail = email != null ? true : false;
+
+		/* Update Email and Name, and set Random Password in Keycloak */
+		KeycloakUtils.updateUserDetails(beUtils, newBe);
+		String password = KeycloakUtils.generateRandomPassword(beUtils, newBe);
+
+		if (sendEmail) {
+            System.out.println("#### Sending email to Mentor after rotary add ####");
+
+           QMessageGennyMSG msg = new QMessageGennyMSG.Builder("MSG_MENTOR1_REGISTER")
+               .addRecipient(newBe)
+               .addContext("PASSWORD", password)
+               .addContext("URL:ENCODE", "QUE_FAKE_PARENT/QUE_FINISH_MENTOR")
+               .addContext("BCC", "PRJ_MENTORMATCH")
+               .setUtils(beUtils)
+               .send();
+
+           System.out.println("MSG_MENTEE1_REGISTER: msg " + JsonUtils.toJson(msg));
+		} else {
+			System.out.println("Error: sendEmail is " + sendEmail);
+		}
+
+		retract(dataMsg);
+        System.out.println("End of " + drools.getRule().getName());
+end

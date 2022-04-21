@@ -1,0 +1,138 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+
+rule "VIEW_JOURNAL_CLICK_EVENT2"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_JOURNAL_VIEW2")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		
+    then
+		System.out.println("Processing VIEW JOURNAL EVENT 2 : " + $message );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		insert(beUtils);
+		TableUtils tableUtils = new TableUtils(beUtils);
+
+		String code =  $message.getData().getCode();
+		String targetCode =  $message.getData().getTargetCode();
+		String internCode = "[\"" + targetCode + "\"]";
+
+		System.out.println("QUESTION CODE   ::   " + code);
+		System.out.println("TARGET CODE     ::   " + targetCode);
+		System.out.println("INTERN CODE     ::   " + internCode);
+
+		String searchBeCode = "SBE_JOURNALS";
+		String sessionSearchCode = searchBeCode + "_" + beUtils.getGennyToken().getJTI().toUpperCase();
+
+		SearchEntity searchBE = new SearchEntity(sessionSearchCode, "Journals")
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%")
+			.addFilter("LNK_INTERN", SearchEntity.StringFilter.EQUAL, internCode)
+			.addSort("PRI_JOURNAL_DATE", "Date", SearchEntity.Sort.DESC)
+			.addColumn("PRI_JOURNAL_DATE", "Date")
+			.addColumn("PRI_JOURNAL_HOURS", "Hours")
+			.addColumn("PRI_JOURNAL_TASKS", "Tasks")
+			.addColumn("PRI_JOURNAL_LEARNING_OUTCOMES", "Outcomes")
+			.setPageStart(0).setPageSize(1000);
+
+		searchBE.setRealm(serviceToken.getRealm());
+		
+		/* fetch the results */
+		SearchUtils searchUtils = new SearchUtils(beUtils);
+		QDataBaseEntityMessage msg = searchUtils.fetchSearchResults(searchBE, serviceToken);
+		long totalResults = msg.getItems().length;
+
+		/* update searchBE with total */
+		/* searchBE.setPageSize(totalResults.intValue());
+		TableUtils.updateBaseEntity(searchBE, "PRI_TOTAL_RESULTS", totalResults + ""); */
+
+		/* prepare baseEntity message */
+		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setParentCode(searchBE.getCode());
+		msg.setTotal(totalResults);
+		msg.setReplace(true);
+
+		/* set journal title */
+		BaseEntity be = beUtils.getBaseEntityByCode(targetCode);
+		if(be != null){
+		
+			String numJournals = Long.toString(totalResults);
+			Answer answerNumJournals = new Answer(userToken.getUserCode(), be.getCode(), "PRI_NUM_JOURNALS", numJournals);
+			beUtils.saveAnswer(answerNumJournals);
+			System.out.println("answerNumJournals: " +answerNumJournals);
+			
+			String journalTitle = be.getValue("PRI_NAME", null);
+			
+			if(journalTitle != null){
+				System.out.println("setting journalTitle to :: " + journalTitle);
+				searchBE.setTitle(journalTitle);
+
+			}else{
+				System.out.println("journalTitle is null");
+			}
+		}else{
+			System.out.println("intern be is null");
+		}
+
+		/* set isDownlodable */
+		searchBE.addColumn("PRI_HAS_DOWNLOAD_LINK", " ");
+
+		/* prepare searchEntity message */
+		QDataBaseEntityMessage searchBeMsg = new QDataBaseEntityMessage(searchBE);
+		searchBeMsg.setToken(beUtils.getGennyToken().getToken());
+
+		/* prepare qBulk message */
+		QBulkMessage aggregatedMessages = new QBulkMessage();
+		aggregatedMessages.setToken(beUtils.getGennyToken().getToken());
+		aggregatedMessages.add(searchBeMsg);
+		aggregatedMessages.add(msg);
+		
+		/* send qbulk msg */
+		String json = JsonUtils.toJson(aggregatedMessages);
+		VertxUtils.writeMsg("webcmds", json);
+
+		/* send end process */
+		QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
+		msgend.setToken(beUtils.getGennyToken().getToken());
+		msgend.setSend(true);  		
+		VertxUtils.writeMsg("webcmds",msgend);
+		
+		/* pdf worflow starts from here */
+		String workflowSignalCode = "START_JOURNAL_PDF";
+		
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode(workflowSignalCode);
+		output.setTargetCode($message.getData().getTargetCode());
+		
+		String workflowBeCode = $message.getData().getTargetCode();
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ workflowBeCode: " + workflowBeCode);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING THE MOVE FROM APPLIED TO SHORTLIST WITH: " +output);
+
+		retract($message);
+		/* update(output);*/
+
+	end
+

@@ -1,0 +1,46 @@
+package life.genny.rules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.models.GennyToken;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.message.QMessageGennyMSG;
+
+rule "SEND_EMAIL_TO_SCHEDULE_MEETING"
+    ruleflow-group 'Notification'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity(code matches "APP_\\S+" )
+		output : OutputParam()
+		controlSignalCode : String(controlSignalCode.equals("MATCH"))
+		beUtils : BaseEntityUtils()
+    then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+ 		newApplication = beUtils.getBaseEntityByCode(newApplication.getCode());
+		System.out.println(drools.getRule().getName() + " :: newApplication = " + newApplication);
+
+		BaseEntity menteeBe = beUtils.getBaseEntityFromLNKAttr(newApplication, "LNK_MENTEE");
+
+		if (menteeBe != null) {
+			System.out.println("#### Sending email to mentee to confirm meeting timings ####");
+
+            QMessageGennyMSG msg = new QMessageGennyMSG.Builder("MSG_MENTEE_CONFIRM_FIRST_MEET_TIMING")
+                .addRecipient(menteeBe)
+                .addContext("APPLICATION", newApplication)
+                .addContext("URL:ENCODE", "QUE_FAKE_PARENT/ACT_CONFIRM_MEETING")
+                .addContext("BCC", "PRJ_MENTORMATCH")
+                .addContext("DATETIMEFORMAT", "dd MMM yyyy, E, hh:mm a")
+                .setUtils(beUtils)
+                .send();
+
+			System.out.println("#### Sent email to mentee to confirm meeting timings ####");
+		} else {
+            System.out.println("ERROR: Mentee BE is NULL");
+		}
+
+		retract(newApplication)
+		retract(controlSignalCode)
+
+end

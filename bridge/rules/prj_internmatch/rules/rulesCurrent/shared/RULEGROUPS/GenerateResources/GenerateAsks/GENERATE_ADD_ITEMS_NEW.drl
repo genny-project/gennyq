@@ -1,0 +1,39 @@
+package life.genny.rules;
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+import java.util.LinkedHashMap;
+
+rule "GENERATE_ADD_ITEMS"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+    when
+		not  SearchEntity (code == "GENERATE_ADD_ITEMS")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		LinkedHashMap<String, String> addItemsMap = new LinkedHashMap<>();
+
+		addItemsMap.put("HOST_CPY", "Host Company");
+		addItemsMap.put("QA_HOST_CPY_REP", "Host Company Rep");
+		addItemsMap.put("EDU_PRO", "Education Provider");
+		addItemsMap.put("QA_EDU_PRO_REP", "Education Provider Rep");
+		addItemsMap.put("INTERNSHIP", "Internship");
+		addItemsMap.put("QA_INTERN", "Intern");
+		addItemsMap.put("AGENCY", "Agency");
+		addItemsMap.put("QA_AGENT", "Agent");
+
+		VertxUtils.putObject(serviceToken.getRealm(), "", "ADD_ITEMS", addItemsMap, serviceToken.getToken());
+end

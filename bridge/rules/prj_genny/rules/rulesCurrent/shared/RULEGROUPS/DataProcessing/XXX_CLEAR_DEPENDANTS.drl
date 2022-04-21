@@ -1,0 +1,67 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.TaskUtils;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.utils.QuestionUtils;
+
+rule "CLEAR_DEPENDANTS"
+	ruleflow-group 'DataProcessing'
+	salience 1000
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		answer : Answer( attributeCode matches "LNK_.*" && ( value == "[]" || value == "" ) )
+		answersToSave : Answers()
+		output : OutputParam()
+		beUtils : BaseEntityUtils()
+
+	then
+		System.out.println(drools.getRule().getName()+": Rule fired");
+
+		String targetCode = answer.getTargetCode();
+		String attributeCode = answer.getAttributeCode();
+		System.out.println("targetCode = " + targetCode);
+		System.out.println("attributeCode = " + attributeCode);
+
+		if (targetCode == null) {
+			System.out.println(drools.getRule().getName() + " : targetCode is NULL");
+			return;
+		}
+		if (attributeCode == null) {
+			System.out.println(drools.getRule().getName() + " : attributeCode is NULL");
+			return;
+		}
+ 		
+		BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+		if (targetBe == null) {
+			System.out.println(drools.getRule().getName() + " : targetBe is NULL");
+			return;
+		}
+
+		BaseEntity defBe = beUtils.getDEF(targetBe);
+
+		if (defBe == null) {
+			System.out.println(drools.getRule().getName() + " : defBe is NULL");
+			return;
+		}
+
+		System.out.println(drools.getRule().getName()+" Target DEF identified as "+defBe.getCode()+"!! "+defBe.getName());
+		List<String> dependants = beUtils.getDependants(attributeCode, defBe);
+
+		if (dependants != null) {
+			for (String dep : dependants) {
+				/* Clear Dependant Attributes */
+				Answer ans = new Answer(userToken.getUserCode(), targetCode, dep, "");
+				answersToSave.add(ans);
+				VertxUtils.sendToFrontEnd(userToken, ans);
+			}
+
+		}
+end

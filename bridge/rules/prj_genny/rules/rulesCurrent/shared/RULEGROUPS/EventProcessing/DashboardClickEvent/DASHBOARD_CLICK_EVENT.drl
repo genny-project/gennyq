@@ -1,0 +1,32 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import org.json.JSONObject;
+
+
+rule "DASHBOARD_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage( data.code matches "QUE_DASHBOARD_VIEW" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		drools.setFocus("SendSummary");
+		retract( $message);
+	end

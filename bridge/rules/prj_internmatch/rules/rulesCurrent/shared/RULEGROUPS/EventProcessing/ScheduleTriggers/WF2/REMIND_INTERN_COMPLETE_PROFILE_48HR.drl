@@ -1,0 +1,143 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.ShleemyUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwandautils.GennySettings;
+import org.apache.commons.lang3.ObjectUtils;
+import life.genny.utils.validation.MessageValidator;
+import life.genny.message.QMessageGennyMSG;
+import java.time.LocalDateTime;
+import life.genny.qwanda.entity.SearchEntity;
+
+rule "REMIND_INTERN_COMPLETE_PROFILE_48HR"
+    ruleflow-group 'EventProcessing'
+    no-loop true
+    salience 5
+    when
+   		$message : QEventMessage(data.code == "SCHEDULE_INTERN_COMPLETE_PROFILE_48HR")
+   		userToken : GennyToken  ()
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+
+    then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+        System.out.println(drools.getRule().getName() + " : Rule fired at "+ LocalDateTime.now());
+
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode: " +targetCode);
+
+		String user = userToken.getUserCode();
+		System.out.println("user: " +user);
+
+		BaseEntity internBe = beUtils.getBaseEntityByCode(targetCode);
+        System.out.println("internBe: "+ internBe);
+
+		if (internBe != null) {
+			String profile = internBe.getValue("PRI_PROFILE", null);
+			System.out.println("profile = " + profile);
+
+			if (profile.equals("Incomplete") || profile.equals("InComplete")) {
+                /* CHANGE CARD COLOUR */
+                Answer answerColour = new Answer(serviceToken.getUserCode(), internBe.getCode(), "PRI_STATUS_COLOR", "warning");
+                beUtils.saveAnswer(answerColour);
+                System.out.println("Answer done" +answerColour);
+
+                VertxUtils.sendToFrontEnd(userToken, answerColour);
+                System.out.println("sendToFrontEnd done");
+
+
+                /* PUBLISH CARD COLOUR */
+                BaseEntity targetBE  = beUtils.getBaseEntityByCode(targetCode);
+
+				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(targetBE);
+				msg.setToken(userToken.getToken());
+
+				SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Agents")
+					.addSort("PRI_NAME","Name",SearchEntity.Sort.ASC)
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+					.addFilter("PRI_IS_AGENT", true)
+					.addColumn("PRI_NAME", "Name")
+					.setPageStart(0).setPageSize(1000);
+
+				searchBE.setRealm(serviceToken.getRealm());
+
+				List<BaseEntity> results = beUtils.getBaseEntitys(searchBE);
+				System.out.println("results: " +results);
+
+				String[] rxList = new String[2];
+				rxList[0] = "SUPERUSER";
+				rxList[1] = "AGENT";
+				/*rxList[2] = "PER_5A666E64-021F-48CE-8111-BE3D66901F9C";*/
+				msg.setRecipientCodeArray(rxList);
+
+				/*VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msg));*/
+				VertxUtils.writeMsg("project", JsonUtils.toJson(msg));
+				System.out.println("writeMsg done");
+
+
+                Boolean isEmailBlank = MessageValidator.isEmailBlank(internBe);
+                System.out.println("isEmailBlank: "+ isEmailBlank);
+
+                if(!isEmailBlank){
+                    QMessageGennyMSG internSendgridMsg = new QMessageGennyMSG.Builder("MSG_IM_INTERN_VERIFICATION_REMINDER_48HRS")
+                        .addRecipient(internBe)
+                        .addContext("URL:ENCODE", "QUE_FAKE_PARENT/QUE_FINISH_INTERN")
+                        .setUtils(beUtils)
+                        .send();
+
+                    System.out.println("Sendgrid msg: "+ JsonUtils.toJson(internSendgridMsg));
+                    System.out.println("Sendgrid email sent to Intern!!");
+                }
+                Boolean isMobileBlank = MessageValidator.isMobileBlank(internBe);
+                System.out.println("isMobileBlank: "+ isMobileBlank);
+
+                /* send sms only if it's a production environment */
+                if (!isMobileBlank && !GennySettings.projectUrl.contains("dev")) {
+                    /* Building sms msg and sending it */
+                    QMessageGennyMSG smsInternMsg =  new QMessageGennyMSG.Builder("MSG_IM_SMS_INTERN_VERIFICATION_REMINDER_48HRS")
+                       .addRecipient(internBe)
+                       .setUtils(beUtils)
+                       .send();
+                    System.out.println("Sms msg: "+ JsonUtils.toJson(smsInternMsg));
+                    System.out.println("Sms sent to Intern!!");
+                }
+            } else if (profile.equals("Complete")) {
+				/* DELETE SCHEDULES */
+				ShleemyUtils.deleteSchedule(serviceToken, internBe.getCode()+"_INTERN_COMPLETE_PROFILE_48HR");
+				ShleemyUtils.deleteSchedule(serviceToken, internBe.getCode()+"_INTERN_COMPLETE_PROFILE_96HR");
+			}
+		} else {
+			System.out.println("Intern is NULL");
+		}
+
+    retract($message)
+end

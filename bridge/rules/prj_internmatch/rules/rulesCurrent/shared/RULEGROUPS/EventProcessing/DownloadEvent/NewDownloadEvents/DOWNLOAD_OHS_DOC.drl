@@ -1,0 +1,199 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.SearchUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import java.util.Arrays;
+import java.util.HashMap;
+import life.genny.qwandautils.PDFHelper;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.Answer;
+
+rule "DOWNLOAD_OHS_DOC"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage(data.code == "ACT_OHS_DOC" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		ruleDetails : RuleDetails()
+		output : OutputParam()
+		beUtils : BaseEntityUtils();
+	then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		String companyCode =  $message.getData().getTargetCode();
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" companyCode :: " +companyCode);
+
+		String userCode = userToken.getUserCode();
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" userCode: " + userCode);
+
+		if(companyCode == null){
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" targetCode is null in the event messsage");
+			return;
+		}
+
+		BaseEntity companyBe = beUtils.getBaseEntityByCode(companyCode);
+		if(companyBe == null){
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" companyBe is null");
+			return;
+		}
+
+		/* send Loading TOAST msg */
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Sending toast message");
+		
+		QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+		toastMsg.setMessage("Please wait while we prepare your Document!");
+		toastMsg.setToken(beUtils.getGennyToken().getToken());
+		toastMsg.setSend(true);
+		VertxUtils.writeMsg("webcmds", toastMsg);
+
+		String pdfUrl="";
+		Boolean sendDownloadFile = true;
+		String docCode = "";
+		String hcCode = "";
+
+		/* check if the document was uploaded by user */
+		Optional<String> optOhsDoc = companyBe.getValue("PRI_OHS_DOC");
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Document upload checking for companyBe.getValue(PRI_OHS_DOC)");
+		if (optOhsDoc.isPresent() && !StringUtils.isBlank(optOhsDoc.get())) {
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Document was present !");
+		
+			String ohsDoc = optOhsDoc.get();
+			if(ohsDoc != null && !ohsDoc.trim().isEmpty()){
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" Document was uploaded!. Sending this to Frontend");
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" ohsDoc      :: " + ohsDoc);
+				String projectUrl = GennySettings.projectUrl;
+				if(projectUrl == null) projectUrl = "https://m.internmatch.io";
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" projectUrl  :: " + projectUrl);
+				pdfUrl = projectUrl+ "/web/public/" + ohsDoc;
+				System.out.println("pdfUrl      :: " + pdfUrl);
+
+			} else {
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" Document was present but failed test ohsDoc != null && !ohsDoc.trim().isEmpty()");
+			}
+		}else{
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Generating Document from the system");
+			docCode = companyBe.getValue("DOC_OHS_CODE",null);
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" docCode   ::   " + docCode);
+
+			if(docCode != null){
+				
+				BaseEntity docBe = beUtils.getBaseEntityByCode(docCode);
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" docBe   ::   " + docBe);
+				
+				if(docBe == null){
+					System.out.println("docBe is null ");
+					return;
+				}	
+
+				String signature = docBe.getValue("PRI_OHS_SIGNATURE", null);
+				if (signature == null || signature.isEmpty()) {
+					System.out.println("NULL or EMPTY signature, not downloading");
+					/* HACK */
+					/* Dont let them download if signature is not signed */
+					sendDownloadFile = false;
+					hcCode = companyBe.getCode();
+				}
+
+				BaseEntity hcrBe = beUtils.getBaseEntityFromLNKAttr(docCode, "LNK_HOST_COMPANY_REP");
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" hcrBe = " + hcrBe);
+				if (hcrBe == null) {
+					System.out.println(ruleDetails+" "+drools.getRule().getName()+" hcrBe is NULL, defaulting to curent user!");
+					/* NOTE: This is the default hcr entity if not found for the DOC BE */
+					hcrBe = beUtils.getBaseEntityByCode(userCode);
+				}
+
+				/* back up template url, if project be doesn't have it */
+				String templatePdf = "https://raw.githubusercontent.com/genny-project/layouts/master/internmatch-new/document_templates/TestOHS-document.html";
+				
+				BaseEntity project = beUtils.getBaseEntityByCode( "PRJ_" + serviceToken.getRealm().toUpperCase());
+				/*if(project != null){*/
+					
+					/* get the template url from project if possible */
+					/*templatePdf = project.getValue("PRI_OHNS_AGREEMENT_URL", templatePdf);
+
+				}*/
+				System.out.println(" HC Name = " + companyBe.getValue("PRI_LEGAL_NAME",null));
+				System.out.println(" HCR Name = " + companyBe.getValue("PRI_NAME",null));
+				System.out.println(" OHS Signature Image = " + docBe.getValue("PRI_OHS_SIGNATURE",null));
+				System.out.println(" OHS Signature Date = " + docBe.getValue("PRI_OHS_SIGNING_DATE",null));
+				HashMap<String, Object> contextMap = new HashMap<String, Object>();
+				contextMap.put("OHS", docBe);
+				contextMap.put("HC", companyBe);
+				contextMap.put("HCR", hcrBe);
+				System.out.println(" template " + templatePdf);
+				pdfUrl = PDFHelper.getDownloadablePdfLinkForHtml(templatePdf, contextMap);
+				System.out.println(ruleDetails+" "+drools.getRule().getName()+" PDF url :: " + pdfUrl);
+			
+			}else{
+				sendDownloadFile = false;
+
+				System.out.println("DOC_OHS_CODE does not exist yet. Creating now!");
+
+				hcCode = companyBe.getCode();
+
+				String uuid = UUID.randomUUID().toString();
+				System.out.println("uuid: " +uuid);
+				uuid = uuid.substring(4);
+				
+				docCode = "DOC_OHS_"+uuid;
+				docCode = docCode.toUpperCase();
+				System.out.println("OHS: docCode = " + docCode);
+				
+				BaseEntity defBE = beUtils.getDEFByCode("DEF_OHS_DOCUMENT");
+				BaseEntity newBe = beUtils.create(defBE, docCode, docCode);
+				System.out.println("OHS: newBe = " + newBe);
+				System.out.println(">>>>>>>>>>>> " + newBe.getName() + " <<<<<<<<<<<<");
+				
+				/* Save DOC_OHS_CODE against HC */
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), companyBe.getCode(), "DOC_OHS_CODE", docCode));
+
+				/* Send the form here */
+			}
+		}
+		if(sendDownloadFile){
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Sending downloadFile  ["+pdfUrl+"]" );
+			/* Send Download QCmdMessage to FE */
+			QCmdMessage downloadMsg = new QCmdMessage("DOWNLOAD_FILE", pdfUrl);
+			downloadMsg.setToken(beUtils.getGennyToken().getToken());
+			downloadMsg.setSend(true);
+
+			VertxUtils.writeMsg("webcmds", downloadMsg);
+			
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" **************** DOWNLOAD OHS FILE DISABLED !!!!!!!!!!! IN RULE !");
+
+		} else {
+			/*VertxUtils.sendCmdMsg(beUtils, "DISPLAY", "FORM");*/
+			VertxUtils.sendCmdMsg(beUtils, "DISPLAY", "FORM" , "DISPLAY");
+
+			System.out.println("STARTING OHS DOC WORKFLOW!!!!");
+			output.setAskSourceCode(userCode);
+			output.setTargetCode(docCode);
+			output.setTypeOfResult("SIGNAL");
+			output.setResultCode("START_OHS");	
+			output.setSuitCase(hcCode);
+			
+			System.out.println("**************************************************");
+			System.out.println("AskSourceCode: " + output.getAskSourceCode());
+			System.out.println("TargetCode: "    + output.getTargetCode());
+			System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+			System.out.println("ResultCode: "    + output.getResultCode());
+			System.out.println("SuitCase: "      + output.getSuitCase());
+			System.out.println("**************************************************");
+		}
+
+		retract($message);
+	end

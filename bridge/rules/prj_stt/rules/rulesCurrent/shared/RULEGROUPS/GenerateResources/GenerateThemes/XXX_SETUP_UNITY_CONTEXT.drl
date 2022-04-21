@@ -1,0 +1,176 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import org.json.JSONObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.Question;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.QwandaMessage;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import life.genny.qwanda.Context;
+import life.genny.qwanda.ContextList;
+import life.genny.qwanda.ContextType;
+
+
+rule "SETUP_UNITY_CONTEXT"
+    ruleflow-group 'GenerateThemes'
+	salience 10000
+    when
+  		serviceToken : GennyToken (code == "PER_SERVICE")
+  		
+     then
+     	System.out.println("   Initialise Unity Context Setup");
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		String[] questionGroups = { "S1_A_Q1", 
+									"S1_A_Q2",
+									"S1_A_Q3",
+									"S1_A_Q4",
+									"S1_A_Q5",
+									"S1_A_Q6",
+									"S1_A_Q7",
+									"S1_A_Q8",
+									"S1_A_Q9",
+									"S1_A_Q10",
+									"S1_B_Q1", 
+									"S1_B_Q2",
+									"S1_B_Q3",
+									"S1_B_Q4",
+									"S1_B_Q5",
+									"S1_C_Q1", 
+									"S1_C_Q2",
+									"S1_C_Q3",
+									"S1_C_Q4",
+									"S1_C_Q5",
+									"S2_A_Q1", 
+									"S2_A_Q2",
+									"S2_A_Q3",
+									"S2_A_Q4",
+									"S2_A_Q5",
+									"S2_B_Q1", 
+									"S2_B_Q2",
+									"S2_B_Q3",
+									"S2_B_Q4",
+									"S2_B_Q5",
+									"S2_C_Q1", 
+									"S2_C_Q2",
+									"S2_C_Q3",
+									"S2_C_Q4",
+									"S2_C_Q5",
+									"S3_A_Q1", 
+									"S3_A_Q2",
+									"S3_A_Q3",
+									"S3_A_Q4",
+									"S3_A_Q5",
+									"S3_B_Q1", 
+									"S3_B_Q2",
+									"S3_B_Q3",
+									"S3_B_Q4",
+									"S3_B_Q5",
+									"S3_C_Q1", 
+									"S3_C_Q2",
+									"S3_C_Q3",
+									"S3_C_Q4",
+									"S3_C_Q5",
+									"S4_A_Q1", 
+									"S4_A_Q2",
+									"S4_A_Q3",
+									"S4_A_Q4",
+									"S4_A_Q5",
+									"S4_B_Q1", 
+									"S4_B_Q2",
+									"S4_B_Q3",
+									"S4_B_Q4",
+									"S4_B_Q5",
+									"S4_C_Q1", 
+									"S4_C_Q2",
+									"S4_C_Q3",
+									"S4_C_Q4",
+									"S4_C_Q5",
+									"S5_A_Q1", 
+									"S5_A_Q2",
+									"S5_A_Q3",
+									"S5_A_Q4",
+									"S5_A_Q5",
+									"S5_B_Q1", 
+									"S5_B_Q2",
+									"S5_B_Q3",
+									"S5_B_Q4",
+									"S5_B_Q5",
+									"S5_C_Q1", 
+									"S5_C_Q2",
+									"S5_C_Q3",
+									"S5_C_Q4",
+									"S5_C_Q5",
+									"S6_A_Q1",
+									"S6_A_Q2",
+									"S6_A_Q3",
+									"S6_A_Q4",
+									"S6_A_Q5",
+									"S6_B_Q1", 
+									"S6_B_Q2",
+									"S6_B_Q3",
+									"S6_B_Q4",
+									"S6_B_Q5",
+									"S6_C_Q1", 
+									"S6_C_Q2",
+									"S6_C_Q3",
+									"S6_C_Q4",
+									"S6_C_Q5",
+									"S7_A_Q1",
+									"S7_A_Q2",
+									"S7_A_Q3",
+									"S7_A_Q4",
+									"S7_A_Q5",
+									"S7_B_Q1", 
+									"S7_B_Q2",
+									"S7_B_Q3",
+									"S7_B_Q4",
+									"S7_B_Q5",
+									"S7_C_Q1", 
+									"S7_C_Q2",
+									"S7_C_Q3",
+									"S7_C_Q4",
+									"S7_C_Q5"
+									};
+
+		for (String group : questionGroups) {
+			/* Grab the Questions from part of scenario */
+			QwandaMessage askMsg = QuestionUtils.getQuestions("PER_USER1", "PER_USER1", "QUE_STT_" + group + "_GRP", serviceToken.getToken());
+			/* Grab the first child ask of the first question */
+			Ask parentAsk = askMsg.asks.getItems()[0];
+			Ask childAsk = parentAsk.getChildAsks()[0];
+			Question unityQuestion = childAsk.getQuestion();
+
+			BaseEntity unityBe = beUtils.getBaseEntityByCode("UNT_" + group + "_CTX_DATA");
+			Context context = new Context(ContextType.UNITY, unityBe);
+			List<Context> ctxList = Arrays.asList(context);
+			ContextList contextList = new ContextList(ctxList);
+			unityQuestion.setContextList(contextList);
+			
+
+			/* Upsert Question to DB */
+			System.out.println("SETUP_UNITY_CONTEXT - Upserting Question: " + unityQuestion.getCode());
+			QuestionUtils.upsertQuestion(unityQuestion, serviceToken);
+
+			/* Cache Question */
+			System.out.println("SETUP_UNITY_CONTEXT - Caching Question: " + unityQuestion.getCode());
+			VertxUtils.putObject(serviceToken.getRealm(), "", unityQuestion.getCode(), unityQuestion, serviceToken.getToken());
+
+		}
+
+
+		System.out.println("Finished running rule: SETUP_UNITY_CONTEXT");
+	end

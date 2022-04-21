@@ -1,0 +1,118 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+rule "CLICK_OHS"
+    ruleflow-group 'EventProcessing'
+		salience 1000
+    no-loop
+    when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_OHS_UNVALIDATED")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+
+    then
+		System.out.println("Processing CLICK OHS : " + $message );
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		/* Grab the BE's for the HCR and HC */
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+		
+		String hcCode = "";
+		String ohsCode = "";
+		
+		BaseEntity newBe = new BaseEntity("temp", "temp");
+		
+		
+		if(user != null) {
+				BaseEntity HCRBe = beUtils.getBaseEntityByCode(user);
+				System.out.println("HCRBe = " + HCRBe);
+				
+				if(HCRBe != null) {
+						hcCode = HCRBe.getValue("LNK_HOST_COMPANY",null);
+						System.out.println("hcCode: " + hcCode);
+						
+						hcCode = hcCode.replace("\"", "").replace("[", "").replace("]", "");
+						System.out.println("hcCode = " +hcCode);	
+						
+						if(hcCode != null) { 
+								BaseEntity HCBe = beUtils.getBaseEntityByCode(hcCode);
+								System.out.println("HCBe = " + HCBe);
+								
+								
+								/* Check whether DOC_OHS_CODE exists or not */
+								
+								ohsCode = HCBe.getValue("DOC_OHS_CODE", null);
+								System.out.println("ohsCode = " + ohsCode);
+								
+								if (ohsCode == null) {
+										System.out.println("DOC_OHS_CODE does not exist yet. Creating now!");
+										
+										String uuid = UUID.randomUUID().toString();
+										System.out.println("uuid: " +uuid);
+										uuid = uuid.substring(4);
+										
+										ohsCode = "DOC_OHS_"+uuid;
+										ohsCode = ohsCode.toUpperCase();
+										System.out.println("OHS: ohsCode = " + ohsCode);
+										
+										BaseEntity defBE = beUtils.getDEFByCode("DEF_OHS_DOCUMENT");
+										newBe = beUtils.create(defBE, ohsCode, ohsCode);
+										System.out.println("OHS: newBe = " + newBe);
+										System.out.println(">>>>>>>>>>>> " + newBe.getName() + " <<<<<<<<<<<<");
+										
+										/* Save DOC_OHS_CODE against HC */
+										beUtils.saveAnswer(new Answer(userToken.getUserCode(), HCBe.getCode(), "DOC_OHS_CODE", ohsCode));
+
+										
+								} else {
+									System.out.println("DOC_OHS_CODE already exists: ohsCode = " + ohsCode);
+								}	
+						} else {
+							System.out.println("ERROR: Null hcCode");
+						}
+				} else {
+					System.out.println("ERROR: Null HCRBe");
+				}
+		} else {
+			System.out.println("ERROR: Null user");
+		}
+		
+		/* Set Parameters */
+ 		
+		output.setAskSourceCode(user);
+		output.setTargetCode(ohsCode);
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_OHS");	
+		output.setSuitCase(hcCode);
+
+
+		/* Print Parameters */
+		
+		System.out.println("**************************************************");
+		System.out.println("AskSourceCode: " + output.getAskSourceCode());
+		System.out.println("TargetCode: "    + output.getTargetCode());
+		System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+		System.out.println("ResultCode: "    + output.getResultCode());
+		System.out.println("SuitCase: "      + output.getSuitCase());
+		System.out.println("**************************************************");
+		
+	
+	
+		retract($message);
+	end

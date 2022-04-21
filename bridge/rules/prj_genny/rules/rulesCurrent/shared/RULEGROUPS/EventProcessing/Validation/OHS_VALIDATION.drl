@@ -1,0 +1,193 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwandautils.GennySettings;
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "OHS_VALIDATION"
+    ruleflow-group 'Validation'
+    no-loop true
+    salience 1000 
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		baseEntityType : String(baseEntityType.equals("OHS"))
+		HCBe : BaseEntity()
+
+	  
+     then
+ 		System.out.println("OHS_VALIDATION: Rule fired" );
+ 		System.out.println("OHS_VALIDATION: HCBe = " + HCBe.getCode()); 
+ 		
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+ 		
+ 		/* Set up email stuff */
+		String subject = null;
+		String template_id = null;
+		String doc = null;
+		String todo = null;
+		Boolean OHS = false;
+		Boolean ready = false;
+		
+		
+		String validationStatus = HCBe.getValue("PRI_VALIDATION", "Incomplete");
+		
+		if (validationStatus.equals("Incomplete")) {
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), HCBe.getCode() ,"PRI_VALIDATION", "OHS"));
+				OHS = true;
+				doc = "OHS document completed";
+				todo = "Please complete the Host Company Services Agreement";
+				subject = "New Host Company - OHS form completed";
+				template_id = "d-56a883c433ba4ce7a92d6ae8082a9dad";
+				System.out.println("PRI_VALIDATION set to OHS");
+		}
+		
+		if (validationStatus.equals("HCS")) {
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), HCBe.getCode() ,"PRI_VALIDATION", "Ready"));
+				ready = true;
+				doc = "OHS and HC Services documents completed";
+				todo = "Please complete the HC Validation form";
+				subject = "Host Company Services form completed";
+				template_id = "d-95472fd28165474f80346ff9a1912a4b";	
+				System.out.println("PRI_VALIDATION set to Ready");  
+		}				
+						
+		HCBe = beUtils.getBaseEntityByCode(HCBe.getCode());				
+		
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(HCBe);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msg));
+		
+		
+		/* SEND EMAIL TO AGENT */	
+						
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+		
+		String token = "";
+		String hcrName = null;
+		
+		BaseEntity hcrBe = beUtils.getBaseEntityByCode(user);
+		if (hcrBe != null) {
+			String docCode = HCBe.getValue("DOC_OHS_CODE", null);
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), docCode ,"LNK_HOST_COMPANY_REP", hcrBe.getCode()));
+			
+			String hcrEmail = hcrBe.getValue("PRI_EMAIL", null);
+			System.out.println("user: " + user);
+			
+			hcrName = hcrBe.getValue("PRI_NAME", null);
+			System.out.println("hcrName: " + hcrName);
+			
+			BaseEntity project = beUtils.getBaseEntityByCode("PRJ_"+ serviceToken.getRealm().toUpperCase());
+			token = KeycloakUtils.getImpersonatedToken(serviceToken.getKeycloakUrl(), serviceToken.getRealm(), project, hcrEmail, serviceToken.getToken());
+			System.out.println("token: " + token);
+		}
+					
+		String urlParentCode = "SBE_HCRS_"+userToken.getJTI().toUpperCase();
+		String urlCode = "ACT_PRI_EVENT_VIEW";
+		String urlTargetCode = HCBe.getCode();
+		
+		urlParentCode = new String(Base64.getEncoder().encode(urlParentCode.getBytes()));
+		urlCode = new String(Base64.getEncoder().encode(urlCode.getBytes()));
+		urlTargetCode = new String(Base64.getEncoder().encode(urlTargetCode.getBytes()));
+
+		String url = GennySettings.projectUrl+"/home/"+urlParentCode+"/"+urlCode+"/"+urlTargetCode;
+		url = url +"?token=" + token;
+		System.out.println("url with token: " + url);
+
+		String agentEmail = "outcomestaff@outcomelife.com.au";
+		String assocHC = HCBe.getValue("PRI_NAME", null);
+		
+		BaseEntity tempBe = null;
+		String tempName = null;
+		String linkedIS = "";
+		String lnkIS = HCBe.getValue("LNK_INTERNSHIPS", null);
+		
+		if (lnkIS != null) {
+			lnkIS = lnkIS.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("lnkIS = " +lnkIS);
+		
+			String[] splitIS = lnkIS.split(",");
+			int length = splitIS.length;
+			System.out.println("length: " + length);
+			
+			if (length > 0) {
+				for (int i = 0; i < length; i++) {
+					tempBe = beUtils.getBaseEntityByCode(splitIS[i]);
+					System.out.println("tempBe = " +tempBe);
+					if (tempBe != null) {
+						if (i == 0) {
+							linkedIS = tempBe.getValue("PRI_NAME", null);
+							System.out.println("linkedIS = " +linkedIS);
+						} else {
+							tempName = tempBe.getValue("PRI_NAME", null);
+							linkedIS = linkedIS + ", " + tempName;
+							System.out.println("tempName = " +tempName);
+							System.out.println("linkedIS = " +linkedIS);
+						}
+					}	
+				}
+			}
+		} else {
+			linkedIS = "No current Internships. Please help them add an Internship!";
+			System.out.println("linkedIS: " + linkedIS);
+		}
+		
+			
+		HashMap<String, String> templateData = new HashMap<String, String>();
+		List<String> bccList = Arrays.asList("internmatch@outcomelife.com.au");
+		
+		if (OHS){
+			System.out.println("Sending Agent - OHS email");
+			
+			templateData.put("hcName", assocHC);
+			templateData.put("hcrName", hcrName);
+			
+			System.out.println("-------- AGENT EMAIL DATA --------");
+			System.out.println("subject: " +subject);
+			System.out.println("template_id: " +template_id);
+			System.out.println("email: " +agentEmail);
+			System.out.println("hcName: " +assocHC);
+			System.out.println("hcrName: " +hcrName);
+			System.out.println("----------------------------");
+			
+			EmailHelper.sendGrid(beUtils, agentEmail, null, bccList, subject, template_id, templateData, false);
+		}
+		
+		if (ready){
+			System.out.println("Sending Agent - HC Validation email");
+			
+			templateData.put("HC", assocHC);
+			templateData.put("Doc", doc);
+			templateData.put("Todo", todo);
+			templateData.put("IS1", linkedIS);
+			templateData.put("url", url);
+			
+			System.out.println("-------- AGENT EMAIL DATA --------");
+			System.out.println("subject: " +subject);
+			System.out.println("template_id: " +template_id);
+			System.out.println("email: " +agentEmail);
+			System.out.println("HC: " +assocHC);
+			System.out.println("Doc: " +doc);
+			System.out.println("Todo: " +todo);
+			System.out.println("IS1: " +linkedIS);
+			System.out.println("----------------------------");
+			EmailHelper.sendGrid(beUtils, agentEmail, null, bccList, subject, template_id, templateData, false);
+		}
+		
+		
+		
+		retract(baseEntityType)
+		retract(HCBe)
+		
+	
+end

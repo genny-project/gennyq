@@ -1,0 +1,41 @@
+package life.genny.rules;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+
+rule "RETURN_SETUP_PROJECT"
+    ruleflow-group 'Stateless'
+     salience 5000
+     no-loop true
+    when
+ 	  $userToken : GennyToken ( code != "PER_SERVICE" ) 
+	  serviceToken : GennyToken ( code == "PER_SERVICE" )
+	  $project : BaseEntity ( code matches "PRJ_\\S+" )
+ 	  allowed : Allowed(code == "READ_PROJECT" && mode == CapabilityMode.VIEW)
+	  
+    then
+   		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + $userToken.getUserCode());
+   		
+		String[] projectFilterStrArray = { "ENV_REALM", "PRI_NAME", "ENV_SIGNATURE_URL", "ENV_UPPY_URL",
+				"PRI_FAVICON", "PRI_CODE", "PRI_COLOR", "PRI_GOOGLE_API_KEY", "PRI_LOGO","PRI_POWERED_BY","PRI_VERSION" };		
+		$project = VertxUtils.privacyFilter($project, projectFilterStrArray);		
+		QDataBaseEntityMessage projectMsg = new QDataBaseEntityMessage($project);
+		projectMsg.setAliasCode("PROJECT");	
+		payload.add(projectMsg); 
+		
+		
+		/*drools.getKnowledgeRuntime().setGlobal("payload", payload);*/
+		retract(allowed); /* no longer needed */
+end

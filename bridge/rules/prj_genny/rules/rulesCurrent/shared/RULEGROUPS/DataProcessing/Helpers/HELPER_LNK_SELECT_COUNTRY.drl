@@ -1,0 +1,106 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import life.genny.utils.DropdownUtils;
+import java.util.List;
+import java.util.ArrayList;
+
+rule "HELPER_LNK_SELECT_COUNTRY"
+	ruleflow-group 'DataProcessing'
+	salience 5000
+	when
+		beUtils : BaseEntityUtils()
+		answer : Answer( attributeCode == "LNK_SELECT_COUNTRY" && !(targetCode matches "SBE_.*") )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		userToken : GennyToken( code != "PER_SERVICE")
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		String targetCode = answer.getTargetCode();
+		System.out.println("targetCode :: " + targetCode);
+		
+		String value = answer.getValue();
+		System.out.println("value :: " + value);
+		
+		String code = beUtils.cleanUpAttributeValue(value);
+		System.out.println("code  :: " + code);
+
+		BaseEntity be = beUtils.getBaseEntityByCode(code);
+		if(be != null){
+			String countryCode = be.getValue("PRI_PHONE_CODE", null);		
+			if(countryCode != null){
+				String phoneCode = "+" + countryCode;
+				System.out.println("phoneCode  :: " + phoneCode);
+
+				/* Prepare mobile ask */
+				Attribute mobileAttr = RulesUtils.getAttribute("PRI_MOBILE", serviceToken);
+				Question mobileQues = new Question("QUE_MOBILE", "Phone", mobileAttr, true);
+				Ask mobileAsk = new Ask(mobileQues, sourceCode, targetCode, true);
+
+				/* Send the ask as DISABLE = true */
+				mobileAsk.setDisabled(true);	
+				
+				QDataAskMessage disableMobile = new QDataAskMessage(mobileAsk);
+				disableMobile.setToken(userToken.getToken());
+				VertxUtils.writeMsg("webcmds", disableMobile);
+				
+				/* Prepare landline ask */
+				Attribute landlineAttr = RulesUtils.getAttribute("PRI_LANDLINE", serviceToken);
+				Question landlineQues = new Question("QUE_PHONE", "Landline Phone Number", landlineAttr, true);
+				Ask landlineAsk = new Ask(landlineQues, sourceCode, targetCode, true);
+				landlineAsk.setDisabled(true);
+
+				QDataAskMessage disableLandline = new QDataAskMessage(landlineAsk);
+				disableLandline.setToken(userToken.getToken());
+				VertxUtils.writeMsg("webcmds", disableLandline);
+
+				/* Send Answer to Front End */
+				Answer landlineAns = new Answer(sourceCode, targetCode, "PRI_LANDLINE", phoneCode);
+				Answer mobileAns = new Answer(sourceCode, targetCode, "PRI_MOBILE", phoneCode);
+				beUtils.saveAnswer(landlineAns);
+				beUtils.saveAnswer(mobileAns);
+				VertxUtils.sendToFrontEnd(userToken, landlineAns, mobileAns);
+
+				/* Send the ask as DISABLE = false */
+				landlineAsk.setDisabled(false);
+				mobileAsk.setDisabled(false);
+				
+				QDataAskMessage enableLandline = new QDataAskMessage(landlineAsk);
+				enableLandline.setToken(userToken.getToken());
+				VertxUtils.writeMsg("webcmds", enableLandline);
+
+				QDataAskMessage enableMobile = new QDataAskMessage(mobileAsk);
+				enableMobile.setToken(userToken.getToken());
+				VertxUtils.writeMsg("webcmds", enableMobile);
+
+
+			}
+			String name = be.getValue("PRI_NAME", null);		
+			if(name != null){
+				Answer ans = new Answer(sourceCode, targetCode, "PRI_SELECT_COUNTRY", name);
+				beUtils.saveAnswer(ans);
+			}
+		}
+end

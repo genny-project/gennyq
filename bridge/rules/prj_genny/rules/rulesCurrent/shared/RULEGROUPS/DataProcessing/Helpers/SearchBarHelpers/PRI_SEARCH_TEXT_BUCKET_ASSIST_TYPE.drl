@@ -1,0 +1,80 @@
+package life.genny.rules;
+
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.utils.OutputParam;
+
+rule "PRI_SEARCH_TEXT_BUCKET_ASSIST_TYPE"
+	ruleflow-group 'DataProcessing'
+	salience 500
+	no-loop true
+	when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "USER") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("!#")) && answer.getTargetCode().startsWith("["))
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+	then
+		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+
+		String value = answer.getValue().substring(2);
+		if (!StringUtils.isBlank(value)) {
+
+			String internshipType = null;
+
+			value = value.trim();
+			if ("WRP".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_OA_WRP";}
+			else if ("WIL".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_OA_WIL";}
+			else if ("CB".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_OA_CARRERBOX";}   /* yes, bad spelling */
+			else if ("PYP".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_PROFESSIONAL_YEAR";}
+			else if ("CC".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_COURSE_CREDIT";}
+			else if ("VG".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_DIGITAL_JOBS";}
+			else if ("EXP".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_EXPERIENCE";}
+			else if ("NS".equalsIgnoreCase(value)) 
+			{internshipType = "SEL_NOT_SURE";}		
+
+			if (internshipType != null) {
+
+				TableUtils tableUtils = new TableUtils(beUtils);
+
+				/* Handle Available Intern Search */
+				SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", "SBE_AVAILABLE_INTERNS", SearchEntity.class, beUtils.getGennyToken().getToken());
+				searchBE.addFilter("LNK_COMP_INTERNSHIP", SearchEntity.StringFilter.EQUAL, "[\""+internshipType+"\"]");
+
+				TableUtils.searchTable(beUtils, searchBE, true);
+
+				String[] codes = { "SBE_APPLIED_APPLICATIONS", "SBE_SHORTLISTED_APPLICATIONS", "SBE_INTERVIEWED_APPLICATIONS", 
+					"SBE_OFFERED_APPLICATIONS", "SBE_PLACED_APPLICATIONS", "SBE_INPROGRESS_APPLICATIONS" };
+
+				/* Handle Application Searches */
+				for (int i = 0; i < codes.length; i++) {
+
+					String searchCode = codes[i];
+					searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", searchCode, SearchEntity.class, beUtils.getGennyToken().getToken());
+					searchBE.addFilter("PRI_INTERN_CODE.LNK_COMP_INTERNSHIP", SearchEntity.StringFilter.EQUAL, "[\""+internshipType+"\"]");
+
+					TableUtils.searchTable(beUtils, searchBE, true);
+
+				}
+			} else {
+				System.out.println("Invalid internshipType for " + value);
+			}
+
+		}
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");
+		retract(answer);
+end

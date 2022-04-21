@@ -1,0 +1,98 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import life.genny.utils.DropdownUtils;
+import java.util.List;
+import java.util.ArrayList;
+
+rule "HELPER_LNK_INDUSTRY"
+	ruleflow-group 'DataProcessing'
+	salience 5000
+	when
+		beUtils : BaseEntityUtils()
+		answer : Answer( attributeCode == "LNK_INDUSTRY")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		userToken : GennyToken( code != "PER_SERVICE")
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		String targetCode = answer.getTargetCode();
+		System.out.println("targetCode :: " + targetCode);
+		
+		String value = answer.getValue();
+		System.out.println("value :: " + value);
+		
+		String code = beUtils.cleanUpAttributeValue(value);
+		System.out.println("code  :: " + code);
+
+		BaseEntity be = beUtils.getBaseEntityByCode(code);
+		System.out.println("be: " + be);
+		if(be != null){
+			String name = be.getValue("PRI_NAME", null);		
+			if(name != null){
+				System.out.println("name: " + name);
+				Answer assocIndustryAnswer = new Answer(sourceCode, targetCode, "PRI_ASSOC_INDUSTRY", name);
+				beUtils.saveAnswer(assocIndustryAnswer);
+				VertxUtils.sendToFrontEnd(userToken, assocIndustryAnswer);
+			}
+		}
+
+
+		BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+		if(targetBe != null){
+			String occupation = targetBe.getValue("LNK_OCCUPATION", null);
+			System.out.println("occupation: " + occupation);
+			if(occupation != null){
+				Answer occupationAnswer = new Answer(sourceCode, targetCode, "LNK_OCCUPATION", "", false, true);
+				Answer assocOccupationAnswer = new Answer(sourceCode, targetCode, "PRI_ASSOC_OCCUPATION", "", false, true);
+				Answer rolesAnswer = new Answer(sourceCode, targetCode, "PRI_ROLES_AND_RESPONSIBILITIES", "", false, true);
+				Answer baseOutcomesAnswer = new Answer(sourceCode, targetCode, "PRI_BASE_LEARNING_OUTCOMES", "", false, true);
+				Answer specificOutcomesAnswer = new Answer(sourceCode, targetCode, "PRI_SPECIFIC_LEARNING_OUTCOMES", "", false, true);
+				
+				beUtils.removeEntityAttribute(targetBe,"LNK_OCCUPATION");
+				beUtils.removeEntityAttribute(targetBe,"PRI_ASSOC_OCCUPATION");
+				beUtils.removeEntityAttribute(targetBe,"PRI_ROLES_AND_RESPONSIBILITIES");
+				beUtils.removeEntityAttribute(targetBe,"PRI_BASE_LEARNING_OUTCOMES");
+				beUtils.removeEntityAttribute(targetBe,"PRI_SPECIFIC_LEARNING_OUTCOMES");
+
+				VertxUtils.sendToFrontEnd(userToken, occupationAnswer, assocOccupationAnswer, rolesAnswer, baseOutcomesAnswer, specificOutcomesAnswer);
+			}
+		}
+
+		/* dropdown search here */
+		/* DropdownUtils dropdown = new DropdownUtils(serviceToken); */
+		/* dropdown.setNewSearch("Dropdown", "Fetch Dropdown Items") */
+		/* 									.addColumn("PRI_NAME","Name") */
+		/* 									.setSourceCode(code) */
+		/* 									.setPageStart(0) */
+		/* 									.setPageSize(1000); */
+
+		/* /1* Send the dropdown options *1/ */
+		/* dropdown.sendSearchResults("GRP_OCCUPATION_SELECTION", "LNK_ITEM", "ITEM", true, false, userToken, false); */
+end
+
+
+
+

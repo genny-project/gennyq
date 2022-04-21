@@ -1,0 +1,69 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "HOST_CPY_REP_DETAIL_VIEW"
+	ruleflow-group 'DetailView'
+	salience 6
+	when
+		$message : QEventMessage(	(data.targetCode matches "PER_.*" && 
+									(
+										data.parentCode matches "SBE_HCRS_.*" ||
+										data.parentCode matches "QUE_HOST_CPY_REP_GRP" ||
+										data.parentCode matches "SBE_LINKED_INTERN_SUPERVISOR_.*" ||
+										data.parentCode matches "SBE_SUMMARY_HCRS_.*"
+									))
+									
+									||
+									
+									( data.code matches "LNK_DETAIL"  && data.rootCode matches "COL_LNK_INTERN_SUPERVISOR__.*" && data.targetCode matches "PER_.*" )
+								)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+	
+		/*
+		{
+ 			code: 'LNK_DETAIL',
+  			rootCode: linkCode,
+  			targetCode: baseEntityCode
+		}
+		*/
+		
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+	
+		if(targetCode != null){
+			TableUtils.searchTable(beUtils,"SBE_HOST_CPY_REP", true, "PRI_CODE", targetCode);
+			String cpyRepCode = "[\"" + targetCode +"\"]";
+			
+			TableUtils.searchTable(beUtils,"SBE_LINKED_INTERNSHIP_OF_SUPERVISOR", true, "LNK_INTERN_SUPERVISOR", cpyRepCode);
+
+		}else{
+			System.out.println("TARGET code is null. Check FE console !");
+
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		retract( $message);
+
+end

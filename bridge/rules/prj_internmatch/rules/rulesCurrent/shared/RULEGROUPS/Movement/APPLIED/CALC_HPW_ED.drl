@@ -1,0 +1,325 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.ArrayList;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+rule "CALC_HPW_ED"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+
+		newApplication : BaseEntity( code matches "APP_\\S+" )
+		associatedInternBe : BaseEntity( code matches "PER_\\S+" )
+		bucketCode : String(bucketCode.equals("APPLIED"))
+		controlSignalCode : String(controlSignalCode.equals("CALC"))
+
+     then
+     	System.out.println("*************************** CALC_HPW_ED ***************************");
+ 		System.out.println("CALC_HPW_ED: Rule fired" );
+
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+
+ 		newApplication = beUtils.getBaseEntityByCode(newApplication.getCode());
+
+ 		newApplication.setFastAttributes(true);
+ 		associatedInternBe.setFastAttributes(true);
+
+ 		List<Answer> answers = new ArrayList<>();
+
+ 		String userCode = userToken.getUserCode();
+		System.out.println("userCode = " + userCode);
+
+		System.out.println("Application Code:: " + newApplication.getCode());
+
+ 		/* Business hours */
+ 		String lnkBH = newApplication.getValue("LNK_BUSINESS_HOURS", null);
+
+		System.out.println("returned lnkBH:: " + lnkBH);
+
+		if (lnkBH != null) {
+			System.out.println("before lnkBH = " + lnkBH);
+			lnkBH = lnkBH.replace("[","").replace("]","");
+			System.out.println("lnkBH = " + lnkBH);
+
+			String[] splt = lnkBH.split(",");
+
+			String startStr = splt[0];
+			String endStr = splt[1];
+
+			double startDbl = Double.parseDouble(startStr);
+			double endDbl = Double.parseDouble(endStr);
+
+			System.out.println("startDbl = " + startDbl);
+			System.out.println("endDbl = " + endDbl);
+
+			double businessHrs = endDbl - startDbl;
+			System.out.println("businessHrs = " + businessHrs);
+
+			String dpwStr = newApplication.getValue("PRI_DAYS_PER_WEEK", null);
+			System.out.println("dpwStr = " + dpwStr);
+
+			/* Days per week */
+
+			if (dpwStr != null) {
+				Double dpwDbl = Double.parseDouble(dpwStr);
+				System.out.println("dpwDbl = " + dpwDbl);
+
+				/* Hours per week */
+				Double hpwDbl = dpwDbl * businessHrs;
+				System.out.println("hpwDbl = " + hpwDbl);
+				answers.add(new Answer(userCode, newApplication.getCode(), "PRI_HOURS_PER_WEEK", hpwDbl));
+			} else {
+				System.out.println("ERROR: Null dpwDbl");
+			}
+		} else {
+			System.out.println("ERROR: Null lnkBH");
+		}
+
+		LocalDate local_start_date = null;
+		String start_date = null;
+
+		if (associatedInternBe.getCode() != null && !associatedInternBe.getCode().isEmpty()) {
+			System.out.println("CALC_HPW_ED:: associatedInternBe:: " + associatedInternBe.getCode());
+			local_start_date = beUtils.getBaseEntityValueAsLocalDate(associatedInternBe.getCode(), "PRI_START_DATE");
+			start_date = null;
+
+		} else {
+			System.out.println("Error! associatedInternBe is empty:: " + associatedInternBe.getCode());
+		}
+
+		if (local_start_date != null) {
+			start_date = local_start_date.toString();
+			System.out.println("start_date = " +start_date);
+		} else {
+			System.out.println("ERROR: Null start_date");
+		}
+
+		String durationStr = newApplication.getValue("PRI_ASSOC_DURATION", null);
+        System.out.println("durationStr = " + durationStr);
+
+        String wdsStr = newApplication.getValue("PRI_WHICH_DAYS_STRIPPED", null);
+        System.out.println("wdsStr = " + wdsStr);
+
+		int durationInt = 0;
+		int dayz = 0;
+		int dayzAdj = 0;
+
+        if (durationStr != null) {
+			durationInt = Integer.parseInt(durationStr);
+			dayz = 7 * durationInt;
+			System.out.println("dayz = " + dayz);
+
+			dayzAdj = dayz - 7;
+			System.out.println("dayzAdj = " + dayzAdj);
+		} else {
+			System.out.println("ERROR: Null durationStr");
+		}
+
+
+        Calendar c = Calendar.getInstance();
+        String DATE_FORMAT = "yyyy-MM-dd";
+        DateFormat df = new SimpleDateFormat(DATE_FORMAT);
+
+		if (start_date != null) {
+			Date startDate = df.parse(start_date.trim());
+			System.out.println("startDate = " + startDate);
+
+			c.setTime(startDate);
+			c.add(Calendar.DATE, dayz);
+		} else {
+			System.out.println("ERROR: Null start_date");
+		}
+
+		String toDate = df.format(c.getTime());
+		System.out.println("endDate minus dayzAdj = " + toDate);
+
+
+		/*wdsStr = "Monday, Friday, Thursday, Wednesday";*/
+
+		HashMap<String, Integer> daysOfWeek = new HashMap<String, Integer>();
+		    daysOfWeek.put("Monday", 1);
+		    daysOfWeek.put("Tuesday", 2);
+		    daysOfWeek.put("Wednesday", 3);
+		    daysOfWeek.put("Thursday", 4);
+		    daysOfWeek.put("Friday", 5);
+		    daysOfWeek.put("Open to any combination of days", 5);
+
+		System.out.println("daysOfWeek:: " + daysOfWeek);
+
+
+		String lastDay = "Friday";
+	    int lastDayKey = 0;
+
+		if (wdsStr != null) {
+			String[] whichDays = wdsStr.split(", ");
+			for (int i = 0; i < whichDays.length; i++) {
+				/*System.out.println("Day = " + whichDays[i] + " with key = " + daysOfWeek.get(whichDays[i]));*/
+
+				if (daysOfWeek.get(whichDays[i]) >= lastDayKey) {
+					lastDayKey = daysOfWeek.get(whichDays[i]);
+					lastDay = whichDays[i];
+					System.out.println("lastDayKey = " + lastDayKey);
+					System.out.println("lastDay = " +lastDay);
+				} else {
+					System.out.println("Not new day. lastDay = " +lastDay);
+			}
+			}
+		} else {
+			System.out.println("ERROR: Null wdsStr");
+		}
+
+
+		/*int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+		System.out.println("dayOfWeek = " + dayOfWeek);*/
+
+		int year = 0;
+		int month = 0;
+		int day = 0;
+
+		if (toDate != null) {
+			String[] toDateSplt = toDate.split("-");
+			year = Integer.parseInt(toDateSplt[0]);
+			month = Integer.parseInt(toDateSplt[1]) -1;
+			day = Integer.parseInt(toDateSplt[2]);
+
+			System.out.println("endDate minus dayzAd :: year = " + year + " :: month = " + month + " :: day = " + day);
+		} else {
+			System.out.println("ERROR: Null toDate");
+		}
+
+		if (year != 0 && month != 0 && day != 0) {
+			Calendar date1 = Calendar.getInstance();
+			date1.set(year, month, day);
+			System.out.println("date1 = " + date1.getTime());
+
+			switch (lastDay) {
+				case "Monday":
+
+				while (date1.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+					date1.add(Calendar.DATE, 1);
+					System.out.println("Monday case: " +date1.getTime());
+				}
+				System.out.println("endDate = " + date1.getTime());
+				break;
+
+				case "Tuesday":
+
+				while (date1.get(Calendar.DAY_OF_WEEK) != Calendar.TUESDAY) {
+					date1.add(Calendar.DATE, 1);
+					System.out.println("Tuesday case: " +date1.getTime());
+				}
+				System.out.println("endDate = " + date1.getTime());
+				break;
+
+				case "Wednesday":
+
+				while (date1.get(Calendar.DAY_OF_WEEK) != Calendar.WEDNESDAY) {
+					date1.add(Calendar.DATE, 1);
+					System.out.println("Wednesday case: " +date1.getTime());
+				}
+				System.out.println("endDate = " + date1.getTime());
+				break;
+
+				case "Thursday":
+
+				while (date1.get(Calendar.DAY_OF_WEEK) != Calendar.THURSDAY) {
+					date1.add(Calendar.DATE, 1);
+					System.out.println("Thursday case: " +date1.getTime());
+				}
+				System.out.println("endDate = " + date1.getTime());
+				break;
+
+				case "Friday":
+
+				while (date1.get(Calendar.DAY_OF_WEEK) != Calendar.FRIDAY) {
+					date1.add(Calendar.DATE, 1);
+					System.out.println("Friday case: " +date1.getTime());
+				}
+				System.out.println("endDate = " + date1.getTime());
+				break;
+
+				case "Open to any combination of days":
+
+				while (date1.get(Calendar.DAY_OF_WEEK) != Calendar.FRIDAY) {
+					date1.add(Calendar.DATE, 1);
+					System.out.println("Friday case: " +date1.getTime());
+				}
+				System.out.println("endDate = " + date1.getTime());
+				break;
+
+				default:
+
+				while (date1.get(Calendar.DAY_OF_WEEK) != Calendar.FRIDAY) {
+					date1.add(Calendar.DATE, 1);
+					System.out.println("Default case: " +date1.getTime());
+				}
+				System.out.println("endDate = " + date1.getTime());
+			}
+
+			LocalDate endDate = date1.getTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+			System.out.println("Application code:: " + newApplication.getCode() + "endDate = " + endDate);
+			answers.add(new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_END_DATE", endDate));
+		}
+
+
+
+		 /*
+        	Monday "2015-10-08";
+         	2 weeks
+         	Monday 	"2015-10-14";
+         	Friday	"2015-10-12";
+
+        -7
+        Start Mon  || End Fri = +4 || -3
+        Start Mon  || End Thu = +3 || -4
+        Start Mon  || End Wed = +2 || -5
+        Start Mon  || End Tue = +1 || -6
+        Start Mon  || ---- = +7	  || 0
+
+        Start Tue  || End Fri = +3 || -4
+        Start Tue  || End Thu = +2 || -5
+        Start Tue  || End Wed = +1 || -6
+        Start Tue  || ---- = +7    || 0
+
+        Start Wed  || End Fri = +2 || -5
+        Start Wed  || End Thu = +1 || -6
+        Start Wed  || ---- = +7    || 0
+
+        Start Thu  || End Fri = +1 || -6
+        Start Thu  || ---- = +7    || 0
+
+        Start Fri  || ---- = +7    || 0
+
+        Start Open || ---- = +7    || 0
+        */
+
+
+		beUtils.saveAnswers(answers);
+		/*answersToSave.addAll(answers);
+		update(answersToSave);*/
+
+
+		retract(newApplication)
+		retract(bucketCode)
+		retract(controlSignalCode)
+
+		System.out.println("*************************** end CALC_HPW_ED ***************************");
+
+end

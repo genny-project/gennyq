@@ -1,0 +1,89 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global java.util.Set stringSet;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.entity.EntityEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.security.EncryptionUtils;
+import life.genny.qwanda.attribute.EntityAttribute;
+import java.util.Optional;
+
+rule "USER_SUBSCRIPTION"
+    ruleflow-group 'SubscriptionRules'
+     salience 1000
+     no-loop true
+    when
+ 	  userToken : GennyToken ( code != "PER_SERVICE" ) 
+  	/*  project : BaseEntity ( code matches "PRJ_\\S+" ) */
+	  serviceToken : GennyToken ( code == "PER_SERVICE" ) 
+	  beUtils : BaseEntityUtils() 
+	  allowed : Allowed(code == "USER") 
+    then
+   		System.out.println("Rule -> "+drools.getRule().getName()+" !! :  user=" + userToken.getUserCode());
+  			
+  		BaseEntity user = beUtils.getBaseEntityByCode(userToken.getUserCode());	
+  		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_"+userToken.getRealm().toUpperCase());	
+  			
+
+ 		String securityKey = GennySettings.defaultServiceKey;
+ 		
+ 		stringSet.add(EncryptionUtils.getEncryptedString(user.getCode(),securityKey,userToken));	
+ 		stringSet.add(EncryptionUtils.getEncryptedString(project.getCode(),securityKey,userToken));	
+ 		
+ 		List<EntityAttribute> eaRoles = user.findPrefixEntityAttributes("PRI_IS_");
+ 		for (EntityAttribute eaRole : eaRoles) {
+ 			String role = eaRole.getAttributeCode().substring("PRI_IS_".length());
+ 			stringSet.add(EncryptionUtils.getEncryptedString(role,securityKey,userToken));	
+ 		}
+
+ 		Optional<String> company = user.getValue("PRI_COMPANY");
+ 		if (company.isPresent()) {
+ 			String companyCode = company.get().substring(2,company.get().length()-2);
+ 			stringSet.add(EncryptionUtils.getEncryptedString(companyCode,securityKey,userToken));
+ 		}
+ 		
+ 		Optional<String> hcompany = user.getValue("LNK_HOST_COMPANY");
+        if (hcompany.isPresent() && !StringUtils.isEmpty(hcompany.get())) {
+            String companyCode = hcompany.get().substring(2,hcompany.get().length()-2);
+            stringSet.add(EncryptionUtils.getEncryptedString(companyCode,securityKey,userToken));
+        }
+
+		List<BaseEntity> childBEs = beUtils.getLinkedBaseEntities(user.getCode());
+		for (BaseEntity entity : childBEs) {
+			if (!entity.getCode().startsWith("PER_")) {
+				stringSet.add(EncryptionUtils.getEncryptedString(entity.getCode(),securityKey,userToken));
+			}
+		}
+		List<BaseEntity> parentBEs = beUtils.getParents(user.getCode());
+		for (BaseEntity entity : parentBEs) {
+			if (!entity.getCode().startsWith("PER_")) {
+				stringSet.add(EncryptionUtils.getEncryptedString(entity.getCode(),securityKey,userToken));
+			}
+		}
+ 		
+ 		System.out.println(stringSet);
+		
+		retract(allowed);
+		drools.getKnowledgeRuntime().setGlobal("stringSet", stringSet); 
+
+end

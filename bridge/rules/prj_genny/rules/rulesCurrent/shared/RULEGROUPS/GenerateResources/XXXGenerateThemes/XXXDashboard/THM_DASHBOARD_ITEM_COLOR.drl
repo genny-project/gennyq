@@ -1,0 +1,55 @@
+package life.genny.rules;
+
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwandautils.JsonUtils;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.Theme;
+
+
+
+rule "THM_DASHBOARD_ITEM_COLOR"
+    ruleflow-group 'GenerateThemes'
+    no-loop true
+
+    when
+      not  Theme (code == "THM_DASHBOARD_ITEM_COLOR")
+      serviceToken : GennyToken( code == "PER_SERVICE")
+
+    then
+
+     	System.out.println("   Generate THM_DASHBOARD_ITEM_COLOR Rule ");
+
+			BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+			BaseEntity project = beUtils.getBaseEntityByCode( "PRJ_" + serviceToken.getRealm().toUpperCase());
+
+			Theme theme = Theme.builder("THM_DASHBOARD_ITEM_COLOR")
+										.addAttribute()
+											.backgroundColor(project.getValue("PRI_COLOR_SURFACE", "#FFFFFF"))
+											.color(project.getValue("PRI_COLOR_SURFACE_ON", "#000000"))
+										.end()
+										.build();   
+
+
+			theme.setRealm(serviceToken.getRealm());
+
+			insert(theme);
+
+			VertxUtils.putObject(serviceToken.getRealm(), "", theme.getCode(), theme, serviceToken.getToken());
+end

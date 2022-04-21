@@ -1,0 +1,52 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_APPLY_INTERNSHIP"
+	ruleflow-group 'SearchFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		searchBE: SearchEntity( code matches "SBE_INTERNSHIPS_.*" || code matches "SBE_INTERNSHIPS_.*" || code matches "SBE_INTERNSHIP_.*")
+		allowed: Allowed(code == "APPLY" && mode == CapabilityMode.VIEW)
+		allowedUser: Allowed(	code == "INTERN" )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("userCode     :: " + userToken.getUserCode());
+		System.out.println("searchCode   :: " + searchBE.getCode());
+
+		searchBE.addDefaultAction("PRI_EVENT_APPLY", "Apply");
+		searchBE.addFilter("PRI_STATUS", SearchEntity.StringFilter.EQUAL, "ACTIVE");
+		
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(searchBE);
+		msg.setAliasCode("SBE");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+		retract(allowed); 
+end

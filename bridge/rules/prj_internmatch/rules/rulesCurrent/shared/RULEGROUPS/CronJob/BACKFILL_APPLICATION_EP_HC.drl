@@ -1,0 +1,121 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+import java.time.LocalDate;
+
+rule "BACKFILL_APPLICATION_EP_HC"
+	ruleflow-group 'EventProcessing'
+	salience 10
+	no-loop true
+	when
+		/*$message : QEventMessage(data.code == "ACT_PRI_EVENT_FINISH_APPLICATION")*/
+		$message : QEventMessage(data.code == "QUE_BACKFILL_HC_TABLE" && data.parentCode == "QUE_BACKFILL_HC_TABLE_GRP" )
+   		userToken : GennyToken ()
+		serviceToken : GennyToken (code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+	    /* get all the apps from PROGRESS bucket */
+	    SearchEntity appSearch = new SearchEntity("SBE_APP", "SBE_APP")
+	            .addSort("PRI_STATUS","Status",SearchEntity.Sort.ASC)
+	            .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+	            .addFilter("PRI_STATUS", SearchEntity.StringFilter.LIKE, "%")
+	            .addFilter("PRI_DISABLED", false)
+					 
+	            .addColumn("LNK_EDU_PROVIDER", "Linked Edu Pro")
+	            .addColumn("LNK_HOST_COMPANY", "Linked HC")
+	            .addColumn("PRI_INTERN_CODE", "Intern Code")
+	            .setPageStart(0).setPageSize(1000);
+	
+	    appSearch.setRealm(serviceToken.getRealm());
+	
+	    List<String> noStartDate = new ArrayList<String>();
+	    List<String> noEndDate = new ArrayList<String>();
+	    List<String> noInternCode = new ArrayList<String>();
+	    List<String> noAssocDuration = new ArrayList<String>();
+	    List<String> goodApps = new ArrayList<String>();
+	
+	    Double completedPercentage = 0.0;
+	
+	    try{
+	        List<BaseEntity> apps = beUtils.getBaseEntitys(appSearch);
+	        System.out.println("The number of apps is " + (apps == null ? "NULL" : apps.size()));
+	        if ((apps != null) && (apps.size() > 0)) {
+						
+						Integer appIndex = 1;
+	          for (BaseEntity app : apps) {
+				
+				System.out.println("***** appIndex = " + appIndex + " *****");
+				System.out.println("app = " +app);
+	
+				String appIntern = app.getValue("PRI_INTERN_CODE", null);
+				if (appIntern != null) {
+						System.out.println("appIntern = " +appIntern);
+						BaseEntity appInternBe = beUtils.getBaseEntityByCode(appIntern);
+						System.out.println("appInternBe = " + appInternBe);
+				} else {
+					System.out.println("appIntern is null");
+				}
+	
+				String appHC = app.getValue("LNK_HOST_COMPANY", null);
+				System.out.println("appHC = " +appHC);
+				if (appHC != null) {
+						appHC = appHC.replace("\"", "").replace("[", "").replace("]", "");
+						System.out.println("appHC = " +appHC);
+						BaseEntity appHCBe = beUtils.getBaseEntityByCode(appHC);
+						System.out.println("appHCBe = " + appHCBe);
+						
+						if (appHCBe != null) {
+								String appEP = app.getValue("LNK_EDU_PROVIDER", null);\
+								System.out.println("appEP = " +appEP);
+								if (appEP != null) {
+										appEP = appEP.replace("\"", "").replace("[", "").replace("]", "");
+										System.out.println("appEP = " +appEP);
+										
+										if (appEP.equals("CPY_691F8677-53A2-47E2-8599-5CE339D5FA79")){
+						 				System.out.println("===== This is a UoA student. Let's add " + appHC + " to the UoA HC list! =====");
+						 				
+						 				Answer answer = new Answer(userToken.getUserCode(), appHCBe.getCode(), "PRI_IS_APPLIED_CPY_691F8677-53A2-47E2-8599-5CE339D5FA79", "true");
+						 				beUtils.saveAnswer(answer);	
+						 						
+									 	} else {	
+									 		System.out.println("+++++ Not a UoA student. Moving on! +++++");
+									 	}
+						 		
+								} else {
+									System.out.println("appEP is null");
+								}
+				 		}
+		 		} else {
+					System.out.println("appHC is null");
+				}
+	        	}
+	    	}
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	
+	    
+			output.setTypeOfResult("NONE");
+			output.setResultCode("NONE");  /* dont display anything new */
+		
+	
+	
+		retract($message);
+end

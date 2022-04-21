@@ -1,0 +1,31 @@
+package life.genny.rules;
+
+
+rule "SBE_TENANTS"
+    ruleflow-group 'GenerateSearches'
+     no-loop true
+    when
+       not  SearchEntity (code == "SBE_TENANTS")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName());
+
+      SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Applications")
+							  /* Sorts */
+                              .addSort("PRI_NAME", "Name", SearchEntity.Sort.ASC)
+
+							  /* Filters */
+                              .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+                              .addFilter("PRI_IS_TENANT", true)
+
+							  /* Columns */
+                              .addColumn("PRI_NAME", "Name")
+
+                              .setPageStart(0).setPageSize(20);
+
+      searchBE.setRealm(serviceToken.getRealm());
+
+      insert(searchBE);
+      VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

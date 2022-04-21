@@ -1,0 +1,12 @@
+package life.genny.rules;
+
+
+rule "TEST_LOJ_ADMIN"
+    ruleflow-group 'TestCapabilities'
+     no-loop true
+    when
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Fired "+drools.getRule().getName());
+end
+

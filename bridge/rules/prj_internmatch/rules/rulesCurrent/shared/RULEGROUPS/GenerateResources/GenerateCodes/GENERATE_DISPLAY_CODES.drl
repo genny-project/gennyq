@@ -1,0 +1,222 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_DISPLAY_CODES"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not  SearchEntity (code == "GENERATE_DISPLAY_CODES")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		Map<String, String> displayCodes = new HashMap<String, String>();
+
+		/* MAP */
+		displayCodes.put("SCH_ACT_PRI_EVENT_MAP_VIEW", "MAP");
+
+		/* DIALOG_FORM */
+		displayCodes.put("ACT_PRI_EVENT_INTERVIEW_APPLICATION", "DIALOG_FORM");
+		displayCodes.put("ACT_PRI_EVENT_POST_INTERVIEW", "DIALOG_FORM");
+		displayCodes.put("ACT_PRI_EVENT_ACCEPT_SHORTLIST", "DIALOG_FORM");
+		displayCodes.put("ACT_PRI_EVENT_EDIT_INTERVIEW_APPLICATION", "DIALOG_FORM");
+		displayCodes.put("ACT_PRI_HELPER_FUNCTION", "DIALOG_FORM");
+        displayCodes.put("ACT_PRI_EVENT_ASSIGN_AGENT_TO_INTERN", "DIALOG_FORM");
+
+		/* DASHBOARD */
+		displayCodes.put("QUE_DASHBOARD_VIEW", "DASHBOARD");
+		displayCodes.put("QUE_FRESH_HOST_CPY_REP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_HOST_CPY_VAL_GRP", "DASHBOARD");
+		displayCodes.put("QUE_OHS_CONTACT_GRP", "DASHBOARD");
+		displayCodes.put("QUE_HC_SERVICES_AGREEMENT_FORM_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_INTERN_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_HOST_CPY_REP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_FRESH_QA_HOST_CPY_REP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_EDU_PRO_REP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_AGENT_GRP", "DASHBOARD");
+		displayCodes.put("QUE_ADMIN_GRP", "DASHBOARD");
+
+		displayCodes.put("QUE_EDU_PRO_GRP", "DASHBOARD");
+		displayCodes.put("QUE_EDU_PRO_REP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_INTERNSHIP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_INTERN_GRP", "DASHBOARD");
+		displayCodes.put("QUE_REF_PART_GRP", "DASHBOARD");
+		displayCodes.put("QUE_REF_PART_REP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_AGENCY_GRP", "DASHBOARD");
+		displayCodes.put("QUE_AGENT_GRP", "DASHBOARD");
+		/* TESTING */
+		displayCodes.put("QUE_HOST_CPY_GRP", "DASHBOARD");
+		displayCodes.put("QUE_HOST_CPY_REP_GRP", "DASHBOARD");
+		displayCodes.put("QUE_LOGBOOK_GRP", "DASHBOARD");
+		displayCodes.put("QUE_OHS_FORM_GRP", "DASHBOARD");
+		displayCodes.put("QUE_HELPER_PORTAL_GRP", "DASHBOARD");
+		displayCodes.put("QUE_TERMS_AND_CONDITIONS_GRP", "DASHBOARD");
+		displayCodes.put("QUE_VIEW_TERMS_AND_CONDITIONS_GRP", "DASHBOARD");
+
+		displayCodes.put("ACT_PRI_EVENT_ACCEPT_APPLY", "DASHBOARD");
+		displayCodes.put("ACT_PRI_EVENT_REJECT_APPLY", "DASHBOARD");
+		displayCodes.put("ACT_PRI_EVENT_REJECT_SHORTLIST", "DASHBOARD");
+        displayCodes.put("QUE_CLEAR_TASKS", "DASHBOARD");
+
+		/* PROCESS */
+		displayCodes.put("QUE_TAB_BUCKET_VIEW", "PROCESS");
+		displayCodes.put("QUE_PRE_AGREEMENT_DOC_P2_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_OUTCOME_FORM_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_INTERN_FORM_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_HC_FORM_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_VIEW_GRP", "PROCESS");
+		displayCodes.put("QUE_APP_AGREEMENT_DOC_GRP", "PROCESS");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TAB_BUCKET_VIEW", "PROCESS");
+		displayCodes.put("ACT_SEARCH_DASHBOARD", "PROCESS");
+
+
+		/* DETAIL */
+
+
+		/* DRAWER:DETAIL */
+		displayCodes.put("QUE_HOST_COMPANY_VIEW", "DRAWER:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_VIEW", "DRAWER:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_PROFILE", "DRAWER:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_APPLICATION", "DRAWER:DETAIL");
+
+		/* FORM:DETAIL */
+		displayCodes.put("QUE_HOST_CPY_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_HOST_CPY_REP_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_INTERNSHIP_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_INTERN_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_NEXT_STEP_HOST_CPY_GRP", "FORM:DETAIL");
+		displayCodes.put("QUE_NEXT_STEP_HOST_CPY_REP_GRP", "FORM:DETAIL");
+		displayCodes.put("QUE_NEXT_STEP_INTERNSHIP_GRP", "FORM:DETAIL");
+		displayCodes.put("QUE_NEXT_STEP_INTERN_GRP", "FORM:DETAIL");
+		displayCodes.put("QUE_FINISH_INTERN", "FORM:DETAIL");
+		displayCodes.put("QUE_FINISH_HOST_CPY_REP", "FORM:DETAIL");
+		displayCodes.put("QUE_FINISH_EDU_PRO_REP", "FORM:DETAIL");
+		displayCodes.put("QUE_FINISH_AGENT", "FORM:DETAIL");
+		displayCodes.put("QUE_AVATAR_PROFILE_GRP", "FORM:DETAIL");
+		displayCodes.put("QUE_EDU_PRO_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_EDU_PRO_REP_MENU", "FORM:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_EDIT", "FORM:DETAIL");
+
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_EDU_PRO_MENU", "FORM:DETAIL");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_EDU_PRO_REP_MENU", "FORM:DETAIL");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_HOST_CPY_REP_MENU", "FORM:DETAIL");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_INTERNSHIP_MENU", "FORM:DETAIL");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_AGENT_MENU", "FORM:DETAIL");
+
+
+		/* TABLE */
+		displayCodes.put("QUE_SEARCH", "TABLE");
+		displayCodes.put("ACT_PRI_EVENT_JOURNAL_VIEW", "TABLE");
+		displayCodes.put("ACT_PRI_EVENT_BADGE_VIEW", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_INTERNS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_INTERNS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_HCRS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_EPRS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_AGENTS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_REFERRERS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_HOST_COMPANIES", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_HOST_COMPANIES_ON_HOLD", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_HOST_COMPANIES_WITHDRAWN", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_DOCUMENTS_GRP", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_EDU_PROVIDERS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_EDU_PROVIDERS_ON_HOLD", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_EDU_PROVIDERS_WITHDRAWN", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_INTERNSHIPS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_COMMUNICATIONS", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_DEV_UI", "TABLE");
+		displayCodes.put("QUE_EDU_INTERNSHIPS", "TABLE");
+		displayCodes.put("QUE_EDU_HOST_COMPANIES", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_APPLICATIONS_APPLIED", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_LOGBOOK_GRP", "TABLE");
+
+
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_INTERNS", "TABLE");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_INTERNSHIPS", "TABLE");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_HCRS", "TABLE");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_EPRS", "TABLE");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_AGENTS", "TABLE");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_APPLICATIONS_APPLIED", "TABLE");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_APPLICATIONS", "TABLE");
+		displayCodes.put("ROW_ACT_PRI_EVENT_VIEW_APPLICATIONS", "TABLE");
+
+		/* FORM */
+		displayCodes.put("QUE_DRAFTS_GRP", "FORM");
+		displayCodes.put("QUE_REF_PART_MENU", "FORM");
+		displayCodes.put("QUE_REF_PART_REP_MENU", "FORM");
+		displayCodes.put("QUE_AGENCY_MENU", "FORM");
+		displayCodes.put("QUE_AGENT_MENU", "FORM");
+		displayCodes.put("QUE_PERSON_MENU", "FORM");
+		displayCodes.put("QUE_QA_INTERN_MENU", "FORM");
+		displayCodes.put("QUE_QA_HOST_CPY_REP_MENU", "FORM");
+		displayCodes.put("QUE_QA_EDU_PRO_REP_MENU", "FORM");
+		displayCodes.put("QUE_QA_AGENT_MENU", "FORM");
+		displayCodes.put("QUE_PRE_AGREEMENT_DOC_GRP", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_HC_SERVICES_AGREEMENT_UNVALIDATED", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_AGREEMENT", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_EDIT_AGREEMENT", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_EDIT_APPLICATION", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_TERMS_AND_CONDITIONS", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_TERMS_AND_CONDITIONS_VALIDATED", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_TERMS_AND_CONDITIONS_UNVALIDATED", "FORM");
+		/* TESTING */
+		displayCodes.put("QUE_UK_HC_LEGAL_DOC_GRP", "DASHBOARD");
+
+
+		/* displayCodes.put("ACT_OHS_DOC", "FORM"); */
+		displayCodes.put("ACT_PRI_EVENT_OHS_UNVALIDATED", "FORM");
+		displayCodes.put("QUE_OHS_GEN_GRP", "FORM");
+		displayCodes.put("QUE_OHS_RISK_GRP", "FORM");
+		displayCodes.put("QUE_OHS_PROCEDURES_GRP", "FORM");
+		displayCodes.put("QUE_OHS_INC_REP_GRP", "FORM");
+		displayCodes.put("QUE_OHS_PRM_GRP", "FORM");
+		displayCodes.put("QUE_OHS_EMERG_GRP", "FORM");
+		displayCodes.put("QUE_OHS_EXITS", "FORM");
+		displayCodes.put("QUE_OHS_FIRE", "FORM");
+		displayCodes.put("QUE_OHS_FIRSTAID_GRP", "FORM");
+		displayCodes.put("QUE_OHS_ELEC_GRP", "FORM");
+		displayCodes.put("QUE_OHS_MAN_GRP", "FORM");
+		displayCodes.put("QUE_OHS_LIGHT_GRP", "FORM");
+		displayCodes.put("QUE_OHS_ENV_GRP", "FORM");
+
+
+		displayCodes.put("QUE_NEXT_STEP_EDU_PRO_GRP", "FORM");
+		displayCodes.put("QUE_NEXT_STEP_EDU_PRO_REP_GRP", "FORM");
+		displayCodes.put("QUE_NEXT_STEP_REF_PART_GRP", "FORM");
+		displayCodes.put("QUE_NEXT_STEP_REF_PART_REP_GRP", "FORM");
+		displayCodes.put("QUE_NEXT_STEP_AGENCY_GRP", "FORM");
+		displayCodes.put("QUE_NEXT_STEP_AGENT_GRP", "FORM");
+		displayCodes.put("ACT_PRI_EVENT_QUE_QA_HOST_CPY_REP_MENU", "FORM");
+		displayCodes.put("QUE_ABN_GRP", "FORM");
+		displayCodes.put("QUE_LOGBOOK_MENU", "FORM");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_LOGBOOK_MENU", "FORM");
+
+
+
+		insert(displayCodes);
+		VertxUtils.putObject(serviceToken.getRealm(), "", "DISPLAY_CODES", displayCodes, serviceToken.getToken());
+end

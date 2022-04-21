@@ -1,0 +1,74 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_SIDEBAR"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not SearchEntity (code == "GENERATE_SIDEBAR")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+		then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	System.out.println("##### SETTING UP SIDEBAR IN CACHE #####");
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+            String sourceCode = "PER_SERVICE";
+            String targetCode = "PER_SERVICE";
+
+            Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+            Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+
+            /* dashboard */
+            Question dashboardQues = new Question("QUE_DASHBOARD_VIEW", "Dashboard", eventAttribute, true);
+            Ask dashboardAsk = new Ask(dashboardQues, sourceCode, targetCode);
+
+            /* process view */
+            Question processViewQues = new Question("QUE_TAB_BUCKET_VIEW", "Process View", eventAttribute, true);
+            Ask processViewAsk = new Ask(processViewQues, sourceCode, targetCode);
+
+            /* mentees */
+            Question menteesQues = new Question("QUE_TREE_ITEM_MENTEES", "Mentees", eventAttribute, true);
+            Ask menteesAsk = new Ask(menteesQues, sourceCode, targetCode);
+
+            /* mentors */
+            Question mentorsQues = new Question("QUE_TREE_ITEM_MENTORS", "Mentors", eventAttribute, true);
+            Ask mentorsAsk = new Ask(mentorsQues, sourceCode, targetCode);
+
+            /* agents */
+            Question agentsQues = new Question("QUE_TREE_ITEM_AGENTS", "Agents", eventAttribute, true);
+            Ask agentsAsk = new Ask(agentsQues, sourceCode, targetCode);
+
+            Ask[] agentSidebar = { dashboardAsk, processViewAsk, menteesAsk, mentorsAsk, agentsAsk };
+            /* add other user types sidebar here */
+
+            /* sidebar group */
+            Question sidebarQues = new Question("QUE_PROJECT_SIDEBAR_GRP", "Sidebar", questionAttribute, true);
+            Ask sidebarAsk = new Ask(sidebarQues, sourceCode, targetCode);
+
+            sidebarAsk.setChildAsks(agentSidebar);
+            VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_AGENT", sidebarAsk, serviceToken.getToken());
+end

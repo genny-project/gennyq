@@ -1,0 +1,492 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.GennySettings;
+
+import life.genny.qwanda.entity.BaseEntity;
+global org.apache.logging.log4j.Logger log;
+import life.genny.rules.QRules;
+import life.genny.utils.VertxUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.FramePosition;
+import life.genny.utils.FrameUtils2;
+import life.genny.models.Frame3;
+import life.genny.models.FramePosition;
+import life.genny.models.GennyToken;
+import life.genny.models.Theme;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwanda.VisualControlType;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.SessionFacts;
+import life.genny.rules.RulesLoader;
+import org.kie.internal.runtime.StatefulKnowledgeSession;
+import java.util.Optional;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+
+rule "CREATE_TEST_INTERNS"
+    ruleflow-group 'RunTests'
+    no-loop true
+    salience 10000
+    when
+      serviceToken : GennyToken( code == "PER_SERVICE")
+      not BaseEntity(code == "PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO")
+      eval( GennySettings.hostIP.equals("10.123.123.123") || GennySettings.isTestServer)   /* only run as local dev */
+     then
+     
+      	System.out.println("Rule -> "+drools.getRule().getName()); 
+     
+     
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+		
+		BaseEntity intern1 = beUtils.create("PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO","Kanika Gulati");	
+		BaseEntity intern2 = beUtils.create("PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO","Joseph Maher");	
+		BaseEntity intern3 = beUtils.create("PER_THOMAS_DOT_CROW_AT_GADA_DOT_IO","Thomas Crow");	
+		
+		BaseEntity hostcompany1 = beUtils.create("CPY_HOSTCOMPANY1","Tyrell Corporation");
+		BaseEntity hostcompany2 = beUtils.create("CPY_HOSTCOMPANY2","Cyberdyne Systems");
+		
+		BaseEntity hostcompanyrep1 = beUtils.create("PER_HOST_CPY_REP1","Domenic Saporito");
+		BaseEntity hostcompanyrep2 = beUtils.create("PER_HOST_CPY_REP2","Gerard Holland");
+		
+		BaseEntity supervisor1 = beUtils.create("PER_SUPERVISOR1","Chris Pyke");
+		BaseEntity supervisor2 = beUtils.create("PER_SUPERVISOR2","Adam Crow");	
+
+		BaseEntity agent1 = beUtils.create("PER_AGENT1","Stephenie Pulis-Cassar");
+		BaseEntity agent2 = beUtils.create("PER_AGENT2","Georgia Moyle");	
+		
+		BaseEntity internship1 = beUtils.create("BEG_INTERNSHIP1","Internship1");
+		BaseEntity internship2 = beUtils.create("BEG_INTERNSHIP2","Internship2");
+		BaseEntity internship3 = beUtils.create("BEG_INTERNSHIP3","Internship3");
+ 
+ 		BaseEntity app1 = beUtils.create("APP_INTERN1_1",intern1.getName());
+		BaseEntity app2 = beUtils.create("APP_INTERN2_1",intern2.getName());
+		BaseEntity app3 = beUtils.create("APP_INTERN3_1",intern3.getName());
+
+		BaseEntity jnl1 =  beUtils.create("JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200408","Wed 08-04-2020 Kanika");
+		BaseEntity jnl2 =  beUtils.create("JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200409","Thu 09-04-2020 Kanika");
+		BaseEntity jnl3 =  beUtils.create("JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200410","Fri 10-04-2020 Kanika");
+		BaseEntity jnl30 = beUtils.create("JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200413","Mon 13-04-2020 Kanika");
+		BaseEntity jnl31 = beUtils.create("JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200414","Tue 14-04-2020 Kanika");
+		BaseEntity jnl32 = beUtils.create("JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200415","Wed 15-04-2020 Kanika");
+
+		BaseEntity jjnl1 =  beUtils.create("JNL_JOSEPH_MAHER_AT_GADA_DOT_IO20200408","Wed 08-04-2020 Joseph");
+		BaseEntity jjnl2 =  beUtils.create("JNL_JOSEPH_MAHER_AT_GADA_DOT_IO20200409","Thu 09-04-2020 Joseph");
+		BaseEntity jjnl3 =  beUtils.create("JNL_JOSEPH_MAHER_AT_GADA_DOT_IO20200410","Fri 10-04-2020 Joseph");
+		BaseEntity jjnl30 = beUtils.create("JNL_JOSEPH_MAHER_AT_GADA_DOT_IO20200413","Mon 13-04-2020 Joseph");
+		BaseEntity jjnl31 = beUtils.create("JNL_JOSEPH_MAHER_AT_GADA_DOT_IO20200414","Tue 14-04-2020 Joseph");
+		BaseEntity jjnl32 = beUtils.create("JNL_JOSEPH_MAHER_AT_GADA_DOT_IO20200415","Wed 15-04-2020 Joseph");
+
+  
+  		List<Answer> answers = new ArrayList<Answer>();
+  
+    	answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_NAME", "Wed 2020-04-08 Kanika"));
+  		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_CODE", "JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200408"));
+  		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP1\"]"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_JOURNAL_DATE", "2020-04-08"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_JOURNAL_HOURS", "6.5"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_JOURNAL_TASKS", "Learn how to turn on a computer, Learn how to turn off a computer, Find the toilet"));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I found the toilet. Can turn a computer on and off. "));
+ 		answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_SYNC", "FALSE"));
+ 	 	answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_STATUS", "UNAPPROVED"));
+  	 	answers.add(new Answer(jnl1.getCode(),jnl1.getCode(),"PRI_FEEDBACK", ""));
+ 
+  		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_NAME", "Thu 2020-04-09 Kanika"));
+  		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_CODE", "JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200409"));
+  		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP1\"]"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_JOURNAL_DATE", "2020-04-09"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_JOURNAL_HOURS", "6.0"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_JOURNAL_TASKS", "Learn how how to maintain quantum state"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I was able to manipulate the magnetic state of a single iron atom on a thin insulator"));
+ 		answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_SYNC", "FALSE")); 
+	 	answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_STATUS", "UNAPPROVED"));
+  	 	answers.add(new Answer(jnl2.getCode(),jnl2.getCode(),"PRI_FEEDBACK", ""));
+  	
+   		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_NAME", "Fri 2020-04-10 Kanika"));
+  		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_CODE", "JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200410"));
+  		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP1\"]"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_JOURNAL_DATE", "2020-04-10"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_JOURNAL_HOURS", "7.0"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_JOURNAL_TASKS", "Learn how how to solve the P vs NP problem"));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I was able to find a algorithm that ran in polynomial time."));
+ 		answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_STATUS", "UNAPPROVED"));
+  	 	answers.add(new Answer(jnl3.getCode(),jnl3.getCode(),"PRI_FEEDBACK", ""));
+ 	
+   		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_NAME", "Mon 2020-04-13 Kanika"));
+  		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_CODE", "JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200413"));
+  		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP1\"]"));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_JOURNAL_DATE", "2020-04-13"));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_JOURNAL_HOURS", "7.5"));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_JOURNAL_TASKS", "Learn how to solve the Poincaré Conjecture."));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I was able to solve it and condense the solution into the margin."));
+ 		answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_STATUS", "APPROVED"));
+  	 	answers.add(new Answer(jnl30.getCode(),jnl30.getCode(),"PRI_FEEDBACK", ""));
+
+   		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_NAME", "Tue 2020-04-14 Kanika"));
+  		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_CODE", "JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200414"));
+  		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP1\"]"));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_JOURNAL_DATE", "2020-04-14"));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_JOURNAL_HOURS", "5.5"));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_JOURNAL_TASKS", "Work out the Riemann Hypothesis."));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "Easily found a proof for it. Then I also found a proof for the Hodge Conjecture."));
+ 		answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_STATUS", "APPROVED"));
+  	 	answers.add(new Answer(jnl31.getCode(),jnl31.getCode(),"PRI_FEEDBACK", ""));
+ 
+   		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_NAME", "Wed 2020-04-15 Kanika"));
+  		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_CODE", "JNL_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO20200415"));
+  		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP1\"]"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_JOURNAL_DATE", "2020-04-15"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_JOURNAL_HOURS", "7.0"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_JOURNAL_TASKS", "Produce a vaccine for COVID19"));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "Failed to find a vaccine that didn't kill the test subject."));
+ 		answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_STATUS", "REJECTED"));
+  	 	answers.add(new Answer(jnl32.getCode(),jnl32.getCode(),"PRI_FEEDBACK", "Kanika killed the other interns with her attempts at a vaccine. Please send more interns. And Kanika needs to improve it."));
+  
+     	answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_NAME", "Wed 2020-04-08 Joseph"));
+  		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_CODE", "JNL_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO20200408"));
+  		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_JOURNAL_DATE", "2020-04-08"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_JOURNAL_HOURS", "6.5"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_JOURNAL_TASKS", "Learn how to turn on a computer, Learn how to turn off a computer, Find the toilet"));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I found the toilet. Can turn a computer on and off. "));
+ 		answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_SYNC", "FALSE"));
+ 	 	answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_STATUS", "UNAPPROVED"));
+  	 	answers.add(new Answer(jjnl1.getCode(),jjnl1.getCode(),"PRI_FEEDBACK", ""));
+ 
+  		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_NAME", "Thu 2020-04-09 Joseph"));
+  		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_CODE", "JNL_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO20200409"));
+  		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_JOURNAL_DATE", "2020-04-09"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_JOURNAL_HOURS", "6.0"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_JOURNAL_TASKS", "Learn how how to maintain quantum state"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I was able to manipulate the magnetic state of a single iron atom on a thin insulator"));
+ 		answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_SYNC", "FALSE")); 
+	 	answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_STATUS", "UNAPPROVED"));
+  	 	answers.add(new Answer(jjnl2.getCode(),jjnl2.getCode(),"PRI_FEEDBACK", ""));
+  	
+   		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_NAME", "Fri 2020-04-10 Joseph"));
+  		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_CODE", "JNL_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO20200410"));
+  		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_JOURNAL_DATE", "2020-04-10"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_JOURNAL_HOURS", "7.0"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_JOURNAL_TASKS", "Learn how how to solve the P vs NP problem"));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I was able to find a algorithm that ran in polynomial time."));
+ 		answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_STATUS", "APPROVED"));
+  	 	answers.add(new Answer(jjnl3.getCode(),jjnl3.getCode(),"PRI_FEEDBACK", ""));
+ 	
+   		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_NAME", "Mon 2020-04-13 Joseph"));
+  		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_CODE", "JNL_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO20200413"));
+  		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_JOURNAL_DATE", "2020-04-13"));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_JOURNAL_HOURS", "7.5"));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_JOURNAL_TASKS", "Learn how to solve the Poincaré Conjecture."));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "I was able to solve it and condense the solution into the margin."));
+ 		answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_STATUS", "APPROVED"));
+  	 	answers.add(new Answer(jjnl30.getCode(),jjnl30.getCode(),"PRI_FEEDBACK", ""));
+
+   		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_NAME", "Tue 2020-04-14 Joseph"));
+  		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_CODE", "JNL_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO20200414"));
+  		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_JOURNAL_DATE", "2020-04-14"));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_JOURNAL_HOURS", "5.5"));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_JOURNAL_TASKS", "Work out the Riemann Hypothesis."));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "Easily found a proof for it. Then I also found a proof for the Hodge Conjecture."));
+ 		answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_STATUS", "APPROVED"));
+  	 	answers.add(new Answer(jjnl31.getCode(),jjnl31.getCode(),"PRI_FEEDBACK", ""));
+ 
+   		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_NAME", "Wed 2020-04-15 Joseph"));
+  		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_CODE", "JNL_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO20200415"));
+  		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_JOURNAL_DATE", "2020-04-15"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_JOURNAL_HOURS", "7.0"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_JOURNAL_TASKS", "Produce a vaccine for COVID19"));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_JOURNAL_LEARNING_OUTCOMES", "Failed to find a vaccine that didn't kill the test subject."));
+ 		answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_SYNC", "FALSE")); 
+ 	 	answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_STATUS", "REJECTED"));
+  	 	answers.add(new Answer(jjnl32.getCode(),jjnl32.getCode(),"PRI_FEEDBACK", "Joseph killed the other interns with his attempts at a vaccine. Please send more interns. And Joseph needs to improve it."));
+  
+
+ 		
+  		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_IS_INTERN", "true"));
+  		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_IS_DEV", "true"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_DISABLED", "false"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_STATUS", "AVAILABLE"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_STATUS_COLOR","#5cb85c"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_NAME",intern1.getName()));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_FIRSTNAME","Kanika"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_LASTNAME","Gulati")); 		
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_EMAIL","kanika.gulati@gada.io"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_MOBILE","61421123234"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_ADDRESS_FULL","17 Hardware Lane, Melboourne, VIC, 3000"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"LNK_EDU_PROVIDER","[\"CPY_UNIMELB\"]"));
+   		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"LNK_GENDER_SELECT","[\"SEL_GENDER_FEMALE\"]"));
+  		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"LNK_INDUSTRY","[\"SEL_INDUSTRY_INFORMATION_COMMUNICATION_TECHNOLOGY\"]"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_ASSOC_EP", "University Of Melbourne"));
+ 		answers.add(new Answer(intern1.getCode(),intern1.getCode(),"PRI_STUDENT_ID", "11223344"));
+ 		
+
+  		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_IS_INTERN", "true"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_DISABLED", "false"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_STATUS", "AVAILABLE"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_STATUS_COLOR","#5cb85c"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_NAME",intern2.getName()));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_FIRSTNAME","Joseph"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_LASTNAME","Maher")); 		
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_EMAIL","joseph.maher@gada.io"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_MOBILE","61421123235"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_ADDRESS_FULL","19 Hardware Lane, Melboourne, VIC, 3000"));
+  		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"LNK_EDU_PROVIDER","[\"CPY_SWINBURNE\"]"));
+  		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"LNK_GENDER_SELECT","[\"SEL_GENDER_MALE\"]"));
+  		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"LNK_INDUSTRY","[\"SEL_INDUSTRY_INFORMATION_COMMUNICATION_TECHNOLOGY\"]"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_ASSOC_EP", "Swinburne University"));
+ 		answers.add(new Answer(intern2.getCode(),intern2.getCode(),"PRI_STUDENT_ID", "556677"));
+ 		
+
+
+  		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_IS_INTERN", "true"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_DISABLED", "false"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_STATUS", "AVAILABLE"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_STATUS_COLOR","#5cb85c"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_NAME",intern3.getName()));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_FIRSTNAME","Tom"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_LASTNAME","Crow")); 		
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_EMAIL","thomas.crow@gada.io"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_MOBILE","61421123235"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_ADDRESS_FULL","1 Newnham Drive, Newnham, TAS, 7248"));
+  		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"LNK_EDU_PROVIDER","[\"CPY_UTAS\"]"));
+  		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"LNK_GENDER_SELECT","[\"SEL_GENDER_MALE\"]"));
+  		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"LNK_INDUSTRY","[\"SEL_INDUSTRY_INFORMATION_COMMUNICATION_TECHNOLOGY\"]"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_ASSOC_EP", "University Of Tasmania"));
+ 		answers.add(new Answer(intern3.getCode(),intern3.getCode(),"PRI_STUDENT_ID", "998877"));
+  		
+		
+		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_IS_DEV", "true"));
+		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_IS_SUPERVISOR", "true"));
+ 		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_DISABLED", "false"));
+ 		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_EMAIL","christopher.pyke@gada.io"));
+ 		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_MOBILE","61433501177"));
+ 		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_ADDRESS_FULL","21 Hardware Lane, Melboourne, VIC, 3000"));
+  		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"LNK_HOST_COMPANY","[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_NAME","Christopher Pyke"));
+  		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_FIRSTNAME","Christopher"));
+ 		answers.add(new Answer(supervisor1.getCode(),supervisor1.getCode(),"PRI_LASTNAME","Pyke")); 		
+ 		
+
+		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_IS_SUPERVISOR", "true"));
+ 		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_DISABLED", "false"));
+ 		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY2\"]"));
+ 		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_EMAIL","cto@gada.io"));
+ 		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_MOBILE","61434321229"));
+  		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_ADDRESS_FULL","23 Hardware Lane, Melboourne, VIC, 3000"));
+  		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"LNK_HOST_COMPANY","[\"CPY_HOSTCOMPANY2\"]"));
+ 		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_NAME","Adam Crow"));
+   		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_FIRSTNAME","Adam"));
+ 		answers.add(new Answer(supervisor2.getCode(),supervisor2.getCode(),"PRI_LASTNAME","Crow")); 		
+  		 		
+ 		answers.add(new Answer(hostcompany1.getCode(),hostcompany1.getCode(),"PRI_IS_HOST_CPY", "true"));
+ 		answers.add(new Answer(hostcompany1.getCode(),hostcompany1.getCode(),"PRI_STATUS", "ACTIVE"));
+  		answers.add(new Answer(hostcompany1.getCode(),hostcompany1.getCode(),"PRI_ADDRESS_FULL","25 Hardware Lane, Melboourne, VIC, 3000"));
+ 		answers.add(new Answer(hostcompany1.getCode(),hostcompany1.getCode(),"PRI_NAME","Tyrell Corporation"));
+ 		answers.add(new Answer(hostcompany1.getCode(),hostcompany1.getCode(),"PRI_PHONE","61434321229"));
+ 		answers.add(new Answer(hostcompany1.getCode(),hostcompany1.getCode(),"PRI_ABN","98137239742"));
+ 		answers.add(new Answer(hostcompany1.getCode(),hostcompany1.getCode(),"PRI_INDUSTRY","Engineering"));
+ 		
+ 		answers.add(new Answer(hostcompany2.getCode(),hostcompany2.getCode(),"PRI_IS_HOST_CPY", "true"));
+ 		answers.add(new Answer(hostcompany2.getCode(),hostcompany2.getCode(),"PRI_STATUS", "ACTIVE"));
+   		answers.add(new Answer(hostcompany2.getCode(),hostcompany2.getCode(),"PRI_ADDRESS_FULL","27 Hardware Lane, Melboourne, VIC, 3000"));
+		answers.add(new Answer(hostcompany2.getCode(),hostcompany2.getCode(),"PRI_NAME","Cyberdyne Systems"));
+ 		answers.add(new Answer(hostcompany2.getCode(),hostcompany2.getCode(),"PRI_PHONE","61434321230"));
+ 		
+ 		answers.add(new Answer(hostcompanyrep1.getCode(),hostcompanyrep1.getCode(),"PRI_IS_HOST_CPY_REP", "true"));
+ 		answers.add(new Answer(hostcompanyrep1.getCode(),hostcompanyrep1.getCode(),"PRI_DISABLED", "false"));
+ 		answers.add(new Answer(hostcompanyrep1.getCode(),hostcompanyrep1.getCode(),"PRI_NAME",hostcompanyrep1.getName()));
+ 		answers.add(new Answer(hostcompanyrep1.getCode(),hostcompanyrep1.getCode(),"LNK_HOST_COMPANY","[\"CPY_HOSTCOMPANY1\"]"));
+  		answers.add(new Answer(hostcompanyrep1.getCode(),hostcompanyrep1.getCode(),"PRI_EMAIL","domenic.saporito@outcome.life"));
+ 		answers.add(new Answer(hostcompanyrep1.getCode(),hostcompanyrep1.getCode(),"PRI_MOBILE","61410662392"));
+  		answers.add(new Answer(hostcompanyrep1.getCode(),hostcompanyrep1.getCode(),"PRI_ADDRESS_FULL","25 Hardware Lane, Melboourne, VIC, 3000"));
+ 		
+ 		
+ 		/* LNK_INTERN_SUPERVISOR 
+ 		PRI_MOBILE  61420705078
+ 		PRI_ASSOC_HC_ADDRESS     Level 1, 17 Hardware Ln, Melbourne VIC 3000, Australia
+ 		 LNK_HOST_COMPANY_REP
+ 		 LNK_HOST_COMPANY   ["CPY_1806A67A-3D73-449E-9D93-CEB80572DD0A"]
+ 		 PRI_ASSOC_HC   HCQPobhFkFOfxusCTK
+ 		 */
+
+ 		answers.add(new Answer(hostcompanyrep2.getCode(),hostcompanyrep2.getCode(),"PRI_IS_HOST_CPY_REP", "true"));
+ 		answers.add(new Answer(hostcompanyrep2.getCode(),hostcompanyrep2.getCode(),"PRI_DISABLED", "false"));
+ 		answers.add(new Answer(hostcompanyrep2.getCode(),hostcompanyrep2.getCode(),"PRI_NAME",hostcompanyrep2.getName()));
+ 		answers.add(new Answer(hostcompanyrep2.getCode(),hostcompanyrep2.getCode(),"LNK_HOST_COMPANY","[\"CPY_HOSTCOMPANY2\"]"));
+  		answers.add(new Answer(hostcompanyrep2.getCode(),hostcompanyrep2.getCode(),"PRI_EMAIL","gerard.hollando@outcome.life"));
+ 		answers.add(new Answer(hostcompanyrep2.getCode(),hostcompanyrep2.getCode(),"PRI_MOBILE","61402329475"));
+  		answers.add(new Answer(hostcompanyrep2.getCode(),hostcompanyrep2.getCode(),"PRI_ADDRESS_FULL","27 Hardware Lane, Melboourne, VIC, 3000"));
+ 		
+ 		
+		answers.add(new Answer(agent1.getCode(),agent1.getCode(),"PRI_IS_AGENT", "true"));
+ 		answers.add(new Answer(agent1.getCode(),agent1.getCode(),"PRI_DISABLED", "false"));	
+ 		answers.add(new Answer(agent1.getCode(),agent1.getCode(),"PRI_NAME",agent1.getName()));
+ 		
+ 		answers.add(new Answer(agent2.getCode(),agent2.getCode(),"PRI_IS_AGENT", "true"));
+ 		answers.add(new Answer(agent2.getCode(),agent2.getCode(),"PRI_DISABLED", "false"));	
+ 		answers.add(new Answer(agent2.getCode(),agent2.getCode(),"PRI_NAME",agent2.getName()));
+ 		
+ 		
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_IS_INTERNSHIP", "true"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_STATUS", "ACTIVE"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_IS_FULL", "false"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_CURRENT_INTERNS", "1"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_NAME",internship1.getName()));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ASSOC_EP", "University Of Melbourne"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_STUDENT_ID", "11223344"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ASSOC_HOST_COMPANY",hostcompany1.getName()));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ABN", "98137239742"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ASSOC_SUPERVISOR", supervisor1.getName()));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ASSOC_HCR", hostcompanyrep1.getName()));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ASSOC_HOST_COMPANY_EMAIL", "info@tyrell.co"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ASSOC_HC", hostcompany1.getName()));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_INDUSTRY", "Engineering"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_INTERNSHIP_DURATION_STRIPPED", "12"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"LNK_NO_OF_INTERNS", "1"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_DAYS_PER_WEEK", "3"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_DISABLED", "FALSE"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_FIRSTNAME", "Kanika"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_LASTNAME", "Gulati"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_EMAIL", "kanika@gada.io"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_INTERN_NAME", intern1.getName()));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_INTERN_ACCEPTED", "TRUE"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(internship1.getCode(),internship1.getCode(),"PRI_ADDRESS_FULL","21 Hardware Lane, Melbourne, VIC, 3000"));
+ 		
+		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_IS_INTERNSHIP", "true"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_STATUS", "ACTIVE"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_IS_FULL", "false"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_CURRENT_INTERNS", "1"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_NAME",internship2.getName()));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ASSOC_EP", "Swinburne University"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_STUDENT_ID", "556677"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ASSOC_HOST_COMPANY",hostcompany1.getName()));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ABN", "98237239742"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ASSOC_SUPERVISOR", supervisor1.getName()));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ASSOC_HCR", hostcompanyrep1.getName()));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ASSOC_HOST_COMPANY_EMAIL", "info@tyrell.co"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ASSOC_HC", hostcompany1.getName()));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_INDUSTRY", "Engineering"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_INTERNSHIP_DURATION_STRIPPED", "12"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"LNK_NO_OF_INTERNS", "1"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_DAYS_PER_WEEK", "3"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_DISABLED", "FALSE"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_FIRSTNAME", "Joseph"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_LASTNAME", "Maher"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_EMAIL", "joseph.maher@gada.io"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_INTERN_NAME", intern2.getName()));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_INTERN_ACCEPTED", "TRUE"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]"));
+ 		answers.add(new Answer(internship2.getCode(),internship2.getCode(),"PRI_ADDRESS_FULL","22 Hardware Lane, Melbourne, VIC, 3000"));
+ 		
+ 		
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"PRI_CODE", "APP_INTERN1_1"));
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR1\"]"));
+		answers.add(new Answer(app1.getCode(),app1.getCode(),"LNK_INTERN", "[\"PER_KANIKA_DOT_GULATI_PLUS_INTERN_AT_GADA_DOT_IO\"]")); 
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP1\"]"));
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP1\"]"));
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY1\"]"));
+		answers.add(new Answer(app1.getCode(),app1.getCode(),"PRI_ASSOC_SUP", supervisor1.getName()));
+		answers.add(new Answer(app1.getCode(),app1.getCode(),"PRI_ASSOC_HCR", hostcompanyrep1.getName()));  		
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"PRI_ASSOC_INTERNSHIP", internship1.getName()));  		
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"PRI_ASSOC_HOST_COMPANY", hostcompany1.getName()));  		
+ 		answers.add(new Answer(app1.getCode(),app1.getCode(),"PRI_ASSOC_INTERN", intern1.getName()));  		
+ 		
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"PRI_CODE", "APP_INTERN2_1"));
+		answers.add(new Answer(app2.getCode(),app2.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR2\"]"));
+		answers.add(new Answer(app2.getCode(),app2.getCode(),"LNK_INTERN", "[\"PER_JOSEPH_DOT_MAHER_AT_GADA_DOT_IO\"]")); 
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP2\"]"));
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY2\"]"));
+		answers.add(new Answer(app2.getCode(),app2.getCode(),"PRI_ASSOC_SUP", supervisor2.getName()));
+		answers.add(new Answer(app2.getCode(),app2.getCode(),"PRI_ASSOC_HCR", hostcompanyrep2.getName()));  		
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"PRI_ASSOC_INTERNSHIP", internship2.getName()));  		
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"PRI_ASSOC_HOST_COMPANY", hostcompany2.getName()));  		
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"PRI_ASSOC_INTERN", intern2.getName()));  		
+
+ 		answers.add(new Answer(app2.getCode(),app2.getCode(),"PRI_CODE", "APP_INTERN3_1"));
+		answers.add(new Answer(app3.getCode(),app3.getCode(),"LNK_INTERN_SUPERVISOR", "[\"PER_SUPERVISOR2\"]"));
+		answers.add(new Answer(app3.getCode(),app3.getCode(),"LNK_INTERN", "[\"PER_THOMAS_DOT_CROW_AT_GADA_DOT_IO\"]")); 
+ 		answers.add(new Answer(app3.getCode(),app3.getCode(),"LNK_INTERNSHIP", "[\"BEG_INTERNSHIP2\"]"));
+ 		answers.add(new Answer(app3.getCode(),app3.getCode(),"LNK_HOST_COMPANY_REP", "[\"PER_HOST_CPY_REP2\"]"));
+ 		answers.add(new Answer(app3.getCode(),app3.getCode(),"LNK_HOST_COMPANY", "[\"CPY_HOSTCOMPANY2\"]"));
+		answers.add(new Answer(app3.getCode(),app3.getCode(),"PRI_ASSOC_SUP", supervisor2.getName()));
+		answers.add(new Answer(app3.getCode(),app3.getCode(),"PRI_ASSOC_HCR", hostcompanyrep2.getName()));  		
+ 		answers.add(new Answer(app3.getCode(),app3.getCode(),"PRI_ASSOC_INTERNSHIP", internship3.getName()));  		
+ 		answers.add(new Answer(app3.getCode(),app3.getCode(),"PRI_ASSOC_HOST_COMPANY", hostcompany2.getName()));  		
+ 		answers.add(new Answer(app3.getCode(),app3.getCode(),"PRI_ASSOC_INTERN", intern3.getName()));  		
+  		
+  		beUtils.saveAnswers(answers);
+  		
+		insert(intern1);
+		insert(app1);
+		insert(app2);
+		insert(app3);
+	end

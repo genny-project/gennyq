@@ -1,0 +1,126 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+rule "CLICK_HC_VALIDATION"
+    ruleflow-group 'EventProcessing'
+		salience 1000
+    no-loop
+    when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_HC_VALIDATION")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		ruleDetails : RuleDetails()
+
+    then
+		System.out.println("Processing CLICK HC VALIDATION : " + $message );
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		
+		/* Grab the BE for the HC */
+		String hcCode = $message.getData().getTargetCode();
+		System.out.println("hcCode = " + hcCode);
+		
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+	
+		String hcvCode = "";
+		
+		BaseEntity newBe = new BaseEntity("temp", "temp");
+		
+		
+						
+		if(hcCode != null) { 
+		
+				
+				BaseEntity hcbe = beUtils.getBaseEntityByCode(hcCode);
+				System.out.println("hcbe = " + hcbe);
+				
+				System.out.println("PRI_VALIDATION set to: Validated"); 	
+									
+				/* Check whether DOC_OHS_CODE exists or not */
+				hcvCode = hcbe.getValue("LNK_HCV_DOC", null);
+				System.out.println("hcvCode = " + hcvCode);
+				
+				if (hcvCode == null) {
+						System.out.println("LNK_HCV_DOC does not exist yet. Creating now!");
+						
+						String uuid = UUID.randomUUID().toString();
+						System.out.println("uuid: " +uuid);
+						uuid = uuid.substring(4);
+						
+						hcvCode = "DOC_HCV_"+uuid;
+						hcvCode = hcvCode.toUpperCase();
+						System.out.println("HCV: hcvCode = " + hcvCode);
+						
+						BaseEntity defBE = beUtils.getDEFByCode("DEF_HCV_DOCUMENT");
+						newBe = beUtils.create(defBE, hcvCode, hcvCode);
+						System.out.println("HCV: newBe = " + newBe);
+						System.out.println(">>>>>>>>>>>> " + newBe.getName() + " <<<<<<<<<<<<");
+
+						
+				} else {
+					System.out.println("LNK_HCV_DOC already exists: hcvCode = " + hcvCode);
+					
+					newBe = beUtils.getBaseEntityByCode(hcvCode);
+					System.out.println("newBe = " + newBe);
+					
+				}
+				
+				/* Save DOC_OHS_CODE against HC */
+				
+				hcbe = beUtils.saveAnswer(new Answer(userToken.getUserCode(), hcbe.getCode(), "LNK_HCV_DOC", hcvCode));
+				/* Set Parameters */
+ 		
+				output.setAskSourceCode(user);
+				output.setTargetCode(newBe.getCode());
+				output.setTypeOfResult("SIGNAL");
+				output.setResultCode("START_HC_VAL");	
+				output.setSuitCase(hcCode);
+				
+				
+				/* Print Parameters */
+				
+				System.out.println("**************************************************");
+				System.out.println("AskSourceCode: " + output.getAskSourceCode());
+				System.out.println("TargetCode: "    + output.getTargetCode());
+				System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+				System.out.println("ResultCode: "    + output.getResultCode());
+				System.out.println("SuitCase: "      + output.getSuitCase());
+				System.out.println("**************************************************");
+				
+				
+				/* Force redirect */
+				
+				QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
+				msg.setToken(beUtils.getGennyToken().getToken());
+				msg.setSend(true);  	
+				VertxUtils.writeMsg("webcmds",msg);
+				
+				QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(hcbe);
+				beMsg.setToken(userToken.getToken());
+				beMsg.setReplace(true);
+				VertxUtils.writeMsg("webcmds", JsonUtils.toJson(beMsg));
+				
+				
+		} else {
+			System.out.println("ERROR: Null hcCode");
+		}		
+	
+	
+		retract($message);
+	end

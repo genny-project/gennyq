@@ -1,0 +1,100 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+
+rule "EASY_CLICK_EVENT_UNARCHIVE"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_UNARCHIVE_.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println("Processing UNARCHIVE CLICK EVENT : " + $message );
+
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode = " + targetCode);
+		
+		String statusToSave = "AVAILABLE";
+		System.out.println("statusToSave = " + statusToSave);
+		
+		if (targetCode.startsWith("BEG_")){
+			statusToSave = "ACTIVE";
+			System.out.println("statusToSave = " + statusToSave);
+		}
+
+		if (targetCode != null && targetCode.startsWith("PER_")) {
+			BaseEntity internBE = beUtils.getBaseEntityByCode(targetCode);
+			if (internBE != null) {
+
+				SearchEntity searchBE = new SearchEntity("SBE_LINKED_APPLICATIONS", "Linked Applications")
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+					.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, internBE.getCode())
+					.setPageStart(0).setPageSize(100000);
+		
+				searchBE.setRealm(serviceToken.getRealm());
+				List<BaseEntity> linkedApps = beUtils.getBaseEntitys(searchBE);
+
+				String[] statusArray = {"PENDING","AVAILABLE", "APPLIED", "SHORTLISTED", "INTERVIEWED", "OFFERED", "PLACED", "PROGRESS", "COMPLETED" };
+				int index = 0;
+				for (BaseEntity app : linkedApps) {
+					/* MAKE SURE ALL APPS ARE ENABLED */
+					System.out.println("enabling application " + app.getCode());
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), app.getCode(), "PRI_DISABLED", "false"));
+					/* FIND MOST PROGRESSED STATUS */
+					String appStatus = app.getValue("PRI_STATUS", null);
+					if (appStatus != null) {
+						if (Arrays.toString(statusArray).contains(appStatus)) {
+							int pos = Arrays.asList(statusArray).indexOf(appStatus);
+							if (pos > index) {
+								index = pos;
+							}
+						}
+					} else {
+						System.out.println("PRI_STATUS is null for " + app.getCode());
+					}
+				}
+				statusToSave = statusArray[index];
+			} else {
+				System.out.println("internBE is null");
+			}
+		} else {
+			System.out.println("targetCode is null or starts with PER_");
+		}
+
+		/* SAVE STATUS OF MOST PROGRESSED APPLICATION OR DEFAULT TO AVAILABLE */
+ 		Answer answer = new Answer(userToken.getUserCode(), targetCode, "PRI_STATUS", statusToSave);
+ 		beUtils.saveAnswer(answer);
+		System.out.println("statusToSave = " + statusToSave);
+ 		
+ 		Answer answerDisable = new Answer(userToken.getUserCode(), targetCode, "PRI_DISABLED", "false");
+ 		beUtils.saveAnswer(answerDisable);
+		
+		VertxUtils.sendToFrontEnd(userToken, answer, answerDisable);
+		
+		TableUtils.moveEntity(targetCode, "SBE_AVAILABLE_INTERNS", null, beUtils);
+				
+		retract( $message);
+		
+	end

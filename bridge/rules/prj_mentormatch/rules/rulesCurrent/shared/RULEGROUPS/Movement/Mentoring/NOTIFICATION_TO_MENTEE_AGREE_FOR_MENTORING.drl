@@ -1,0 +1,79 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import org.json.JSONObject;
+
+import life.genny.notifications.EmailHelper;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.notifications.SmsHelper;
+import java.util.Arrays;
+import java.time.ZoneOffset;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import java.time.LocalDateTime;
+import life.genny.notifications.EmailHelper;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.notifications.SmsHelper;
+import java.util.Arrays;
+import java.time.ZoneOffset;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+rule "NOTIFICATION_TO_MENTEE_AGREE_FOR_MENTORING"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 5
+    when
+   		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		targetBaseEntity : BaseEntity( code matches "PER_\\S+" )
+		output : OutputParam( )
+		controlSignalCode : String(controlSignalCode.equals("SEND_NOTIFICATION_TO_MENTEE"))
+		beUtils : BaseEntityUtils()
+     then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+ 		System.out.println("Current Time is "+LocalDateTime.now());
+
+ 		BaseEntity mentorBe = beUtils.getBaseEntityByCode(targetBaseEntity.getCode());
+		System.out.println(drools.getRule().getName() + " :: mentorBe :: " + mentorBe.getCode());
+
+		BaseEntity applicationBe = null;
+		BaseEntity menteeBe = null;
+
+ 		if (targetBaseEntity.getCode() != null) {
+			applicationBe = beUtils.getBaseEntityFromLNKAttr(mentorBe, "LNK_APPLICATION");
+			System.out.println(drools.getRule().getName() + " :: applicationCode: " + applicationBe.getCode());
+			if (applicationBe !=null)
+			{
+				menteeBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "LNK_MENTEE");
+				System.out.println(drools.getRule().getName() + " :: menteeCode: " + menteeBe.getCode());
+			}
+		}
+
+		if (menteeBe != null) {
+			System.out.println("#### Sending email to mentee to agree for mentoring ####");
+
+            QMessageGennyMSG msg = new QMessageGennyMSG.Builder("MSG_MENTEE_TO_AGREE_MEENTORING")
+                .addRecipient(menteeBe)
+                .addContext("URL:ENCODE", "QUE_FAKE_PARENT/ACT_MENTEE_MENTORING_AGREE")
+                .addContext("BCC", "PRJ_MENTORMATCH")
+                .setUtils(beUtils)
+                .send();
+
+			System.out.println("#### Sent email to mentee to agree for mentoring ####");
+		} else {
+            System.out.println("ERROR: Mentee BE is NULL");
+		}
+		retract(targetBaseEntity)
+		retract(controlSignalCode)
+end

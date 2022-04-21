@@ -1,0 +1,43 @@
+package life.genny.rules;
+
+import life.genny.qwanda.entity.BaseEntity;
+global org.apache.logging.log4j.Logger log;
+import life.genny.rules.QRules;
+import life.genny.utils.VertxUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.FramePosition;
+import life.genny.utils.FrameUtils2;
+import life.genny.models.Frame3;
+import life.genny.models.FramePosition;
+import life.genny.models.GennyToken;
+import life.genny.models.Theme;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwanda.VisualControlType;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.SessionFacts;
+import life.genny.rules.RulesLoader;
+import org.kie.internal.runtime.StatefulKnowledgeSession;
+import java.util.Optional;
+
+rule "RUN_TEST"
+    ruleflow-group 'RunTests'
+    no-loop true
+    salience 10000
+    when
+      serviceToken : GennyToken( code == "PER_SERVICE")
+      kieSession : StatefulKnowledgeSession()
+    then
+				SessionFacts sf = new SessionFacts(serviceToken,serviceToken,"APP_ONE");
+				kieSession.signalEvent("START_MOVE", sf);
+				SessionFacts sf2 = new SessionFacts(serviceToken,serviceToken,"APP_TWO");
+				kieSession.signalEvent("START_MOVE", sf2);
+				
+				Optional<Long> pid = RulesLoader.getProcessIdByWorkflowBeCode("internmatch","APP_57AB12A4-C96C-4095-AD2E-1BAC96259F3B");
+				if (pid.isPresent()) {
+ 					System.out.println("PID is "+pid);
+				} else {
+					System.out.println("PID is NOT FOUND");
+				}
+	retract(kieSession); /* Brutal */
+	end

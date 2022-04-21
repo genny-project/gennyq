@@ -1,0 +1,20 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+
+rule "SEND_ADD_INTERNSHIP_QUESTIONS"
+    ruleflow-group 'Send_Add_Internship_Questions'
+    lock-on-active true
+    when
+	$message : QEventMessage(data.code == "QUE_ADD_NEW_INTERNSHIP")
+      userToken : GennyToken (code != "PER_SERVICE" )
+      output : OutputParam( )
+        
+     then
+
+	 System.out.println("Processing Answer/Data : cyrus" + $message );
+	 output.setResult("FRM_QUE_ADD_NEW_INTERNSHIP");
+	 retract( $message);
+
+	 System.out.printl("Test");
+
+end

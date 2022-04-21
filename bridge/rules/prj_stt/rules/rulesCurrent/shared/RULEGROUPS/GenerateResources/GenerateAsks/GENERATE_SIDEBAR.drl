@@ -1,0 +1,100 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_SIDEBAR"
+    ruleflow-group 'GenerateAsks'
+     no-loop true
+    when
+       not  SearchEntity (code == "GENERATE_SIDEBAR")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+			String sourceCode = "PER_SERVICE";
+			String targetCode = "PER_SERVICE";
+			
+			Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+			Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+			
+			/* sidebar group */
+			Question sidebarQues = new Question("QUE_PROJECT_SIDEBAR_GRP", "Sidebar", questionAttribute, true);
+			Ask sidebarAsk = new Ask(sidebarQues, sourceCode, targetCode);
+			
+			Question dashboardQues = new Question("QUE_DASHBOARD_VIEW", "Home", eventAttribute, true);
+			Ask dashboardAsk = new Ask(dashboardQues, sourceCode, targetCode);
+			
+			Question processViewQues = new Question("QUE_TAB_BUCKET_VIEW", "Progress", eventAttribute, true);
+			Ask processViewAsk = new Ask(processViewQues, sourceCode, targetCode);
+
+			Question contactsQues = new Question("QUE_TREE_ITEM_CONTACTS_GRP", "Contacts", questionAttribute, true);
+			Ask contactsAsk = new Ask(contactsQues, sourceCode, targetCode);
+
+				Question adminsQues = new Question("QUE_TREE_ITEM_ADMINS", "Admins", eventAttribute, true);
+				Question eduProRepsQues = new Question("QUE_TREE_ITEM_EPRS", "Trainers", eventAttribute, true);
+				Question studentsQues = new Question("QUE_TREE_ITEM_STUDENTS", "Students", eventAttribute, true);
+				Question teamsQues = new Question("QUE_TREE_ITEM_TEAMS", "Classes", eventAttribute, true);
+				
+				Ask adminsAsk = new Ask(adminsQues, sourceCode, targetCode);
+				Ask eduProRepsAsk = new Ask(eduProRepsQues, sourceCode, targetCode);
+				Ask studentsAsk = new Ask(studentsQues, sourceCode, targetCode);
+				Ask teamsAsk = new Ask(teamsQues, sourceCode, targetCode);
+
+				Ask[] contactsChildAsks = { adminsAsk, eduProRepsAsk, studentsAsk, teamsAsk };
+				contactsAsk.setChildAsks(contactsChildAsks);
+			
+			Question definitionsViewQues = new Question("QUE_STT_DEFINTIONS", "Definitions", eventAttribute, true);
+			Ask definitionsViewAsk = new Ask(definitionsViewQues, sourceCode, targetCode);
+
+			Question warningsViewQues = new Question("QUE_STT_WARNINGS", "Warnings", eventAttribute, true);
+			Ask warningsViewAsk = new Ask(warningsViewQues, sourceCode, targetCode);
+
+			/* Scenarios */
+			Question scenariosQues = new Question("QUE_UNITY_PLAYER", "Test Your Knowledge", eventAttribute, true);
+			Ask scenariosAsk = new Ask(scenariosQues, sourceCode, targetCode);
+
+			Question resultsViewQues = new Question("QUE_RESULTS_GRP", "Results", eventAttribute, true);
+			Ask resultsViewAsk = new Ask(resultsViewQues, sourceCode, targetCode);
+			
+			Ask[] adminSidebar = { dashboardAsk, processViewAsk, contactsAsk, definitionsViewAsk, warningsViewAsk, scenariosAsk };
+			Ask[] eduProRepSidebar = { dashboardAsk, processViewAsk, contactsAsk, definitionsViewAsk, warningsViewAsk, scenariosAsk };
+			Ask[] studentSidebar = { dashboardAsk, definitionsViewAsk, warningsViewAsk, scenariosAsk, resultsViewAsk };
+			
+			sidebarAsk.setChildAsks(adminSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_ADMIN", sidebarAsk, serviceToken.getToken());
+			
+			/* Edu Pro Rep should not see Admins in contacts */
+			Ask[] eduProContactsChildAsks = { eduProRepsAsk, studentsAsk, teamsAsk };
+			contactsAsk.setChildAsks(eduProContactsChildAsks);
+
+			sidebarAsk.setChildAsks(eduProRepSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_EDU_PRO_REP", sidebarAsk, serviceToken.getToken());
+
+			sidebarAsk.setChildAsks(studentSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_STUDENT", sidebarAsk, serviceToken.getToken());
+
+end

@@ -1,0 +1,99 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+import life.genny.qwanda.EEntityStatus;
+
+
+
+rule "PRI_SEARCH_TEXT_SET_BE_STATUS"
+    ruleflow-group 'DataProcessing'
+        salience 10000
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "TEST" || code == "SUPERUSER" || code == "DEV")
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("!setstatus:")) )
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  userToken : GennyToken( code != "PER_SERVICE")
+	  output : OutputParam( )
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+   		retract(answer);
+   		
+   		String sourceCode = beUtils.getGennyToken().getUserCode();
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		
+		/* setstatus:PER_XXX:ACTIVE */
+		
+		String[] split = answer.getValue().split(":");
+		
+		String targetCode = "";
+		String status = "";
+		
+		if (split.length == 3) {
+			targetCode = split[1].trim();
+			status = split[2].trim();
+			
+			System.out.println("targetCode :: " + targetCode);
+			System.out.println("status :: " + status);
+
+			if (targetCode != null && status != null ) {
+				BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+				
+				switch (status) {
+					case "ACTIVE": target.setStatus(EEntityStatus.ACTIVE); break;
+					case "DELETED": target.setStatus(EEntityStatus.DELETED); break;
+					case "PENDING": target.setStatus(EEntityStatus.PENDING); break;
+					case "ARCHIVED": target.setStatus(EEntityStatus.ARCHIVED); break;
+					case "PENDING_DELETE": target.setStatus(EEntityStatus.PENDING_DELETE); break;
+					case "TEST": target.setStatus(EEntityStatus.TEST); break;
+					case "TEMPORARY": target.setStatus(EEntityStatus.TEMPORARY); break;
+				
+				}
+				beUtils.updateBaseEntity(target);
+				
+				System.out.println("Saved Status!!");
+			} else {
+				System.out.println("One of your dudes was null");
+			}
+		} else {
+			System.out.println("length was incorrect for setstatus: " +split.length);
+		}
+		
+	
+		output.setTypeOfResult("NO_PROCESSING");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+		
+end

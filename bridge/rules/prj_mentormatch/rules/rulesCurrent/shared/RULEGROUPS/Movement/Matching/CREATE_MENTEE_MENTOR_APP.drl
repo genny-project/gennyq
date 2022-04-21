@@ -1,0 +1,85 @@
+package life.genny.rules;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.qwandautils.JsonUtils;
+
+rule "CREATE_MENTEE_MENTOR_APP"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity( code matches "APP_\\S+" )
+        associatedMenteeBe : BaseEntity( code matches "PER_\\S+" )
+        associatedMentorBe : BaseEntity( code matches "PER_\\S+" )
+		bucketCode : String(bucketCode.equals("MENTOR"))
+		controlSignalCode : String(controlSignalCode.equals("INVITE"))
+    then
+ 		System.out.println(drools.getRule().getName() + " :: Rule fired");
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		System.out.println(drools.getRule().getName() + " :: newApplication = " + newApplication.getCode());
+
+        BaseEntity application = beUtils.getBaseEntityByCode(newApplication.getCode());
+        System.out.println("application = " + application.getCode());
+
+		BaseEntity menteeBe = beUtils.getBaseEntityByCode(associatedMenteeBe.getCode());
+        System.out.println("menteeCode = " + menteeBe.getCode());
+
+ 		BaseEntity mentorBe = beUtils.getBaseEntityByCode(associatedMentorBe.getCode());
+ 		System.out.println("mentorCode = " + mentorBe.getCode());
+
+		if (mentorBe != null) {
+ 		    /* Changing status of mentor and mentee as invite send to mentor */
+            beUtils.saveAnswer(new Answer(userToken.getUserCode(), mentorBe.getCode(), "PRI_STATUS", "MATCHED"));
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), menteeBe.getCode(), "PRI_STATUS", "MATCHED"));
+           
+			/* Saving APP code in PER Mentor and PER Mentee */
+			if (application.getCode() != null) {
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), mentorBe.getCode(), "LNK_APPLICATION", application.getCode()));
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), menteeBe.getCode(), "LNK_APPLICATION", application.getCode()));
+			}
+
+            /* Send confirmation Email to Mentee */
+             System.out.println("#### Sending email to Mentee confirming email sent to Mentor for M&G1 invite ####");
+
+            QMessageGennyMSG menteeMsg = new QMessageGennyMSG.Builder("MSG_MENTEE_CONFIRM_INVITE_MENTOR")
+                .addRecipient(menteeBe)
+                .addContext("MENTOR", mentorBe)
+                .addContext("BCC", "PRJ_MENTORMATCH")
+                .setUtils(beUtils)
+                .send();
+
+            System.out.println("MSG_MENTEE_CONFIRM_INVITE_MENTOR: msg " + JsonUtils.toJson(menteeMsg));
+
+            /* Send Invite Email to Mentor */
+             System.out.println("#### Sending email to Mentor informing about the invite by Mentee for M&G1 ####");
+
+            QMessageGennyMSG mentorMsg = new QMessageGennyMSG.Builder("MSG_MENTEE_INVITE_MENTOR")
+                .addRecipient(mentorBe)
+                .addContext("URL:ENCODE", application.getCode() +"/ACT_MENTOR_AGREE_TO_MENTOR")
+                .addContext("BCC", "PRJ_MENTORMATCH")
+                .setUtils(beUtils)
+                .send();
+
+            System.out.println("MSG_MENTEE_INVITE_MENTOR: msg " + JsonUtils.toJson(mentorMsg));
+        }
+        TimeUnit.SECONDS.sleep(5);
+        System.out.println("SENDING MESSAGE TO FRONTEND");
+        menteeBe = beUtils.getBaseEntityByCode(menteeBe.getCode());
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(menteeBe);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msg));
+
+        TableUtils.searchTable(beUtils,"SBE_SUMMARY_MENTORS", true);
+        
+        retract(newApplication)
+        retract(bucketCode)
+        retract(controlSignalCode)
+end

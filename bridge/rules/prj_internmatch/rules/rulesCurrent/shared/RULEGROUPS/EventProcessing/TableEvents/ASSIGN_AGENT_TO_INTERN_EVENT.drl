@@ -1,0 +1,46 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+
+rule "ASSIGN_AGENT_TO_INTERN_EVENT"
+  ruleflow-group 'EventProcessing'
+  salience 2
+  no-loop
+  when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_ASSIGN_AGENT_TO_INTERN")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+
+  then
+    System.out.println(drools.getRule().getName() + " triggered");
+
+		String targetCode = $message.getData().getTargetCode();
+		if(targetCode == null){
+			System.out.println("targetCode is null");
+			return;
+		}
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_ASSIGN_AGENT_TO_INTERN");
+		output.setTargetCode(targetCode);
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, targetCode);
+		retract( $message);
+	end

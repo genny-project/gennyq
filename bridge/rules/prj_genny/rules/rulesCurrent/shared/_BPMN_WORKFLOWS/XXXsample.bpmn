@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions id="Definition"
+    targetNamespace="http://www.jboss.org/drools"
+    typeLanguage="http://www.java.com/javaTypes"
+    expressionLanguage="http://www.mvel.org/2.0"
+    xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+    xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+    xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd">
+
+    <process id="rulescurrent.shared.00_Startup.sample" name="Hello jBPM World" processType="Private" isExecutable="true">
+        <startEvent id="startEventId" />
+
+        <scriptTask id="scriptTaskId" name="Hello">
+            <script>System.out.println("Hello jBPM World!!!");</script>
+        </scriptTask>
+
+        <endEvent id="endEventId">
+            <terminateEventDefinition />
+        </endEvent>
+
+        <sequenceFlow id="startEvent-scriptTask" sourceRef="startEventId" targetRef="scriptTaskId" />
+        <sequenceFlow id="scriptTask-endEvent" sourceRef="scriptTaskId" targetRef="endEventId" />
+    </process>
+
+    <bpmndi:BPMNDiagram>
+        <bpmndi:BPMNPlane bpmnElement="rulescurrent.shared.00_Startup.sample">
+            <bpmndi:BPMNShape bpmnElement="scriptTaskId">
+                <dc:Bounds x="96" y="16" width="80" height="48" />
+            </bpmndi:BPMNShape>
+
+            <bpmndi:BPMNShape bpmnElement="startEventId">
+                <dc:Bounds x="30" y="22" width="36" height="36" />
+            </bpmndi:BPMNShape>
+
+            <bpmndi:BPMNShape bpmnElement="endEventId">
+                <dc:Bounds x="210" y="22" width="36" height="36" />
+            </bpmndi:BPMNShape>
+
+            <bpmndi:BPMNEdge bpmnElement="startEvent-scriptTask">
+                <di:waypoint x="66" y="40" />
+                <di:waypoint x="96" y="40" />
+            </bpmndi:BPMNEdge>
+
+            <bpmndi:BPMNEdge bpmnElement="scriptTask-endEvent">
+                <di:waypoint x="176" y="40" />
+                <di:waypoint x="210" y="40" />
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>

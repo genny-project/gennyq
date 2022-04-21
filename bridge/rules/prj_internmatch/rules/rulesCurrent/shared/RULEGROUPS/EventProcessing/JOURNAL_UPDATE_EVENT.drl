@@ -1,0 +1,167 @@
+package life.genny.rules;
+
+
+import org.apache.commons.lang3.StringUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import life.genny.utils.SearchCallable;
+import life.genny.utils.TableFrameCallable;
+
+
+rule "JOURNAL_UPDATE_EVENT"
+    ruleflow-group 'JournalProcessing'
+	salience 2
+    no-loop
+    when
+			message : QEventMessage(data.code matches "JOURNAL_UPDATE" )
+			userToken : GennyToken (code != "PER_SERVICE" )
+			serviceToken : GennyToken( code == "PER_SERVICE")
+
+    then
+		System.out.println("JOURNL_UPDATE_EVENT Journal Update Processing : " + message );
+		
+		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+		beUtils.setServiceToken(serviceToken);
+
+		String userWhoUpdatedJournals = message.getData().getParentCode();
+		String listOfChangedJournals = message.getData().getTargetCode();
+		String webhookURL = null;
+		String studentName = "Unknown";
+		String hostCompany = "Unknown";
+		String educationProvider = "Unknown";
+		LocalDateTime updateTime = null;
+
+		List<String> changedJournals = new ArrayList<String>(); /*
+																 * Stream.of(listOfChangedJournals.split(",",
+																 * -1)).collect(Collectors.toList());
+																 */
+		String[] journalArray = listOfChangedJournals.split(",", -1);
+		for (String journalCode : journalArray) {
+			changedJournals.add(journalCode);
+		}
+
+		List<BaseEntity> journals = new ArrayList<BaseEntity>();
+		for (String journalCode : changedJournals) {
+			BaseEntity journal = beUtils.getBaseEntityByCode(journalCode);
+			journals.add(journal);
+
+		}
+
+		/* studentName = user.getValue("PRI_LASTNAME",true); */
+		/* updateTime = journal.getValue("PRI_INTERN_LAST_UPDATE",true); */
+
+		Map<String, BaseEntity> internMap = new HashMap<String, BaseEntity>();
+		Map<String, BaseEntity> supervisorMap = new HashMap<String, BaseEntity>();
+
+		for (BaseEntity journal : journals) {
+			if (journal != null) {
+				String journalName = journal.getName();
+				String status = journal.getValue("PRI_STATUS", "NO STATUS");
+
+				Optional<String> optHostCompanySupervisorCode = journal.getValue("LNK_INTERN_SUPERVISOR");
+				if (optHostCompanySupervisorCode.isPresent()) {
+					String supervisorCode = optHostCompanySupervisorCode.get();
+					supervisorCode = supervisorCode.substring(2);
+					supervisorCode = supervisorCode.substring(0, (supervisorCode.length() - 2));
+					BaseEntity supervisor = beUtils.getBaseEntityByCode(supervisorCode);
+				}
+
+				Optional<String> optInternCode = journal.getValue("LNK_INTERN");
+				if (optInternCode.isPresent()) {
+					String internCode = optInternCode.get();
+					internCode = internCode.substring(2);
+					internCode = internCode.substring(0, (internCode.length() - 2));
+					BaseEntity intern = beUtils.getBaseEntityByCode(internCode);
+					studentName = intern.getName();
+					Optional<String> optEduCode = intern.getValue("LNK_EDU_PROVIDER");
+					if (optEduCode.isPresent()) {
+						String eduCode = optEduCode.get();
+						eduCode = eduCode.substring(2);
+						eduCode = eduCode.substring(0, (eduCode.length() - 2));
+						BaseEntity edu = beUtils.getBaseEntityByCode(eduCode);
+						educationProvider = edu.getName();
+					}
+					hostCompany = intern.getValue("PRI_ASSOC_HOST_COMPANY", "NOT SET");
+				}
+
+				BaseEntity agent = beUtils.getBaseEntityByCode("CPY_OUTCOME_LIFE");
+				webhookURL = agent.getValueAsString("PRI_SLACK");
+
+				/* Sending Slack Notification */
+
+				updateTime = LocalDateTime.now();
+
+				JsonObject msgpayload = new JsonObject("{\n" + "   \"blocks\":[\n" + "      {\n"
+						+ "         \"type\":\"section\",\n" + "         \"text\":{\n"
+						+ "            \"type\":\"mrkdwn\",\n" + "            \"text\":\"New Journal (" + status
+						+ ") -> " + journalName + " :memo:\"\n" + "         }\n" + "      },\n" + "      {\n"
+						+ "         \"type\":\"divider\"\n" + "      },\n" + "      {\n"
+						+ "         \"type\":\"section\",\n" + "         \"fields\":[\n" + "            {\n"
+						+ "               \"type\":\"mrkdwn\",\n" + "               \"text\":\"*Student:*\\n"
+						+ studentName + "\"\n" + "            },\n" + "            {\n"
+						+ "               \"type\":\"mrkdwn\",\n" + "               \"text\":\"*Time:*\\n" + updateTime
+						+ "\"\n" + "            },\n" + "            {\n" + "               \"type\":\"mrkdwn\",\n"
+						+ "               \"text\":\"*Host Company:*\\n" + hostCompany + "\"\n" + "            },\n"
+						+ "            {\n" + "               \"type\":\"mrkdwn\",\n"
+						+ "               \"text\":\"*Education Provider:*\\n" + educationProvider + "\"\n"
+						+ "            }\n" + "         ]\n" + "      },\n" + "      {\n"
+						+ "         \"type\":\"divider\"\n" + "      },\n" + "      {\n"
+						+ "         \"type\":\"context\",\n" + "         \"elements\":[\n" + "            {\n"
+						+ "               \"type\":\"mrkdwn\",\n"
+						+ "               \"text\":\"*Last updated:* 9:15 AM May 22, 2020\"\n" + "            }\n"
+						+ "         ]\n" + "      }\n" + "   ]\n" + "}");
+
+				System.out.println("Payload is" + msgpayload.toString());
+
+				try {
+					QwandaUtils.apiPostEntity(webhookURL, msgpayload.toString(), serviceToken.getToken());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+
+		retract(message);
+
+		end

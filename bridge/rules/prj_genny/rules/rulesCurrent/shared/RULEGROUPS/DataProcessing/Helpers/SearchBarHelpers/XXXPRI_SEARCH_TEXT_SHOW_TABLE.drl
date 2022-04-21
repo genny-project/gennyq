@@ -1,0 +1,93 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+
+
+
+rule "PRI_SEARCH_TEXT_SHOW_TABLE"
+    ruleflow-group 'DataProcessing'
+        salience 500
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "SHOW_TABLE" || code == "TEST") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("table:")) )   /* this is a pure search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+   		retract(answer);
+   		
+		/* Now import athe Searchbar code */
+		String searchBeCode = null;
+		String[] split = answer.getValue().split(":");
+		if (split.length == 2) {
+			searchBeCode = split[1];		
+			searchBeCode = searchBeCode.toUpperCase().trim();
+			System.out.println("searchBEcode = "+searchBeCode);
+			/* get current search */
+ 	   		 TableUtils tableUtils = new TableUtils(beUtils);
+ 	   		 System.out.println("Got to here 0");
+			 SearchEntity searchBE = tableUtils.getSessionSearch(searchBeCode);
+			System.out.println("Got to here 1");
+ 	        Answer pageAnswer = new Answer(beUtils.getGennyToken().getUserCode(),searchBE.getCode(), "SCH_PAGE_START", "0");
+			Answer pageNumberAnswer = new Answer(beUtils.getGennyToken().getUserCode(),searchBE.getCode(), "PRI_INDEX", "1");
+			System.out.println("Got to here 2");
+
+			searchBE = beUtils.updateBaseEntity(searchBE, pageAnswer,SearchEntity.class);
+			searchBE = beUtils.updateBaseEntity(searchBE, pageNumberAnswer,SearchEntity.class);
+			System.out.println("Got to here 3");
+
+			VertxUtils.putObject(beUtils.getGennyToken().getRealm(), "", searchBE.getCode(), searchBE,
+			beUtils.getGennyToken().getToken());
+			System.out.println("Got to here 4");
+
+			/* show tab-view first */
+ 	   		 ShowFrame.display(beUtils.getGennyToken(), "FRM_QUE_TAB_VIEW", "FRM_CONTENT", "Test");
+			System.out.println("Got to here 5");
+
+			/* show table-view inside tab-content */
+			ShowFrame.display(beUtils.getGennyToken(), "FRM_TABLE_VIEW", "FRM_TAB_CONTENT", "Test");
+			System.out.println("Got to here 6");
+
+ 			tableUtils.performSearch(beUtils.getGennyToken(), serviceToken,searchBeCode, null);	
+ 			System.out.println("Got to here 7");
+ 					
+		}
+		System.out.println("Got to here 8");
+				 
+		output.setTypeOfResult("NO_PROCESSING");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+
+		
+		
+end

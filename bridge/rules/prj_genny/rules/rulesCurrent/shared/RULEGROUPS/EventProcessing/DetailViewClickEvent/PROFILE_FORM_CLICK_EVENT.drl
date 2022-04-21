@@ -1,0 +1,76 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "PROFILE_FORM_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop true
+    when
+		$message : QEventMessage(data.code matches "QUE_AVATAR_PROFILE_GRP")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		
+    then
+		System.out.println("Processing EDIT FORM CLICK EVENT : " + $message );
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		String sourceCode = $message.getData().getRootCode();
+		System.out.println("sourceCode: " +sourceCode);
+		
+       	BaseEntity sourceBe = beUtils.getBaseEntityByCode(sourceCode);
+       	System.out.println("sourceBe: " +sourceBe);	
+       	
+       	String role = "";
+       	
+       	if(sourceBe != null) {
+       			Boolean isIntern 	= sourceBe.is("PRI_IS_INTERN");
+       			Boolean isStudent 	= sourceBe.is("PRI_IS_STUDENT");
+				Boolean isEPR 		= sourceBe.is("PRI_IS_EDU_PRO_REP");
+				Boolean isHCR 		= sourceBe.is("PRI_IS_HOST_CPY_REP");
+				Boolean isRPR 		= sourceBe.is("PRI_IS_REF_PART_REP");
+				Boolean isAgent 	= sourceBe.is("PRI_IS_AGENT");
+				Boolean isAdmin 	= sourceBe.is("PRI_IS_ADMIN");
+				Boolean isDev 		= sourceBe.is("PRI_IS_DEV");
+				Boolean isMentee 	= sourceBe.is("PRI_IS_MENTEE");
+				Boolean isMentor 	= sourceBe.is("PRI_IS_MENTOR");
+
+				if(isIntern) 		{role = "INTERN"; }
+				if(isStudent) 		{role = "STUDENT"; }
+				if(isEPR) 	 		{role = "EDU_PRO_REP"; }
+       			if(isHCR)    		{role = "HOST_CPY_REP"; }
+       			if(isRPR)    		{role = "REF_PART_REP"; }
+       			if(isAgent)  		{role = "AGENT"; }
+       			if(isAdmin)  		{role = "ADMIN"; }
+       			if(isDev)    		{role = "DEV"; }
+       			if(isMentee)    	{role = "MENTEE"; }
+       			if(isMentor)    	{role = "MENTOR"; }
+       	}
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_EDIT_ENTITY");
+		output.setTargetCode($message.getData().getRootCode());
+		output.setSuitCase(role);
+		
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ Output TargetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("STARTING PROFILE EDIT FORMS PROCEDURE WITH: " +output);
+	
+		retract( $message);
+	end

@@ -1,0 +1,220 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.notifications.NotificationHelper;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwandautils.GennySettings;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+import java.util.List;
+import java.util.ArrayList;
+import org.json.JSONArray;
+
+rule "IS_INTERNSHIP"
+    ruleflow-group 'IsBaseEntity'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		baseEntityType : String(baseEntityType.equals("INTERNSHIP"))
+		newBe : BaseEntity()
+
+
+     then
+ 		System.out.println("IS_INTERNSHIP: Rule fired" );
+ 		System.out.println("IS_INTERNSHIP: newBe = " + newBe.getCode());
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		List<Answer> answers = new ArrayList<>();
+
+ 		/* Construct answer with Source, Target, Attribute Code, Value */
+
+ 		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_IS_INTERNSHIP", "true")); */
+		answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_STATUS", "ACTIVE"));
+		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_IS_FULL", "false")); */
+		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_CURRENT_INTERNS", "0")); */
+		/* beUtils.saveAnswers(answers); */
+
+		/* Refresh the BaseEntity because reasons... */
+ 		newBe = beUtils.getBaseEntityByCode(newBe.getCode());
+
+ 		BaseEntity appHCBe = beUtils.getBaseEntityFromLNKAttr(newBe, "LNK_HOST_COMPANY");
+		System.out.println("appHCBe = " + appHCBe);
+
+		if(appHCBe != null) {
+				String imageHC = appHCBe.getValue("PRI_IMAGE_URL", null);
+				System.out.println("imageHC = " + imageHC);
+
+				beUtils.quantumLink(userToken.getUserCode(), appHCBe.getCode(), newBe.getCode(), "LNK_INTERNSHIPS");
+
+				if(imageHC != null) {
+						answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_IMAGE_URL", imageHC));
+
+				} else {
+					System.out.println("ERROR: Null imageHC");
+				}
+		} else {
+			System.out.println("ERROR: Null appHCBe");
+		}
+
+		BaseEntity appHCR = beUtils.getBaseEntityFromLNKAttr(newBe, "LNK_INTERN_SUPERVISOR");
+		System.out.println("appHCR = " +appHCR);
+
+		if (appHCR != null) {
+			beUtils.quantumLink(userToken.getUserCode(), appHCR.getCode(), newBe.getCode(), "LNK_INTERNSHIPS");
+		}
+
+		JSONArray jsonArrayWhichDays = new JSONArray(beUtils.getBaseEntityValue(newBe.getCode(), "LNK_WHICH_DAYS").toString());
+
+		int jsonArrayWhichDaysLength = jsonArrayWhichDays.length();
+		System.out.println("jsonArrayWhichDaysLength: " + jsonArrayWhichDaysLength);
+
+		String whichDays = "";
+
+		for(int i=0; i<jsonArrayWhichDaysLength; i++) {
+		BaseEntity whichDaysEntity = beUtils.getBaseEntityByCode(jsonArrayWhichDays.get(i).toString());
+		System.out.println("whichDaysEntity: " + whichDaysEntity);
+
+		if(i==0) {
+				whichDays = whichDaysEntity.getName();
+		} else {
+				whichDays = whichDays + ", " + whichDaysEntity.getName();
+		}
+
+		System.out.println("whichDays: " + whichDays);
+		}
+
+		Answer answerWhichDays = new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_WHICH_DAYS_STRIPPED", whichDays);
+		answers.add(answerWhichDays);
+
+
+
+		BaseEntity user = beUtils.getBaseEntityByCode(newBe.getCode());
+		String title = user.getValue("PRI_NAME",null);
+
+
+
+		String endPoint = GennySettings.projectUrl + "/v7/notes";
+		/*String endPoint = "https://internmatch-cyrus.gada.io/v7/notes";*/
+
+		String tag = "System";
+		String userName = "System";
+		String userImage = "";
+
+		QwandaUtils.apiPostNote(endPoint, userToken.getUserCode(), newBe.getCode(), "Added as an Internship", tag, userName, userImage, serviceToken.getToken());
+
+		System.out.println("I just posted the note");
+		System.out.println("Note endPoint: " +endPoint);
+		System.out.println("Note userToken.getUserCode(): " +userToken.getUserCode());
+
+
+		/* ========== Sending Slack Notification ============ */
+		BaseEntity agent = beUtils.getBaseEntityByCode("CPY_OUTCOME_LIFE");
+		String projectUrl = GennySettings.projectUrl;
+		System.out.println("Slack Notification :: agent :: " + agent);
+		/*String webhookURL = agent.getValueAsString("PRI_SLACK_NEW_INTERNSHIP_URL");*/
+		String webhookURL = agent.getValueAsString("PRI_SLACK_NOTIFICATION_URL");
+		System.out.println("Slack Notification :: webhookURL :: " + webhookURL);
+
+		LocalDateTime updateTime = LocalDateTime.now();
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy");
+		String addedOn = dtf.format(updateTime);
+		String assocHC = newBe.getValue("PRI_ASSOC_HC", null);
+		String internshipName = newBe.getValue("PRI_NAME", null);
+		String internshipIndustry = newBe.getValue("PRI_ASSOC_INDUSTRY", null);
+		String internshipOcc = newBe.getValue("PRI_ASSOC_OCCUPATION", null);
+		LocalDate internshipStartDate = newBe.getValue("PRI_INTERNSHIP_START_DATE", null);
+		String startDateStr = dtf.format(internshipStartDate);
+
+		/* Refresh the BaseEntity because reasons... */
+ 		BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		String userNameStr = userBe.getValue("PRI_NAME", null);
+
+		HashMap<String, String> payloadDataMap = new HashMap<String, String>();
+		payloadDataMap.put("*Added on:* ", addedOn);
+		payloadDataMap.put("*Start Date:* ", startDateStr);
+		payloadDataMap.put("*Internship Name:* ",internshipName);
+		payloadDataMap.put("*Host Company:* ",assocHC);
+		payloadDataMap.put("*Industry:* ",internshipIndustry);
+		payloadDataMap.put("*Specialisation:* ",internshipOcc);
+		payloadDataMap.put("*Added By:* ",userNameStr);
+
+		JsonArray jsonArray2 = new JsonArray();
+		for(String key : payloadDataMap.keySet())
+		{
+			JsonObject jsonChildObj = new JsonObject();
+			jsonChildObj.put("type", "mrkdwn");
+			jsonChildObj.put("text", key + payloadDataMap.get(key));
+			jsonArray2.add(jsonChildObj);
+		}
+
+		JsonObject parent2 = new JsonObject();
+		parent2.put("type", "section");
+		parent2.put("fields", jsonArray2);
+
+		JsonObject child = new JsonObject();
+		child.put("type", "mrkdwn");
+		child.put("text", ":new: *New Internship Opportunity Added!*");
+
+		JsonObject parent = new JsonObject();
+		parent.put("type", "section");
+		parent.put("text", child);
+
+		JsonObject parent3 = new JsonObject();
+		parent3.put("type", "divider");
+
+		JsonArray jsonArray = new JsonArray();
+		jsonArray.add(parent);
+		jsonArray.add(parent2);
+		jsonArray.add(parent3);
+
+		JsonObject msgPayload = new JsonObject();
+		msgPayload.put("blocks", jsonArray);
+
+		System.out.println("Payload is" + msgPayload.toString());
+		if(projectUrl.contains("staging") || projectUrl.contains("dev") )
+		{
+			NotificationHelper.slackNotification(msgPayload.toString(), "T6NKG982D/B025LQM7ZMM/K0W6J1GUagiyRivmSIvAfOAz");
+		}
+		else
+		{
+			NotificationHelper.slackNotification(msgPayload.toString(), "T39561A7P/B027B423NJH/pa7gkQhLBfh1etDEMAgoeYvm");
+		}
+
+		/* quantumCopy(sourceBE, sourceAtt, saveLink, strip, userToken, targetBE, targetAtt)*/
+		beUtils.quantumCopy(newBe, "LNK_NO_OF_INTERNS", false, true, userToken.getUserCode(), newBe.getCode(), "PRI_NO_OF_INTERNS");
+
+
+
+		/* send cmd msg */
+		QCmdMessage msg = new QCmdMessage("TOAST", "INFO");
+		msg.setMessage("Congrats for adding an internship - We will let you know as soon as an intern has applied.");
+		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setSend(true);
+		VertxUtils.writeMsg("webcmds", msg);
+
+		/* String body = "{\"blocks\": [{\"type\": \"section\",\"text\": {\"type\": \"mrkdwn\"," */
+		/* 	+ "\"text\": \":party-parrot: *New Internship Opportunity Added!* :party-parrot:\"}}," */
+		/* 	+ "{\"type\": \"section\",\"fields\": [{\"type\": \"mrkdwn\",\"text\": \"*Host Company:* "+assocHC+"\"}," */
+		/* 	+ "{\"type\": \"mrkdwn\",\"text\": \"*Internship Name:* "+internshipName+"\"}," */
+		/* 	+ "{\"type\": \"mrkdwn\",\"text\": \"*Start Date:* "+startDateStr+"\"}," */
+		/* 	+ "{\"type\": \"mrkdwn\",\"text\": \"*Added on:* "+addedOn+"\"}]},{\"type\": \"divider\"}]}"; */
+
+		/* NotificationHelper.slackNotification(body, "T6NKG982D/B025LQM7ZMM/K0W6J1GUagiyRivmSIvAfOAz"); */
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+
+		beUtils.saveAnswers(answers);
+
+		retract(newBe)
+
+end

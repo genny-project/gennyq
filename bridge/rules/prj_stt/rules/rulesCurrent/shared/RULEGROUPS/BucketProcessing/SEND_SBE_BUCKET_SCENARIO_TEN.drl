@@ -1,0 +1,39 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "SEND_SBE_BUCKET_SCENARIO_TEN"
+	ruleflow-group 'BucketProcessing'
+	salience 6
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		/*allowed: Allowed(code == "VIEW_REGISTERED_STUDENTS" && mode == CapabilityMode.VIEW)*/
+
+	then
+
+		System.out.println(drools.getRule().getName() + " triggered");
+		Boolean cache = true;
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+  
+		long totalTime = TableUtils.searchTable(beUtils,"BUCKET_SCENARIO_TEN", cache);
+		System.out.println("total took " + (totalTime) + " ms"); 
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+end

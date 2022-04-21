@@ -1,0 +1,123 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+import java.util.Map;
+import java.util.HashMap;
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_DISPLAY_CODES"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not  SearchEntity (code == "GENERATE_DISPLAY_CODES")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		Map<String, String> displayCodes = new HashMap<String, String>();
+
+		/* FORM:DETAIL */
+		displayCodes.put("QUE_MENTEE_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_MENTOR_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_ADMIN_MENU", "FORM:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_START_MENTEE_TRAINING", "FORM:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_START_MENTOR_TRAINING", "FORM:DETAIL");
+		displayCodes.put("ACT_AGREE_TO_MENTOR_MENTEE_MEETING", "FORM:DETAIL");
+		displayCodes.put("QUE_QA_MENTEE_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_QA_MENTOR_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_QA_ADMIN_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_FINISH_MENTEE", "FORM:DETAIL");
+		displayCodes.put("QUE_FINISH_MENTOR", "FORM:DETAIL");
+		displayCodes.put("ACT_GO_TO_PROFILE", "FORM:DETAIL");
+		displayCodes.put("ACT_GO_TO_MENTOR_PROFILE", "FORM:DETAIL");
+		displayCodes.put("QUE_AVATAR_PROFILE_GRP", "FORM:DETAIL");
+		displayCodes.put("QUE_QA_CLUB_PRESIDENT_MENU", "FORM:DETAIL");
+
+
+		/* PROCESS */
+		displayCodes.put("QUE_TAB_BUCKET_VIEW", "PROCESS");
+		displayCodes.put("QUE_SELECT_MENTOR_GRP", "PROCESS");
+		displayCodes.put("QUE_MENTOR_MEETING_TIME_GRP", "PROCESS");
+		displayCodes.put("QUE_CREATE_MEETING_GRP", "PROCESS");
+		displayCodes.put("QUE_MENTOR_MENTORING_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTEE_MENTORING_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MEETING_REQUEST_GRP", "PROCESS");
+		displayCodes.put("QUE_VERIFY_MENTOR_GRP", "PROCESS");
+
+
+		/* DASHBOARD */
+		displayCodes.put("QUE_MENTEE_PROFILE_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTOR_PROFILE_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTEE_TRAINING_MODULE_ONE_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTOR_TRAINING_MODULE_ONE_GRP", "DASHBOARD");
+		displayCodes.put("QUE_DASHBOARD_VIEW", "DASHBOARD");
+		displayCodes.put("QUE_MENTEE_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTOR_GRP", "DASHBOARD");
+		displayCodes.put("QUE_ADMIN_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTOR_AGREE_TO_MENTOR_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTOR_AND_MENTEE_UPDATE_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTOR_UPDATE_ON_MEETING_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_MENTEE_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_MENTOR_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_ADMIN_GRP", "DASHBOARD");
+		displayCodes.put("QUE_MENTOR_MEETING_TIME_GRP", "DASHBOARD");
+		displayCodes.put("QUE_CREATE_MEETING_GRP", "DASHBOARD");
+		displayCodes.put("QUE_QA_CLUB_PRESIDENT_GRP", "DASHBOARD");
+		displayCodes.put("ACT_PRI_PRIMARY_AVAILABILITY", "DASHBOARD");
+		displayCodes.put("ACT_PRI_SECONDARY_AVAILABILITY", "DASHBOARD");
+		displayCodes.put("ACT_TERTIARY_AVAILABILITY", "DASHBOARD");
+		displayCodes.put("ACT_PRI_EVENT_SELECT_MENTOR", "DASHBOARD");
+        displayCodes.put("QUE_CLEAR_TASKS", "DASHBOARD");
+
+		/* dialog */
+		displayCodes.put("ACT_MENTOR_MENTORING_AGREE", "DIALOG_FORM");
+		displayCodes.put("ACT_MENTOR_MEETING_AGREE", "DIALOG_FORM");
+		displayCodes.put("ACT_MENTEE_MENTORING_AGREE", "DIALOG_FORM");
+		displayCodes.put("ACT_MEETING_REQUEST", "DIALOG_FORM");
+		displayCodes.put("ACT_PRI_EVENT_SCHEDULE_MENTORING", "DIALOG_FORM");
+		displayCodes.put("ACT_MENTORING_TIME_AGREE", "DIALOG_FORM");
+		displayCodes.put("ACT_VERIFY_MENTEE", "DIALOG_FORM");
+
+		/* TABLE */
+	    displayCodes.put("QUE_TREE_ITEM_AGENTS", "TABLE");
+        displayCodes.put("QUE_TREE_ITEM_MENTEES", "TABLE");
+        displayCodes.put("QUE_TREE_ITEM_MENTORS", "TABLE");
+
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_AGENTS", "TABLE");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_MENTEES", "TABLE");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TREE_ITEM_MENTORS", "TABLE");
+		displayCodes.put("ACT_MENTOR_AGREE_TO_MENTOR", "VIEW:ASK");
+		
+
+		/* DRAWER:DETAIL */
+		displayCodes.put("ACT_PRI_EVENT_VIEW_PROFILE", "DRAWER:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_VIEW", "DRAWER:DETAIL");
+
+		/*FORM*/
+		displayCodes.put("QUE_DRAFTS_GRP", "FORM");
+
+		insert(displayCodes);
+		VertxUtils.putObject(serviceToken.getRealm(), "", "DISPLAY_CODES", displayCodes, serviceToken.getToken());
+end

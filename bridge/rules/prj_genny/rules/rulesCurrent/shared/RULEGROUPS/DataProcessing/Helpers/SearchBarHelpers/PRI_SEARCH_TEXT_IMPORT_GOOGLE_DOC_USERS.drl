@@ -1,0 +1,221 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+import java.io.IOException;
+
+
+
+rule "PRI_SEARCH_TEXT_IMPORT_GOOGLE_DOC_USERS"
+    ruleflow-group 'DataProcessing'
+        salience 510
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "IMPORT_USERS" || code == "TEST") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("googleid:users:")) )   /* this is a pure search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+   		retract(answer);
+   		
+				/* Now import a google doc xls file and generate a List of BaseEntityImports */
+				String googleDocId = null;
+				String sheetId = "Users"; /* default */
+				Integer start=0;
+				Integer finish=10000;
+				String[] split = answer.getValue().split(":");
+				
+				if (split.length == 3) {
+					googleDocId = split[2];
+				} else if (split.length == 4) {
+					googleDocId = split[2];
+					sheetId = split[3].trim();
+				}
+				if  (split.length == 6) {
+					googleDocId = split[2];
+					sheetId = split[3].trim();
+					start = Integer.parseInt(split[4]);
+					finish = Integer.parseInt(split[5]);
+				}
+		
+			googleDocId = googleDocId.trim();
+		
+		 Map<String,String> fieldMapping = new HashMap<String,String>();
+			/* fieldMapping.put("Company Trading Name".toLowerCase(), "PRI_NAME"); */
+			 fieldMapping.put("firstname", "PRI_FIRSTNAME");
+			 fieldMapping.put("lastname", "PRI_LASTNAME");
+			 fieldMapping.put("email", "PRI_EMAIL");
+			 fieldMapping.put("company", "PRI_ASSOC_COMPANY");
+			 fieldMapping.put("password", "PRI_PASSWORD");
+			 fieldMapping.put("roles", "PRI_ROLES");
+			 fieldMapping.put("mobile", "PRI_PHONE");
+			 
+			 fieldMapping.put("UNIQUE_KEY_FIELD", "email");
+			 fieldMapping.put("PREFIX", "PER_");
+
+
+			 				
+				 List<BaseEntityImport> beImports = ImportUtils.importGoogleDoc(googleDocId, sheetId,fieldMapping);
+				 System.out.println("Importing Rule : "+beImports.size()+" items");
+				 /* now generate the baseentity and send through all the answers */
+				 
+				 /* First create The Host Company reps */
+				 
+				 for (BaseEntityImport beImport : beImports) {
+					 if (beImport.getAttributeValuePairList().isEmpty()) {
+						 continue;
+					 }
+				List<Answer> answers = new ArrayList<Answer>();
+				 Integer count=0;
+					 
+					 System.out.println("Import User :"+beImport.getCode()+":"+beImport.getName());
+					 
+				 	/* check if already there */
+				 	BaseEntity be = beUtils.getBaseEntityByCode(beImport.getCode());
+				 	if (be == null) {
+						BaseEntity defBE = beUtils.getDEFByCode("DEF_USER");
+					 	be = beUtils.create(defBE, beImport.getName(), beImport.getCode());
+					 } 
+					Map<String,String> kv = new HashMap<String,String>();
+					 
+					 for (Tuple2<String,String> attributeCodeValue : beImport.getAttributeValuePairList()) {
+					 	if (attributeCodeValue != null) {
+					 		String value = StringUtils.isBlank(attributeCodeValue._2)?"":attributeCodeValue._2; 
+					 		value = value.trim();
+					 		if (value.contains("'")) {
+					 			value = value.replace("'", "\\'");
+					 		}
+					 		kv.put(attributeCodeValue._1,value);
+						}
+					 }
+
+						Boolean intern = false;
+					String[] roles = kv.get("PRI_ROLES").split(",");
+					for (String role : roles) {
+						Answer isSomething = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_IS_"+role.toUpperCase(),"TRUE");
+						answers.add(isSomething);
+						if ("INTERN".equals(role.toUpperCase())) {
+							Answer isImported = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_STATUS","AVAILABLE");
+							answers.add(isImported);
+							intern = true;
+						}
+ 					}
+					
+					String hostCompany = kv.get("PRI_ASSOC_COMPANY");
+					BaseEntity hc = ImportUtils.fetchBaseEntityByName(beUtils, hostCompany,"CPY_");
+
+					if (intern) {
+						if (hc != null) {
+							Answer lnkHC = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"LNK_HOST_COMPANY","[\""+hc.getCode()+"\"]");
+							answers.add(lnkHC);			 
+
+						Answer isHC = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_ASSOC_HC",kv.get("PRI_ASSOC_COMPANY"));
+						answers.add(isHC);
+						}
+						
+					} else {
+						if (hc != null) {
+							Answer lnkHC = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"LNK_COMPANY","[\""+hc.getCode()+"\"]");
+							answers.add(lnkHC);			 
+
+						Answer isHC = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_ASSOC_COMPANY",kv.get("PRI_ASSOC_COMPANY"));
+						answers.add(isHC);
+						}
+
+					}
+					
+					Answer isImported = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_IMPORTED","TRUE");
+					answers.add(isImported);
+					Answer isFirstname = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_FIRSTNAME",kv.get("PRI_FIRSTNAME"));
+					answers.add(isFirstname);
+					Answer isLastname = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_LASTNAME",kv.get("PRI_LASTNAME"));
+					answers.add(isLastname);
+					Answer isEmail = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_EMAIL",kv.get("PRI_EMAIL"));
+					answers.add(isEmail);
+					Answer isMobile = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_PHONE",kv.get("PRI_PHONE"));
+					answers.add(isMobile);
+					Answer isPhone = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_MOBILE",kv.get("PRI_PHONE"));
+					answers.add(isPhone);
+					Answer disabled = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_DISABLED","FALSE");
+					answers.add(disabled);
+
+
+					
+
+					QDataAnswerMessage msg = new QDataAnswerMessage(answers);
+					System.out.println("created QDataAnswerMessage  for "+beImport.getCode()+":"+be.getName());
+					msg.setToken(beUtils.getGennyToken().getToken());
+					msg.setAliasCode("IMPORT");
+					/* creating new user in keycloak */
+					/* ASSUME FIRSTNAME, LASTNAME, EMAIL ARE GOOD!!! TODO */
+					try {
+						String email = kv.get("PRI_EMAIL");
+						String userPassword = kv.get("PRI_PASSWORD");
+						String userId = "";
+						/*System.out.println(" keycloak token is "+serviceToken.getToken());*/
+						if (kv.get("PRI_ROLES").contains("DEV")) {
+							userId = KeycloakUtils.createUser(serviceToken.getToken(), serviceToken.getRealm(),email , kv.get("PRI_FIRSTNAME"), kv.get("PRI_LASTNAME"),  email, userPassword,"dev,admin,test,user", "dev,test,admin,user");
+						} else
+
+						if (kv.get("PRI_ROLES").contains("ADMIN")) {
+							userId = KeycloakUtils.createUser(serviceToken.getToken(), serviceToken.getRealm(),email , kv.get("PRI_FIRSTNAME"), kv.get("PRI_LASTNAME"),  email, userPassword,"admin,user", "admin,user");
+						} else if (kv.get("PRI_ROLES").contains("AGENT")) {
+							userId = KeycloakUtils.createUser(serviceToken.getToken(), serviceToken.getRealm(),email , kv.get("PRI_FIRSTNAME"), kv.get("PRI_LASTNAME"),  email, userPassword,"user", "user");
+							
+						}
+						Answer keycloakId = new Answer(beUtils.getGennyToken().getUserCode(),be.getCode(),"PRI_UUID",userId);
+						answers.add(keycloakId);
+						
+					} catch (IOException e) {
+						/* keycloak exception spits the answer */
+					}
+					
+						System.out.println("inserting new user  message containing all their new attributes");
+						if ((count >=start) && (count <= finish))	
+						{			
+							insert(msg);
+						} else {
+							if (count > finish)	{
+								break;
+							}
+					}
+						count++;
+				 }
+				 System.out.println("Aggregated  all Answers ");
+			
+		System.out.println("Finished insertion of QDataAnswerMessage containing imported");		
+		output.setTypeOfResult("NONE");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+		
+end

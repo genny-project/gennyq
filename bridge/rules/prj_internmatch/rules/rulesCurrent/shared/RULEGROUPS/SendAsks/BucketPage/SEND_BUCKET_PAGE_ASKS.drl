@@ -1,0 +1,60 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "SEND_BUCKET_PAGE_ASKS"
+	ruleflow-group 'SendAsks'
+	salience 8
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		beUtils : BaseEntityUtils()
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		/* get the bucketPage ask from cache */
+		Ask bucketPageAsk = VertxUtils.getObject(serviceToken.getRealm(), "", "BUCKET_PAGE", Ask.class, serviceToken.getToken());
+
+		if(bucketPageAsk == null){
+			System.out.println("bucketPageAsk is not in cache");
+
+		}else{
+			
+			String json = JsonUtils.toJson(bucketPageAsk);
+			json = json.replaceAll("PER_SERVICE", userToken.getUserCode());
+
+			bucketPageAsk = JsonUtils.fromJson(json, Ask.class);
+			VertxUtils.sendAskMsg(beUtils, bucketPageAsk);
+		}
+
+		BaseEntity targetBE = beUtils.getBaseEntityByCode("BKT_APPLICATIONS");
+		if (targetBE != null) {
+			VertxUtils.sendBaseEntityMsg(beUtils, targetBE);
+		} else {
+			System.out.println("targetBE is NULL");
+		}
+		
+end

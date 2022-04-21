@@ -1,0 +1,23 @@
+package life.genny.rules;
+
+rule "ROL_TENANT"
+    ruleflow-group 'GenerateCapabilities'
+     no-loop true
+    when
+        not BaseEntity (code == "ROL_TENANT")
+        capabilityUtils : CapabilityUtils()
+        parentUser : BaseEntity (code == "ROL_USER")
+        beUtils : BaseEntityUtils()
+    then
+        System.out.println("   Generate "+drools.getRule().getName());
+
+        BaseEntity defBE = beUtils.getDEFByCode("DEF_ROLE");
+        BaseEntity role = capabilityUtils.getBeUtils().create(defBE, WordUtils.capitalize(drools.getRule().getName().substring(4)), drools.getRule().getName());
+
+        beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), role.getCode(), "PRI_COLOR", "#FFD500", false, true));
+
+        capabilityUtils.inheritRole(role,parentUser);
+
+
+        /* Adding types */
+end

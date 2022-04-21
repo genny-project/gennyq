@@ -1,0 +1,184 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import org.json.JSONArray;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+
+rule "SAVE_AGREEMENT_DOC_DATA"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity()
+		output : OutputParam()
+		bucketCode : String(bucketCode.equals("OFFERED"))
+		controlSignalCode : String(controlSignalCode.equals("EDIT_AGREEMENT"))
+
+
+     then
+ 		System.out.println("SAVE_AGREEMENT_DOC_DATA: Rule fired" );
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+        newApplication =  beUtils.getBaseEntityByCode(newApplication.getCode());
+		/* Construct Business Hours */
+		String lnkBH = newApplication.getValue("LNK_BUSINESS_HOURS", null);
+		System.out.println("lnkBH = " + lnkBH);
+
+
+        String input = lnkBH.replace("[","").replace("]","");
+
+        String[] splt = input.split(",");
+
+        String startStr = splt[0];
+        String endStr = splt[1];
+
+    	String minStart = "";
+    	String minEnd = "";
+
+    	int lenStart = startStr.length();
+    	int lenEnd = endStr.length();
+
+    	if (startStr.contains(".5")) {
+          	minStart = ":30";
+          	startStr = startStr.substring(0, lenStart - 2);
+        } else {
+            minStart = ":00";
+        }
+
+        if (endStr.contains(".5")) {
+            minEnd = ":30";
+          	endStr = endStr.substring(0, lenEnd - 2);
+        } else {
+            minEnd = ":00";
+        }
+
+
+    	double startD = Double.parseDouble(startStr);
+        double endD = Double.parseDouble(endStr);
+
+    	String startMeridiem = "";
+        String endMeridiem = "";
+
+
+        if (startD < 12.0) {
+            startMeridiem = "AM";
+        } else {
+            startMeridiem = "PM";
+            startD = startD - 12.0;
+        }
+
+        if (endD < 12.0) {
+            endMeridiem = "AM";
+        } else {
+            endMeridiem = "PM";
+          	endD = endD - 12.0;
+        }
+
+    	String newStartStr = String.valueOf(startD);
+    	String newEndStr = String.valueOf(endD);
+
+    	int lenNewStart = newStartStr.length();
+    	int lenNewEnd = newEndStr.length();
+
+    	String trimStartStr = newStartStr.substring(0, lenNewStart - 2);
+    	String trimEndStr = newEndStr.substring(0, lenNewEnd - 2);
+
+    	String startTime = trimStartStr + minStart + " "+ startMeridiem;
+    	String endTime = trimEndStr + minEnd + " "+ endMeridiem;
+
+    	System.out.println("Start time = " + startTime);
+        System.out.println("End time = " + endTime);
+
+    	String businessHours = startTime + " - " + endTime;
+    	System.out.println("Business hours = " + businessHours);
+
+		if (businessHours != null) {
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_BUSINESS_HOURS", businessHours));
+				System.out.println("businessHours: " + businessHours);
+		} else {
+			System.out.println("ERROR: Null businessHours");
+		}
+
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MMM-yy");
+        LocalDate localDate_start_date = beUtils.getBaseEntityValueAsLocalDate(newApplication.getCode(), "PRI_WORD_START_DATE");
+        String start_date = null;
+        if (localDate_start_date != null) {
+            start_date = localDate_start_date.toString();
+            localDate_start_date = LocalDate.parse(start_date);
+            if (localDate_start_date != null) {
+                start_date = (String) localDate_start_date.format(dateFormat);
+            }
+        } else {
+            System.out.println("start_date is null or empty " + start_date);
+        }
+		System.out.println("start_date = " +start_date);
+		if (start_date != null) {
+            beUtils.saveAnswer(new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_START_DATE", start_date));
+            System.out.println("start_date: " + start_date);
+
+            beUtils.saveAnswer(new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_WORD_START_DATE", start_date));
+            System.out.println("word_start_date: " + start_date);
+		} else {
+			System.out.println("ERROR: Null start_date");
+		}
+
+		System.out.println("@@@@@@@@@@@@@ SAVE AGREEMENT DOC RULE: SAVING WHICH DAYS @@@@@@@@@@@@@");
+
+		JSONArray jsonArrayWhichDays = new JSONArray(beUtils.getBaseEntityValue(newApplication.getCode(), "LNK_WHICH_DAYS").toString());
+
+		int jsonArrayWhichDaysLength = jsonArrayWhichDays.length();
+		System.out.println("jsonArrayWhichDaysLength: " + jsonArrayWhichDaysLength);
+
+		String whichDays = "";
+
+		for(int i=0; i<jsonArrayWhichDaysLength; i++) {
+				BaseEntity whichDaysEntity = beUtils.getBaseEntityByCode(jsonArrayWhichDays.get(i).toString());
+				System.out.println("whichDaysEntity: " + whichDaysEntity);
+
+				if(i==0) {
+						whichDays = whichDaysEntity.getName();
+				} else {
+						whichDays = whichDays + ", " + whichDaysEntity.getName();
+				}
+				System.out.println("whichDays: " + whichDays);
+		}
+
+		Answer answerWhichDays = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_WHICH_DAYS_STRIPPED", whichDays);
+ 		beUtils.saveAnswer(answerWhichDays);
+
+
+
+		retract(newApplication)
+		retract(bucketCode)
+		retract(controlSignalCode)
+
+end

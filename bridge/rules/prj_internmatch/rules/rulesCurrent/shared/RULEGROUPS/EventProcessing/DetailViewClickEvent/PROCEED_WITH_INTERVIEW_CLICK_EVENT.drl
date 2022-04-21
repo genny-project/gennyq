@@ -1,0 +1,175 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import java.util.List;
+import java.util.HashMap;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import life.genny.utils.validation.MessageValidator;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.message.QMessageGennyMSG;
+import org.apache.commons.lang3.ObjectUtils;
+import life.genny.qwanda.message.QEventMessage;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.text.ParseException;
+import life.genny.utils.ShleemyUtils;
+
+rule "PROCEED_WITH_INTERVIEW_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 100
+	no-loop
+	when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_ACCEPT_INTERVIEW")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		System.out.println("User Has Accepted Interview Schedule");
+
+		String parentCode = $message.getData().getParentCode();
+		System.out.println("parentCode = " + parentCode);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode = " + targetCode);
+
+		BaseEntity applicationBe = beUtils.getBaseEntityByCode(targetCode);
+		System.out.println("applicationBe = " + applicationBe);
+
+		if (applicationBe != null) {
+            /* Fetching internship from application */
+            BaseEntity internshipBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "LNK_INTERNSHIP");
+            System.out.println("internshipBe: "+ internshipBe);
+
+            /* Fetching intern from application */
+            BaseEntity internBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "PRI_INTERN_CODE");
+            System.out.println("internBe: "+ internBe);
+
+            /* Fetching host company representative from application */
+            BaseEntity hcrBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "LNK_INTERN_SUPERVISOR");
+            System.out.println("hcrBe: "+ hcrBe);
+
+            /* Fetching agent from application */
+            BaseEntity agentBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "LNK_AGENT");
+            System.out.println("agentBe: "+ agentBe);
+
+            String date = null;
+            String time = null;
+
+            BaseEntity hcBe = null;
+            if(hcrBe != null){
+                /* Fetching host company from host company */
+                hcBe = beUtils.getBaseEntityFromLNKAttr(hcrBe, "LNK_HOST_COMPANY");
+                System.out.println("hcBe: "+ hcBe);
+            }
+
+            if(ObjectUtils.allNotNull(internshipBe,internBe,hcBe, hcrBe, agentBe)){
+
+                String interviewType = applicationBe.getValue("PRI_INTERVIEW_TYPE", null);
+                System.out.println("interviewType = " + interviewType);
+
+                /* Handle date and zoning */
+                LocalDateTime interviewDateTime = applicationBe.getValue("PRI_INTERVIEW_START_DATETIME", null);
+                System.out.println("interviewDateTime = " + interviewDateTime);
+                ZonedDateTime zdt = ZonedDateTime.of(interviewDateTime, ZoneId.of("UTC"));
+                System.out.println("zdt = " + zdt);
+
+                DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm:ss z");
+
+                String timezone = hcrBe.getValue("PRI_TIMEZONE_ID", null);
+                System.out.println("timezone = " + timezone);
+
+                if (timezone != null && !timezone.isEmpty()) {
+                    System.out.println("Timezone found for HCR, changing datetime...");
+                    zdt = zdt.withZoneSameInstant(ZoneId.of(timezone));
+                    System.out.println("zdt After zoning: " + zdt);
+                }
+
+                date = zdt.format(dateFormat);
+                time = zdt.format(timeFormat);
+
+                try {
+                    SimpleDateFormat _24HourSDF = new SimpleDateFormat("HH:mm");
+                    SimpleDateFormat _12HourSDF = new SimpleDateFormat("hh:mm a");
+                    Date _24HourDt = _24HourSDF.parse(time);
+
+                    System.out.println("24 Hour Time:: " + _24HourDt);
+                    System.out.println("12 Hour Time:: " + _12HourSDF.format(_24HourDt));
+
+                    if (_12HourSDF.format(_24HourDt) != null) {
+                        time = _12HourSDF.format(_24HourDt);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                System.out.println("date: " +date);
+                System.out.println("time: " +time);
+
+                String url = new StringBuilder()
+                                .append(parentCode)
+                                .append("/")
+                                .append("ACT_PRI_EVENT_VIEW_APPLICATION")
+                                .append("/")
+                                .append(applicationBe.getCode())
+                                .toString();
+
+                Boolean sendEmail = hcrBe.getValue("PRI_EMAIL_FLAG", false);
+                System.out.println("sendEmail: " + sendEmail);
+
+                Boolean isHcrEmailBlank = MessageValidator.isEmailBlank(hcrBe);
+                System.out.println("isHcrEmailBlank: "+ isHcrEmailBlank);
+
+                if(sendEmail && !isHcrEmailBlank){
+                    /* Email is sent to the host company representative */
+                    /* Building sendgrid msg and sending it */
+                    QMessageGennyMSG hcrSendgridMsg = new QMessageGennyMSG.Builder("MSG_IM_HC_REP_INTERN_ACCEPTED_INTERVIEW")
+                        .addRecipient(hcrBe)
+                        .addContext("APPLICATION",applicationBe)
+                        .addContext("INTERNSHIP", internshipBe)
+                        .addContext("INTERN", internBe)
+                        .addContext("HC", hcBe)
+                        .addContext("DATE_INTERVIEW", date)
+                        .addContext("TIME_INTERVIEW", time)
+                        .addContext("URL:ENCODE", url)
+                        .setUtils(beUtils)
+                        .send();
+
+                    System.out.println("Sendgrid msg: "+ JsonUtils.toJson(hcrSendgridMsg));
+                    System.out.println("Sendgrid email sent to host company representative!!");
+                }
+
+                /* Email is sent to the host company representative */
+                /* Building sendgrid msg and sending it */
+                QMessageGennyMSG agentSendgridMsg = new QMessageGennyMSG.Builder("MSG_IM_AGENT_INTERN_ACCEPTED_INTERVIEW")
+                    .addRecipient(agentBe)
+                    .addContext("APPLICATION",applicationBe)
+                    .addContext("INTERNSHIP", internshipBe)
+                    .addContext("INTERN", internBe)
+                    .addContext("HC", hcBe)
+                    .addContext("DATE_INTERVIEW", date)
+                    .addContext("TIME_INTERVIEW", time)
+                    .addContext("URL:ENCODE", url)
+                    .setUtils(beUtils)
+                    .send();
+
+                System.out.println("Sendgrid msg: "+ JsonUtils.toJson(agentSendgridMsg));
+                System.out.println("Sendgrid email sent to agent!!");
+
+            }
+		} else {
+			System.out.println("ApplicationBe is NULL");
+		}
+
+		ShleemyUtils.deleteSchedule(serviceToken, applicationBe.getCode() + "_INTERN_INTERVIEWED_48HR");
+		ShleemyUtils.deleteSchedule(serviceToken, applicationBe.getCode() + "_INTERN_INTERVIEWED_96HR");
+
+	retract($message);
+end

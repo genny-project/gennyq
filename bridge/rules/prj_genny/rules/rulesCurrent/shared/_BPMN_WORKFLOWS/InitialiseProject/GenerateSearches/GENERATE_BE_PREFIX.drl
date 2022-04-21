@@ -1,0 +1,67 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_BE_PREFIX"
+	ruleflow-group 'GenerateSearches'
+	no-loop true
+	when
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		Map<String, String> prefixMap = new HashMap<String, String>();
+
+		/* PER */
+		prefixMap.put("INTERN", "PER");
+		prefixMap.put("HOST_CPY_REP", "PER");
+		prefixMap.put("EDU_PRO_REP", "PER");
+		prefixMap.put("REF_PART_REP", "PER");
+		prefixMap.put("AGENT", "PER");
+		prefixMap.put("STUDENT", "PER");
+		prefixMap.put("ADMIN", "PER");
+		prefixMap.put("PERSON", "PER");
+
+		/* CPY */
+		prefixMap.put("HOST_CPY", "CPY");
+		prefixMap.put("EDU_PRO", "CPY");
+		prefixMap.put("REF_PART", "CPY");
+		prefixMap.put("AGENCY", "CPY");
+
+		/* BEG */
+		prefixMap.put("INTERNSHIP", "BEG");
+		
+		/* TEA */
+		prefixMap.put("TEAM", "TEA");
+
+
+		for (String entity : prefixMap.keySet()) {
+            System.out.println("Saving pefix PRF_" + entity + " : " + prefixMap.get(entity));
+			VertxUtils.putObject(serviceToken.getRealm(), "", "PRF_" + entity, prefixMap.get(entity), serviceToken.getToken());
+		}
+
+end

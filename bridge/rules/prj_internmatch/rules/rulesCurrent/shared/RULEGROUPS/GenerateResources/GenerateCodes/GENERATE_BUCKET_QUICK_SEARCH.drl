@@ -1,0 +1,33 @@
+package life.genny.rules;
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+
+rule "GENERATE_BUCKET_QUICK_SEARCH"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		HashMap<String, String> superSearchData = new HashMap<>();
+		superSearchData.put("SBE_AVAILABLE_INTERNS", "SELF");
+		superSearchData.put("SBE_APPLIED_APPLICATIONS", "LNK_APPLICATIONS");
+		superSearchData.put("SBE_SHORTLISTED_APPLICATIONS", "LNK_APPLICATIONS");
+		superSearchData.put("SBE_INTERVIEWED_APPLICATIONS", "LNK_APPLICATIONS");
+		superSearchData.put("SBE_OFFERED_APPLICATIONS", "LNK_APPLICATIONS");
+		superSearchData.put("SBE_PLACED_APPLICATIONS", "LNK_APPLICATIONS");
+		superSearchData.put("SBE_INPROGRESS_APPLICATIONS", "LNK_APPLICATIONS");
+		
+		VertxUtils.putObject(serviceToken.getRealm(), "", "BUCKET_QUICK_SEARCH", superSearchData, serviceToken.getToken());
+end

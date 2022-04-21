@@ -1,0 +1,254 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import life.genny.qwanda.message.QCmdMessage;
+
+rule "APPLY_VIEW_ITEM_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_APPLY.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+
+    then
+		System.out.println("Processing APPLY EVENT : " + $message );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+
+		String applyType = $message.getData().getTargetCode();
+		System.out.println("applyType: " +applyType);
+
+		String profile = null;
+		BaseEntity targetBe = beUtils.getBaseEntityByCode(applyType);
+		System.out.println("targetBe: " + targetBe);
+
+		if (applyType.startsWith("BEG")){
+
+			String user = userToken.getUserCode();
+			System.out.println("user: " + user);
+
+			targetBe = beUtils.getBaseEntityByCode(user);
+			System.out.println("targetBe: " + targetBe);
+		}
+
+		if (targetBe != null) {
+			profile = targetBe.getValue("PRI_PROFILE", null);
+			System.out.println("profile: " +profile);
+		}
+
+
+		if (profile == null) {
+			System.out.println("Uh uh uh, you didn't say the magic word!!");
+
+			applyType = null;
+			System.out.println("Setting applyType equal to null: " +applyType);
+
+			String toastStr = "Sorry!! Your Intern profile is NOT COMPLETE. Please complete your profile to apply for Internships";
+			VertxUtils.sendCmdMsg(beUtils, "TOAST", "WARNING", toastStr);
+		}
+
+		System.out.println("applyType is " + applyType);
+
+		if(applyType != null){
+
+			Integer threshold = 4;
+			Integer count = 0;
+			Boolean canApplyToInternship = true;
+			if (GennySettings.projectUrl.contains("dev")) {
+				threshold = 100;
+			}
+
+			if (applyType.startsWith("BEG")){
+
+				/* check if the intern has applied to this internship before */
+				SearchEntity searchBE = VertxUtils.getObject(serviceToken.getRealm(), "", "SBE_APPLICATIONS_APPLIED",SearchEntity.class, serviceToken.getToken());
+				if(searchBE != null) {
+					searchBE.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, userToken.getUserCode());
+					try{
+						List<BaseEntity> apps = beUtils.getBaseEntitys(searchBE);
+						System.out.println("The number of apps is "+(apps ==null?"NULL":apps.size()));
+
+						if ((apps!=null) && (apps.size() > 0)) {
+
+							for (BaseEntity app : apps) {
+								String internshipCode = app.getValue("LNK_INTERNSHIP", null);
+									if(internshipCode != null && internshipCode.equals( "[\"" + applyType + "\"]")){
+
+										/* the intern has already applied to this internship */
+
+										String message = "You have already applied to this internship! Please go to 'My Applications' to track the progress.";
+										String applicationStatus = app.getValue("PRI_STATUS", null);
+										if(applicationStatus != null)
+											message += " Application Status: "+ applicationStatus;
+										/* send cmd msg */
+										VertxUtils.sendCmdMsg(beUtils, "TOAST", "INFO", message);
+										return;
+									}
+							}
+
+							count = apps.size();
+						}
+
+						System.out.println("BEG:: count: " + count + " threshold: " + threshold);
+
+						if(count > threshold ){
+							System.out.println("Intern has already been applied to " + count +" internships   ::   ");
+							canApplyToInternship = false;
+						}
+
+					} catch (Exception e) {
+						System.out.println("Error in " + drools.getRule().getName() +"\n Exception Details   ::   "+e.toString());
+					}
+
+				}
+
+				if(canApplyToInternship) {
+					System.out.println("Applying from the internship search page!!");
+
+					String user = userToken.getUserCode();
+					System.out.println("Search Apply user: " + user);
+					output.setAskSourceCode(user);
+
+					String code = $message.getData().getCode();
+					String workflowSignalCode = "PRI_EVENT_SEARCH_APPLY";
+
+					/* send cmd msg */
+					QCmdMessage msg = new QCmdMessage("TOAST", "INFO");
+					msg.setMessage("Please wait while we process your application!");
+					msg.setToken(beUtils.getGennyToken().getToken());
+					msg.setSend(true);
+					VertxUtils.writeMsg("webcmds", msg);
+
+					output.setTypeOfResult("SIGNAL");
+					output.setResultCode("START_"+workflowSignalCode);
+					output.setTargetCode($message.getData().getTargetCode());
+					output.setSuitCase(user);
+
+					System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+
+					SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+
+					System.out.println("START SIGNAL: " +workflowSignalCode);
+
+				} else {
+					System.out.println("Can't apply for internship now");
+
+					/* send cmd msg */
+					QCmdMessage msg = new QCmdMessage("TOAST", "INFO");
+					msg.setMessage("Sorry! You can't apply for this internship.");
+					msg.setToken(beUtils.getGennyToken().getToken());
+					msg.setSend(true);
+					VertxUtils.writeMsg("webcmds", msg);
+				}
+
+			} else if (applyType.startsWith("PER")){
+
+				/* check if intern is allowed to apply for internship */
+
+				/* ============================= */
+				System.out.println("Checking if Agent can apply for internship");
+
+
+				/* get total number of journals */
+				SearchEntity searchBE = new SearchEntity("SBE_COUNT_APPS", "SBE_COUNT_APPS")
+							.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+							.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+							.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.LIKE, "%" + $message.getData().getTargetCode() + "%")
+							.addColumn("PRI_CODE", "Name");
+
+				try {
+					List<BaseEntity> apps = beUtils.getBaseEntitys(searchBE);
+
+					System.out.println("The number of apps is " + (apps == null ? "NULL" : apps.size()));
+
+					if ((apps != null) && (apps.size() > 0)) {
+
+							System.out.println("Total Apps before filtering   ::   " + apps.size());
+
+							apps.removeIf(app -> {
+									return (app.getValueAsString("PRI_STATUS").equals("REJECT") || app.getValueAsString("PRI_STATUS").equals("WITHDRAWN"));
+							});
+
+							System.out.println("Total Apps after filtering    ::   " + apps.size());
+
+							count = apps.size();
+					}
+					threshold = 100;
+
+					System.out.println("PER:: count: " + count + " threshold: " + threshold);
+
+
+					if(count > threshold ){
+						System.out.println("Intern has already been applied to " + count +" internships   ::   ");
+						canApplyToInternship = false;
+					}
+
+
+				} catch (Exception e1) {
+					count = 0;
+					System.out.println("No Applications yet for " + $message.getData().getTargetCode());
+				}
+
+
+				/* ============================= */
+				if(canApplyToInternship){
+
+					/* send redirect display msg */
+					QCmdMessage displayMsg = new QCmdMessage("DISPLAY", "DIALOG_FORM");
+					displayMsg.setToken(beUtils.getGennyToken().getToken());
+					displayMsg.setSend(true);
+					VertxUtils.writeMsg("webcmds", displayMsg);
+
+					System.out.println("Applying from the Process or Table View!!");
+
+					String code = $message.getData().getCode(); /* get click event code e.g. QUE_ADD_EDU_PROVIDER_GRP  */
+					String workflowSignalCode = StringUtils.removeEnd(code, "_PER_INTERN");
+					workflowSignalCode = "PRI_EVENT_APPLY";
+
+					output.setTypeOfResult("SIGNAL");
+					output.setResultCode("START_"+workflowSignalCode);
+					output.setTargetCode($message.getData().getTargetCode());
+
+					System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+
+					SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+					/*SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());*/
+
+					System.out.println("START SIGNAL: " +workflowSignalCode);
+					System.out.println("STARTING THE NEW APPLICATION WITH: " +output);
+
+				}else{
+					System.out.println("Can't apply for internship now");
+
+					/* send cmd msg */
+					QCmdMessage msg = new QCmdMessage("TOAST", "INFO");
+					msg.setMessage("Sorry! You can't apply for this internship.");
+					msg.setToken(beUtils.getGennyToken().getToken());
+					msg.setSend(true);
+					VertxUtils.writeMsg("webcmds", msg);
+				}
+
+
+			} else {
+				System.out.println("NO BEG OR PER PASSED INTO APPLY_VIEW_ITEM_CLICK_EVENT!!");
+			}
+		}
+		retract( $message);
+	end

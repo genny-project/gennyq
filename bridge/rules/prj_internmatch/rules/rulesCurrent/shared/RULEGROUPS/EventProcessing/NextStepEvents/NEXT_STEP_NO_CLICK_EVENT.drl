@@ -1,0 +1,46 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+import life.genny.qwanda.message.QCmdMessage;
+
+
+rule "NEXT_STEP_NO_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage(data.code matches "QUE_NO.*"  && data.parentCode matches "QUE_NEXT_STEP_.*" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		QCmdMessage msg = new QCmdMessage("DISPLAY", "DASHBOARD");
+		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setSend(true); 
+
+		/* Send cmd message */
+		VertxUtils.writeMsg("webcmds",msg);
+
+		drools.setFocus("TimelineProcessing");
+		retract( $message);
+	end

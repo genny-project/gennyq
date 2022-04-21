@@ -1,0 +1,161 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.ShleemyUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwandautils.GennySettings;
+import life.genny.notifications.EmailHelper;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+rule "REMIND_MENTORING_SESSIONS"
+    ruleflow-group 'EventProcessing'
+    no-loop true
+    salience 5
+    when
+   		$message : QEventMessage(data.code == "SCHEDULE_MENTORING_REMINDER_24HRS_BEFORE")
+   		userToken : GennyToken  ()
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		beUtils : BaseEntityUtils ()
+     then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+ 		System.out.println("Current Time is "+LocalDateTime.now());
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode: " +targetCode);	
+		
+		BaseEntity mentoringSession = beUtils.getBaseEntityByCode(targetCode);
+		String menteeBeCode = mentoringSession.getValue("PRI_MENTEE_CODE", null);
+		String mentorBeCode = mentoringSession.getValue("PRI_MENTOR_CODE", null);
+		
+		String meetingTime = mentoringSession.getValue("PRI_MEETING_TIME", null);
+		
+		BaseEntity menteeBe = beUtils.getBaseEntityByCode(menteeBeCode);
+		BaseEntity mentorBe = beUtils.getBaseEntityByCode(mentorBeCode);
+		
+		System.out.println("^^^^^^^^^ menteeBeCode = " + menteeBeCode);
+		System.out.println("^^^^^^^^^ mentorBeCode = " + mentorBeCode);
+		System.out.println("^^^^^^^^^ meetingTime = " + meetingTime);
+		
+		if (menteeBe != null) {
+			System.out.println("Sending email remind to mentee for meeting");
+
+			/* SEND EMAIL */
+                String menteeEmail = menteeBe.getValue("PRI_EMAIL", null);
+				System.out.println("menteeEmail: " + menteeEmail);
+
+				String menteeName = menteeBe.getValue("PRI_NAME", null);
+				System.out.println("menteeName: " + menteeName);
+
+				if (menteeEmail != null) {
+
+						String subject = "Reminder: Your upcoming MentorMatch meeting is tomorrow!";
+						String template_id = "d-0ad1e70fb59a4e9dbcd4ecd34d05f6e4";
+
+					    HashMap<String, String> templateData = new HashMap<>();
+
+                        templateData.put("Mentee", menteeName);
+                        templateData.put("MeetingTime", meetingTime);
+
+                        System.out.println("-------- EMAIL DATA --------");
+                        System.out.println("subject: " +subject);
+						System.out.println("template_id: " +template_id);
+						System.out.println("email: " + menteeEmail);
+						System.out.println("Mentee: " +menteeName);
+						System.out.println("----------------------------");
+
+						if (!GennySettings.projectUrl.contains("dev")) {
+
+								List<String> bccList = Arrays.asList("mentormatch@gada.io");
+								EmailHelper.sendGrid(beUtils, menteeEmail, null, bccList, subject, template_id, templateData, true);
+
+
+								System.out.println("Email Sent ||| Subject: " + subject + "||| template_id: " + template_id);
+
+						} else {
+								List<String> bccList = Arrays.asList("mentormatch@gada.io");
+								EmailHelper.sendGrid(beUtils, menteeEmail, null, bccList, subject, template_id, templateData, true);
+
+								System.out.println("Email Sent ||| Subject: " + subject + "||| template_id: " + template_id);
+
+							System.out.println("WARNING: Email not sent because on Dev server");
+						}
+				} else {
+					System.out.println("ERROR Null Mentee email");
+				}
+				
+			}
+			if (mentorBe != null) {
+			System.out.println("Sending email to remind mentor for meeting");
+
+			/* SEND EMAIL */
+                String mentorEmail = mentorBe.getValue("PRI_EMAIL", null);
+				System.out.println("mentorEmail: " + mentorEmail);
+
+				String mentorName = mentorBe.getValue("PRI_NAME", null);
+				System.out.println("mentorName: " + mentorName);
+
+				if (mentorEmail != null) {
+
+						String subject = "Reminder: Your upcoming MentorMatch mentoring session is tomorrow!";
+						String template_id = "d-d269d66e59a647f3a791a7b3309475b1";
+
+						HashMap<String, String> templateData = new HashMap<String, String>();
+
+                        templateData.put("Mentor", mentorName);
+                        templateData.put("MeetingTime", meetingTime);
+
+                        System.out.println("-------- EMAIL DATA --------");
+                        System.out.println("subject: " +subject);
+						System.out.println("template_id: " +template_id);
+						System.out.println("email: " + mentorEmail);
+						System.out.println("Mentor: " +mentorName);
+						System.out.println("----------------------------");
+
+						if (!GennySettings.projectUrl.contains("dev")) {
+
+								List<String> bccList = Arrays.asList("mentormatch@gada.io");
+								EmailHelper.sendGrid(beUtils, mentorEmail, null, bccList, subject, template_id, templateData, true);
+
+								System.out.println("Email Sent ||| Subject: " + subject + "||| template_id: " + template_id);
+
+						} else {
+								List<String> bccList = Arrays.asList("mentormatch@gada.io");
+								EmailHelper.sendGrid(beUtils, mentorEmail, null, bccList, subject, template_id, templateData, true);
+
+								System.out.println("Email Sent ||| Subject: " + subject + "||| template_id: " + template_id);
+
+							System.out.println("WARNING: Email not sent because on Dev server");
+						}
+				} else {
+					System.out.println("ERROR Null Mentor email");
+				}
+		}
+		retract($message)
+end

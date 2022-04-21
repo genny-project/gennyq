@@ -1,0 +1,106 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.TableUtils;
+import life.genny.utils.SearchUtils;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.qwanda.message.QBaseMSGMessageType;
+import life.genny.qwandautils.MessageUtils;
+import life.genny.qwandautils.JsonUtils;
+
+rule "SET_PRI_STATUS_AS_REJECTED"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 100
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		applicationBe : BaseEntity()
+		bucketCode : String(
+				bucketCode == "AVAILABLE" ||
+				bucketCode == "APPLIED" ||
+				bucketCode == "SHORTLISTED" ||
+				bucketCode == "INTERVIEWED" ||
+				bucketCode == "OFFERED" ||
+				bucketCode == "PLACED" ||
+				bucketCode == "PROGRESS" ||
+				bucketCode == "COMPLETED" ||
+				bucketCode == "ANY"
+			)
+		controlSignalCode : String( controlSignalCode.equals("REJECT") )
+		beUtils : BaseEntityUtils()
+
+    then
+		System.out.println(drools.getRule().getName()+" Rule Fired!");
+
+		applicationBe = beUtils.getBaseEntityByCode(applicationBe.getCode());
+        System.out.println("applicationBe "+ applicationBe);
+
+		/* Save the new status */
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), applicationBe.getCode() , "PRI_STAGE", "REJECT"));
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), applicationBe.getCode(), "PRI_REJECTED_BY", userToken.getUserCode()));
+
+		String bucket = "SBE_" + bucketCode + "_APPLICATIONS";
+		TableUtils.moveEntity(applicationBe.getCode(), bucket, null, beUtils);
+
+		System.out.println("REJECTED APPLICATION : " + applicationBe.getCode());
+
+		BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		System.out.println("current user: "+ userBe);
+		String userType = beUtils.whoAreYou(userBe.getCode());
+		Boolean isInternOrHcr = "PRI_IS_HOST_CPY_REP".equals(userType) || "PRI_IS_INTERN".equals(userType);
+
+		if (isInternOrHcr) {
+            BaseEntity internBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "PRI_INTERN_CODE");
+            BaseEntity agentBe = null;
+            if (internBe != null) {
+                agentBe = beUtils.getBaseEntityFromLNKAttr(internBe, "LNK_AGENT");
+            }
+
+           /* Creating url for the applied application */
+            String agentUrl = new StringBuilder()
+                            .append("SBE_APPLIED_APPLICATIONS_")
+                            .append(userToken.getJTI().toUpperCase())
+                            .append("/")
+                            .append("ACT_PRI_EVENT_VIEW")
+                            .append("/")
+                            .append(applicationBe.getCode())
+                            .toString();
+
+            System.out.println("agent email attached url: "+agentUrl);
+			String template_id = null;
+			if ("PRI_IS_INTERN".equals(userType)) {
+				/* Intern has rejected */
+				if (bucketCode.equals("APPLIED")) {
+					template_id = "MSG_AGT9_INTERN_REJECT_APPLIED";
+				} else if (bucketCode.equals("INTERVIEWED")) {
+					template_id = "MSG_AGT10_INTERN_REJECT_INTERVIEWED";
+				}
+			} else {
+				/* Host Cpy Rep has rejected */
+				if (bucketCode.equals("SHORTLISTED")) {
+					template_id = "MSG_AGT11_HCR_REJECT_SHORTLISTED";
+				}
+			}
+
+            /* Init Sendgrid Msg */
+             QMessageGennyMSG sendGridInternMsg = new QMessageGennyMSG.Builder(template_id)
+                .addRecipient(agentBe)
+                .addContext("APPLICATION", applicationBe)
+                .addContext("URL:ENCODE", agentUrl)
+                .setUtils(beUtils)
+                .send();
+
+            System.out.println("Sendgrid msg: "+ JsonUtils.toJson(sendGridInternMsg));
+            System.out.println("Sendgrid email sent to agent!!");
+
+            /* Re generate cached applications */
+            SearchUtils.regenerateCaches(beUtils, applicationBe);
+		} else {
+            System.out.println("Both isIntern and isHostCpyRep failed.");
+		}
+
+		System.out.println("End of " + drools.getRule().getName() + " Rule.");
+end

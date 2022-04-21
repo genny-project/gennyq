@@ -1,0 +1,115 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+import java.time.LocalDateTime;
+import life.genny.qwandautils.QwandaUtils;
+
+import life.genny.qwandautils.GennySettings;
+
+
+import java.util.Optional;
+import life.genny.utils.BaseEntityUtils;
+
+
+
+
+rule "FIX_MISSING_JNL_STATUS"
+    ruleflow-group 'DataProcessing'
+        salience 500
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "SEARCHBAR_CMDS" || code == "TEST") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("fixmissingjnlstatus:")) )   /* this is a pure search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+   		retract(answer);
+   		
+		long starttime = System.currentTimeMillis();
+		long looptime = 0;
+		long searchtime = 0;
+		SearchEntity searchBE = new SearchEntity("SBE_TEST", "All Journals")
+				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%")
+
+				.setPageStart(0).setPageSize(20000);
+
+		searchBE.setRealm(serviceToken.getRealm());
+
+
+		String jsonSearchBE = JsonUtils.toJson(searchBE);
+		/* System.out.println(jsonSearchBE); */
+		String resultJson;
+		BaseEntity result = null;
+		int fixed = 0;
+		try {
+			resultJson = QwandaUtils.apiPostEntity(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/search",
+					jsonSearchBE, serviceToken.getToken());
+			searchtime = System.currentTimeMillis();
+			QDataBaseEntityMessage resultMsg = JsonUtils.fromJson(resultJson, QDataBaseEntityMessage.class);
+			BaseEntity[] bes = resultMsg.getItems();
+			System.out.println("Returned " + bes.length + " items");
+			System.out.println("The count return " + resultMsg.getTotal());
+			/* Now only send the ones that are not synced */
+			List<BaseEntity> unsyncedItemList = new ArrayList<BaseEntity>();
+			int index=0;
+			for (BaseEntity be : bes) {
+				Optional<String> status = be.getValue("PRI_STATUS");
+				if (!status.isPresent()) {
+					
+					beUtils.saveAnswer(new Answer(be.getCode(),be.getCode(),"PRI_STATUS","UNAPPROVED"));
+					fixed++;
+				}
+				if ((index % 10)==0) {
+					System.out.println("Checking "+index+" of "+resultMsg.getItems().length);
+				}
+				index++;
+
+			}
+			looptime = System.currentTimeMillis();
+			resultMsg.setItems(unsyncedItemList.toArray(new BaseEntity[0]));
+
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+
+		long endtime = System.currentTimeMillis();
+		System.out.println("total took " + (endtime - starttime) + " ms");	
+		System.out.println("Fixed "+fixed+" journals");
+	
+		output.setTypeOfResult("NO_PROCESSING");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+		
+end

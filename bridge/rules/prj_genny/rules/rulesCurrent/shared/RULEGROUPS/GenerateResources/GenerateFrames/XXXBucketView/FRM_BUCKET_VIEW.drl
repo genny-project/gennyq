@@ -1,0 +1,178 @@
+package life.genny.rules;
+
+global org.apache.logging.log4j.Logger log;
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwandautils.JsonUtils;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.Frame3;
+import life.genny.models.Theme;
+import life.genny.utils.FrameUtils2;
+import java.util.Map;
+import life.genny.models.FrameTuple3;
+import life.genny.utils.BucketUtils;
+import life.genny.qwanda.Context;
+import life.genny.qwanda.ContextList;
+import life.genny.qwanda.ContextType;
+
+rule "FRM_BUCKET_VIEW"
+    ruleflow-group 'GenerateFrames'
+
+    when
+      not  Frame3(code == "FRM_BUCKET_VIEW")
+      FRM_BUCKET_WRAPPER : Frame3 ( code == "FRM_BUCKET_WRAPPER" )
+      FRM_BUCKETS : Frame3 ( code == "FRM_BUCKETS" )
+      FRM_BUCKET_HEADER : Frame3 ( code == "FRM_BUCKET_HEADER" )
+      FRM_BUCKET_CONTENT : Frame3 ( code == "FRM_BUCKET_CONTENT" )
+      FRM_BUCKET_VIEW_CONTENT : Frame3 ( code == "FRM_BUCKET_VIEW_CONTENT" )
+      serviceToken : GennyToken( code == "PER_SERVICE")
+
+      
+    then
+			System.out.println(" Generating FRM_BUCKET_VIEW Ruless  "+serviceToken.getUserCode());
+
+			/* initialize  beUtils */
+			BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+			
+			/* initialize  bucketUtils */
+			BucketUtils bucketUtils = new BucketUtils(beUtils);
+			
+			/* initialize  virtualAskMap */
+			Map<String, QDataAskMessage> virtualAskMap = new HashMap<String, QDataAskMessage>();
+			
+			/*  initialize ask set */
+			Set<QDataAskMessage> askSet = new HashSet<QDataAskMessage>();
+			
+			/* initialize  contextListMap */
+			Map<String, ContextList> contextListMap = new HashMap<String, ContextList>();
+
+			/* get the searchBeList from cache */
+			List<SearchEntity> searchBeList = new ArrayList<SearchEntity>();
+
+
+			/* --------------  ADD BUCKETS HERE  -------------- */
+			/*
+			SearchEntity SBE_BUCKET_ONE = VertxUtils.getObject(serviceToken.getRealm(), "",
+							"SBE_BUCKET_ONE", SearchEntity.class, serviceToken.getToken());
+
+			searchBeList.add(SBE_BUCKET_ONE);
+			*/
+			/* ------------------------------------------------ */
+
+			/* print the searchBE List size */
+			System.out.println("size   ::    " + searchBeList.size());
+
+			Theme THM_DISPLAY_VERTICAL = VertxUtils.getObject(serviceToken.getRealm(), "",
+						"THM_DISPLAY_VERTICAL", Theme.class, serviceToken.getToken());
+			Theme THM_QUESTION_GRP_LABEL = VertxUtils.getObject(serviceToken.getRealm(), "",
+						"THM_QUESTION_GRP_LABEL", Theme.class, serviceToken.getToken());
+			Theme THM_BH_ROW_ONE_GRP_CONTENT_WRAPPER = VertxUtils.getObject(serviceToken.getRealm(), "",
+						"THM_BH_ROW_ONE_GRP_CONTENT_WRAPPER", Theme.class, serviceToken.getToken());
+			Theme THM_WIDTH_100_PERCENT_NO_INHERIT = VertxUtils.getObject(serviceToken.getRealm(), "",
+						"THM_WIDTH_100_PERCENT_NO_INHERIT", Theme.class, serviceToken.getToken());
+			Theme THM_BUCKET_HEADER_GROUP_WRAPPER = VertxUtils.getObject(serviceToken.getRealm(), "",
+						"THM_BUCKET_HEADER_GROUP_WRAPPER", Theme.class, serviceToken.getToken());
+			Theme THM_BUCKET_HEADER_GROUP_HEADER_WRAPPER = VertxUtils.getObject(serviceToken.getRealm(), "",
+						"THM_BUCKET_HEADER_GROUP_HEADER_WRAPPER", Theme.class, serviceToken.getToken());
+			Theme THM_BUCKET_HEADER_GROUP_LABEL = VertxUtils.getObject(serviceToken.getRealm(), "",
+						"THM_BUCKET_HEADER_GROUP_LABEL", Theme.class, serviceToken.getToken());
+                
+			/* bucket-header label context  */
+			Context bucketHeaderLabelContext = new Context(ContextType.THEME, bucketUtils.getThemeBe(THM_QUESTION_GRP_LABEL), VisualControlType.GROUP, 1.0);
+			bucketHeaderLabelContext.setDttCode("DTT_SUBMIT_BUTTON");
+      
+			/* bucket-header  context  */
+			List<Context> bucketHeaderContext = new ArrayList<>();
+			bucketHeaderContext.add(new Context(ContextType.THEME, bucketUtils.getThemeBe(THM_DISPLAY_VERTICAL), VisualControlType.GROUP_CONTENT_WRAPPER, 1.0));
+			bucketHeaderContext.add(new Context(ContextType.THEME, bucketUtils.getThemeBe(THM_BH_GROUP_WRAPPER), VisualControlType.GROUP_WRAPPER, 1.0));
+			bucketHeaderContext.add(bucketHeaderLabelContext);
+
+			/* cardContext */
+			List<Context> bucketContentContext = new ArrayList<>();
+			bucketContentContext.add(new Context(ContextType.THEME, bucketUtils.getThemeBe(THM_WIDTH_100_PERCENT_NO_INHERIT),
+					VisualControlType.GROUP_WRAPPER, 1.0));
+
+			/* get all the bucket related asks group */
+			Ask FRM_BUCKET_HEADER_ASK = bucketUtils.getBucketHeaderAsk(contextListMap, serviceToken);
+			Ask FRM_BUCKET_CONTENT_ASK = bucketUtils.getBucketContentAsk(contextListMap, serviceToken);
+			
+			/* loop through the searchList */
+			for (SearchEntity searchBe : searchBeList) {
+    	   
+				String code = searchBe.getCode().split("SBE_")[1];
+				System.out.println("Current Code   ::    " + code);
+
+				/* add the contextList for the bucketHeaderAsk and bucketContentAsk */
+				contextListMap.put("QUE_BUCKET_HEADER_" + code + "_GRP", new ContextList(bucketHeaderContext));
+				contextListMap.put("QUE_BUCKET_CONTENT_" + code + "_GRP", new ContextList(bucketContentContext));
+
+				Frame3 bucketHeader = Frame3.clone(FRM_BUCKET_HEADER);
+				bucketHeader.setCode("FRM_BUCKET_HEADER_" + code);
+				bucketHeader.setQuestionCode("QUE_BUCKET_HEADER_" + code + "_GRP");
+
+				Frame3 bucketContent = Frame3.clone(FRM_BUCKET_CONTENT);
+				bucketContent.setCode("FRM_BUCKET_CONTENT_" + code);
+				bucketContent.setQuestionCode("QUE_BUCKET_CONTENT_" + code + "_GRP");
+
+				Frame3 bucket = Frame3.clone(FRM_BUCKETS);
+				bucket.setCode("FRM_BUCKET_"+code);
+				bucket.getFrames().add(new FrameTuple3(bucketHeader, FramePosition.NORTH, 1.0));
+				bucket.getFrames().add(new FrameTuple3(bucketContent, FramePosition.CENTRE, 1.0));
+
+				/* add the cloned bucket to wrapper */
+				FRM_BUCKET_WRAPPER.getFrames().add(new FrameTuple3(bucket, FramePosition.WEST, 1.0));
+
+				/* bucketHeader asks */
+				Ask bucketHeaderAsk = Ask.clone(FRM_BUCKET_HEADER_ASK);
+				bucketHeaderAsk.setQuestionCode("QUE_BUCKET_HEADER_" + code + "_GRP");
+				bucketHeaderAsk.setName(searchBe.getName());
+
+				/* bucketContent asks */
+				Ask bucketContentAsk = Ask.clone(FRM_BUCKET_CONTENT_ASK);
+				bucketContentAsk.setQuestionCode("QUE_BUCKET_CONTENT_" + code + "_GRP");
+				bucketContentAsk.setName(searchBe.getName());
+
+				System.out.println("bucketHeaderAsk Code   ::    " + bucketHeaderAsk.getQuestionCode());
+				System.out.println("bucketContentAsk Code   ::    " + bucketContentAsk.getQuestionCode());
+
+				/* add the ask to virtualAskMap */
+				virtualAskMap.put(bucketHeaderAsk.getQuestionCode(), new QDataAskMessage(bucketHeaderAsk));
+				virtualAskMap.put(bucketContentAsk.getQuestionCode(), new QDataAskMessage(bucketContentAsk));
+			}
+
+			Frame3 frame = Frame3.builder("FRM_BUCKET_VIEW")
+                    .addFrame(FRM_BUCKET_VIEW_CONTENT, FramePosition.CENTRE).end()
+										.build();
+							
+			frame.setRealm(serviceToken.getRealm());
+								
+			insert (frame);
+	
+			/* generating frame msg and saving to cache */
+			QDataBaseEntityMessage frameMsg = FrameUtils2.toMessage(frame, serviceToken, askSet, contextListMap, virtualAskMap);
+
+			/* cache the frame */
+			VertxUtils.putObject(serviceToken.getRealm(), "", frame.getCode(), frame, serviceToken.getToken());
+
+			/* cache the QDataBaseEntityMessage */
+			VertxUtils.putObject(serviceToken.getRealm(), "", frame.getCode() + "_MSG", frameMsg, serviceToken.getToken());
+			
+			/* cache the ask */
+			VertxUtils.writeCachedJson(serviceToken.getRealm(),"ASK_" + frame.getCode(), JsonUtils.toJson(askSet.toArray()),serviceToken.getToken());
+
+end

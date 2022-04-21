@@ -1,0 +1,39 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "SEND_SIDEBAR"
+	/* ruleflow-group 'SendSidebar' */
+	salience 10
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		allowed : Allowed()
+		beUtils : BaseEntityUtils()
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		/*  Send sidebar here */
+		retract(allowed); 
+end

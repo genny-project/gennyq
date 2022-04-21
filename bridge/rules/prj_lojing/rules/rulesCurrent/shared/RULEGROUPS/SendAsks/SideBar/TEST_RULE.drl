@@ -1,0 +1,19 @@
+package life.genny.rules;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+rule "TEST_RULE"
+	ruleflow-group 'SendAsks'
+	salience 10
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		/* allowed : Allowed(code == "AGENT") */
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		System.out.println("ServiceToken Realm = " + serviceToken.getRealm());
+		System.out.println("UserToken Realm = " + userToken.getRealm());
+end

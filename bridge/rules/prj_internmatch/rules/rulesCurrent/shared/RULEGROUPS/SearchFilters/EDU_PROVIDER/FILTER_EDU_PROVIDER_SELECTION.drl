@@ -1,0 +1,79 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_EDU_PROVIDER_SELECTION"
+	ruleflow-group 'SearchFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		searchBE: SearchEntity(code matches "SBE_GRP_EDU_PROVIDER_SELECTION" || code matches "SBE_SUMMARY_EDU_PRO_.*")
+		allowed : Allowed(code == "EDU_PRO_REP")
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		System.out.println("searchCode   :: " + searchBE.getCode());
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		if(userBe == null){
+			System.out.println("userBe is null");
+			return;
+		}
+
+		String companyCode = userBe.getValue("LNK_EDU_PROVIDER", null);		
+		if(companyCode == null){
+			System.out.println("companyCode is null");
+			return;
+		}
+
+		System.out.println("companyCode   ::   " + companyCode);
+		companyCode = companyCode.replace("\"", "").replace("[", "").replace("]", "");
+		System.out.println("companyCode after   ::   " + companyCode);
+
+		searchBE.addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, companyCode);
+
+		BaseEntity eduPro = beUtils.getBaseEntityByCode(companyCode);
+		if(eduPro != null){
+
+			String eduProviderName = eduPro.getValue("PRI_NAME",null);
+			System.out.println("eduProviderName   ::   " + eduProviderName);
+
+			if (eduProviderName != null && !eduProviderName.isEmpty()) {
+				searchBE.setTitle(eduProviderName);
+			}
+		}else{
+			System.out.println("eduPro BE is null");
+		}
+
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(searchBE);
+		msg.setAliasCode("SBE");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+end

@@ -1,0 +1,144 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.SearchUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwandautils.GennySettings;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import life.genny.notifications.SmsHelper;
+import java.util.Arrays;
+
+import com.google.gson.*;
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "SET_PRI_STATUS_AS_APPLIED_NEW"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		answersToSave : Answers()
+
+		newApplication : BaseEntity( code matches "APP_\\S+" )
+		associatedInternBe : BaseEntity( code matches "PER_\\S+" )
+		bucketCode : String(bucketCode.equals("EMPTY"))
+		controlSignalCode : String(controlSignalCode.equals("APPLIED"))
+
+		allowed: Allowed(code == "AGENT" || code == "INTERN" || code == "EDU_PRO_REP" || code == "HOST_CPY_REP")
+		beUtils : BaseEntityUtils()
+     then
+
+ 		System.out.println(drools.getRule().getName() + " triggered");
+
+		String toastStr = "Creating Application. This takes some time. Please be patient";
+		VertxUtils.sendCmdMsg(beUtils, "TOAST", "INFO", toastStr);
+
+
+		/* Refresh the BaseEntity because reasons. Gather relevant codes */
+ 		newApplication = beUtils.getBaseEntityByCode(newApplication.getCode());
+ 		List<Answer> answers = new ArrayList<>();
+
+ 		String appCode = newApplication.getCode();
+		System.out.println("appCode = " + appCode);
+
+		String userCode = userToken.getUserCode();
+		System.out.println("userCode = " + userCode);
+
+		String internCode = associatedInternBe.getCode();
+		System.out.println("internCode = " + internCode);
+
+
+		/* Gather Internship Title */
+		String lnkInternship = newApplication.getValue("LNK_INTERNSHIP", null);
+		System.out.println("lnkInternship = " +lnkInternship);
+		if (lnkInternship != null) {
+				lnkInternship = lnkInternship.replace("\"", "").replace("[", "").replace("]", "");
+				BaseEntity internshipBe = beUtils.getBaseEntityByCode(lnkInternship);
+
+				if (internshipBe != null) {
+						String name = internshipBe.getValue("PRI_NAME", null);
+						System.out.println("name = " +name);
+
+						answers.add(new Answer(userCode, appCode, "PRI_TITLE", name));
+
+						String internshipDetails = internshipBe.getValue("PRI_INTERNSHIP_DETAILS", null);
+						if(internshipDetails != null) {
+							System.out.println("internshipDetails = " +internshipDetails);
+							answers.add(new Answer(userCode, appCode, "PRI_INTERNSHIP_DETAILS", internshipDetails));
+						}
+
+				} else {
+					System.out.println("ERROR: Null internshipBe");
+				}
+		} else {
+			System.out.println("ERROR: Null lnkInternship");
+		}
+
+		String internName = associatedInternBe.getValue("PRI_NAME", null);
+		String internImage = associatedInternBe.getValue("PRI_IMAGE_URL", null);
+
+		System.out.println("appliedBucket: internName = " + internName);
+		System.out.println("appliedBucket: internImage = " + internImage);
+
+		answers.add(new Answer(userCode, appCode, "PRI_IMAGE_URL", internImage));
+		answers.add(new Answer(userCode, appCode, "PRI_APPLICANT_CODE", internCode));
+		answers.add(new Answer(userCode, appCode, "PRI_INTERN_CODE", internCode));
+
+		/* Save the required answers for the BE */
+ 		answers.add(new Answer(userCode, appCode, "PRI_STATUS", "APPLIED"));
+		answers.add(new Answer(userCode, appCode, "PRI_STAGE", "APPLIED"));
+ 		answers.add(new Answer(userCode, appCode, "PRI_DISABLED", false));
+ 		answers.add(new Answer(userCode, appCode, "PRI_STATUS_COLOR", "#5CB85C"));
+		answers.add(new Answer(userCode, appCode, "PRI_APPLIED_BY", userCode));
+
+
+		/* Create the card */
+		newApplication = beUtils.getBaseEntityByCode(appCode);
+
+		VertxUtils.sendBaseEntityMsg(beUtils, newApplication);
+
+		TableUtils.moveEntity(appCode, null ,"SBE_APPLIED_APPLICATIONS", beUtils);
+
+		if (associatedInternBe != null){
+			System.out.println("associatedInternBe: " +associatedInternBe);
+
+			String internStatus = associatedInternBe.getValue("PRI_STATUS", null);
+			System.out.println("internStatus: " +internStatus);
+
+			if (internStatus.equals("AVAILABLE")){
+				Answer answerStatus = new Answer(userToken.getUserCode(), associatedInternBe.getCode(), "PRI_STATUS", "APPLIED");
+				beUtils.saveAnswer(answerStatus);
+				System.out.println("answerStatus: " +answerStatus);
+			} else {
+				System.out.println("internStatus is not AVAILABLE: " +internStatus);
+			}
+
+
+		} else {
+			System.out.println("$$$ assocIntern PRI_INTERN_CODE was null $$$");
+		}
+
+		beUtils.saveAnswers(answers);
+
+
+		/* Re generate cached applications */
+		/*SearchUtils.regenerateCaches(beUtils, newApplication);*/
+
+
+		retract(newApplication)
+		retract(bucketCode)
+		retract(controlSignalCode)
+		retract(associatedInternBe)
+
+	System.out.println("End of " + drools.getRule().getName());
+end

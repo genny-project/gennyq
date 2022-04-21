@@ -1,0 +1,31 @@
+
+import life.genny.utils.CapabilityUtilsRefactored;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import life.genny.qwanda.entity.BaseEntity;
+
+rule "INIT_CAPS"
+    ruleflow-group 'GenerateCapabilities'
+	salience 10000
+	no-loop true
+    when
+  		serviceToken : GennyToken (code == "PER_SERVICE")
+  		capabilityUtils : CapabilityUtilsRefactored()
+    then
+     	System.out.println("facts initialising new capabilities");
+
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+     	String projectCode = "PRJ_"+serviceToken.getRealm().toUpperCase();
+
+ 		BaseEntity project = beUtils.getBaseEntityByCode(projectCode);
+        
+        capabilityUtils.addCapability("OWN_LOGIN", "Login");
+        capabilityUtils.addCapability("DEV_PORTAL", "Developer Portal");
+
+		capabilityUtils.process();
+
+		System.out.println("   Completed initial setup of Capabilities - "+capabilityUtils);
+
+ 		update(capabilityUtils);
+ 		insert(project);
+end

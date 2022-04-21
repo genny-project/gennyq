@@ -1,0 +1,94 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+
+rule "EASY_CLICK_EVENT_DUPLICATE"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_DUPLICATE_.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println("Processing DUPLICATE CLICK EVENT : " + $message );
+
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode = " + targetCode);
+		
+		String statusToSave = "AVAILABLE";
+
+		if (targetCode != null) {
+			BaseEntity targetBE = beUtils.getBaseEntityByCode(targetCode);
+			
+			String uuid = UUID.randomUUID().toString();
+			String newCode = "BEG_" + uuid;
+			newCode = newCode.toUpperCase();	
+			System.out.println("newCode = " + newCode);
+			
+			BaseEntity defBE = beUtils.getDEFByCode("DEF_INTERNSHIP");
+			BaseEntity newBe = beUtils.create(defBE, newCode, newCode);
+			System.out.println("newBe = " + newBe);
+			
+			beUtils.duplicateAttributes(targetBE, newBe);
+			
+			/* Change date created */
+/* 			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy");
+	    	LocalDateTime created = newBe.getCreated();
+			System.out.println("created = " +created);
+			String prettyCreated = dtf.format(created);
+	    	System.out.println("prettyCreated ~ " + prettyCreated);
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_CREATED_DATE", prettyCreated)); */
+			
+			/* SAVE STATUS OF MOST PROGRESSED APPLICATION OR DEFAULT TO AVAILABLE */
+	 		Answer answerActive = new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_STATUS", "ACTIVE");
+	 		beUtils.saveAnswer(answerActive);
+			
+			VertxUtils.sendToFrontEnd(userToken, answerActive);
+			
+			TableUtils.moveEntity(targetCode, "SBE_AVAILABLE_INTERNS", null, beUtils);
+			
+			
+			/* Resend table command */
+			TableUtils tableUtils = new TableUtils(beUtils);
+			SearchEntity searchBE = tableUtils.getSessionSearch("SBE_INTERNSHIPS");
+			
+			/* Reset page to start */
+			Answer pageAnswer = new Answer(beUtils.getGennyToken().getUserCode(), searchBE.getCode(), "SCH_PAGE_START", "0");
+			Answer pageNumberAnswer = new Answer(beUtils.getGennyToken().getUserCode(), searchBE.getCode(), "PRI_INDEX", "1");
+			
+			searchBE = beUtils.updateBaseEntity(searchBE, pageAnswer, SearchEntity.class);
+			searchBE = beUtils.updateBaseEntity(searchBE, pageNumberAnswer, SearchEntity.class);
+			
+			VertxUtils.putObject(beUtils.getGennyToken().getRealm(), "", searchBE.getCode(), searchBE, beUtils.getGennyToken().getToken());
+
+			long totalTime = TableUtils.searchTable(beUtils,searchBE, true);
+			System.out.println("total took " + (totalTime) + " ms"); 
+
+			/* Send out the Filter question group */
+			TableUtils.sendFilterQuestions(beUtils, searchBE.getCode());
+		}		
+		
+		retract( $message);
+		
+	end

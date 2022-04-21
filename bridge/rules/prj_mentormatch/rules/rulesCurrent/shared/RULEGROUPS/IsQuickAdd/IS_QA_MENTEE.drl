@@ -1,0 +1,50 @@
+package life.genny.rules;
+
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.qwandautils.JsonUtils;
+
+rule "IS_QA_MENTEE"
+    ruleflow-group 'IsQuickAdd'
+    no-loop true
+    salience 1000
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		baseEntityType : String("QA_MENTEE" == baseEntityType)
+		newBe : BaseEntity()
+		beUtils: BaseEntityUtils()
+
+    then
+ 		System.out.println(drools.getRule().getName() + ": Rule fired :: newBe = " + newBe.getCode());
+
+		/* Update Email and Name, and set Random Password in Keycloak */
+		KeycloakUtils.updateUserDetails(beUtils, newBe);
+		String password = "password1";
+		if(GennySettings.projectUrl.contains("dev")){
+            String uuid = newBe.getValue("PRI_UUID", null);
+            KeycloakUtils.setPassword(beUtils.getServiceToken().getToken(), beUtils.getServiceToken().getRealm(), uuid, password, true);
+		}else{
+		    password = KeycloakUtils.generateRandomPassword(beUtils, newBe);
+		}
+
+        System.out.println("Created User in Keycloak with password:" + password);
+
+        System.out.println("#### Sending email to Mentee after quick add ####");
+        QMessageGennyMSG msg = new QMessageGennyMSG.Builder("MSG_MENTEE1_REGISTER")
+            .addRecipient(newBe)
+            .addContext("PASSWORD", password)
+            .addContext("URL:ENCODE", "QUE_FAKE_PARENT/ACT_GO_TO_PROFILE")
+            .addContext("BCC", "PRJ_MENTORMATCH")
+            .setUtils(beUtils)
+            .send();
+
+        System.out.println("MSG_MENTEE1_REGISTER: msg " + JsonUtils.toJson(msg));
+
+		retract(newBe)
+
+        System.out.println("End of " + drools.getRule().getName());
+end

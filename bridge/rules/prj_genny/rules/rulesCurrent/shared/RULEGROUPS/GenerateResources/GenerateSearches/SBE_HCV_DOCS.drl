@@ -1,0 +1,42 @@
+package life.genny.rules;
+
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "SBE_HCV_DOCS"
+	ruleflow-group 'GenerateSearches'
+	no-loop true
+	when
+		not  SearchEntity (code == "SBE_HCV_DOCS")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "HCV Docs")
+			.addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
+
+			/* Filters */
+			.addFilter("PRI_CODE",SearchEntity.StringFilter.LIKE,"DOC_%")
+			.addFilter("PRI_IS_HCV_DOCUMENT", true)
+
+			/* Columns */
+			.addColumn("PRI_LEGAL_NAME", "Legal Name")
+			.addAssociatedColumn("LNK_SIGNEE", "PRI_NAME", "Signee")
+
+			/* Actions */
+            .addAction("EDIT", "Edit")
+			.setPageStart(0)
+			.setPageSize(10000);
+
+
+		searchBE.setRealm(serviceToken.getRealm());
+
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

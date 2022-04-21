@@ -1,0 +1,95 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+
+rule "SEND_ADD_ITEMS"
+	ruleflow-group 'SendAsks'
+	salience 8
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
+  
+		System.out.println("userCode   ::   " + userToken.getUserCode());
+
+		/* get the addItems ask from cache */
+		LinkedHashMap<String, String> addItemsMap = VertxUtils.getObject(serviceToken.getRealm(), "", "ADD_ITEMS", LinkedHashMap.class, serviceToken.getToken());
+
+		if (addItemsMap == null || addItemsMap.isEmpty()) {
+			System.out.println("addItemsMap is NULL or EMPTY");
+
+		} else {
+							
+			String sourceCode = "PER_SERVICE";
+			String targetCode = "PER_SERVICE";
+
+			Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+			Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+
+			Question addItemsQues = new Question("QUE_ADD_ITEMS_GRP", "Add Items", questionAttribute, true);
+			Ask addItemsAsk = new Ask(addItemsQues, sourceCode, targetCode);
+
+			List<Ask> sendCodes = new ArrayList<>();
+
+			for (String key : addItemsMap.keySet()) {
+
+				String name = addItemsMap.get(key);
+
+				if (capabilityUtils.hasCapabilityThroughPriIs("TYPE_"+(key.replace("QA_","")), CapabilityMode.ADD)) {
+
+					System.out.println(drools.getRule().getName()+" Has Permission for " + key);
+
+					Question itemQues = new Question("QUE_"+key+"_MENU", name, eventAttribute, true);
+					Ask itemAsk = new Ask(itemQues, sourceCode, targetCode);
+
+					sendCodes.add(itemAsk);
+
+				}
+			}
+
+			Ask[] items = sendCodes.toArray(new Ask[sendCodes.size()]);
+			addItemsAsk.setChildAsks(items);
+			
+			String json = JsonUtils.toJson(addItemsAsk);
+			json = json.replaceAll("PER_SERVICE", userToken.getUserCode());
+
+			addItemsAsk = JsonUtils.fromJson(json, Ask.class);
+			/* send the addItems asks */
+			QDataAskMessage askMsg = new QDataAskMessage(addItemsAsk);
+			askMsg.setToken(userToken.getToken());
+			VertxUtils.writeMsg("webcmds", askMsg);
+		}
+
+		/* SearchEntity searchBE = new SearchEntity("SBE_TEST_INTERNS", "Interns") */
+		/* 	.addSort("PRI_NAME","Name", SearchEntity.Sort.ASC) */
+		/* 	.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%") */
+		/* 	.addFilter("PRI_IS_INTERN", true) */
+		/* 	.addColumn("PRI_NAME", "Name") */
+		/* 	.setPageStart(0).setPageSize(20); */
+
+
+		/* String resultJsonStr = QwandaUtils.apiPostEntity2("http://erstwhile-wolf-genny-fyodor-svc:4242/api/search", JsonUtils.toJson(searchBE), serviceToken.getToken(), null); */
+		/* System.out.println("RESULT = " + resultJsonStr); */
+
+end

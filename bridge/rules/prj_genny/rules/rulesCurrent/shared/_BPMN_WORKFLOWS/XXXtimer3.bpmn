@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- origin at X=0.0 Y=0.0 -->
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmn20="http://www.omg.org/bpmn20" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="_rgjd0GkSEeGLXa7Rf4_OXA" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.4.3.Final-v20180418-1358-B1" name="auth_init" targetNamespace="http://www.omg.org/bpmn20">
+  <bpmn2:itemDefinition id="ItemDefinition_1" isCollection="false" structureRef="life.genny.qwanda.message.QEventMessage"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2" isCollection="false" structureRef="life.genny.rules.QRules"/>
+  <bpmn2:itemDefinition id="ItemDefinition_3" isCollection="false" structureRef="java.lang.String"/>
+  <bpmn2:itemDefinition id="ItemDefinition_6" isCollection="false" structureRef="org.kie.api.runtime.process.WorkflowProcessInstance"/>
+  <bpmn2:itemDefinition id="ItemDefinition_7" isCollection="false" structureRef="life.genny.eventbus.EventBusInterface"/>
+  <bpmn2:itemDefinition id="ItemDefinition_9" isCollection="false" structureRef="life.genny.eventbus.VertxCache"/>
+  <bpmn2:itemDefinition id="ItemDefinition_11" isCollection="false" structureRef="life.genny.eventbus.WildflyCacheInterface"/>
+  <bpmn2:itemDefinition id="ItemDefinition_5" isCollection="false" structureRef="life.genny.qwanda.message.QDataBaseEntityMessage"/>
+  <bpmn2:itemDefinition id="ItemDefinition_13" isCollection="false" structureRef="life.genny.utils.VertxUtils.ESubscriptionType"/>
+  <bpmn2:itemDefinition id="ItemDefinition_14" isCollection="false" structureRef="life.genny.utils.VertxUtils"/>
+  <bpmn2:itemDefinition id="ItemDefinition_16" isCollection="false" structureRef="life.genny.qwanda.entity.BaseEntity"/>
+  <bpmn2:itemDefinition id="ItemDefinition_18" isCollection="false" structureRef="java.util.List"/>
+  <bpmn2:itemDefinition id="ItemDefinition_21" isCollection="false" structureRef="java.util.Map.Entry"/>
+  <bpmn2:itemDefinition id="ItemDefinition_22" isCollection="false" structureRef="java.util.Map"/>
+  <bpmn2:itemDefinition id="ItemDefinition_24" isCollection="false" structureRef="java.util.HashMap"/>
+  <bpmn2:itemDefinition id="ItemDefinition_27" isCollection="false" structureRef="life.genny.qwanda.VisualControlType"/>
+  <bpmn2:itemDefinition id="ItemDefinition_28" isCollection="false" structureRef="life.genny.qwanda.Context"/>
+  <bpmn2:itemDefinition id="ItemDefinition_30" isCollection="false" structureRef="life.genny.qwanda.ContextList"/>
+  <bpmn2:itemDefinition id="ItemDefinition_32" isCollection="false" structureRef="java.util.ArrayList"/>
+  <bpmn2:itemDefinition id="ItemDefinition_34" isCollection="false" structureRef="life.genny.qwanda.Layout"/>
+  <bpmn2:itemDefinition id="ItemDefinition_36" isCollection="false" structureRef="life.genny.utils.Layout.LayoutUtils"/>
+  <bpmn2:itemDefinition id="ItemDefinition_38_1" isCollection="false" structureRef="life.genny.utils.Layout.LayoutPosition"/>
+  <bpmn2:itemDefinition id="ItemDefinition_38" isCollection="false" structureRef="life.genny.qwanda.ContextType"/>
+  <bpmn2:process id="timer3" drools:packageName="life.genny.jbpm" name="Timer3" isExecutable="true">
+    <bpmn2:extensionElements>
+      <drools:import name="life.genny.qwanda.message.QEventMessage"/>
+      <drools:import name="life.genny.rules.QRules"/>
+      <drools:import name="java.lang.String"/>
+      <drools:import name="org.kie.api.runtime.process.WorkflowProcessInstance"/>
+      <drools:import name="life.genny.eventbus.EventBusInterface"/>
+      <drools:import name="life.genny.eventbus.VertxCache"/>
+      <drools:import name="life.genny.eventbus.WildflyCacheInterface"/>
+      <drools:global identifier="processInstance" type="org.kie.api.runtime.process.WorkflowProcessInstance"/>
+      <drools:import name="life.genny.qwanda.message.QDataBaseEntityMessage"/>
+      <drools:import name="life.genny.utils.VertxUtils"/>
+      <drools:import name="life.genny.utils.VertxUtils.ESubscriptionType"/>
+      <drools:import name="life.genny.qwanda.entity.BaseEntity"/>
+      <drools:import name="java.util.List"/>
+      <drools:import name="java.util.Map"/>
+      <drools:import name="java.util.Map.Entry"/>
+      <drools:import name="java.util.HashMap"/>
+      <drools:import name="life.genny.qwanda.Context"/>
+      <drools:import name="life.genny.qwanda.VisualControlType"/>
+      <drools:import name="life.genny.qwanda.ContextList"/>
+      <drools:import name="java.util.ArrayList"/>
+      <drools:import name="life.genny.qwanda.Layout"/>
+      <drools:import name="life.genny.utils.Layout.LayoutUtils"/>
+      <drools:import name="life.genny.utils.Layout.LayoutPosition"/>
+      <drools:import name="life.genny.qwanda.ContextType"/>
+    </bpmn2:extensionElements>
+    <bpmn2:property id="rules" itemSubjectRef="ItemDefinition_2" name="rules"/>
+    <bpmn2:startEvent id="StartEvent_1" name="Timer3">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Timer3]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:endEvent id="EndEvent_1" name="End Event 1">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[End Event 1]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_8</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:scriptTask id="ScriptTask_1" name="Init" scriptFormat="http://www.java.com/java">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Init]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
+      <bpmn2:script>System.out.println(&quot;Auth Init Start&quot;);
+processInstance = (WorkflowProcessInstance)kcontext.getProcessInstance();
+System.out.println(&quot;workprocessInstanceId = &quot;+processInstance.getId());
+
+kcontext.getKieRuntime().getEntryPoint(&quot;DEFAULT&quot;).getObjects().forEach(obj -> {
+	//System.out.println(obj);
+if(obj instanceof String){
+		kcontext.setVariable(&quot;name&quot;, (String)obj);
+System.out.println(&quot;FOUND STRING&quot;);
+	} else if(obj instanceof QEventMessage){
+		kcontext.setVariable(&quot;message&quot;, (QEventMessage)obj);
+System.out.println(&quot;FOUND QEVENTMESSAGE&quot;);
+	} else if (obj instanceof QRules){
+		kcontext.setVariable(&quot;rules&quot;, (QRules)obj);
+		System.out.println(&quot;FOUND QRULE &quot;);
+		
+	}  else if (obj instanceof EventBusInterface){
+		kcontext.setVariable(&quot;eb&quot;, (EventBusInterface)obj);
+		System.out.println(&quot;FOUND EVENTBUS&quot;);
+	}
+    });
+
+QRules rs = ((QRules)kcontext.getVariable(&quot;rules&quot;));
+if (rs != null ){
+   System.out.println(&quot;JBPM QRules=&quot;+rs.realm());
+} else {
+   System.out.println(&quot;rs is null&quot;);
+}
+
+</bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_2" sourceRef="StartEvent_1" targetRef="ScriptTask_1"/>
+    <bpmn2:scriptTask id="ScriptTask_12" name="Script Task 12" scriptFormat="http://www.java.com/java">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Script Task 12]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_4</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
+      <bpmn2:script>System.out.println(&quot;Testing!&quot;);</bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_4" drools:priority="1" sourceRef="ScriptTask_1" targetRef="ScriptTask_12"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_8" drools:priority="1" sourceRef="ScriptTask_12" targetRef="EndEvent_1"/>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1" name="Default Process Diagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="timer3">
+      <bpmndi:BPMNShape id="BPMNShape_1" bpmnElement="StartEvent_1">
+        <dc:Bounds height="36.0" width="36.0" x="30.0" y="104.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_1" labelStyle="BPMNLabelStyle_1">
+          <dc:Bounds height="11.0" width="28.0" x="34.0" y="140.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_2" bpmnElement="EndEvent_1">
+        <dc:Bounds height="36.0" width="36.0" x="500.0" y="104.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_3" labelStyle="BPMNLabelStyle_1">
+          <dc:Bounds height="11.0" width="50.0" x="493.0" y="140.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_1" bpmnElement="ScriptTask_1" isExpanded="true">
+        <dc:Bounds height="50.0" width="42.0" x="110.0" y="97.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_4" labelStyle="BPMNLabelStyle_1">
+          <dc:Bounds height="11.0" width="13.0" x="124.0" y="116.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_12" bpmnElement="ScriptTask_12" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="225.0" y="95.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="57.0" x="251.0" y="114.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="SequenceFlow_2" sourceElement="BPMNShape_1" targetElement="BPMNShape_ScriptTask_1">
+        <di:waypoint xsi:type="dc:Point" x="66.0" y="122.0"/>
+        <di:waypoint xsi:type="dc:Point" x="88.0" y="122.0"/>
+        <di:waypoint xsi:type="dc:Point" x="110.0" y="122.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_5"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_4" bpmnElement="SequenceFlow_4" sourceElement="BPMNShape_ScriptTask_1" targetElement="BPMNShape_ScriptTask_12">
+        <di:waypoint xsi:type="dc:Point" x="152.0" y="122.0"/>
+        <di:waypoint xsi:type="dc:Point" x="188.0" y="122.0"/>
+        <di:waypoint xsi:type="dc:Point" x="188.0" y="120.0"/>
+        <di:waypoint xsi:type="dc:Point" x="225.0" y="120.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_8" bpmnElement="SequenceFlow_8" sourceElement="BPMNShape_ScriptTask_12" targetElement="BPMNShape_2">
+        <di:waypoint xsi:type="dc:Point" x="335.0" y="120.0"/>
+        <di:waypoint xsi:type="dc:Point" x="417.0" y="120.0"/>
+        <di:waypoint xsi:type="dc:Point" x="417.0" y="122.0"/>
+        <di:waypoint xsi:type="dc:Point" x="500.0" y="122.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+    <bpmndi:BPMNLabelStyle id="BPMNLabelStyle_1">
+      <dc:Font name="arial" size="9.0"/>
+    </bpmndi:BPMNLabelStyle>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

@@ -1,0 +1,43 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+
+rule "SKIP_QUESTION"
+    ruleflow-group 'EventProcessing'
+		salience 3
+    no-loop
+    when
+		$message : QEventMessage ( ( data.code == "QUE_SKIP_BTN" ) && ( data.parentCode matches "QUE_STT_.*_GRP" ) )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		
+    then		
+		System.out.println("SKIP_QUESTION : Rule Fired!");
+		
+		/* Send a Signal */
+		output.setTypeOfResult("SIGNAL");
+		
+		/* Signal to send */
+		output.setResultCode("START_NEXT_QUESTION");
+		
+		output.setTargetCode("SKIP_EVENT:" + $message.getData().getParentCode());
+				
+		System.out.println("START SIGNAL: START_NEXT_QUESTION");
+		System.out.println("STARTING THE SKIP QUESTION WITH: " +output);
+	
+		retract( $message);
+	end

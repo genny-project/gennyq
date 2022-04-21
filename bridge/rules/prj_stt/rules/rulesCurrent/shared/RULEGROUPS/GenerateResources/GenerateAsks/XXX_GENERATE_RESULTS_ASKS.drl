@@ -1,0 +1,179 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.RulesUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_RESULTS_ASKS"
+    ruleflow-group 'GenerateAsks'
+     no-loop true
+    when
+       not  SearchEntity (code == "GENERATE_RESULTS_ASKS")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+			String sourceCode = "PER_SERVICE";
+			String targetCode = "PER_SERVICE";
+			
+			Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+			Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+			
+			/* Scenario Results group */
+			Question scenarioResultsQues = new Question("QUE_SCENARIO_RESULTS_GRP", "Scenario Results", questionAttribute, true);
+			Ask scenarioResultsAsk = new Ask(scenarioResultsQues, sourceCode, targetCode);
+			
+				/* META INFO group */
+				Question metaInfoQues = new Question("QUE_RESULTS_META_INFO_GRP", "Results Meta Info", questionAttribute, true);
+				Ask metaInfoAsk = new Ask(metaInfoQues, sourceCode, targetCode);
+
+					Attribute nameAttribute = RulesUtils.getAttribute("PRI_NAME", beUtils.getGennyToken().getToken());
+					Attribute emailAttribute = RulesUtils.getAttribute("PRI_EMAIL", beUtils.getGennyToken().getToken());
+					Attribute scenarioAttribute = RulesUtils.getAttribute("PRI_SCENARIO", beUtils.getGennyToken().getToken());
+					Attribute timeCompletedAttribute = RulesUtils.getAttribute("PRI_TIME_COMPLETED", beUtils.getGennyToken().getToken());
+					Attribute totalScoreAttribute = RulesUtils.getAttribute("PRI_TOTAL_SCORE", beUtils.getGennyToken().getToken());
+
+					Question nameQues = new Question("QUE_NAME", "Name", nameAttribute, true);
+					Ask nameAsk = new Ask(nameQues, sourceCode, targetCode);
+
+					Question emailQues = new Question("QUE_EMAIL", "Name", emailAttribute, true);
+					Ask emailAsk = new Ask(emailQues, sourceCode, targetCode);
+
+					Question scenarioQues = new Question("QUE_SCENARIO", "Username", scenarioAttribute, true);
+					Ask scenarioAsk = new Ask(scenarioQues, sourceCode, targetCode);
+
+					Question timeCompletedQues = new Question("QUE_TIME_COMPLETED", "Time Completed", timeCompletedAttribute, true);
+					Ask timeCompletedAsk = new Ask(timeCompletedQues, sourceCode, targetCode);
+
+				Ask[] metaInfoAskArray = { nameAsk, emailAsk, scenarioAsk, timeCompletedAsk };
+				metaInfoAsk.setChildAsks(metaInfoAskArray);
+
+				/* IDENTIFY group */
+				Question identifyQues = new Question("QUE_IDENTIFY_RESULTS_GRP", "Identify & Click Results", questionAttribute, true);
+				Ask eduProRepIdentifyAsk = new Ask(identifyQues, sourceCode, targetCode);
+				Ask studentIdentifyAsk = new Ask(identifyQues, sourceCode, targetCode);
+
+				/* IDENTIFY group */
+				Question installQues = new Question("QUE_INSTALL_RESULTS_GRP", "Install Results", questionAttribute, true);
+				Ask eduProRepInstallAsk = new Ask(installQues, sourceCode, targetCode);
+				Ask studentInstallAsk = new Ask(installQues, sourceCode, targetCode);
+
+				/* IDENTIFY group */
+				Question quizQues = new Question("QUE_QUIZ_RESULTS_GRP", "Quiz Results", questionAttribute, true);
+				Ask eduProRepQuizAsk = new Ask(quizQues, sourceCode, targetCode);
+				Ask studentQuizAsk = new Ask(quizQues, sourceCode, targetCode);
+			
+				/* Selection Button group */
+				Question scenarioSelectQues = new Question("QUE_SCENARIO_SELECT_GRP", "Quiz Results", questionAttribute, true);
+				Ask scenarioSelectAsk = new Ask(quizQues, sourceCode, targetCode);
+  
+					Question previousQues = new Question("QUE_PREVIOUS", "Prev", eventAttribute, true);
+					Ask previousAsk = new Ask(previousQues, sourceCode, targetCode);
+  
+					Question nextQues = new Question("QUE_NEXT", "Next", eventAttribute, true);
+					Ask nextAsk = new Ask(nextQues, sourceCode, targetCode);
+  
+				Ask[] scenarioSelectionAskArray = { previousAsk, nextAsk };
+				scenarioSelectAsk.setChildAsks(scenarioSelectionAskArray);
+
+				String[] groups = { "A", "B", "C" };
+
+				for (String g : groups) {
+					
+					List<Ask> eduProRepGroupAskList = new ArrayList<Ask>();
+					List<Ask> studentGroupAskList = new ArrayList<Ask>();
+		
+					for (int i = 1; i < 6; i++) {
+
+						Attribute imageAttribute = RulesUtils.getAttribute("PRI_" + g + "_Q" + i + "_QUESTION_IMAGE", beUtils.getGennyToken().getToken());
+						Attribute numberAttribute = RulesUtils.getAttribute("PRI_" + g + "_Q" + i + "_QUESTION_NUMBER", beUtils.getGennyToken().getToken());
+						Attribute textAttribute = RulesUtils.getAttribute("PRI_" + g + "_Q" + i + "_QUESTION_TEXT", beUtils.getGennyToken().getToken());
+						Attribute scoreAttribute = RulesUtils.getAttribute("PRI_" + g + "_Q" + i + "_SCORE", beUtils.getGennyToken().getToken());
+						Attribute passOrFailAttribute = RulesUtils.getAttribute("PRI_" + g + "_Q" + i + "_PASS_OR_FAIL", beUtils.getGennyToken().getToken());
+
+						Question questionQues = new Question("QUE_" + g + "_Q" + i + "_GRP", "Question " + i, questionAttribute, true);
+						Ask eduProRepQuestionAsk = new Ask(questionQues, sourceCode, targetCode);
+						Ask studentQuestionAsk = new Ask(questionQues, sourceCode, targetCode);
+
+							Question questionImageQues = new Question("QUE_" + g + "_Q" + i + "_QUESTION_IMAGE", "Question Image", imageAttribute, true);
+							Ask questionImageAsk = new Ask(questionImageQues, sourceCode, targetCode);
+
+							Question questionNumberQues = new Question("QUE_" + g + "_Q" + i + "_QUESTION_NUMBER", "Question Number", numberAttribute, true);
+							Ask questionNumberAsk = new Ask(questionNumberQues, sourceCode, targetCode);
+
+							Question questionTextQues = new Question("QUE_" + g + "_Q" + i + "_QUESTION_TEXT", "Question Text", textAttribute, true);
+							Ask questionTextAsk = new Ask(questionTextQues, sourceCode, targetCode);
+
+							Question scoreQues = new Question("QUE_" + g + "_Q" + i + "_SCORE", "Score", scoreAttribute, true);
+							Ask scoreAsk = new Ask(scoreQues, sourceCode, targetCode);
+
+							Question passOrFailQues = new Question("QUE_" + g + "_Q" + i + "_PASS_OR_FAIL", "Pass or Fail", passOrFailAttribute, true);
+							Ask passOrFailAsk = new Ask(passOrFailQues, sourceCode, targetCode);
+
+						
+						/* DO THIS FOR BOTH TRAINER AND STUDENT */
+
+						Ask[] eduProRepQuestionChildAsks = { questionImageAsk, questionNumberAsk, questionTextAsk, scoreAsk, passOrFailAsk };
+						Ask[] studentQuestionChildAsks = { questionNumberAsk, scoreAsk, passOrFailAsk };
+
+						eduProRepQuestionAsk.setChildAsks(eduProRepQuestionChildAsks);
+						studentQuestionAsk.setChildAsks(studentQuestionChildAsks);
+
+						eduProRepGroupAskList.add(eduProRepQuestionAsk);
+						studentGroupAskList.add(studentQuestionAsk);
+
+					}
+
+					Ask[] eduProRepGroupAskArray = eduProRepGroupAskList.toArray(new Ask[eduProRepGroupAskList.size()]);
+					Ask[] studentGroupAskArray = studentGroupAskList.toArray(new Ask[studentGroupAskList.size()]);
+					if (g.equals("A")) {
+						eduProRepIdentifyAsk.setChildAsks(eduProRepGroupAskArray);
+						studentIdentifyAsk.setChildAsks(studentGroupAskArray);
+					}
+					if (g.equals("B")) {
+						eduProRepInstallAsk.setChildAsks(eduProRepGroupAskArray);
+						studentInstallAsk.setChildAsks(studentGroupAskArray);
+					}
+					if (g.equals("C")) {
+						eduProRepQuizAsk.setChildAsks(eduProRepGroupAskArray);
+						studentQuizAsk.setChildAsks(studentGroupAskArray);
+					}
+
+				}
+			
+			Ask[] eduProRepResultsAskArray = { metaInfoAsk, eduProRepIdentifyAsk, eduProRepInstallAsk, eduProRepQuizAsk, scenarioSelectAsk };
+			Ask[] studentResultsAskArray = { metaInfoAsk, studentIdentifyAsk, studentInstallAsk, studentQuizAsk, scenarioSelectAsk };
+			
+			scenarioResultsAsk.setChildAsks(eduProRepResultsAskArray);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "RESULTS_ASKS_ADMIN", scenarioResultsAsk, serviceToken.getToken());
+			
+			scenarioResultsAsk.setChildAsks(eduProRepResultsAskArray);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "RESULTS_ASKS_EDU_PRO_REP", scenarioResultsAsk, serviceToken.getToken());
+
+			scenarioResultsAsk.setChildAsks(studentResultsAskArray);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "RESULTS_ASKS_STUDENT", scenarioResultsAsk, serviceToken.getToken());
+
+end

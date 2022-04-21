@@ -1,0 +1,109 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.QwandaUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "HELPER_PRI_FIRSTNAME.drl"
+    ruleflow-group 'DataProcessing'
+        salience 15000 
+    when
+      beUtils : BaseEntityUtils()
+      not Answer( attributeCode == "LNK_GENDER_SELECT" )
+	  answer : Answer( attributeCode == "PRI_FIRSTNAME")
+	  answersToSave : Answers()
+	  ruleDetails : RuleDetails()
+	  output : OutputParam( )
+     then
+ 		System.out.println(ruleDetails+" "+drools.getRule().getName()+"Processing Helper Answer/Data : " + answer );
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		String targetCode = answer.getTargetCode();
+		
+		/* Parse json answer and save the individual answers */
+		
+		String firstnameRaw = answer.getValue();
+		String encodedFirstname = firstnameRaw;
+		if (!StringUtils.isBlank(firstnameRaw)) {
+		try {
+            encodedFirstname =  URLEncoder.encode(firstnameRaw, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+           
+        }
+		System.out.println("HELPER FIRSTNAME: raw="+firstnameRaw+" : encoded="+encodedFirstname);
+		
+        JsonObject genderObj = new JsonObject( QwandaUtils.apiGet("https://api.genderize.io/?name=" +encodedFirstname , null));
+        String gender = genderObj.getString("gender");
+        Double weight = genderObj.getDouble("probability");
+
+        System.out.println("GENDER OBJECT   ::   "+genderObj.toString());
+        System.out.println("gender   ::   " + gender);
+        System.out.println("weight   ::   " + weight);
+
+		Answer genderAnswer = null;
+        if(gender !=null ) {
+
+            switch (gender) {
+            	case "male":
+            		genderAnswer = new Answer(sourceCode, targetCode, "LNK_GENDER_SELECT", "[\"SEL_GENDER_MALE\"]",false,true);
+            		answersToSave.add(genderAnswer);
+            		answersToSave.add(new Answer(sourceCode, targetCode, "PRI_GENDER", "MALE",false,true));
+            		break;
+            	case "female":
+           			genderAnswer = new Answer(sourceCode, targetCode, "LNK_GENDER_SELECT", "[\"SEL_GENDER_FEMALE\"]",false,true);
+            		answersToSave.add(genderAnswer);
+            		answersToSave.add(new Answer(sourceCode, targetCode, "PRI_GENDER", "FEMALE",false,true));
+            		break;
+           		default:
+           			genderAnswer = new Answer(sourceCode, targetCode, "LNK_GENDER_SELECT", "[\"SEL_GENDER_UNKNOWN\"]",false,true);
+            		answersToSave.add(genderAnswer);
+            		answersToSave.add(new Answer(sourceCode, targetCode, "PRI_GENDER", "UNKNOWN",false,true));
+             		
+		    }
+            genderAnswer.setWeight(weight);
+            genderAnswer.setInferred(true);
+            System.out.println(genderAnswer);
+            insert(genderAnswer); /* push this inferred answer into the rules to prevent refiring of this rule and to possibly invoke others */           		
+           
+		    
+			BaseEntity baseEntity = beUtils.updateBaseEntity(targetCode,genderAnswer);
+			beUtils.updateBaseEntity(targetCode,answer); /* send back the updated firstname */
+			QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntity);
+			msg.setToken(beUtils.getGennyToken().getToken());
+			msg.setReplace(true);
+			
+			VertxUtils.writeMsg("webcmds",JsonUtils.toJson(msg));		  /* push out to frontend */
+
+ 			update(answersToSave);
+            
+        }else {
+            System.out.println("Sorry, No Inferred Rule was executed ");
+        }
+ 
+	
+		output.setTypeOfResult("NONE");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		}
+
+	
+end

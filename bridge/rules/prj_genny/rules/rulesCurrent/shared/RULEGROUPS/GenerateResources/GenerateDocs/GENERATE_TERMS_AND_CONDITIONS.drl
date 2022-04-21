@@ -1,0 +1,38 @@
+package life.genny.rules;
+
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.Answer;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.QwandaUtils;
+
+rule "GENERATE_TERMS_AND_CONDITIONS"
+    ruleflow-group 'GenerateSearches'
+    no-loop true
+    salience 10000
+    when
+      serviceToken : GennyToken( code == "PER_SERVICE")
+	  beUtils : BaseEntityUtils()
+    then
+		System.out.println(drools.getRule().getName() + " - Running...");
+
+		String projectCode = "PRJ_" + serviceToken.getRealm().toUpperCase();
+		System.out.println("projectCode = " + projectCode);
+		BaseEntity projectBE = beUtils.getBaseEntityByCode(projectCode);
+
+		String termsAndConditionsURL = projectBE.getValue("PRI_TERMS_AND_CONDITIONS_URL", "");
+		System.out.println("termsAndConditionsURL = " + termsAndConditionsURL);
+
+		if (termsAndConditionsURL != null && !termsAndConditionsURL.isEmpty()) {
+			String documentAsString = QwandaUtils.apiGet(termsAndConditionsURL, null);
+
+			if (documentAsString != null) {
+				beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), projectBE.getCode(), "PRI_TERMS_AND_CONDITIONS_HTML", documentAsString));
+			} else {
+				System.out.println("documentAsString is NULL");
+			}
+		} else {
+			System.out.println("termsAndConditionsURL is NULL or EMPTY");
+		}
+
+	end

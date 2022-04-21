@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- origin at X=0.0 Y=0.0 -->
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xmlns:java="http://www.java.com/javaTypes" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.5.1.Final-v20190425-2005-B1" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+  <bpmn2:itemDefinition id="ItemDefinition_2" isCollection="false" structureRef="life.genny.models.GennyToken"/>
+  <bpmn2:itemDefinition id="ItemDefinition_954" isCollection="false" structureRef="life.genny.utils.SessionFacts"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1346" isCollection="false" structureRef="life.genny.utils.CallingProcessToken"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1812" isCollection="false" structureRef="java.lang.Long"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2016" isCollection="false" structureRef="life.genny.qwanda.entity.BaseEntity"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2722" isCollection="false" structureRef="org.kie.api.runtime.KieSession"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2725" isCollection="false" structureRef="org.kie.internal.runtime.StatefulKnowledgeSession"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2733" isCollection="false" structureRef="java.lang.String"/>
+  <bpmn2:itemDefinition id="ItemDefinition_3323" isCollection="false" structureRef="life.genny.qwanda.utils.OutputParam"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1115" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1116" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1117" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1118" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2291" isCollection="false" structureRef="life.genny.qwanda.message.QBaseMSGMessageType"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1240" isCollection="false" structureRef="java.util.HashMap"/>
+  <bpmn2:itemDefinition id="ItemDefinition_123" isCollection="false" structureRef="java.lang.Byte"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2141" isCollection="false" structureRef="java.util.UUID"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2143" isCollection="false" structureRef="life.genny.utils.BaseEntityUtils"/>
+  <bpmn2:itemDefinition id="ItemDefinition_3" isCollection="false" structureRef="org.json.JSONArray"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2841" isCollection="false" structureRef="life.genny.qwanda.Answer"/>
+  <bpmn2:signal id="Signal_1" name="notification"/>
+  <bpmn2:signal id="Signal_2" name="dynamicControl"/>
+  <bpmn2:signal id="Signal_3" name="controlSignal"/>
+  <bpmn2:signal id="Signal_4" name="dynamicStatus"/>
+  <bpmn2:signal id="Signal_5" name="broadcast"/>
+  <bpmn2:signal id="Signal_6" name="startDynamic"/>
+  <bpmn2:signal id="Signal_7" name="START_PRI_EVENT_APPLY"/>
+  <bpmn2:signal id="Signal_8" name="signature"/>
+  <bpmn2:signal id="Signal_9" name="START_MOVE"/>
+  <bpmn2:process id="appliedBucket" drools:version="1" drools:packageName="defaultPackage" drools:adHoc="false" name="Default Process" isExecutable="true">
+    <bpmn2:extensionElements>
+      <drools:import name="life.genny.models.GennyToken"/>
+      <drools:import name="life.genny.utils.SessionFacts"/>
+      <drools:import name="life.genny.utils.CallingProcessToken"/>
+      <drools:import name="life.genny.qwanda.entity.BaseEntity"/>
+      <drools:import name="org.kie.api.runtime.KieSession"/>
+      <drools:import name="org.kie.internal.runtime.StatefulKnowledgeSession"/>
+      <drools:import name="life.genny.qwanda.utils.OutputParam"/>
+      <drools:import name="life.genny.qwanda.message.QBaseMSGMessageType"/>
+      <drools:import name="java.util.HashMap"/>
+      <drools:import name="java.util.UUID"/>
+      <drools:import name="life.genny.utils.BaseEntityUtils"/>
+      <drools:import name="org.json.JSONArray"/>
+      <drools:import name="life.genny.qwanda.Answer"/>
+    </bpmn2:extensionElements>
+    <bpmn2:property id="userToken" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+    <bpmn2:property id="serviceToken" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+    <bpmn2:property id="sessionFacts" itemSubjectRef="ItemDefinition_954" name="sessionFacts"/>
+    <bpmn2:property id="callingProcessToken" itemSubjectRef="ItemDefinition_1346" name="callingProcessToken"/>
+    <bpmn2:property id="processId" itemSubjectRef="ItemDefinition_1812" name="processId"/>
+    <bpmn2:property id="newApplication" itemSubjectRef="ItemDefinition_2016" name="newApplication"/>
+    <bpmn2:property id="bucketCode" itemSubjectRef="ItemDefinition_2733" name="bucketCode"/>
+    <bpmn2:property id="controlSignalCode" itemSubjectRef="ItemDefinition_2733" name="controlSignalCode"/>
+    <bpmn2:property id="colourCode" itemSubjectRef="ItemDefinition_2733" name="colourCode"/>
+    <bpmn2:property id="outputMsg" itemSubjectRef="ItemDefinition_3323" name="outputMsg"/>
+    <bpmn2:property id="notificationCode" itemSubjectRef="ItemDefinition_2733" name="notificationCode"/>
+    <bpmn2:property id="orangeTimerCode" itemSubjectRef="ItemDefinition_2733" name="orangeTimerCode"/>
+    <bpmn2:property id="redTimerCode" itemSubjectRef="ItemDefinition_2733" name="redTimerCode"/>
+    <bpmn2:property id="dynamicControlCode" itemSubjectRef="ItemDefinition_2733" name="dynamicControlCode"/>
+    <bpmn2:property id="workflowStatus" itemSubjectRef="ItemDefinition_2733" name="workflowStatus"/>
+    <bpmn2:property id="dynamicStatusCode" itemSubjectRef="ItemDefinition_2733" name="dynamicStatusCode"/>
+    <bpmn2:property id="broadcastCode" itemSubjectRef="ItemDefinition_2733" name="broadcastCode"/>
+    <bpmn2:property id="statusCode" itemSubjectRef="ItemDefinition_2733" name="statusCode"/>
+    <bpmn2:property id="notificationSignal" itemSubjectRef="ItemDefinition_2291" name="notificationSignal"/>
+    <bpmn2:property id="notificationTemplate" itemSubjectRef="ItemDefinition_2733" name="notificationTemplate"/>
+    <bpmn2:property id="arrNotificationRecipient" itemSubjectRef="ItemDefinition_2733" name="arrNotificationRecipient"/>
+    <bpmn2:property id="templateMap" itemSubjectRef="ItemDefinition_1240" name="templateMap"/>
+    <bpmn2:property id="sendMsg" itemSubjectRef="ItemDefinition_2733" name="sendMsg"/>
+    <bpmn2:property id="startDynamicCode" itemSubjectRef="ItemDefinition_2733" name="startDynamicCode"/>
+    <bpmn2:property id="signatureCode" itemSubjectRef="ItemDefinition_2733" name="signatureCode"/>
+    <bpmn2:property id="newHCRBe" itemSubjectRef="ItemDefinition_2016" name="newHCRBe"/>
+    <bpmn2:property id="newEPRBe" itemSubjectRef="ItemDefinition_2016" name="newEPRBe"/>
+    <bpmn2:property id="newINTBe" itemSubjectRef="ItemDefinition_2016" name="newINTBe"/>
+    <bpmn2:property id="uuid" itemSubjectRef="ItemDefinition_2141" name="uuid"/>
+    <bpmn2:property id="results" itemSubjectRef="ItemDefinition_1240" name="results"/>
+    <bpmn2:property id="associatedInternBe" itemSubjectRef="ItemDefinition_2016" name="associatedInternBe"/>
+    <bpmn2:property id="associatedIntern" itemSubjectRef="ItemDefinition_2733" name="associatedIntern"/>
+    <bpmn2:property id="workflowBeCode" itemSubjectRef="ItemDefinition_2733" name="workflowBeCode"/>
+    <bpmn2:property id="appBeg" itemSubjectRef="ItemDefinition_2733" name="appBeg"/>
+    <bpmn2:property id="appHC" itemSubjectRef="ItemDefinition_2733" name="appHC"/>
+    <bpmn2:property id="associatedBegBe" itemSubjectRef="ItemDefinition_2016" name="associatedBegBe"/>
+    <bpmn2:property id="associatedHCBe" itemSubjectRef="ItemDefinition_2016" name="associatedHCBe"/>
+    <bpmn2:property id="str_five" itemSubjectRef="ItemDefinition_2733" name="str_five"/>
+    <bpmn2:property id="hold_str" itemSubjectRef="ItemDefinition_2733" name="hold_str"/>
+    <bpmn2:property id="internship_name" itemSubjectRef="ItemDefinition_2733" name="internship_name"/>
+    <bpmn2:property id="hc_name" itemSubjectRef="ItemDefinition_2733" name="hc_name"/>
+    <bpmn2:startEvent id="StartEvent_1" name="Start">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Start]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:outgoing>SequenceFlow_40</bpmn2:outgoing>
+    </bpmn2:startEvent>
+    <bpmn2:task id="Task_1" name="int length = tables.getLength();">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[int length = tables.getLength();]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_30</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_39</bpmn2:outgoing>
+    </bpmn2:task>
+    <bpmn2:task id="Task_2" name="tables.getFirst().drop()">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[tables.getFirst().drop()]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_37</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_41</bpmn2:outgoing>
+    </bpmn2:task>
+    <bpmn2:task id="Task_9" name="Tables tables = db.getTables()">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Tables tables = db.getTables()]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_42</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_30</bpmn2:outgoing>
+    </bpmn2:task>
+    <bpmn2:sequenceFlow id="SequenceFlow_30" drools:priority="1" sourceRef="Task_9" targetRef="Task_1"/>
+    <bpmn2:exclusiveGateway id="ExclusiveGateway_11" name="length > 0" gatewayDirection="Diverging">
+      <bpmn2:incoming>SequenceFlow_39</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_37</bpmn2:outgoing>
+      <bpmn2:outgoing>SequenceFlow_38</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+    <bpmn2:sequenceFlow id="SequenceFlow_37" drools:priority="1" name="true" sourceRef="ExclusiveGateway_11" targetRef="Task_2"/>
+    <bpmn2:endEvent id="EndEvent_2" name="End">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[End]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_38</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_38" drools:priority="1" name="false" sourceRef="ExclusiveGateway_11" targetRef="EndEvent_2"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_39" drools:priority="1" sourceRef="Task_1" targetRef="ExclusiveGateway_11"/>
+    <bpmn2:exclusiveGateway id="ExclusiveGateway_12" gatewayDirection="Converging">
+      <bpmn2:incoming>SequenceFlow_40</bpmn2:incoming>
+      <bpmn2:incoming>SequenceFlow_41</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_42</bpmn2:outgoing>
+    </bpmn2:exclusiveGateway>
+    <bpmn2:sequenceFlow id="SequenceFlow_40" drools:priority="1" sourceRef="StartEvent_1" targetRef="ExclusiveGateway_12"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_41" drools:priority="1" sourceRef="Task_2" targetRef="ExclusiveGateway_12"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_42" drools:priority="1" sourceRef="ExclusiveGateway_12" targetRef="Task_9"/>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1" name="Default Process Diagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="appliedBucket">
+      <bpmndi:BPMNShape id="BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds height="36.0" width="36.0" x="140.0" y="292.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_1">
+          <dc:Bounds height="11.0" width="20.0" x="148.0" y="328.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_1" bpmnElement="Task_1" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="480.0" y="285.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_3">
+          <dc:Bounds height="22.0" width="93.0" x="488.0" y="299.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_2" bpmnElement="Task_2" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="420.0" y="377.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_4">
+          <dc:Bounds height="11.0" width="90.0" x="430.0" y="396.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_9" bpmnElement="Task_9" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="330.0" y="285.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_2">
+          <dc:Bounds height="22.0" width="93.0" x="338.0" y="299.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_11" bpmnElement="ExclusiveGateway_11" isMarkerVisible="true">
+        <dc:Bounds height="50.0" width="50.0" x="659.0" y="285.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_5">
+          <dc:Bounds height="13.0" width="49.0" x="659.0" y="335.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_1" bpmnElement="EndEvent_2">
+        <dc:Bounds height="36.0" width="36.0" x="768.0" y="292.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_6">
+          <dc:Bounds height="11.0" width="17.0" x="777.0" y="328.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_12" bpmnElement="ExclusiveGateway_12" isMarkerVisible="true">
+        <dc:Bounds height="50.0" width="50.0" x="230.0" y="285.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_7"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_30" bpmnElement="SequenceFlow_30" sourceElement="BPMNShape_Task_9" targetElement="BPMNShape_Task_1">
+        <di:waypoint xsi:type="dc:Point" x="440.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="460.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="480.0" y="310.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_8"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_37" bpmnElement="SequenceFlow_37" sourceElement="BPMNShape_ExclusiveGateway_11" targetElement="BPMNShape_Task_2">
+        <di:waypoint xsi:type="dc:Point" x="684.0" y="335.0"/>
+        <di:waypoint xsi:type="dc:Point" x="684.0" y="402.0"/>
+        <di:waypoint xsi:type="dc:Point" x="530.0" y="402.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_9">
+          <dc:Bounds height="11.0" width="16.0" x="634.0" y="403.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_38" bpmnElement="SequenceFlow_38" sourceElement="BPMNShape_ExclusiveGateway_11" targetElement="BPMNShape_EndEvent_1">
+        <di:waypoint xsi:type="dc:Point" x="709.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="738.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="768.0" y="310.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_10">
+          <dc:Bounds height="11.0" width="20.0" x="730.0" y="311.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_39" bpmnElement="SequenceFlow_39" sourceElement="BPMNShape_Task_1" targetElement="BPMNShape_ExclusiveGateway_11">
+        <di:waypoint xsi:type="dc:Point" x="590.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="624.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="659.0" y="310.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_11"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_40" bpmnElement="SequenceFlow_40" sourceElement="BPMNShape_StartEvent_2" targetElement="BPMNShape_ExclusiveGateway_12">
+        <di:waypoint xsi:type="dc:Point" x="176.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="203.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="230.0" y="310.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_12"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_41" bpmnElement="SequenceFlow_41" sourceElement="BPMNShape_Task_2" targetElement="BPMNShape_ExclusiveGateway_12">
+        <di:waypoint xsi:type="dc:Point" x="420.0" y="402.0"/>
+        <di:waypoint xsi:type="dc:Point" x="255.0" y="402.0"/>
+        <di:waypoint xsi:type="dc:Point" x="255.0" y="335.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_13"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_42" bpmnElement="SequenceFlow_42" sourceElement="BPMNShape_ExclusiveGateway_12" targetElement="BPMNShape_Task_9">
+        <di:waypoint xsi:type="dc:Point" x="280.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="305.0" y="310.0"/>
+        <di:waypoint xsi:type="dc:Point" x="330.0" y="310.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_14"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

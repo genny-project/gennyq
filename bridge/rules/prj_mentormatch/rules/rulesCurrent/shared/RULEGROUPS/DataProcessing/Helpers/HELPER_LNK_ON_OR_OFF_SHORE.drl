@@ -1,0 +1,152 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.Ask;
+import life.genny.utils.VertxUtils;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.utils.RulesUtils;
+
+rule "HELPER_LNK_ON_OR_OFF_SHORE"
+	ruleflow-group 'DataProcessing'
+	salience 500
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE")
+		serviceToken : GennyToken (code == "PER_SERVICE")
+		answer : Answer((attributeCode == "LNK_ON_OR_OFF_SHORE"))
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " : Rule fired");
+
+        try {
+            String sourceCode = beUtils.getGennyToken().getUserCode();
+            String targetCode = answer.getTargetCode();
+            String value = answer.getValue();
+            String formattedValue = beUtils.cleanUpAttributeValue(value);
+            System.out.println("LNK_ON_OR_OFF_SHORE :: sourceCode = " + sourceCode);
+            System.out.println("LNK_ON_OR_OFF_SHORE :: targetCode = " + targetCode);
+            System.out.println("LNK_ON_OR_OFF_SHORE :: value = " + value);
+            System.out.println("LNK_ON_OR_OFF_SHORE :: formattedValue = " + formattedValue);
+
+            QDataAskMessage askMsg = QuestionUtils.getAsks(userToken.getUserCode(), targetCode, "QUE_MENTEE_PROFILE_GRP", userToken.getToken());
+            System.out.println("AskMessage = " + JsonUtils.toJson(askMsg));
+
+            if (askMsg != null) {
+                if ((askMsg.getItems().length > 0)) {
+                    if (askMsg.getItems()[0] != null) {
+                        if (!formattedValue.isEmpty()) {
+                            /*Value is selected, show / hide associated qns*/
+                            boolean isOnShore = "SEL_ONSHORE".equals(formattedValue);
+                            boolean isOffShore = "SEL_OFFSHORE".equals(formattedValue);
+                            System.out.println("LNK_ON_OR_OFF_SHORE :: isOnShore = " + isOnShore);
+                            System.out.println("LNK_ON_OR_OFF_SHORE :: isOffShore = " + isOffShore);
+
+                            for (Ask withValueChildAsk : askMsg.getItems()[0].getChildAsks()) {
+                                /*If chosen on-shore: ask How long have you been on-shore for?*/
+                                /*If chosen off-shore: ask Which country are you currently residing in?*/
+                                String withValueQnsCode = withValueChildAsk.getQuestionCode();
+                                if ("QUE_HOW_LONG_ONSHORE".equals(withValueQnsCode)) {
+                                    withValueChildAsk.setHidden(!isOnShore);
+                                    withValueChildAsk.setMandatory(isOnShore);
+                                }
+                                if ("QUE_MENTEE_WHICH_COUNTRY".equals(withValueQnsCode)) {
+                                    withValueChildAsk.setHidden(isOnShore);
+                                    withValueChildAsk.setMandatory(!isOnShore);
+                                }
+                            }
+
+                            if (isOnShore) {
+                                Answer residingCountryAns = new Answer(sourceCode, targetCode, "LNK_SELECT_COUNTRY", "");
+                                beUtils.saveAnswer(residingCountryAns);
+                                VertxUtils.sendToFrontEnd(userToken, residingCountryAns);
+
+                                /*check if edu loc is set then set phone code from there*/
+                                BaseEntity targetBE = beUtils.getBaseEntityByCode(targetCode);
+
+                                if (targetBE != null) {
+                                    String eduLocation = targetBE.getValue("LNK_WHERE_EDU_INST_LOC", null);
+
+                                    if (eduLocation != null) {
+                                        eduLocation = beUtils.cleanUpAttributeValue(eduLocation);
+                                        BaseEntity countryBE = beUtils.getBaseEntityByCode(eduLocation);
+
+                                        if (countryBE != null) {
+                                            String countryCode = countryBE.getValue("PRI_PHONE_CODE", null);
+
+                                            if (countryCode != null) {
+                                                String phoneCode = "+" + countryCode;
+                                                System.out.println("LNK_ON_OR_OFF_SHORE :: phoneCode = " + phoneCode);
+                                                /* Prepare mobile ask */
+                                                Attribute mobileAttr = RulesUtils.getAttribute("PRI_MOBILE", serviceToken);
+                                                Question mobileQues = new Question("QUE_MOBILE", "Phone", mobileAttr, true);
+                                                Ask mobileAsk = new Ask(mobileQues, sourceCode, targetCode, true);
+
+                                                /* Send the ask as DISABLE = true */
+                                                mobileAsk.setDisabled(true);
+                                                QDataAskMessage disableMobile = new QDataAskMessage(mobileAsk);
+                                                disableMobile.setToken(userToken.getToken());
+                                                VertxUtils.writeMsg("webcmds", disableMobile);
+
+                                                /* Send Answer to Front End */
+                                                Answer mobileAns = new Answer(sourceCode, targetCode, "PRI_MOBILE", phoneCode);
+                                                beUtils.saveAnswer(mobileAns);
+                                                VertxUtils.sendToFrontEnd(userToken, mobileAns);
+
+                                                /* Send the ask as DISABLE = false */
+                                                mobileAsk.setDisabled(false);
+                                                QDataAskMessage enableMobile = new QDataAskMessage(mobileAsk);
+                                                enableMobile.setToken(userToken.getToken());
+                                                VertxUtils.writeMsg("webcmds", enableMobile);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (isOffShore) {
+                                Answer howLongOnShoreAns = new Answer(sourceCode, targetCode, "LNK_HOW_LONG_ONSHORE", "");
+                                beUtils.saveAnswer(howLongOnShoreAns);
+                                VertxUtils.sendToFrontEnd(userToken, howLongOnShoreAns);
+                            }
+                        } else {
+                            System.out.println("LNK_ON_OR_OFF_SHORE :: Value is Empty.");
+                            /*On value removed, empty all associated be values and remove associated qns*/
+                            Answer clearResidingCountryAns = new Answer(sourceCode, targetCode, "LNK_SELECT_COUNTRY", "");
+                            beUtils.saveAnswer(clearResidingCountryAns);
+                            Answer clearHowLongOnShoreAns = new Answer(sourceCode, targetCode, "LNK_HOW_LONG_ONSHORE", "");
+                            beUtils.saveAnswer(clearHowLongOnShoreAns);
+                            VertxUtils.sendToFrontEnd(userToken, clearResidingCountryAns, clearHowLongOnShoreAns);
+
+                            for (Ask withOutValueChildAsk : askMsg.getItems()[0].getChildAsks()) {
+                                String withOutValueQnsCode = withOutValueChildAsk.getQuestionCode();
+                                if (("QUE_HOW_LONG_ONSHORE".equals(withOutValueQnsCode)) || ("QUE_MENTEE_WHICH_COUNTRY".equals(withOutValueQnsCode))) {
+                                    withOutValueChildAsk.setHidden(true);
+                                }
+                            }
+                        }
+                    } else {
+                        System.out.println("LNK_ON_OR_OFF_SHORE :: Ask Message Items [0] is NULL!!!");
+                    }
+                } else {
+                    System.out.println("LNK_ON_OR_OFF_SHORE :: Ask Message Items is empty!!!");
+                }
+                /* Send Asks regardless */
+                askMsg.setToken(userToken.getToken());
+                askMsg.setReplace(true);
+                VertxUtils.writeMsg("webcmds", askMsg);
+            } else {
+                System.out.println("LNK_ON_OR_OFF_SHORE :: Could not fetch ask from cache: QUE_MENTEE_PROFILE_GRP");
+            }
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+end

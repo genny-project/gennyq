@@ -1,0 +1,160 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.TableUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+import life.genny.qwanda.Answer;
+
+
+rule "EASY_CLICK_EVENT_REJECT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_REJECT_APPLICATION" ||
+                                    data.code matches "ACT_PRI_EVENT_REJECT_APPLY" ||
+                                    data.code matches "ACT_PRI_EVENT_REJECT_SHORTLIST" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println("Processing EASY CLICK EVENT REJECT : " + $message );
+
+		
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		/*
+		code: "ACT_PRI_EVENT_REJECT_APPLICATION"
+		parentCode: "SBE_INPROGRESS_APPLICATIONS_5B54BC48-E0D3-4867-B7AE-748834029C30"
+		targetCode: "APP_FCB876B5-6CE9-49B6-A692-59E43EF75544"
+		*/
+		
+		String targetCode = $message.getData().getTargetCode();		/* get targetCode e.g. APP_FCB876B5-6CE9-49B6-A692-59E43EF75544  */ 	
+		String parentCode = $message.getData().getParentCode(); 	/* get parentcode SBE e.g. SBE_INPROGRESS_XXXXX  */ 
+		System.out.println("targetCode: " +targetCode);
+		System.out.println("parentCode: " +parentCode);
+		
+		String[] parentSplit = parentCode.split("_");
+		String bucket = parentSplit[1];
+		System.out.println("bucket: " +bucket);									/* INPROGRESS */
+        
+		bucket = "SBE_" + bucket + "_APPLICATIONS";	
+		System.out.println("bucket: " +bucket);
+
+		/* FETCH PARENT INTERNSHIP */
+ 		BaseEntity parentInternshipBe = beUtils.getBaseEntityFromLNKAttr(targetCode, "LNK_INTERNSHIP");
+		if (parentInternshipBe != null) {
+			String limitInternsCode = beUtils.cleanUpAttributeValue(parentInternshipBe.getValueAsString("LNK_NO_OF_INTERNS"));
+ 			BaseEntity limitInternsBe = beUtils.getBaseEntityByCode(limitInternsCode);
+	 		Integer limitNumberInterns = Integer.valueOf(limitInternsBe.getName());
+			Integer currentNumberInterns = Integer.valueOf(parentInternshipBe.getValueAsString("PRI_CURRENT_INTERNS"));
+
+			/*
+			if (currentNumberInterns == limitNumberInterns) {
+				System.out.println(drools.getRule().getName() + " - Enabling other applications for " + parentInternshipBe.getCode());
+				SearchEntity searchBE = new SearchEntity("SBE_LINKED_APPLICATIONS", "Linked Applications")
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+					.addFilter("LNK_INTERNSHIP", SearchEntity.StringFilter.LIKE, "%"+parentInternshipBe.getCode()+"%")
+					.setPageStart(0).setPageSize(100000);
+		
+				searchBE.setRealm(serviceToken.getRealm());
+				List<BaseEntity> linkedApps = beUtils.getBaseEntitys(searchBE);
+				System.out.println(drools.getRule().getName() + " - Found " + linkedApps.size() + " other applications");
+
+				for (BaseEntity linkedApplication : linkedApps) {
+					String appStatus = linkedApplication.getValueAsString("PRI_STATUS");
+					if ( appStatus.equals("APPLIED") || appStatus.equals("SHORTLISTED") || appStatus.equals("INTERVIEWED") ) {
+						System.out.println(drools.getRule().getName() + " Re-Enabling application " + linkedApplication.getCode());
+						beUtils.saveAnswer(new Answer(userToken.getUserCode(), linkedApplication.getCode(), "PRI_DISABLED", false));
+						QDataBaseEntityMessage appBeMsg = new QDataBaseEntityMessage(linkedApplication);
+						appBeMsg.setToken(userToken.getToken());
+						appBeMsg.setReplace(true);
+						VertxUtils.writeMsg("webcmds", JsonUtils.toJson(appBeMsg));
+						TableUtils.moveEntity(linkedApplication.getCode(), null, "SBE_"+appStatus+"_APPLICATIONS", beUtils);		
+					}
+				}
+			}
+			*/
+			/* DECREMENT INTERN COUNT */
+			String status = beUtils.getBaseEntityValueAsString(targetCode, "PRI_STATUS");
+			if ( status.equals("OFFERED") || status.equals("PLACED") || status.equals("PROGRESS") ) {
+				if (currentNumberInterns > 0) {
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), parentInternshipBe.getCode(), "PRI_CURRENT_INTERNS", Integer.toString(currentNumberInterns-1)));
+					System.out.println(drools.getRule().getName() + " - Intern Count now at " + Integer.toString(currentNumberInterns-1));
+				}
+			}
+		} else {
+			System.out.println(drools.getRule().getName() + " - COULD NOT GET PARENT BEG FOR " + targetCode);
+		}
+ 		
+		/* Save the new status */ 	
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), targetCode , "PRI_STATUS", "REJECT"));
+
+		/* MAKE SURE INTERN BE STATUS IS UP TO DATE */
+		BaseEntity applicationBE = beUtils.getBaseEntityByCode(targetCode);
+		if (applicationBE != null) {
+			String internCode = applicationBE.getValue("PRI_INTERN_CODE", null);
+			System.out.println("internCode = " + internCode);
+			if (internCode != null) {
+				BaseEntity internBE = beUtils.getBaseEntityByCode(internCode);
+				if (internBE != null) {
+					SearchEntity searchBE = new SearchEntity("SBE_LINKED_APPLICATIONS", "Linked Applications")
+						.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+						.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, internBE.getCode())
+						.setPageStart(0).setPageSize(100000);
+			
+					searchBE.setRealm(serviceToken.getRealm());
+					List<BaseEntity> linkedApps = beUtils.getBaseEntitys(searchBE);
+					String[] statusArray = { "AVAILABLE", "APPLIED", "SHORTLISTED", "INTERVIEWED", "OFFERED", "PLACED", "PROGRESS", "COMPLETED" };
+					int index = 0;
+					for (BaseEntity app : linkedApps) {
+						/* FIND MOST PROGRESSED STATUS */
+						String appStatus = app.getValue("PRI_STATUS", null);
+						if (appStatus != null) {
+							if (Arrays.toString(statusArray).contains(appStatus)) {
+								int pos = Arrays.asList(statusArray).indexOf(appStatus);
+								if (pos > index) {
+									index = pos;
+								}
+							}
+						} else {
+							System.out.println("PRI_STATUS is null for " + app.getCode());
+						}
+					}
+					System.out.println("new status = " + statusArray[index]);
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), internBE.getCode() , "PRI_STATUS", statusArray[index]));
+				} else {
+					System.out.println("internBE is null");
+				}
+			} else {
+				System.out.println("internCode in null");
+			}
+		} else {
+			System.out.println("applicationBE in null");
+		}
+
+ 		/*Boolean cache = true;
+				TableUtils.searchTable(beUtils, bucket, cache);*/
+		
+		TableUtils.moveEntity(targetCode, bucket, null, beUtils);
+        
+		System.out.println("REJECTED APPLICATION : " +targetCode);
+	
+		retract( $message);
+	end

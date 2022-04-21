@@ -1,0 +1,78 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+import life.genny.rules.listeners.GennyRuleTimingListener;
+import life.genny.utils.TableUtils;
+
+
+
+rule "PRI_SEARCH_TEXT_WARNINGS_TABLE"
+	ruleflow-group 'DataProcessing'
+	salience 600
+	no-loop true
+	when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "USER") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" 
+	  			&& ( 
+					targetCode matches "SBE_WARNINGS_.*" ||
+					targetCode matches "SBE_APPENDIX_WARNINGS_.*"
+				)
+				&& (value.startsWith("!")) )   /* this is a pure assist search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+	then
+		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+		retract(answer);
+
+		String value = answer.getValue().substring(1);
+
+		/* get current search */
+		TableUtils tableUtils = new TableUtils(beUtils);
+
+		SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", "SBE_WARNINGS", SearchEntity.class, beUtils.getGennyToken().getToken());
+
+		/* update the sbe object */
+		searchBE.setWildcard(value);
+		searchBE.setPageStart(0);
+
+		/* Reset the PRI_CODE filter to search across all definitions */
+		searchBE.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "WRN_%");
+		searchBE.setDisplayMode("VERTICAL");
+		
+		/* send the data */
+		TableUtils.searchTable(beUtils, searchBE, true);
+
+		retract(answer);
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+end

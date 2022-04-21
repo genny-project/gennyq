@@ -1,0 +1,49 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "ADMIN"
+    ruleflow-group 'GenerateSearches'
+     no-loop true
+    when
+       not  SearchEntity (code == "ADMIN")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Admin")
+			.addFilter("PRI_IS_ADMIN", true)
+			.addColumn("PRI_NAME", "Name")
+			.addColumn("PRI_ASSOC_EP", "Education Provider")
+			.addColumn("PRI_EMAIL", "Email")
+			.addColumn("PRI_MOBILE", "Mobile")
+			.addColumn("PRI_IMAGE_URL", " ")
+			.setDisplayMode("DETAIL_VIEW")
+
+			.setPageStart(0).setPageSize(GennySettings.defaultPageSize);
+
+		searchBE.setRealm(serviceToken.getRealm());
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

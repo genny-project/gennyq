@@ -1,0 +1,83 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "INTERNSHIP_DETAIL_VIEW"
+	ruleflow-group 'DetailView'
+	salience 6
+	when
+		$message : QEventMessage(	data.targetCode matches "BEG_.*" && 
+									(
+										data.parentCode matches "SBE_SUMMARY_INTERNSHIPS_.*" ||
+										data.parentCode matches "SBE_INTERNSHIPS_.*" ||
+										data.parentCode matches "SBE_LINKED_INTERNSHIP_OPP_.*" ||
+										data.parentCode matches "QUE_INTERNSHIP_GRP" ||
+										data.parentCode matches "SBE_INTERN_RECOMMENDATIONS_.*" ||
+										data.parentCode matches "SBE_LINKED_INTERNSHIP_OF_SUPERVISOR_.*" ||
+										data.parentCode matches "PRI_MATCHED_INTERNSHIPS"
+									)
+								)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		allowed: Allowed(	code == "AGENT" ||
+										code == "INTERN" ||
+										code == "EDU_PRO_REP" ||
+										code == "HOST_CPY_REP" )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+	
+		if(targetCode != null){
+			TableUtils.searchTable(beUtils,"SBE_INTERNSHIP", true, "PRI_CODE", targetCode);
+
+			BaseEntity be = beUtils.getBaseEntityByCode(targetCode);
+			if(be!=null){
+				String cpyCode = be.getValue("LNK_HOST_COMPANY",null);
+				if(cpyCode != null){
+					cpyCode= cpyCode.replaceAll("[\\[\\](){}\"]", "").replace("\"", "");
+					System.out.println("cpyCode ::  " + cpyCode);
+
+					TableUtils.searchTable(beUtils,"SBE_LINKED_HOST_CPY", true, "PRI_CODE", cpyCode);
+				}
+
+				if(!allowed.code.equals("INTERN")){
+					String internSupervisorCode = be.getValue("LNK_INTERN_SUPERVISOR",null);
+					if(internSupervisorCode != null){
+						internSupervisorCode= internSupervisorCode.replaceAll("[\\[\\](){}\"]", "").replace("\"", "");
+						System.out.println("internSupervisorCode ::  " + internSupervisorCode);
+
+						TableUtils.searchTable(beUtils,"SBE_LINKED_INTERN_SUPERVISOR", true, "PRI_CODE", internSupervisorCode);
+					}
+				}
+			}else{
+				System.out.println("be code is null. Not in the cache");
+			}
+
+		}else{
+			System.out.println("TARGET code is null. Check FE console !");
+
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		retract( $message);
+
+end

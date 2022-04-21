@@ -1,0 +1,100 @@
+package life.genny.rules;
+
+
+
+rule "ROL_SUPERADMIN"
+    ruleflow-group 'GenerateCapabilities'
+     no-loop true
+    when
+        not BaseEntity (code == "ROL_SUPERADMIN")
+        capabilityUtils : CapabilityUtils()
+        user : BaseEntity (code == "ROL_DEV")
+        beUtils : BaseEntityUtils()
+    then
+        System.out.println("   Generate "+drools.getRule().getName());
+
+       /* BaseEntity defBE = beUtils.getDEFByCode("DEF_ROLE");
+        BaseEntity role = capabilityUtils.getBeUtils().create(defBE, WordUtils.capitalize(drools.getRule().getName().substring(4)), drools.getRule().getName());
+
+        beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), role.getCode(), "PRI_COLOR", "#FFD500", false, true));
+
+        capabilityUtils.inheritRole(role,user);
+
+        Adding types 
+        capabilityUtils.addCapabilityToRole(role, "TYPE_SUPER_ADMIN", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_ADMIN", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_TENANT", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_REFERRAL_PARTNER", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_DEVELOPER", CapabilityMode.ADD);
+        
+        /* User Management 
+        capabilityUtils.addCapabilityToRole(role, "ARCHIVE_USER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "BLOCK_USER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "DELETE_USER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "RESET_PASS_OWN", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "RESET_PASS_OTHER", CapabilityMode.VIEW);
+
+        /* Property Management 
+        capabilityUtils.addCapabilityToRole(role, "TYPE_LISTING", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "EDIT_LISTING", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "DELETE_LISTING", CapabilityMode.VIEW);
+        /* TODO: Unsure whether or not to merge these two capabilities 
+        capabilityUtils.addCapabilityToRole(role, "ARCHIVE_LISTING", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "WITHDRAW_LISTING", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "VIEW_LISTINGS", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "APPLY_TO_LISTING", CapabilityMode.VIEW);
+
+        /* Application Management 
+        capabilityUtils.addCapabilityToRole(role, "TYPE_TENANCY_APP", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "UPLOAD_TENANCY_APP_OTHER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "EDIT_TENANCY_APP_OTHER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "EDIT_TENANCY_APP_OWN", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "ARCHIVE_TENANCY_APP_OTHER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "DELETE_TENANCY_APP_OTHER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "DELETE_TENANCY_APP_OWN", CapabilityMode.VIEW);
+
+        /* Application Approval 
+        capabilityUtils.addCapabilityToRole(role, "APPROVE_TENANCY_APP", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "DECLINE_TENANCY_APP", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "VIEW_TENANT_DOCUMENTS", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "VIEW_TENANT_DETAILS", CapabilityMode.VIEW);
+
+        /* Payment Capabilities 
+        capabilityUtils.addCapabilityToRole(role, "EDIT_CREDIT_CARD_DETAILS_OTHER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "EDIT_CREDIT_CARD_DETAILS_OWN", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "VIEW_PAYMENT_STATUS_OF_TENANT", CapabilityMode.VIEW);
+
+        /* Profile Management
+        capabilityUtils.addCapabilityToRole(role, "PROFILE_AGENT", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "PROFILE_TENANT", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "PROFILE_REFERRAL_PARTNER", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "PROFILE_DEVELOPER", CapabilityMode.VIEW);
+
+        /* Tenant Management 
+        capabilityUtils.addCapabilityToRole(role, "TENANT_MANAGEMENT_PORTAL", CapabilityMode.DELETE);
+
+        /* Communication 
+        capabilityUtils.addCapabilityToRole(role, "WRITE_NOTES", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "RESEND_SYS_MSG_EMAIL", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "RESEND_SYS_MSG_SMS", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "RESEND_SYS_MSG_WHATSAPP", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "SEND_CUSTOM_MSG_EMAIL", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "SEND_CUSTOM_MSG_SMS", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "SEND_CUSTOM_MSG_WHATSAPP", CapabilityMode.VIEW);
+
+        /* Views 
+        capabilityUtils.addCapabilityToRole(role, "VIEW_VIEW_TENANT_PROCESS", CapabilityMode.VIEW);
+        capabilityUtils.addCapabilityToRole(role, "VIEW_VIEW_TENANT_TABLE", CapabilityMode.VIEW);
+
+        /* Super Admin Tools 
+        capabilityUtils.addCapabilityToRole(role, "CONFIG_SYSTEM_SETTINGS", CapabilityMode.VIEW);
+
+        capabilityUtils.addCapabilityToRole(role, "TYPE_PROPERTY", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_TENANT_APPLICATION", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_PROPERTY_LISTING", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_PASSPORT", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_VISA", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_REFERRAL_PARTNER", CapabilityMode.ADD);
+        capabilityUtils.addCapabilityToRole(role, "TYPE_DEVELOPER", CapabilityMode.ADD); */
+
+end

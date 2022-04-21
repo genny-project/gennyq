@@ -1,0 +1,85 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_RFR_INTERN"
+	ruleflow-group 'SearchFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		searchBE: SearchEntity( code == "SBE_GRP_REASON_FOR_REJECTION" )
+		allowed: Allowed(code == "INTERN" )
+		beUtils : BaseEntityUtils( )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("userCode     :: " + userToken.getUserCode());
+		System.out.println("searchCode   :: " + searchBE.getCode());
+
+		EntityAttribute dropdownTarget = searchBE.findEntityAttribute("SCH_DROPDOWN_TARGET").orElse(null);
+		System.out.println("dropdownTarget = " + dropdownTarget);
+		if (dropdownTarget == null) {
+			System.out.println("dropdownTarget is null");
+			return;
+		}
+
+		BaseEntity applicationBE = beUtils.getBaseEntityByCode(dropdownTarget.getValue());
+		System.out.println("applicationBE = " + applicationBE);
+		if(applicationBE == null){
+			System.out.println("applicationBE is null");
+			return;
+		}
+
+		String status = applicationBE.getValue("PRI_STATUS", null);		
+		System.out.println("status = " + status);
+		if(status == null){
+			System.out.println("status is null");
+			return;
+		}
+		
+		/* TODO: change items based on status */
+		if (status.equals("APPLIED") || status.equals("OFFERED")) {
+			searchBE.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "SEL_REJECT_ITEM_1");
+			searchBE.addOr("PRI_CODE", SearchEntity.StringFilter.LIKE, "SEL_REJECT_ITEM_2");
+			searchBE.addOr("PRI_CODE", SearchEntity.StringFilter.LIKE, "SEL_REJECT_ITEM_3");
+			searchBE.addOr("PRI_CODE", SearchEntity.StringFilter.LIKE, "SEL_REJECT_ITEM_4");
+			searchBE.addOr("PRI_CODE", SearchEntity.StringFilter.LIKE, "SEL_REJECT_ITEM_5");
+		} else if (status.equals("INTERVIEWED")) {
+			searchBE.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "SEL_REJECT_ITEM_4");
+			searchBE.addOr("PRI_CODE", SearchEntity.StringFilter.LIKE, "SEL_REJECT_ITEM_5");
+		} else {
+			System.out.println("status not accounted for yet");
+			return;
+		}
+
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(searchBE);
+		msg.setAliasCode("SBE");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+		retract(allowed); 
+end

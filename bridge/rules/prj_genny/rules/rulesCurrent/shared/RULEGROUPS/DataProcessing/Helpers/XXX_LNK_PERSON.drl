@@ -1,0 +1,190 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.TaskUtils;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.utils.QuestionUtils;
+
+rule "LNK_PERSON"
+	ruleflow-group 'DataProcessing'
+	salience 500
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		answer : Answer( attributeCode == "LNK_PERSON" && value != "[]" )
+		output : OutputParam()
+		beUtils : BaseEntityUtils()
+
+	then
+		System.out.println(drools.getRule().getName()+": Rule fired");
+		
+
+		/* Ensure frontend has updated dropdown value */
+		VertxUtils.sendToFrontEnd(userToken, answer);
+ 		
+		/* Get Target User BE */
+ 		String value = answer.getValue();
+ 		System.out.println("value = " + value); 
+		String cleanCodes = beUtils.cleanUpAttributeValue(value);
+		System.out.println("cleanCodes = " + cleanCodes);
+
+		String[] codeArray = cleanCodes.split(",");
+
+		List<BaseEntity> beList = Arrays.stream(codeArray).map(x -> beUtils.getBaseEntityByCode(x)).collect(Collectors.toList());
+
+		TableUtils tableUtils = new TableUtils(beUtils);
+
+		/* Currently only works for one */
+		BaseEntity target = beList.get(0);
+
+		if (target == null) {
+			System.out.println("TARGET BE IS NULL!");
+			return;
+		}
+
+		Boolean isHostCpyRep = target.getValue("PRI_IS_HOST_CPY_REP", false);
+		Boolean isEduProRep = target.getValue("PRI_IS_EDU_PRO_REP", false);
+		Boolean isAgent = target.getValue("PRI_IS_AGENT", false);
+		Boolean isHC = target.getValue("PRI_IS_HOST_CPY", false);
+		Boolean isEduPro = target.getValue("PRI_IS_EDU_PROVIDER", false);
+
+		SearchEntity availableSearch = null;
+
+		/* Fetch All Applications */
+		SearchEntity appSearchBE = new SearchEntity("SBE_INTERN_APPLICATIONS", "Intern Applications")
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+			.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, target.getCode());
+
+		if (isHostCpyRep) {
+			/* Fetch All Applications */
+			appSearchBE = new SearchEntity("SBE_INTERN_APPLICATIONS", "Intern Applications")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+				.addFilter("LNK_INTERNSHIP.LNK_HOST_COMPANY_REP", SearchEntity.StringFilter.EQUAL, target.getCode());
+
+		} else if (isEduProRep) {
+			/* Fetch All Applications */
+			String eduProv = beUtils.getBaseEntityByCode(target.getCode()).getValue("LNK_EDU_PROVIDER");
+			appSearchBE = new SearchEntity("SBE_INTERN_APPLICATIONS", "Intern Applications")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+				.addFilter("PRI_INTERN_CODE.LNK_EDU_PROVIDER", SearchEntity.StringFilter.EQUAL, eduProv);
+		} else if (isAgent) {
+			/* Fetch All Applications */
+			appSearchBE = new SearchEntity("SBE_INTERN_APPLICATIONS", "Intern Applications")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+				.addFilter("PRI_INTERN_CODE.LNK_AGENT", SearchEntity.StringFilter.EQUAL, target.getCode());
+		} else if (isHC) {
+			/* Fetch All Applications */
+			appSearchBE = new SearchEntity("SBE_INTERN_APPLICATIONS", "Intern Applications")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+				.addFilter("LNK_INTERNSHIP.LNK_HOST_COMPANY", SearchEntity.StringFilter.EQUAL, target.getCode());
+		} else if (isEduPro) {
+			/* Fetch All Applications */
+			appSearchBE = new SearchEntity("SBE_INTERN_APPLICATIONS", "Intern Applications")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+				.addFilter("PRI_INTERN_CODE.LNK_EDU_PROVIDER", SearchEntity.StringFilter.EQUAL, target.getCode());
+		}
+
+		if (availableSearch != null) {
+			beList = beUtils.getBaseEntitys(availableSearch);
+		}
+
+		List<BaseEntity> availableCol = new ArrayList<>();
+
+		/* Check if each intern can be shown in available col */
+		for (BaseEntity availableIntern : beList) {
+
+			/* BaseEntity availableIntern = beUtils.getBaseEntityByCode(code); */
+
+			Boolean disabled = availableIntern.getValue("PRI_DISABLED", false);
+			String personStatus = availableIntern.getValue("PRI_STATUS", "");
+
+			if ((!disabled)&&(!personStatus.equals("PROGRESS"))&&(!personStatus.equals("PLACED"))) {
+				availableCol.add(availableIntern);
+			}
+		}
+
+		Long total = Long.valueOf(availableCol.size());
+
+		/* Send Available Card */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(availableCol);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		msg.setTotal(total);
+		msg.setParentCode("SBE_AVAILABLE_INTERNS_"+userToken.getJTI().toUpperCase());
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msg));
+
+		SearchEntity availableSearch = VertxUtils.getObject(serviceToken.getRealm(), "", "SBE_AVAILABLE_INTERNS_"+userToken.getJTI().toUpperCase(), SearchEntity.class, serviceToken.getToken());
+		tableUtils.updateBaseEntity(availableSearch, "PRI_TOTAL_RESULTS", total + "");
+
+		QDataBaseEntityMessage availableSearchMsg = new QDataBaseEntityMessage(availableSearch);
+		availableSearchMsg.setToken(userToken.getToken());
+		availableSearchMsg.setReplace(true);
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(availableSearchMsg));
+
+		/* Add OR filter for every other code */
+		if (codeArray.length > 1) {
+			for (int i = 1; i < codeArray.length; i++) {
+				appSearchBE.addOr("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, codeArray[i]);
+			}
+		}
+
+		List<BaseEntity> internApplications = beUtils.getBaseEntitys(appSearchBE);
+		System.out.println("found " + internApplications + " applications");
+
+		String[] codes = { "SBE_APPLIED_APPLICATIONS", "SBE_SHORTLISTED_APPLICATIONS", "SBE_INTERVIEWED_APPLICATIONS", 
+							"SBE_OFFERED_APPLICATIONS", "SBE_PLACED_APPLICATIONS", "SBE_INPROGRESS_APPLICATIONS" };
+
+		String[] statusCodes = { "APPLIED", "SHORTLISTED", "INTERVIEWED", "OFFERED", "PLACED", "PROGRESS" };
+
+		for (int i = 0; i < codes.length; i++) {
+			String searchCode = codes[i]+"_"+userToken.getJTI().toUpperCase();
+			SearchEntity searchBE = VertxUtils.getObject(serviceToken.getRealm(), "", searchCode, SearchEntity.class, serviceToken.getToken());
+			List<BaseEntity> bucketApps = new ArrayList<>();
+			for (BaseEntity application : internApplications) {
+				String appStatus = application.getValue("PRI_STATUS", null);
+				if (appStatus != null && appStatus.equals(statusCodes[i])) {
+
+					/* Get Assoc Cols and add them to the BE */
+					for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
+						if (ea.getAttributeCode().startsWith("COL__")) {
+							Answer ans = SearchUtils.getAssociatedColumnValue(beUtils, application, ea.getAttributeCode(), serviceToken);
+
+							if (ans != null) {
+								try {
+									application.addAnswer(ans);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						}
+					}
+
+					bucketApps.add(application);
+				}
+			}
+			/* Send Available Card */
+			QDataBaseEntityMessage appMsg = new QDataBaseEntityMessage(bucketApps);
+			appMsg.setToken(userToken.getToken());
+			appMsg.setReplace(true);
+			appMsg.setParentCode(searchCode);
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(appMsg));
+
+			tableUtils.updateBaseEntity(searchBE, "PRI_TOTAL_RESULTS", Long.valueOf(bucketApps.size()) + ""); 
+
+			QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
+			searchMsg.setToken(userToken.getToken());
+			searchMsg.setReplace(true);
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(searchMsg));
+
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");
+		retract(answer);
+end

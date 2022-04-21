@@ -1,0 +1,187 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import org.json.JSONObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.JsonUtils;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
+import life.genny.utils.OutputParam;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
+
+rule "BUCKET_MOVEMENT"
+    ruleflow-group 'DataProcessing'
+        salience 10 
+    when
+	  userToken : GennyToken (code != "PER_SERVICE" )
+	  serviceToken : GennyToken (code == "PER_SERVICE" )
+	  answer : Answer( attributeCode matches "PRI_UNITY_DATA" )
+	  answersToSave : Answers()
+	  ruleDetails : RuleDetails()
+	  output : OutputParam( )
+
+     then
+ 		System.out.println(drools.getRule().getName()+" - Rule fired! Processing Answer/Data : " + answer );
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(userToken, serviceToken);
+
+		String sourceCode = answer.getSourceCode();
+		String targetCode = answer.getTargetCode();
+
+		JSONObject json = new JSONObject((String) answer.getValue());
+
+		Integer scene = Integer.parseInt(json.get("sceneNumber").toString());
+		String part = json.get("part").toString().toUpperCase();
+		Integer question = Integer.parseInt(json.get("question").toString());
+		Integer wrongAttempts = Integer.parseInt(json.get("incorrectAnswerCount").toString());
+	
+ 		System.out.println(drools.getRule().getName()+" - Scenario = " + scene );
+ 		System.out.println(drools.getRule().getName()+" - Part = " + part );
+ 		System.out.println(drools.getRule().getName()+" - Question = " + question );
+
+		if (scene == 0) {
+ 			System.out.println(drools.getRule().getName()+" - Scenario is 0 ... Skipping This Data Message" );
+		} else {
+			beUtils.saveAnswer(new Answer(sourceCode, targetCode, "PRI_CURRENT_SCENARIO", scene));
+			beUtils.saveAnswer(new Answer(sourceCode, targetCode, "PRI_CURRENT_PART", part));
+			beUtils.saveAnswer(new Answer(sourceCode, targetCode, "PRI_CURRENT_QUESTION", question));
+
+			String currentScenarioString = beUtils.getBaseEntityValueAsString(targetCode, "PRI_CURRENT_SCENARIO");
+
+			if (currentScenarioString != null) {
+				Integer currentScenario = Integer.valueOf(currentScenarioString);
+				
+				if (currentScenario != scene)  {
+					String fromBucket = null;
+					String toBucket = null;
+
+					if (currentScenario == 1) { fromBucket = "ONE"; }
+					if (currentScenario == 2) { fromBucket = "TWO"; }
+					if (currentScenario == 3) { fromBucket = "THREE"; }
+					if (currentScenario == 4) { fromBucket = "FOUR"; }
+					if (currentScenario == 5) { fromBucket = "FIVE"; }
+					if (currentScenario == 6) { fromBucket = "SIX"; }
+					if (currentScenario == 7) { fromBucket = "SEVEN"; }
+					if (currentScenario == 8) { fromBucket = "EIGHT"; }
+					if (currentScenario == 9) { fromBucket = "NINE"; }
+					if (currentScenario == 10) { fromBucket = "TEN"; }
+
+					if (scene == 1) { toBucket = "ONE"; }
+					if (scene == 2) { toBucket = "TWO"; }
+					if (scene == 3) { toBucket = "THREE"; }
+					if (scene == 4) { toBucket = "FOUR"; }
+					if (scene == 5) { toBucket = "FIVE"; }
+					if (scene == 6) { toBucket = "SIX"; }
+					if (scene == 7) { toBucket = "SEVEN"; }
+					if (scene == 8) { toBucket = "EIGHT"; }
+					if (scene == 9) { toBucket = "NINE"; }
+					if (scene == 10) { toBucket = "TEN"; }
+
+					TableUtils.moveEntity(targetCode, "SBE_BUCKET_SCENARIO_" + fromBucket, "SBE_BUCKET_SCENARIO_TWO" + toBucket, beUtils);
+				}
+			}
+
+			/* UPDATE RESULT BE */
+			BaseEntity resultBE = beUtils.getBaseEntityFromLNKAttr(userToken.getUserCode(), "PRI_RESULTS_BE_CODE_S"+scene);
+			if (resultBE == null) {
+				System.out.println(drools.getRule().getName() + " - User has no result be, this is only an issue if they are a student");
+			} else {
+
+				System.out.println(drools.getRule().getName() + " - Found Results BE with code " + resultBE.getCode());
+
+				String baseAttributeString = "PRI_" + part + "_Q" + question;
+				String scoreAttributeCode = baseAttributeString + "_SCORE"; 
+				String passOrFailAttributeCode = baseAttributeString + "_PASS_OR_FAIL";
+
+				/* calculate the score */
+				Double score = 1.0;
+				String scoreRaw = resultBE.getValueAsString(scoreAttributeCode);
+				if (scoreRaw != null) {
+					score = Double.valueOf(scoreRaw);
+				}
+
+				if (wrongAttempts != 0) {
+					if (score > 0) {
+						score = 1 - ( 0.2 * wrongAttempts );
+						score = Math.round(score*100.0)/100.0;
+
+						System.out.println(drools.getRule().getName()+" - New score for question is " + score.toString() );
+					} else {
+						System.out.println(drools.getRule().getName()+" - Score is 0, cannot go lower" );
+					}	
+				} else {
+					
+					System.out.println(drools.getRule().getName()+" - Success! Question answered correctly" );
+					String passOrFail = "fail";
+					if (score >= 0.5) {
+						passOrFail = "pass";
+					}
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), resultBE.getCode(), passOrFailAttributeCode, passOrFail));
+					if (part.equals("C") && question == 5) {
+						beUtils.saveAnswer(new Answer(userToken.getUserCode(), resultBE.getCode(), "PRI_TIME_COMPLETED", DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(LocalDateTime.now())));
+					}
+					if (scene == 10 && part.equals("C") && question == 5) {
+						beUtils.saveAnswer(new Answer(userToken.getUserCode(), userToken.getUserCode(), "PRI_STATUS", "COMPLETED"));
+					}
+				}
+
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), resultBE.getCode(), scoreAttributeCode, score));
+
+			}
+
+			System.out.println(drools.getRule().getName() + " - Checking for Timeline updates...");
+
+			/* UPDATE DASHBOARD TIMELINE - PRI_SCENARIOS */
+			if ((scene == 1) || (scene == 4) || (scene == 7) || (scene == 10)) {
+
+				String attribute = null;
+				if (scene == 1) {
+					attribute = "PRI_SCENARIO_1";
+				} 
+				else if (scene == 4) {
+					attribute = "PRI_SCENARIO_2_TO_4";
+				}
+				else if (scene == 7) {
+					attribute = "PRI_SCENARIO_5_TO_7";
+				}
+				else if (scene == 10) {
+					attribute = "PRI_SCENARIO_8_TO_10";
+				}
+				String timelineJsonString = beUtils.getBaseEntityValueAsString(targetCode, "PRI_TIMELINE_JSON");
+				if (timelineJsonString != null) {
+					System.out.println(drools.getRule().getName() + " - Saving update for timeline");
+					JSONObject timelineJson = new JSONObject(timelineJsonString);
+					timelineJson.put(attribute, true);
+					beUtils.saveAnswer(new Answer(sourceCode, targetCode, "PRI_TIMELINE_JSON", timelineJson.toString()));
+				} else {
+					System.out.println(drools.getRule().getName() + " - COULD NOT FIND TIMELINE JSON ATTRIBUTE");
+				}
+			}
+
+			BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+			QDataBaseEntityMessage userBeMsg = new QDataBaseEntityMessage(userBe);
+			userBeMsg.setToken(userToken.getToken());
+			userBeMsg.setReplace(true);
+			System.out.println(drools.getRule().getName() + " - Sending userBE");
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(userBeMsg));
+		}
+
+		System.out.println(drools.getRule().getName() + " - Json = " + json.toString());
+
+		retract( answer );
+
+end

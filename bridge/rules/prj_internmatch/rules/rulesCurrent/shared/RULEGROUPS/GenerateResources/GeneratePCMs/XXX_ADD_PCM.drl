@@ -1,0 +1,75 @@
+package life.genny.rules;
+
+import org.apache.commons.lang3.StringUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import life.genny.utils.SearchCallable;
+import life.genny.utils.TableFrameCallable;
+import life.genny.utils.CacheSearchUtils;
+
+rule "ADD_PCM"
+    ruleflow-group 'GeneratePCMs'
+		salience 5000 
+        no-loop true
+    when
+			beUtils : BaseEntityUtils()
+			serviceToken : GennyToken( code == "PER_SERVICE")
+			ruleDetails : RuleDetails()
+    then
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " );
+
+			System.out.println("Adding PCM...");
+
+			BaseEntity defBE = beUtils.getDEFByCode("DEF_PCM");
+
+			BaseEntity newBe = beUtils.create(defBE, "PCM_INTERN_PROFILE", "PCM Intern Profile");
+
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_IS_PCM", "TRUE"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_TEMPLATE_CODE", "TPL_INTERN"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC1", "PRI_IMAGE_URL"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC2", "PRI_NAME"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC3", "_LNK_EDU_PROVIDER__PRI_NAME"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC4", "PRI_EMAIL"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC5", "PRI_MOBILE"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC6", "PRI_ADDRESS_FULL"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC7", "PRI_LINKEDIN_URL"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC8", "ACT_PRI_EVENT_APPLY"));
+			beUtils.saveAnswer(new Answer(serviceToken.getUserCode(), "PCM_INTERN_PROFILE", "PRI_LOC9", "DUMMY"));
+
+
+		end

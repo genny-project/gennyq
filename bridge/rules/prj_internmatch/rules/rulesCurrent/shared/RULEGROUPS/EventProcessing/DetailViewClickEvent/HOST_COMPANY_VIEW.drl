@@ -1,0 +1,44 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "HOST_COMPANY_VIEW"
+	ruleflow-group 'EventProcessing'
+	salience 100
+	no-loop
+	when
+		$message : QEventMessage(data.code matches "QUE_HOST_COMPANY_VIEW" )
+		allowed: Allowed(code == "HOST_CPY_REP" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+    BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		
+    if(userBe != null){
+      String lnkHostCompanyCode = userBe.getValue("LNK_HOST_COMPANY", null);		
+			System.out.println("lnkHostCompanyCode :: " + lnkHostCompanyCode);
+			
+      if(lnkHostCompanyCode != null){
+     		String hostCompanyCode = lnkHostCompanyCode.trim().substring(2,lnkHostCompanyCode.trim().length()-2);
+    		System.out.println("hostCompanyCode :: " + hostCompanyCode);
+
+        TableUtils.searchTable(beUtils,"SBE_HOST_CPY", true);
+  			TableUtils.searchTable(beUtils,"SBE_LINKED_INTERNSHIP_OPP", true, "LNK_HOST_COMPANY", lnkHostCompanyCode);
+
+      }
+    }
+	end

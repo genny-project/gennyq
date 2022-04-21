@@ -1,0 +1,54 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.qwandautils.JsonUtils;
+
+rule "IS_QA_AGENT"
+    ruleflow-group 'IsQuickAdd'
+    no-loop true
+    salience 1000
+    when
+
+        userToken : GennyToken (code != "PER_SERVICE" )
+        serviceToken : GennyToken (code == "PER_SERVICE" )
+        baseEntityType : String("QA_AGENT" == baseEntityType)
+        newBe : BaseEntity()
+        beUtils : BaseEntityUtils()
+
+    then
+        System.out.println(drools.getRule().getName() + ": Rule fired :: newBe = " + newBe.getCode());
+
+        /* Update Email and Name, and set Random Password in Keycloak */
+        KeycloakUtils.updateUserDetails(beUtils, newBe);
+        String password = KeycloakUtils.generateRandomPassword(beUtils, newBe);
+
+        String sendEmail = newBe.getValue("LNK_SEND_EMAIL", "");
+        System.out.println("sendEmail = " + sendEmail);
+
+        if (sendEmail.contains("SEL_YES")) {
+            System.out.println("#### Sending email to Agent after quick add ####");
+
+            QMessageGennyMSG msg = new QMessageGennyMSG.Builder("MSG_AGENT1_REGISTER")
+                .addRecipient(newBe)
+                .addContext("PASSWORD", password)
+                .addContext("URL:ENCODE", "QUE_FAKE_PARENT/QUE_FINISH_AGENT")
+                .addContext("BCC", "PRJ_MENTORMATCH")
+                .setUtils(beUtils)
+                .send();
+
+            System.out.println("MSG_AGENT1_REGISTER: msg " + JsonUtils.toJson(msg));
+        }
+
+        /* Post Note */
+        String endPoint = GennySettings.projectUrl + "/v7/notes";
+		System.out.println("Note endPoint: " +endPoint);
+        System.out.println("Note userToken.getUserCode(): " +userToken.getUserCode());
+        QwandaUtils.apiPostNote(endPoint, userToken.getUserCode(), newBe.getCode(), "Added as an Agent", "System", "System", "", serviceToken.getToken());
+
+        retract(newBe)
+end

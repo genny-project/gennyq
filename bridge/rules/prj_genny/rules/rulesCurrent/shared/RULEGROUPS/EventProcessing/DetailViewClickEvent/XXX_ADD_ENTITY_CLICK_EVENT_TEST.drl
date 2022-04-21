@@ -1,0 +1,133 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "ADD_ENTITY_CLICK_EVENT_TEST"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop true
+    when
+		$message : QEventMessage(data.code matches "QUE_.*" && data.parentCode == "QUE_ADD_ITEMS_GRP" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+    then
+		System.out.println("Processing ADD ENTITY CLICK EVENT : " + $message );
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		/*
+		code: "QUE_INTERN_MENU"
+		parentCode: "QUE_ADD_ITEMS_GRP"
+		targetCode: "PER_5A666E64-021F-48CE-8111-BE3D66901F9C"
+		*/
+		
+		String workflowSignalCode = "ADD_ENTITY";
+		String code = $message.getData().getCode(); 	 
+		
+		String[] codeSplit = code.split("_");
+        
+        int size = codeSplit.length;
+        System.out.println("size: " +size);
+        
+        String typeOf = "";
+    
+        if (size == 3) {
+                typeOf = codeSplit[1];
+                System.out.println("typeOf: " +typeOf);
+        }
+        
+        if (size == 4) {
+                typeOf = codeSplit[1] + "_" + codeSplit[2];
+                System.out.println("typeOf: " +typeOf);
+        }
+        
+        if (size == 5) {
+                typeOf = codeSplit[1] + "_" + codeSplit[2] + "_" + codeSplit[3];
+                System.out.println("typeOf: " +typeOf);
+        }
+        
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_"+workflowSignalCode);
+		output.setTargetCode($message.getData().getTargetCode());
+		output.setSuitCase(typeOf);
+		
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING ADD ENTITY PROCEDURE WITH: " +output);
+
+
+
+		String targetCode = $message.getData().getTargetCode();
+
+		if(targetCode != null ){
+
+			System.out.println("targetCode   ::   " + targetCode);
+
+			BaseEntity be = beUtils.getBaseEntityByCode(targetCode);
+			
+			if(be != null){
+
+				System.out.println("be   ::   " + be.getCode());
+				
+				/* if be has LNK_INDUSTRY attr, we send  LNK_OCCUPATION */
+				String industryCode = be.getValue("LNK_INDUSTRY", null);
+				if(industryCode != null){
+
+					industryCode = industryCode.replace("\"", "").replace("[", "").replace("]", "");
+					System.out.println("industryCode   ::   " + industryCode);
+				
+					/* dropdown search for occupations */
+					DropdownUtils dropdown = new DropdownUtils(serviceToken);
+					
+					dropdown.setNewSearch("Dropdown", "Fetch Dropdown Items")
+									.addColumn("PRI_NAME","Name")
+									.setSourceCode(industryCode)
+									.setPageStart(0)
+									.setPageSize(1000);
+
+					/* Send the dropdown options */
+					dropdown.sendSearchResults("GRP_OCCUPATION_SELECTION", "LNK_ITEM", "ITEM", true, false, userToken, false);
+				}
+
+				/* if be has LNK_HOST_COMPANY attr, we send  LNK_HOST_COMPANY_REP */
+				String hostCompanyCode = be.getValue("LNK_HOST_COMPANY", null);
+				if(hostCompanyCode != null){
+
+					hostCompanyCode = hostCompanyCode.replace("\"", "").replace("[", "").replace("]", "");
+					System.out.println("hostCompanyCode   ::   " + hostCompanyCode);
+
+					/* dropdown search for companyRep */
+					DropdownUtils dropdownHcReps = new DropdownUtils(serviceToken);
+					
+					dropdownHcReps.setNewSearch("HCR Dropdown", "Fetch HCR Dropdown Items")
+														.addFilter("PRI_IS_HOST_CPY_REP", true)
+														.setSourceCode(hostCompanyCode)
+														.setPageStart(0)
+														.setPageSize(1000);
+
+					/* Send the dropdown options */
+					dropdownHcReps.sendSearchResults("GRP_HOST_COMPANY_REP_SELECTION", "LNK_ITEM", "ITEM", true, false, userToken, false);
+
+				}
+			}
+		}
+	
+		retract( $message);
+	end

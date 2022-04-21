@@ -1,0 +1,155 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+import life.genny.rules.listeners.GennyRuleTimingListener;
+import life.genny.utils.TableUtils;
+
+
+
+rule "PRI_SEARCH_TEXT_BUCKET_ASSIST"
+	ruleflow-group 'DataProcessing'
+	salience 500
+	no-loop true
+	when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "USER") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("!@")) && answer.getTargetCode().startsWith("["))   /* this is a pure assist search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+	then
+		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+		retract(answer);
+
+		String value = answer.getValue().substring(2);
+
+		/* get current search */
+		TableUtils tableUtils = new TableUtils(beUtils);
+		Long total = Long.valueOf(0);
+			/* Fetch All Applications */
+		SearchEntity availableSearchBE = new SearchEntity("SBE_AVAILABLE_INTERNS", "Wildcard Available")
+							.addFilter("PRI_IS_INTERN", true)
+							.addFilter("PRI_STATUS", SearchEntity.StringFilter.NOT_LIKE,"P%")
+							.setWildcard(value)
+							.setPageStart(0)
+							.setPageSize(10000);
+
+
+		List<BaseEntity> internAvailable = beUtils.getBaseEntitys(availableSearchBE);
+		total = Long.valueOf(internAvailable.size());
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(internAvailable);
+		
+		/* Send Available Cards */
+		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setReplace(true);
+		msg.setTotal(total);
+		msg.setParentCode("SBE_AVAILABLE_INTERNS_"+beUtils.getGennyToken().getJTI().toUpperCase());
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msg));
+
+
+		QDataBaseEntityMessage availableSearchMsg = new QDataBaseEntityMessage(availableSearchBE);
+		availableSearchMsg.setToken(beUtils.getGennyToken().getToken());
+		availableSearchMsg.setReplace(true);
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(availableSearchMsg));
+
+		List<SearchEntity> searchBeList = new ArrayList<SearchEntity>();
+
+				System.out.println("Rule -> "+drools.getRule().getName()+" TargetCode is an array of SBEs");
+
+			String sbeCodes = answer.getTargetCode().replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("sbeCodes  :: " + sbeCodes);
+
+			for (String sbeCode : sbeCodes.split(",")) {
+				System.out.println("sbeCode  :: " + sbeCode);
+				searchBeList.add(VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", sbeCode, SearchEntity.class));
+			}
+
+	
+			/* Fetch All Applications */
+		SearchEntity appSearchBE = new SearchEntity("SBE_BUCKET_WILDCARD", "Wildcard Applications")
+							.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+							.setWildcard(value);
+
+		List<BaseEntity> internApplications = beUtils.getBaseEntitys(appSearchBE);
+		System.out.println("found " + internApplications + " applications");
+
+		String[] codes = { "SBE_APPLIED_APPLICATIONS", "SBE_SHORTLISTED_APPLICATIONS", "SBE_INTERVIEWED_APPLICATIONS", 
+							"SBE_OFFERED_APPLICATIONS", "SBE_PLACED_APPLICATIONS", "SBE_INPROGRESS_APPLICATIONS" };
+
+		String[] statusCodes = { "APPLIED", "SHORTLISTED", "INTERVIEWED", "OFFERED", "PLACED", "PROGRESS" };
+
+		for (int i = 0; i < codes.length; i++) {
+			String searchCode = codes[i]+"_"+beUtils.getGennyToken().getJTI().toUpperCase();
+			SearchEntity searchBE = VertxUtils.getObject(serviceToken.getRealm(), "", searchCode, SearchEntity.class, serviceToken.getToken());
+			List<BaseEntity> bucketApps = new ArrayList<>();
+			for (BaseEntity application : internApplications) {
+				String appStatus = application.getValue("PRI_STATUS", null);
+				if (appStatus != null && appStatus.equals(statusCodes[i])) {
+
+					/* Get Assoc Cols and add them to the BE */
+					for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
+						if (ea.getAttributeCode().startsWith("COL__")) {
+							Answer ans = SearchUtils.getAssociatedColumnValue(beUtils, application, ea.getAttributeCode(), serviceToken);
+
+							if (ans != null) {
+								try {
+									application.addAnswer(ans);
+								} catch (Exception e) {
+									e.printStackTrace();
+								}
+							}
+						}
+					}
+
+					bucketApps.add(application);
+				}
+			}
+			/* Send Available Card */
+			QDataBaseEntityMessage appMsg = new QDataBaseEntityMessage(bucketApps);
+			appMsg.setToken(beUtils.getGennyToken().getToken());
+			appMsg.setReplace(true);
+			appMsg.setParentCode(searchCode);
+			appMsg.setTotal((long)bucketApps.size());
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(appMsg));
+
+		/*	tableUtils.updateBaseEntity(searchBE, "PRI_TOTAL_RESULTS", Long.valueOf(bucketApps.size()) + ""); 
+
+			QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
+			searchMsg.setToken(beUtils.getGennyToken().getToken());
+			searchMsg.setReplace(true);
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(searchMsg));
+*/
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");
+		retract(answer);
+end

@@ -1,0 +1,44 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtilsTest;
+import  life.genny.models.TableData;
+import  life.genny.qwanda.utils.OutputParam;;
+
+
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "XXXPRI_SEARCH_TEXT2"
+    ruleflow-group 'DataProcessing'
+        salience 500 
+    when
+      beUtils : BaseEntityUtils()
+	  serviceToken : GennyToken( code == "PER_SERVICE") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT2" )
+	  output : OutputParam( )
+	  
+     then
+ 		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer); 
+ 		TableUtilsTest.performSearch(serviceToken , beUtils, "SBE_SEARCHBAR", answer);
+  	     
+  	     /* Send to front end */
+   	     
+  	     output.setFormCode("FRM_TABLE_VIEW","FRM_CONTENT");
+		retract(answer);  	     
+
+	
+end

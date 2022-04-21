@@ -1,0 +1,141 @@
+package life.genny.rules;
+
+
+rule "ROL_AGENT"
+    ruleflow-group 'GenerateCapabilities'
+     salience 1000
+     no-loop true
+    when
+       not  BaseEntity (code == "ROL_AGENT")
+        capabilityUtils : CapabilityUtils()
+        user : BaseEntity (code == "ROL_USER")   
+        beUtils : BaseEntityUtils()           
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+ 		System.out.println("==================\nFiring Lojing Agent Role!\n====================");
+		 BaseEntity defBE = beUtils.getDEFByCode("DEF_ROLE");
+   	     BaseEntity role = capabilityUtils.getBeUtils().create(defBE, WordUtils.capitalize(drools.getRule().getName().substring(4)), drools.getRule().getName());
+  
+    	 beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), role.getCode(), "PRI_COLOR", "#1183C8",false,true));
+ 
+    	 capabilityUtils.inheritRole(role,user);
+  	     
+   	     capabilityUtils.addCapabilityToRole(role,"VERIFY_EMAIL",CapabilityMode.DELETE);
+   	     capabilityUtils.addCapabilityToRole(role,"VIEW_AVAILABLE_INTERNS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"APPLY",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SHORTLIST_APPLICATION",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"INTERVIEW_APPLICATION",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"INTERVIEW_APPLICATION",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"OFFER",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"PLACE_APPLICATION",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_AGREEMENT",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"VIEW_AGREEMENT",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"FINISH_APPLICATION",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"ARCHIVE_INTERN",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"ARCHIVE_INTERNSHIP",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"UNARCHIVE_INTERNSHIP",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"DUPLICATE_INTERNSHIP",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"DELETE_INTERNSHIP",CapabilityMode.VIEW);
+	     capabilityUtils.addCapabilityToRole(role,"ARCHIVE_HCR",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"ARCHIVE_EPR",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"VALIDATE_HC",CapabilityMode.VIEW);
+	     capabilityUtils.addCapabilityToRole(role,"UNARCHIVE_INTERN",CapabilityMode.VIEW);
+	     capabilityUtils.addCapabilityToRole(role,"POST_INTERVIEW",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"ON_HOLD_APPLICATION",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"REJECT_APPLICATION",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"WITHDRAW_APPLICATION",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"VIEW_JOURNAL",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"RATE_INTERN",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"VIEW_RATING",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"START_INTERNSHIP",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_INTERNSHIP",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_INTERN",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_AGENT",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_HCR",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_EPR",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_REF_PART_REP",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_REF_PART",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_HOST_COMPANY",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_EDU_PROVIDER",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_AGENCY",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"DOWNLOAD_OHNS_AGREEMENT_DOC",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"DOWNLOAD_SERVICE_AGREEMENT_DOC",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"DOWNLOAD_INTERNSHIP_AGREEMENT_DOC",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"EDIT_APPLICATION",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"DOWNLOAD_HC_TERMS_AND_CONDITIONS_DOC",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"APPROVE_JOURNALS",CapabilityMode.EDIT);
+		 capabilityUtils.addCapabilityToRole(role,"UNAPPROVE_JOURNALS",CapabilityMode.EDIT);
+		 capabilityUtils.addCapabilityToRole(role,"ACCESS_NOTES_INTERN",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"ACCESS_NOTES_APPLICATION",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"ACCESS_NOTES_INTERNSHIP",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"ACCESS_NOTES_HC",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"ACCESS_NOTES_HCR",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"ASSIGN_AGENT_TO_INTERN",CapabilityMode.ADD);
+
+		 /* CACHED SEARCHES */
+		 capabilityUtils.addCapabilityToRole(role,"USE_CACHE",CapabilityMode.VIEW);
+
+		 /* SIDEBAR */
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_DASHBOARD", CapabilityMode.VIEW);
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TAB_BUCKET_VIEW", CapabilityMode.VIEW);
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_INTERNSHIPS", CapabilityMode.VIEW);
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_HOST_COMPANIES", CapabilityMode.VIEW);
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_EDU_PROVIDERS", CapabilityMode.VIEW);
+	    /* capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_LOGBOOK_GRP", CapabilityMode.VIEW); */
+
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_CONTACTS_GRP", CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_INTERNS", CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_HCRS", CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_EPRS", CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_AGENTS", CapabilityMode.VIEW);
+		/* capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_REFERRERS", CapabilityMode.VIEW); */
+
+		 /* BUCKETS SEARCHES */
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_AVAILABLE_INTERNS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_APPLIED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_SHORTLISTED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_INTERVIEWED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_OFFERED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_PLACED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_INPROGRESS_APPLICATIONS",CapabilityMode.VIEW);
+
+		 /* SUMMARY SEARCHES */
+		 capabilityUtils.addCapabilityToRole(role,"SBE_SUMMARY_AGENCY",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"SBE_SUMMARY_AGENTS",CapabilityMode.VIEW);
+		 capabilityUtils.addCapabilityToRole(role,"SBE_SUMMARY_INTERNS",CapabilityMode.VIEW);
+
+		 /* A Cap For Handling Other Roles and Items */
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_AGENT",CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_HOST_CPY_REP",CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_EDU_PRO_REP",CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_INTERN",CapabilityMode.ADD);
+
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_AGENCY",CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_HOST_CPY",CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_EDU_PRO",CapabilityMode.ADD);
+
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_INTERNSHIP",CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"TYPE_APPLICATION",CapabilityMode.ADD);
+
+		 capabilityUtils.addCapabilityToRole(role,"EXTERNAL_AGENT", CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"EXTERNAL_HOST_CPY_REP", CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"EXTERNAL_EDU_PRO_REP", CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"EXTERNAL_INTERN", CapabilityMode.ADD);
+
+		 capabilityUtils.addCapabilityToRole(role,"EXTERNAL_AGENCY", CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"EXTERNAL_HOST_CPY", CapabilityMode.ADD);
+		 capabilityUtils.addCapabilityToRole(role,"EXTERNAL_EDU_PRO", CapabilityMode.ADD);
+
+		 capabilityUtils.addCapabilityToRole(role,"QUICK_SEARCH_ALL", CapabilityMode.VIEW);
+
+  	     role = capabilityUtils.getBeUtils().getBaseEntityByCode(role.getCode());
+  	     
+  	    beUtils.saveAnswer(new Answer(capabilityUtils.getBeUtils().getServiceToken().getUserCode(), role.getCode(), "PRI_WEIGHT", 700.0,false,true));
+ 
+ 		 insert(role);
+ 		 		 
+ 		 VertxUtils.writeCachedJson(capabilityUtils.getBeUtils().getServiceToken().getRealm(), role.getCode(), JsonUtils.toJson(role), capabilityUtils.getBeUtils().getServiceToken().getToken());
+ 		 
+
+
+end

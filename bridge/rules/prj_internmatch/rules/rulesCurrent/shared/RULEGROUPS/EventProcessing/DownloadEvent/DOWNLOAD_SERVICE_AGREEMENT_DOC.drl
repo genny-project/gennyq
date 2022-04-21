@@ -1,0 +1,86 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.SearchUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import java.util.Arrays;
+import java.util.HashMap;
+import life.genny.qwandautils.PDFHelper;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.Answer;
+
+rule "DOWNLOAD_SERVICE_AGREEMENT_DOC"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_DOWNLOAD_SERVICE_AGREEMENT_DOC_VALIDATED" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		String companyCode =  $message.getData().getTargetCode();
+		System.out.println("companyCode :: " +companyCode);
+
+		if(companyCode == null){
+			
+			System.out.println("targetCode is null in the event messsage");
+			return;
+		
+		}
+
+		BaseEntity companyBe = beUtils.getBaseEntityByCode(companyCode);
+		
+		if(companyBe != null){
+
+			/* back up template url, if project be doesn't have it */
+			String template = "https://raw.githubusercontent.com/genny-project/layouts/master/internmatch-new/document_templates/HostCompanyServicesAgreement2020.html";
+			
+			BaseEntity project = beUtils.getBaseEntityByCode( "PRJ_" + serviceToken.getRealm().toUpperCase());
+			if(project != null){
+				
+				/* get the template url from project if possible */
+				template = project.getValue("PRI_HC_SERVICES_AGREEMENT_URL", template);
+
+			}
+
+			/* send TOAST msg */
+			QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+			toastMsg.setMessage("Please wait while we prepare your Document!");
+			toastMsg.setToken(beUtils.getGennyToken().getToken());
+			toastMsg.setSend(true);
+			VertxUtils.writeMsg("webcmds", toastMsg);
+
+			HashMap<String, Object> contextMap = new HashMap<String, Object>();
+			contextMap.put("HC", companyBe);
+
+			String pdfUrl = PDFHelper.getDownloadablePdfLinkForHtml(template, contextMap);
+			System.out.println("PDF url :: " + pdfUrl);
+
+			/* Send Download QCmdMessage to FE */
+			QCmdMessage msg = new QCmdMessage("DOWNLOAD_FILE", pdfUrl);
+			msg.setToken(beUtils.getGennyToken().getToken());
+			msg.setSend(true);
+
+			VertxUtils.writeMsg("webcmds", msg);
+			
+		}else{
+			
+			System.out.println("companyBe is not in cache");
+
+		}
+	end

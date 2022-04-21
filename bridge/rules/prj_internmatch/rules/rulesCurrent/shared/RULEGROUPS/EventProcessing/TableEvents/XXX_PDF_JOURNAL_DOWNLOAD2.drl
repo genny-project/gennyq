@@ -1,0 +1,103 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+
+import java.util.HashMap;
+import life.genny.qwandautils.PDFHelper;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.Answer;
+
+rule "PDF_JOURNAL_DOWNLOAD2"
+    ruleflow-group 'TableEvents'
+		salience 2
+    no-loop
+	when
+		journalCode : String(journalCode.equals("DOWNLOAD"))
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		internBe : BaseEntity( code matches "PER_\\S+" )
+		
+
+
+    then
+		System.out.println("Processing PDF_JOURNAL_DOWNLOAD EVENT rule");
+		
+		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+		TableUtils tableUtils = new TableUtils(beUtils);
+		
+		String targetCode =  internBe.getCode();
+		String internCode = "[\"" + targetCode + "\"]";
+
+		
+
+		String journalTemplate = "https://raw.githubusercontent.com/genny-project/layouts/2020-05-25-journal-report-update/internmatch-new/document_templates/journal-report.html";
+		System.out.println("JOURNAL TEMPLATE     ::   " + journalTemplate);
+
+		/* Create dummy journal here */
+		BaseEntity be = beUtils.create("JNL_ONE", "Dummy Journal");
+
+		List<Answer> answers = new ArrayList<Answer>();
+		answers.add(new Answer(be.getCode(), be.getCode(), "PRI_NAME", "JNL_ONE"));
+		answers.add(new Answer(be.getCode(), be.getCode(), "PRI_CODE", "JNL_ONE"));
+		answers.add(new Answer(be.getCode(), be.getCode(), "PRI_JOURNAL_DATE", "2020-04-15"));
+		answers.add(new Answer(be.getCode(), be.getCode(), "PRI_JOURNAL_HOURS", "7.0"));
+		answers.add(new Answer(be.getCode(), be.getCode(), "PRI_JOURNAL_TASKS", "Produce a vaccine for COVID19"));
+		answers.add(new Answer(be.getCode(), be.getCode(), "PRI_JOURNAL_LEARNING_OUTCOMES", "Failed to find a vaccine that didn't kill the test subject."));
+		beUtils.saveAnswers(answers);
+
+		BaseEntity JNL_ONE = beUtils.getBaseEntityByCode("JNL_ONE");
+		
+		System.out.println("JNL_ONE     ::   " + JNL_ONE);	
+		
+	
+		
+		
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Journals")
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%")
+			.addFilter("LNK_INTERN", SearchEntity.StringFilter.EQUAL, internCode)
+			.addColumn("PRI_JOURNAL_DATE", "Date")
+			.addColumn("PRI_JOURNAL_HOURS", "Hours")
+			.addColumn("PRI_JOURNAL_TASKS", "Tasks")
+			.addColumn("PRI_JOURNAL_LEARNING_OUTCOMES", "Outcomes")
+			.setPageStart(0).setPageSize(10000);
+			
+		System.out.println("searchBE     ::   " + searchBE);	
+		
+		
+		/*
+		SearchUtils searchUtils = new SearchUtils(beUtils);
+		QDataBaseEntityMessage msg = searchUtils.fetchSearchResults(searchBe, serviceToken);
+		long totalResults = msg.getItems().length;
+		List<BaseEntity> journalList = Arrays.asList(msg.getItems());
+		*/
+		
+		
+
+		/* Create context Hash Map  */
+		HashMap<String, Object> contextMap = new HashMap<String, Object>();
+		contextMap.put("JOURNAL", JNL_ONE);
+
+		/* Generate PDF */
+		String pdfUrl = PDFHelper.getDownloadablePdfLinkForHtml(journalTemplate, contextMap);
+		System.out.println("Journal Pdf URL :: " + pdfUrl);
+
+		/* Send QCmdMessage to FE */
+		QCmdMessage cmdMsg = new QCmdMessage("DOWNLOAD_FILE",pdfUrl);
+		cmdMsg.setToken(beUtils.getGennyToken().getToken());
+		/* String json = JsonUtils.toJson(cmdMsg); */
+		VertxUtils.writeMsg("webcmds", cmdMsg);
+
+		
+	end

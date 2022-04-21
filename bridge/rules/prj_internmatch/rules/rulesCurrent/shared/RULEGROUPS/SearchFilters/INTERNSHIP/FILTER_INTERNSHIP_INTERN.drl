@@ -1,0 +1,71 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_INTERNSHIP_INTERN"
+	ruleflow-group 'SearchFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		searchBE: SearchEntity( code matches "SBE_INTERNSHIP_.*")
+		allowed: Allowed(code == "INTERN" )
+		beUtils : BaseEntityUtils( )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		System.out.println("searchCode   :: " + searchBE.getCode());
+		
+
+		BaseEntity intern = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		if (intern == null) {
+			System.out.println("intern is NULL");
+			return;
+		}
+		
+		searchBE.removeAttribute("COL__LNK_INTERN_SUPERVISOR__PRI_NAME");
+		searchBE.addAssociatedColumn("LNK_INTERN_SUPERVISOR", "PRI_FIRSTNAME", "First Name");
+		
+		searchBE.removeAttribute("COL_PRI_ADDRESS_FULL");
+		searchBE.addAssociatedColumn("LNK_HOST_COMPANY", "PRI_ADDRESS_SUBURB", "Suburb");
+		searchBE.addAssociatedColumn("LNK_HOST_COMPANY", "PRI_ADDRESS_STATE", "State");
+		
+		String internStatus = intern.getValue("PRI_STATUS", null);
+		System.out.println("internStatus = " + internStatus);
+		if(internStatus != 'PLACED')
+		{
+			searchBE.removeAttribute("COL__LNK_INTERN_SUPERVISOR__PRI_EMAIL");
+		    searchBE.removeAttribute("COL__LNK_INTERN_SUPERVISOR__PRI_MOBILE");
+		    searchBE.removeAttribute("COL__LNK_INTERN_SUPERVISOR__PRI_LINKEDIN_URL");
+		}
+		/* only show active internships to intern */
+		/* searchBE.addFilter("PRI_STATUS", SearchEntity.StringFilter.EQUAL, "ACTIVE"); */
+
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(searchBE);
+		msg.setAliasCode("SBE");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+end

@@ -1,0 +1,64 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "SAVE_STUDENT_TIMELINE_JSON"
+	ruleflow-group 'DashboardProcessing'
+	salience 15
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		allowed : Allowed(code == "STUDENT" ||
+							code == "ADMIN" ||
+							code == "EDU_PRO_REP"
+							)
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		Boolean cache = true;
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		if (beUtils.getBaseEntityValue(userToken.getUserCode(), "PRI_TIMELINE_JSON") == null) {
+
+			System.out.println(drools.getRule().getName() + " - No Timeline Json attribute found, creating one...");
+
+			String defaultJson = "{ \"PRI_REGISTERED_IN_STT\": true, " 
+				+   "\"PRI_PROFILE_COMPLETE\": false, "
+				+   "\"PRI_LEARN_DEFINITIONS\": false, "
+				+   "\"PRI_LEARN_WARNINGS\": false, "
+				+   "\"PRI_COMPLETE_QUIZ\": false, "
+				+   "\"PRI_SCENARIO_1\": false, "
+				+   "\"PRI_SCENARIO_2_TO_4\": false, "
+				+   "\"PRI_SCENARIO_5_TO_7\": false, "
+				+   "\"PRI_SCENARIO_8_TO_10\": false, "
+				+   "\"PRI_SEE_PROGRESS\": false, "
+				+   "\"PRI_GENERATE_RESULTS_REPORT\": false, "
+				+   "\"PRI_RECEIVE_CERTIFICATE\": false, "
+				+   "\"PRI_UPDATE_LINKEDIN\": false "
+				+ "}";
+
+			System.out.println(drools.getRule().getName() + " - Saving timeline Json");
+
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), userToken.getUserCode(), "PRI_TIMELINE_JSON", defaultJson));
+		} else {
+			System.out.println(drools.getRule().getName() + " - Found a Timeline Json for this user");
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+end

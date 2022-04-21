@@ -1,0 +1,86 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import org.apache.commons.lang3.StringUtils;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.Answer;
+
+rule "AGREE_TO_MENTOR_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_MENTOR_AGREE_TO_MENTOR.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+ 		ruleDetails : RuleDetails()
+    then
+
+		System.out.println(drools.getRule().getName() + " - Rule fired");
+
+        String applicationCode = $message.getData().getParentCode();
+        System.out.println("########## TARGET code :: (APPLICATION CODE): " + applicationCode);
+		/* QUE_FINISH_MENTOR */
+
+		String code = $message.getData().getCode();
+		System.out.println("code: " +code);
+
+		String key = StringUtils.removeStart(code, "QUE_MENTOR_AGREE_TO_MENTOR_GRP");
+		System.out.println("key: " +key);
+
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+
+        /* Set result */
+        output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_MENTOR_AGREE");
+
+		output.setSuitCase(key);
+		output.setAskSourceCode(user);
+		/* targetCode is the BaseEntity we want to finish */
+		output.setTargetCode(user);
+
+
+		System.out.println("**************************************************");
+		System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+		System.out.println("ResultCode: "    + output.getResultCode());
+		System.out.println("SuitCase: "      + output.getSuitCase());
+		System.out.println("AskSourceCode: " + output.getAskSourceCode());
+		System.out.println("TargetCode: "    + output.getTargetCode());
+		System.out.println("**************************************************");
+
+		/* Sending matched mentee detail to FE */
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		BaseEntity applicationBe = beUtils.getBaseEntityByCode(applicationCode);
+
+		if(applicationBe != null){
+            BaseEntity menteeBe = beUtils.getBaseEntityFromLNKAttr(applicationBe.getCode(), "LNK_MENTEE");
+            System.out.println(drools.getRule().getName() + " :: MenteeCode : "+menteeBe.getCode());
+
+            if (menteeBe != null) {
+                BaseEntity hobbiesAndInterestBe = beUtils.getBaseEntityFromLNKAttr(menteeBe.getCode(), "LNK_HOBBIES_INTEREST");
+                if (hobbiesAndInterestBe != null) {
+                    String hobbiesAndInterestValue = hobbiesAndInterestBe.getValue("PRI_NAME", null);
+                    Answer hobbiesAndInterestAnswer = new Answer(userToken.getUserCode(), menteeBe.getCode(), "PRI_HOBBIES_INTEREST", hobbiesAndInterestValue);
+                    VertxUtils.sendToFrontEnd(userToken, hobbiesAndInterestAnswer);
+                }
+                QDataBaseEntityMessage msg = new QDataBaseEntityMessage(menteeBe);
+                msg.setToken(beUtils.getGennyToken().getToken());
+                msg.setReplace(true);
+
+                VertxUtils.writeMsg("webcmds",JsonUtils.toJson(msg));		  /* push out to frontend */
+            }
+        }
+
+		retract($message);
+	end

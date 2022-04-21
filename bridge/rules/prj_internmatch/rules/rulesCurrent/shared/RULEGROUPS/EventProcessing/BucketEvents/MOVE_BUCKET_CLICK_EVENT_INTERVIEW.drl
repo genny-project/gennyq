@@ -1,0 +1,102 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "MOVE_BUCKET_CLICK_EVENT_INTERVIEW"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_INTERVIEW_APPLICATION" || data.code matches "ACT_PRI_EVENT_ACCEPT_SHORTLIST" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println("Processing INTERVIEW CLICK EVENT : " + $message );
+		
+		
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		String code = $message.getData().getCode();
+		String workflowSignalCode = "INTERVIEW";
+
+		String targetCode = $message.getData().getTargetCode();
+		if (targetCode.startsWith("PER_")) {
+			/*
+			This means we are coming from an intern detail view
+			and must find the application to push through
+			*/
+			String searchCode = $message.getData().getParentCode();
+			SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", searchCode, SearchEntity.class, beUtils.getGennyToken().getToken());
+
+			EntityAttribute dropdownTarget = searchBE.findEntityAttribute("SCH_DROPDOWN_TARGET").orElse(null);
+			System.out.println("dropdownTarget = " + dropdownTarget);
+			if (dropdownTarget == null) {
+				System.out.println("dropdownTarget is null");
+			} else {
+				targetCode = dropdownTarget.getValue();
+			}
+		}
+		System.out.println("targetCode = " + targetCode);
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_"+workflowSignalCode);
+		output.setTargetCode(targetCode);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING THE MOVE FROM SHORTLISTED TO INTERVIEWED WITH: " +output);
+		
+		
+		/* CHANGE CARD COLOUR */
+				Answer answerColour = new Answer(serviceToken.getUserCode(), targetCode, "PRI_STATUS_COLOR", "default");
+				beUtils.saveAnswer(answerColour);
+				System.out.println("Answer done" +answerColour);
+				
+				VertxUtils.sendToFrontEnd(userToken, answerColour);
+				System.out.println("sendToFrontEnd done");
+            
+        /* PUBLISH CARD COLOUR */
+				BaseEntity targetBE  = beUtils.getBaseEntityByCode(targetCode);
+		
+				QDataBaseEntityMessage msgCard = new QDataBaseEntityMessage(targetBE);
+				msgCard.setToken(userToken.getToken());
+				
+				SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Agents")
+					.addSort("PRI_NAME","Name",SearchEntity.Sort.ASC)
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+					.addFilter("PRI_IS_AGENT", true)
+					.addColumn("PRI_NAME", "Name")
+		
+					.setPageStart(0).setPageSize(1000);
+		
+				searchBE.setRealm(serviceToken.getRealm());
+				
+				List<BaseEntity> results = beUtils.getBaseEntitys(searchBE);
+				System.out.println("results: " +results);
+				
+				String[] rxList = new String[2];
+				rxList[0] = "SUPERUSER";
+				rxList[1] = "AGENT";
+				msgCard.setRecipientCodeArray(rxList);
+				
+				VertxUtils.writeMsg("project", JsonUtils.toJson(msgCard));
+				System.out.println("writeMsg done");
+	
+		retract( $message);
+	end

@@ -1,0 +1,48 @@
+package life.genny.rules;
+
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "LNK_PERSON_CLEAR"
+	ruleflow-group 'DataProcessing'
+	salience 500
+	no-loop true
+	when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "USER") 
+	  answer : Answer( attributeCode == "LNK_PERSON" && value.equals("[]") )
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  userToken : GennyToken (code != "PER_SERVICE")
+	  output : OutputParam( )
+	then
+		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+		System.out.println("Resetting Buckets!!!");
+		VertxUtils.sendToFrontEnd(userToken, answer);
+		retract(answer);
+
+		List<String> codes = new ArrayList<>();
+		codes.add("SBE_AVAILABLE_INTERNS");
+		codes.add("SBE_APPLIED_APPLICATIONS");
+		codes.add("SBE_SHORTLISTED_APPLICATIONS");
+		codes.add("SBE_INTERVIEWED_APPLICATIONS");
+		codes.add("SBE_OFFERED_APPLICATIONS");
+		codes.add("SBE_PLACED_APPLICATIONS");
+		codes.add("SBE_INPROGRESS_APPLICATIONS");
+
+		for (String code : codes) {
+			TableUtils.searchTable(beUtils, code, true);
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");
+end

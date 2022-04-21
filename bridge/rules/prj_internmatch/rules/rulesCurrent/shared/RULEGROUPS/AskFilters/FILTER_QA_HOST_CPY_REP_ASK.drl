@@ -1,0 +1,113 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+import org.apache.commons.lang.ArrayUtils;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.Arrays;
+
+rule "FILTER_QA_HOST_CPY_REP_ASK"
+	ruleflow-group 'AskFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		ask: Ask(ask.getQuestion().getCode() == "QUE_QA_HOST_CPY_REP_GRP")
+		beUtils : BaseEntityUtils( )
+		allowed: Allowed(code == "HOST_CPY_REP" )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("question code   :: " + ask.getQuestion().getCode());
+		System.out.println("userToken Code   :: " + userToken.getUserCode());
+
+		/* Save some answer for the rep */
+		String targetCode = ask.getTargetCode();
+		System.out.println("targetCode  ::  " + targetCode);
+
+		List<String> questionCodes = new ArrayList<String>();
+		questionCodes.add("QUE_SPECIFY_HOST_CPY");
+		questionCodes.add("QUE_SELECT_HOST_COMPANY");
+		questionCodes.add("QUE_ALL_EMAILS");
+		
+		System.out.println("questionCodes to remove  ::  " + questionCodes);
+
+		List<Ask> childAskList = new ArrayList<Ask>(Arrays.asList(ask.getChildAsks()));
+		List<Ask> filteredAsks = new ArrayList<Ask>();
+		
+		System.out.println("BEFORE childAskList length  ::  " + childAskList.size());
+
+		for (Ask childAsk : childAskList) {
+			String childQues =  childAsk.getQuestionCode();
+
+			boolean isExist = questionCodes.contains(childQues);
+
+			if (isExist) {
+				System.out.println("Removing the question  ::  " + childQues);
+				filteredAsks.add(childAsk);
+			}
+		}
+		
+		childAskList.removeAll(filteredAsks);
+		System.out.println("AFTER childAskList length  ::  " + childAskList.size());
+
+		ask.setChildAsks(childAskList.toArray(new Ask[0]));
+
+		/* Send the filtered asks back */
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setAliasCode("ASK");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+
+		BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		if(userBe == null){
+			System.out.println("userBe is null");
+			return;
+		}
+
+		String hostCompanyCode = userBe.getValue("LNK_HOST_COMPANY", null);		
+		if(hostCompanyCode == null){
+			System.out.println("hostCompanyCode is null");
+			return;
+		}
+
+		BaseEntity companyBe = beUtils.getBaseEntityByCode(beUtils.cleanUpAttributeValue(hostCompanyCode));
+		if(companyBe != null){
+			String name = companyBe.getValue("PRI_NAME", null);		
+			if(name != null){
+				Answer assocHcAnswer = new Answer(userToken.getUserCode(), targetCode, "PRI_ASSOC_HC", name);
+				beUtils.saveAnswer(assocHcAnswer);
+			}
+		}
+		Answer lnkSpecifyHostCpy = new Answer(userToken.getUserCode(), targetCode, "LNK_SPECIFY_HOST_CPY", "SEL_YES");
+		Answer hostCpy = new Answer(userToken.getUserCode(), targetCode, "LNK_HOST_COMPANY", hostCompanyCode);
+		Answer turnOnEmail = new Answer(userToken.getUserCode(), targetCode, "LNK_ALL_EMAILS", "SEL_YES");
+		beUtils.saveAnswer(lnkSpecifyHostCpy);
+		beUtils.saveAnswer(hostCpy);
+		beUtils.saveAnswer(turnOnEmail);
+		VertxUtils.sendToFrontEnd(userToken, lnkSpecifyHostCpy, hostCpy, turnOnEmail);
+end

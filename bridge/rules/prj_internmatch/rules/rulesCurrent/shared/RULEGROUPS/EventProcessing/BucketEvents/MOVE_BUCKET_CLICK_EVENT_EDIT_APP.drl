@@ -1,0 +1,101 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.DropdownUtils;
+
+rule "MOVE_BUCKET_CLICK_EVENT_EDIT_APP"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_EDIT_AGREEMENT")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+    then
+		System.out.println("Processing OFFER CLICK EVENT : " + $message );
+		
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		
+		/*
+		code: "ACT_PRI_EVENT_EDIT_AGREEMENT"
+		parentCode: "SBE_OFFERED_APPLICATIONS_A1F5B232-3984-43E3-A2DF-1506E2AA859D"
+		targetCode: "APP_E30617D8-1D8F-4F81-B9E7-F3887830437E"
+		*/
+
+		
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode :: " + targetCode);
+		
+		/* get the company baseentity */
+		BaseEntity appBe = beUtils.getBaseEntityByCode(targetCode);
+		System.out.println("appBe :: " + appBe);
+		
+		String hostCompanyCode = "";
+		
+		if(appBe != null) {
+				hostCompanyCode = appBe.getValue("LNK_HOST_COMPANY", null);	
+				System.out.println("hostCompanyCode :: " + hostCompanyCode);
+				
+		} else {
+			System.out.println("ERROR: Null appBe");
+		}
+		
+		
+
+		/* dropdown search here For companyRep */
+		DropdownUtils dropdown = new DropdownUtils(serviceToken);
+		dropdown.setNewSearch("HCR Dropdown", "Fetch HCR Dropdown Items")
+											.addFilter("PRI_IS_HOST_CPY_REP", true)
+											.addFilter("LNK_HOST_COMPANY", SearchEntity.StringFilter.EQUAL, hostCompanyCode)
+											.setPageStart(0)
+											.setPageSize(1000);
+
+		/* Send the dropdown options */
+		dropdown.sendSearchResults("GRP_HOST_COMPANY_REP_SELECTION", "LNK_ITEM", "ITEM", true, false, userToken, false);
+		
+		retract($message);
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		update(output);
+		
+		
+		
+		/* -------------------------------------------------------- */
+		
+		
+		String code = $message.getData().getCode();
+		String workflowSignalCode = "EDIT_APPLICATION";
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_"+workflowSignalCode);
+		output.setTargetCode($message.getData().getTargetCode());
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING EDIT OF APPLICATION INSIDE OFFERED WITH: " +output);
+	
+	
+		retract( $message);
+	end

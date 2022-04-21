@@ -1,0 +1,51 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "MOVE_BUCKET_CLICK_EVENT_AGREE_DOC"
+    ruleflow-group 'EventProcessing'
+		salience 1000
+    no-loop
+    when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_VIEW_AGREEMENT")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+    then
+		System.out.println("Processing OFFER CLICK EVENT : " + $message );
+
+		
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		String user = userToken.getUserCode();
+		System.out.println("Agreement Doc User: " + user);
+		output.setAskSourceCode(user);
+		
+		String code = $message.getData().getCode();
+		String workflowSignalCode = "AGREEMENT_DOC";
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_"+workflowSignalCode);
+		output.setTargetCode($message.getData().getTargetCode());
+		output.setSuitCase(user);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING AGREEMENT DOC INSIDE OFFERED WITH: " +output);
+	
+		retract( $message);
+	end

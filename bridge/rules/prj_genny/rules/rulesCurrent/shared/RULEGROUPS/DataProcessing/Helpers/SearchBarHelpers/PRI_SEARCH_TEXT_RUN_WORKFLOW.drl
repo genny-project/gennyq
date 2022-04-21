@@ -1,0 +1,87 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventWorkflowMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+
+
+
+rule "PRI_SEARCH_TEXT_RUN_WORKFLOW"
+    ruleflow-group 'DataProcessing'
+        salience 550
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "TEST" || code == "SUPERUSER" || code == "DEV")
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("!workflow:")) )
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  userToken : GennyToken( code != "PER_SERVICE")
+	  output : OutputParam( )
+    then
+
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+
+   		System.out.println("PRI_SEARCH_TEXT_RUN_WORKFLOW FIRED!");
+   		String sourceCode = beUtils.getGennyToken().getUserCode();
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		/* Run a Workflow */
+		String workflowCode = answer.getValue().split(":")[1];
+		String targetCode = answer.getValue().split(":")[2];
+		System.out.println(workflowCode);
+
+		output.setTypeOfResult("DISPLAY");
+        output.setResultCode(workflowCode);
+
+        String questionCode = "QUE_REMOTE_SERVICE_GRP";
+        output.setSuitCase(questionCode);
+        output.setAskSourceCode(userToken.getUserCode());
+        output.setTargetCode(targetCode);
+
+        System.out.println("**************************************************");
+        System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+        System.out.println("ResultCode: "    + output.getResultCode());
+        System.out.println("SuitCase: "      + output.getSuitCase());
+        System.out.println("AskSourceCode: " + output.getAskSourceCode());
+        System.out.println("TargetCode: "    + output.getTargetCode());
+        System.out.println("**************************************************");
+
+
+
+        /*construct a signal event that runs the ASK_QUESTION workflow*/
+        QEventWorkflowMessage workflowMsg = new QEventWorkflowMessage("ASK_QUESTIONS", output);
+        workflowMsg.setToken(userToken.getToken());
+        VertxUtils.writeMsg("events", workflowMsg);
+        retract(answer);
+
+		
+end

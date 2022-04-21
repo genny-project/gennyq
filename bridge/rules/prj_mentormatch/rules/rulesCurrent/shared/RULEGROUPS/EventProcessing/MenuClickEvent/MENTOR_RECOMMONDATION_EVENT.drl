@@ -1,0 +1,96 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+import life.genny.utils.SessionFacts;
+import life.genny.qwanda.rule.RuleDetails;
+import life.genny.utils.DropdownUtils;
+
+rule "MENTOR_RECOMMONDATION_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage((data.code matches "ACT_PRI_EVENT_SELECT_MENTOR"))
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		ruleDetails : RuleDetails()
+        beUtils : BaseEntityUtils( )
+
+    then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing:: " + $message );
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode = " + targetCode);
+		BaseEntity user = beUtils.getBaseEntityByCode(targetCode);
+
+		TableUtils.searchTable(beUtils,"SBE_SUMMARY_MENTORS", true);
+	/* ================== BASIC AF MATCHING ALGORITHM ================== */
+
+		/* Recommendation Algorithm Rules
+		From Highest Priority to Lowest Priority */
+		/*String mentorLoc = "LNK_MENTOR_LOC_PREF";
+		String mentorGen = "LNK_MENTOR_GENDER_PREF";
+		String mentorAge = "LNK_MENTOR_AGE_PREF";
+		String mentorExp = "LNK_MENTOR_EXP_PREF";
+		String mentorEth = "PRI_MENTOR_ETH_BACK";
+		String topIndustry = "PRI_INDUSTRY_TO_BE_MENTORED";
+		String otherIndustry = "PRI_INTERESTED_INDUSTRIES";*/
+		
+		/* Gather Matching Info */
+		/* String assocMentorLoc = user.getValue(mentorLoc, null); */
+		/* String assocMentorGen = user.getValue(mentorGen, null); */
+		/* String assocMentorAge = user.getValue(mentorAge, null); */
+	/*	String assocMentorExp = user.getValue(mentorExp, null);
+		String assocMentorEth = user.getValue(mentorEth, null); */
+		/* String assocTopIndustry = user.getValue(topIndustry, null); */
+	/*	String assocOtherIndustry = user.getValue(otherIndustry, null); */
+		
+		/* Get all the all the matching Mentors */
+	  /*  SearchEntity matchedMentorBe = new SearchEntity("SBE_MENTOR_RECOMMENDATIONS_BASIC", "Matching Mentor")
+	            .addFilter("PRI_IS_MENTOR", true)
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+				.addFilter("PRI_STATUS", SearchEntity.StringFilter.LIKE, "AVAILABLE") */
+				/*.addFilter("PRI_ETH_BACK", SearchEntity.StringFilter.LIKE, assocMentorEth)*/
+				/*.addFilter("PRI_AREA_EXPERTISE", SearchEntity.StringFilter.LIKE, assocMentorExp)*/
+
+				/* Table Columns */
+				/*.addColumn("PRI_IMAGE_URL", "Image")
+				.addColumn("PRI_NAME", "Name")
+				.addColumn("PRI_AREA_EXPERTISE", "Expertise") */
+
+				/* Row Actions */
+				/* .addAction("PRI_EVENT_VIEW", "View") */
+
+
+	           /* .setPageStart(0).setPageSize(1000); */
+
+	    /* matchedMentorBe.setRealm(serviceToken.getRealm()); */
+		
+		/*List<BaseEntity> matchedMentorLst = beUtils.getBaseEntitys(matchedMentorBe);
+		
+		System.out.println("List of matched Mentor: = " +matchedMentorLst); */
+
+		
+		
+		/*QDataBaseEntityMessage machedMentorMsg = new QDataBaseEntityMessage(matchedMentorLst);
+			machedMentorMsg.setToken(userToken.getToken());
+			machedMentorMsg.setReplace(true);
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(machedMentorMsg));*/
+		
+		retract( $message);
+	end

@@ -1,0 +1,61 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+
+rule "POST_INTERN_INTERVIEW"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_POST_INTERVIEW")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+    then
+    
+		System.out.println("Processing POST_INTERN_INTERVIEW click event : " + $message );
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+	
+		/* Set input Parameters */
+		String workflowSignalCode = "BASIC_QG";
+		String key = "STAR_RATING";
+		
+
+		/* Set Parameters to output */
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_"+workflowSignalCode);
+		output.setAskSourceCode(userToken.getUserCode());
+		output.setTargetCode($message.getData().getTargetCode());
+		output.setSuitCase(key);
+		output.setPath(key);
+		
+		/* Print Parameters */
+		System.out.println("TypeOfResult: " + "SIGNAL");
+		System.out.println("ResultCode: " + "START_"+workflowSignalCode);
+		System.out.println("SourceCode: " + userToken.getUserCode());
+		System.out.println("TargetCode: " + $message.getData().getTargetCode());
+		System.out.println("SuitCase: " + key);
+		
+		
+		/* Set SessionFacts */
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());	
+	
+		retract( $message);
+	end

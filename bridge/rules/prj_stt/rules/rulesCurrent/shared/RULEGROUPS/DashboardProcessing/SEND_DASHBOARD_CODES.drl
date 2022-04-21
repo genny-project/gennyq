@@ -1,0 +1,50 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "SEND_DASHBOARD_CODES"
+	ruleflow-group 'DashboardProcessing'
+	salience 15
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		beUtils : BaseEntityUtils( )
+		allowed: Allowed( code == "EDU_PRO_REP" || code == "STUDENT" )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		Boolean cache = true;
+  
+		String sessionCode= beUtils.getGennyToken().getSessionCode().toUpperCase();
+		System.out.println("sessionCode   ::   " + sessionCode);
+
+		List<String> codes = new ArrayList<String>();
+		if(sessionCode != null){
+			codes.add("SBE_TEAMS_"+sessionCode);
+		}
+
+		/* Send bucket arrayCodes */
+		QCmdMessage msg = new QCmdMessage("DASHBOARD_CODES", "DASHBOARD_CODES");
+		msg.setTargetCodes(codes);
+		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setSend(true);  		
+		VertxUtils.writeMsg("webcmds",msg);
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+
+end

@@ -1,16 +1,18 @@
 package life.genny.bridge.live.data;
 
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.json.JsonObject;
 import javax.inject.Inject;
-import life.genny.bridge.blacklisting.BlackListInfo;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.security.keycloak.TokenVerification;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
-import life.genny.qwandaq.utils.CacheUtils;
+
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonObject;
+import life.genny.bridge.blacklisting.BlackListInfo;
+import life.genny.bridge.model.grpc.Item;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
+import life.genny.qwandaq.security.keycloak.TokenVerification;
 
 /**
  * InternalConsumer --- The class where all messages from the backends such as lauchy,
@@ -23,9 +25,10 @@ public class InternalConsumer {
 
 	private static final Logger log = Logger.getLogger(InternalConsumer.class);
 
-	@Inject TokenVerification verification;
-	@Inject EventBus bus;
-	@Inject BlackListInfo blackList;
+  @Inject TokenVerification verification;
+  @Inject EventBus bus;
+  @Inject BlackListInfo blackList;
+  @Inject BridgeGrpcService grpcService;
 
 	/**
 	 * A request with a protocol which will add, delete all or delete just a record depending on the
@@ -84,9 +87,6 @@ public class InternalConsumer {
 	 */
 	public void handleIncomingMessage(String arg) {
 
-		// String jsonAttribute = (String) CacheUtils.readCache("internmatch", "attributes");
-
-		// log.debug("Outgoing Payload jsonAttribute = " + jsonAttribute);
 		log.debug("Outgoing Payload = " + arg);
 
 		String incoming = arg;
@@ -99,10 +99,12 @@ public class InternalConsumer {
 			final JsonObject json = new JsonObject(incoming);
 			GennyToken gennyToken = new GennyToken(json.getString("token"));
 			verification.verify(gennyToken.getRealm(), gennyToken.getToken());
-
+			KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
+			
 			if (!incoming.contains("<body>Unauthorized</body>")) {
 				String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");
 				log.info("Publishing message to session " + sessionState);
+				grpcService.send(payload.jti, Item.newBuilder().setBody(removeKeys(json).toString()).build());
 				bus.publish(sessionState, removeKeys(json));
 
 			} else {

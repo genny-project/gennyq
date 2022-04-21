@@ -1,0 +1,62 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.utils.TableUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.model.NodeStatus;
+
+rule "APPROVE_JOURNAL"
+  ruleflow-group 'EventProcessing'
+  salience 2
+  no-loop
+  when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_APPROVE_JOURNAL")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+  then
+    System.out.println(drools.getRule().getName() + " triggered");
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode = " + targetCode);
+		
+    Answer answer = new Answer(userToken.getUserCode(),targetCode,"PRI_STATUS","APPROVED");
+    BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+    beUtils.saveAnswer(answer);
+    VertxUtils.sendToFrontEnd(userToken, answer);
+    
+    /* pdf worflow starts from here */
+  		BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+    	String internCode = beUtils.quantumStrip(targetBe, "LNK_INTERN", "internCode");
+		String workflowSignalCode = "START_JOURNAL_PDF";
+		
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode(workflowSignalCode);
+		output.setTargetCode(internCode);
+		
+		String workflowBeCode = $message.getData().getTargetCode();
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ workflowBeCode: " + workflowBeCode);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+    
+				
+		retract( $message);
+		
+	end

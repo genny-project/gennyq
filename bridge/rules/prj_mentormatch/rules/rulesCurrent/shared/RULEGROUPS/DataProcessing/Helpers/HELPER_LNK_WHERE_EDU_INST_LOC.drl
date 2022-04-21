@@ -1,0 +1,96 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.Ask;
+import life.genny.utils.VertxUtils;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.utils.RulesUtils;
+
+rule "HELPER_LNK_WHERE_EDU_INST_LOC"
+	ruleflow-group 'DataProcessing'
+	salience 500
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE")
+		serviceToken : GennyToken (code == "PER_SERVICE")
+		answer : Answer((attributeCode == "LNK_WHERE_EDU_INST_LOC"))
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " : Rule fired");
+
+        String sourceCode = beUtils.getGennyToken().getUserCode();
+ 		String targetCode = answer.getTargetCode();
+        String value = answer.getValue();
+        String formattedValue = beUtils.cleanUpAttributeValue(value);
+        System.out.println("LNK_WHERE_EDU_INST_LOC :: sourceCode = " + sourceCode);
+ 		System.out.println("LNK_WHERE_EDU_INST_LOC :: targetCode = " + targetCode);
+ 		System.out.println("LNK_WHERE_EDU_INST_LOC :: value = " + value);
+        System.out.println("LNK_WHERE_EDU_INST_LOC :: formattedValue = " + formattedValue);
+
+        BaseEntity countryBE = beUtils.getBaseEntityByCode(formattedValue);
+        BaseEntity targetBE = beUtils.getBaseEntityByCode(targetCode);
+        boolean needToChange = true;
+        /*Check if already Off-shore selected, then no need to change it from here*/
+        if (targetBE != null) {
+            System.out.println("targetBe is not NULL");
+
+            String onOrOffShore = targetBE.getValue("LNK_ON_OR_OFF_SHORE", null);
+            onOrOffShore = beUtils.cleanUpAttributeValue(onOrOffShore);
+
+            System.out.println("onOrOffShore = " + onOrOffShore);
+
+            if ((onOrOffShore == null) || (onOrOffShore.isEmpty())) {
+                /*If LNK_ON_OR_OFF_SHORE value not selected yet, no need to change phone code*/
+                needToChange = false;
+            } else {
+                if ("SEL_OFFSHORE".equals(onOrOffShore)) {
+                    needToChange = false;
+                }
+            }
+        }
+
+        System.out.println("LNK_WHERE_EDU_INST_LOC :: needToChange = " + needToChange);
+
+        if (needToChange && (countryBE != null)) {
+            String countryCode = countryBE.getValue("PRI_PHONE_CODE", null);
+            System.out.println("needToChange and countryBE is not NULL");
+
+            if (countryCode != null) {
+                String phoneCode = "+" + countryCode;
+                System.out.println("phoneCode = " + phoneCode);
+
+                /* Prepare mobile ask */
+                Attribute mobileAttr = RulesUtils.getAttribute("PRI_MOBILE", serviceToken);
+                Question mobileQues = new Question("QUE_MOBILE", "Phone", mobileAttr, true);
+                Ask mobileAsk = new Ask(mobileQues, sourceCode, targetCode, true);
+
+                /* Send the ask as DISABLE = true */
+                mobileAsk.setDisabled(true);
+                QDataAskMessage disableMobile = new QDataAskMessage(mobileAsk);
+                disableMobile.setToken(userToken.getToken());
+                VertxUtils.writeMsg("webcmds", disableMobile);
+
+                /* Send Answer to Front End */
+                Answer mobileAns = new Answer(sourceCode, targetCode, "PRI_MOBILE", phoneCode);
+                beUtils.saveAnswer(mobileAns);
+                VertxUtils.sendToFrontEnd(userToken, mobileAns);
+
+                /* Send the ask as DISABLE = false */
+                mobileAsk.setDisabled(false);
+                QDataAskMessage enableMobile = new QDataAskMessage(mobileAsk);
+                enableMobile.setToken(userToken.getToken());
+                VertxUtils.writeMsg("webcmds", enableMobile);
+            } else {
+                System.out.println("Country Code is NULL");
+            }
+        } else {
+             System.out.println("LNK_WHERE_EDU_INST_LOC :: needToChange false or Country BE is NULL");
+        }
+end

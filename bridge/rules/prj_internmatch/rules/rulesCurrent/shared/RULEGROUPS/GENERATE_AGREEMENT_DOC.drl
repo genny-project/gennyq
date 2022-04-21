@@ -1,0 +1,138 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.MergeUtil;
+import life.genny.qwanda.entity.BaseEntity;
+import org.json.JSONArray;
+import life.genny.qwanda.Answer;
+import life.genny.qwandautils.QwandaUtils;
+import java.util.HashMap;
+
+rule "GENERATE_AGREEMENT_DOC"
+    ruleflow-group 'GenerateAgreementDoc'
+		salience 1
+    no-loop
+    when
+    	application : BaseEntity()
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+    then
+		System.out.println("Processing GENERATE_AGREEMENT_DOC EVENT" );
+		System.out.println("%%%%%%%%%%%%%%%%%%% application " + application + "%%%%%%%%%%%%%%%%%%%");
+		try{
+			BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+			/* Getting all baseEntity from the set */
+        	BaseEntity projectBe = beUtils.getBaseEntityByCode("PRJ_INTERNMATCH");
+			BaseEntity internBe = null;
+			System.out.println("*********************** projectBe " + projectBe);
+
+			if (application != null) {
+				internBe = beUtils.getBaseEntityFromLNKAttr(application, "LNK_INTERN");
+			} else {
+				System.out.println("*********************** application is null");
+			}
+
+	        if( projectBe != null) {
+
+				String agreementHtml = "";
+
+				if (internBe != null) {
+					System.out.println("*********************** internBe " + internBe);
+					String entityAddress = "";
+					entityAddress = internBe.getValue("PRI_ADDRESS_COUNTRY", null);
+
+					if (entityAddress != null) {
+						System.out.println("*********************** entityAddress " + entityAddress);
+						if (entityAddress.equals("United Kingdom")) {
+							agreementHtml = projectBe.getValue("PRI_UK_AGREEMENT_URL","");
+							System.out.println("*********************** PRI_UK_AGREEMENT_URL: agreementHtml " + agreementHtml );
+						} else {
+							agreementHtml = projectBe.getValue("PRI_AGREEMENT_URL","");
+							System.out.println("*********************** PRI_AGREEMENT_URL: agreementHtml " + agreementHtml );
+						}
+					} else {
+						System.out.println("*********************** entityAddress is null");
+					}
+				} else {
+					System.out.println("*********************** internBe is null");
+				}
+
+				/* Temporary test URL is PRI_TEST_AGREEMENT_URL. Do not release this without using PRI_AGREEMENT_URL! */
+				/*agreementHtml = projectBe.getValue("PRI_TEST_AGREEMENT_URL","");*/
+	        	/*System.out.println("*********************** Agrementhtml " + agreementHtml );*/
+
+
+
+	            if( agreementHtml != null ) {
+					BaseEntity internship = beUtils.getBaseEntityFromLNKAttr(application, "LNK_INTERNSHIP");
+					BaseEntity hostCompany = null;
+					BaseEntity supervisor = null;
+					BaseEntity hostCompanyRep = null;
+
+					BaseEntity worksite = null;
+					BaseEntity dressCode = null;
+
+					if (internship != null) {
+						hostCompany = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_HOST_COMPANY");
+						supervisor = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_INTERN_SUPERVISOR");
+						hostCompanyRep = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_HOST_COMPANY_REP");
+
+						worksite = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_WORKSITE_SELECT");
+						dressCode = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_DRESS_CODE");
+					}
+					BaseEntity intern = beUtils.getBaseEntityFromLNKAttr(application, "PRI_INTERN_CODE");
+					BaseEntity agent = null;
+					BaseEntity internshipDuration = null;
+
+					if (intern != null) {
+						agent = beUtils.getBaseEntityFromLNKAttr(intern, "LNK_AGENT");
+						internshipDuration = beUtils.getBaseEntityFromLNKAttr(intern, "LNK_INTERNSHIP_DURATION");
+					}
+
+					/* creating Hash Map */
+					HashMap<String, Object> contextMap = new HashMap<>();
+
+					contextMap.put("APPLICATION", application);
+					contextMap.put("INTERNSHIP", internship);
+					contextMap.put("AGENT", agent);
+					contextMap.put("INTERN", intern);
+					contextMap.put("SUPERVISOR", supervisor);
+					contextMap.put("HCR", hostCompanyRep);
+					contextMap.put("HC", hostCompany);
+
+					contextMap.put("WORKSITE", worksite);
+					contextMap.put("DURATION", internshipDuration);
+					contextMap.put("DRESS_CODE", dressCode);
+
+	                /* getting html code as a string */
+	       			String agreementDocumentAsString = QwandaUtils.apiGet(agreementHtml, null);
+
+	       			/* returns an agreement doc html with merged value */
+	                String agreementDocHtml = MergeUtil.merge(agreementDocumentAsString, contextMap);
+	                System.out.println("*********************** AgreementHtml Doc html:" + agreementDocHtml);
+
+	       			/* saving to agreementDocHtml compliance baseEntity */
+	              beUtils.saveAnswer(new Answer( userToken.getUserCode(), application.getCode(), "PRI_AGREEMENT_HTML", agreementDocHtml));
+             	}
+			} else {
+				System.out.println("*********************** projectBe is null");
+			}
+		} catch(Exception e) {
+				System.out.println("error" + e);
+		}
+		retract(application);
+
+		System.out.println("End of " + drools.getRule().getName());
+end
+

@@ -1,0 +1,113 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwandautils.GennySettings;
+
+rule "HAVE_ABN"
+    ruleflow-group 'BasicQG'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		ruleHashMap : HashMap()
+		newBe : BaseEntity()
+		/*beUtils : BaseEntityUtils()*/
+
+
+     then
+ 		System.out.println("HAVE_ABN: Rule fired");
+ 		
+ 		System.out.println("HAVE_ABN: newBe = " + newBe);
+ 		
+ 		String whichRule = (String)ruleHashMap.get("whichRule");
+    	String whichType = (String)ruleHashMap.get("whichType");
+    	String newCode = (String)ruleHashMap.get("newCode");
+    
+    	System.out.println(whichRule);
+   	 	System.out.println(whichType);
+    	System.out.println(newCode);
+ 		
+ 		System.out.println("ruleHashMap" + ruleHashMap); 
+ 		
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+ 		newBe = beUtils.getBaseEntityByCode(newCode);
+ 		
+ 		String targetCode = newCode;
+ 		System.out.println("targetCode" + targetCode);
+ 		
+		/* Get Agent */
+		
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+		output.setAskSourceCode(user); 	
+	
+		String key = whichType;
+		System.out.println("key: " +key);	
+		
+		key = "NO_ABN_" +whichType;
+		System.out.println("key: " +key);	
+ 		
+ 		/*
+ 		if (workflowSignalCode.equals("HOST_CPY") || workflowSignalCode.equals("HOST_CPY_REP")) {
+			output.setResultCode("START_"+workflowSignalCode);
+		} else {
+		
+			workflowSignalCode = workflowSignalCode + "_NO";
+			System.out.println("workflowSignalCode: " +workflowSignalCode);
+			
+			output.setResultCode("START_ADD_ENTITY");
+		}
+		*/
+ 		
+ 		/* Set Parameters */
+ 		
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_ADD_ENTITY");	
+
+		output.setSuitCase(key);
+		output.setAskSourceCode(user);
+		output.setTargetCode(targetCode);
+
+
+		/* Print Parameters */
+		
+		System.out.println("**************************************************");
+		System.out.println("AskSourceCode: " + output.getAskSourceCode());
+		System.out.println("TargetCode: "    + output.getTargetCode());
+		System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+		System.out.println("ResultCode: "    + output.getResultCode());
+		System.out.println("SuitCase: "      + output.getSuitCase());
+		System.out.println("**************************************************");
+ 		
+
+
+		retract(newBe)
+		retract(ruleHashMap)
+
+end

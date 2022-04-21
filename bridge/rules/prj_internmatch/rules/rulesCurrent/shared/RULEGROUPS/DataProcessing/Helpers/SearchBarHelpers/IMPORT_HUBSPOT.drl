@@ -1,0 +1,133 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+import java.time.LocalDateTime;
+import life.genny.qwandautils.QwandaUtils;
+
+import life.genny.qwandautils.GennySettings;
+
+
+import java.util.Optional;
+import life.genny.utils.BaseEntityUtils;
+
+
+
+
+rule "IMPORT_HUBSPOT"
+    ruleflow-group 'DataProcessing'
+        salience 9000
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "SEARCHBAR_CMDS" || code == "TEST") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("!importhubspot:")) )   /* this is a pure search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+   		retract(answer);
+   		
+		long starttime = System.currentTimeMillis();
+		long looptime = 0;
+		long searchtime = 0;
+
+		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_INTERNMATCH");
+		String hubspotApiKey = project.getValueAsString("ENV_HUBSPOT_API_KEY");
+		String url = "https://api.hubapi.com/contacts/v1/lists/all/contacts/all?hapikey="+hubspotApiKey+"&count=20000";
+		System.out.println("apikey = "+hubspotApiKey);
+
+
+		String json = QwandaUtils.apiGet(url,null);
+		JsonObject hubspotJson = new JsonObject(json);
+		
+		JsonArray contactsArray = hubspotJson.getJsonArray("contacts");
+		/* System.out.println("json array = "+contactsArray);*/
+		
+		/* loop through contacts */
+		Integer index = 0;
+		Integer count = contactsArray.size();
+		for (index=0;index<count;index++) {
+			
+			JsonObject  contactJson = contactsArray.getJsonObject(index);
+			JsonObject properties = contactJson.getJsonObject("properties");
+			JsonObject firstnameJson = properties.getJsonObject("firstname");
+			String firstname = firstnameJson.getString("value");
+			JsonObject lastnameJson = properties.getJsonObject("lastname");
+			String lastname = lastnameJson.getString("value");
+			
+			JsonArray identityprofiles = contactJson.getJsonArray("identity-profiles");
+			JsonObject identityJson = identityprofiles.getJsonObject(0);
+			JsonArray identitys = identityJson.getJsonArray("identities");
+			JsonObject emailJson = identitys.getJsonObject(0);
+			
+			String email = emailJson.getString("value");
+			if (!email.contains("@")) { /* let's try next one */
+				emailJson = identitys.getJsonObject(1);			
+				email = emailJson.getString("value");
+			}
+			
+			
+			System.out.println("name is "+firstname+" "+lastname+" ---> "+email);
+			
+			
+			BaseEntity defIntern = beUtils.getDEFByCode("DEF_INTERN");
+			/* check if already there */
+			
+			BaseEntity intern =  beUtils.getBaseEntityByAttributeAndValue("PRI_EMAIL",email);
+			if (intern == null) {
+				intern = beUtils.create(defIntern,firstname+" "+lastname);
+			}
+			intern.setStatus(EEntityStatus.PENDING);
+			Answer fnAns = new Answer(intern.getCode(),intern.getCode(),"PRI_FIRSTNAME",firstname);
+			Answer lnAns = new Answer(intern.getCode(),intern.getCode(),"PRI_LASTNAME",lastname);
+			Answer emailAns = new Answer(intern.getCode(),intern.getCode(),"PRI_EMAIL",email);
+			insert(fnAns);
+			insert(lnAns);
+			insert(emailAns);	
+			
+			/* work out what the existing rules do */		
+		}
+		
+		
+		
+		
+
+		long endtime = System.currentTimeMillis();
+		System.out.println("total took " + (endtime - starttime) + " ms");	
+		System.out.println("Imported "+count+" contacts");
+	
+		output.setTypeOfResult("NO_PROCESSING");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+		
+end

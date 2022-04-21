@@ -1,0 +1,40 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import java.util.Iterator;
+import life.genny.qwanda.ESessionType;
+
+rule "FINALISE_STATELESS_ANSWERS"
+    ruleflow-group 'DataProcessing'
+     salience 10
+     no-loop true
+    when
+	  userToken : GennyToken ( code != "PER_SERVICE" ) 
+	  serviceToken : GennyToken ( code == "PER_SERVICE" ) 
+	  answersToSave : Answers()
+	  ruleDetails : RuleDetails()
+	  beUtils : BaseEntityUtils()
+	  eval(beUtils.getGennyToken().hasRole("b2b")) 
+	  eval(answersToSave.getAnswers().size()>0) 
+	 /* ESessionType(this == ESessionType.B2B) */
+    then
+ 		System.out.println("Rule -> FINALISE_STATELESS_ANSWERS Processing Answer/Data!! :  user=" + userToken.getUserCode()); 
+ 
+		Iterator<Answer> iter = answersToSave.getAnswers().iterator();
+		while (iter.hasNext()) {
+			Answer answer = iter.next();
+			beUtils.saveAnswer(answer);
+		/*	iter.remove();*/
+		
+		}
+		/*answersToSave = new Answers(); /* clear */
+		update(answersToSave);
+ 
+end

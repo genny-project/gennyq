@@ -1,0 +1,52 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "RED"
+    ruleflow-group 'CommonEnter'
+    no-loop true
+    salience 1 
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity()
+		colourCode : String(colourCode.equals("RED"))
+
+	  
+     then
+ 		System.out.println("Red: Rule fired" ); 
+ 		
+ 	/*  green: '#5cb85c' */
+	/*  orange: '#FFCC00' */
+	/*  red: '#cc0000' */
+ 		
+ 	/*  Construct answer with Source, Target, Attribute Code, Value */
+ 		Answer answer = new Answer(userToken.getUserCode(),newApplication.getCode(),"PRI_STATUS_COLOR","#cc0000");
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+ 		beUtils.saveAnswer(answer);
+
+	/* insert(answer); */
+		
+		System.out.println("Red: Answer = " + answer);
+		System.out.println("Red: newApplication = " + newApplication); 
+		
+		
+	/* System.out.println("GREEN: Answer Source Code = " + answer.getSourceCode()); */
+	/* System.out.println("GREEN: Answer Target Code = " + answer.getTargetCode()); */
+	/* System.out.println("GREEN: Answer Attribute Code = " + answer.getAttributeCode()); */
+	/* System.out.println("GREEN: Answer Value = " + answer.getValue());  */
+		
+	
+
+		retract(colourCode)
+		retract(newApplication)
+		
+end

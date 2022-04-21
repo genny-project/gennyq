@@ -1,0 +1,86 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import java.util.UUID;
+import life.genny.notifications.EmailHelper;
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "IS_REG_INTERN"
+    ruleflow-group 'IsRegistered'
+    no-loop true
+    salience 1000
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		baseEntityType : String(baseEntityType.equals("REGISTERED_INTERN"))
+		currentUser : BaseEntity()
+		beUtils: BaseEntityUtils()
+	  
+     then
+ 		System.out.println("IS_REG_INTERN: Rule fired");
+ 		
+ 		BaseEntity user = beUtils.getBaseEntityByCode(currentUser.getCode());
+ 		System.out.println("IS_REG_INTERN: currentUser = " + currentUser.getCode()); 
+ 		
+ 	/*  Construct answer with Source, Target, Attribute Code, Value */
+ 		
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), currentUser.getCode() ,"PRI_IS_INTERN", "true"));
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), currentUser.getCode() ,"PRI_STATUS", "AVAILABLE"));
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), currentUser.getCode() ,"PRI_DISABLED", "false"));
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), currentUser.getCode() ,"PRI_STATUS_COLOR", "#5cb85c"));
+
+		
+		
+
+		String firstname = user.getValue("PRI_FIRSTNAME","");
+		System.out.println("currentUser: firstname = " +firstname);
+		if (firstname != null) {
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), user.getCode() ,"PRI_FIRSTNAME", firstname));
+		} else {
+			System.out.println("ERROR: Null firstname");
+		}
+		
+		String lastname = user.getValue("PRI_LASTNAME","");
+		System.out.println("currentUser: lastname = " +lastname);
+		if (lastname != null) {
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), user.getCode() ,"PRI_LASTNAME", lastname));
+		} else {
+			System.out.println("ERROR: Null lastname");
+		}
+		
+		
+		firstname = firstname.toLowerCase().trim();
+		firstname = WordUtils.capitalize(firstname);
+		
+		lastname = lastname.toLowerCase().trim();
+		lastname = StringUtils.capitalize(lastname);
+								
+		String name = firstname  + " " + lastname;
+		name = name.trim();	
+		System.out.println("currentUser: name = " +name);
+			
+		String initials = WordUtils.initials(name).toUpperCase();
+		System.out.println("currentUser: initials = " +initials);
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), user.getCode() ,"PRI_INITIALS", initials));
+		
+		Answer answerName = new Answer(userToken.getUserCode(), user.getCode(), "PRI_NAME", name);
+ 		beUtils.saveAnswer(answerName);		
+		VertxUtils.sendToFrontEnd(userToken, answerName);
+		
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* don't display anything new */
+		
+		retract(currentUser)
+	
+end

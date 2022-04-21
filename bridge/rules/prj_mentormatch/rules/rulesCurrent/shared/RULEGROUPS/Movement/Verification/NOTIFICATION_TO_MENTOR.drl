@@ -1,0 +1,52 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.message.QMessageGennyMSG;
+
+rule "NOTIFICATION_TO_MENTOR"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 5
+    when
+   		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		targetBaseEntity : BaseEntity( code matches "RSP_\\S+" )
+		controlSignalCode : String(controlSignalCode.equals("SEND_MSG_WELCOME_TO_MENTOR"))
+		beUtils : BaseEntityUtils()
+    then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+
+ 		targetBaseEntity = beUtils.getBaseEntityByCode(targetBaseEntity.getCode());
+ 		System.out.println(drools.getRule().getName() +" :: targetBaseEntity = " + targetBaseEntity);
+
+		if (targetBaseEntity != null) {
+			/* Send welcone email to Mentor */
+			String mentorCode = targetBaseEntity.getValue("PRI_RESPONSE_TO",null);
+			System.out.println("MentorCode = " + mentorCode);
+
+			BaseEntity mentorBe = beUtils.getBaseEntityByCode(mentorCode);
+
+			if (mentorBe != null) {
+                BaseEntity clubBe = beUtils.getBaseEntityFromLNKAttr(mentorBe, "LNK_MENTOR_CLUB");
+                System.out.println("clubBe code = " + clubBe.getCode());
+                /*Update Mentor BE Status to Verified after Rotary Club Member verifies*/
+                beUtils.saveAnswer(new Answer(userToken.getUserCode(), mentorBe.getCode(), "PRI_STATUS", "VERIFIED"));
+
+                System.out.println("#### Sending welcome email to mentor ####");
+
+                QMessageGennyMSG verificationMsg = new QMessageGennyMSG.Builder("MSG_MENTOR_WELCOME")
+                    .addRecipient(mentorBe)
+                    .addContext("CLUB", clubBe)
+                    .addContext("URL:ENCODE", "QUE_FAKE_PARENT/ACT_PRI_EVENT_START_MENTOR_TRAINING")
+                    .addContext("BCC", "PRJ_MENTORMATCH")
+                    .setUtils(beUtils)
+                    .send();
+
+                System.out.println("NOTIFICATION_TO_MENTOR: msg " + JsonUtils.toJson(verificationMsg));
+			}
+		}
+		retract(targetBaseEntity)
+		retract(controlSignalCode)
+end

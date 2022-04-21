@@ -1,0 +1,43 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "WARNINGS_ITEM_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		message : QEventMessage(data.parentCode matches "SBE_APPENDIX_WARNINGS_.*" && data.code matches "APN_WRN_.*" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " + message );
+
+		String targetCode = message.getData().getCode().replace("APN_", "");
+
+		SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", "SBE_WARNINGS", SearchEntity.class, beUtils.getGennyToken().getToken());
+		
+		searchBE.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, targetCode+"%");
+
+		Boolean cache = true;
+
+		long totalTime = TableUtils.searchTable(beUtils, searchBE, cache);
+		System.out.println("total took " + (totalTime) + " ms"); 
+
+		retract(message);
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+	end

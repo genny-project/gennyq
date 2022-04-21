@@ -1,0 +1,64 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwandautils.GennySettings;
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "IS_REF_PART"
+    ruleflow-group 'IsBaseEntity'
+    no-loop true
+    salience 1 
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		baseEntityType : String(baseEntityType.equals("REF_PART"))
+		newBe : BaseEntity()
+
+	  
+     then
+ 		System.out.println("IS_REF_PART: Rule fired" );
+ 		System.out.println("IS_REF_PART: newBe = " + newBe.getCode()); 
+ 		
+ 	/*  Construct answer with Source, Target, Attribute Code, Value */
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+ 		List<Answer> answers = new ArrayList<>();
+ 		
+ 		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_IS_REF_PART", "true")); */
+ 		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_STATUS", "ACTIVE")); */
+		
+		
+		
+		BaseEntity user = beUtils.getBaseEntityByCode(newBe.getCode());
+		String name = user.getValue("PRI_NAME",null);
+	
+	
+		String endPoint = GennySettings.projectUrl + "/v7/notes";
+		/*String endPoint = "https://internmatch-cyrus.gada.io/v7/notes";*/
+		
+		String tag = "System";
+		String userName = "System";
+		String userImage = "";
+		
+		QwandaUtils.apiPostNote(endPoint, userToken.getUserCode(), newBe.getCode(), "Added as an Referral Partner", tag, userName, userImage, serviceToken.getToken());
+		
+		System.out.println("I just posted the note");
+		System.out.println("Note endPoint: " +endPoint);
+		System.out.println("Note userToken.getUserCode(): " +userToken.getUserCode());
+		
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+
+		beUtils.saveAnswers(answers);
+		
+		retract(newBe)
+	
+end

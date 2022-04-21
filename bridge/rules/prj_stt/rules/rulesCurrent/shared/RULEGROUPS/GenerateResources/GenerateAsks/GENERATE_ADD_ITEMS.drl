@@ -1,0 +1,77 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_ADD_ITEMS"
+    ruleflow-group 'GenerateAsks'
+     no-loop true
+    when
+       not  SearchEntity (code == "GENERATE_ADD_ITEMS")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+			String sourceCode = "PER_SERVICE";
+			String targetCode = "PER_SERVICE";
+			
+			Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+			Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+			
+			/* ADD ITEMS group */
+			Question addItemsQues = new Question("QUE_ADD_ITEMS_GRP", "Add Items", questionAttribute, true);
+			Ask addItemsAsk = new Ask(addItemsQues, sourceCode, targetCode);
+
+				Question adminQues = new Question("QUE_ADMIN_MENU", "Admin", eventAttribute, true);
+				Ask adminAsk = new Ask(adminQues, sourceCode, targetCode);
+
+				Question eduProQues = new Question("QUE_EDU_PRO_MENU", "Education Provider", eventAttribute, true);
+				Ask eduProAsk = new Ask(eduProQues, sourceCode, targetCode);
+			
+				Question eduProRepQues = new Question("QUE_EDU_PRO_REP_MENU", "Trainer", eventAttribute, true);
+				Ask eduProRepAsk = new Ask(eduProRepQues, sourceCode, targetCode);
+
+				Question studentQues = new Question("QUE_STUDENT_MENU", "Student", eventAttribute, true);
+				Ask studentAsk = new Ask(studentQues, sourceCode, targetCode);
+
+				Question classQues = new Question("QUE_TEAM_MENU", "Class", eventAttribute, true);
+				Ask classAsk = new Ask(classQues, sourceCode, targetCode);
+
+			
+			Ask[] adminAddItems = { adminAsk, eduProAsk, eduProRepAsk, studentAsk, classAsk };
+			Ask[] eduProRepAddItems = { eduProRepAsk, studentAsk, classAsk };
+			Ask[] studentAddItems = {  };
+			
+			addItemsAsk.setChildAsks(adminAddItems);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "ADD_ITEMS_ADMIN", addItemsAsk, serviceToken.getToken());
+			
+			addItemsAsk.setChildAsks(eduProRepAddItems);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "ADD_ITEMS_EDU_PRO_REP", addItemsAsk, serviceToken.getToken());
+
+			addItemsAsk.setChildAsks(studentAddItems);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "ADD_ITEMS_STUDENT", addItemsAsk, serviceToken.getToken());
+
+end

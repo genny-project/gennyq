@@ -1,0 +1,109 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwandautils.GennySettings;
+import org.apache.commons.lang3.ObjectUtils
+import life.genny.utils.validation.MessageValidator
+import life.genny.message.QMessageGennyMSG;
+
+rule "TRIGGER_NOTIFY_HC_REP_EMAIL_ORANGE"
+    ruleflow-group 'EventProcessing'
+    no-loop true
+    salience 5
+    when
+   		$message : QEventMessage(data.code == "SCHEDULE_SHORTLIST_ORANGE")
+   		userToken : GennyToken  ()
+		serviceToken : GennyToken ( code == "PER_SERVICE" )
+
+     then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode: " +targetCode);
+
+		BaseEntity applicationBe  = beUtils.getBaseEntityByCode(targetCode);
+        System.out.println("applicationBe: "+ applicationBe);
+		if (applicationBe != null) {
+
+            /* Fetching internship from application */
+            BaseEntity internshipBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "LNK_INTERNSHIP");
+            /* Fetching intern from application */
+            BaseEntity internBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "PRI_INTERN_CODE");
+            System.out.println("internBe: "+ internBe);
+            /* Fetching host company representative from application */
+            BaseEntity hcrBe = beUtils.getBaseEntityFromLNKAttr(applicationBe, "LNK_INTERN_SUPERVISOR");
+            System.out.println("hcrBe: "+ hcrBe);
+            System.out.println("internshipBe: "+ internshipBe);
+
+            if(ObjectUtils.allNotNull(internBe,internshipBe,hcrBe)){
+                Boolean isEmailBlank = MessageValidator.isEmailBlank(internBe);
+                System.out.println("isEmailBlank: "+ isEmailBlank);
+                if(!isEmailBlank){
+                    /* Creating url for the applied application */
+                    String url = new StringBuilder()
+                                        .append("SBE_SHORTLISTED_APPLICATIONS_")
+                                        .append(userToken.getJTI().toUpperCase())
+                                        .append("/")
+                                        .append("ACT_PRI_EVENT_VIEW_APPLICATION")
+                                        .append("/")
+                                        .append(applicationBe.getCode())
+                                        .toString();
+
+                    System.out.println("url: " + url);
+                    Boolean sendEmail = hcrBe.getValue("PRI_EMAIL_FLAG", false);
+                    System.out.println("sendEmail: " + sendEmail);
+
+                    if(sendEmail){
+                        /* Email is sent to the host company representative */
+                        /* Building sendgrid msg and sending it */
+                        QMessageGennyMSG sendGridMsg = new QMessageGennyMSG.Builder("MSG_IM_HC_REP_OFFER_INTERVIEW_REMINDER_48HRS")
+                                                .addRecipient(hcrBe)
+                                                .addContext("INTERNSHIP", internshipBe)
+                                                .addContext("INTERN", internBe)
+                                                .addContext("URL:ENCODE", url)
+                                                .setUtils(beUtils)
+                                                .send();
+
+                        System.out.println("Sendgrid msg: "+ JsonUtils.toJson(sendGridMsg));
+                        System.out.println("Sendgrid email sent to host company representative!!");
+                    }
+                }
+            }else{
+                System.out.println("Required Object is NULL!!");
+            }
+		} else {
+			System.out.println("Application is NULL!!");
+		}
+
+		retract($message)
+end

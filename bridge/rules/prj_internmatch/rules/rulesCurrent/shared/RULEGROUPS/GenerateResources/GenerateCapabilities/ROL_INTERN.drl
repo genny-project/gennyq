@@ -1,0 +1,88 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.CapabilityMode;
+
+import org.apache.commons.lang3.text.WordUtils;
+
+rule "ROL_INTERN"
+    ruleflow-group 'GenerateCapabilities'
+    no-loop true
+    when
+		not  BaseEntity (code == "ROL_INTERN")
+		capabilityUtils : CapabilityUtils()
+		userRole : BaseEntity (code == "ROL_USER")
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println("   Generate "+drools.getRule().getName() );
+
+		 BaseEntity defBE = beUtils.getDEFByCode("DEF_ROLE");
+		 BaseEntity role = capabilityUtils.getBeUtils().create(defBE, WordUtils.capitalize(drools.getRule().getName().substring(4)), drools.getRule().getName());
+
+		beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), role.getCode(), "PRI_COLOR", "#096F09",false,true));
+
+		capabilityUtils.inheritRole(role,userRole);
+
+		capabilityUtils.addCapabilityToRole(role,"DASHBOARD_TIMELINE",CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"READ_HOST_COMPANY",CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"READ_JOURNALS",CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"CREATE_JOURNALS",CapabilityMode.SELF);
+		capabilityUtils.addCapabilityToRole(role,"READ_INTERNSHIPS",CapabilityMode.VIEW);
+
+		capabilityUtils.addCapabilityToRole(role,"WITHDRAW_APPLICATION",CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"VIEW_JOURNAL",CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"EDIT_JOURNAL",CapabilityMode.EDIT);
+		capabilityUtils.addCapabilityToRole(role,"ADD_JOURNAL",CapabilityMode.ADD);
+		capabilityUtils.addCapabilityToRole(role,"APPLY",CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"VIEW_AGREEMENT",CapabilityMode.VIEW);
+		capabilityUtils.addCapabilityToRole(role,"DOWNLOAD_INTERNSHIP_AGREEMENT_DOC",CapabilityMode.VIEW);
+
+		/* SIDEBAR */
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_DASHBOARD", CapabilityMode.VIEW);
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TAB_BUCKET_VIEW", CapabilityMode.VIEW);
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_INTERNSHIPS", CapabilityMode.VIEW);
+	    capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_APPLICATIONS_APPLIED", CapabilityMode.VIEW);
+	    /* capabilityUtils.addCapabilityToRole(role,"SIDEBAR_QUE_TREE_ITEM_LOGBOOK_GRP", CapabilityMode.VIEW); */
+
+		 /* BUCKETS SEARCHES */
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_APPLIED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_SHORTLISTED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_INTERVIEWED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_OFFERED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_PLACED_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_INPROGRESS_APPLICATIONS",CapabilityMode.VIEW);
+
+		 /* SUMMARY SEARCHES */
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_SUMMARY_INTERN",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_SUMMARY_MY_APPLICATIONS",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_SUMMARY_INTERVIEWS_INTERN",CapabilityMode.VIEW);
+   	     capabilityUtils.addCapabilityToRole(role,"SBE_SUMMARY_INPROGRESS_APPLICATION",CapabilityMode.VIEW);
+
+		role = capabilityUtils.getBeUtils().getBaseEntityByCode(role.getCode());
+		beUtils.saveAnswer(new Answer(capabilityUtils.getBeUtils().getServiceToken().getUserCode(), role.getCode(), "PRI_WEIGHT", 200.0,false,true));
+
+		insert(role);
+		
+		VertxUtils.writeCachedJson(capabilityUtils.getBeUtils().getServiceToken().getRealm(), role.getCode(), JsonUtils.toJson(role), capabilityUtils.getBeUtils().getServiceToken().getToken());
+end

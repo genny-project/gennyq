@@ -1,0 +1,174 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_SIDEBAR"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not SearchEntity (code == "GENERATE_SIDEBAR")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+		then
+
+		/* minIO IDs for the Icons */
+		String DASHBOARD_ICON="81014108-22d7-4842-a631-f528b08f9077";
+		String TAB_BUCKET_VIEW_ICON="deec87af-688f-463e-b6e8-88b30f72752b";
+		String TREE_ITEM_CONTACTS_GRP_ICON="22b38cd3-0ff0-4655-b5e2-e427f116fe3a";
+		String TREE_ITEM_INTERNSHIPS_ICON="7f3e2768-7b4c-4ab7-841b-7bc247034c80";
+		String TREE_ITEM_HOST_COMPANIES_ICON="1ebb07c3-c8ee-4e9e-8bf1-9bbb1136497d";
+
+		String TREE_ITEM_APPLICATIONS_APPLIED_ICON="6d8b3a76-0fe0-4ae9-b176-416e0b083c59";
+		String TABLE_INTERNS_ICON="7f3e2768-7b4c-4ab7-841b-7bc247034c80";
+		String EDU_PROVIDERS_ICON="4b41f6ec-acee-4ec5-8696-31ed8e5fddaa";
+		String APPLICATIONS_ICON="6d8b3a76-0fe0-4ae9-b176-416e0b083c59";
+
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+			String sourceCode = "PER_SERVICE";
+			String targetCode = "PER_SERVICE";
+			
+			Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+			Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+			
+			/* dashboard */
+			Question dashboardQues = new Question("QUE_DASHBOARD_VIEW", "Dashboard", eventAttribute, true);
+			dashboardQues.setIcon(DASHBOARD_ICON);
+			Ask dashboardAsk = new Ask(dashboardQues, sourceCode, targetCode);
+			
+			/* process view */
+			Question processViewQues = new Question("QUE_TAB_BUCKET_VIEW", "Process View", eventAttribute, true);
+			processViewQues.setIcon(TAB_BUCKET_VIEW_ICON);
+			Ask processViewAsk = new Ask(processViewQues, sourceCode, targetCode);
+
+			/* internships */
+			Question internshipsQues = new Question("QUE_TREE_ITEM_INTERNSHIPS", "Internships", questionAttribute, true);
+			internshipsQues.setIcon(TREE_ITEM_INTERNSHIPS_ICON);
+			Ask internshipsAsk = new Ask(internshipsQues, sourceCode, targetCode);
+
+			/* host-companies */
+			Question hostCompaniesQues = new Question("QUE_TREE_ITEM_HOST_COMPANIES", "Host Companies", questionAttribute, true);
+			hostCompaniesQues.setIcon(TREE_ITEM_HOST_COMPANIES_ICON);
+			Ask hostCompaniesAsk = new Ask(hostCompaniesQues, sourceCode, targetCode);
+			
+			/* edu-providers */
+			Question eduProvidersQues = new Question("QUE_TREE_ITEM_EDU_PROVIDERS", "Edu Providers", questionAttribute, true);
+			eduProvidersQues.setIcon(EDU_PROVIDERS_ICON);
+			Ask eduProvidersAsk = new Ask(eduProvidersQues, sourceCode, targetCode);
+
+			/* applications */
+			Question applicationsQues = new Question("QUE_TREE_ITEM_APPLICATIONS_APPLIED", "My Applications", questionAttribute, true);
+			applicationsQues.setIcon(APPLICATIONS_ICON);
+			Ask applicationsAsk = new Ask(applicationsQues, sourceCode, targetCode);
+
+			/* my company */
+			Question myCompanyQues = new Question("QUE_HOST_COMPANY_VIEW", "My Company", eventAttribute, true);
+			Ask myCompanyAsk = new Ask(myCompanyQues, sourceCode, targetCode);
+
+			/* contacts */
+			Question contactsQues = new Question("QUE_TREE_ITEM_CONTACTS_GRP", "Contacts", questionAttribute, true);
+			contactsQues.setIcon(TREE_ITEM_CONTACTS_GRP_ICON);
+			Ask contactsAsk = new Ask(contactsQues, sourceCode, targetCode);
+				/* Contacts child asks */
+				Question internsQues = new Question("QUE_TREE_ITEM_INTERNS", "Interns", eventAttribute, true);
+				Question hcrQues = new Question("QUE_TREE_ITEM_HCRS", "Host Company Reps", eventAttribute, true);
+				Question eduProRepQues = new Question("QUE_TREE_ITEM_EPRS", "Edu Provider Reps", eventAttribute, true);
+				Question agentsQues = new Question("QUE_TREE_ITEM_AGENTS", "Agents", eventAttribute, true);
+				Question referrersQues = new Question("QUE_TREE_ITEM_REFERRERS", "Referrers", eventAttribute, true);
+				
+				Ask internsAsk = new Ask(internsQues, sourceCode, targetCode);
+				Ask hcrAsk = new Ask(hcrQues, sourceCode, targetCode);
+				Ask eduProRepAsk = new Ask(eduProRepQues, sourceCode, targetCode);
+				Ask agentsAsk = new Ask(agentsQues, sourceCode, targetCode);
+				Ask referrersAsk = new Ask(referrersQues, sourceCode, targetCode);
+
+				Ask[] contactsChildAsks = { internsAsk, hcrAsk, eduProRepAsk, agentsAsk };
+				contactsAsk.setChildAsks(contactsChildAsks);
+
+			/* logbook */
+			Question logbookQues = new Question("QUE_TREE_ITEM_LOGBOOK_GRP", "LogBook", questionAttribute, true);
+			Ask logbookAsk = new Ask(logbookQues, sourceCode, targetCode);
+
+			/* messages */
+			Question commsQues = new Question("QUE_TREE_ITEM_COMMUNICATIONS", "Communications", eventAttribute, true);
+			commsQues.setIcon(TAB_BUCKET_VIEW_ICON);
+			Ask commsAsk = new Ask(commsQues, sourceCode, targetCode);
+
+			/* appointments */
+			Question appointmentsQues = new Question("QUE_TREE_ITEM_APPOINTMENTS", "Appointments", eventAttribute, true);
+			appointmentsQues.setIcon(TAB_BUCKET_VIEW_ICON);
+			Ask appointmentsAsk = new Ask(appointmentsQues, sourceCode, targetCode);
+
+			/* documents */
+			Question documentsQues = new Question("QUE_TREE_ITEM_DOCUMENTS_GRP", "Documents", questionAttribute, true);
+			documentsQues.setIcon(TAB_BUCKET_VIEW_ICON);
+			Ask documentsAsk = new Ask(documentsQues, sourceCode, targetCode);
+				/* documentss child asks */
+				Question ohsDocsQue = new Question("QUE_TREE_ITEM_OHS_DOCS", "OHS Documents", eventAttribute, true);
+				Ask ohsDocsAsk = new Ask(ohsDocsQue, sourceCode, targetCode);
+				
+				Question hcsDocsQue = new Question("QUE_TREE_ITEM_HCS_DOCS", "HCS Documents", eventAttribute, true);
+				Ask hcsDocsAsk = new Ask(hcsDocsQue, sourceCode, targetCode);
+				
+				Question hcvDocsQue = new Question("QUE_TREE_ITEM_HCV_DOCS", "HCV Documents", eventAttribute, true);
+				Ask hcvDocsAsk = new Ask(hcvDocsQue, sourceCode, targetCode);
+
+				Question agreementDocsQue = new Question("QUE_TREE_ITEM_AGREEMENT_DOCS", "Agreement Documents", eventAttribute, true);
+				Ask agreementDocsAsk = new Ask(agreementDocsQue, sourceCode, targetCode);
+
+				Ask[] docsChildAsks = { ohsDocsAsk, hcsDocsAsk, hcvDocsAsk, agreementDocsAsk };
+				documentsAsk.setChildAsks(docsChildAsks);
+
+			/* devUI */
+			Question devUIQues = new Question("QUE_TREE_ITEM_DEV_UI", "LogBook", eventAttribute, true);
+			devUIQues.setIcon(TAB_BUCKET_VIEW_ICON);
+			Ask devUIAsk = new Ask(devUIQues, sourceCode, targetCode);
+
+			Ask[] devSidebar = { dashboardAsk, processViewAsk, contactsAsk, internshipsAsk, hostCompaniesAsk, eduProvidersAsk, commsAsk, appointmentsAsk, documentsAsk, devUIAsk };
+			Ask[] agentSidebar = { dashboardAsk, processViewAsk, contactsAsk, internshipsAsk, hostCompaniesAsk, eduProvidersAsk };
+			Ask[] internSidebar = { dashboardAsk, processViewAsk, internshipsAsk, applicationsAsk };
+			Ask[] eduProRepSidebar = { dashboardAsk, processViewAsk, eduProRepAsk, internsAsk, hostCompaniesAsk};
+			Ask[] hcRepSidebar = { dashboardAsk, processViewAsk, internshipsAsk, hcrAsk, myCompanyAsk };
+
+			/* sidebar group */
+			Question sidebarQues = new Question("QUE_PROJECT_SIDEBAR_GRP", "Sidebar", questionAttribute, true);
+			Ask sidebarAsk = new Ask(sidebarQues, sourceCode, targetCode);
+
+			sidebarAsk.setChildAsks(devSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_DEV", sidebarAsk, serviceToken.getToken());
+			
+			sidebarAsk.setChildAsks(agentSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_AGENT", sidebarAsk, serviceToken.getToken());
+
+			sidebarAsk.setChildAsks(internSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_INTERN", sidebarAsk, serviceToken.getToken());
+
+			sidebarAsk.setChildAsks(eduProRepSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_EDU_PRO_REP", sidebarAsk, serviceToken.getToken());
+
+			sidebarAsk.setChildAsks(hcRepSidebar);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_HOST_CPY_REP", sidebarAsk, serviceToken.getToken());
+end

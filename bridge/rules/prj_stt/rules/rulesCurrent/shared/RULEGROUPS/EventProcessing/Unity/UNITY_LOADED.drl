@@ -1,0 +1,42 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+
+rule "UNITY_LOADED"
+    ruleflow-group 'EventProcessing'
+		salience 3
+    no-loop
+    when
+		$message : QEventMessage ( data.code == "UNITY_LOADED" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		
+    then		
+		System.out.println("UNITY_LOADED : Rule Fired!");
+		
+		/* Send a Signal */
+		output.setTypeOfResult("SIGNAL");
+		
+		/* Signal to send */
+		output.setResultCode("UNITY_LOADED");
+		
+				
+		System.out.println("START SIGNAL: UNITY_LOADED");
+		System.out.println("STARTING UNITY_LOADED WITH: " +output);
+	
+		retract( $message);
+	end

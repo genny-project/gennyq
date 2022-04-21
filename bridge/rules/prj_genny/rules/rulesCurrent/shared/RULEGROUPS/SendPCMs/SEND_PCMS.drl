@@ -1,0 +1,52 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+
+rule "SEND_PCMS"
+	ruleflow-group 'SendPCMs'
+	salience 8
+	no-loop true
+	when
+     	beUtils : BaseEntityUtils()
+	  	serviceToken : GennyToken( code == "PER_SERVICE")
+	  	userToken : GennyToken( code != "PER_SERVICE")
+	  	ruleDetails : RuleDetails()
+    then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()); 
+
+		CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
+
+		System.out.println("userCode   ::   " + userToken.getUserCode());
+
+	    SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
+             .addSort("PRI_CREATED", "Created", SearchEntity.Sort.ASC)
+             .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PCM_%")
+             .addColumn("PRI_CODE", "Code")
+             .addColumn("PRI_STATUS","Status");
+     	searchBE.setRealm(userToken.getRealm());
+     	
+     	List<BaseEntity> pcms = beUtils.getBaseEntitys(searchBE);
+     	
+     	/* Now send to frontend user client */
+     	
+     	QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(pcms);
+		beMsg.setToken(userToken.getToken());
+		beMsg.setReplace(true);
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(beMsg));
+     	
+
+end

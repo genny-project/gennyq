@@ -1,0 +1,227 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.Link;
+import life.genny.qwanda.attribute.AttributeText;
+
+
+rule "LNK_FILTER_COLUMN"
+	ruleflow-group 'DataProcessing'
+	salience 450
+	no-loop true
+	when
+		beUtils : BaseEntityUtils()
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		userToken : GennyToken( code != "PER_SERVICE")
+		answer : Answer( attributeCode == "LNK_FILTER_COLUMN" && targetCode matches "SBE_.*" )
+		output : OutputParam( )
+ 
+	 then
+		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+
+		String targetCode = answer.getTargetCode();
+		System.out.println("targetCode = " + targetCode);
+		String value = answer.getValue();
+		System.out.println("value = " + value);
+
+		/* Strip value to find attribute code */
+		String attributeCode = beUtils.cleanUpAttributeValue(value).substring("SEL_FILTER_COLUMN_SRT_".length());
+		System.out.println("attributeCode = " + attributeCode);
+
+		/* Fetch Search from Cache */
+		SearchEntity searchBE = VertxUtils.getObject(serviceToken.getRealm(), "", targetCode, SearchEntity.class, serviceToken.getToken());
+
+		/* Add Filter Column */
+		AttributeText attributeFilterColumn = new AttributeText("SCH_FILTER_COLUMN", "Filter Column");
+		AttributeText attributeFilterOption = new AttributeText("SCH_FILTER_OPTION", "Filter Option");
+		AttributeText attributeFilterValue = new AttributeText("SCH_FILTER_VALUE", "Filter Value");
+		searchBE.addAttribute(attributeFilterColumn, 5.0, attributeCode);
+		searchBE.addAttribute(attributeFilterOption, 5.0, "");
+		searchBE.addAttribute(attributeFilterValue, 5.0, "");
+
+		/* Update Search in Cache */
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+		/* Define dropdown items selector */
+		String unhidden = null;
+
+		/* Get associated Attribute */
+		Attribute attr = RulesUtils.getAttribute(attributeCode, serviceToken);
+		if (attr != null) {
+			/* Check the datatype */
+			String dtt = attr.getDataType().getClassName();
+			System.out.println("dtt = " + dtt);
+			if (dtt != null) {
+
+				List<BaseEntity> filterOptionsArray = new ArrayList<>();
+				/* Grab Ask group from cache */
+				BaseEntity equalTo = beUtils.getBaseEntityByCode("SEL_EQUAL_TO");
+				BaseEntity notEqualTo = beUtils.getBaseEntityByCode("SEL_NOT_EQUAL_TO");
+				BaseEntity like = beUtils.getBaseEntityByCode("SEL_LIKE");
+				BaseEntity notLike = beUtils.getBaseEntityByCode("SEL_NOT_LIKE");
+				BaseEntity isTrue = beUtils.getBaseEntityByCode("SEL_IS_TRUE");
+				BaseEntity isFalse = beUtils.getBaseEntityByCode("SEL_IS_FALSE");
+				BaseEntity greaterThan = beUtils.getBaseEntityByCode("SEL_GREATER_THAN");
+				BaseEntity greaterThanOrEqualTo = beUtils.getBaseEntityByCode("SEL_GREATER_THAN_OR_EQUAL_TO");
+				BaseEntity lessThan = beUtils.getBaseEntityByCode("SEL_LESS_THAN");
+				BaseEntity lessThanOrEqualTo = beUtils.getBaseEntityByCode("SEL_LESS_THAN_OR_EQUAL_TO");
+
+				BaseEntity[] booleanSelection = { isTrue, isFalse };
+				BaseEntity[] equalSelection = { equalTo, notEqualTo };
+				BaseEntity[] stringSelection = { equalTo, notEqualTo, like, notLike };
+				BaseEntity[] numSelection = { greaterThan, greaterThanOrEqualTo, lessThan, lessThanOrEqualTo, equalTo, notEqualTo };
+
+				if (attr.getCode().equals("PRI_ADDRESS_COUNTRY")) {
+					filterOptionsArray = Arrays.asList(equalSelection);
+					unhidden = "QUE_FILTER_VALUE_COUNTRY";
+
+				} else if (attr.getCode().equals("PRI_ADDRESS_STATE")) {
+					filterOptionsArray = Arrays.asList(equalSelection);
+					unhidden = "QUE_FILTER_VALUE_STATE";
+				
+				} else if (dtt.equals("java.lang.String") || dtt.equals("String") || dtt.equalsIgnoreCase("Text")) {
+					filterOptionsArray = Arrays.asList(stringSelection);
+					unhidden = "QUE_FILTER_VALUE_TEXT";
+					
+				} else if (dtt.equals("java.lang.Boolean") || dtt.equalsIgnoreCase("Boolean")) {
+					filterOptionsArray = Arrays.asList(booleanSelection);
+
+				} else if (dtt.equals("java.lang.Double") || dtt.equalsIgnoreCase("Double")
+							|| dtt.equals("java.lang.Integer") || dtt.equalsIgnoreCase("Integer")
+							|| dtt.equals("java.lang.Long") || dtt.equalsIgnoreCase("Long")) {
+					filterOptionsArray = Arrays.asList(numSelection);
+					unhidden = "QUE_FILTER_VALUE_TEXT";
+
+				} else if (dtt.equals("java.time.LocalDate") || dtt.equalsIgnoreCase("LocalDate")) {
+					filterOptionsArray = Arrays.asList(numSelection);
+					unhidden = "QUE_FILTER_VALUE_DATE";
+
+				} else if (dtt.equals("java.time.LocalDateTime") || dtt.equalsIgnoreCase("LocalDateTime")) {
+					filterOptionsArray = Arrays.asList(numSelection);
+					unhidden = "QUE_FILTER_VALUE_DATETIME";
+
+				} else if (dtt.equals("java.time.LocalTime") || dtt.equalsIgnoreCase("LocalTime")) {
+					filterOptionsArray = Arrays.asList(numSelection);
+					unhidden = "QUE_FILTER_VALUE_TIME";
+
+				}
+
+				Ask filterGrpAsk = VertxUtils.getObject(serviceToken.getRealm(), "", "QUE_FILTER_GRP_"+targetCode, Ask.class, serviceToken.getToken());
+
+				System.out.println("Unhiding " + unhidden);
+				for (Ask childAsk : filterGrpAsk.getChildAsks()[0].getChildAsks()) {
+
+					if (childAsk.getQuestionCode().contains("QUE_FILTER_VALUE")) {
+						if (childAsk.getQuestionCode().equals(unhidden)) {
+							childAsk.setHidden(false);
+						} else {
+							childAsk.setHidden(true);
+						}
+					}
+				}
+
+				filterOptionsArray = new ArrayList<>(filterOptionsArray);
+
+				BaseEntity optionGrp = new BaseEntity("GRP_FILTER_OPTIONS", "Filter Options");
+				Attribute attributeLink = new Attribute("LNK_CORE", "LNK_CORE", new DataType(String.class));
+				Set<EntityEntity> childLinks = new HashSet<>();
+
+				Double index = 0.0;
+				for (BaseEntity option : filterOptionsArray) {
+					/* Create a link between GRP and BE */
+					EntityEntity ee = new EntityEntity(optionGrp, option, attributeLink, index);
+					Link link = new Link(optionGrp.getCode(), option.getCode(), attributeLink.getCode(), "ITEMS", index);
+					ee.setLink(link);
+					childLinks.add(ee);
+					index += 1.0;
+				}
+				optionGrp.setLinks(childLinks);
+				/* filterOptionsArray.add(optionGrp); */
+
+				/* Cache changes to filter grp */
+				VertxUtils.putObject(beUtils.getGennyToken().getRealm(), "", filterGrpAsk.getQuestionCode(), filterGrpAsk, serviceToken.getToken());
+
+				/* Send filter option dropdown items */
+				QDataBaseEntityMessage filterOptionsMsg = new QDataBaseEntityMessage(filterOptionsArray);
+				filterOptionsMsg.setParentCode("QUE_ADD_FILTER_GRP");
+				filterOptionsMsg.setQuestionCode("QUE_FILTER_OPTION");
+				filterOptionsMsg.setLinkCode("LNK_CORE");
+				filterOptionsMsg.setLinkValue("LNK_ITEMS");
+				filterOptionsMsg.setToken(beUtils.getGennyToken().getToken());
+				filterOptionsMsg.setReplace(true);
+				VertxUtils.writeMsg("webcmds", filterOptionsMsg);
+				System.out.println("Filter Options sent to FE");
+
+				/* Send Asks to FE */
+				QDataAskMessage askMsg = new QDataAskMessage(filterGrpAsk);
+				askMsg.setToken(beUtils.getGennyToken().getToken());
+				askMsg.setReplace(true);
+				VertxUtils.writeMsg("webcmds", askMsg);
+				System.out.println("Asks sent to FE");
+
+				if (unhidden != null) {
+
+					/* Init Blank Search */
+					SearchEntity itemSearch = new SearchEntity("SBE_FILTER_ITEMS", "Filter Items")
+						.addColumn("PRI_CODE", "Code")
+						.addColumn("PRI_NAME", "Name")
+						.setLinkCode("LNK_CORE")
+						.setPageSize(250);
+
+					Boolean searchTrigger = false;
+
+					if (unhidden.equals("QUE_FILTER_VALUE_COUNTRY")) {
+						itemSearch.setLinkValue("COUNTRY");
+						searchTrigger = true;
+
+					} else if (unhidden.equals("QUE_FILTER_VALUE_STATE")) {
+						itemSearch.setLinkValue("AUS_STATE");
+						searchTrigger = true;
+
+					}
+
+					/* Basically, don't search if no linkVal is set */
+					if (searchTrigger) {
+						/* Fetch Countries */
+						List<BaseEntity> items = beUtils.getBaseEntitys(itemSearch);
+						/* Package and send */
+						QDataBaseEntityMessage itemMsg = new QDataBaseEntityMessage(items);
+						itemMsg.setQuestionCode(unhidden);
+						itemMsg.setParentCode("QUE_ADD_FILTER_GRP");
+						itemMsg.setLinkCode("LNK_CORE");
+						itemMsg.setLinkValue("LNK_ITEMS");
+						itemMsg.setToken(beUtils.getGennyToken().getToken());
+						itemMsg.setReplace(true);
+						itemMsg.setToken(userToken.getToken());
+						VertxUtils.writeMsg("webcmds", itemMsg);
+					}
+				}
+
+			} else {
+				System.out.println("dtt is NULL");
+			}
+		} else {
+			System.out.println("attr is NULL");
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");
+
+end

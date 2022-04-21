@@ -1,0 +1,21 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.qwanda.utils.OutputParam;
+
+
+rule "ADD_PERSON_ATTRIBUTES"
+    ruleflow-group 'AddBaseEntityAttributes'
+    no-loop
+
+    when
+    
+	  	bePrefix : String ( )
+		output : OutputParam( )
+     
+     then
+     
+		output.setResultCode("PER");
+		output.setTypeOfResult("PERSON");
+		
+end

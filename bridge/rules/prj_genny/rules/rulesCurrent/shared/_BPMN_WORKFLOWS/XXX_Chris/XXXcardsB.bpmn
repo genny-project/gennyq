@@ -1,0 +1,1441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- origin at X=0.0 Y=0.0 -->
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xmlns:java="http://www.java.com/javaTypes" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.5.1.Final-v20190425-2005-B1" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+  <bpmn2:itemDefinition id="ItemDefinition_2" isCollection="false" structureRef="life.genny.models.GennyToken"/>
+  <bpmn2:itemDefinition id="ItemDefinition_874" isCollection="false" structureRef="life.genny.utils.SessionFacts"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1328" isCollection="false" structureRef="org.kie.api.runtime.KieSession"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1331" isCollection="false" structureRef="org.kie.internal.runtime.StatefulKnowledgeSession"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1343" isCollection="false" structureRef="life.genny.utils.CallingProcessToken"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1359" isCollection="false" structureRef="java.lang.Long"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1365" isCollection="false" structureRef="life.genny.qwanda.entity.BaseEntity"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1382" isCollection="false" structureRef="java.lang.String"/>
+  <bpmn2:itemDefinition id="ItemDefinition_1884" isCollection="false" structureRef="life.genny.qwanda.utils.OutputParam"/>
+  <bpmn2:itemDefinition id="ItemDefinition_9573" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_9574" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_9575" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_9576" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2106" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2107" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2108" isCollection="false" structureRef="Object"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2109" isCollection="false" structureRef="Object"/>
+  <bpmn2:signal id="Signal_1" name="cardiB"/>
+  <bpmn2:signal id="Signal_2" name="notification"/>
+
+  <bpmn2:signal id="Signal_3" name="placedStatus"/>
+  <bpmn2:signal id="Signal_4" name="broadcast"/>
+  <bpmn2:signal id="Signal_6" name="controlSignal"/>
+  <bpmn2:signal id="Signal_7" name="placedControl"/>
+
+  <bpmn2:process id="cardsB" drools:version="1" drools:packageName="defaultPackage" drools:adHoc="false" name="Default Process" isExecutable="true">
+    <bpmn2:extensionElements>
+      <drools:import name="life.genny.models.GennyToken"/>
+      <drools:import name="life.genny.utils.SessionFacts"/>
+      <drools:import name="org.kie.api.runtime.KieSession"/>
+      <drools:import name="org.kie.internal.runtime.StatefulKnowledgeSession"/>
+      <drools:import name="life.genny.utils.CallingProcessToken"/>
+      <drools:import name="life.genny.qwanda.entity.BaseEntity"/>
+      <drools:import name="life.genny.qwanda.utils.OutputParam"/>
+    </bpmn2:extensionElements>
+    <bpmn2:property id="userToken" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+    <bpmn2:property id="serviceToken" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+    <bpmn2:property id="sessionFacts" itemSubjectRef="ItemDefinition_874" name="sessionFacts"/>
+    <bpmn2:property id="callingProcessToken" itemSubjectRef="ItemDefinition_1343" name="callingProcessToken"/>
+    <bpmn2:property id="processId" itemSubjectRef="ItemDefinition_1359" name="processId"/>
+    <bpmn2:property id="newApplication" itemSubjectRef="ItemDefinition_1365" name="newApplication"/>
+    <bpmn2:property id="bucketCode" itemSubjectRef="ItemDefinition_1382" name="bucketCode"/>
+    <bpmn2:property id="controlSignalCode" name="controlSignalCode"/>
+    <bpmn2:property id="outputMsg" itemSubjectRef="ItemDefinition_1884" name="outputMsg"/>
+    <bpmn2:property id="notificationCode" itemSubjectRef="ItemDefinition_1382" name="notificationCode"/>
+    <bpmn2:property id="colourCode" itemSubjectRef="ItemDefinition_1382" name="colourCode"/>
+    <bpmn2:property id="orangeTimerCode" itemSubjectRef="ItemDefinition_1382" name="orangeTimerCode"/>
+    <bpmn2:property id="redTimerCode" itemSubjectRef="ItemDefinition_1382" name="redTimerCode"/>
+
+    <bpmn2:property id="statusCode" itemSubjectRef="ItemDefinition_1382" name="statusCode"/>
+    <bpmn2:property id="broadcastCode" itemSubjectRef="ItemDefinition_1382" name="broadcastCode"/>
+    <bpmn2:property id="placedControlCode" itemSubjectRef="ItemDefinition_1382" name="placedControlCode"/>
+    <bpmn2:property id="placedStatusCode" itemSubjectRef="ItemDefinition_1382" name="placedStatusCode"/>
+    <bpmn2:endEvent id="EndEvent_1" name="End Event 1">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[End Event 1]]></drools:metaValue>
+
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_8</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:subProcess id="SubProcess_1" name="Placed Bucket">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Placed Bucket]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_6</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_7</bpmn2:outgoing>
+      <bpmn2:startEvent id="StartEvent_2" name="Start Placed Bucket">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Start Placed Bucket]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>SequenceFlow_9</bpmn2:outgoing>
+      </bpmn2:startEvent>
+      <bpmn2:scriptTask id="ScriptTask_1" name="Set bucketCode" scriptFormat="http://www.java.com/java">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Set bucketCode]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_12</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_15</bpmn2:outgoing>
+        <bpmn2:script>kcontext.setVariable(&quot;outputMsg&quot;, outputMsg);
+bucketCode = outputMsg.getTargetCode();
+kcontext.setVariable(&quot;bucketCode&quot;, bucketCode);
+System.out.println(&quot;cardsB: bucketCode = &quot; + bucketCode);
+
+System.out.println(&quot;\n*************************************** &quot; + bucketCode + &quot; ***************************************&quot;);
+
+
+kcontext.setVariable(&quot;serviceToken&quot;, serviceToken);
+kcontext.setVariable(&quot;userToken&quot;, userToken);
+
+newApplication = (BaseEntity)sessionFacts.getMessage();
+kcontext.setVariable(&quot;newApplication&quot;, newApplication);
+
+System.out.println(&quot;cardsB: serviceToken = &quot; + serviceToken);
+System.out.println(&quot;cardsB: userToken = &quot; + userToken);
+System.out.println(&quot;cardsB: newApplication = &quot; + newApplication);
+</bpmn2:script>
+      </bpmn2:scriptTask>
+      <bpmn2:scriptTask id="ScriptTask_3" name="Set Variables" scriptFormat="http://www.java.com/java">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Set Variables]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_9</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_11</bpmn2:outgoing>
+        <bpmn2:script>System.out.println(&quot;Hello Card B&quot;);
+
+bucketCode = &quot;Offered&quot;;
+kcontext.setVariable(&quot;bucketCode&quot;, bucketCode);
+
+controlSignalCode = &quot;FORWARD&quot;;
+kcontext.setVariable(&quot;controlSignalCode&quot;, controlSignalCode);
+
+System.out.println(&quot;cardsB: NEW CYCLE bucketCode = &quot; + bucketCode);
+System.out.println(&quot;cardsB: NEW CYCLE controlSignalCode = &quot; + controlSignalCode);
+
+kcontext.setVariable(&quot;serviceToken&quot;, serviceToken);
+kcontext.setVariable(&quot;userToken&quot;, userToken);
+
+newApplication = (BaseEntity)sessionFacts.getMessage();
+kcontext.setVariable(&quot;newApplication&quot;, newApplication);
+
+System.out.println(&quot;cardsB: NEW CYCLE serviceToken = &quot; + serviceToken.getCode());
+System.out.println(&quot;cardsB: NEW CYCLE userToken = &quot; + userToken.getCode());
+System.out.println(&quot;cardsB: NEW CYCLE newApplication = &quot; + newApplication);
+
+</bpmn2:script>
+      </bpmn2:scriptTask>
+      <bpmn2:sequenceFlow id="SequenceFlow_9" drools:priority="1" sourceRef="StartEvent_2" targetRef="ScriptTask_3"/>
+      <bpmn2:task id="Task_1" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="MOVE BUCKET - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[MOVE BUCKET - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_11</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_12</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_1">
+          <bpmn2:dataInput id="DataInput_1" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_2" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_3" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_4" name="callingWorkflow"/>
+          <bpmn2:dataInput id="DataInput_5" itemSubjectRef="ItemDefinition_1365" name="newApplication"/>
+          <bpmn2:dataInput id="DataInput_6" itemSubjectRef="ItemDefinition_1382" name="bucketCode"/>
+          <bpmn2:dataInput id="DataInput_7" name="controlSignalCode"/>
+          <bpmn2:dataOutput id="DataOutput_2" itemSubjectRef="ItemDefinition_1884" name="output"/>
+          <bpmn2:inputSet id="_InputSet_46">
+            <bpmn2:dataInputRefs>DataInput_1</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_2</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_3</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_4</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_5</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_6</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_7</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_2" name="Output Set 2">
+            <bpmn2:dataOutputRefs>DataOutput_2</bpmn2:dataOutputRefs>
+          </bpmn2:outputSet>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_196">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_1</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_197">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_2</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_198">
+          <bpmn2:targetRef>DataInput_3</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_1">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_3">MoveBucket</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_1">DataInput_3</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_199">
+          <bpmn2:targetRef>DataInput_4</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_2">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_6">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_4">DataInput_4</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_1">
+          <bpmn2:sourceRef>newApplication</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_5</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_2">
+          <bpmn2:sourceRef>bucketCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_6</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_3">
+          <bpmn2:sourceRef>controlSignalCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_7</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataOutputAssociation id="DataOutputAssociation_2">
+          <bpmn2:sourceRef>DataOutput_2</bpmn2:sourceRef>
+          <bpmn2:targetRef>outputMsg</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_11" drools:priority="1" sourceRef="ScriptTask_3" targetRef="Task_1"/>
+      <bpmn2:sequenceFlow id="SequenceFlow_12" drools:priority="1" sourceRef="Task_1" targetRef="ScriptTask_1"/>
+      <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_1" name="Notification Hub">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Notification Hub]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_18</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_22</bpmn2:outgoing>
+        <bpmn2:dataInput id="DataInput_8" name="Signal_2_Input"/>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_4">
+          <bpmn2:sourceRef>notificationCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_8</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:inputSet id="InputSet_1" name="Input Set 1">
+          <bpmn2:dataInputRefs>DataInput_8</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:signalEventDefinition id="SignalEventDefinition_2" signalRef="Signal_2"/>
+      </bpmn2:intermediateThrowEvent>
+      <bpmn2:task id="Task_2" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="TIMER - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[TIMER - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+          <drools:onExit-script scriptFormat="http://www.java.com/java">
+            <drools:script>orangeTimerCode =  outputMsg.getResultCode();
+redTimerCode = outputMsg.getTargetCode();
+System.out.println(&quot;cardsB: Orange Timer = &quot; + orangeTimerCode);
+System.out.println(&quot;cardsB: Red Timer = &quot; + redTimerCode);</drools:script>
+          </drools:onExit-script>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_15</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_48</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_2">
+          <bpmn2:dataInput id="DataInput_9" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_10" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_11" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_12" name="callingWorkflow"/>
+          <bpmn2:dataInput id="DataInput_13" itemSubjectRef="ItemDefinition_1382" name="bucketCode"/>
+          <bpmn2:dataOutput id="DataOutput_3" itemSubjectRef="ItemDefinition_1884" name="output"/>
+          <bpmn2:inputSet id="_InputSet_50">
+            <bpmn2:dataInputRefs>DataInput_9</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_10</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_11</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_12</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_13</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_3" name="Output Set 3">
+            <bpmn2:dataOutputRefs>DataOutput_3</bpmn2:dataOutputRefs>
+          </bpmn2:outputSet>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_212">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_9</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_213">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_10</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_214">
+          <bpmn2:targetRef>DataInput_11</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_3">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_9">Timer</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_7">DataInput_11</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_215">
+          <bpmn2:targetRef>DataInput_12</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_4">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_12">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_10">DataInput_12</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_5">
+          <bpmn2:sourceRef>bucketCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_13</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataOutputAssociation id="DataOutputAssociation_3">
+          <bpmn2:sourceRef>DataOutput_3</bpmn2:sourceRef>
+          <bpmn2:targetRef>outputMsg</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_15" drools:priority="1" sourceRef="ScriptTask_1" targetRef="Task_2"/>
+      <bpmn2:task id="Task_3" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="SPECIFIC ENTER - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[SPECIFIC ENTER - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_49</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_18</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_3">
+          <bpmn2:dataInput id="DataInput_14" itemSubjectRef="cardsA.bpmn#ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_15" itemSubjectRef="cardsA.bpmn#ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_16" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_17" name="callingWorkflow"/>
+          <bpmn2:dataInput id="DataInput_18" itemSubjectRef="cardsA.bpmn#ItemDefinition_2016" name="newApplication"/>
+          <bpmn2:dataInput id="DataInput_19" itemSubjectRef="cardsA.bpmn#ItemDefinition_2733" name="bucketCode"/>
+          <bpmn2:dataOutput id="DataOutput_4" itemSubjectRef="cardsA.bpmn#ItemDefinition_3323" name="output"/>
+          <bpmn2:inputSet id="InputSet_2">
+            <bpmn2:dataInputRefs>DataInput_14</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_15</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_16</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_17</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_18</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_19</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_4" name="Output Set 6">
+            <bpmn2:dataOutputRefs>DataOutput_4</bpmn2:dataOutputRefs>
+          </bpmn2:outputSet>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_6">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_14</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_7">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_15</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_8">
+          <bpmn2:targetRef>DataInput_16</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_5">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_13">SpecificEnter</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_14">DataInput_31</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_9">
+          <bpmn2:targetRef>DataInput_17</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_6">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_15">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_16">DataInput_32</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_10">
+          <bpmn2:sourceRef>newApplication</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_18</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_11">
+          <bpmn2:sourceRef>bucketCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_19</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataOutputAssociation id="DataOutputAssociation_4">
+          <bpmn2:sourceRef>DataOutput_4</bpmn2:sourceRef>
+          <bpmn2:targetRef>outputMsg</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_18" drools:priority="1" sourceRef="Task_3" targetRef="IntermediateThrowEvent_1"/>
+      <bpmn2:parallelGateway id="ParallelGateway_2" name="Generate 3 Tokens" gatewayDirection="Diverging">
+        <bpmn2:incoming>SequenceFlow_22</bpmn2:incoming>
+
+        <bpmn2:outgoing>SequenceFlow_25</bpmn2:outgoing>
+        <bpmn2:outgoing>SequenceFlow_29</bpmn2:outgoing>
+        <bpmn2:outgoing>SequenceFlow_26</bpmn2:outgoing>
+
+      </bpmn2:parallelGateway>
+      <bpmn2:scriptTask id="ScriptTask_6" name="Remove me" scriptFormat="http://www.java.com/java">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Remove me]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+
+        <bpmn2:incoming>SequenceFlow_27</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_36</bpmn2:outgoing>
+        <bpmn2:script>System.out.println(&quot;cardsB: controlsignalCode = &quot; + controlSignalCode);
+System.out.println(&quot;cardsB: Ending &quot; + bucketCode + &quot; cycle&quot;);</bpmn2:script>
+      </bpmn2:scriptTask>
+      <bpmn2:endEvent id="EndEvent_4" name="End Event 1">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[End Event 1]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_36</bpmn2:incoming>
+      </bpmn2:endEvent>
+
+      <bpmn2:sequenceFlow id="SequenceFlow_22" drools:priority="1" sourceRef="IntermediateThrowEvent_1" targetRef="ParallelGateway_2"/>
+      <bpmn2:intermediateCatchEvent id="IntermediateCatchEvent_1" name="Orange Timer">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Orange Timer]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_21</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_55</bpmn2:outgoing>
+        <bpmn2:timerEventDefinition id="TimerEventDefinition_1">
+          <bpmn2:timeDuration xsi:type="bpmn2:tFormalExpression" id="FormalExpression_17">#{orangeTimerCode}</bpmn2:timeDuration>
+        </bpmn2:timerEventDefinition>
+      </bpmn2:intermediateCatchEvent>
+      <bpmn2:intermediateCatchEvent id="IntermediateCatchEvent_2" name="Red Timer">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Red Timer]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_10</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_46</bpmn2:outgoing>
+        <bpmn2:timerEventDefinition id="TimerEventDefinition_2">
+          <bpmn2:timeDuration xsi:type="bpmn2:tFormalExpression" id="FormalExpression_18">#{redTimerCode}</bpmn2:timeDuration>
+        </bpmn2:timerEventDefinition>
+      </bpmn2:intermediateCatchEvent>
+      <bpmn2:endEvent id="EndEvent_7" name="Consume Orange Token">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Consume Orange Token]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_64</bpmn2:incoming>
+      </bpmn2:endEvent>
+      <bpmn2:task id="Task_8" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="COMMON ENTER - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[COMMON ENTER - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+          <drools:onEntry-script scriptFormat="http://www.java.com/java">
+            <drools:script>colourCode = &quot;Red&quot;;
+kcontext.setVariable(&quot;colourCode&quot;, colourCode);
+System.out.println(&quot;colourCode: &quot; + colourCode);</drools:script>
+          </drools:onEntry-script>
+          <drools:onExit-script scriptFormat="http://www.java.com/java"/>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_46</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_61</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_8">
+          <bpmn2:dataInput id="DataInput_74" itemSubjectRef="ItemDefinition_1365" name="newApplication"/>
+          <bpmn2:dataInput id="DataInput_52" itemSubjectRef="ItemDefinition_1382" name="colourCode"/>
+          <bpmn2:dataInput id="DataInput_75" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_76" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_77" itemSubjectRef="ItemDefinition_9575" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_78" itemSubjectRef="ItemDefinition_9576" name="callingWorkflow"/>
+          <bpmn2:inputSet id="InputSet_6">
+            <bpmn2:dataInputRefs>DataInput_52</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_74</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_75</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_76</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_77</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_78</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_9" name="Output Set 7"/>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_41">
+          <bpmn2:sourceRef>colourCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_52</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_62">
+          <bpmn2:sourceRef>newApplication</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_74</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_63">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_75</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_64">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_76</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_65">
+          <bpmn2:targetRef>DataInput_77</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_25">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_59">CommonEnter</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_57">DataInput_77</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_66">
+          <bpmn2:targetRef>DataInput_78</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_26">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_62">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_60">DataInput_78</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_46" drools:priority="1" sourceRef="IntermediateCatchEvent_2" targetRef="Task_8"/>
+      <bpmn2:task id="Task_9" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="COMMON ENTER - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[COMMON ENTER - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+          <drools:onEntry-script scriptFormat="http://www.java.com/java">
+            <drools:script>colourCode = &quot;Green&quot;;
+kcontext.setVariable(&quot;colourCode&quot;, colourCode);
+System.out.println(&quot;cardsA: colourCode = &quot; + colourCode);</drools:script>
+          </drools:onEntry-script>
+          <drools:onExit-script scriptFormat="http://www.java.com/java"/>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_48</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_49</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_9">
+          <bpmn2:dataInput id="DataInput_53" itemSubjectRef="cardsA.bpmn#ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_54" itemSubjectRef="cardsA.bpmn#ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_55" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_56" name="callingWorkflow"/>
+          <bpmn2:dataInput id="DataInput_57" itemSubjectRef="cardsA.bpmn#ItemDefinition_2016" name="newApplication"/>
+          <bpmn2:dataInput id="DataInput_58" itemSubjectRef="cardsA.bpmn#ItemDefinition_2733" name="colourCode"/>
+          <bpmn2:inputSet id="InputSet_7">
+            <bpmn2:dataInputRefs>DataInput_53</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_54</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_55</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_56</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_57</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_58</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_10" name="Output Set 9"/>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_42">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_53</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_43">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_54</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_44">
+          <bpmn2:targetRef>DataInput_55</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_17">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_40">CommonEnter</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_41">DataInput_58</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_45">
+          <bpmn2:targetRef>DataInput_56</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_18">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_42">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_43">DataInput_59</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_46">
+          <bpmn2:sourceRef>newApplication</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_57</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_47">
+          <bpmn2:sourceRef>colourCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_58</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_48" drools:priority="1" sourceRef="Task_2" targetRef="Task_9"/>
+      <bpmn2:sequenceFlow id="SequenceFlow_49" drools:priority="1" sourceRef="Task_9" targetRef="Task_3"/>
+      <bpmn2:task id="Task_12" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="COMMON ENTER - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[COMMON ENTER - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+          <drools:onEntry-script scriptFormat="http://www.java.com/java">
+            <drools:script>colourCode = &quot;Orange&quot;;
+kcontext.setVariable(&quot;colourCode&quot;, colourCode);
+System.out.println(&quot;cardsA: colourCode = &quot; + colourCode);</drools:script>
+          </drools:onEntry-script>
+          <drools:onExit-script scriptFormat="http://www.java.com/java"/>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_55</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_59</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_12">
+          <bpmn2:dataInput id="DataInput_68" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_69" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_70" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_71" name="callingWorkflow"/>
+          <bpmn2:dataInput id="DataInput_72" itemSubjectRef="ItemDefinition_1365" name="newApplication"/>
+          <bpmn2:dataInput id="DataInput_73" itemSubjectRef="ItemDefinition_1382" name="colourCode"/>
+          <bpmn2:inputSet id="_InputSet_56">
+            <bpmn2:dataInputRefs>DataInput_68</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_69</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_70</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_71</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_72</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_73</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_13" name="Output Set 13"/>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_236">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_68</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_237">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_69</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_238">
+          <bpmn2:targetRef>DataInput_70</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_23">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_53">CommonEnter</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_51">DataInput_70</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_239">
+          <bpmn2:targetRef>DataInput_71</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_24">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_56">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_54">DataInput_71</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_60">
+          <bpmn2:sourceRef>newApplication</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_72</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_61">
+          <bpmn2:sourceRef>colourCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_73</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_55" drools:priority="1" sourceRef="IntermediateCatchEvent_1" targetRef="Task_12"/>
+      <bpmn2:task id="Task_14" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="SPECIFIC REMINDER - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[SPECIFIC REMINDER - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_59</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_63</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_14">
+          <bpmn2:dataInput id="DataInput_84" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_85" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_86" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_87" name="callingWorkflow"/>
+          <bpmn2:dataInput id="DataInput_92" itemSubjectRef="ItemDefinition_1382" name="bucketCode"/>
+          <bpmn2:dataInput id="DataInput_93" itemSubjectRef="ItemDefinition_1382" name="colourCode"/>
+          <bpmn2:inputSet id="_InputSet_59">
+            <bpmn2:dataInputRefs>DataInput_84</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_85</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_86</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_87</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_92</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_93</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_15" name="Output Set 15"/>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_248">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_84</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_249">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_85</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_250">
+          <bpmn2:targetRef>DataInput_86</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_29">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_68">SpecificReminder</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_66">DataInput_86</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="_DataInputAssociation_251">
+          <bpmn2:targetRef>DataInput_87</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_30">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_71">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_69">DataInput_87</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_77">
+          <bpmn2:sourceRef>bucketCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_92</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_78">
+          <bpmn2:sourceRef>colourCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_93</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_59" drools:priority="1" sourceRef="Task_12" targetRef="Task_14"/>
+      <bpmn2:task id="Task_15" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="SPECIFIC REMINDER - Rule Flow Group">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[SPECIFIC REMINDER - Rule Flow Group]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_61</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_65</bpmn2:outgoing>
+        <bpmn2:ioSpecification id="InputOutputSpecification_15">
+          <bpmn2:dataInput id="DataInput_88" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+          <bpmn2:dataInput id="DataInput_89" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+          <bpmn2:dataInput id="DataInput_90" name="ruleFlowGroup"/>
+          <bpmn2:dataInput id="DataInput_91" name="callingWorkflow"/>
+          <bpmn2:dataInput id="DataInput_94" itemSubjectRef="ItemDefinition_1382" name="bucketCode"/>
+          <bpmn2:dataInput id="DataInput_95" itemSubjectRef="ItemDefinition_1382" name="colourCode"/>
+          <bpmn2:inputSet id="InputSet_11">
+            <bpmn2:dataInputRefs>DataInput_88</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_89</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_90</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_91</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_94</bpmn2:dataInputRefs>
+            <bpmn2:dataInputRefs>DataInput_95</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:outputSet id="OutputSet_16" name="Output Set 15"/>
+        </bpmn2:ioSpecification>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_73">
+          <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_88</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_74">
+          <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_89</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_75">
+          <bpmn2:targetRef>DataInput_90</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_31">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_72">SpecificReminder</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_73">DataInput_86</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_76">
+          <bpmn2:targetRef>DataInput_91</bpmn2:targetRef>
+          <bpmn2:assignment id="Assignment_32">
+            <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_74">cardsB</bpmn2:from>
+            <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_75">DataInput_87</bpmn2:to>
+          </bpmn2:assignment>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_79">
+          <bpmn2:sourceRef>bucketCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_94</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_80">
+          <bpmn2:sourceRef>colourCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_95</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+      </bpmn2:task>
+      <bpmn2:sequenceFlow id="SequenceFlow_61" drools:priority="1" sourceRef="Task_8" targetRef="Task_15"/>
+      <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_3" name="Notification Hub">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Notification Hub]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_63</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_64</bpmn2:outgoing>
+        <bpmn2:dataInput id="DataInput_96" name="Signal_2_Input"/>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_81">
+          <bpmn2:sourceRef>notificationCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_96</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:inputSet id="InputSet_12" name="Input Set 1">
+          <bpmn2:dataInputRefs>DataInput_96</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:signalEventDefinition id="SignalEventDefinition_4" signalRef="Signal_2"/>
+      </bpmn2:intermediateThrowEvent>
+      <bpmn2:sequenceFlow id="SequenceFlow_63" drools:priority="1" sourceRef="Task_14" targetRef="IntermediateThrowEvent_3"/>
+      <bpmn2:sequenceFlow id="SequenceFlow_64" drools:priority="1" sourceRef="IntermediateThrowEvent_3" targetRef="EndEvent_7"/>
+      <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_4" name="Notification Hub">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Notification Hub]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_65</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_5</bpmn2:outgoing>
+        <bpmn2:dataInput id="DataInput_97" name="Signal_2_Input"/>
+        <bpmn2:dataInputAssociation id="DataInputAssociation_82">
+          <bpmn2:sourceRef>notificationCode</bpmn2:sourceRef>
+          <bpmn2:targetRef>DataInput_97</bpmn2:targetRef>
+        </bpmn2:dataInputAssociation>
+        <bpmn2:inputSet id="InputSet_13" name="Input Set 1">
+          <bpmn2:dataInputRefs>DataInput_97</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+        <bpmn2:signalEventDefinition id="SignalEventDefinition_5" signalRef="Signal_2"/>
+      </bpmn2:intermediateThrowEvent>
+      <bpmn2:sequenceFlow id="SequenceFlow_65" drools:priority="1" sourceRef="Task_15" targetRef="IntermediateThrowEvent_4"/>
+
+      <bpmn2:sequenceFlow id="SequenceFlow_66" drools:priority="1" sourceRef="IntermediateThrowEvent_4" targetRef="EndEvent_8"/>
+      <bpmn2:subProcess id="SubProcess_2" name="Status Event Handler" triggeredByEvent="true">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Status Event Handler]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:startEvent id="StartEvent_4" name="Receive status" isInterrupting="false">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue><![CDATA[Receive status]]></drools:metaValue>
+            </drools:metaData>
+          </bpmn2:extensionElements>
+          <bpmn2:outgoing>SequenceFlow_14</bpmn2:outgoing>
+          <bpmn2:dataOutput id="DataOutput_7" name="Signal_12_Output"/>
+          <bpmn2:dataOutputAssociation id="DataOutputAssociation_7">
+            <bpmn2:sourceRef>DataOutput_7</bpmn2:sourceRef>
+            <bpmn2:targetRef>placedStatusCode</bpmn2:targetRef>
+          </bpmn2:dataOutputAssociation>
+          <bpmn2:outputSet id="OutputSet_7" name="Output Set 12">
+            <bpmn2:dataOutputRefs>DataOutput_7</bpmn2:dataOutputRefs>
+          </bpmn2:outputSet>
+          <bpmn2:signalEventDefinition id="SignalEventDefinition_7" signalRef="Signal_3"/>
+        </bpmn2:startEvent>
+        <bpmn2:endEvent id="EndEvent_3" name="Send broadcast">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue><![CDATA[Send broadcast]]></drools:metaValue>
+            </drools:metaData>
+          </bpmn2:extensionElements>
+          <bpmn2:incoming>SequenceFlow_16</bpmn2:incoming>
+          <bpmn2:dataInput id="DataInput_33" name="Signal_11_Input"/>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_24">
+            <bpmn2:sourceRef>broadcastCode</bpmn2:sourceRef>
+            <bpmn2:targetRef>DataInput_33</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:inputSet id="InputSet_8" name="Input Set 11">
+            <bpmn2:dataInputRefs>DataInput_33</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:signalEventDefinition id="SignalEventDefinition_8" signalRef="cardsA.bpmn#Signal_5"/>
+        </bpmn2:endEvent>
+        <bpmn2:task id="Task_7" drools:taskName="RuleFlowGroup" drools:displayName="RunRuleFlowGroup" drools:icon="icons/icon-info.gif" name="CARD STATUS - Rule Flow Group">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue><![CDATA[CARD STATUS - Rule Flow Group]]></drools:metaValue>
+            </drools:metaData>
+            <drools:onEntry-script scriptFormat="http://www.java.com/java">
+              <drools:script>kcontext.setVariable(&quot;placedStatusCode&quot;, placedStatusCode);
+statusCode  = placedStatusCode;
+kcontext.setVariable(&quot;statusCode&quot;, statusCode);
+System.out.println(&quot;cardsA: statusCode = &quot; + statusCode);</drools:script>
+            </drools:onEntry-script>
+            <drools:onExit-script scriptFormat="http://www.java.com/java">
+              <drools:script>broadcastCode = outputMsg.getTargetCode();
+System.out.println(&quot;cardsA: broadcastCode = &quot; + broadcastCode);</drools:script>
+            </drools:onExit-script>
+          </bpmn2:extensionElements>
+          <bpmn2:incoming>SequenceFlow_14</bpmn2:incoming>
+          <bpmn2:outgoing>SequenceFlow_16</bpmn2:outgoing>
+          <bpmn2:ioSpecification id="InputOutputSpecification_7">
+            <bpmn2:dataInput id="DataInput_47" itemSubjectRef="ItemDefinition_2" name="serviceToken"/>
+            <bpmn2:dataInput id="DataInput_48" itemSubjectRef="ItemDefinition_2" name="userToken"/>
+            <bpmn2:dataInput id="DataInput_49" itemSubjectRef="ItemDefinition_2108" name="ruleFlowGroup"/>
+            <bpmn2:dataInput id="DataInput_50" itemSubjectRef="ItemDefinition_2109" name="callingWorkflow"/>
+            <bpmn2:dataInput id="DataInput_51" itemSubjectRef="ItemDefinition_1365" name="newApplication"/>
+            <bpmn2:dataInput id="DataInput_59" itemSubjectRef="ItemDefinition_1382" name="statusCode"/>
+            <bpmn2:dataOutput id="DataOutput_10" itemSubjectRef="ItemDefinition_1884" name="output"/>
+            <bpmn2:inputSet id="_InputSet_66">
+              <bpmn2:dataInputRefs>DataInput_47</bpmn2:dataInputRefs>
+              <bpmn2:dataInputRefs>DataInput_48</bpmn2:dataInputRefs>
+              <bpmn2:dataInputRefs>DataInput_49</bpmn2:dataInputRefs>
+              <bpmn2:dataInputRefs>DataInput_50</bpmn2:dataInputRefs>
+              <bpmn2:dataInputRefs>DataInput_51</bpmn2:dataInputRefs>
+              <bpmn2:dataInputRefs>DataInput_59</bpmn2:dataInputRefs>
+            </bpmn2:inputSet>
+            <bpmn2:outputSet id="OutputSet_11" name="Output Set 11">
+              <bpmn2:dataOutputRefs>DataOutput_10</bpmn2:dataOutputRefs>
+            </bpmn2:outputSet>
+          </bpmn2:ioSpecification>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_34">
+            <bpmn2:sourceRef>serviceToken</bpmn2:sourceRef>
+            <bpmn2:targetRef>DataInput_47</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_35">
+            <bpmn2:sourceRef>userToken</bpmn2:sourceRef>
+            <bpmn2:targetRef>DataInput_48</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_36">
+            <bpmn2:targetRef>DataInput_49</bpmn2:targetRef>
+            <bpmn2:assignment id="Assignment_15">
+              <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_34">CardStatus</bpmn2:from>
+              <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_32">DataInput_49</bpmn2:to>
+            </bpmn2:assignment>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_37">
+            <bpmn2:targetRef>DataInput_50</bpmn2:targetRef>
+            <bpmn2:assignment id="Assignment_16">
+              <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_37">cardsB</bpmn2:from>
+              <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_35">DataInput_50</bpmn2:to>
+            </bpmn2:assignment>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_38">
+            <bpmn2:sourceRef>newApplication</bpmn2:sourceRef>
+            <bpmn2:targetRef>DataInput_51</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_39">
+            <bpmn2:sourceRef>statusCode</bpmn2:sourceRef>
+            <bpmn2:targetRef>DataInput_59</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:dataOutputAssociation id="DataOutputAssociation_10">
+            <bpmn2:sourceRef>DataOutput_10</bpmn2:sourceRef>
+            <bpmn2:targetRef>outputMsg</bpmn2:targetRef>
+          </bpmn2:dataOutputAssociation>
+        </bpmn2:task>
+        <bpmn2:sequenceFlow id="SequenceFlow_14" drools:priority="1" sourceRef="StartEvent_4" targetRef="Task_7"/>
+        <bpmn2:sequenceFlow id="SequenceFlow_16" drools:priority="1" sourceRef="Task_7" targetRef="EndEvent_3"/>
+      </bpmn2:subProcess>
+      <bpmn2:intermediateCatchEvent id="IntermediateCatchEvent_4" name="Intermediate Catch Event 4">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Intermediate Catch Event 4]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>SequenceFlow_26</bpmn2:incoming>
+        <bpmn2:outgoing>SequenceFlow_27</bpmn2:outgoing>
+        <bpmn2:dataOutput id="DataOutput_13" name="Signal_12_Output"/>
+        <bpmn2:dataOutputAssociation id="DataOutputAssociation_13">
+          <bpmn2:sourceRef>DataOutput_13</bpmn2:sourceRef>
+          <bpmn2:targetRef>controlSignalCode</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+        <bpmn2:outputSet id="OutputSet_17" name="Output Set 17">
+          <bpmn2:dataOutputRefs>DataOutput_13</bpmn2:dataOutputRefs>
+        </bpmn2:outputSet>
+        <bpmn2:signalEventDefinition id="SignalEventDefinition_12" signalRef="Signal_6"/>
+      </bpmn2:intermediateCatchEvent>
+      <bpmn2:sequenceFlow id="SequenceFlow_26" drools:priority="1" sourceRef="ParallelGateway_2" targetRef="IntermediateCatchEvent_4"/>
+      <bpmn2:sequenceFlow id="SequenceFlow_27" drools:priority="1" sourceRef="IntermediateCatchEvent_4" targetRef="ScriptTask_6"/>
+      <bpmn2:subProcess id="SubProcess_4" name="Movement Event Handler" triggeredByEvent="true">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Movement Event Handler]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:startEvent id="StartEvent_6" name="Start Event 6" isInterrupting="false">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue><![CDATA[Start Event 6]]></drools:metaValue>
+            </drools:metaData>
+          </bpmn2:extensionElements>
+          <bpmn2:outgoing>SequenceFlow_28</bpmn2:outgoing>
+          <bpmn2:dataOutput id="DataOutput_14" name="Signal_13_Output"/>
+          <bpmn2:dataOutputAssociation id="DataOutputAssociation_14">
+            <bpmn2:sourceRef>DataOutput_14</bpmn2:sourceRef>
+            <bpmn2:targetRef>placedControlCode</bpmn2:targetRef>
+          </bpmn2:dataOutputAssociation>
+          <bpmn2:outputSet id="OutputSet_18" name="Output Set 18">
+            <bpmn2:dataOutputRefs>DataOutput_14</bpmn2:dataOutputRefs>
+          </bpmn2:outputSet>
+          <bpmn2:signalEventDefinition id="SignalEventDefinition_13" signalRef="Signal_7"/>
+        </bpmn2:startEvent>
+        <bpmn2:scriptTask id="ScriptTask_5" name="Open the Door" scriptFormat="http://www.java.com/java">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue><![CDATA[Open the Door]]></drools:metaValue>
+            </drools:metaData>
+          </bpmn2:extensionElements>
+          <bpmn2:incoming>SequenceFlow_28</bpmn2:incoming>
+          <bpmn2:outgoing>SequenceFlow_31</bpmn2:outgoing>
+          <bpmn2:script>System.out.println(&quot;cardsB: Hello from the other side&quot;);
+
+kcontext.setVariable(&quot;placedControlCode&quot;, placedControlCode);
+controlSignalCode = placedControlCode;
+kcontext.setVariable(&quot;controlSignalCode&quot;, controlSignalCode);
+
+System.out.println(&quot;cardsB: controlSignalCode = &quot; +controlSignalCode);
+</bpmn2:script>
+        </bpmn2:scriptTask>
+        <bpmn2:sequenceFlow id="SequenceFlow_28" drools:priority="1" sourceRef="StartEvent_6" targetRef="ScriptTask_5"/>
+        <bpmn2:endEvent id="EndEvent_9" name="Send controlSignal">
+          <bpmn2:extensionElements>
+            <drools:metaData name="elementname">
+              <drools:metaValue><![CDATA[Send controlSignal]]></drools:metaValue>
+            </drools:metaData>
+          </bpmn2:extensionElements>
+          <bpmn2:incoming>SequenceFlow_31</bpmn2:incoming>
+          <bpmn2:dataInput id="DataInput_61" name="Signal_14_Input"/>
+          <bpmn2:dataInputAssociation id="DataInputAssociation_48">
+            <bpmn2:sourceRef>controlSignalCode</bpmn2:sourceRef>
+            <bpmn2:targetRef>DataInput_61</bpmn2:targetRef>
+          </bpmn2:dataInputAssociation>
+          <bpmn2:inputSet id="InputSet_14" name="Input Set 14">
+            <bpmn2:dataInputRefs>DataInput_61</bpmn2:dataInputRefs>
+          </bpmn2:inputSet>
+          <bpmn2:signalEventDefinition id="SignalEventDefinition_14" signalRef="Signal_6"/>
+        </bpmn2:endEvent>
+        <bpmn2:sequenceFlow id="SequenceFlow_31" drools:priority="1" sourceRef="ScriptTask_5" targetRef="EndEvent_9"/>
+      </bpmn2:subProcess>
+
+    </bpmn2:subProcess>
+    <bpmn2:startEvent id="StartEvent_3" name="Start cardsB">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Start cardsB]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:outgoing>SequenceFlow_6</bpmn2:outgoing>
+      <bpmn2:dataOutput id="DataOutput_1" name="Signal_1_Output"/>
+      <bpmn2:dataOutputAssociation id="DataOutputAssociation_1">
+        <bpmn2:sourceRef>DataOutput_1</bpmn2:sourceRef>
+        <bpmn2:targetRef>sessionFacts</bpmn2:targetRef>
+      </bpmn2:dataOutputAssociation>
+      <bpmn2:outputSet id="OutputSet_1" name="Output Set 1">
+        <bpmn2:dataOutputRefs>DataOutput_1</bpmn2:dataOutputRefs>
+      </bpmn2:outputSet>
+      <bpmn2:signalEventDefinition id="SignalEventDefinition_1" signalRef="Signal_1"/>
+    </bpmn2:startEvent>
+    <bpmn2:sequenceFlow id="SequenceFlow_6" drools:priority="1" sourceRef="StartEvent_3" targetRef="SubProcess_1"/>
+    <bpmn2:scriptTask id="ScriptTask_2" name="Kie Session" scriptFormat="http://www.java.com/java">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Kie Session]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_7</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
+      <bpmn2:script>/*kcontext.setVariable(&quot;serviceToken&quot;, serviceToken);
+kcontext.setVariable(&quot;userToken&quot;, userToken);
+kcontext.setVariable(&quot;newApplication&quot;, newApplication);*/
+
+sessionFacts = new SessionFacts(serviceToken, userToken, newApplication);
+sessionFacts.setUserToken(userToken);
+sessionFacts.setServiceToken(serviceToken);
+sessionFacts.setMessage(newApplication);
+
+/*System.out.println(&quot;cardsB: sessionFacts = &quot; + sessionFacts.getServiceToken());
+System.out.println(&quot;cardsB: sessionFacts = &quot; + sessionFacts.getUserToken());
+System.out.println(&quot;cardsB: sessionFacts = &quot; + sessionFacts.getMessage());*/
+
+System.out.println(&quot;Goodbye - I'm going to cardsC&quot;);
+KieSession kieSession = ((StatefulKnowledgeSession)kcontext.getKnowledgeRuntime()); 
+kieSession.signalEvent(&quot;cardiC&quot;, sessionFacts);</bpmn2:script>
+    </bpmn2:scriptTask>
+    <bpmn2:sequenceFlow id="SequenceFlow_7" drools:priority="1" sourceRef="SubProcess_1" targetRef="ScriptTask_2"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_8" drools:priority="1" sourceRef="ScriptTask_2" targetRef="EndEvent_1"/>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1" name="Default Process Diagram">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="cardsB">
+      <bpmndi:BPMNShape id="BPMNShape_SubProcess_1" bpmnElement="SubProcess_1" isExpanded="true">
+
+        <dc:Bounds height="411.0" width="1575.0" x="226.0" y="150.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_1">
+          <dc:Bounds height="11.0" width="59.0" x="232.0" y="153.0"/>
+
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_SubProcess_2" bpmnElement="SubProcess_2" isExpanded="true">
+        <dc:Bounds height="113.0" width="307.0" x="300.0" y="420.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="86.0" x="306.0" y="423.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_SubProcess_4" bpmnElement="SubProcess_4" isExpanded="true">
+        <dc:Bounds height="115.0" width="307.0" x="300.0" y="284.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="102.0" x="306.0" y="287.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_2" bpmnElement="EndEvent_1">
+
+        <dc:Bounds height="36.0" width="36.0" x="2000.0" y="290.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_2">
+          <dc:Bounds height="11.0" width="50.0" x="1993.0" y="326.0"/>
+
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_StartEvent_1" bpmnElement="StartEvent_2">
+        <dc:Bounds height="36.0" width="36.0" x="250.0" y="208.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_3">
+
+          <dc:Bounds height="11.0" width="53.0" x="242.0" y="244.0"/>
+
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_1" bpmnElement="ScriptTask_1" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="600.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_4">
+
+          <dc:Bounds height="11.0" width="52.0" x="629.0" y="220.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_StartEvent_2" bpmnElement="StartEvent_3">
+        <dc:Bounds height="36.0" width="36.0" x="141.0" y="338.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_5">
+          <dc:Bounds height="11.0" width="53.0" x="133.0" y="374.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_2" bpmnElement="ScriptTask_2" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="1840.0" y="283.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_6">
+          <dc:Bounds height="11.0" width="52.0" x="1869.0" y="302.0"/>
+
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_3" bpmnElement="ScriptTask_3" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="320.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_7">
+
+          <dc:Bounds height="11.0" width="52.0" x="349.0" y="220.0"/>
+
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_1" bpmnElement="Task_1" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="460.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_8">
+          <dc:Bounds height="22.0" width="104.0" x="463.0" y="215.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_1" bpmnElement="IntermediateThrowEvent_1">
+        <dc:Bounds height="36.0" width="36.0" x="1170.0" y="208.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_9">
+          <dc:Bounds height="11.0" width="64.0" x="1156.0" y="244.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_2" bpmnElement="Task_2" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="745.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_10">
+          <dc:Bounds height="11.0" width="104.0" x="748.0" y="220.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_3" bpmnElement="Task_3" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="1026.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_11">
+          <dc:Bounds height="22.0" width="90.0" x="1036.0" y="215.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ParallelGateway_2" bpmnElement="ParallelGateway_2" isMarkerVisible="true">
+        <dc:Bounds height="50.0" width="50.0" x="1236.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_12">
+          <dc:Bounds height="11.0" width="76.0" x="1223.0" y="251.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_6" bpmnElement="ScriptTask_6" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="1376.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_13">
+
+          <dc:Bounds height="11.0" width="52.0" x="1405.0" y="220.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_4" bpmnElement="EndEvent_4">
+        <dc:Bounds height="36.0" width="36.0" x="1528.0" y="208.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_14">
+          <dc:Bounds height="11.0" width="50.0" x="1521.0" y="244.0"/>
+
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateCatchEvent_1" bpmnElement="IntermediateCatchEvent_1">
+        <dc:Bounds height="36.0" width="36.0" x="1312.0" y="284.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_15">
+          <dc:Bounds height="11.0" width="56.0" x="1302.0" y="320.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateCatchEvent_2" bpmnElement="IntermediateCatchEvent_2">
+        <dc:Bounds height="36.0" width="36.0" x="1311.0" y="361.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_16">
+          <dc:Bounds height="11.0" width="42.0" x="1308.0" y="397.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_7" bpmnElement="EndEvent_7">
+        <dc:Bounds height="36.0" width="36.0" x="1740.0" y="284.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_17">
+
+          <dc:Bounds height="11.0" width="50.0" x="1733.0" y="320.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_8" bpmnElement="EndEvent_8">
+        <dc:Bounds height="36.0" width="36.0" x="1740.0" y="361.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_18">
+          <dc:Bounds height="11.0" width="50.0" x="1733.0" y="397.0"/>
+
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_8" bpmnElement="Task_8" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="1376.0" y="354.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_19">
+          <dc:Bounds height="22.0" width="90.0" x="1386.0" y="368.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_9" bpmnElement="Task_9" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="890.0" y="201.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_20">
+          <dc:Bounds height="22.0" width="90.0" x="900.0" y="215.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_12" bpmnElement="Task_12" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="1376.0" y="277.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_21">
+          <dc:Bounds height="22.0" width="90.0" x="1386.0" y="291.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_14" bpmnElement="Task_14" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="1519.0" y="277.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_22">
+          <dc:Bounds height="22.0" width="108.0" x="1520.0" y="291.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_15" bpmnElement="Task_15" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="1519.0" y="354.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_23">
+          <dc:Bounds height="22.0" width="108.0" x="1520.0" y="368.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_3" bpmnElement="IntermediateThrowEvent_3">
+        <dc:Bounds height="36.0" width="36.0" x="1660.0" y="284.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_24">
+          <dc:Bounds height="11.0" width="64.0" x="1646.0" y="320.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_4" bpmnElement="IntermediateThrowEvent_4">
+        <dc:Bounds height="36.0" width="36.0" x="1660.0" y="361.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_25">
+          <dc:Bounds height="11.0" width="64.0" x="1646.0" y="397.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="BPMNShape_StartEvent_4" bpmnElement="StartEvent_4">
+        <dc:Bounds height="36.0" width="36.0" x="330.0" y="464.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="60.0" x="318.0" y="500.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_2" bpmnElement="EndEvent_3">
+        <dc:Bounds height="36.0" width="36.0" x="546.0" y="464.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="64.0" x="532.0" y="500.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_Task_7" bpmnElement="Task_7" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="400.0" y="457.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="22.0" width="101.0" x="404.0" y="471.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_IntermediateCatchEvent_4" bpmnElement="IntermediateCatchEvent_4">
+        <dc:Bounds height="36.0" width="36.0" x="1312.0" y="208.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="22.0" width="60.0" x="1300.0" y="244.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_StartEvent_6" bpmnElement="StartEvent_6">
+        <dc:Bounds height="36.0" width="36.0" x="323.0" y="327.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="53.0" x="315.0" y="363.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_ScriptTask_5" bpmnElement="ScriptTask_5" isExpanded="true">
+        <dc:Bounds height="50.0" width="110.0" x="400.0" y="320.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="60.0" x="425.0" y="339.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_EndEvent_6" bpmnElement="EndEvent_9">
+        <dc:Bounds height="36.0" width="36.0" x="540.0" y="327.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds height="11.0" width="76.0" x="520.0" y="363.0"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_6" bpmnElement="SequenceFlow_6" sourceElement="BPMNShape_StartEvent_2" targetElement="BPMNShape_SubProcess_1">
+        <di:waypoint xsi:type="dc:Point" x="177.0" y="356.0"/>
+        <di:waypoint xsi:type="dc:Point" x="201.0" y="356.0"/>
+        <di:waypoint xsi:type="dc:Point" x="226.0" y="355.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_26"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_7" bpmnElement="SequenceFlow_7" sourceElement="BPMNShape_SubProcess_1" targetElement="BPMNShape_ScriptTask_2">
+        <di:waypoint xsi:type="dc:Point" x="1801.0" y="355.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1895.0" y="355.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1895.0" y="333.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_27"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_8" bpmnElement="SequenceFlow_8" sourceElement="BPMNShape_ScriptTask_2" targetElement="BPMNShape_2">
+        <di:waypoint xsi:type="dc:Point" x="1950.0" y="308.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1975.0" y="308.0"/>
+        <di:waypoint xsi:type="dc:Point" x="2000.0" y="308.0"/>
+
+        <bpmndi:BPMNLabel id="BPMNLabel_28"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_9" bpmnElement="SequenceFlow_9" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_ScriptTask_3">
+        <di:waypoint xsi:type="dc:Point" x="286.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="303.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="320.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_29"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_11" bpmnElement="SequenceFlow_11" sourceElement="BPMNShape_ScriptTask_3" targetElement="BPMNShape_Task_1">
+        <di:waypoint xsi:type="dc:Point" x="430.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="445.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="460.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_30"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_12" bpmnElement="SequenceFlow_12" sourceElement="BPMNShape_Task_1" targetElement="BPMNShape_ScriptTask_1">
+        <di:waypoint xsi:type="dc:Point" x="570.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="585.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="600.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_31"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_15" bpmnElement="SequenceFlow_15" sourceElement="BPMNShape_ScriptTask_1" targetElement="BPMNShape_Task_2">
+        <di:waypoint xsi:type="dc:Point" x="710.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="727.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="745.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_32"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_18" bpmnElement="SequenceFlow_18" sourceElement="BPMNShape_Task_3" targetElement="BPMNShape_IntermediateThrowEvent_1">
+        <di:waypoint xsi:type="dc:Point" x="1136.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1153.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1170.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_33"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_22" bpmnElement="SequenceFlow_22" sourceElement="BPMNShape_IntermediateThrowEvent_1" targetElement="BPMNShape_ParallelGateway_2">
+        <di:waypoint xsi:type="dc:Point" x="1206.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1221.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1236.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_35"/>
+
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_25" bpmnElement="SequenceFlow_25" sourceElement="BPMNShape_ParallelGateway_2" targetElement="BPMNShape_IntermediateCatchEvent_1">
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="251.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1312.0" y="302.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_36"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_29" bpmnElement="SequenceFlow_29" sourceElement="BPMNShape_ParallelGateway_2" targetElement="BPMNShape_IntermediateCatchEvent_2">
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="251.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1311.0" y="379.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_37"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_36" bpmnElement="SequenceFlow_36" sourceElement="BPMNShape_ScriptTask_6" targetElement="BPMNShape_EndEvent_4">
+        <di:waypoint xsi:type="dc:Point" x="1486.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1507.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1528.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_38"/>
+
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_46" bpmnElement="SequenceFlow_46" sourceElement="BPMNShape_IntermediateCatchEvent_2" targetElement="BPMNShape_Task_8">
+        <di:waypoint xsi:type="dc:Point" x="1347.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1361.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1376.0" y="379.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_39"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_48" bpmnElement="SequenceFlow_48" sourceElement="BPMNShape_Task_2" targetElement="BPMNShape_Task_9">
+        <di:waypoint xsi:type="dc:Point" x="855.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="872.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="890.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_40"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_49" bpmnElement="SequenceFlow_49" sourceElement="BPMNShape_Task_9" targetElement="BPMNShape_Task_3">
+        <di:waypoint xsi:type="dc:Point" x="1000.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1013.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1026.0" y="226.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_41"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_55" bpmnElement="SequenceFlow_55" sourceElement="BPMNShape_IntermediateCatchEvent_1" targetElement="BPMNShape_Task_12">
+        <di:waypoint xsi:type="dc:Point" x="1348.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1362.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1376.0" y="302.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_42"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_59" bpmnElement="SequenceFlow_59" sourceElement="BPMNShape_Task_12" targetElement="BPMNShape_Task_14">
+        <di:waypoint xsi:type="dc:Point" x="1486.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1502.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1519.0" y="302.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_43"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_61" bpmnElement="SequenceFlow_61" sourceElement="BPMNShape_Task_8" targetElement="BPMNShape_Task_15">
+        <di:waypoint xsi:type="dc:Point" x="1486.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1502.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1519.0" y="379.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_44"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_63" bpmnElement="SequenceFlow_63" sourceElement="BPMNShape_Task_14" targetElement="BPMNShape_IntermediateThrowEvent_3">
+        <di:waypoint xsi:type="dc:Point" x="1629.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1644.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1660.0" y="302.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_45"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_64" bpmnElement="SequenceFlow_64" sourceElement="BPMNShape_IntermediateThrowEvent_3" targetElement="BPMNShape_EndEvent_7">
+        <di:waypoint xsi:type="dc:Point" x="1696.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1718.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1740.0" y="302.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_46"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_65" bpmnElement="SequenceFlow_65" sourceElement="BPMNShape_Task_15" targetElement="BPMNShape_IntermediateThrowEvent_4">
+        <di:waypoint xsi:type="dc:Point" x="1629.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1644.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1660.0" y="379.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_47"/>
+
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_5" bpmnElement="SequenceFlow_5" sourceElement="BPMNShape_IntermediateThrowEvent_4" targetElement="BPMNShape_IntermediateCatchEvent_4">
+        <di:waypoint xsi:type="dc:Point" x="1696.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1718.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1740.0" y="379.0"/>
+        <bpmndi:BPMNLabel id="BPMNLabel_48"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_14" bpmnElement="SequenceFlow_14" sourceElement="BPMNShape_StartEvent_4" targetElement="BPMNShape_Task_7">
+        <di:waypoint xsi:type="dc:Point" x="366.0" y="482.0"/>
+        <di:waypoint xsi:type="dc:Point" x="383.0" y="482.0"/>
+        <di:waypoint xsi:type="dc:Point" x="400.0" y="482.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_16" bpmnElement="SequenceFlow_16" sourceElement="BPMNShape_Task_7" targetElement="BPMNShape_EndEvent_2">
+        <di:waypoint xsi:type="dc:Point" x="510.0" y="482.0"/>
+        <di:waypoint xsi:type="dc:Point" x="528.0" y="482.0"/>
+        <di:waypoint xsi:type="dc:Point" x="546.0" y="482.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_26" bpmnElement="SequenceFlow_26" sourceElement="BPMNShape_ParallelGateway_2" targetElement="BPMNShape_IntermediateCatchEvent_4">
+        <di:waypoint xsi:type="dc:Point" x="1286.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1299.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1312.0" y="226.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_27" bpmnElement="SequenceFlow_27" sourceElement="BPMNShape_IntermediateCatchEvent_4" targetElement="BPMNShape_ScriptTask_6">
+        <di:waypoint xsi:type="dc:Point" x="1348.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1362.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1376.0" y="226.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_28" bpmnElement="SequenceFlow_28" sourceElement="BPMNShape_StartEvent_6" targetElement="BPMNShape_ScriptTask_5">
+        <di:waypoint xsi:type="dc:Point" x="359.0" y="345.0"/>
+        <di:waypoint xsi:type="dc:Point" x="379.0" y="345.0"/>
+        <di:waypoint xsi:type="dc:Point" x="400.0" y="345.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_31" bpmnElement="SequenceFlow_31" sourceElement="BPMNShape_ScriptTask_5" targetElement="BPMNShape_EndEvent_6">
+        <di:waypoint xsi:type="dc:Point" x="510.0" y="345.0"/>
+        <di:waypoint xsi:type="dc:Point" x="525.0" y="345.0"/>
+        <di:waypoint xsi:type="dc:Point" x="540.0" y="345.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_10" bpmnElement="SequenceFlow_10" sourceElement="BPMNShape_ExclusiveGateway_1" targetElement="BPMNShape_IntermediateCatchEvent_2">
+        <di:waypoint xsi:type="dc:Point" x="1286.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1298.0" y="379.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1311.0" y="379.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_13" bpmnElement="SequenceFlow_13" sourceElement="BPMNShape_ParallelGateway_2" targetElement="BPMNShape_ExclusiveGateway_1">
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="251.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="354.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_14" bpmnElement="SequenceFlow_14" sourceElement="BPMNShape_IntermediateCatchEvent_4" targetElement="BPMNShape_ExclusiveGateway_1">
+        <di:waypoint xsi:type="dc:Point" x="1758.0" y="397.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1758.0" y="431.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="431.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="404.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_16" bpmnElement="SequenceFlow_16" sourceElement="BPMNShape_ScriptTask_6" targetElement="BPMNShape_EndEvent_2">
+        <di:waypoint xsi:type="dc:Point" x="1486.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1502.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1519.0" y="226.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_17" bpmnElement="SequenceFlow_17" sourceElement="BPMNShape_ParallelGateway_2" targetElement="BPMNShape_IntermediateCatchEvent_3">
+        <di:waypoint xsi:type="dc:Point" x="1286.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1299.0" y="226.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1312.0" y="226.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_21" bpmnElement="SequenceFlow_21" sourceElement="BPMNShape_ParallelGateway_2" targetElement="BPMNShape_IntermediateCatchEvent_1">
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="251.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1261.0" y="302.0"/>
+        <di:waypoint xsi:type="dc:Point" x="1312.0" y="302.0"/>
+        <bpmndi:BPMNLabel/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

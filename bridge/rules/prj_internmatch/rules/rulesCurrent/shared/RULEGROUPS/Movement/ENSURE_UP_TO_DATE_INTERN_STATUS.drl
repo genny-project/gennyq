@@ -1,0 +1,102 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+
+rule "ENSURE_UP_TO_DATE_INTERN_STATUS"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience -2
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity()
+		output : OutputParam()
+		bucketCode : String( bucketCode matches ".*" )
+		controlSignalCode : String( controlSignalCode != "ARCHIVE" )
+		beUtils : BaseEntityUtils()
+
+
+     then
+     	System.out.println("*************************** ENSURE_UP_TO_DATE_INTERN_STATUS ***************************");
+		System.out.println(drools.getRule().getName()+" Rule Fired!");
+		
+		BaseEntity applicationBE = beUtils.getBaseEntityByCode(newApplication.getCode());
+		List<Answer> answers = new ArrayList<>();
+		
+		/* MAKE SURE INTERN BE STATUS IS UP TO DATE */
+		applicationBE = beUtils.getBaseEntityByCode(applicationBE.getCode());
+		if (applicationBE != null) {
+			String internCode = applicationBE.getValue("PRI_INTERN_CODE", null);
+			System.out.println("internCode = " + internCode);
+			if (internCode != null) {
+				BaseEntity internBE = beUtils.getBaseEntityByCode(internCode);
+				if (internBE != null) {
+					SearchEntity searchBE = new SearchEntity("SBE_LINKED_APPLICATIONS", "Linked Applications")
+						.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+						.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, internBE.getCode())
+						.setPageStart(0).setPageSize(100000);
+			
+					searchBE.setRealm(serviceToken.getRealm());
+					List<BaseEntity> linkedApps = beUtils.getBaseEntitys(searchBE);
+					String[] statusArray = { "AVAILABLE", "REJECT", "APPLIED", "SHORTLISTED", "INTERVIEWED", "OFFERED", "PLACED", "PROGRESS", "COMPLETED" };
+					int index = 0;
+					for (BaseEntity app : linkedApps) {
+						/* FIND MOST PROGRESSED STATUS */
+						String appStatus = app.getValue("PRI_STATUS", null);
+						if (appStatus != null) {
+							if (Arrays.toString(statusArray).contains(appStatus)) {
+								int pos = Arrays.asList(statusArray).indexOf(appStatus);
+								if (pos > index) {
+									index = pos;
+								}
+							}
+						} else {
+							System.out.println("PRI_STATUS is null for " + app.getCode());
+						}
+					}
+					System.out.println("new status = " + statusArray[index]);
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), internBE.getCode() , "PRI_STATUS", statusArray[index]));
+				} else {
+					System.out.println("internBE is null");
+				}
+			} else {
+				System.out.println("internCode in null");
+			}
+		} else {
+			System.out.println("applicationBE in null");
+		}
+		
+
+
+				
+		retract(newApplication)
+		retract(bucketCode)
+		retract(controlSignalCode)
+
+		System.out.println("*************************** ENSURE_UP_TO_DATE_INTERN_STATUS ***************************");
+end

@@ -1,0 +1,66 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.utils.TableUtils;
+
+rule "VIEW_APPLICATIONS_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 100
+	no-loop
+	when
+		$message : QEventMessage(
+			data.code == "ROW_ACT_PRI_EVENT_VIEW_APPLICATIONS" ||
+			data.code == "ACT_PRI_EVENT_VIEW_APPLICATIONS"
+		)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		beUtils : BaseEntityUtils()
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+	
+		if(targetCode != null){
+
+			TableUtils tableUtils = new TableUtils(beUtils);
+			SearchEntity searchBE = tableUtils.getSessionSearch("SBE_APPLICATIONS");
+
+			if(searchBE != null) {
+
+				/* reset the page index to 1 */
+				Answer pageNumberAnswer = new Answer(beUtils.getGennyToken().getUserCode(), searchBE.getCode(), "PRI_INDEX", "1");
+				
+				/* update the searchBE  */
+				searchBE = beUtils.updateBaseEntity(searchBE, pageNumberAnswer,SearchEntity.class);
+				searchBE.setPageStart(0);
+
+				/* set internCode as the parentCode of the SBE */
+				searchBE.setParentCode(targetCode);
+
+				/* cache the session search */
+				VertxUtils.putObject(beUtils.getGennyToken().getRealm(), "", searchBE.getCode(), searchBE, beUtils.getGennyToken().getToken());
+
+				/* send the table */
+				TableUtils.searchTable(beUtils, searchBE, true, "PRI_INTERN_CODE", targetCode, true);
+
+			}else{
+				System.out.println("searchBE is null"); 
+			}
+		}else{
+			System.out.println("TARGET code is null. Check FE console !");
+		}
+		retract($message);
+	end

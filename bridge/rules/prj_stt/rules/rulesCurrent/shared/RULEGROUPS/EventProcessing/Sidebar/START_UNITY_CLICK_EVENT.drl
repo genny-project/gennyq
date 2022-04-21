@@ -1,0 +1,41 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+
+rule "START_UNITY_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 3
+    no-loop
+    when
+		$message : QEventMessage ( data.code matches "QUE_UNITY_PLAYER" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		
+    then		
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		/* Send a Signal */
+		output.setTypeOfResult("SIGNAL");
+		
+		/* Signal to send */
+		output.setResultCode("START_UNITY_EVENT");
+				
+		System.out.println("START SIGNAL: START_UNITY_EVENT");
+		System.out.println("STARTING THE NEW APPLICATION WITH: " +output);
+	
+		retract( $message);
+	end

@@ -1,0 +1,67 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwandautils.GennySettings;
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "SEND_AGENT_DETAILS"
+    ruleflow-group 'AssignAgent'
+    no-loop true
+    salience 1000 
+    when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		targetBe : BaseEntity() 
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		System.out.println("targetBe  :: " + targetBe.getCode()); 
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		/* send a toast to update user */
+		VertxUtils.sendCmdMsg(beUtils, "TOAST", "INFO", "Updating agent details...");
+		
+		BaseEntity internBe = beUtils.getBaseEntityByCode(targetBe.getCode());
+
+		if(internBe != null){
+			String agentCode = internBe.getValue("LNK_AGENT", null);
+			System.out.println("agentCode before :: " + agentCode);
+			
+			if(agentCode != null){
+				agentCode = beUtils.cleanUpAttributeValue(agentCode);
+				System.out.println("agentCode after :: " + agentCode);
+				
+				BaseEntity agentBe = beUtils.getBaseEntityByCode(agentCode);
+				
+				if(agentBe != null){
+					String assocAgency = agentBe.getValue("PRI_ASSOC_AGENCY", null);
+					String name = agentBe.getValue("PRI_NAME", null);
+
+					System.out.println("assocAgency :: " + assocAgency);
+					System.out.println("name        :: " + name);
+
+					Answer assocAgencyAns = new Answer(userToken.getUserCode(), targetBe.getCode(), "PRI_LNK_AGENT__PRI_ASSOC_AGENCY", assocAgency);
+					Answer nameAns = new Answer(userToken.getUserCode(), targetBe.getCode(), "PRI_LNK_AGENT__PRI_NAME", name);
+
+					VertxUtils.sendToFrontEnd(userToken, assocAgencyAns, nameAns);
+				}else{
+					System.out.println("agentBe is null");
+				}
+			} else{
+				System.out.println("agentCode is null");
+			}
+		}else{
+			System.out.println("internBe is null");
+		}
+		
+		retract(targetBe)
+	
+end

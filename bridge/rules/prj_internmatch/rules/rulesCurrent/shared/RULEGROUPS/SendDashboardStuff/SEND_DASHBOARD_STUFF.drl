@@ -1,0 +1,96 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+import java.util.stream.Collectors;
+
+
+rule "SEND_DASHBOARD_STUFF"
+	ruleflow-group 'SendDashboardStuff'
+	salience 6
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		allowed: Allowed(	code == "AGENT" ||
+							code == "INTERN" ||
+							code == "EDU_PRO_REP" ||
+							code == "HOST_CPY_REP" )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+
+		String who = allowed.code;
+		System.out.println("Allowed code :: " + who);
+		
+		String user = userToken.getUserCode();
+		System.out.println("user :: " + user);
+		
+		
+		switch (who) {
+			case "AGENT":
+				System.out.println("No Dashboard stuff for an Agent yet!!");
+                drools.setFocus("BucketProcessing");
+				break;
+				
+			case "INTERN":
+				System.out.println("Serving you with Dashboard stuff for an Intern!!");
+				
+				BaseEntity internBe = beUtils.getBaseEntityByCode(user);
+				
+				String matched = internBe.getValue("PRI_MATCHED_INTERNSHIPS", "[\"\"]");
+				System.out.println("matched: " +matched);
+				matched = matched.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
+				
+				String[] beCodes = matched.split(",");
+				BaseEntity[] beCodez = new BaseEntity[3];
+				
+				for (int i = 0; i < 3; i++) {
+					beCodez[i] = beUtils.getBaseEntityByCode(beCodes[i]);
+				}
+				
+				System.out.println("results::  " + beCodes[0]);
+				System.out.println("results::  " + beCodes[1]);
+				System.out.println("results::  " + beCodes[2]);
+				
+				QDataBaseEntityMessage msgMatches = new QDataBaseEntityMessage(beCodez);
+				msgMatches.setToken(userToken.getToken());
+				msgMatches.setReplace(true);
+				VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msgMatches));
+				
+				break;	
+				
+			case "EDU_PRO_REP":
+				System.out.println("No Dashboard stuff for an EPR yet!!");
+				break;		
+				
+			case "HOST_CPY_REP":
+				System.out.println("No Dashboard stuff for an HCR yet!!");
+				break;	
+				
+			default:
+    			System.out.println("ERROR: No recognised user for Dashboard stuff");	
+		
+		}
+		
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		retract(allowed); 
+
+end

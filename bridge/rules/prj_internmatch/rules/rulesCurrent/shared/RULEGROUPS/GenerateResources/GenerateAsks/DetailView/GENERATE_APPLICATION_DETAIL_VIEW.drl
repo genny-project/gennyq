@@ -1,0 +1,84 @@
+package life.genny.rules;
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+import java.util.LinkedHashMap;
+
+rule "GENERATE_APPLICATION_DETAIL_VIEW"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+    when
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		LinkedHashMap<String, Object> appView = new LinkedHashMap<>();
+
+		LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+
+		map.put("QUE_INTERN_NAME", "_PRI_INTERN_CODE__PRI_NAME");
+		map.put("QUE_COMPANY_NAME", "_LNK_INTERNSHIP__LNK_HOST_COMPANY__PRI_NAME");
+
+		appView.put("QUE_APPLICATION_DETAILS_GRP", map);
+
+		map = new LinkedHashMap<>();
+
+		map.put("QUE_SUPERVISOR_NAME", "_LNK_INTERN_SUPERVISOR__PRI_NAME");
+		map.put("QUE_SUPERVISOR_JOB_TITLE", "_LNK_INTERN_SUPERVISOR__PRI_JOB_TITLE");
+		map.put("QUE_SUPERVISOR_EMAIL", "_LNK_INTERN_SUPERVISOR__PRI_EMAIL");
+		map.put("QUE_SUPERVISOR_MOBILE", "_LNK_INTERN_SUPERVISOR__PRI_MOBILE");
+
+		appView.put("QUE_SUPERVISOR_DETAILS_GRP", map);
+
+		map = new LinkedHashMap<>();
+
+		map.put("QUE_INTERNSHIP_DETAILS", "_LNK_INTERNSHIP__PRI_INTERNSHIP_DETAILS");
+
+		appView.put("QUE_SHORT_SUMMARY_GRP", map);
+
+		map = new LinkedHashMap<>();
+
+		map.put("QUE_INTERNSHIP_DETAILS", "_LNK_INTERNSHIP__PRI_INTERNSHIP_DETAILS");
+
+		map.put("QUE_INTERNSHIP_OCCUPATION", "_LNK_INTERNSHIP__LNK_OCCUPATION__PRI_NAME");
+		map.put("QUE_INTERNSHIP_WORKSITE", "_LNK_INTERNSHIP__LNK_WORKSITE_SELECT__PRI_NAME");
+		map.put("QUE_INTERNSHIP_START_DATE", "_LNK_INTERNSHIP__PRI_INTERNSHIP_START_DATE");
+		map.put("QUE_INTERNSHIP_DAYS", "_LNK_INTERNSHIP__PRI_WHICH_DAYS_STRIPPED");
+		map.put("QUE_INTERNSHIP_DRESS_CODE", "_LNK_INTERNSHIP__PRI_DRESS_CODE");
+		map.put("QUE_INTERNSHIP_NO_OF_INTERNS", "_LNK_INTERNSHIP__PRI_NO_OF_INTERNS");
+
+		appView.put("QUE_INTERNSHIP_DETAILS_GRP", map);
+
+		map = new LinkedHashMap<>();
+
+		map.put("QUE_INTERNSHIP_ROLES_AND_RESPONSIBILITIES", "_LNK_INTERNSHIP__PRI_ROLES_AND_RESPONSIBILITIES");
+
+		appView.put("QUE_ROLES_AND_RESPONSIBILITIES_GRP", map);
+
+		map = new LinkedHashMap<>();
+
+		map.put("QUE_INTERNSHIP_BASE_LEARNING_OUTCOMES", "_LNK_INTERNSHIP__PRI_BASE_LEARNING_OUTCOMES");
+
+		appView.put("QUE_LEARNING_OUTCOMES_GRP", map);
+
+		/* SPECIFIC LEARNING OUTCOMES */
+		map = new LinkedHashMap<>();
+
+		map.put("QUE_INTERNSHIP_SPECIFIC_LEARNING_OUTCOMES", "_LNK_INTERNSHIP__PRI_SPECIFIC_LEARNING_OUTCOMES");
+
+		appView.put("QUE_SPECIFIC_LEARNING_OUTCOMES_GRP", map);
+
+
+		VertxUtils.putObject(serviceToken.getRealm(), "", "APPLICATION_DETAIL_VIEW", appView, serviceToken.getToken());
+end

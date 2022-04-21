@@ -1,0 +1,98 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+import java.util.stream.Collectors;
+
+
+rule "SEND_SUMMARY_SBE"
+	ruleflow-group 'SendSummary'
+	salience 6
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		TableUtils tableUtils = new TableUtils(beUtils);
+		CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
+  
+		String sessionCode = beUtils.getGennyToken().getJTI().toUpperCase();
+		System.out.println("userCode   ::   " + userToken.getUserCode());
+		System.out.println("sessionCode   ::   " + sessionCode);
+
+		/* get SUMMARY_CODES from cache */
+		List<String> summaryCodes = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", "SUMMARY_CODES", List.class);
+		List<String> sendCodes = new ArrayList<>();
+
+		if(summaryCodes!= null && summaryCodes.size() > 0){
+
+			for (String code : summaryCodes) {
+				if (capabilityUtils.hasCapabilityThroughPriIs(code, CapabilityMode.VIEW)) {
+					System.out.println(drools.getRule().getName()+" Has Permission for " + code);
+					sendCodes.add(code);
+				}
+			}
+
+			List<String> sbeSessionCodes = sendCodes.stream().map(code -> code+"_"+sessionCode).collect(Collectors.toList());
+
+			System.out.println("1. Sending summaryCodes !");
+			System.out.println(sbeSessionCodes);
+
+			/* Send summary arrayCodes */
+			if (!sbeSessionCodes.isEmpty()) {
+				VertxUtils.sendCmdMsg(beUtils, "SUMMARY_CODES", "SUMMARY_CODES", sbeSessionCodes);
+			}
+
+			System.out.println("2. Sending summary SBES !");
+			
+			/* send data */
+			for(String sbeCode : sendCodes){
+				if (sbeCode.startsWith("SBE_") || sbeCode.startsWith("CNS_SBE_")) {
+					
+					/* Remove prefix */
+					String trimmedCode = sbeCode;
+					if (sbeCode.startsWith("CNS_SBE_")) {
+						trimmedCode = trimmedCode.substring(4);
+					}
+					/* Get SBE from cache */
+					SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", trimmedCode, SearchEntity.class, beUtils.getGennyToken().getToken());
+
+					/* Find any linked searches */
+					for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
+						if (ea.getAttributeCode().startsWith("SBE_") || ea.getAttributeCode().startsWith("CNS_SBE_")) {
+							TableUtils.searchTable(beUtils, ea.getAttributeCode(), true);
+
+							if (ea.getAttributeCode().startsWith("CNS_SBE_")) {
+								ea.setAttributeCode(ea.getAttributeCode().substring(4));
+							}
+						}
+					}
+					TableUtils.searchTable(beUtils, searchBE, true);
+				}
+			}
+
+		}else{
+			System.out.println("SUMMARY_CODES not in cache");
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+
+end

@@ -1,0 +1,76 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_SUMMARY_CODES"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not  SearchEntity (code == "GENERATE_SUMMARY_CODES")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		List<String> summaryCodes = new ArrayList<>();
+
+		/* HC REP */
+		summaryCodes.add("SBE_SUMMARY_SERVICE_AGREEMENT_DOC");
+		summaryCodes.add("SBE_SUMMARY_OHNS_AGREEMENT_DOC");
+		summaryCodes.add("SBE_SUMMARY_HOST_CPY");
+		summaryCodes.add("SBE_SUMMARY_INTERNSHIPS");
+		summaryCodes.add("SBE_SUMMARY_HCRS");
+		/* summaryCodes.add("SBE_SUMMARY_INTERVIEWS"); */
+		
+		/* INTERN */
+		summaryCodes.add("SBE_SUMMARY_INTERN");
+		summaryCodes.add("SBE_SUMMARY_MY_APPLICATIONS");
+		summaryCodes.add("SBE_SUMMARY_INTERVIEWS_INTERN");
+		summaryCodes.add("SBE_SUMMARY_INPROGRESS_APPLICATION");
+		
+		/* EDU PRO REP */
+		summaryCodes.add("SBE_COUNTS_EDU_PRO_REP");
+		summaryCodes.add("SBE_SUMMARY_EDU_PRO");
+		summaryCodes.add("SBE_SUMMARY_EPRS");
+		summaryCodes.add("SBE_SUMMARY_INTERNS");
+		
+		/* AGENT */
+		summaryCodes.add("SBE_SUMMARY_AGENCY");
+		summaryCodes.add("SBE_SUMMARY_AGENTS");
+		summaryCodes.add("SBE_SUMMARY_INTERNS");
+		
+		summaryCodes.add("SBE_AVAILABLE_INTERNS");
+		summaryCodes.add("SBE_APPLIED_APPLICATIONS");
+		summaryCodes.add("SBE_SHORTLISTED_APPLICATIONS");
+		summaryCodes.add("SBE_INTERVIEWED_APPLICATIONS");
+		summaryCodes.add("SBE_OFFERED_APPLICATIONS");
+		summaryCodes.add("SBE_PLACED_APPLICATIONS");
+		summaryCodes.add("SBE_INPROGRESS_APPLICATIONS");
+		
+
+		insert(summaryCodes);
+		VertxUtils.putObject(serviceToken.getRealm(), "", "SUMMARY_CODES", summaryCodes, serviceToken.getToken());
+end

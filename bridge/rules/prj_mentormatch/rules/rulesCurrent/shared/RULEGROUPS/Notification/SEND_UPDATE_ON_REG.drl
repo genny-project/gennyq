@@ -1,0 +1,136 @@
+package life.genny.rules;
+
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.models.GennyToken;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.message.QMessageGennyMSG;
+
+rule "SEND_UPDATE_ON_REG"
+    ruleflow-group 'Notification'
+    no-loop true
+    salience 5
+    when
+   		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		associatedBe : BaseEntity( )
+		output : OutputParam( )
+		controlSignalCode : String(controlSignalCode.equals("SEND_UPDATE_ON_REGISTRATION"))
+		beUtils : BaseEntityUtils()
+    then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+
+ 		associatedBe = beUtils.getBaseEntityByCode(associatedBe.getCode());
+		System.out.println("associatedBe = " + associatedBe);
+
+		if (associatedBe != null) {
+            /*Check if Mentor BE*/
+            boolean isMentor = associatedBe.getValue("PRI_IS_MENTOR", false);
+            boolean isMentee = associatedBe.getValue("PRI_IS_MENTEE", false);
+            if (isMentor) {
+                Answer answer =  new Answer(serviceToken.getUserCode(), associatedBe.getCode(), "PRI_STATUS", "VERIFIED",false,true);
+                Attribute attribute = RulesUtils.getAttribute("PRI_STATUS", serviceToken);
+                answer.setAttribute(attribute);
+                associatedBe.addAnswer(answer);
+               
+                
+                System.out.println("SENDING MESSAGE TO FRONTEND");
+
+                QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+                toastMsg.setMessage("Thanks for completing your profile. Complete your training.");
+                toastMsg.setToken(beUtils.getGennyToken().getToken());
+                toastMsg.setSend(true);
+                VertxUtils.writeMsg("webcmds", toastMsg);
+
+                QDataBaseEntityMessage msg = new QDataBaseEntityMessage(associatedBe);
+                msg.setToken(userToken.getToken());
+                msg.setReplace(true);
+                VertxUtils.writeMsg("webcmds", JsonUtils.toJson(msg));
+                
+
+		
+
+
+               /* String status = associatedBe.getValue("PRI_STATUS",null);
+                System.out.println(drools.getRule().getName() + " status = " + status); */
+                /*if(status.equalsIgnoreCase("PENDING"))
+                { */
+                    /* Send email to rotary member for verification  */
+                    /*BaseEntity clubBe = beUtils.getBaseEntityFromLNKAttr(associatedBe, "LNK_MENTOR_CLUB");
+                    System.out.println("clubBe = " + clubBe);
+                    System.out.println("clubBe code = " + clubBe.getCode());
+
+                    BaseEntity clubPresidentBe = null;
+
+                    try {
+                        clubPresidentBe = beUtils.getBaseEntityFromLNKAttr(clubBe, "LNK_CLUB_PRESIDENT");
+                        System.out.println("clubPresidentBe code = " + clubPresidentBe.getCode());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    if (clubPresidentBe != null) {
+                        System.out.println("#### Sending email to rotary member for verification ####");
+
+                        QMessageGennyMSG verificationMsg = new QMessageGennyMSG.Builder("MSG_MENTOR_VERIFICATION")
+                            .addRecipient(clubPresidentBe)
+                            .addContext("MENTOR", associatedBe)
+                            .addContext("URL:ENCODE", associatedBe.getCode() + "/ACT_VERIFY_MENTEE")
+                            .addContext("BCC", "PRJ_MENTORMATCH")
+                            .setUtils(beUtils)
+                            .send();
+
+                        System.out.println("SEND_MENTOR_UPDATE_ON_REG: msg " + JsonUtils.toJson(verificationMsg));
+                    } else {
+                        System.out.println("#### No club president found ####");
+                    } */
+                    /* Sending toast message after mentor completes profile  */
+                    /*QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+                    toastMsg.setMessage("Thanks for completing your profile. This account is currently pending verification from your Rotary Club President");
+                    toastMsg.setToken(beUtils.getGennyToken().getToken());
+                    toastMsg.setSend(true);
+                    VertxUtils.writeMsg("webcmds", toastMsg);
+
+                    System.out.println("#### Sending email to mentor for pending verification ####");
+
+                    QMessageGennyMSG verificationMsg = new QMessageGennyMSG.Builder("MSG_MENTOR_VERIFICATION_PENDING")
+                        .addRecipient(associatedBe)
+                        .addContext("BCC", "PRJ_MENTORMATCH")
+                        .setUtils(beUtils)
+                        .send();
+
+                    System.out.println("#### Sent email to mentor for pending verification ####");*/
+                
+            } else {
+                System.out.println("#### Not a Mentor BE. ####");
+            }
+
+            if (isMentee)
+            {
+                 /* Sending toast message after mentee completes profile  */
+                QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+                toastMsg.setMessage("Thanks for completing your profile. Complete your training.");
+                toastMsg.setToken(beUtils.getGennyToken().getToken());
+                toastMsg.setSend(true);
+                VertxUtils.writeMsg("webcmds", toastMsg);
+
+                System.out.println("#### Sending email to mentee for completing training ####");
+
+                QMessageGennyMSG verificationMsg = new QMessageGennyMSG.Builder("MSG_MENTEE_TO_COMPLETE_TRAINING")
+                    .addRecipient(associatedBe)
+                    .addContext("BCC", "PRJ_MENTORMATCH")
+                    .addContext("URL:ENCODE", "QUE_FAKE_PARENT/ACT_PRI_EVENT_START_MENTEE_TRAINING")
+                    .setUtils(beUtils)
+                    .send();
+
+                System.out.println("#### Sending email to mentee for completing training ####");
+            } else {
+                System.out.println("#### Not a Mentee BE. ####");
+            }
+		}
+		retract(associatedBe)
+		retract(controlSignalCode)
+
+		System.out.println("End of " + drools.getRule().getName());
+end

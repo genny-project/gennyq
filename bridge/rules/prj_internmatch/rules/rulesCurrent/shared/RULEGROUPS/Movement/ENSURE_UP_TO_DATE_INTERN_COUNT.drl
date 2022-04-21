@@ -1,0 +1,116 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+
+rule "ENSURE_UP_TO_DATE_INTERN_COUNT"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience -1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity()
+		output : OutputParam()
+		bucketCode : String( 
+				bucketCode == "AVAILABLE" ||
+				bucketCode == "APPLIED" ||
+				bucketCode == "SHORTLISTED" ||
+				bucketCode == "INTERVIEWED" ||
+				bucketCode == "OFFERED" ||
+				bucketCode == "PLACED" ||
+				bucketCode == "PROGRESS" ||
+				bucketCode == "COMPLETED" ||
+				bucketCode == "ANY"
+			)
+		controlSignalCode : String(
+				controlSignalCode.equals("REJECT") ||
+				controlSignalCode.equals("WITHDRAWN") ||
+				controlSignalCode.equals("ONHOLD")
+			)
+		beUtils : BaseEntityUtils()
+
+     then
+		System.out.println(drools.getRule().getName()+" Rule Fired!");
+
+		BaseEntity applicationBE = beUtils.getBaseEntityByCode(newApplication.getCode());
+		
+		/* FETCH PARENT INTERNSHIP */
+ 		BaseEntity parentInternshipBe = beUtils.getBaseEntityFromLNKAttr(applicationBE.getCode(), "LNK_INTERNSHIP");
+		if (parentInternshipBe != null) {
+			String limitInternsCode = beUtils.cleanUpAttributeValue(parentInternshipBe.getValueAsString("LNK_NO_OF_INTERNS"));
+ 			BaseEntity limitInternsBe = beUtils.getBaseEntityByCode(limitInternsCode);
+	 		Integer limitNumberInterns = Integer.valueOf(limitInternsBe.getName());
+			Integer currentNumberInterns = Integer.valueOf(parentInternshipBe.getValueAsString("PRI_CURRENT_INTERNS"));
+
+			/*
+			if (currentNumberInterns == limitNumberInterns) {
+				System.out.println(drools.getRule().getName() + " - Enabling other applications for " + parentInternshipBe.getCode());
+				SearchEntity searchBE = new SearchEntity("SBE_LINKED_APPLICATIONS", "Linked Applications")
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+					.addFilter("LNK_INTERNSHIP", SearchEntity.StringFilter.LIKE, "%"+parentInternshipBe.getCode()+"%")
+					.setPageStart(0).setPageSize(100000);
+		
+				searchBE.setRealm(serviceToken.getRealm());
+				List<BaseEntity> linkedApps = beUtils.getBaseEntitys(searchBE);
+				System.out.println(drools.getRule().getName() + " - Found " + linkedApps.size() + " other applications");
+
+				for (BaseEntity linkedApplication : linkedApps) {
+					String appStatus = linkedApplication.getValueAsString("PRI_STATUS");
+					if ( appStatus.equals("APPLIED") || appStatus.equals("SHORTLISTED") || appStatus.equals("INTERVIEWED") ) {
+						System.out.println(drools.getRule().getName() + " Re-Enabling application " + linkedApplication.getCode());
+						beUtils.saveAnswer(new Answer(userToken.getUserCode(), linkedApplication.getCode(), "PRI_DISABLED", false));
+						QDataBaseEntityMessage appBeMsg = new QDataBaseEntityMessage(linkedApplication);
+						appBeMsg.setToken(userToken.getToken());
+						appBeMsg.setReplace(true);
+						VertxUtils.writeMsg("webcmds", JsonUtils.toJson(appBeMsg));
+						TableUtils.moveEntity(linkedApplication.getCode(), null, "SBE_"+appStatus+"_APPLICATIONS", beUtils);		
+					}
+				}
+			}
+			*/
+
+			/* DECREMENT INTERN COUNT */
+			String status = applicationBE.getValue("PRI_STATUS", null);
+			if (status != null) {
+				if ( status.equals("OFFERED") || status.equals("PLACED") || status.equals("PROGRESS") ) {
+					if (currentNumberInterns > 0) {
+						beUtils.saveAnswer(new Answer(userToken.getUserCode(), parentInternshipBe.getCode(), "PRI_CURRENT_INTERNS", Integer.toString(currentNumberInterns-1)));
+						System.out.println(drools.getRule().getName() + " - Intern Count now at " + Integer.toString(currentNumberInterns-1));
+					}
+				} else {
+					System.out.println("No change being made to intern count");
+				}
+			} else {
+				System.out.println("application status is null");
+			}
+		} else {
+			System.out.println(drools.getRule().getName() + " - COULD NOT GET PARENT BEG FOR " + applicationBE.getCode());
+		}
+
+
+end

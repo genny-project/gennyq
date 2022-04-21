@@ -1,0 +1,78 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.EEntityStatus;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.SearchUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+
+rule "SET_PRI_STATUS_AS_WITHDRAWN"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity()
+		output : OutputParam()
+		bucketCode : String(
+				bucketCode == "AVAILABLE" ||
+				bucketCode == "APPLIED" ||
+				bucketCode == "SHORTLISTED" ||
+				bucketCode == "INTERVIEWED" ||
+				bucketCode == "OFFERED" ||
+				bucketCode == "PLACED" ||
+				bucketCode == "PROGRESS" ||
+				bucketCode == "COMPLETED" ||
+				bucketCode == "ANY"
+			)
+		controlSignalCode : String( controlSignalCode.equals("WITHDRAWN") )
+		beUtils : BaseEntityUtils()
+
+     then
+		System.out.println(drools.getRule().getName()+" Rule Fired!");
+
+		BaseEntity applicationBE = beUtils.getBaseEntityByCode(newApplication.getCode());
+
+		/* Save the new status */
+ 		Answer answer = new Answer(userToken.getUserCode(),newApplication.getCode(),"PRI_STATUS","WITHDRAWN");
+		answer.setChangeEvent(true);
+ 		beUtils.saveAnswer(answer);
+
+		Answer answerStage = new Answer(userToken.getUserCode(),newApplication.getCode(),"PRI_STAGE","WITHDRAWN");
+		answerStage.setChangeEvent(true);
+ 		beUtils.saveAnswer(answerStage);
+
+		/*applicationBE.setStatus(EEntityStatus.ARCHIVED);*/
+
+		String bucket = "SBE_" + bucketCode + "_APPLICATIONS";
+		TableUtils.moveEntity(applicationBE.getCode(), bucket, null, beUtils);
+
+        /* Re generate cached applications */
+		SearchUtils.regenerateCaches(beUtils, newApplication);
+
+		System.out.println("WITHDREW APPLICATION : " +applicationBE.getCode());
+
+end

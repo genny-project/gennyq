@@ -1,0 +1,54 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "SBE_SUMMARY_HOST_CPY"
+   ruleflow-group 'GenerateSearches'
+   no-loop true
+   when
+      not  SearchEntity (code == "SBE_SUMMARY_HOST_CPY")
+      serviceToken : GennyToken( code == "PER_SERVICE")
+   then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+
+      SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "My Company")
+                              /* .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "CPY_%") */
+                     			.addFilter("PRI_IS_HOST_CPY", true)
+                              
+                              /* Columns */
+                     			.addColumn("PRI_COMPANY_DESCRIPTION", "Details")
+                              .addColumn("PRI_VALIDATION", "Validation")
+                              .addColumn("PRI_OHS_DOC", "Download OH&S Declaration")
+		                        .addColumn("PRI_TC_DOC", "Download Terms and Conditions Document")
+
+                              /* Validation Attribute */
+                              .setValidationAttribute("PRI_VALIDATION")
+                              
+                              
+                              /* Display Mode */
+                              .setDisplayMode("my_company")
+                              .setPageStart(0).setPageSize(1);
+
+      searchBE.setRealm(serviceToken.getRealm());
+
+      insert(searchBE);
+      VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

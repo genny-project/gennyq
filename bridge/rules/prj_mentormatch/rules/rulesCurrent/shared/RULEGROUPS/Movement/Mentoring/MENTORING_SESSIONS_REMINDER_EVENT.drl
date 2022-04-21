@@ -1,0 +1,117 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import org.json.JSONObject;
+
+import life.genny.notifications.EmailHelper;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.notifications.SmsHelper;
+import java.util.Arrays;
+import java.time.ZoneOffset;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import java.time.LocalDateTime;
+import life.genny.notifications.EmailHelper;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.notifications.SmsHelper;
+import java.util.Arrays;
+import java.time.ZoneOffset;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+
+rule "MENTORING_SESSIONS_REMINDER_EVENT"
+	ruleflow-group 'Movement'
+	salience 2
+	no-loop
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		targetBaseEntity : BaseEntity( code matches "PER_\\S+" )
+		output : OutputParam( )
+		controlSignalCode : String(controlSignalCode.equals("SCHEDULE_MENTORING_SESSIONS"))
+		beUtils : BaseEntityUtils()
+	then
+		System.out.println(drools.getRule().getName() + " : Rule fired");
+
+		targetBaseEntity = beUtils.getBaseEntityByCode(targetBaseEntity.getCode());
+		System.out.println(drools.getRule().getName() + " ::  targetBaseEntityCode: " + targetBaseEntity.getCode());
+
+		BaseEntity newApplication = null;
+
+ 		if (targetBaseEntity.getCode() != null) {
+			newApplication = beUtils.getBaseEntityFromLNKAttr(targetBaseEntity, "LNK_APPLICATION");
+			System.out.println(drools.getRule().getName() + " :: newApplicationCode: " + newApplication.getCode());
+		}
+
+
+		ArrayList<BaseEntity> mentoringSessionLst = new ArrayList<BaseEntity>();
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MMM yyyy, E, hh:mm:ss a");
+
+		LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+    	String prettyNow = dtf.format(now);
+    	System.out.println(drools.getRule().getName() + " :: The current date and time is ~ " + prettyNow);
+
+		for(int i = 1 ; i<=1 ; i++){
+			BaseEntity mentoringSessionsBe = null;
+			try {
+				mentoringSessionsBe = beUtils.getBaseEntityFromLNKAttr(newApplication, "LNK_MTS_" + i);
+				System.out.println(drools.getRule().getName() + " :: mentoringSessionsCode: " + mentoringSessionsBe.getCode());
+			} catch (Exception e) {
+	    		e.printStackTrace();
+			}
+
+			if (mentoringSessionsBe != null) {
+				System.out.println("################## START Shleemy ##################");
+
+					System.out.println("mentoringSessionsBe code is " + mentoringSessionsBe.getCode());
+
+					String scheduleMsgCode = mentoringSessionsBe.getCode() + "_SESSIONS_" + i;
+					System.out.println("scheduleMsgCode is " + scheduleMsgCode);
+
+					LocalDateTime meetingTime = mentoringSessionsBe.getValue("PRI_MEETING_TIME", null);
+
+					/* This bit is messy. Need to redo it. */
+					if (meetingTime != null) {
+						System.out.println("meetingTime is " + meetingTime);
+						/*LocalDateTime mentoringSessionDT = LocalDateTime.parse(meetingTime, dtf);*/
+						LocalDateTime mentoringSessionDT = meetingTime;
+						LocalDateTime orangeTimer = mentoringSessionDT.minusHours(24);
+						/*LocalDateTime orangeTimer = now.plusSeconds(20);*/
+						String prettyOrange = dtf.format(orangeTimer);
+						/*System.out.println(drools.getRule().getName() + " :: The Shleemy timer is set for ~ " + prettyOrange);*/
+						/*ShleemyUtils.scheduleMessage(userToken, "SCHEDULE_MENTORING_REMINDER_24HRS_BEFORE", scheduleMsgCode,  orangeTimer, mentoringSessionsCode);*/
+
+						String scheduleMsgCodeForReview = mentoringSessionsBe.getCode() + "_REVIEW_" + i;
+						/*LocalDateTime yellowTimer = mentoringSessionDT.plusHours(2); */
+						LocalDateTime yellowTimer = now.plusSeconds(20);
+						System.out.println(drools.getRule().getName() + " :: The Shleemy timer is set for ~ yellowTimer " + yellowTimer);
+						System.out.println(drools.getRule().getName() + " :: The Shleemy timer is set for ~ scheduleCode " + scheduleMsgCodeForReview);
+
+						ShleemyUtils.scheduleMessage(userToken, "SCHEDULE_MENTORING_REVIEW_2HRS_AFTER", scheduleMsgCodeForReview,  yellowTimer, mentoringSessionsBe.getCode());
+					} else {
+						System.out.println("meetingTime is null!");
+					}
+
+				System.out.println("################## END Shleemy ##################");
+
+			} else {
+				System.out.println("mentoringSessionsBe is null!");
+			}
+		}
+		retract(controlSignalCode);
+		retract(targetBaseEntity);
+
+		System.out.println("End of " + drools.getRule().getName());
+	end

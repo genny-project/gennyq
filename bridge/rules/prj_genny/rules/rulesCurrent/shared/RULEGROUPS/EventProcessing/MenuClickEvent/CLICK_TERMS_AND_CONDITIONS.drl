@@ -1,0 +1,44 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+rule "CLICK_TERMS_AND_CONDITIONS"
+    ruleflow-group 'EventProcessing'
+		salience 1000
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_TERMS_AND_CONDITIONS.*")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		beUtils : BaseEntityUtils()
+
+    then
+		System.out.println(drools.getRule().getName() + " Processing : " + $message);
+
+		/* Just Fire WF, it handles everything else */
+		
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_TERMS_AND_CONDITIONS");
+
+		output.setAskSourceCode(userToken.getUserCode());
+
+		System.out.println("**************************************************");
+		System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+		System.out.println("ResultCode: "    + output.getResultCode());
+		System.out.println("AskSourceCode: " + output.getAskSourceCode());
+		System.out.println("**************************************************");
+
+		retract( $message);
+	end

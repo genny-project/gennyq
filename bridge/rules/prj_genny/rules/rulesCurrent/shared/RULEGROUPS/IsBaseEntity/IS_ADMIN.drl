@@ -1,0 +1,88 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwandautils.GennySettings;
+
+import java.security.SecureRandom;
+import java.util.stream.Collectors;
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "IS_ADMIN"
+    ruleflow-group 'IsBaseEntity'
+    no-loop true
+    salience 1000 
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		baseEntityType : String(baseEntityType.equals("ADMIN"))
+		newBe : BaseEntity()
+		beUtils : BaseEntityUtils()
+	  
+     then
+ 		System.out.println("IS_ADMIN: Rule fired" );
+ 		System.out.println("IS_ADMIN: newBe = " + newBe.getCode());
+
+ 		List<Answer> answers = new ArrayList<>();
+
+ 		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_IS_ADMIN", "true")); */
+ 		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_STATUS", "REGISTERED")); */
+ 		/* answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_STATUS_COLOR","#5cb85c")); */
+
+		BaseEntity user = beUtils.getBaseEntityByCode(newBe.getCode());
+		String userCode = newBe.getCode().split("_")[1];
+		System.out.println("User "+user+" with userCode = "+userCode);
+
+		String userId = "";
+
+		/* Set up in Keycloak */
+		String firstname = user.getValue("PRI_FIRSTNAME",null);
+		if (firstname != null) {
+			String lastname = user.getValue("PRI_LASTNAME",null);
+			if (lastname != null) {
+				String email = user.getValue("PRI_EMAIL",null);
+				if (email != null) {
+					/* TODO HACK */
+					if (true) {
+						userId = KeycloakUtils.updateUser(userCode,serviceToken.getToken(), serviceToken.getRealm(), email, firstname, lastname,  email, null, "user", "users");
+						userId = userId.toUpperCase();
+						Answer keycloakId = new Answer(beUtils.getGennyToken().getUserCode(),newBe.getCode(),"PRI_UUID",userId);
+						answers.add(keycloakId);
+						System.out.println("Created User "+email+" in Keycloak with id = "+userId);
+
+						/* Generate a random 15 char password */
+						char[] allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGJKLMNPRSTUVWXYZ0123456789^$?!@#%&".toCharArray();
+						String password = new SecureRandom().ints(15, 0, allowed.length).mapToObj(i -> String.valueOf(allowed[i])).collect(Collectors.joining());
+						KeycloakUtils.setPassword(serviceToken.getToken(), serviceToken.getRealm(), userId, password, true);
+
+						/* Send them an email with their password */
+						String url = GennySettings.projectUrl + "/home";
+						HashMap<String, String> templateData = new HashMap<String, String>();
+						templateData.put("name", firstname);
+						templateData.put("password", password);
+						templateData.put("url", url);
+							
+						List<String> bccList = Arrays.asList("internmatch@outcomelife.com.au");
+						
+						EmailHelper.sendGrid(beUtils, email, null, bccList, "", "d-100adae110bb46eb999cd8b48666cad0", templateData, false);		
+					} else {
+					     System.out.println("KEYCLOAK USER CREATION DISABLED IN RULE IS_ADMIN");
+					}
+				}
+			}
+		}
+
+		output.setTypeOfResult("NONE");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+
+  	    beUtils.saveAnswers(answers);
+
+		retract(newBe)
+end

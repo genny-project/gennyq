@@ -1,0 +1,98 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.DataType;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.Question;
+import life.genny.qwanda.Ask;
+
+rule "GENERATE_QUICK_ADD_ITEMS"
+    ruleflow-group 'Test'
+     no-loop true
+    when
+       not  SearchEntity (code == "GENERATE_QUICK_ADD_ITEMS")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+			String sourceCode = "PER_SERVICE";
+			String targetCode = "PER_SERVICE";
+			
+			Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+			Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+			
+			/* QUICK ADD ITEMS group */
+			Question quickAddItemsQues = new Question("QUE_QUICK_ADD_ITEMS_GRP", "Quick Add Items", questionAttribute, true);
+			Ask quickAddItemsAsk = new Ask(quickAddItemsQues, sourceCode, targetCode);
+			
+				Question hostCompanyQuickQues = new Question("QUE_QA_HOST_CPY_MENU", "Host Company", eventAttribute, true);
+				Ask hostCompanyQuickAsk = new Ask(hostCompanyQuickQues, sourceCode, targetCode);
+				
+				Question hostCompanyRepQuickQues = new Question("QUE_QA_HOST_CPY_REP_MENU", "Host Company Rep", eventAttribute, true);
+				Ask hostCompanyRepQuickAsk = new Ask(hostCompanyRepQuickQues, sourceCode, targetCode);
+
+				Question eduProQuickQues = new Question("QUE_QA_EDU_PRO_MENU", "Education Provider", eventAttribute, true);
+				Ask eduProQuickAsk = new Ask(eduProQuickQues, sourceCode, targetCode);
+
+				Question eduProRepQuickQues = new Question("QUE_QA_EDU_PRO_REP_MENU", "Education Provider Rep", eventAttribute, true);
+				Ask eduProRepQuickAsk = new Ask(eduProRepQuickQues, sourceCode, targetCode);
+
+				Question internshipQuickQues = new Question("QUE_QA_INTERNSHIP_MENU", "Internship", eventAttribute, true);
+				Ask internshipQuickAsk = new Ask(internshipQuickQues, sourceCode, targetCode);
+
+				Question internQuickQues = new Question("QUE_QA_INTERN_MENU", "Intern", eventAttribute, true);
+				Ask internQuickAsk = new Ask(internQuickQues, sourceCode, targetCode);
+
+				Question refPartnerQuickQues = new Question("QUE_QA_REF_PART_MENU", "Referral Partner", eventAttribute, true);
+				Ask refPartnerQuickAsk = new Ask(refPartnerQuickQues, sourceCode, targetCode);
+
+				Question refPartnerRepQuickQues = new Question("QUE_QA_REF_PART_REP_MENU", "Referral Partner Rep", eventAttribute, true);
+				Ask refPartnerRepQuickAsk = new Ask(refPartnerRepQuickQues, sourceCode, targetCode);
+
+				Question agencyQuickQues = new Question("QUE_QA_AGENCY_MENU", "Agency", eventAttribute, true);
+				Ask agencyQuickAsk = new Ask(agencyQuickQues, sourceCode, targetCode);
+
+				Question agentQuickQues = new Question("QUE_QA_AGENT_MENU", "Agent", eventAttribute, true);
+				Ask agentQuickAsk = new Ask(agentQuickQues, sourceCode, targetCode);
+
+				Question personQuickQues = new Question("QUE_QA_PERSON_MENU", "Person", eventAttribute, true);
+				Ask personQuickAsk = new Ask(personQuickQues, sourceCode, targetCode);
+
+			
+			Ask[] agentQuickAddItems = { hostCompanyQuickAsk, hostCompanyRepQuickAsk, eduProQuickAsk, eduProRepQuickAsk, internshipQuickAsk, internQuickAsk, agencyQuickAsk, agentQuickAsk, personQuickAsk };
+			Ask[] internQuickAddItems = {  };
+			Ask[] eduProRepQuickAddItems = { eduProRepQuickAsk };
+			Ask[] hcRepQuickAddItems = { internshipQuickAsk};
+			
+			quickAddItemsAsk.setChildAsks(agentQuickAddItems);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "QUICK_ADD_ITEMS_AGENT", quickAddItemsAsk, serviceToken.getToken());
+
+			quickAddItemsAsk.setChildAsks(internQuickAddItems);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "QUICK_ADD_ITEMS_INTERN", quickAddItemsAsk, serviceToken.getToken());
+
+			quickAddItemsAsk.setChildAsks(eduProRepQuickAddItems);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "QUICK_ADD_ITEMS_EDU_PRO_REP", quickAddItemsAsk, serviceToken.getToken());
+
+			quickAddItemsAsk.setChildAsks(hcRepQuickAddItems);
+			VertxUtils.putObject(serviceToken.getRealm(), "", "QUICK_ADD_ITEMS_HOST_CPY_REP", quickAddItemsAsk, serviceToken.getToken());
+end

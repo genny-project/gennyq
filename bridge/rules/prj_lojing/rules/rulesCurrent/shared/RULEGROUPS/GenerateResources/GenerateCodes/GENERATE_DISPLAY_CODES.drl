@@ -1,0 +1,81 @@
+package life.genny.rules;
+
+
+rule "GENERATE_DISPLAY_CODES"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not  SearchEntity (code == "GENERATE_DISPLAY_CODES")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		Map<String, String> displayCodes = new HashMap<String, String>();
+
+		/* MAP */
+		displayCodes.put("SCH_ACT_PRI_EVENT_MAP_VIEW", "MAP");
+
+		/* DIALOG_FORM */
+
+		/* DASHBOARD */
+		displayCodes.put("QUE_DASHBOARD_VIEW", "DASHBOARD");
+
+		/* TESTING */
+        displayCodes.put("QUE_CLEAR_TASKS", "DASHBOARD");
+
+		/* PROCESS */
+		displayCodes.put("QUE_TAB_BUCKET_VIEW", "PROCESS");
+		displayCodes.put("QUE_PRE_AGREEMENT_DOC_P2_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_OUTCOME_FORM_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_INTERN_FORM_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_HC_FORM_GRP", "PROCESS");
+		displayCodes.put("QUE_AGREEMENT_DOCUMENT_VIEW_GRP", "PROCESS");
+		displayCodes.put("QUE_APP_AGREEMENT_DOC_GRP", "PROCESS");
+		displayCodes.put("SCH_ACT_PRI_EVENT_QUE_TAB_BUCKET_VIEW", "PROCESS");
+		displayCodes.put("ACT_SEARCH_DASHBOARD", "PROCESS");
+
+		/* DETAIL */
+
+
+		/* DRAWER:DETAIL */
+		displayCodes.put("ACT_PRI_EVENT_VIEW", "DRAWER:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_PROFILE", "DRAWER:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_VIEW_APPLICATION", "DRAWER:DETAIL");
+
+		/* FORM:DETAIL */
+		displayCodes.put("QUE_CUSTOMER_MENU", "FORM:DETAL");
+		displayCodes.put("QUE_TENANT_APPLICATION_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_PROPERTY_LISTING_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_PROPERTY_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_VISA_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_PASSPORT_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_REFERRAL_PARTNER_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_ADMIN_MENU", "FORM:DETAL");
+		displayCodes.put("QUE_SUPER_ADMIN_MENU", "FORM:DETAL");
+		displayCodes.put("QUE_DEVELOPER_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_INSPECTION_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_MIGRATION_AGENT_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_GUARANTOR_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_BTR_PRINCIPAL_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_BTR_MANAGER_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_AMENITY_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_BUILDING_MENU", "FORM:DETAIL");
+		displayCodes.put("QUE_LEVEL_MENU", "FORM:DETAIL");
+
+		displayCodes.put("QUE_AVATAR_PROFILE_GRP", "FORM:DETAIL");
+		displayCodes.put("ACT_PRI_EVENT_EDIT", "FORM:DETAIL");
+
+
+		/* TABLE */
+		displayCodes.put("QUE_SEARCH", "TABLE");
+		displayCodes.put("QUE_TREE_ITEM_PROPERTIES", "TABLE");
+
+		/* FORM */
+		displayCodes.put("QUE_DRAFTS_GRP", "FORM");
+
+
+
+		insert(displayCodes);
+		VertxUtils.putObject(serviceToken.getRealm(), "", "DISPLAY_CODES", displayCodes, serviceToken.getToken());
+end

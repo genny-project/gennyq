@@ -1,0 +1,734 @@
+package life.genny.rules;
+
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.SearchUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwandautils.MessageUtils;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.qwanda.message.QBaseMSGMessageType;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneOffset;
+import life.genny.utils.ShleemyUtils;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.utils.VertxUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.validation.MessageValidator;
+import life.genny.qwandautils.QwandaUtils;
+
+rule "SET_PRI_STATUS_AS_SELF_APPLIED"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity( code matches "APP_\\S+" )
+		bucketCode : String(bucketCode.equals("EMPTY"))
+		controlSignalCode : String(controlSignalCode.equals("SELF_APPLIED"))
+		associatedInternBe : BaseEntity( code matches "PER_\\S+" )
+		beUtils : BaseEntityUtils()
+
+	then
+        System.out.println(drools.getRule().getName() + " : Rule fired!! - newApplication = " + newApplication);
+ 		newApplication = beUtils.getBaseEntityByCode(newApplication.getCode());
+ 		associatedInternBe = beUtils.getBaseEntityByCode(associatedInternBe.getCode());
+
+ 		Answer answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_STATUS", "APPLIED");
+ 		beUtils.saveAnswer(answer);
+
+ 		answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_DISABLED", "false");
+ 		beUtils.saveAnswer(answer);
+
+ 		answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_STATUS_COLOR", "#5CB85C");
+ 		beUtils.saveAnswer(answer);
+
+		/* Save Code of user applying the Intern */
+		beUtils.saveAnswer(new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_APPLIED_BY", userToken.getUserCode()));
+
+ 		String appBeg = newApplication.getValue("LNK_INTERNSHIP", null);
+		appBeg = appBeg.replace("\"", "").replace("[", "").replace("]", "");
+		System.out.println("appBeg = " +appBeg);
+		BaseEntity assocBegBe = beUtils.getBaseEntityByCode(appBeg);
+		System.out.println("assocBegBe = " + assocBegBe);
+
+		String appHC = newApplication.getValue("LNK_HOST_COMPANY", null);
+		appHC = appHC.replace("\"", "").replace("[", "").replace("]", "");
+		System.out.println("appHC = " +appHC);
+		BaseEntity appHCBe = beUtils.getBaseEntityByCode(appHC);
+		System.out.println("appHCBe = " + appHCBe);
+
+		String appSuper = assocBegBe.getValue("LNK_INTERN_SUPERVISOR", null);
+		appSuper = appSuper.replace("\"", "").replace("[", "").replace("]", "");
+		System.out.println("appSuper = " +appSuper);
+		BaseEntity appSuperBe = beUtils.getBaseEntityByCode(appSuper);
+		System.out.println("appSuperBe = " + appSuperBe);
+
+		String agentEmail = null;
+		String agentFirstName = null;
+		String appAgent = associatedInternBe.getValue("LNK_AGENT", null);
+		if (appAgent != null) {
+			appAgent = appAgent.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("appAgent: " + appAgent);
+			if (appAgent != null) {
+				BaseEntity appAgentBe = beUtils.getBaseEntityByCode(appAgent);
+				System.out.println("appAgentBe: " + appAgentBe);
+
+				if (appAgentBe != null) {
+					agentFirstName = appAgentBe.getValue("PRI_FIRSTNAME", null);
+					System.out.println("agentFirstName: " + agentFirstName);
+
+					agentEmail = appAgentBe.getValue("PRI_EMAIL", null);
+					System.out.println("agentEmail: " + agentEmail);
+				}
+			} else {
+				System.out.println("Null: appAgentBe");
+			}
+		} else {
+			System.out.println("Null: appAgent");
+		}
+
+		String PERcode = associatedInternBe.getCode();
+		System.out.println("PERcode = " +PERcode);
+
+		if (PERcode != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_INTERN_CODE", PERcode);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null PERcode");
+		}
+
+ 		String appEP = associatedInternBe.getValue("LNK_EDU_PROVIDER", null);
+		appEP = appEP.replace("\"", "").replace("[", "").replace("]", "");
+		System.out.println("appEP = " +appEP);
+
+ 		if (appEP.equals("CPY_CQU")){
+			System.out.println("This is a CQU student. Let's add " + appHC + " to the CQU HC list!");
+			answer = new Answer(userToken.getUserCode(), appHCBe.getCode(), "PRI_IS_APPLIED_CPY_CQU", "true");
+			beUtils.saveAnswer(answer);
+ 		} else {
+			System.out.println("Not a CQU student. Moving on!");
+ 		}
+
+
+ 		if (appEP.equals("CPY_UQ")){
+			System.out.println("This is a UQ student. Let's add " + appHC + " to the UQ HC list!");
+			answer = new Answer(userToken.getUserCode(), appHCBe.getCode(), "PRI_IS_APPLIED_CPY_UQ", "true");
+			beUtils.saveAnswer(answer);
+ 		} else {
+			System.out.println("Not a UQ student. Moving on!");
+ 		}
+
+ 		String firstname = associatedInternBe.getValue("PRI_FIRSTNAME", null);
+ 		String lastname = associatedInternBe.getValue("PRI_LASTNAME", null);
+ 		String name = "";
+
+		System.out.println("firstname = " + firstname);
+		System.out.println("lastname = " + lastname);
+		if((firstname != null) && (lastname != null)) {
+			name = firstname + " " + lastname;
+			System.out.println("name = " + name);
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_NAME", name);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: First or Last Name is NULL");
+		}
+
+ 		String anzco = associatedInternBe.getValue("PRI_ANZCO", null);
+		System.out.println("anzco = " +anzco);
+		if (anzco != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ANZCO", anzco);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null anzco");
+		}
+
+		String lnkBusHrs = assocBegBe.getValue("LNK_BUSINESS_HOURS", null);
+		System.out.println("lnkBusHrs = " +lnkBusHrs);
+		if (lnkBusHrs != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_BUSINESS_HOURS", lnkBusHrs);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null lnkBusHrs");
+		}
+
+		String busHrs = assocBegBe.getValue("PRI_BUSINESS_HOURS", null);
+		System.out.println("busHrs = " +busHrs);
+		if (busHrs != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_BUSINESS_HOURS", busHrs);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null busHrs");
+		}
+
+		String dressCode = assocBegBe.getValue("LNK_DRESS_CODE", null);
+		System.out.println("dressCode = " +dressCode);
+		if (dressCode != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_DRESS_CODE", dressCode);
+			beUtils.saveAnswer(answer);
+
+			dressCode = dressCode.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("dressCode = " +dressCode);
+
+			BaseEntity dressCodeBe = beUtils.getBaseEntityByCode(dressCode);
+			System.out.println("dressCodeBe = " + dressCodeBe);
+
+			if (dressCodeBe != null) {
+				dressCode = dressCodeBe.getValue("PRI_NAME", null);
+				System.out.println("dressCode = " +dressCode);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_DRESS_CODE", dressCode);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: Null dressCodeBe");
+			}
+		} else {
+			System.out.println("ERROR: Null dressCode");
+		}
+
+		String transport = associatedInternBe.getValue("LNK_TRANSPORT", null);
+		System.out.println("transport = " +transport);
+		if (transport != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_TRANSPORT", transport);
+			beUtils.saveAnswer(answer);
+
+			transport = transport.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("transport = " +transport);
+
+			BaseEntity transportBe = beUtils.getBaseEntityByCode(transport);
+			System.out.println("transportBe = " + transportBe);
+
+			if (transportBe != null) {
+				transport = transportBe.getValue("PRI_NAME", null);
+				System.out.println("transport = " +transport);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_TRANSPORT", transport);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: Null transportBe");
+			}
+		} else {
+			System.out.println("ERROR: Null transport");
+		}
+
+		String linkedDPW = associatedInternBe.getValue("LNK_DAYS_PER_WEEK", null);
+		System.out.println("linkedDPW = " + linkedDPW);
+		if (linkedDPW != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_DAYS_PER_WEEK", linkedDPW);
+			beUtils.saveAnswer(answer);
+
+			linkedDPW = linkedDPW.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("linkedDPW = " +linkedDPW);
+
+			BaseEntity linkedDPWBe = beUtils.getBaseEntityByCode(linkedDPW);
+			System.out.println("linkedDPWBe = " + linkedDPWBe);
+
+			if (linkedDPWBe != null) {
+				String dpw = linkedDPWBe.getValue("PRI_NAME", null);
+				if (dpw != null) {
+					int idpw = Integer.parseInt(dpw);
+					int intHPW = 8 * idpw;
+
+					String hoursPerWeek = intHPW +"";
+					System.out.println("hoursPerWeek = " + hoursPerWeek);
+
+					answer = new Answer(userToken.getUserCode(), newApplication.getCode(),"PRI_HOURS_PER_WEEK", hoursPerWeek);
+					beUtils.saveAnswer(answer);
+				} else {
+					System.out.println("ERROR: No dpw");
+				}
+			} else {
+				System.out.println("ERROR: No linkedDPWBe");
+			}
+		} else {
+			System.out.println("ERROR: No linkedDPW");
+			linkedDPW = associatedInternBe.getValue("PRI_DAYS_PER_WEEK", null);
+			System.out.println("linkedDPW = " + linkedDPW);
+
+			if (linkedDPW != null) {
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_DAYS_PER_WEEK", linkedDPW);
+ 				beUtils.saveAnswer(answer);
+
+				int idpw = Integer.parseInt(linkedDPW);
+				int intHPW = 8 * idpw;
+
+				String hoursPerWeek = intHPW +"";
+				System.out.println("hoursPerWeek = " + hoursPerWeek);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(),"PRI_HOURS_PER_WEEK", hoursPerWeek);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: No priDPW");
+			}
+		}
+
+ 		String assoc_ep = associatedInternBe.getValue("LNK_EDU_PROVIDER", null);
+		System.out.println("assoc_ep = " +assoc_ep);
+		if (assoc_ep != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_EDU_PROVIDER", assoc_ep);
+			beUtils.saveAnswer(answer);
+
+			assoc_ep = assoc_ep.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("assoc_ep = " +assoc_ep);
+
+			BaseEntity assoc_epBe = beUtils.getBaseEntityByCode(assoc_ep);
+			System.out.println("assoc_epBe = " + assoc_epBe);
+
+			if (assoc_epBe != null) {
+				assoc_ep = assoc_epBe.getValue("PRI_NAME", null);
+				System.out.println("assoc_ep = " +assoc_ep);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_EP", assoc_ep);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: Null assoc_epBe");
+			}
+		} else {
+			System.out.println("ERROR: Null assoc_ep");
+		}
+
+		String assoc_super = assocBegBe.getValue("LNK_INTERN_SUPERVISOR", null);
+		System.out.println("assoc_super = " +assoc_super);
+		if (assoc_super != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_INTERN_SUPERVISOR", assoc_super);
+			beUtils.saveAnswer(answer);
+
+			assoc_super = assoc_super.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("assoc_super = " +assoc_super);
+
+			BaseEntity assoc_superBe = beUtils.getBaseEntityByCode(assoc_super);
+			System.out.println("assoc_superBe = " + assoc_superBe);
+
+			if (assoc_superBe != null) {
+				assoc_super = assoc_superBe.getValue("PRI_NAME", null);
+				System.out.println("assoc_super = " +assoc_super);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_SUPER", assoc_super);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: Null assoc_superBe");
+			}
+		} else {
+			System.out.println("ERROR: Null assoc_super");
+		}
+
+ 		String lnk_industry = assocBegBe.getValue("LNK_INDUSTRY", null);
+		System.out.println("lnk_industry = " +lnk_industry);
+		if (lnk_industry != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_INDUSTRY", lnk_industry);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null lnk_industry");
+		}
+
+		String assoc_industry = assocBegBe.getValue("PRI_ASSOC_INDUSTRY", null);
+		System.out.println("assoc_industry = " +assoc_industry);
+		if (assoc_industry != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_INDUSTRY", assoc_industry);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null assoc_industry");
+		}
+
+		String lnk_occupation = assocBegBe.getValue("LNK_OCCUPATION", null);
+		System.out.println("lnk_occupation = " +lnk_occupation);
+		if (lnk_occupation != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_OCCUPATION", lnk_occupation);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null lnk_occupation");
+		}
+
+		String assoc_occupation = assocBegBe.getValue("PRI_ASSOC_OCCUPATION", null);
+		System.out.println("assoc_occupation = " +assoc_occupation);
+		if (assoc_occupation != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_OCCUPATION", assoc_occupation);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null assoc_occupation");
+		}
+
+		String profile_pic = associatedInternBe.getValue("PRI_IMAGE_URL", null);
+		System.out.println("profile_pic = " +profile_pic);
+		if (profile_pic != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_IMAGE_URL", profile_pic);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null profile_pic");
+		}
+
+		String duration_weeks = associatedInternBe.getValue("LNK_INTERNSHIP_DURATION", null);
+		System.out.println("duration_weeks = " +duration_weeks);
+		if (duration_weeks != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_INTERNSHIP_DURATION", duration_weeks);
+			beUtils.saveAnswer(answer);
+
+			duration_weeks = duration_weeks.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("duration_weeks = " +duration_weeks);
+
+			BaseEntity duration_weeksBe = beUtils.getBaseEntityByCode(duration_weeks);
+			System.out.println("duration_weeksBe = " + duration_weeksBe);
+
+			if (duration_weeksBe != null) {
+				duration_weeks = duration_weeksBe.getValue("PRI_NAME", null);
+				System.out.println("duration_weeks = " +duration_weeks);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_DURATION", duration_weeks);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: Null duration_weeksBe");
+			}
+		} else {
+			System.out.println("ERROR: Null duration_weeks");
+		}
+
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd-MMM-yy");
+		LocalDate start_date = beUtils.getBaseEntityValueAsLocalDate(associatedInternBe.getCode(), "PRI_START_DATE");
+		System.out.println("start_date = " + start_date);
+		if(start_date != null) {
+			String stringStartDate = start_date.toString();
+			LocalDate localDate_start_date = LocalDate.parse(stringStartDate);
+			System.out.println("localDate_start_date = " + localDate_start_date);
+			if (localDate_start_date != null) {
+				stringStartDate = (String) localDate_start_date.format(dateFormat);
+			} else {
+				System.out.println("ERROR: LocalDate Start Date is NULL");
+			}
+
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_START_DATE", stringStartDate);
+			beUtils.saveAnswer(answer);
+
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_WORD_START_DATE", stringStartDate);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Start Date is NULL");
+		}
+
+		String roles = assocBegBe.getValue("PRI_ROLES_AND_RESPONSIBILITIES", null);
+		System.out.println("roles = " +roles);
+		if (roles != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ROLES_AND_RESPONSIBILITIES", roles);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null roles");
+		}
+
+		String base_lo = assocBegBe.getValue("PRI_BASE_LEARNING_OUTCOMES", null);
+		System.out.println("base_lo = " +base_lo);
+		if (base_lo != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_BASE_LEARNING_OUTCOMES", base_lo);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null base_lo");
+		}
+
+		String specific_lo = assocBegBe.getValue("PRI_SPECIFIC_LEARNING_OUTCOMES", null);
+		System.out.println("specific_lo = " +specific_lo);
+		if (specific_lo != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_SPECIFIC_LEARNING_OUTCOMES", specific_lo);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null specific_lo");
+		}
+
+		String address = assocBegBe.getValue("PRI_ADDRESS_FULL", null);
+		System.out.println("address = " +address);
+		if (address != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ADDRESS_FULL", address);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null address");
+		}
+
+		String title = assocBegBe.getValue("PRI_NAME", null);
+		System.out.println("title = " +title);
+		if (title != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_TITLE", title);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null title");
+		}
+
+		String which_days = assocBegBe.getValue("LNK_WHICH_DAYS", null);
+		System.out.println("which_days = " +which_days);
+		if (which_days != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_WHICH_DAYS", which_days);
+			beUtils.saveAnswer(answer);
+
+			which_days = which_days.replace("[","").replace("]","").replace(","," ");
+			String[] day = which_days.split("SEL_WHICH_DAYS_");
+			int size = day.length;
+			String dayz = "";
+
+			for (int i = 0; i < size; i++) {
+				if (i != 0) {
+					String Day = day[i].toLowerCase();
+					Day = Day.substring(0, 1).toUpperCase() + Day.substring(1).trim();
+					dayz = dayz + ", " +Day;
+				}
+			}
+			dayz = dayz.substring(2);
+			System.out.println("The list is: " +dayz);
+
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_WHICH_DAYS_STRIPPED", dayz);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null which_days");
+		}
+
+		String worksite = assocBegBe.getValue("LNK_WORKSITE_SELECT", null);
+		System.out.println("worksite = " +worksite);
+		if (worksite != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_WORKSITE_SELECT", worksite);
+			beUtils.saveAnswer(answer);
+
+			worksite = worksite.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("worksite = " +worksite);
+
+			BaseEntity worksiteBe = beUtils.getBaseEntityByCode(worksite);
+			System.out.println("worksiteBe = " + worksiteBe);
+
+			if (worksiteBe != null) {
+				worksite = worksiteBe.getValue("PRI_NAME", null);
+				System.out.println("worksite = " +worksite);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_WORKSITE", worksite);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: Null worksiteBe");
+			}
+		} else {
+			System.out.println("ERROR: Null worksite");
+		}
+
+		String numInterns = assocBegBe.getValue("LNK_NO_OF_INTERNS", null);
+		System.out.println("numInterns = " +numInterns);
+		if (numInterns != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "LNK_NO_OF_INTERNS", numInterns);
+			beUtils.saveAnswer(answer);
+
+			numInterns = numInterns.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("numInterns = " +numInterns);
+
+			BaseEntity numInternsBe = beUtils.getBaseEntityByCode(numInterns);
+			System.out.println("numInternsBe = " + numInternsBe);
+
+			if (numInternsBe != null) {
+				numInterns = numInternsBe.getValue("PRI_NAME", null);
+				System.out.println("numInterns = " +numInterns);
+
+				answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_NO_OF_INTERNS", numInterns);
+				beUtils.saveAnswer(answer);
+			} else {
+				System.out.println("ERROR: Null numInternsBe");
+			}
+		} else {
+			System.out.println("ERROR: Null numInterns");
+		}
+
+		String assoc_hc = appHCBe.getValue("PRI_NAME", null);
+		System.out.println("assoc_hc = " +assoc_hc);
+		if (assoc_hc != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ASSOC_HC", assoc_hc);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null assoc_hc");
+		}
+
+		String abn = appHCBe.getValue("PRI_ABN", null);
+		System.out.println("abn = " +abn);
+		if (abn != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_ABN", abn);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null abn");
+		}
+
+		String hcImage = appHCBe.getValue("PRI_IMAGE_URL", null);
+		System.out.println("hcImage = " +hcImage);
+		if (hcImage != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_IMAGE_SECONDARY", hcImage);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null hcImage");
+		}
+
+		String hcr_name = appSuperBe.getValue("PRI_NAME", null);
+		System.out.println("hcr_name = " +hcr_name);
+		if (assoc_hc != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_SUPER_NAME", hcr_name);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null hcr_name");
+		}
+
+		String hcr_title = appSuperBe.getValue("PRI_JOB_TITLE", null);
+		System.out.println("hcr_title = " +hcr_title);
+		if (hcr_title != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_SUPER_JOB_TITLE", hcr_title);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null hcr_title");
+		}
+
+		String hcr_email = appSuperBe.getValue("PRI_EMAIL", null);
+		System.out.println("hcr_email = " +hcr_email);
+		if (hcr_email != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_SUPER_EMAIL", hcr_email);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null hcr_email");
+		}
+
+		String hcr_mobile = appSuperBe.getValue("PRI_MOBILE", null);
+		System.out.println("hcr_mobile = " +hcr_mobile);
+		if (hcr_mobile != null) {
+			answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_SUPER_MOBILE", hcr_mobile);
+			beUtils.saveAnswer(answer);
+		} else {
+			System.out.println("ERROR: Null hcr_mobile");
+		}
+
+		/* Save Steph as a default */
+		answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_OUTCOME_LIFE_REP_NAME", "Stephenie Pulis-Cassar");
+ 		beUtils.saveAnswer(answer);
+
+ 		/* Save this PRI_CODE because reasons... */
+		answer = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_CODE", newApplication.getCode());
+ 		beUtils.saveAnswer(answer);
+
+		BaseEntity appBe = beUtils.getBaseEntityByCode(newApplication.getCode());
+		if(appBe != null) {
+			QDataBaseEntityMessage appBeMsg = new QDataBaseEntityMessage(appBe);
+			appBeMsg.setToken(userToken.getToken());
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(appBeMsg));
+		}
+
+		TableUtils.moveEntity(newApplication.getCode(), null ,"SBE_APPLIED_APPLICATIONS", beUtils);
+
+		/* Save status to the PER */
+		if (associatedInternBe != null){
+			System.out.println("associatedInternBe: " +associatedInternBe);
+			String internStatus = associatedInternBe.getValue("PRI_STATUS", null);
+			System.out.println("internStatus: " +internStatus);
+
+			if (internStatus.equals("AVAILABLE")){
+				Answer answerStatus = new Answer(userToken.getUserCode(), associatedInternBe.getCode(), "PRI_STATUS", "APPLIED");
+				beUtils.saveAnswer(answerStatus);
+				System.out.println("answerStatus: " +answerStatus);
+			}
+		} else {
+			System.out.println("$$$ assocIntern PRI_INTERN_CODE was null $$$");
+		}
+
+		System.out.println("$$$ RULE RESTART $$$");
+
+		/* SCHEDULE THE SHLEEMY REMINDER EVENTS */
+		System.out.println("#### Scheduling Shleemy Events ####");
+        LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
+
+        String scheduleMsgCode48HR = newApplication.getCode() + "_APPLIED_ORANGE";
+        ShleemyUtils.scheduleMessage(userToken, "SCHEDULE_ORANGE", scheduleMsgCode48HR, now.plusHours(48), newApplication.getCode());
+
+        String scheduleMsgCode96HR = newApplication.getCode() + "_APPLIED_RED";
+        ShleemyUtils.scheduleMessage(userToken, "SCHEDULE_RED", scheduleMsgCode96HR, now.plusHours(96), newApplication.getCode());
+		BaseEntity hostCompany = null;
+		BaseEntity agent = null;
+
+        BaseEntity intern = beUtils.getBaseEntityFromLNKAttr(newApplication, "PRI_INTERN_CODE");
+        System.out.println("intern = " + intern);
+        if (intern != null){
+			agent = beUtils.getBaseEntityFromLNKAttr(intern, "LNK_AGENT");
+        }
+
+        BaseEntity internship = beUtils.getBaseEntityFromLNKAttr(newApplication, "LNK_INTERNSHIP");
+ 		if (internship != null) {
+            hostCompany = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_HOST_COMPANY");
+        }
+
+        String internUrl = new StringBuilder()
+                        .append("SBE_APPLIED_APPLICATIONS_")
+                        .append(userToken.getJTI().toUpperCase())
+                        .append("/")
+                        .append("ACT_PRI_EVENT_VIEW_APPLICATION")
+                        .append("/")
+                        .append(newApplication.getCode())
+                        .toString();
+
+        /* Send Email to Intern */
+        QMessageGennyMSG sendGridInternMsg = new QMessageGennyMSG.Builder("MSG_INT6_SELF_APPLIED")
+            .setUtils(beUtils)
+            .addRecipient(intern)
+            .addContext("HC", hostCompany)
+            .addContext("INTERNSHIP", internship)
+            .addContext("URL:ENCODE", internUrl)
+            .addContext("BCC", "PRJ_INTERNMATCH")
+            .send();
+
+        System.out.println("Sendgrid msg: "+ JsonUtils.toJson(sendGridInternMsg));
+        System.out.println("Sendgrid email sent to intern!!");
+
+        Boolean isInternMobileBlank = MessageValidator.isMobileBlank(intern);
+        System.out.println("isInternMobileBlank: "+ isInternMobileBlank);
+
+        if (!isInternMobileBlank && !GennySettings.projectUrl.contains("dev")) {
+            QMessageGennyMSG internSmsMsg = new QMessageGennyMSG.Builder("MSG_INT_SMS_SELF_APPLIED")
+                .setUtils(beUtils)
+                .addRecipient(intern)
+                .send();
+            System.out.println("Sms msg: "+ JsonUtils.toJson(internSmsMsg));
+            System.out.println("Sms sent to intern!!");
+        } else {
+            System.out.println("SMS not sent because internMobile & internName is empty.");
+        }
+
+        String agentUrl = new StringBuilder()
+            .append("SBE_APPLIED_APPLICATIONS_")
+            .append(userToken.getJTI().toUpperCase())
+            .append("/")
+            .append("ACT_PRI_EVENT_VIEW")
+            .append("/")
+            .append(newApplication.getCode())
+            .toString();
+
+        /* Send Email to Agent */
+        QMessageGennyMSG sendGridAgentMsg = new QMessageGennyMSG.Builder("MSG_AGT6_SELF_APPLIED")
+            .setUtils(beUtils)
+            .addRecipient(agent)
+            .addContext("HC", hostCompany)
+            .addContext("INTERNSHIP", internship)
+            .addContext("URL:ENCODE", agentUrl)
+            .addContext("BCC", "PRJ_INTERNMATCH")
+            .send();
+
+        System.out.println("Sendgrid msg: "+ JsonUtils.toJson(sendGridAgentMsg));
+        System.out.println("Sendgrid email sent to agent!!");
+
+
+		String endPoint = GennySettings.projectUrl + "/v7/notes";
+		QwandaUtils.apiPostNote(endPoint, userToken.getUserCode(), "ni", newApplication.getCode(), intern.getCode() + ", applied to the internship " + internship.getCode() + " at " + hostCompany.getCode(), serviceToken.getToken());
+
+		appBe = beUtils.getBaseEntityByCode(newApplication.getCode());
+		if(appBe != null){
+			QDataBaseEntityMessage appBeMsg = new QDataBaseEntityMessage(appBe);
+			appBeMsg.setToken(userToken.getToken());
+			VertxUtils.writeMsg("webcmds", JsonUtils.toJson(appBeMsg));
+		}
+
+		/* Re generate cached applications */
+		SearchUtils.regenerateCaches(beUtils, newApplication);
+
+		retract(newApplication)
+		retract(bucketCode)
+		retract(controlSignalCode)
+		retract(associatedInternBe)
+
+        System.out.println("End of " + drools.getRule().getName() + " :Rule for - newApplication = " + newApplication);
+end

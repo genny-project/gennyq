@@ -1,0 +1,327 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.utils.RulesUtils;
+import life.genny.utils.CapabilityUtils;
+
+
+rule "INIT_GENERATE_CAPABILITIES"
+    ruleflow-group 'GenerateCapabilities'
+	salience 10000
+	no-loop true
+    when
+  		serviceToken : GennyToken (code == "PER_SERVICE")
+  		capabilityUtils : CapabilityUtils()
+     then
+     	System.out.println("   Initialise Generate Capabilities");
+
+
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+ 		beUtils.setServiceToken(serviceToken);
+
+     	String projectCode = "PRJ_"+serviceToken.getRealm().toUpperCase();
+
+ 		BaseEntity project = beUtils.getBaseEntityByCode(projectCode);
+
+		/* ============== PRJ_LOJING CAPABILITIES ================== */
+
+			/* User Creation */
+			capabilityUtils.addCapability("CREATE_SUPER_ADMIN", "Create Super Admin");
+			capabilityUtils.addCapability("CREATE_ADMIN", "Create Admin");
+			capabilityUtils.addCapability("CREATE_TENANT", "Create Tenant");
+			capabilityUtils.addCapability("CREATE_REFERRAL_PARTNER", "Create Referral Partner");
+			capabilityUtils.addCapability("CREATE_DEVELOPER", "Create Developer");
+
+			/* User Management */
+			capabilityUtils.addCapability("ARCHIVE_USER", "Archive User");
+			capabilityUtils.addCapability("BLOCK_USER", "Block User");
+			capabilityUtils.addCapability("DELETE_USER", "Delete User");
+			capabilityUtils.addCapability("RESET_PASS_OWN", "Reset Own Password");
+			capabilityUtils.addCapability("RESET_PASS_OTHER", "Reset User Password");
+
+			/* Property Management */
+			capabilityUtils.addCapability("CREATE_LISTING", "Create Property Listing");
+			capabilityUtils.addCapability("EDIT_LISTING", "Edit Property Listing");
+			capabilityUtils.addCapability("DELETE_LISTING", "Delete a Property Listing");
+			/* TODO: Unsure whether or not to merge these two capabilities */
+			capabilityUtils.addCapability("ARCHIVE_LISTING", "Archive Property Listing");
+			capabilityUtils.addCapability("WITHDRAW_LISTING", "Withdraw Property Listing");
+			capabilityUtils.addCapability("VIEW_LISTINGS", "View Property Listings");
+			capabilityUtils.addCapability("APPLY_TO_LISTING", "Apply for a Property Listing");
+
+			/* Application Management */
+			capabilityUtils.addCapability("CREATE_TENANCY_APP", "Create a Tenancy Application");
+			capabilityUtils.addCapability("UPLOAD_TENANCY_APP_OTHER", "Upload a Tenancy Application on behalf of a Tenant");
+			capabilityUtils.addCapability("EDIT_TENANCY_APP_OTHER", "Edit a Tenancy Application");
+			capabilityUtils.addCapability("EDIT_TENANCY_APP_OWN", "Edit own Tenancy Application");
+			capabilityUtils.addCapability("ARCHIVE_TENANCY_APP_OTHER", "Archive a Tenancy Application");
+			capabilityUtils.addCapability("DELETE_TENANCY_APP_OTHER", "Delete a Tenancy Application");
+			capabilityUtils.addCapability("DELETE_TENANCY_APP_OWN", "Delete own Tenancy Application");
+
+			/* Application Approval */
+			capabilityUtils.addCapability("APPROVE_TENANCY_APP", "Approve a Tenancy Application");
+			capabilityUtils.addCapability("DECLINE_TENANCY_APP", "Decline a Tenancy Application");
+			capabilityUtils.addCapability("VIEW_TENANT_DOCUMENTS", "View a Tenant's uploaded documents");
+			capabilityUtils.addCapability("VIEW_TENANT_DETAILS", "View a Tenant's personal details");
+
+			/* Payment Capabilities */
+			capabilityUtils.addCapability("EDIT_CREDIT_CARD_DETAILS_OTHER", "Edit a Tenant's Credit Card details");
+			capabilityUtils.addCapability("EDIT_CREDIT_CARD_DETAILS_OWN", "Edit own Credit Card details");
+			capabilityUtils.addCapability("VIEW_PAYMENT_STATUS_OF_TENANT", "View the payment status of a potential Tenant");
+			/* No one should have this perm */
+			capabilityUtils.addCapability("VIEW_CREDIT_CARD_DETAILS", "View Card Details of a Tenant");
+
+			/* Profile Management */
+			capabilityUtils.addCapability("VIEW_PROFILE_AGENT", "View Agent Profiles");
+			capabilityUtils.addCapability("VIEW_PROFILE_TENANT", "View Tenant Profiles");
+			capabilityUtils.addCapability("VIEW_PROFILE_REFERRAL_PARTNER", "View Referral Partner Profiles");
+			capabilityUtils.addCapability("VIEW_PROFILE_DEVELOPER", "View Developer Profiles");
+
+			/* Tenant Management */
+			capabilityUtils.addCapability("VIEW_TENANT_MANAGEMENT_PORTAL", "View Tenant Management Portal");
+			capabilityUtils.addCapability("EDIT_TENANT_MANAGEMENT_PORTAL", "Edit Tenant Management Portal");
+			capabilityUtils.addCapability("DELETE_TENANT_MANAGEMENT_PORTAL", "Delete Tenant Management Portal");
+
+			/* Communication */
+			capabilityUtils.addCapability("WRITE_NOTES", "Write Notes");
+			capabilityUtils.addCapability("RESEND_SYS_MSG_EMAIL", "Resend System Email Message");
+			capabilityUtils.addCapability("RESEND_SYS_MSG_SMS", "Resend System SMS Message");
+			capabilityUtils.addCapability("RESEND_SYS_MSG_WHATSAPP", "Resend System WhatsApp Message");
+			capabilityUtils.addCapability("SEND_CUSTOM_MSG_EMAIL", "Send a Custom Email Message");
+			capabilityUtils.addCapability("SEND_CUSTOM_MSG_SMS", "Send a Custom SMS Message");
+			capabilityUtils.addCapability("SEND_CUSTOM_MSG_WHATSAPP", "Send a Custom WhatsApp Message");
+
+			/* Views */
+			capabilityUtils.addCapability("VIEW_VIEW_TENANT_PROCESS", "View Tenant Process View");
+			capabilityUtils.addCapability("VIEW_VIEW_TENANT_TABLE", "View Tenant Table View");
+
+			/* Super Admin Tools */
+			capabilityUtils.addCapability("CONFIG_SYSTEM_SETTINGS", "Configure System Settings");
+
+
+
+	/*	CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils); */
+
+		/* Add all Capabilities in the prj_genny system */
+		capabilityUtils.addCapability( "IMPORT", "Import");
+
+		capabilityUtils.addCapability( "LOGIN", "Login");
+		capabilityUtils.addCapability( "LOGOUT", "Logout");
+
+		/* Dev Mode */
+		capabilityUtils.addCapability( "DEV_PORTAL", "Developer Portal");
+
+		/* Sidebar Capabilities */
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_DASHBOARD", "Sidebar Dashboard");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TAB_BUCKET_VIEW", "Sidebar Bucket View");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_INTERNSHIPS", "Sidebar Internships");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_HOST_COMPANIES", "Sidebar Host Companies");
+		capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_DOCUMENTS_GRP", "Sidebar Documents");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_EDU_PROVIDERS", "Sidebar Edu Providers");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_APPLICATIONS_APPLIED", "Sidebar My Applications");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_HOST_COMPANY_VIEW", "Sidebar My Host Company");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_LOGBOOK_GRP", "Sidebar Logbook");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TABLE_INTERNS", "Sidebar Interns Table");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TABLE_HCRS", "Sidebar HCRS Table");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TABLE_EPRS", "Sidebar EPRS Table");
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_MESSAGES", "Sidebar Messages");
+
+	    capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_CONTACTS_GRP", "Sidebar Contacts");
+		capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_INTERNS", "Sidebar Contacts Interns");
+		capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_HCRS", "Sidebar Contacts Host Company Reps");
+		capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_EPRS", "Sidebar Contacts Edu Pro Reps");
+		capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_AGENTS", "Sidebar Contacts Agents");
+		capabilityUtils.addCapability( "SIDEBAR_QUE_TREE_ITEM_REFERRERS", "Sidebar Contacts Referrers");
+
+		/* A Cap For Handling Other Roles */
+		capabilityUtils.addCapability( "TYPE_AGENT", "Agent");
+		capabilityUtils.addCapability( "TYPE_HOST_CPY_REP", "Host Company Rep");
+		capabilityUtils.addCapability( "TYPE_EDU_PRO_REP", "Education Provider Rep");
+		capabilityUtils.addCapability( "TYPE_INTERN", "Education Provider Rep");
+
+		capabilityUtils.addCapability( "TYPE_AGENCY", "Host Company Rep");
+		capabilityUtils.addCapability( "TYPE_HOST_CPY", "Host Company Rep");
+		capabilityUtils.addCapability( "TYPE_EDU_PRO", "Education Provider");
+
+		capabilityUtils.addCapability( "TYPE_INTERNSHIP", "Internship");
+		capabilityUtils.addCapability( "TYPE_APPLICATION", "Application");
+
+		capabilityUtils.addCapability( "TYPE_JOURNAL", "Journal");
+
+		capabilityUtils.addCapability( "TYPE_PROPERTY", "Property");
+		capabilityUtils.addCapability( "TYPE_TENANT_APPLICATION", "Tenant Application");
+		capabilityUtils.addCapability( "TYPE_CUSTOMER", "Customer");
+		capabilityUtils.addCapability( "TYPE_DEVELOPER", "Developer");
+
+
+
+		/* Handle Roles External to Current Group */
+		capabilityUtils.addCapability( "EXTERNAL_AGENT", "External Agent");
+		capabilityUtils.addCapability( "EXTERNAL_HOST_CPY_REP", "External Host Company Rep");
+		capabilityUtils.addCapability( "EXTERNAL_EDU_PRO_REP", "External Education Provider Rep");
+		capabilityUtils.addCapability( "EXTERNAL_INTERN", "External Education Provider Rep");
+
+		capabilityUtils.addCapability( "EXTERNAL_AGENCY", "External Host Company Rep");
+		capabilityUtils.addCapability( "EXTERNAL_HOST_CPY", "External Host Company Rep");
+		capabilityUtils.addCapability( "EXTERNAL_EDU_PRO", "External Education Provider");
+
+
+		/* CACHED SEARCHES */
+		capabilityUtils.addCapability("USE_CACHE","Use Cache");
+
+
+		/* BUCKETS SEARCHES */
+		capabilityUtils.addCapability("SBE_AVAILABLE_INTERNS","Available");
+		capabilityUtils.addCapability("SBE_APPLIED_APPLICATIONS","Applied");
+		capabilityUtils.addCapability("SBE_SHORTLISTED_APPLICATIONS","Shortlisted");
+		capabilityUtils.addCapability("SBE_INTERVIEWED_APPLICATIONS","Interviewed");
+		capabilityUtils.addCapability("SBE_OFFERED_APPLICATIONS", "Offered");
+		capabilityUtils.addCapability("SBE_PLACED_APPLICATIONS","Placed");
+		capabilityUtils.addCapability("SBE_INPROGRESS_APPLICATIONS","In Progress");
+
+		/* SUMMARY SEARCHES */
+		capabilityUtils.addCapability("SBE_SUMMARY_SERVICE_AGREEMENT_DOC", "Services Agreement Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_OHNS_AGREEMENT_DOC", "OH&S Document Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_HOST_CPY", "Host Company Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_INTERNSHIPS", "Internships Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_HCRS", "Host Company Rep Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_INTERN", "Intern Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_MY_APPLICATIONS", "My Applications Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_INTERVIEWS_INTERN", "Intern Interviews Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_INPROGRESS_APPLICATION", "In Progress Summary");
+		capabilityUtils.addCapability("SBE_COUNTS_EDU_PRO_REP", "Edu Pro Rep Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_EDU_PRO", "Edu Pro Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_EPRS", " Company Edu Pro Reps Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_INTERNS", "Interns Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_AGENCY", "Agency Summary");
+		capabilityUtils.addCapability("SBE_SUMMARY_AGENTS", "Agents Summary");
+
+  	   	capabilityUtils.addCapability( "NOTES", "Notes");
+		capabilityUtils.addCapability( "NOTES_USER_OWN", "Notes Users Own");
+  	 	capabilityUtils.addCapability( "TOAST", "Toast");
+  	 	capabilityUtils.addCapability( "PROCESS1", "Process 1");
+  	 	capabilityUtils.addCapability( "PROCESS2", "Process 2");
+  	 	capabilityUtils.addCapability( "PROCESS3", "Process 3");
+  	 	capabilityUtils.addCapability( "PROCESS4", "Process 4");
+  	 	capabilityUtils.addCapability( "PROCESS5", "Process 5");
+  	 	capabilityUtils.addCapability( "PROCESS6", "Process 6");
+  	 	capabilityUtils.addCapability( "PROCESS7", "Process 7");
+  	 	capabilityUtils.addCapability( "DASHBOARD", "Dashboard");
+  	 	capabilityUtils.addCapability( "DASHBOARD_COUNTS", "Dashboard Counts");
+  	 	capabilityUtils.addCapability( "DASHBOARD_TIMELINE", "Dashboard Timeline");
+
+  	 	capabilityUtils.addCapability( "SHOW_DEV_INFO","Show Dev Info");
+  	 	capabilityUtils.addCapability( "RULE_TIMINGS","Show Rules Timings");
+
+  	 	capabilityUtils.addCapability( "SHOW_TABLE","Show a table from searchBar Command");
+  	 	capabilityUtils.addCapability( "VERIFY_EMAIL","Send a Keycloak Verify Email");
+  	 	capabilityUtils.addCapability( "EDIT_ACCOUNT","Edit Account");
+  	 	capabilityUtils.addCapability( "IMPORT_USERS","Import Users");
+  	 	capabilityUtils.addCapability( "IMPORT_INTERNS","Import Interns");
+  	 	capabilityUtils.addCapability( "IMPORT_INTERNSHIPS","Import Internships");
+  	 	capabilityUtils.addCapability( "IMPORT_HC","Import Host Companies");
+  	 	capabilityUtils.addCapability( "IMPORT_HCR","Import Host Company Reps");
+  	 	capabilityUtils.addCapability( "READ_USER", "Read User");
+ 		capabilityUtils.addCapability( "READ_PROJECT", "Read Project");
+ 		capabilityUtils.addCapability( "READ_INTERNSHIPS", "Read Internships");
+ 		capabilityUtils.addCapability( "READ_HOST_COMPANY", "Read Host Company");
+ 		capabilityUtils.addCapability( "CREATE_JOURNALS", "Create Journals");
+ 		capabilityUtils.addCapability( "APPROVE_JOURNALS", "Approve Journals");
+ 		capabilityUtils.addCapability( "UNAPPROVE_JOURNALS", "Unapprove Journals");
+ 		capabilityUtils.addCapability( "READ_JOURNALS", "Read Journals");
+		capabilityUtils.addCapability( "SEARCHBAR_CMDS", "Run Commands From SearchBar");
+
+		capabilityUtils.addCapability( "VIEW_AVAILABLE_INTERNS", "View Available Interns");
+ 		capabilityUtils.addCapability( "VIEW_INTERNS", "View Interns");
+
+ 		capabilityUtils.addCapability( "VALIDATE_HC", "Validate Host Company");
+		capabilityUtils.addCapability( "UNARCHIVE_INTERN", "Unarchive Intern");
+ 		capabilityUtils.addCapability( "ARCHIVE_INTERN", "Archive Intern");
+		capabilityUtils.addCapability( "ARCHIVE_HCR", "Archive Host Company Rep");
+		capabilityUtils.addCapability( "ARCHIVE_EPR", "Archive Education Provider Rep");
+ 		capabilityUtils.addCapability( "ARCHIVE_INTERNSHIP", "Deactivate");
+ 		capabilityUtils.addCapability( "UNARCHIVE_INTERNSHIP", "Reactivate");
+ 		capabilityUtils.addCapability( "DUPLICATE_INTERNSHIP", "Copy");
+ 		capabilityUtils.addCapability( "DELETE_INTERNSHIP", "Delete");
+ 		capabilityUtils.addCapability( "POST_INTERVIEW", "Enter Star Rating");
+		capabilityUtils.addCapability( "SHORTLIST_APPLICATION", "Shortlist Application");
+		capabilityUtils.addCapability( "INTERVIEW_APPLICATION", "Interview Application");
+		capabilityUtils.addCapability( "PLACE_APPLICATION", "Place Application");
+		capabilityUtils.addCapability( "ON_HOLD_APPLICATION", "On Hold Application");
+		capabilityUtils.addCapability( "REJECT_APPLICATION", "Reject Application");
+		capabilityUtils.addCapability( "WITHDRAW_APPLICATION", "Withdraw Application");
+		capabilityUtils.addCapability( "FINISH_APPLICATION", "Finish Application");
+		capabilityUtils.addCapability( "START_INTERNSHIP", "Start Internship");
+
+		capabilityUtils.addCapability( "ACCESS_NOTES_INTERN", "Access Notes");
+		capabilityUtils.addCapability( "ACCESS_NOTES_APPLICATION", "Access Notes");
+		capabilityUtils.addCapability( "ACCESS_NOTES_INTERNSHIP", "Access Notes");
+		capabilityUtils.addCapability( "ACCESS_NOTES_HC", "Access Notes");
+		capabilityUtils.addCapability( "ACCESS_NOTES_HCR", "Access Notes");
+
+		capabilityUtils.addCapability( "EDIT_AGREEMENT", "Edit Agreement");
+		capabilityUtils.addCapability( "VIEW_AGREEMENT", "View Agreement");
+		capabilityUtils.addCapability( "OFFER", "Offer");
+		capabilityUtils.addCapability( "APPLY", "Apply");
+		capabilityUtils.addCapability( "VIEW_JOURNAL", "View Journal");
+		capabilityUtils.addCapability( "EDIT_JOURNAL", "Edit Journal");
+		capabilityUtils.addCapability( "ADD_JOURNAL", "Add Journal");
+		capabilityUtils.addCapability( "RATE_INTERN", "Rate Intern");
+		capabilityUtils.addCapability( "VIEW_RATING", "View Rating");
+
+		capabilityUtils.addCapability( "EDIT_APPLICATION", "Edit Application");
+		capabilityUtils.addCapability( "EDIT_INTERNSHIP", "Edit Internship");
+		capabilityUtils.addCapability( "EDIT_INTERN", "Edit Intern");
+		capabilityUtils.addCapability( "EDIT_AGENT", "Edit Agent");
+		capabilityUtils.addCapability( "EDIT_HCR", "Edit Host Company Rep");
+		capabilityUtils.addCapability( "EDIT_EPR", "Edit Education Provider Rep");
+		capabilityUtils.addCapability( "EDIT_REF_PART_REP", "Edit Referal Partner Rep");
+		capabilityUtils.addCapability( "EDIT_REF_PART", "Edit Referal Partner");
+		capabilityUtils.addCapability( "EDIT_HOST_COMPANY", "Edit Host Company");
+		capabilityUtils.addCapability( "EDIT_EDU_PROVIDER", "Edit Education Provider");
+		capabilityUtils.addCapability( "EDIT_AGENCY", "Edit Agency");
+   		capabilityUtils.addCapability( "ON_SHORE_APPLICATION", "Move to on-shore");
+   		capabilityUtils.addCapability( "TRAINING_APPLICATION", "Training");
+   		capabilityUtils.addCapability( "MATCHED_APPLICATION", "Matched");
+   		capabilityUtils.addCapability( "MENTORING_APPLICATION", "Mentoring");
+		capabilityUtils.addCapability( "ALUMNI_APPLICATION", "Alumni");
+
+
+		capabilityUtils.addCapability( "WEB_ONLY", "Public Web Use");
+
+		capabilityUtils.addCapability( "DOWNLOAD_OHNS_AGREEMENT_DOC", "Download OHNS Agreement Document");
+		capabilityUtils.addCapability( "DOWNLOAD_SERVICE_AGREEMENT_DOC", "Download Service Agreement Document");
+		capabilityUtils.addCapability( "DOWNLOAD_HC_TERMS_AND_CONDITIONS_DOC", "Download Host Company Terms and Conditions Document");
+		capabilityUtils.addCapability( "DOWNLOAD_INTERNSHIP_AGREEMENT_DOC", "Download Internship Agreement Document");
+		capabilityUtils.addCapability( "ASSIGN_AGENT_TO_INTERN", "Assign Agent");
+
+
+		/* Miscellaneous */
+		capabilityUtils.addCapability( "QUICK_SEARCH_ALL", "All quick search items");
+
+
+		capabilityUtils.process();
+
+		System.out.println("   Completed initial setup of Capabilities - "+capabilityUtils);
+
+ 		update(capabilityUtils);
+ 		insert(project);
+end

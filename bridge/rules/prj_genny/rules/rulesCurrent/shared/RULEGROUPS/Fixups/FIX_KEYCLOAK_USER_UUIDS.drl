@@ -1,0 +1,193 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.text.WordUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.keycloak.util.JsonSerialization;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+
+function String encodeValue(String value) 
+{
+		try {
+			return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+		} catch (UnsupportedEncodingException ex) {
+			throw new RuntimeException(ex.getCause());
+		}
+}
+
+
+rule "FIX_KEYCLOAK_USER_UUIDS"
+    ruleflow-group 'FixKeycloakUserUuids'
+        salience 1000 
+        no-loop
+    when
+      beUtils : BaseEntityUtils()
+	  serviceToken : GennyToken( code == "PER_SERVICE")
+	  userToken : GennyToken( code != "PER_SERVICE")
+	  ruleDetails : RuleDetails()
+     then
+ 		System.out.println(ruleDetails+" "+drools.getRule().getName()+":  user=" + beUtils.getGennyToken().getUserCode()); 
+
+		String accessToken = null;
+		try {
+			accessToken = KeycloakUtils.getAccessToken(userToken.getKeycloakUrl(), "master", "admin-cli", null, System.getenv("KEYCLOAK_ADMIN"), System.getenv("KEYCLOAK_PASSWORD"));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		System.out.println("Fetching all Keycloak Users");
+		
+		String keycloakUrl = userToken.getKeycloakUrl();
+		List<LinkedHashMap> results = new ArrayList<LinkedHashMap>();
+	    final HttpClient client = new DefaultHttpClient();
+	
+		    
+	    try {
+	      final HttpGet get =
+	          new HttpGet(keycloakUrl + "/auth/admin/realms/" + userToken.getRealm() + "/users?first=0&max=20000");
+	      get.addHeader("Authorization", "Bearer " + accessToken);
+	      try {
+	        final HttpResponse response = client.execute(get);
+	        if (response.getStatusLine().getStatusCode() != 200) {
+	          throw new IOException();
+	        }
+	        final HttpEntity entity = response.getEntity();
+	        final InputStream is = entity.getContent();
+	        try {
+	          results = JsonSerialization.readValue(is, (new ArrayList<UserRepresentation>()).getClass());
+	        } finally {
+	          is.close();
+	        }
+	      } catch (final IOException e) {
+	        throw new RuntimeException(e);
+	      }
+	    } finally {
+	      client.getConnectionManager().shutdown();
+	    }
+	    
+	    
+	    System.out.println("Number of keycloak users = "+results.size());
+			SearchEntity searchBE = new SearchEntity("SBE_TEST", "Users")
+				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+				.addColumn("PRI_CODE", "Name");
+
+		searchBE.setRealm(userToken.getRealm());
+		searchBE.setPageStart(0);
+		searchBE.setPageSize(100000);
+
+		String jsonSearchBE = JsonUtils.toJson(searchBE);
+		 
+		String resultJson;
+		BaseEntity result = null;
+		QDataBaseEntityMessage resultMsg = null;
+		try {
+			resultJson = QwandaUtils.apiPostEntity(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/search",
+					jsonSearchBE, serviceToken.getToken());
+			resultMsg = JsonUtils.fromJson(resultJson, QDataBaseEntityMessage.class);
+	
+			BaseEntity[] bes = resultMsg.getItems();
+			System.out.println("Returned " + bes.length + " items");
+			System.out.println("The count return " + resultMsg.getTotal());
+
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}	    
+	    
+		System.out.println("Number of PERSON = "+resultMsg.getItems().length);
+		Map<String, BaseEntity> persons = new HashMap<String,BaseEntity>();
+		for (BaseEntity be : resultMsg.getItems()) {
+			persons.put(be.getCode(), be);
+		}
+		
+		int count=0;
+	    for (LinkedHashMap userMap : results)
+	    {
+	    	String username = (String) userMap.get("username");
+	    	String email = (String) userMap.get("email");
+	    	String code = QwandaUtils.getNormalisedUsername("PER_"+username);
+	    	String appCode = QwandaUtils.getNormalisedUsername("APP_"+username);
+	    	BaseEntity user = persons.get(code);
+	    	if (user != null) {
+	    		String id = (String)userMap.get("id");
+	    		String newCode = "PER_"+id.toUpperCase();
+	    		System.out.println("Fix "+user.getCode()+" to "+newCode);
+	    		String newAppCode = "APP_"+id.toUpperCase();
+	    		
+	    		try {
+	    			String encodedsql = encodeValue("update baseentity_attribute set baseentityCode='"+newCode+"' where baseentityCode='"+user.getCode()+"'");
+	    			resultJson = QwandaUtils.apiGet(GennySettings.qwandaServiceUrl + "/service/executesql/"+encodedsql,
+	    					serviceToken.getToken());
+	    			encodedsql = encodeValue("update baseentity_attribute set valueString='[\""+newCode+"]\"' where valueString='\"["+user.getCode()+"\"]'");
+	    			resultJson = QwandaUtils.apiGet(GennySettings.qwandaServiceUrl + "/service/executesql/"+encodedsql,
+	    					serviceToken.getToken());
+	    			encodedsql = encodeValue("update baseentity_attribute set valueString='[\""+newCode+"]\"' where valueString='"+user.getCode()+"'");
+	    			resultJson = QwandaUtils.apiGet(GennySettings.qwandaServiceUrl + "/service/executesql/"+encodedsql,
+	    					serviceToken.getToken());
+
+	    			encodedsql = encodeValue("update baseentity set code='"+newCode+"' where code='"+user.getCode()+"'");
+	    			resultJson = QwandaUtils.apiGet(GennySettings.qwandaServiceUrl + "/service/executesql/"+encodedsql,
+	    					serviceToken.getToken());
+
+	    			encodedsql = encodeValue("update baseentity set code='"+newAppCode+"' where code='"+appCode+"'");
+	    			resultJson = QwandaUtils.apiGet(GennySettings.qwandaServiceUrl + "/service/executesql/"+encodedsql,
+	    					serviceToken.getToken());
+
+	    		} catch (Exception e) {
+	    			
+	    		}
+	    		
+	    	}
+	    	count++;
+	    }
+	    
+	
+end

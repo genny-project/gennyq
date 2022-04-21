@@ -1,0 +1,137 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+import life.genny.models.BaseEntityImport;
+import io.vavr.Tuple;
+import io.vavr.Tuple2;
+import life.genny.utils.ImportUtils;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.utils.CapabilityUtils;
+import java.util.UUID;
+import java.time.LocalDateTime;
+import life.genny.qwandautils.QwandaUtils;
+
+import life.genny.qwandautils.GennySettings;
+
+
+import java.util.Optional;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.DateTimeUtils;
+import java.time.LocalDate;
+
+
+
+
+rule "PROCESS_JOURNAL_NAMES"
+    ruleflow-group 'DataProcessing'
+        salience 500
+        no-loop true
+    when
+ 	  beUtils : BaseEntityUtils()
+ 	  allowed : Allowed(code == "SEARCHBAR_CMDS" || code == "TEST") 
+	  answer : Answer( attributeCode == "PRI_SEARCH_TEXT" && (value.startsWith("!processjournalnames:")) )   /* this is a pure search */
+	  serviceToken : GennyToken (code == "PER_SERVICE")
+	  output : OutputParam( )
+    then
+  		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer);
+   		retract(answer);
+   		
+	
+		SearchEntity searchBE = new SearchEntity("SBE_SEARCH", "Intern Journals")
+				.addSort("PRI_CODE", "Created", SearchEntity.Sort.ASC)
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%") 
+				.addColumn("PRI_JOURNAL_DATE", "Date")
+				.addColumn("LNK_INTERN", "Intern")
+				.setPageStart(0)
+				.setPageSize(20000);
+		
+		searchBE.setRealm(serviceToken.getRealm());
+		
+ 		String jsonSearchBE = JsonUtils.toJson(searchBE);
+ 		/* System.out.println(jsonSearchBE); */
+		String resultJson;
+		BaseEntity result = null; 
+		try {
+			resultJson = QwandaUtils.apiPostEntity(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/search",
+					jsonSearchBE, serviceToken.getToken());
+				QDataBaseEntityMessage resultMsg = JsonUtils.fromJson(resultJson, QDataBaseEntityMessage.class);
+				BaseEntity[] bes = resultMsg.getItems();
+				System.out.println("Processing "+resultMsg.getItems().length+" Journals");
+				Map<String,BaseEntity> supervisors = new HashMap<String,BaseEntity>();
+				for (BaseEntity be : bes) {
+					String niceDate="";
+					String firstname="" ;
+					BaseEntity intern = null;
+					System.out.println("Processing JNL "+be.getCode());
+					Optional<LocalDate> optDate = be.getValue("PRI_JOURNAL_DATE");
+					Optional<String> optIntern = be.getValue("LNK_INTERN");
+					Optional<String> optSupervisor = be.getValue("LNK_INTERN_SUPERVISOR");
+					if (optDate.isPresent()) {
+						LocalDate date = optDate.get();
+						System.out.println("Journal date = "+date);
+						niceDate = DateTimeUtils.getNiceDateStr(date);
+						System.out.println("Journal nice date = "+niceDate);
+					}
+					if (optIntern.isPresent()) {
+						String internCode = optIntern.get();
+						internCode = internCode.substring(2,internCode.length()-2);
+						System.out.println("Intern = "+internCode);
+						intern = beUtils.getBaseEntityByCode(internCode);
+						if (intern != null) {
+							String name = intern.getName();
+							String[] names = name.split(" ");
+							firstname = intern.getValue("PRI_FIRSTNAME",names[0]);
+						} else {
+							firstname = "";
+						}
+						
+					}
+					if (optSupervisor.isPresent()) {
+						String supervisorCode = optSupervisor.get();
+						supervisorCode = supervisorCode.substring(2,supervisorCode.length()-2);
+						if (!supervisors.containsKey(supervisorCode)) {
+							System.out.println("Supervisor = "+supervisorCode);
+							BaseEntity supervisor  = beUtils.getBaseEntityByCode(supervisorCode);
+							System.out.println("Setting Supervisor "+supervisorCode);
+							beUtils.saveAnswer(new Answer(supervisor.getCode(),supervisor.getCode(),"PRI_IS_SUPERVISOR","TRUE"));
+							beUtils.saveAnswer(new Answer(supervisor.getCode(),supervisor.getCode(),"PRI_DISABLED","FALSE"));
+							supervisors.put(supervisorCode, supervisor);
+						}
+					}
+					String niceName = niceDate+" "+firstname;
+					niceName = niceName.trim();
+					beUtils.saveAnswer(new Answer(be.getCode(), be.getCode(), "PRI_NAME", niceName));
+					
+				}
+				System.out.println("Finished Fixing Journals");
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}		
+	
+		output.setTypeOfResult("NO_PROCESSING");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+		
+end

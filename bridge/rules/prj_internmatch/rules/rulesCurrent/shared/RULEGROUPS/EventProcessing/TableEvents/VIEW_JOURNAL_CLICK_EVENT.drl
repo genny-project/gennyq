@@ -1,0 +1,126 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import life.genny.utils.TableUtils;
+
+rule "VIEW_JOURNAL_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_JOURNAL_VIEW")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+		allowed: Allowed(	code == "AGENT" ||
+											code == "INTERN" ||
+											code == "EDU_PRO_REP" ||
+											code == "HOST_CPY_REP" )
+	
+	then
+		System.out.println("Processing VIEW JOURNAL EVENT 1 : " + $message );
+
+		String code =  $message.getData().getCode();
+		String targetCode =  $message.getData().getTargetCode();
+
+		System.out.println("QUESTION CODE   ::   " + code);
+		System.out.println("TARGET CODE     ::   " + targetCode);
+
+		TableUtils tableUtils = new TableUtils(beUtils);
+
+		/* String searchCode = "SBE_JOURNALSS"; */
+		String searchCode = "SBE_LOGBOOK";
+		SearchEntity searchBE = tableUtils.getSessionSearch(searchCode);
+
+		if(searchBE != null) {
+
+			/* reset the page index to 1 */
+			Answer pageNumberAnswer = new Answer(beUtils.getGennyToken().getUserCode(), searchBE.getCode(), "PRI_INDEX", "1");
+			
+			/* update the searchBE  */
+			searchBE = beUtils.updateBaseEntity(searchBE, pageNumberAnswer,SearchEntity.class);
+			searchBE.setPageStart(0);
+
+			/* Check if the targetCode is an application baseEntity */
+			if(targetCode.startsWith("APP_")){
+				BaseEntity app = beUtils.getBaseEntityByCode(targetCode);
+
+				if(app == null){
+					System.out.println(targetCode + " baseentity is null");
+					return;
+				}
+				/* get the internCode */
+				String applicantCode = app.getValue("PRI_INTERN_CODE", null);
+
+				if(applicantCode == null){
+					System.out.println(targetCode + " baseentity doesnt have PRI_INTERN_CODE attribute");
+					return;
+				}
+				
+				/* set the targetCode as applicantCode and change the internCode */
+				targetCode = applicantCode;
+			}
+
+			String internCode = "[\"" + targetCode + "\"]";
+			System.out.println("INTERN CODE     ::   " + internCode);
+			
+			if(allowed.code.equals("INTERN")){
+				searchBE.setTitle("My Logbook");
+			}else{
+				BaseEntity intern = beUtils.getBaseEntityByCode(targetCode);
+				if(intern != null){
+					/* change the table title to intern's name */	
+					String journalTitle = intern.getValue("PRI_NAME", null);
+					if(journalTitle != null){
+						System.out.println("setting journalTitle to :: " + journalTitle);
+						searchBE.setTitle(journalTitle);
+					}else{
+						System.out.println("journalTitle is null");
+					}
+				}
+			}
+			
+			/* cache the session search */
+			VertxUtils.putObject(beUtils.getGennyToken().getRealm(), "", searchBE.getCode(), searchBE, beUtils.getGennyToken().getToken());
+
+			/* send the journal table */
+			TableUtils.searchTable(beUtils, searchBE, true, "LNK_INTERN", internCode, true);
+
+		}else{
+			System.out.println("searchBE is null"); 
+
+		}
+		
+		/* pdf worflow starts from here */
+		String workflowSignalCode = "START_JOURNAL_PDF";
+		
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode(workflowSignalCode);
+		output.setTargetCode(targetCode);
+		
+		String workflowBeCode = $message.getData().getTargetCode();
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ workflowBeCode: " + workflowBeCode);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+
+		retract($message);
+	end
+

@@ -1,0 +1,68 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_INTERNS_FULL_TABLE"
+	ruleflow-group 'SearchFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		searchBE: SearchEntity( code matches "SBE_INTERNS_.*" )
+		allowed: Allowed(code == "AGENT" )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("searchCode   :: " + searchBE.getCode());
+		/*searchBE.addColumn("PRI_ASSOC_DURATION", "Internship Duration");*/
+		/*searchBE.addColumn("PRI_DAYS_PER_WEEK", "Days Per Week");*/
+		searchBE.addColumn("PRI_STUDENT_ID", "Student ID");
+		/*searchBE.addColumn("PRI_ASSOC_OCCUPATION", "Occupation");*/
+		searchBE.addColumn("PRI_VIDEO_URL", "Video URL");
+		searchBE.addColumn("PRI_LINKEDIN_URL", "LinkedIn Url");
+		searchBE.addColumn("PRI_CV", "CV");
+		/*searchBE.addColumn("PRI_ASSOC_COMP_INTERNSHIP", "Academy");*/
+		/*searchBE.addFilterableColumn("PRI_ASSOC_COMP_INTERNSHIP", "Academy");*/
+
+		/* HACK: This is a temporary fix for a bug with the SBE index's */
+		Double maxWeight = 0.0;
+		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
+			if (ea.getAttributeCode().startsWith("FLC_")) {
+				if (ea.getWeight() > maxWeight) {
+					maxWeight = ea.getWeight();
+				}
+			}
+		}
+		searchBE.setFLCIndex(maxWeight + 1.0);
+		searchBE.addFilterableColumn("PRI_ASSOC_EP", "Education Provider");
+
+		/* Create  QDataBaseEntityMessage for SearchEntity */
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(searchBE);
+		msg.setAliasCode("SBE");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+		retract(allowed); 
+end

@@ -1,0 +1,132 @@
+package life.genny.rules;
+
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.utils.ShleemyUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.StringUtils;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import life.genny.utils.DropdownUtils;
+import java.time.format.DateTimeFormatter;
+
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "HELPER_SIGNATURE_COMPLETE"
+	ruleflow-group 'DataProcessing'
+			salience 5000
+	when
+		beUtils : BaseEntityUtils()
+		answer : Answer( attributeCode == "PRI_AGR_DOC_INT_SIGNATURE"
+						|| attributeCode == "PRI_AGR_DOC_HC_SIGNATURE"
+						|| attributeCode == "PRI_AGR_DOC_OUTCOME_SIGNATURE"
+						|| attributeCode == "PRI_HCS_AGR_SIGNATURE"
+						|| attributeCode == "PRI_OHS_SIGNATURE")
+		answersToSave : Answers()
+		ruleDetails : RuleDetails()
+		output : OutputParam( )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		userToken : GennyToken( code != "PER_SERVICE")
+
+	then
+		System.out.println(drools.getRule().getName() + " fired");
+
+		/* Save the actual AGREEMENT_SIGNATURE answer */
+
+		ArrayList<Answer> answers = new ArrayList<>();
+
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		System.out.println("sourceCode :: " + sourceCode);
+
+		String targetCode = answer.getTargetCode();
+		System.out.println("targetCode :: " + targetCode);
+
+		String value = answer.getValue();
+		System.out.println("value = " + value);
+
+		BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+		System.out.println("targetBe = " + targetBe);
+
+		if (value != null && !value.equals("null") && value.startsWith("data:image/png;base64") && !value.equals("https://bit.ly/3A2xdjI")) {
+
+			String internSignature = targetBe.getValue("PRI_AGR_DOC_INT_SIGNATURE", null);
+			String hcrSignature = targetBe.getValue("PRI_AGR_DOC_HC_SIGNATURE", null);
+			String outcomeSignature = targetBe.getValue("PRI_AGR_DOC_OUTCOME_SIGNATURE", null);
+
+            System.out.println("internSignature: " + internSignature);
+            System.out.println("hcrSignature: " + hcrSignature);
+            System.out.println("outcomeSignature: " + outcomeSignature);
+
+			/*This is a temp white backgrounf URL I (Rahul) added becuase it was defualting to an image icon on the document*/
+
+			if (internSignature != null) {
+				System.out.println("internSignature present");
+			}
+			if (hcrSignature != null) {
+				System.out.println("hcrSignature present");
+			}
+			if (outcomeSignature != null) {
+				System.out.println("outcomeSignature present");
+			}
+
+			/* Checks if the signature is blank or null */
+			Boolean internSigned =!StringUtils.isBlank(internSignature) && (!internSignature.equals("https://bit.ly/3A2xdjI")) && internSignature.startsWith("data:image/png;base64") ;
+			Boolean hcrSigned = !StringUtils.isBlank(hcrSignature) && (!hcrSignature.equals("https://bit.ly/3A2xdjI")) &&  hcrSignature.startsWith("data:image/png;base64") ;
+			Boolean outcomeSigned = !StringUtils.isBlank(outcomeSignature) && (!outcomeSignature.equals("https://bit.ly/3A2xdjI")) &&  outcomeSignature.startsWith("data:image/png;base64");
+
+            System.out.println("InternSigned: " + internSigned);
+            System.out.println("HCRSigned: " + hcrSigned);
+            System.out.println("OutcomeSigned: " + outcomeSigned);
+
+			/* Gets current status to ensure APP is in OFFERED */
+			String currentAppStatus = targetBe.getValue("PRI_STATUS", null);
+			System.out.println(drools.getRule().getName() + " PRI_STATUS is :: " + currentAppStatus);
+
+			if (internSigned && hcrSigned && outcomeSigned) {
+				System.out.println("All signatures present");
+
+				Answer answerSignatures = new Answer(serviceToken.getUserCode(), targetCode, "PRI_AGREEMENT_SIGNATURES", "Complete");
+				answers.add(answerSignatures);
+				System.out.println("Answer done" +answerSignatures);
+
+				if (!currentAppStatus.equals("PLACED") && !currentAppStatus.equals("PROGRESS")) {
+					Answer answerPlaced = new Answer(serviceToken.getUserCode(), targetCode, "PRI_STATUS", "PLACED");
+					answers.add(answerPlaced);
+					System.out.println("Answer done " + answerPlaced);
+
+					String scheduleMsgCode = targetBe.getCode() + "_MOVE_PLACED";
+
+					ShleemyUtils.scheduleMessage(userToken, "ACT_PRI_EVENT_PLACE_APPLICATION", scheduleMsgCode, LocalDateTime.now(ZoneOffset.UTC).plusSeconds(1), targetBe.getCode());
+
+				} else {
+					System.out.println(targetBe.getCode() + " is not in OFFERED:: " + currentAppStatus);
+				}
+
+			} else {
+				System.out.println("Not all signatures complete!");
+			}
+		}
+
+		beUtils.saveAnswers(answers);
+
+		/* retract(answer); */
+
+	System.out.println("End of " + drools.getRule().getName());
+end

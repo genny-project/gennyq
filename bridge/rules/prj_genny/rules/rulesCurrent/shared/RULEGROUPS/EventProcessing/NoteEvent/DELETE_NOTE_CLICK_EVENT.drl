@@ -1,0 +1,119 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import org.apache.commons.lang3.StringUtils;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.utils.VertxUtils;
+
+
+rule "DELETE_NOTE_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "ACT_PRI_EVENT_DELETE_NOTE")
+		userToken : GennyToken (code != "PER_SERVICE")
+		serviceToken : GennyToken (code == "PER_SERVICE")
+		output : OutputParam()
+ 		ruleDetails : RuleDetails()
+    then
+		/*
+		code: "ACT_PRI_EVENT_ACCESS_NOTES_APPLICATION"
+		parentCode: "SBE_APPLIED_APPLICATIONS_D12A7273-656D-4408-A12F-714E2A38D3E3"
+		targetCode: "APP_8CC599CA-CA86-4AC3-A0C6-24B025B40D92"
+		*/ 
+		
+		System.out.println(drools.getRule().getName() + " - Rule fired");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		System.out.println("sourceCode :: " + sourceCode);
+		
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode :: " + targetCode);
+
+		String parentCode = $message.getData().getParentCode();
+		System.out.println("parentCode :: " + parentCode);
+		
+		String content = $message.getData().getContent();
+		System.out.println("content :: " + content);
+			
+		String tags = "Business Development";
+
+		BaseEntity sourceBe = beUtils.getBaseEntityByCode(sourceCode);
+
+		String userName = sourceBe.getValue("PRI_NAME", null);
+		System.out.println("userName: " +userName);
+
+		String userImage = sourceBe.getValue("PRI_IMAGE_URL", null);
+		System.out.println("userImage: " +userImage);
+		
+		BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+			
+		if (targetBe != null) {
+			String endPoint = "https://internmatch-dev.gada.io/v7/notes";
+			System.out.println("endPoint :: " + endPoint);
+			
+			String url = endPoint + "/"+targetCode + "?tags=&pageIndex=0&pageSize=100";
+			System.out.println("url :: " + url);
+			
+			QwandaUtils.apiPostNote(endPoint, sourceCode, targetCode, tags, userName, userImage, content, serviceToken.getToken());
+			System.out.println("Note saved against " + targetCode + " with content: " + content);
+		
+			String toastName = targetBe.getValue("PRI_NAME", null);
+			System.out.println("toastName: " +toastName);
+			
+			/* send cmd msg */
+			QCmdMessage msg = new QCmdMessage("TOAST", "INFO");
+			msg.setMessage("Note saved against " + toastName + " with content: " + content);
+			msg.setToken(beUtils.getGennyToken().getToken());
+			msg.setSend(true);
+			VertxUtils.writeMsg("webcmds", msg);	
+		} else {
+			System.out.println("ERROR: Notes failed to save");
+			
+			QCmdMessage msg = new QCmdMessage("TOAST", "ERROR");
+			msg.setMessage("ERROR: Notes failed to save");
+			msg.setToken(beUtils.getGennyToken().getToken());
+			msg.setSend(true);
+			VertxUtils.writeMsg("webcmds", msg);
+		}
+
+
+		/*["APP_8CC599CA-CA86-4AC3-A0C6-24B025B40D92","PER_0E23D8C1-D9EB-4A47-BF36-FB8ABE76ABEC","BEG_3416F0D9-FD89-4F1D-83DC-369761023BF0","CPY_7268CA0A-D19A-44F0-AC50-629A64E8F81C","PER_AEC7B678-4227-4EA9-8147-EB20458B43DF"]*/
+		String key = "nah";
+		String luggage = "nah";
+		
+		if (parentCode != null) {
+			parentCode = parentCode.replace("\"", "").replace("[", "").replace("]", "");
+			System.out.println("parentCode: " + parentCode);
+
+			if (parentCode.contains(",")) {
+				key = "APPLICATION";
+				String[] parents = parentCode.split(",");
+				luggage = parents[0];
+			} else {
+				key = "INTERN";	
+			}			
+		}
+
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode("START_ACCESS_NOTES");
+		output.setTargetCode(targetCode);
+		output.setSuitCase(key);
+		output.setLuggage(luggage);
+		
+		System.out.println("**************************************************");
+		System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+		System.out.println("ResultCode: "    + output.getResultCode());
+		System.out.println("TargetCode: "    + output.getTargetCode());
+		System.out.println("SuitCase: "      + output.getSuitCase());
+		System.out.println("Luggage: "      + output.getLuggage());
+		System.out.println("**************************************************");
+		
+		retract( $message);
+	end

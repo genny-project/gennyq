@@ -1,0 +1,97 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+
+rule "FILTER_ABN_ASK"
+	ruleflow-group 'AskFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		ask: Ask( 	ask.getQuestion().getCode() == "QUE_HOST_CPY_GRP" || 
+					ask.getQuestion().getCode() == "QUE_EDU_PRO_GRP"|| 
+					ask.getQuestion().getCode() == "QUE_AGENCY_GRP" )
+		beUtils : BaseEntityUtils( )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("question code   :: " + ask.getQuestion().getCode());
+		System.out.println("userToken Code   :: " + userToken.getUserCode());
+		System.out.println("target Code   :: " + ask.getTargetCode());
+
+		Boolean isSpecifyAbnDisabled = true;
+		Boolean isAbnDisabled = true;
+		
+		/* get the targetCode */
+		String targetCode = ask.getTargetCode();
+		
+		if(targetCode != null){
+			BaseEntity targetBe = beUtils.getBaseEntityByCode(targetCode);
+			if(targetBe != null){
+				
+				String countryCode = targetBe.getValue("LNK_SELECT_COUNTRY", null);
+				System.out.println("countryCode = " + countryCode);
+				if(countryCode != null && !countryCode.trim().isEmpty()){
+
+					countryCode = beUtils.cleanUpAttributeValue(countryCode);
+					if (countryCode.equals("SEL_AUSTRALIA")) {
+						/* if the country is Australia, enable the abn questions */
+						isSpecifyAbnDisabled = false;
+
+						String hasAbn = targetBe.getValue("LNK_SPECIFY_ABN", null);
+						/* if the company has answered YES to abn question, enable it */
+						if(hasAbn != null && !hasAbn.trim().isEmpty()){
+
+							if (hasAbn.equals("SEL_YES")) {
+								isAbnDisabled = false;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		/* SET REPLACE TRUE */
+		for (Ask childAsk : ask.getChildAsks()) {
+
+			if (childAsk.getQuestionCode().equals("QUE_SPECIFY_ABN")) {
+				System.out.println("Setting QUE_SPECIFY_ABN disabled field to ::  " + isSpecifyAbnDisabled);
+				childAsk.setDisabled(isSpecifyAbnDisabled);
+			}
+
+			if (childAsk.getQuestionCode().equals("QUE_COMPANY_ABN")) {
+				System.out.println("Setting QUE_COMPANY_ABN disabled field to ::  " + isAbnDisabled);
+				childAsk.setDisabled(isAbnDisabled);
+			}
+		}
+
+		/* Send the filtered asks back */
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setAliasCode("ASK");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+end

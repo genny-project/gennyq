@@ -1,0 +1,53 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.datatype.CapabilityMode;
+
+import org.apache.commons.lang3.text.WordUtils;
+
+rule "ROL_STUDENT"
+    ruleflow-group 'GenerateCapabilities'
+     no-loop true
+    when
+       not  BaseEntity (code == "ROL_STUDENT")
+       capabilityUtils : CapabilityUtils()
+       userRole : BaseEntity (code == "ROL_USER")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+ 		 
+   	     BaseEntity role = capabilityUtils.getBeUtils().create(drools.getRule().getName(),WordUtils.capitalize(drools.getRule().getName().substring(4)));
+   	     
+   	     capabilityUtils.inheritRole(role,userRole);
+ 
+ 		 capabilityUtils.addCapabilityToRole(role,"DASHBOARD_TIMELINE",CapabilityMode.VIEW);
+
+  	     
+  	     role = capabilityUtils.getBeUtils().getBaseEntityByCode(role.getCode());
+ 		 insert(role);
+ 		 
+  		 VertxUtils.writeCachedJson(capabilityUtils.getBeUtils().getServiceToken().getRealm(), role.getCode(), JsonUtils.toJson(role), capabilityUtils.getBeUtils().getServiceToken().getToken());
+  		 
+
+
+end

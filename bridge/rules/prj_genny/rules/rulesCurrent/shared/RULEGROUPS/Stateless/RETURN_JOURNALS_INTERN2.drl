@@ -1,0 +1,93 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
+
+rule "RETURN_JOURNALS_INTERN2"
+    ruleflow-group 'Stateless'
+     salience 1000
+     no-loop true
+    when
+ 	  $userToken : GennyToken ( code != "PER_SERVICE" ) 
+ 	  $user : BaseEntity (  code == $userToken.getUserCode() )
+ 	  $project : BaseEntity ( code matches "PRJ_\\S+" )
+	  serviceToken : GennyToken ( code == "PER_SERVICE" )
+	  beUtils : BaseEntityUtils()
+	  allowed : Allowed(code == "READ_JOURNALS" && mode == CapabilityMode.VIEW)
+	  allowed2 : Allowed(code == "INTERN")
+	  device : Answer (attributeCode matches "PRI_DEVICE_CODE") 
+	  
+    then
+     	System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + $userToken.getUserCode());
+   		System.out.println("Rule -> "+drools.getRule().getName()+" :  device=" + device.getValue());
+   		
+   		String uniqueDeviceCode = "DEV_"+device.getValue().toUpperCase()+$userToken.getString("sub").hashCode();
+   		System.out.println("Unique DevCode="+uniqueDeviceCode);
+   		
+   		BaseEntity deviceBe = beUtils.getBaseEntityByCode(uniqueDeviceCode);
+   		   		
+  		String roleAttribute = "LNK_INTERN";
+		String userCode  = $userToken.getUserCode();
+
+   		LocalDateTime veryearly = LocalDateTime.of(1970,01,01,0,0,0);
+   		LocalDateTime lastUpdated = null;
+   		if (deviceBe!=null) {
+   			lastUpdated = deviceBe.getValue("PRI_LAST_UPDATED",veryearly);
+   		} else {
+   			lastUpdated = veryearly;
+   		}
+   		
+   		long starttime = System.currentTimeMillis();
+   		long looptime = 0;
+   		long searchtime = 0;
+
+ 		final DateTimeFormatter formatterMysql = DateTimeFormatter.ISO_DATE_TIME;
+ 		String dtStr = formatterMysql.format(lastUpdated).replace("T", " ");
+ 		
+ 		System.out.println("Journal DateTime Query is "+dtStr);
+ 		
+ 		String hql = "select ea from EntityAttribute ea, EntityAttribute eb where ea.baseEntityCode=eb.baseEntityCode ";
+ 		hql += " and eb.attributeCode = '"+roleAttribute+"' and eb.valueString = '[\""+ userCode +"\"]'";
+ 		hql += " and ea.baseEntityCode like 'JNL_%'  ";
+ 		hql += " and ((ea.updated >= '"+dtStr+"') or (ea.updated is null and ea.created >= '"+dtStr+"'))";
+		hql = Base64.getUrlEncoder().encodeToString(hql.getBytes());
+		String resultJson;
+		QDataBaseEntityMessage resultMsg = null;
+		try {
+			resultJson = QwandaUtils.apiGet(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/search22/"+hql, serviceToken.getToken(),120);
+			searchtime = System.currentTimeMillis();
+			resultMsg = JsonUtils.fromJson(resultJson, QDataBaseEntityMessage.class);
+			payload.add(resultMsg);
+			
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}		
+		long endtime = System.currentTimeMillis();
+		System.out.println("search took "+(searchtime-starttime)+" ms "+resultMsg);
+		System.out.println("finish took "+(endtime-searchtime)+" ms");
+		System.out.println("total took "+(endtime-starttime)+" ms");
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+		retract(allowed); /* no longer needed */
+end

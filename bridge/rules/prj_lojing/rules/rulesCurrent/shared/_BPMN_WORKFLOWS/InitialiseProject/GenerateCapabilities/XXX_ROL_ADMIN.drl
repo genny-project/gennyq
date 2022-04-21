@@ -1,0 +1,40 @@
+package life.genny.rules;
+
+
+rule "ROL_ADMIN"
+    ruleflow-group 'GenerateCapabilities'
+     no-loop true
+    when
+       not  BaseEntity (code == "ROL_ADMIN")
+        capabilityUtils : CapabilityUtils()
+        user : BaseEntity (code == "ROL_USER")  
+        beUtils : BaseEntityUtils()       
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+ 		 
+		 BaseEntity defBE = beUtils.getDEFByCode("DEF_ROLE");
+   	     BaseEntity role = capabilityUtils.getBeUtils().create(defBE, WordUtils.capitalize(drools.getRule().getName().substring(4)), drools.getRule().getName());
+   	     
+   	     capabilityUtils.inheritRole(role,user);
+ 
+ 		 /* CACHED SEARCHES */
+		 capabilityUtils.addCapabilityToRole(role,"USE_CACHE",CapabilityMode.VIEW);
+ 
+ 
+   	     capabilityUtils.addCapabilityToRole(role,"VERIFY_EMAIL",CapabilityMode.DELETE);
+      	 capabilityUtils.addCapabilityToRole(role,"LOGIN",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"LOGOUT",CapabilityMode.EDIT);
+   	     capabilityUtils.addCapabilityToRole(role,"READ_INTERNSHIPS",CapabilityMode.DELETE);
+   	     
+ 
+  	     role = capabilityUtils.getBeUtils().getBaseEntityByCode(role.getCode());
+ 		
+ 		 beUtils.saveAnswer(new Answer(capabilityUtils.getBeUtils().getServiceToken().getUserCode(), role.getCode(), "PRI_WEIGHT", 800.0,false,true));
+ 
+ 		 insert(role);
+ 		 		 
+ 		 VertxUtils.writeCachedJson(capabilityUtils.getBeUtils().getServiceToken().getRealm(), role.getCode(), JsonUtils.toJson(role), capabilityUtils.getBeUtils().getServiceToken().getToken());
+ 		 
+
+
+end

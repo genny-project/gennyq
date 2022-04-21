@@ -1,0 +1,192 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.OutputParam;
+import life.genny.qwandautils.KeycloakUtils;
+import java.util.UUID;
+
+import java.util.List;
+import java.util.ArrayList;
+import org.json.JSONArray;
+
+rule "IS_TEAM"
+    ruleflow-group 'IsBaseEntity'
+    no-loop true
+    salience 1 
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam()
+		baseEntityType : String(baseEntityType.equals("TEAM"))
+		newBe : BaseEntity()
+		beUtils : BaseEntityUtils()
+	  
+     then
+ 		System.out.println("IS_TEAM: Rule fired" );
+ 		System.out.println("IS_TEAM: newBe = " + newBe.getCode()); 
+ 		
+ 		beUtils.saveAnswer(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_STATUS", "REGISTERED"));
+ 		beUtils.saveAnswer(new Answer(userToken.getUserCode(),newBe.getCode(),"PRI_STATUS_COLOR","#5cb85c"));
+
+		newBe = beUtils.getBaseEntityByCode(newBe.getCode());
+
+		if (newBe == null) {
+			System.out.println(drools.getRule().getName() + " : Could NOT set Links - newBe fetched is null!");
+		} else {
+			BaseEntity eduProBE = beUtils.getBaseEntityFromLNKAttr(newBe.getCode(), "LNK_EDU_PROVIDER");
+			List<String> teamMemberList = new ArrayList<String>();
+
+			if (eduProBE == null ) {
+				System.out.println(drools.getRule().getName() + " : EDU PRO BE is null!");
+			} else {
+				String assocEPName = eduProBE.getValueAsString("PRI_NAME");
+				System.out.println(drools.getRule().getName() + " - assocEP Name: " + assocEPName);
+				
+				if (assocEPName != null) {
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_ASSOC_EP", assocEPName));
+					beUtils.saveAnswer(new Answer(userToken.getUserCode(), newBe.getCode() ,"PRI_EDU_PROVIDER_CODE", eduProBE.getCode()));
+				}
+
+				/* Get the name of the inviter or default as usercode */
+				String inviteFrom = beUtils.getBaseEntityValueAsString(userToken.getUserCode(), "PRI_NAME");
+				if (inviteFrom == null) {
+					inviteFrom = userToken.getUserCode();
+				}
+				/* Get the name of the class or default as usercode */
+				String className = newBe.getValueAsString("PRI_NAME");
+
+				System.out.println(drools.getRule().getName() + " - SENDING INVITE EMAILS");
+
+				String emailAttrValue = newBe.getValue("PRI_EMAIL_IMPORT", null);
+				if (emailAttrValue != null) {
+
+					String[] emailList = beUtils.cleanUpBaseEntityCode(emailAttrValue).split(",");
+				
+					for (String email : emailList) {
+						
+						System.out.println(drools.getRule().getName() + " Handling email : " + email);
+						BaseEntity userBe = beUtils.getBaseEntityByAttributeAndValue("PRI_EMAIL", email);
+
+						String templateId = null;
+						String subject = null;
+						HashMap<String, String> templateData = new HashMap<String, String>();
+
+						if (userBe == null) {
+							System.out.println(drools.getRule().getName() + " User does not exist yet");
+
+							String uuid = KeycloakUtils.createDummyUser(serviceToken.getToken(), serviceToken.getRealm());
+
+							/* String tempPassword = UUID.randomUUID().toString().substring(0, 8); */
+							String tempPassword = "password1";
+
+							String newCode = "PER_"+uuid.toUpperCase();
+							userBe = beUtils.create(newCode, newCode);
+
+							String userId = KeycloakUtils.updateUser(uuid.toUpperCase(), serviceToken.getToken(), serviceToken.getRealm(), email, uuid, uuid,  email, tempPassword, "user", "users");
+
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_NAME", email));
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_EMAIL", email));
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_UUID", userId));
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_IS_STUDENT", "true"));
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_STATUS", "REGISTERED"));
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_STATUS_COLOR", "#5cb85c"));
+
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "LNK_EDU_PROVIDER", newBe.getValueAsString("LNK_EDU_PROVIDER")));
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode() ,"PRI_ASSOC_EP", assocEPName));
+							beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode() ,"PRI_EDU_PROVIDER_CODE", eduProBE.getCode()));
+
+							/* CREATE BE'S TO SAVE THE USERS RESULTS */	
+							for (int i = 1; i <= 10; i++) {
+								String newUUID = UUID.randomUUID().toString().replaceAll("-", "_").toUpperCase();
+								BaseEntity resultBE = beUtils.create("RES_" + newUUID, "RES_" + newUUID);
+								beUtils.saveAnswer(new Answer(userToken.getUserCode(), "RES_"+ newUUID, "PRI_SCENARIO", String.valueOf(i)));
+								beUtils.saveAnswer(new Answer(userToken.getUserCode(), "RES_"+ newUUID, "PRI_USERCODE", userBe.getCode()));
+								beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_RESULTS_BE_CODE_S"+i, resultBE.getCode()));
+
+								System.out.println(drools.getRule().getName() + ": Creating new results BE for scenario " + i + " with code " + resultBE.getCode());
+							}
+
+							templateId = "d-297964cf11514f7c9629ec8aac05403a";
+							subject = "You have been invited to join SafeTrafficTown";
+
+							templateData.put("email", email);
+							templateData.put("password", tempPassword);
+						} else {
+							System.out.println(drools.getRule().getName() + " User with that email already exists in the database");
+							String firstname = userBe.getValueAsString("PRI_FIRSTNAME");
+
+							templateId = "d-32e80d5f817a42da8d0965bc9e0f0bc4";
+							subject = "You have been invited to a class in SafeTrafficTown";
+
+							templateData.put("inviteTo", firstname);
+							templateData.put("className", className);
+						}
+
+						System.out.println(drools.getRule().getName() + " adding user to team member list");
+						teamMemberList.add(userBe.getCode());
+
+
+						List<String> teamList = new ArrayList<String>();
+						String teamListRaw = beUtils.getBaseEntityValueAsString(userBe.getCode(), "PRI_TEAM_LIST");
+						if (teamListRaw != null) {
+							teamList = Arrays.asList(beUtils.cleanUpBaseEntityCode(teamListRaw).split(","));
+						}
+
+						teamList.add(newBe.getCode());
+						beUtils.saveAnswer(new Answer(userToken.getUserCode(), userBe.getCode(), "PRI_TEAM_LIST", teamList.toString()));
+
+						templateData.put("inviteFrom", inviteFrom);
+						templateData.put("url", GennySettings.projectUrl);
+						
+						System.out.println(drools.getRule().getName() + " - " + email + " : " + templateId + " : " + subject);
+
+						try {
+							EmailHelper.sendGrid(beUtils, email, subject, templateId, templateData);
+						} catch (Exception e) {
+							System.out.println("ERROR - COULDNT SEND EMAIL");
+							System.out.println(e.getStackTrace());
+						}
+					}
+				} else {
+					System.out.println(drools.getRule().getName() + " - No Emails to import");
+				}
+			}
+
+			System.out.println(drools.getRule().getName() + " - Fetching eduProRep code list...");
+			List<String> eduProRepCodeList = beUtils.getBaseEntityCodeArrayFromLNKAttr(newBe.getCode(), "LNK_EDU_PRO_REPS");
+			if (eduProRepCodeList == null || eduProRepCodeList.size() == 0) {
+				System.out.println(drools.getRule().getName() + " - NO EDU PRO REPS WERE SELECTED");
+			}
+
+			System.out.println(drools.getRule().getName() + " - Adding team to PRI_TEAM_LIST for each Edu Pro Rep...");
+			for (String eduProRepCode : eduProRepCodeList) {
+				
+				System.out.println(drools.getRule().getName() + " - EduProRepCode = " + eduProRepCode);
+				List<String> teamList = new ArrayList<String>();
+				String teamListRaw = beUtils.getBaseEntityValueAsString(eduProRepCode, "PRI_TEAM_LIST");
+				if (teamListRaw != null) {
+					teamList = Arrays.asList(beUtils.cleanUpBaseEntityCode(teamListRaw).split(","));
+					teamList = new ArrayList<String>(teamList);
+				}
+
+				teamList.add(newBe.getCode());
+				System.out.println(drools.getRule().getName() + " - Saving data for user, teamList = " + teamList.toString());
+				beUtils.saveAnswer(new Answer(userToken.getUserCode(), eduProRepCode, "PRI_TEAM_LIST", teamList.toString()));
+
+				teamMemberList.add(eduProRepCode);
+			}
+
+			System.out.println(drools.getRule().getName() + " - Saving data for team, teamMemberList = " + teamMemberList.toString());
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_TEAM_MEMBERS", teamMemberList.toString()));
+		}
+
+		output.setTypeOfResult("NONE");
+  	    	output.setResultCode("NONE");  /* dont display anything new */
+		
+		retract(newBe);
+	
+end

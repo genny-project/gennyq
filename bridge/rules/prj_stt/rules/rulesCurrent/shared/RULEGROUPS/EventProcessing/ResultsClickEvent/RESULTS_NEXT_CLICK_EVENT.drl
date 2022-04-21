@@ -1,0 +1,62 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "RESULTS_NEXT_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		message : QEventMessage( data.code matches "QUE_NEXT" && data.parentCode matches "RES_.*" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " + message );
+		System.out.println(drools.getRule().getName() + " - CODE = " + message.getData().getCode());
+		System.out.println(drools.getRule().getName() + " - PARENT CODE = " + message.getData().getParentCode());
+
+		BaseEntity resultBe = beUtils.getBaseEntityByCode(message.getData().getParentCode());
+		String scenarioRaw = resultBe.getValueAsString("PRI_SCENARIO");
+		String userCode = resultBe.getValueAsString("PRI_USERCODE");
+
+		Integer currentScenario = 1;
+		if (scenarioRaw != null) {
+			currentScenario = Integer.valueOf(scenarioRaw);
+		} else { 
+			System.out.println(drools.getRule().getName() + " - scenarioRaw is Null");
+		}
+
+		System.out.println(drools.getRule().getName() + " - currentScenario = " + currentScenario);
+
+		String nextScenario = "";
+		if (currentScenario < 10 && userCode != null) {
+			nextScenario = Integer.toString(currentScenario + 1);
+			System.out.println(drools.getRule().getName() + " - nextScenario = " + nextScenario);
+
+			String selectionString = "RENDER_RESULTS_S" + nextScenario + ":" + userCode;
+			
+			insert(selectionString);
+			drools.setFocus("ResultsProcessing");
+		} else {
+			System.out.println(drools.getRule().getName() + " - userCode = " + userCode + ", currentScenario = " + currentScenario);
+		}
+
+		/* Set to NONE */
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");
+
+		retract(message);
+	end

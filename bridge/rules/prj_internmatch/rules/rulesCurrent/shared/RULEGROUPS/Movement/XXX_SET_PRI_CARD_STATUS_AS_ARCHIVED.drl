@@ -1,0 +1,72 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+
+rule "SET_PRI_CARD_STATUS_AS_ARCHIVED"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity()
+		output : OutputParam()
+		bucketCode : String(bucketCode.equals("ANY"))
+		controlSignalCode : String(controlSignalCode.equals("ARCHIVED"))
+
+
+     then
+ 		System.out.println("SET_PRI_CARD_STATUS_AS_ONHOLD: Rule fired" );
+
+
+ 		Answer answer = new Answer(userToken.getUserCode(),newApplication.getCode(),"PRI_STATUS","ARCHIVED");
+ 		BaseEntityUtils beUtils = new BaseEntityUtils(userToken);
+ 		beUtils.saveAnswer(answer);
+ 		
+ 		Answer answerDisable = new Answer(userToken.getUserCode(), newApplication.getCode(), "PRI_DISABLED", true);
+ 		beUtils.saveAnswer(answerDisable);
+
+
+		System.out.println("SET_PRI_CARD_STATUS_AS_ARCHIVED: Answer = " + answer);
+		System.out.println("SET_PRI_CARD_STATUS_AS_ARCHIVED: newApplication = " + newApplication);
+		
+		
+		/*Boolean cache = true;
+			 	String sourceCode = "AVAILABLE_INTERNS";
+				TableUtils.searchTable(beUtils,sourceCode, cache);*/
+		
+		TableUtils.moveEntity(newApplication.getCode(), "SBE_AVAILABLE_INTERNS", null, beUtils);
+
+				
+		
+
+		retract(newApplication)
+		retract(bucketCode)
+		retract(controlSignalCode)
+
+end

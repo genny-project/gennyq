@@ -1,0 +1,53 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "SAVE_INTERN_CPY_NAME"
+	ruleflow-group 'TimelineProcessing'
+	salience 20
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		allowed : Allowed(code == "INTERN")
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		Boolean cache = true;
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		if (beUtils.getBaseEntityValue(userToken.getUserCode(), "PRI_ASSOC_ENTITY_NAME") == null) {
+
+			System.out.println(drools.getRule().getName() + " - No Assoc Entity attribute found, creating one...");
+
+			String eduProName = "";
+			
+			try {
+				BaseEntity eduPro = beUtils.getParent(userToken.getUserCode(), "LNK_CPY");
+				eduProName = eduPro.getValueAsString("PRI_NAME");
+			} catch (Exception e) {
+				System.out.println(drools.getRule().getName() + " - Could not find LNK_CPY");
+			}
+
+			System.out.println(drools.getRule().getName() + " - Saving edu pro name: " + eduProName);
+
+			beUtils.saveAnswer(new Answer(userToken.getUserCode(), userToken.getUserCode(), "PRI_ASSOC_ENTITY_NAME", eduProName));
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+end

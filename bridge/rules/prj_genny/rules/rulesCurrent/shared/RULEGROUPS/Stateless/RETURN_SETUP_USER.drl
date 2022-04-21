@@ -1,0 +1,40 @@
+package life.genny.rules;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+
+rule "RETURN_SETUP_USER"
+    ruleflow-group 'Stateless'
+     salience 5000
+     no-loop true
+    when
+      beUtils : BaseEntityUtils()	 
+/*	  allowed: Allowed(code == "READ_USER") */
+    then
+   		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + beUtils.getGennyToken().getUserCode());
+   		
+		/* fetch user details and return */
+		BaseEntity user = beUtils.getBaseEntityByCode(beUtils.getGennyToken().getUserCode());
+		String[] userFilterStrArray = { "PRI_FIRSTNAME", "PRI_LASTNAME", "PRI_MOBILE", "PRI_IS_INTERN","PRI_IS_SUPERVISOR","PRI_IS_INTERN","PRI_IS_HOST_CPY_REP","PRI_IS_ADMIN","PRI_IS_USER","PRI_IS_DEV","PRI_IS_SUPERUSER",
+				"PRI_IMAGE_URL", "PRI_CODE", "PRI_NAME", "PRI_USERNAME", "PRI_EMAIL" };
+		user = VertxUtils.privacyFilter(user, userFilterStrArray);		
+		QDataBaseEntityMessage userMsg = new QDataBaseEntityMessage(user);
+		userMsg.setAliasCode("USER");	
+		payload.add(userMsg);
+				
+		
+		drools.getKnowledgeRuntime().setGlobal("payload", payload);
+		/* retract(allowed);*/  /* no longer needed */
+end

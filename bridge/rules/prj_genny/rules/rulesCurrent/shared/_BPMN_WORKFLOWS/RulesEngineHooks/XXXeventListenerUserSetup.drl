@@ -1,0 +1,25 @@
+package life.genny.rules;
+
+
+
+import life.genny.rules.listeners.JbpmInitListener;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+
+
+rule "eventListenerUserSetup"
+salience 10000
+    when
+    	userToken: GennyToken(code != "PER_SERVICE")
+     	serviceToken: GennyToken(code == "PER_SERVICE")
+     	not  QRules()
+    then
+    System.out.println("Setup Listener for serviceToken,userToken! -> add qrules to rules!!"); 
+    QRules rules = new QRules(serviceToken, userToken); 
+
+    kcontext.getKnowledgeRuntime().addEventListener(new JbpmInitListener(serviceToken,userToken)); 
+/*	insert(rules); */
+end
+
+
+

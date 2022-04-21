@@ -1,0 +1,45 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "SEND_USER_DATA"
+	ruleflow-group 'DashboardProcessing'
+	salience 10
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		
+		/* Send User BE */
+		System.out.println(drools.getRule().getName() + " - Sending UserBE");
+		
+		QDataBaseEntityMessage userBeMsg = new QDataBaseEntityMessage(userBe);
+		userBeMsg.setToken(userToken.getToken());
+		userBeMsg.setReplace(true);
+		
+		VertxUtils.writeMsg("webcmds", JsonUtils.toJson(userBeMsg));
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+end

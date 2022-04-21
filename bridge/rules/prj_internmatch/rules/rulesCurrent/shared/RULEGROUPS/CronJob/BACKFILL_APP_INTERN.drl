@@ -1,0 +1,276 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+import java.time.LocalDate;
+
+rule "BACKFILL_APP_INTERN"
+	ruleflow-group 'EventProcessing'
+	salience 10
+	no-loop true
+	when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_FINISH_APPLICATIONSSSS")
+		/*$message : QEventMessage(data.code == "QUE_BACKFILL_HC_TABLE" && data.parentCode == "QUE_BACKFILL_HC_TABLE_GRP" )*/
+   		userToken : GennyToken ()
+		serviceToken : GennyToken (code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		
+		
+	    /* get all the apps from PROGRESS bucket */
+	    SearchEntity appSearch = new SearchEntity("SBE_APP", "SBE_APP")
+	            .addSort("PRI_STATUS","Status",SearchEntity.Sort.ASC)
+	            .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+	            .addFilter("PRI_STATUS", SearchEntity.StringFilter.LIKE, "%")
+	            .addFilter("PRI_DISABLED", false)
+					 
+	            .addColumn("LNK_EDU_PROVIDER", "Linked Edu Pro")
+	            .addColumn("LNK_HOST_COMPANY", "Linked HC")
+	            .addColumn("PRI_INTERN_CODE", "Intern Code")
+	            .setPageStart(0).setPageSize(1000);
+	
+	    appSearch.setRealm(serviceToken.getRealm());
+
+		List<String> internsUpdated = new ArrayList<String>();
+	 	List<String> internshipsUpdated = new ArrayList<String>();
+	 	List<String> nullInterns = new ArrayList<String>();
+	 	List<String> nullInternships = new ArrayList<String>();
+	 	
+	    try{
+	        List<BaseEntity> apps = beUtils.getBaseEntitys(appSearch);
+	        System.out.println("The number of apps is " + (apps == null ? "NULL" : apps.size()));
+	        if ((apps != null) && (apps.size() > 0)) {
+						
+				Integer appIndex = 1;
+	          	for (BaseEntity app : apps) {
+			
+					/*System.out.println("app = " +app);*/
+		
+					String appIntern = app.getValue("PRI_INTERN_CODE", null);
+					/*System.out.println("appIntern = " +appIntern);*/
+					if (appIntern != null) {
+							beUtils.quantumLink(userToken.getUserCode(), appIntern, app.getCode(), "LNK_APPLICATIONS");
+							internsUpdated.add("appIntern :: " + app.getCode() + "    " + appIntern);
+					} else {
+						/*System.out.println("appIntern is null");*/
+						nullInterns.add("nullIntern :: " + app.getCode() + "    " + appIntern);
+					}
+					
+						
+			
+					String appInternship = app.getValue("LNK_INTERNSHIP", null);
+					/*System.out.println("appInternship = " +appInternship);*/
+					if (appInternship != null) {
+							appInternship = appInternship.replace("\"", "").replace("[", "").replace("]", "");
+							/*System.out.println("appInternship = " +appInternship);*/
+							beUtils.quantumLink(userToken.getUserCode(), appInternship, app.getCode(), "LNK_APPLICATIONS");
+							internshipsUpdated.add("appInternship :: " + app.getCode() + "    " + appInternship);
+														
+			 		} else {
+						/*System.out.println("appInternship is null");*/
+						nullInternships.add("nullInternship :: " + app.getCode() + "    " + appInternship);
+					}
+					
+					/*System.out.println("==============================================");*/
+	        	}
+	    	}
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    
+	    
+	    SearchEntity internshipSearch = new SearchEntity("SBE_INTERNSHIPS", "Internships")
+			/* Sorts */
+			.addSort("PRI_NAME","Title",SearchEntity.Sort.ASC)
+			/* Filters */
+			.addFilter("PRI_IS_INTERNSHIP", true)
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "BEG_%")
+			.addFilter("PRI_ADDRESS_STATE", SearchEntity.StringFilter.LIKE, "%")
+			.addFilter("PRI_ASSOC_INDUSTRY", SearchEntity.StringFilter.LIKE, "%")
+			.setPageStart(0).setPageSize(1000);
+
+		internshipSearch.setRealm(serviceToken.getRealm());
+	
+
+		List<String> hcUpdated = new ArrayList<String>();
+	 	List<String> hcrUpdated = new ArrayList<String>();
+	 	List<String> nullHC = new ArrayList<String>();
+	 	List<String> nullHCR = new ArrayList<String>();
+	 	
+	    try{
+	        List<BaseEntity> internships = beUtils.getBaseEntitys(internshipSearch);
+	        System.out.println("The number of internships is " + (internships == null ? "NULL" : internships.size()));
+	        if ((internships != null) && (internships.size() > 0)) {
+						
+	          	for (BaseEntity internship : internships) {
+					/*System.out.println("internship = " +internship);*/
+		
+					String internshipHC = internship.getValue("LNK_HOST_COMPANY", null);
+					/*System.out.println("internshipHC = " +internshipHC);*/
+					if (internshipHC != null) {
+							internshipHC = internshipHC.replace("\"", "").replace("[", "").replace("]", "");
+							beUtils.quantumLink(userToken.getUserCode(), internshipHC, internship.getCode(), "LNK_INTERNSHIPS");
+							hcUpdated.add("internshipHC :: " + internship.getCode() + "    " + internshipHC);
+					} else {
+						/*System.out.println("appIntern is null");*/
+						nullHC.add("nullHC :: " + internship.getCode() + "    " + internshipHC);
+					}
+					
+						
+			
+					String internshipHCR = internship.getValue("LNK_INTERN_SUPERVISOR", null);
+					/*System.out.println("internshipHCR = " +internshipHCR);*/
+					if (internshipHCR != null) {
+							internshipHCR = internshipHCR.replace("\"", "").replace("[", "").replace("]", "");
+							/*System.out.println("internshipHCR = " +internshipHCR);*/
+							beUtils.quantumLink(userToken.getUserCode(), internshipHCR, internship.getCode(), "LNK_INTERNSHIPS");
+							hcrUpdated.add("internshipHCR :: " + internship.getCode() + "    " + internshipHCR);
+														
+			 		} else {
+						/*System.out.println("internshipHCR is null");*/
+						nullHCR.add("nullHCR :: " + internship.getCode() + "    " + internshipHC);
+					}
+					
+					/*System.out.println("==============================================");*/
+	        	}
+	    	}
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    
+	    
+	    
+	    
+	    SearchEntity hcrSearch = new SearchEntity("HC_HCR", "HC_HCR")
+			/* Sorts */
+			.addSort("PRI_NAME","Name",SearchEntity.Sort.ASC)
+			/* Filters */
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+			.addFilter("PRI_IS_HOST_CPY_REP", true)
+			.setPageStart(0).setPageSize(1000);
+
+		hcrSearch.setRealm(serviceToken.getRealm());
+	
+
+		List<String> hc_hcrUpdated = new ArrayList<String>();
+	 	List<String> nullHC_HCR = new ArrayList<String>();
+	 	
+	    try{
+	        List<BaseEntity> hcrs = beUtils.getBaseEntitys(hcrSearch);
+	        System.out.println("The number of HCR's is " + (hcrs == null ? "NULL" : hcrs.size()));
+	        if ((hcrs != null) && (hcrs.size() > 0)) {
+						
+	          	for (BaseEntity hcr : hcrs) {
+					/*System.out.println("hcr = " +hcr);*/
+		
+					String hc_hcr = hcr.getValue("LNK_HOST_COMPANY", null);
+					/*System.out.println("hc_hcr = " +hc_hcr);*/
+					if (hc_hcr != null) {
+							hc_hcr = hc_hcr.replace("\"", "").replace("[", "").replace("]", "");
+							beUtils.quantumLink(userToken.getUserCode(), hc_hcr, hcr.getCode(), "LNK_HCRS");
+							hc_hcrUpdated.add("hc_hcr :: " + hcr.getCode() + "    " + hc_hcr);
+					} else {
+						/*System.out.println("hc_hcr is null");*/
+						nullHC_HCR.add("nullHC_HCR :: " + hcr.getCode() + "    " + hc_hcr);
+					}
+	        	}
+	    	}
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	
+	
+	
+	
+	
+	
+		
+	    System.out.println("============= INTERNS UPDATED =============");
+	    for (String sd : internsUpdated) {
+	        System.out.println(sd);
+	    }
+	   
+	    System.out.println("============= INTERNSHIPS UPDATED =============");
+	    for (String sd : internshipsUpdated) {
+	        System.out.println(sd);
+	    }
+	    
+	    System.out.println("============= HC UPDATED =============");
+	    for (String sd : hcUpdated) {
+	        System.out.println(sd);
+	    }
+	   
+	    System.out.println("============= HCR UPDATED =============");
+	    for (String sd : hcrUpdated) {
+	        System.out.println(sd);
+	    }
+	    
+	    System.out.println("============= HC_HCR UPDATED =============");
+	    for (String sd : hc_hcrUpdated) {
+	        System.out.println(sd);
+	    }
+	    
+	    
+	    
+	    System.out.println("============= NULL INTERNS =============");
+	    for (String sd : nullInterns) {
+	        System.out.println(sd);
+	    }
+	   
+	    System.out.println("============= NULL INTERNSHIPS =============");
+	    for (String sd : nullInternships) {
+	        System.out.println(sd);
+	    }
+	    
+	    System.out.println("============= NUL HC's =============");
+	    for (String sd : nullHC) {
+	        System.out.println(sd);
+	    }
+	   
+	    System.out.println("============= NULL HCR's =============");
+	    for (String sd : nullHCR) {
+	        System.out.println(sd);
+	    }
+	    
+	    System.out.println("============= NULL HC_HCR's =============");
+	    for (String sd : nullHC_HCR) {
+	        System.out.println(sd);
+	    }
+	    
+	    System.out.println("============= TOTALS =============");
+	    
+	    System.out.println("Total number of Interns updated: " + internsUpdated.size());
+	    System.out.println("Total number of Internships updated: " + internshipsUpdated.size());    
+	    System.out.println("Total number of HC's updated: " + hcUpdated.size()); 
+	    System.out.println("Total number of HCR's updated: " + hcrUpdated.size());    
+	    System.out.println("Total number of HC_HCR's updated: " + hc_hcrUpdated.size());
+	    
+	    System.out.println("Total number of null Interns: " + nullInterns.size());
+	    System.out.println("Total number of null Internships: " + nullInternships.size());
+	    System.out.println("Total number of null HC's: " + nullHC.size());
+	    System.out.println("Total number of null HCR's: " + nullHCR.size());
+	    System.out.println("Total number of null HC_HCR's: " + nullHC_HCR.size());
+	    
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		
+	
+	
+		retract($message);
+end

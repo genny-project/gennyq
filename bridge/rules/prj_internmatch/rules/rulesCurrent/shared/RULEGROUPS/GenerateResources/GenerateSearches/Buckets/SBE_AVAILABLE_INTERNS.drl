@@ -1,0 +1,73 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "SBE_AVAILABLE_INTERNS"
+	ruleflow-group 'GenerateSearches'
+	no-loop true
+	when
+		not SearchEntity (code == "SBE_AVAILABLE_INTERNS")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+
+		SearchEntity searchBE = new SearchEntity("SBE_AVAILABLE_INTERNS", "Available")
+						.addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
+						.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+						.addFilter("PRI_IS_INTERN", true)
+						.addFilter("PRI_DISABLED", false)
+						/* .addFilter("PRI_STATUS", SearchEntity.StringFilter.NOT_LIKE, "P%")    THIS IS A REAL UGLY SMARTASS HACK - ACC - I DID THIS TO AVOID PLACED OR PROGRESS */
+						.addFilter("PRI_STATUS", SearchEntity.StringFilter.NOT_EQUAL, "PLACED")
+						.addAnd("PRI_STATUS", SearchEntity.StringFilter.NOT_EQUAL, "PROGRESS")
+						.addAnd("PRI_STATUS", SearchEntity.StringFilter.NOT_EQUAL, "PENDING")
+
+						.addColumn("PRI_NAME", "Name")
+						.addAssociatedColumn("LNK_OCCUPATION", "PRI_NAME", " ")
+						.addColumn("PRI_MOBILE", "Mobile")
+						.addColumn("PRI_EMAIL", "Email")
+
+						.addAssociatedColumn("LNK_EDU_PROVIDER", "PRI_NAME", "Education Provider")
+						.addAssociatedColumn("LNK_INDUSTRY", "PRI_NAME", "Industry")
+						.addAssociatedColumn("LNK_INTERNSHIP_DURATION", "PRI_NAME", "Duration")
+						.addColumn("PRI_STATUS_COLOR", " ")
+						.addColumn("PRI_IMAGE_URL", " ")
+						.addAssociatedColumn("LNK_AGENT", "PRI_NAME", "Agent Name")
+						.addAssociatedColumn("LNK_AGENT", "PRI_IMAGE_URL", "Agent Image")
+						.addAssociatedColumn("LNK_COMP_INTERNSHIP", "PRI_COLOUR", "Completing Internship Type Colour")
+
+						/* Wildcard Whitelisted Attributes */
+						.addWhitelist("PRI_NAME")
+
+						.setDisplayMode("CARD:MAIN_2")
+						/* Actions */
+						.addAction("PRI_EVENT_VIEW", "View Intern Profile")
+						.addAction("PRI_EVENT_VIEW_APPLICATIONS", "View Intern's Applications")
+						.setCachable(true)
+						.setWildcardDepth(1)
+						.setPageStart(0).setPageSize(GennySettings.defaultBucketSize);
+
+		searchBE.setRealm(serviceToken.getRealm());
+
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

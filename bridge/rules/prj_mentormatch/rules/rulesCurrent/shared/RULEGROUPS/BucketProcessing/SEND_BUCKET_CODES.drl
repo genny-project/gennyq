@@ -1,0 +1,61 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "SEND_BUCKET_CODES"
+	ruleflow-group 'BucketProcessing'
+	salience 8
+	no-loop true
+	when
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		allowed: Allowed(	code == "AGENT" ||
+											code == "MENTOR" ||
+											code == "MENTEE" )
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		Boolean cache = true;
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String sessionCode= beUtils.getGennyToken().getJTI().toUpperCase();
+		System.out.println("sessionCode   ::   " + sessionCode);
+
+		List<String> codes = new ArrayList<String>();
+		if(sessionCode != null){
+			if(allowed.code.equals("AGENT") || allowed.code.equals("MENTEE")){
+				codes.add("SBE_OFF_SHORE_"+sessionCode);
+				codes.add("SBE_ON_SHORE_"+sessionCode);
+				codes.add("SBE_MENTEE_TRAINING_"+sessionCode);
+			}
+
+			/* Only these buckets are visible for the Mentor */
+			codes.add("SBE_MATCHED_"+sessionCode);
+			codes.add("SBE_ROTARY_MENTORING_"+sessionCode);
+			codes.add("SBE_COMPLETED_"+sessionCode);
+		}
+
+		/* Send bucket arrayCodes */
+		QCmdMessage msg = new QCmdMessage("BUCKET_CODES", "BUCKET_CODES");
+		msg.setTargetCodes(codes);
+		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setSend(true);
+		VertxUtils.writeMsg("webcmds",msg);
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+
+end

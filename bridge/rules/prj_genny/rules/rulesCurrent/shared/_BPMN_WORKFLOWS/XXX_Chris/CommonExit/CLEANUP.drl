@@ -1,0 +1,21 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+
+import java.util.List;
+import java.util.ArrayList;
+
+rule "CLEANUP"
+    ruleflow-group 'CommonExit'
+    no-loop true
+    salience 1 
+    when
+	 
+	  
+     then
+ 		System.out.println("SUCCESS -> Cleaned everything up" ); 
+
+end

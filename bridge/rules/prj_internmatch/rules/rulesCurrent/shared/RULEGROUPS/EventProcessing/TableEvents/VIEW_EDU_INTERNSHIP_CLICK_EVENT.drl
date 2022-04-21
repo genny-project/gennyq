@@ -1,0 +1,167 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import life.genny.qwanda.attribute.Attribute;
+import life.genny.qwanda.attribute.AttributeInteger;
+
+
+rule "VIEW_EDU_INTERNSHIP_CLICK_EVENT"
+  ruleflow-group 'EventProcessing'
+  salience 3
+  no-loop
+  when
+		$message : QEventMessage( data.code == "QUE_EDU_INTERNSHIPS" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+    allowed : Allowed(code == "EDU_PRO_REP")
+  then
+
+		System.out.println(drools.getRule().getName()+" - Rule fired!");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+    BaseEntity userBe = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		if(userBe == null){
+			System.out.println("userBe is null");
+			return;
+		}
+
+		String eduProviderCode = userBe.getValue("LNK_EDU_PROVIDER", null);		
+		if(eduProviderCode == null){
+			System.out.println("eduProviderCode is null");
+			return;
+		}
+
+    /* prepare SBE_INTERNSHIPS */
+    String searchBeCode = "SBE_INTERNSHIPS";
+    String sessionSearchCode = searchBeCode + "_" + beUtils.getGennyToken().getJTI().toUpperCase();
+    
+    SearchEntity sbeInternship = new SearchEntity(sessionSearchCode, "Internships")
+            .addSort("PRI_NAME", "Title", SearchEntity.Sort.ASC)
+            .addFilter("PRI_IS_INTERNSHIP", true)
+            .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "BEG_%")
+            .addFilter("PRI_STATUS", SearchEntity.StringFilter.EQUAL, "ACTIVE")
+            .addFilter("PRI_ADDRESS_STATE", SearchEntity.StringFilter.LIKE, "%")
+            .addFilter("PRI_ASSOC_INDUSTRY", SearchEntity.StringFilter.LIKE, "%")
+            .addAction("PRI_EVENT_VIEW", "View")
+            .addColumn("PRI_NAME", "Name")
+            .addColumn("PRI_STATUS", "Status")
+            .addColumn("PRI_ASSOC_HC", "Host Company")
+            .addColumn("PRI_ADDRESS_FULL", "Address")
+            .addColumn("PRI_START_DATE", "Proposed Start Date")
+            .addColumn("PRI_ASSOC_INDUSTRY", "Industry")
+            .addColumn("PRI_IMAGE_URL", " ")
+            .setPageStart(0).setPageSize(GennySettings.defaultPageSize);
+
+      sbeInternship.setRealm(serviceToken.getRealm());
+
+      List<BaseEntity> internshipsToSend = new ArrayList<>();
+      
+      try {
+        /* get all the apps visible to eduProvider  */
+        SearchEntity appSearch = new SearchEntity("SBE_APP", "SBE_APP")
+                .addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+                .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+                .addFilter("PRI_STATUS", SearchEntity.StringFilter.LIKE, "%")
+                .addFilter("LNK_EDU_PROVIDER", SearchEntity.StringFilter.EQUAL, eduProviderCode)
+                .addColumn("PRI_NAME", "Name")
+                .addColumn("PRI_CODE", "Code")
+                .setPageStart(0).setPageSize(1000);
+
+        appSearch.setRealm(serviceToken.getRealm());
+        
+        List<BaseEntity> apps = beUtils.getBaseEntitys(appSearch);
+        System.out.println("The number of apps is " + (apps == null ? "NULL" : apps.size()));
+        if ((apps != null) && (apps.size() > 0)) {
+
+          System.out.println("Number of apps returned is " + apps.size());
+
+          /* loop through apps */
+          for (BaseEntity app : apps) {
+
+            String status = app.getValue("PRI_STATUS", null);
+            if(status !=null){
+
+              /* if app doesn't belong in the bucket, skip the app */
+              if(status.equals("COMPLETED") || status.equals("WITHDRAWN") || status.equals("REJECT")){
+                continue;
+              }
+              
+              /* get the internship */
+              String internshipCode = app.getValue("LNK_INTERNSHIP", null);
+
+              /* check if the internship is already added to list */
+
+              if (internshipCode != null) {
+                  String code = internshipCode.substring(2, internshipCode.length() - 2);
+                  sbeInternship.addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, code);
+
+                  List<BaseEntity> internships = beUtils.getBaseEntitys(sbeInternship);
+                  if ((internships != null) && (internships.size() > 0)) {
+
+                      /* add internship only if not present in the list */
+                      if(!internshipsToSend.contains(internships.get(0))){
+                          internshipsToSend.add(internships.get(0));
+                      }
+                  }
+              }
+            }
+          }
+        }
+
+        sbeInternship.removeAttribute("PRI_CODE");
+        sbeInternship.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "BEG_%");
+
+        /*page updates*/
+        AttributeInteger priIndex = new AttributeInteger("PRI_INDEX", "PRI_INDEX");
+        AttributeInteger priTotalResults = new AttributeInteger("PRI_TOTAL_RESULTS", "PRI_TOTAL_RESULTS");
+        sbeInternship.addAttribute(priIndex, 1.0, 1);
+        sbeInternship.addAttribute(priTotalResults, 1.0, internshipsToSend.size());
+        sbeInternship.setPageStart(0);
+        sbeInternship.setPageSize(internshipsToSend.size());
+
+        /* prepare searchEntity message */
+        QDataBaseEntityMessage searchBeMsg = new QDataBaseEntityMessage(sbeInternship);
+        searchBeMsg.setToken(beUtils.getGennyToken().getToken());
+
+        /* prepare baseEntity message */
+        QDataBaseEntityMessage internshipListMsg = new QDataBaseEntityMessage(internshipsToSend);
+        internshipListMsg.setToken(beUtils.getGennyToken().getToken());
+        internshipListMsg.setParentCode(sbeInternship.getCode());
+        internshipListMsg.setTotal((long) internshipsToSend.size());
+        internshipListMsg.setReplace(true);
+
+        /* prepare qBulk message */
+        QBulkMessage bulkMsg = new QBulkMessage();
+        bulkMsg.setToken(beUtils.getGennyToken().getToken());
+        bulkMsg.add(searchBeMsg);
+        bulkMsg.add(internshipListMsg);
+
+        /* send qbulk msg */
+        String json = JsonUtils.toJson(bulkMsg);
+        VertxUtils.writeMsg("webcmds", json);
+
+        /* send end process */
+        QCmdMessage msgend = new QCmdMessage("END_PROCESS", "END_PROCESS");
+        msgend.setToken(beUtils.getGennyToken().getToken());
+        msgend.setSend(true);
+
+        VertxUtils.writeMsg("webcmds",msgend);
+
+      } catch (Exception e) {
+          e.printStackTrace();
+      }
+
+		retract( $message);
+	end

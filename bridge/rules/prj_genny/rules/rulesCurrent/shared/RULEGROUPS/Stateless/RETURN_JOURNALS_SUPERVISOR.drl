@@ -1,0 +1,110 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+
+rule "RETURN_JOURNALS_SUPERVISOR"
+    ruleflow-group 'Stateless'
+     salience 6000
+     no-loop true
+    when
+ 	  $userToken : GennyToken ( code != "PER_SERVICE" ) 
+ 	  $user : BaseEntity (  code == $userToken.getUserCode() )
+ 	  $project : BaseEntity ( code matches "PRJ_\\S+" )
+	  serviceToken : GennyToken ( code == "PER_SERVICE" )
+	  beUtils : BaseEntityUtils()
+	  allowed : Allowed(code == "READ_JOURNALS" && mode == CapabilityMode.EDIT)
+	  allowed2 : Allowed(code == "SUPERVISOR2")  /* DISABLED BY ADDING A 2 */
+	  
+    then
+   		System.out.println("Rule -> "+drools.getRule().getName()+" :  user=" + $userToken.getUserCode());
+   		long starttime = System.currentTimeMillis();
+   		long looptime = 0;
+   		long searchtime = 0;
+  		 System.out.println("User code is "+$user.getCode());
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Intern Journals")
+				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "JNL_%") 
+				/* .addFilter("PRI_SYNC", SearchEntity.StringFilter.LIKE, "FALSE") */
+				.addFilter("LNK_INTERN_SUPERVISOR", SearchEntity.StringFilter.LIKE, "%"+$user.getCode()+"%") 
+				.addColumn("PRI_NAME", "Name")
+				.addColumn("LNK_INTERNSHIP","Internship")
+				.addColumn("LNK_INTERN", "Intern")
+				.addColumn("LNK_HOST_COMPANY_REP", "Host Company Rep")
+				.addColumn("LNK_HOST_COMPANY", "Host Company")
+				.addColumn("LNK_INTERN_SUPERVISOR", "Supervisor")
+				.addColumn("PRI_JOURNAL_DATE","Date")
+				.addColumn("PRI_JOURNAL_HOURS","Hours")
+				.addColumn("PRI_JOURNAL_TASKS","Tasks")				
+				.addColumn("PRI_JOURNAL_LEARNING_OUTCOMES","Learning Outcomes")
+				.addColumn("PRI_FEEDBACK","Feedback")
+				.addColumn("PRI_STATUS","Status")								
+				.addColumn("PRI_SYNC","Synced")
+				.addColumn("PRI_LAST_UPDATED","Last Updated")
+				.addColumn("PRI_INTERN_LAST_UPDATE","Intern last update")
+				.addColumn("PRI_SUPERVISOR_LAST_UPDATE","Last Supervisor Update")
+				.addColumn("PRI_LAST_CHANGED_BY","Last Changed By")
+				.setPageStart(0)
+				.setPageSize(2000);
+		
+		searchBE.setRealm(serviceToken.getRealm());
+		
+ 		String jsonSearchBE = JsonUtils.toJson(searchBE);
+ 		/* System.out.println(jsonSearchBE); */
+		String resultJson;
+		BaseEntity result = null; 
+		try {
+			resultJson = QwandaUtils.apiPostEntity(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/search",
+					jsonSearchBE, serviceToken.getToken());
+					searchtime = System.currentTimeMillis();
+				QDataBaseEntityMessage resultMsg = JsonUtils.fromJson(resultJson, QDataBaseEntityMessage.class);
+				/* System.out.println(drools.getRule().getName()+" Got to here in RETURN JOURNALS "+resultJson);*/
+				BaseEntity[] bes = resultMsg.getItems();
+				/* Now only send the ones that are not synced */
+				List<BaseEntity> unsyncedItemList = new ArrayList<BaseEntity>();
+				for (BaseEntity be : bes) {
+					Optional<String> unsynced = be.getValue("PRI_SYNC");
+				/*	if (!((unsynced.isPresent()) && ("TRUE".equals(unsynced.get())))) {
+						Answer ans = new Answer($user.getCode(),be.getCode(),"PRI_SYNC","TRUE");
+						beUtils.saveAnswer(ans);
+						be = beUtils.getBaseEntityByCode(be.getCode());
+						unsyncedItemList.add(be);
+					} */
+					be = beUtils.getBaseEntityByCode(be.getCode());
+					unsyncedItemList.add(be);
+				}
+				looptime = System.currentTimeMillis();
+				resultMsg.setItems(unsyncedItemList.toArray(new BaseEntity[0]));
+				payload.add(resultMsg);
+				System.out.println("payload in return journals supervisoor = "+payload);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}		
+		
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+		retract(allowed); /* no longer needed */
+		long endtime = System.currentTimeMillis();
+		System.out.println("search took "+(searchtime-starttime)+" ms");
+		System.out.println("loop took "+(looptime-searchtime)+" ms");
+		System.out.println("finish took "+(endtime-looptime)+" ms");
+		System.out.println("total took "+(endtime-starttime)+" ms");
+end

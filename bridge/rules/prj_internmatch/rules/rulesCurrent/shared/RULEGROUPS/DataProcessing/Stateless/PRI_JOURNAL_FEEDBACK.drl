@@ -1,0 +1,64 @@
+package life.genny.rules;
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.Answers;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import life.genny.utils.VertxUtils;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
+import java.util.ArrayList;
+
+
+
+rule "PRI_FEEDBACK"
+    ruleflow-group 'DataProcessing'
+        salience 5000 
+        no-loop
+    when
+      beUtils : BaseEntityUtils()
+	  serviceToken : GennyToken( code == "PER_SERVICE") 
+	  answer : Answer( attributeCode == "PRI_FEEDBACK" )
+	  answersToSave : Answers()
+	  output : OutputParam( )
+     then
+ 		System.out.println("Rule -> PRI_FEEDBACK :  user=" + beUtils.getGennyToken().getUserCode()+" : "+answer); 
+		String sourceCode = beUtils.getGennyToken().getUserCode();
+		String targetCode = answer.getTargetCode();
+		
+		BaseEntity journal = beUtils.getBaseEntityByCode(targetCode);
+		if (journal != null) {				
+			String supervisorCode = journal.getValue("LNK_INTERN_SUPERVISOR",null);	
+			if (supervisorCode != null) {
+				System.out.println("Supervisor code for journal "+journal.getCode()+ " is "+supervisorCode);
+				String userCode = beUtils.getGennyToken().getUserCode();
+				if (supervisorCode.contains(userCode)) {
+					System.out.println("Supervisor is Valid -> Setting Status");		
+					answersToSave.add(new Answer(sourceCode, targetCode, "PRI_FEEDBACK", answer.getValue(),false,true));	
+				} else {
+					System.out.println(sourceCode+" IS NOT THE Supervisor for journal "+journal.getCode());
+				}
+			} else {
+				System.out.println("Supervisor code for journal "+journal.getCode()+ " is NULL");
+			}
+	
+		} else {
+			System.out.println("ERROR: journal does not exist "+targetCode);
+		}
+		
+		output.setTypeOfResult("NONE");
+  	    output.setResultCode("NONE");  /* dont display anything new */
+		
+		retract(answer); 
+		update(answersToSave);
+	
+end

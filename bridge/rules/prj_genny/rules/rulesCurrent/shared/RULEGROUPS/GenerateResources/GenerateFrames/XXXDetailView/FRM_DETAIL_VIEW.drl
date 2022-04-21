@@ -1,0 +1,56 @@
+package life.genny.rules;
+
+
+
+global org.apache.logging.log4j.Logger log;
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwandautils.JsonUtils;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.Frame3;
+import life.genny.models.Theme;
+import life.genny.utils.FrameUtils2;
+
+rule "FRM_DETAIL_VIEW"
+    ruleflow-group 'GenerateFrames'
+
+    when
+      not  Frame3(code == "FRM_DETAIL_VIEW")
+      serviceToken : GennyToken( code == "PER_SERVICE")
+      FRM_NAME : Frame3 ( code == "FRM_NAME" )
+      FRM_EMAIL : Frame3 ( code == "FRM_EMAIL" )
+      FRM_DOB : Frame3 ( code == "FRM_DOB" )
+      FRM_MOBILE : Frame3 ( code == "FRM_MOBILE" )
+
+
+    then
+    	System.out.println("   Generate FRM_DETAIL_VIEW Rule  "+serviceToken.getUserCode());
+
+ 	  	Frame3 frame = Frame3.builder("FRM_DETAIL_VIEW")
+										.addFrame(FRM_NAME, FramePosition.WEST).end()
+										.addFrame(FRM_EMAIL, FramePosition.WEST).end()
+                    .addFrame(FRM_DOB, FramePosition.WEST).end()
+										.addFrame(FRM_MOBILE, FramePosition.WEST).end()
+										.build();
+
+			frame.setRealm(serviceToken.getRealm());
+			FrameUtils2.toMessage(frame, serviceToken);
+			insert (frame);
+			/* Process and save to cache */
+			/**/
+	end

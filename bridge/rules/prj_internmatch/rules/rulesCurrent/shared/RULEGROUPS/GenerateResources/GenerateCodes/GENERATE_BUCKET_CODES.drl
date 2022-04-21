@@ -1,0 +1,35 @@
+package life.genny.rules;
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+
+
+rule "GENERATE_BUCKET_CODES"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not  SearchEntity (code == "GENERATE_BUCKET_CODES")
+		serviceToken : GennyToken( code == "PER_SERVICE")
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		List<String> bucketCodes = new ArrayList<String>();
+		bucketCodes.add("SBE_AVAILABLE_INTERNS");
+		bucketCodes.add("SBE_APPLIED_APPLICATIONS");
+		bucketCodes.add("SBE_SHORTLISTED_APPLICATIONS");
+		bucketCodes.add("SBE_INTERVIEWED_APPLICATIONS");
+		bucketCodes.add("SBE_OFFERED_APPLICATIONS");
+		bucketCodes.add("SBE_PLACED_APPLICATIONS");
+		bucketCodes.add("SBE_INPROGRESS_APPLICATIONS");
+
+		insert(bucketCodes);
+		VertxUtils.putObject(serviceToken.getRealm(), "", "BUCKET_CODES", bucketCodes, serviceToken.getToken());
+end

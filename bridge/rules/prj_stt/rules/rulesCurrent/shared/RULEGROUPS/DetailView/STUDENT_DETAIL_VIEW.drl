@@ -1,0 +1,60 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+
+rule "STUDENT_DETAIL_VIEW"
+	ruleflow-group 'DetailView'
+	salience 6
+	when
+		$message : QEventMessage(	data.targetCode matches "PER_.*" && 
+										(
+										data.parentCode matches "SBE_BUCKET_.*" ||
+										data.parentCode matches "SBE_STUDENTS_.*" ||
+										data.parentCode matches "QUE_STUDENT_GRP"
+										)
+			)
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("TARGET code ::  " + targetCode);
+	
+		if(targetCode != null){
+			long totalTime = TableUtils.searchTable(beUtils,"STUDENT", true, "PRI_CODE", targetCode);
+			System.out.println("total took " + (totalTime) + " ms"); 
+
+			SearchEntity searchBE = VertxUtils.getObject(beUtils.getGennyToken().getRealm(), "", "SBE_TEAMS", SearchEntity.class, beUtils.getGennyToken().getToken());
+			searchBE.addFilter("PRI_TEAM_MEMBERS", SearchEntity.StringFilter.LIKE, "%"+targetCode+"%");
+			searchBE.setDisplayMode("NESTED");
+
+			totalTime = TableUtils.searchTable(beUtils, searchBE, true);
+			System.out.println("total took " + (totalTime) + " ms");
+
+		}else{
+			System.out.println("TARGET code is null. Check FE console !");
+
+		}
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		retract( $message);
+
+end

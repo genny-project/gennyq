@@ -1,0 +1,42 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwandautils.QwandaMessage;
+import life.genny.qwanda.attribute.Attribute;
+
+
+rule "DASHBOARD_CLICK_EVENT_TIMELINE"
+    ruleflow-group 'EventProcessing'
+		salience 3
+    no-loop
+    when
+		$message : QEventMessage( data.code matches "QUE_DASHBOARD_VIEW" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+	    /*allowed2 : Allowed(code == "STUDENT" || code == "ADMIN" )*/
+	    /*allowed : Allowed(code == "DASHBOARD_TIMELINE" && mode == CapabilityMode.VIEW)*/
+    then
+
+		System.out.println(drools.getRule().getName()+" - Rule fired!");
+		System.out.println("Processing message: " + $message );
+
+		drools.setFocus("DashboardProcessing");
+		
+		System.out.println(drools.getRule().getName() + " ending");
+
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+
+		retract( $message);
+	end

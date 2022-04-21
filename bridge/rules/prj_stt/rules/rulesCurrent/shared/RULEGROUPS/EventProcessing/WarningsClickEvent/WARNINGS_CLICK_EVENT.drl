@@ -1,0 +1,53 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+
+rule "WARNINGS_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		message : QEventMessage(data.code matches "QUE_STT_WARNINGS" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+		beUtils : BaseEntityUtils()
+    then
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " + message );
+
+		
+		Boolean cache = true;
+
+		long totalTime = TableUtils.searchTable(beUtils, "APPENDIX_WARNINGS", cache);
+		System.out.println("total took " + (totalTime) + " ms"); 
+		
+
+		/* Get Warnings Ask GRP 
+		QwandaMessage newAskMsg = QuestionUtils.getQuestions(userToken.getUserCode(), userToken.getUserCode(), "QUE_WARNINGS_GRP", serviceToken.getToken());
+		Ask newAskGrp = newAskMsg.asks.getItems()[0];
+		
+		/* Create QDataAskMessage and send to FRONTEND 
+		QDataAskMessage askMsg = new QDataAskMessage(newAskGrp);
+		
+		askMsg.setToken(userToken.getToken());
+		askMsg.setReplace(true);
+		String askJson = JsonUtils.toJson(askMsg);
+		
+		VertxUtils.writeMsg("webcmds", askJson);
+		*/
+
+		retract(message);
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+	end

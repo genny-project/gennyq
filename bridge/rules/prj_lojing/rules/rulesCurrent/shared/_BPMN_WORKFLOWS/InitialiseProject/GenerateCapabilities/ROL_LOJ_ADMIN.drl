@@ -1,0 +1,33 @@
+package life.genny.rules;
+
+import life.genny.utils.CapabilityUtilsRefactored;
+import life.genny.utils.CapabilityUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+
+rule "ROL_LOJ_ADMIN"
+    ruleflow-group 'GenerateCapabilities'
+     no-loop true
+    when
+        not BaseEntity (code == "ROL_LOJ_ADMIN")
+        capabilityUtilsRefactored : CapabilityUtilsRefactored()
+        parentUser : BaseEntity (code == "ROL_USER")
+        beUtils : BaseEntityUtils()
+    then
+        System.out.println("   Generate "+drools.getRule().getName());
+
+        BaseEntity defBE = beUtils.getDEFByCode("DEF_ROLE");
+        BaseEntity role = capabilityUtilsRefactored.getBeUtils().create(defBE, WordUtils.capitalize(drools.getRule().getName().substring(4)), drools.getRule().getName());
+
+        System.out.println("Persisting colour");
+        beUtils.saveAnswer(new Answer(beUtils.getGennyToken().getUserCode(), role.getCode(), "PRI_COLOR", "#FFD500", false, true));
+        System.out.println("Generate " + drools.getRule().getName() + " Inheriting from: " + parentUser);
+        capabilityUtilsRefactored.inheritRole(role,parentUser);
+
+        /* Adding types */
+        capabilityUtilsRefactored.addCapabilityToBaseEntity(role, "OWN_LOGIN", CapabilityMode.EDIT);
+        capabilityUtilsRefactored.addCapabilityToBaseEntity(role, "DEV_PORTAL", CapabilityMode.VIEW);
+
+        insert(role);
+        capabilityUtilsRefactored.writeRoleToCache(role);
+end

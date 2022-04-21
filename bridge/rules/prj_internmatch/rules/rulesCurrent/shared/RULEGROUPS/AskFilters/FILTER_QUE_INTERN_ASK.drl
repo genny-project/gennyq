@@ -1,0 +1,84 @@
+package life.genny.rules;
+
+import java.io.IOException;
+
+global life.genny.qwanda.message.QBulkMessage payload;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.CapabilityUtils;
+import life.genny.qwanda.Answer;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.model.OutputParamTreeSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.utils.TableUtils;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.attribute.EntityAttribute;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import org.drools.core.spi.KnowledgeHelper;
+import org.apache.commons.lang.ArrayUtils;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.Arrays;
+
+rule "FILTER_QUE_INTERN_ASK"
+	ruleflow-group 'AskFilters'
+	salience 10000
+	no-loop true
+	when
+		userToken : GennyToken ( code != "PER_SERVICE" ) 
+		ask: Ask(ask.getQuestion().getCode() == "QUE_INTERN_GRP")
+		beUtils : BaseEntityUtils( )
+		allowed: Allowed(code == "INTERN" )
+	
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		
+		System.out.println("question code   :: " + ask.getQuestion().getCode());
+		System.out.println("userToken Code   :: " + userToken.getUserCode());
+
+		/* Save some answer for the rep */
+		String targetCode = ask.getTargetCode();
+		System.out.println("targetCode  ::  " + targetCode);
+
+		List<String> questionCodes = new ArrayList<String>();
+		questionCodes.add("QUE_SELECT_AGENT");
+		questionCodes.add("QUE_SELECT_BATCH");
+		
+		System.out.println("questionCodes to remove  ::  " + questionCodes);
+
+		List<Ask> childAskList = new ArrayList<Ask>(Arrays.asList(ask.getChildAsks()));
+		List<Ask> filteredAsks = new ArrayList<Ask>();
+		
+		System.out.println("BEFORE childAskList length  ::  " + childAskList.size());
+
+		for (Ask childAsk : childAskList) {
+			String childQues =  childAsk.getQuestionCode();
+
+			boolean isExist = questionCodes.contains(childQues);
+
+			if (isExist) {
+				System.out.println("Removing the question  ::  " + childQues);
+				filteredAsks.add(childAsk);
+			}
+		}
+		
+		childAskList.removeAll(filteredAsks);
+		System.out.println("AFTER childAskList length  ::  " + childAskList.size());
+
+		ask.setChildAsks(childAskList.toArray(new Ask[0]));
+
+		/* Send the filtered asks back */
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setAliasCode("ASK");	
+		payload.add(msg); 
+
+		drools.getKnowledgeRuntime().setGlobal("payload", payload); 
+end

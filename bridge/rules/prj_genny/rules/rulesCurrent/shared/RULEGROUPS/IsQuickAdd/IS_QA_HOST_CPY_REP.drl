@@ -1,0 +1,131 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwandautils.KeycloakUtils;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwandautils.GennySettings;
+import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.qwanda.message.QBaseMSGMessageType;
+import life.genny.qwandautils.MessageUtils;
+
+rule "IS_QA_HOST_CPY_REP"
+    ruleflow-group 'IsQuickAdd'
+    no-loop true
+    salience 1000
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		baseEntityType : String(baseEntityType.equals("QA_HOST_CPY_REP"))
+		newBe : BaseEntity()
+		beUtils : BaseEntityUtils()
+
+    then
+ 		System.out.println(drools.getRule().getName() + ": Rule fired :: newBe = " + newBe.getCode());
+
+ 		List<Answer> answers = new ArrayList<>();
+
+		Boolean isHostCpyRep = (Boolean) beUtils.getBaseEntityValue(userToken.getUserCode(), "PRI_IS_HOST_CPY_REP");
+        BaseEntity hcBe = beUtils.getBaseEntityFromLNKAttr(newBe, "LNK_HOST_COMPANY");
+        System.out.println("hcBe = "+hcBe);
+		String linkedHC = newBe.getValue("LNK_HOST_COMPANY", null);
+		System.out.println("linkedHC = " + linkedHC);
+		BaseEntity companyBe = null;
+		if (linkedHC != null && !linkedHC.isEmpty()) {
+			System.out.println("LNK_HOST_COMPANY present!");
+
+		} else {
+			if (isHostCpyRep != null && isHostCpyRep) {
+				/* If HostCpyRep adding another HostCpyRep, then set same company */
+				String userHostCpy = beUtils.getBaseEntityValueAsString(userToken.getUserCode(), "LNK_HOST_COMPANY");
+				answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "LNK_HOST_COMPANY", userHostCpy));
+
+				companyBe = beUtils.getBaseEntityByCode(beUtils.cleanUpAttributeValue(userHostCpy));
+
+                /** Link hc with hcr **/
+              /*  beUtils.saveAnswer(new Answer(userToken.getUserCode(), hcBe.getCode(), "LNK_HOST_COMPANY_REP", "[\""+newBe.getCode()+"\"]"));
+                BaseEntity hcrBe = beUtils.getBaseEntityFromLNKAttr(newBe, "LNK_HOST_COMPANY_REP");
+                System.out.println("hcrBe = "+ hcrBe);*/
+			} else {
+				/* CREATE EMPTY CPY FOR THE USER */
+				System.out.println("NO HOST COMPANY SELECTED, CREATING ONE...");
+
+				String uuid = UUID.randomUUID().toString().toUpperCase();
+				String cpyCode = "CPY_"+uuid;
+				BaseEntity defBE = beUtils.getDEFByCode("DEF_HOST_CPY");
+				beUtils.create(defBE, cpyCode, cpyCode);
+
+				answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "LNK_HOST_COMPANY", "[\""+cpyCode+"\"]"));
+				answers.add(new Answer(userToken.getUserCode(), cpyCode, "PRI_IS_HOST_CPY", true));
+				answers.add(new Answer(userToken.getUserCode(), cpyCode, "PRI_PROFILE", "Incomplete"));
+				answers.add(new Answer(userToken.getUserCode(), cpyCode, "PRI_NAME", "Not selected yet"));
+
+				companyBe = beUtils.getBaseEntityByCode(cpyCode);
+			}
+
+			/* Save the CPY name to the rep BE */
+			if(companyBe != null) {
+				/* get the name attribute of the company */
+				String hcName = companyBe.getValue("PRI_NAME", null);
+				System.out.println("hcName  :: " + hcName);
+
+				/* save the company's name as PRI_ASSOC_HC attribute for person baseentity */
+				if(hcName != null){
+					Answer answerHC = new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ASSOC_HC", hcName);
+					answers.add(answerHC);
+					VertxUtils.sendToFrontEnd(userToken, answerHC);
+
+					/* copy across all the address and timezone TODO , this needs to be done upon a host company select */
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ADDRESS_ADDRESS1",companyBe.getValueAsString("PRI_ADDRESS_ADDRESS1")));
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ADDRESS_CITY",companyBe.getValueAsString("PRI_ADDRESS_CITY")));
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ADDRESS_COUNTRY",companyBe.getValueAsString("PRI_ADDRESS_COUNTRY")));
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ADDRESS_FULL",companyBe.getValueAsString("PRI_ADDRESS_FULL")));
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ADDRESS_JSON",companyBe.getValueAsString("PRI_ADDRESS_JSON")));
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ADDRESS_POSTCODE",companyBe.getValueAsString("PRI_ADDRESS_POSTCODE")));
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_ADDRESS_STATE",companyBe.getValueAsString("PRI_ADDRESS_STATE")));
+					answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_TIMEZONE_ID",companyBe.getValueAsString("PRI_TIMEZONE_ID")));
+
+				} else {
+					System.out.println("hcName is NULL");
+				}
+			} else {
+				System.out.println("companyBe is NULL");
+			}
+		}
+
+		/* Boolean sendEmail = newBe.getValue("PRI_EMAIL_FLAG", false); */
+		String sendEmail = newBe.getValue("LNK_ALL_EMAILS", "");
+		System.out.println("sendEmail = " + sendEmail);
+		Boolean flag = sendEmail.contains("SEL_YES") ? true : false;
+		answers.add(new Answer(userToken.getUserCode(), newBe.getCode(), "PRI_EMAIL_FLAG", flag));
+
+		beUtils.saveAnswers(answers);
+
+		/* Update Email and Name, and set Random Password in Keycloak */
+		KeycloakUtils.updateUserDetails(beUtils, newBe);
+		String password = KeycloakUtils.generateRandomPassword(beUtils, newBe);
+
+		/* Init Sendgrid Msg */
+		QMessageGennyMSG msg = new QMessageGennyMSG(QBaseMSGMessageType.SENDGRID);
+		msg.setTemplateCode("MSG_HCR1_REGISTER");
+		msg.addRecipient(newBe);
+		msg.addContext("PASSWORD", password);
+		msg.addContext("URL:ENCODE", "QUE_FAKE_PARENT/QUE_FINISH_HOST_CPY_REP");
+		msg.addContext("BCC", "PRJ_INTERNMATCH");
+
+		if (flag) {
+			MessageUtils.sendMessage(beUtils, msg);
+		}
+
+		/* Post Note */
+		String endPoint = GennySettings.projectUrl + "/v7/notes";
+		QwandaUtils.apiPostNote(endPoint, userToken.getUserCode(), newBe.getCode(), "Added as a Host Company Rep", "System", "System", "", serviceToken.getToken());
+
+		retract(newBe)
+end

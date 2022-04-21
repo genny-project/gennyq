@@ -1,0 +1,58 @@
+package life.genny.rules;
+
+
+rule "GENERATE_SIDEBAR"
+	ruleflow-group 'GenerateAsks'
+	no-loop true
+	when
+		not SearchEntity (code == "GENERATE_SIDEBAR")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+		then
+     	System.out.println("   Generate "+drools.getRule().getName());
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		System.out.println("ServiceToken Realm = " + serviceToken.getRealm());
+
+		String sourceCode = "PER_SERVICE";
+		String targetCode = "PER_SERVICE";
+		
+		Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+		Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+		
+		/* dashboard */
+		Question dashboardQues = new Question("QUE_DASHBOARD_VIEW", "Dashboard", eventAttribute, true);
+		Ask dashboardAsk = new Ask(dashboardQues, sourceCode, targetCode);
+		
+		/* process view */
+		Question processViewQues = new Question("QUE_TAB_BUCKET_VIEW", "Process View", eventAttribute, true);
+		Ask processViewAsk = new Ask(processViewQues, sourceCode, targetCode);
+
+		/* applications */
+		Question applicationsQues = new Question("QUE_TREE_ITEM_APPLICATIONS_APPLIED", "My Applications", questionAttribute, true);
+		Ask applicationsAsk = new Ask(applicationsQues, sourceCode, targetCode);
+
+		/* contacts */
+		Question contactsQues = new Question("QUE_TREE_ITEM_CONTACTS_GRP", "Contacts", questionAttribute, true);
+		Ask contactsAsk = new Ask(contactsQues, sourceCode, targetCode);
+
+			Question tenantsQues = new Question("QUE_TREE_ITEM_TENANTS", "Tenants", eventAttribute, true);
+			Question applicantsQues = new Question("QUE_TREE_ITEM_APPLICANTS", "Applicants", eventAttribute, true);
+			Question customersQues = new Question("QUE_TREE_ITEM_CUSTOMERS", "Customers", eventAttribute, true);
+		
+			Ask tenantsAsk = new Ask(tenantsQues, sourceCode, targetCode);
+			Ask applicantsAsk = new Ask(applicantsQues, sourceCode, targetCode);
+			Ask customersAsk = new Ask(customersQues, sourceCode, targetCode);
+		
+
+			Ask[] contactsChildAsks = { tenantsAsk, applicantsAsk, customersAsk };
+			contactsAsk.setChildAsks(contactsChildAsks);
+
+		Ask[] agentSidebar = { dashboardAsk, contactsAsk, processViewAsk };
+	
+		/* sidebar group */
+		Question sidebarQues = new Question("QUE_PROJECT_SIDEBAR_GRP", "Sidebar", questionAttribute, true);
+		Ask sidebarAsk = new Ask(sidebarQues, sourceCode, targetCode);
+		
+		sidebarAsk.setChildAsks(agentSidebar);
+		VertxUtils.putObject(serviceToken.getRealm(), "", "SIDEBAR_AGENT", sidebarAsk, serviceToken.getToken());
+end

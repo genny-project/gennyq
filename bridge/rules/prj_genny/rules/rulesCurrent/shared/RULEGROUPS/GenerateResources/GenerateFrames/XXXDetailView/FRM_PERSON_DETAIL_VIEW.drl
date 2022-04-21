@@ -1,0 +1,87 @@
+package life.genny.rules;
+
+import life.genny.qwanda.ContextList;
+
+
+
+global org.apache.logging.log4j.Logger log;
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwandautils.JsonUtils;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.Frame3;
+import life.genny.models.Theme;
+import life.genny.utils.FrameUtils2;
+import org.apache.commons.beanutils.BeanUtilsBean;
+
+rule "FRM_PERSON_DETAIL_VIEW"
+    ruleflow-group 'GenerateFrames'
+
+    when
+      not  Frame3(code == "FRM_PERSON_DETAIL_VIEW")
+      serviceToken : GennyToken( code == "PER_SERVICE")
+      FRM_DETAIL_VIEW_TOP_CARD : Frame3 ( code == "FRM_DETAIL_VIEW_TOP_CARD" )
+      FRM_DETAIL_VIEW_CARD : Frame3 ( code == "FRM_DETAIL_VIEW_CARD" )
+
+    then
+        System.out.println("   Generate FRM_PERSON_DETAIL_VIEW Rule  "+serviceToken.getUserCode());
+
+		/*
+			Setting appropriate question code !!!!
+			For top FRM_DETAIL_VIEW_TOP_CARD send questions with groupCode QUE_DETAIL_VIEW_TOP_SUMMARY_GRP
+			For FRM_DETAIL_VIEW_CARD send questions with groupCode QUE_DETAIL_VIEW_SUMMARY_GRP or change the targetCode to desire question group code
+		*/
+
+		/*BeanUtilsBean odd = BeanUtilsBean.getInstance();
+		Frame3 personDetailFrame = (Frame3) odd.cloneBean(FRM_DETAIL_VIEW_CARD);
+		Frame3 personDetailFrame = new Frame3(FRM_DETAIL_VIEW_CARD);*/
+
+		Frame3 personDetailFrame = FRM_DETAIL_VIEW_CARD ;
+		personDetailFrame.setCode("FRM_PERSON_SUMMARY");
+
+		/*Question code should be exactly same as the SBE questiongroup code*/
+		personDetailFrame.setQuestionCode("QUE_PERSON_DETAIL_GRP");
+
+		/*Frame3 personDocSummaryFrame = (Frame3) odd.cloneBean(FRM_DETAIL_VIEW_CARD);
+		Frame3 personDocSummaryFrame = new Frame3(FRM_DETAIL_VIEW_CARD);*/
+		Frame3 personDocSummaryFrame = FRM_DETAIL_VIEW_CARD ;
+		personDocSummaryFrame.setCode("FRM_PERSON_DOC_SUMMARY");
+
+		/*Question code should be exactly same as the SBE questiongroup code*/
+		personDocSummaryFrame.setQuestionCode("QUE_PERSON_DOC_DETAIL_GRP");
+
+ 	  	Frame3 frame = Frame3.builder("FRM_PERSON_DETAIL_VIEW")
+						.addFrame(FRM_DETAIL_VIEW_TOP_CARD,FramePosition.CENTRE).end()
+						.addFrame(personDetailFrame, FramePosition.CENTRE).end()
+						.addFrame(personDocSummaryFrame, FramePosition.CENTRE).end()
+						.build();
+
+			frame.setRealm(serviceToken.getRealm());
+			insert (frame);
+
+    /* Process and save to cache */
+    Set<QDataAskMessage> askSet = new HashSet<QDataAskMessage>();
+		Map<String, ContextList> contextListMap = new HashMap<String, ContextList>();
+
+		FrameUtils2.toMessage(frame, serviceToken,askSet,contextListMap);
+
+		VertxUtils.putObject(serviceToken.getRealm(), "", frame.getCode(), frame, serviceToken.getToken());
+		System.out.println("Writing to cache");
+		VertxUtils.writeCachedJson(serviceToken.getRealm(),"ASK_" + frame.getCode(), JsonUtils.toJson(askSet.toArray()),serviceToken.getToken());
+
+	end

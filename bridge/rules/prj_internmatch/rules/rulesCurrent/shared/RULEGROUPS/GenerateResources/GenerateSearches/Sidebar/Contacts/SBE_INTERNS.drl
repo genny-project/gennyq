@@ -1,0 +1,105 @@
+package life.genny.rules;
+
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.rules.QRules;
+import life.genny.qwandautils.JsonUtils;
+import org.apache.logging.log4j.Logger;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwandautils.GennySettings;
+import life.genny.qwanda.EEntityStatus;
+
+rule "SBE_INTERNS"
+    ruleflow-group 'GenerateSearches'
+     no-loop true
+    when
+       not  SearchEntity (code == "SBE_INTERNS")
+        serviceToken : GennyToken( code == "PER_SERVICE")
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+     	BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken);
+
+		SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Interns")
+			/* Sorts */
+			.addSort("PRI_NAME","Name", SearchEntity.Sort.ASC)
+			.addSort("PRI_CREATED_DATE", "Date Created", SearchEntity.Sort.DESC)
+			/* .addSort("PRI_STATUS","Status", SearchEntity.Sort.ASC) */
+			/* .addSort("PRI_ASSOC_INDUSTRY", "Industry", SearchEntity.Sort.ASC) */
+			/* .addSort("PRI_NUM_JOURNALS", "Journals", SearchEntity.Sort.DESC) */
+			/* .addSort("PRI_START_DATE","Start Date",SearchEntity.Sort.ASC) */
+			/* .addSort("PRI_ASSOC_EP", "Education Provider", SearchEntity.Sort.ASC) */
+			/* .addSort("PRI_ADDRESS_STATE", "State",SearchEntity.Sort.ASC) */
+
+			/* Filters */
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+			.addFilter("PRI_IS_INTERN", true)
+			/* .setSearchStatus(EEntityStatus.PENDING) */
+
+			/* Table Columns */
+			.addColumn("PRI_IMAGE_URL", "Profile Picture")
+			.addColumn("PRI_NAME", "Name")
+			.addColumn("PRI_CREATED_DATE", "Date Created")
+			.addColumn("PRI_PREFERRED_NAME", "Preferred Name")
+			.addColumn("PRI_STATUS", "Status")
+			.addAssociatedColumn("LNK_INDUSTRY", "PRI_NAME", "Industry")
+			.addAssociatedColumn("LNK_OCCUPATION", "PRI_NAME", "Occupation")
+			.addAssociatedColumn("LNK_EDU_PROVIDER", "PRI_NAME", "Education Provider")
+			.addAssociatedColumn("LNK_INTERNSHIP_DURATION", "PRI_NAME", "Internship Duration")
+			.addAssociatedColumn("LNK_DAYS_PER_WEEK", "PRI_NAME", "Days per week")
+			.addColumn("PRI_EMAIL", "Email")
+			.addColumn("PRI_MOBILE", "Mobile")
+			.addAssociatedColumn("LNK_AGENT", "PRI_NAME", "Agent Name")
+			.addAssociatedColumn("LNK_AGENT", "PRI_ASSOC_AGENCY", "Assoc Agency")
+			.addColumn("PRI_START_DATE", "Start Date")
+			.addColumn("PRI_ADDRESS_SUBURB", "Suburb")
+			.addColumn("PRI_ADDRESS_STATE", "State")
+			.addColumn("PRI_ADDRESS_COUNTRY", "Country")
+			.addColumn("PRI_VIDEO_URL", "Video URL")
+			.addColumn("PRI_CV", "CV")
+			.addColumn("PRI_NUM_JOURNALS", "Completed Journals")
+			.addAssociatedColumn("LNK_COMP_INTERNSHIP", "PRI_NAME", "Academy")
+
+			/* Filterable Columns */
+			.addFilterableColumn("PRI_NAME", "Name")
+			.addFilterableColumn("PRI_STATUS", "Status")
+			.addFilterableColumn("PRI_ASSOC_INDUSTRY", "Industry")
+			.addFilterableColumn("PRI_START_DATE", "Start Date")
+			.addFilterableColumn("PRI_ADDRESS_STATE", "State")
+			.addFilterableColumn("PRI_AGENT_NAME", "Agent Name")
+			.addFilterableColumn("PRI_BATCH", "Batch")
+			.addFilterableColumn("PRI_ADDRESS_STATE", "State")
+			.addFilterableColumn("PRI_ADDRESS_COUNTRY", "Country")
+			.addFilterableColumn("PRI_CREATED_DATE", "Date Created")
+
+			/* Table actions */
+			.addAction("PRI_EVENT_VIEW", "View Profile")
+			.addAction("PRI_EVENT_JOURNAL_VIEW", "View Logbook")
+			/*.addAction("PRI_EVENT_APPLY", "Apply to an Internship")*/
+
+			/* Wildcard Whitelisted Attributes */
+			.addWhitelist("PRI_NAME")
+
+			/* Row Action */
+			.addRowAction("PRI_EVENT_VIEW_APPLICATIONS", "View Applications")
+			.setCachable(true)
+			.setWildcardDepth(1)
+			.setPageStart(0).setPageSize(GennySettings.defaultPageSize);
+
+		searchBE.setRealm(serviceToken.getRealm());
+		insert(searchBE);
+		VertxUtils.putObject(serviceToken.getRealm(), "", searchBE.getCode(), searchBE, serviceToken.getToken());
+
+end

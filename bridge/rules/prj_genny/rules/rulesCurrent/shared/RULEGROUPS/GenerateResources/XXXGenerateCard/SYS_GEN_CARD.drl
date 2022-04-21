@@ -1,0 +1,139 @@
+package life.genny.rules;
+
+import life.genny.qwanda.entity.BaseEntity;
+global org.apache.logging.log4j.Logger log;
+import life.genny.rules.QRules;
+import life.genny.utils.VertxUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.FramePosition;
+import life.genny.utils.FrameUtils2;
+import life.genny.models.Frame3;
+import life.genny.models.FramePosition;
+import life.genny.models.GennyToken;
+import life.genny.models.Theme;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwanda.VisualControlType;
+import io.vertx.core.json.JsonObject;
+
+rule "SYS_GENERATE_CARD"
+    ruleflow-group 'GenerateCard'
+    no-loop true
+    salience 10000
+    when
+      serviceToken : GennyToken( code == "PER_SERVICE")
+    
+    then
+		    /* create themes */
+		
+		    Theme THM_FORM_LABEL_DEFAULT = Theme.builder("THM_FORM_LABEL_DEFAULT")
+		                                    .addAttribute()
+		                                    .backgroundColor("white")
+		                                    .end().build();
+		
+		    Theme THM_CARD_DEFAULT = Theme.builder("THM_CARD_DEFAULT")
+		                    .addAttribute().backgroundColor("none").end()
+		                    .build();
+		
+		
+		    Theme THM_CARD = Theme.builder("THM_CARD")
+		                    .addAttribute(ThemeAttributeType.PRI_IS_INHERITABLE, false).end()
+		                    .addAttribute()
+		                            .height(200)
+		                            .backgroundColor("#F8F9FA")
+		                            .width("100%")
+		                            .shadowColor("#000")
+		                            .shadowOpacity(0.4)
+		                            .shadowRadius(5)
+		                                    .shadowOffset()
+		                                    .width(0)
+		                                    .height(0)
+		                           .end()
+		                     .end()
+		                    .build();
+		
+		    Theme THM_CARD_LEFT = Theme.builder("THM_CARD_LEFT")
+		                    .addAttribute()
+		                    .backgroundColor("#EBECF0")
+		                    .end().build();
+		    Theme THM_CARD_CENTRE = Theme.builder("THM_CARD_CENTRE")
+		                    .addAttribute()
+		                    .backgroundColor("#FFFFFF")
+		                    .end().build();
+		    Theme THM_CARD_RIGHT = Theme.builder("THM_CARD_RIGHT")
+		                    .addAttribute()
+		                    .backgroundColor("#E1E2E1")
+		                    .end().build();
+		
+		    /* create frames for each question */
+		    Frame3 frameName = Frame3.builder("FRM_NAME")
+		                    .question("QUE_NAME_TWO")
+		                            .addTheme(THM_CARD_DEFAULT)
+		                            .vcl(VisualControlType.VCL_LABEL)
+		                            .end()
+		                    .end().build();
+		    Frame3 frameEmail = Frame3.builder("FRM_EMAIL")
+		                    .question("QUE_EMAIL")
+		                            .addTheme(THM_CARD_DEFAULT)
+		                            .vcl(VisualControlType.VCL_LABEL)
+		                            .end()
+		                    .end().build();
+		    Frame3 frameMobile = Frame3.builder("FRM_MOBILE")
+		                    .question("QUE_MOBILE")
+		                            .addTheme(THM_CARD_DEFAULT)
+		                            .vcl(VisualControlType.VCL_LABEL)
+		                            .end()
+		                    .end().build();
+		    Frame3 frameDob = Frame3.builder("FRM_DOB")
+		                    .question("QUE_DOB")
+		                            .addTheme(THM_CARD_DEFAULT)
+		                            .vcl(VisualControlType.VCL_LABEL)
+		                            .end()
+		                    .end().build();
+		
+		    /* build left, center, card frame-card */
+		
+		    Frame3 frameLeftCard = Frame3.builder("FRM_CARD_LEFT")
+		                    .addTheme(THM_CARD_LEFT).end()
+		                    .question("QUE_IMAGE")
+		                    .end().build();
+		    Frame3 frameCentreCard = Frame3.builder("FRM_CARD_CENTRE")
+		                    .addTheme(THM_CARD_CENTRE).end()
+		                    .addFrame(frameName, FramePosition.NORTH).end()
+		                    .addFrame(frameEmail, FramePosition.NORTH).end()
+		                    .addFrame(frameMobile, FramePosition.NORTH).end()
+		                    .addFrame(frameDob, FramePosition.NORTH).end()
+		
+		                    .build();
+		    Frame3 frameRightCard = Frame3.builder("FRM_CARD_RIGHT")
+		                    .addTheme(THM_CARD_RIGHT).end()
+		                    .question("QUE_NAME_TWO")
+		                    .end().build();
+		
+		    Theme THM_TEST1 = Theme.builder("THM_TEST1").
+		                    addAttribute().backgroundColor("none").width("100%")
+		                    .height(70).end().build();
+		
+		    /* create frames */
+		    Frame3 frameCard = Frame3.builder("FRM_CARD")
+		                    .addTheme(THM_CARD).end()
+		                    .question("QUE_NAME_TWO")
+		                            .addTheme(THM_FORM_LABEL_DEFAULT)
+		                            .vcl(VisualControlType.VCL_WRAPPER)
+		                            .end()
+		                    .end()
+		                    .addFrame(frameLeftCard, FramePosition.WEST).end()
+		                    .addFrame(frameCentreCard, FramePosition.WEST).end()
+		                    .build();
+			
+			insert(frameCard);
+			
+			/* Writing frameCard to the cache*/
+			
+			VertxUtils.putObject(serviceToken.getRealm(), "", frameCard.getCode(), frameCard, serviceToken.getToken());
+			
+			/*Printing the frameCard just saved to cache */
+			BaseEntity be = VertxUtils.getObject(serviceToken.getRealm(), "", "FRM_CARD", BaseEntity.class, serviceToken.getToken());
+			System.out.println("CREATED CARD BASEENTITY   :::  " + be.getCode());
+  
+	end

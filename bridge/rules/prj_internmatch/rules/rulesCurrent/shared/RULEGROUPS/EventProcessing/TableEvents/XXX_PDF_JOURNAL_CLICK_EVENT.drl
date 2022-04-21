@@ -1,0 +1,58 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+
+rule "PDF_JOURNAL_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage(data.code matches "QUE_PRI_EVENT_JOURNAL_VIEW_.*" && (data.rootCode == "QUE_TABLE_RESULTS_GRP"))
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		output : OutputParam( )
+		ruleDetails : RuleDetails()
+
+		
+    then
+
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		String code = $message.getData().getCode(); /* get click event code e.g. QUE_ADD_EDU_PROVIDER_GRP  */
+		System.out.println("code : " + code);
+		
+		/*String internCode = StringUtils.removeStart(workflowSignalCode,"QUE_PRI_EVENT_JOURNAL_VIEW_")
+		System.out.println("internCode : " + internCode);*/
+		
+		String workflowSignalCode = "START_JOURNAL_PDF";
+		
+		output.setTypeOfResult("SIGNAL");
+		output.setResultCode(workflowSignalCode);
+		output.setTargetCode($message.getData().getTargetCode());
+		
+		String workflowBeCode = $message.getData().getTargetCode();
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ workflowBeCode: " + workflowBeCode);
+		
+		System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$ targetCode: " + output.getTargetCode());
+		
+		SessionFacts facts = new SessionFacts(serviceToken, userToken, output.getTargetCode());
+		
+		System.out.println("START SIGNAL: " +workflowSignalCode);
+		System.out.println("STARTING THE MOVE FROM APPLIED TO SHORTLIST WITH: " +output);
+
+		retract( $message);
+		
+
+	end

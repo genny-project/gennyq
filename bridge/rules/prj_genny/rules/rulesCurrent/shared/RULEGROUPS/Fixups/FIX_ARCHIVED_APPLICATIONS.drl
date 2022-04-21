@@ -1,0 +1,115 @@
+package life.genny.rules;
+
+import org.apache.commons.lang3.StringUtils;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import io.vertx.core.json.JsonObject;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.List;
+import com.google.gson.reflect.TypeToken;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.TableUtils;
+import life.genny.models.TableData;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.qwanda.Ask;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.jbpm.customworkitemhandlers.ShowFrame;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import life.genny.utils.SearchCallable;
+import life.genny.utils.TableFrameCallable;
+import life.genny.utils.CacheSearchUtils;
+
+rule "FIX_ARCHIVED_APPLICATIONS"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+			message : QEventMessage(data.code == "QUE_FIX_ARCHIVED_APPLICATIONS" && data.parentCode == "QUE_FIX_ARCHIVED_APPLICATIONS_GRP" )
+			userToken : GennyToken (code != "PER_SERVICE" )
+			serviceToken : GennyToken( code == "PER_SERVICE")
+			output : OutputParam( )
+			ruleDetails : RuleDetails()
+			beUtils : BaseEntityUtils()
+    then
+			System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processings : " + message );
+
+			System.out.println("Fixing All User Status'");
+
+
+			SearchEntity searchBE = new SearchEntity("SBE_GET_INTERNS", "Get All Interns")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%")
+				.addFilter("PRI_STATUS", SearchEntity.StringFilter.EQUAL, "ARCHIVED")
+				.addFilter("PRI_IS_INTERN", true)
+				.setPageStart(0).setPageSize(100000);
+	
+			searchBE.setRealm(serviceToken.getRealm());
+			List<BaseEntity> internBaseEntitys = beUtils.getBaseEntitys(searchBE);
+
+			System.out.println("Found " + internBaseEntitys.size() + " Intern BEs");
+
+			Integer archiveCount = 0;
+			Integer disabledCount = 0;
+			for (BaseEntity intern : internBaseEntitys) {
+				System.out.println("Intern Code = " + intern.getCode());
+				String status = intern.getValue("PRI_STATUS", null);
+				System.out.println("Intern Status = " + status);
+				
+				SearchEntity appSearchBE = new SearchEntity("SBE_LINKED_APPLICATIONS", "Linked Applications")
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+					.addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, intern.getCode())
+					.setPageStart(0).setPageSize(100000);
+		
+				appSearchBE.setRealm(serviceToken.getRealm());
+				List<BaseEntity> linkedApps = beUtils.getBaseEntitys(appSearchBE);
+
+				if (status != null) {
+					/* Disable all apps if person is archived */
+					if (status.equals("ARCHIVED")) {
+						System.out.println("Intern is an ARCHIVED intern");
+						archiveCount += 1;
+
+						for (BaseEntity app : linkedApps) {
+							Boolean disabled = app.getValue("PRI_DISABLED", null);
+							if (disabled != null) {
+								if (!disabled) {
+									disabledCount += 1;
+									beUtils.saveAnswer(new Answer(userToken.getUserCode(), app.getCode(), "PRI_DISABLED", "true"));
+								}
+							}
+						}
+					}
+				} else {
+					System.out.println("status is NULL");
+				}
+
+			}
+			System.out.println("Number of Archived Interns found = " + archiveCount.toString());
+			System.out.println("Number of Applications Set to Disabled = " + disabledCount.toString());
+
+			retract(message);
+			output.setTypeOfResult("NONE");
+			output.setResultCode("NONE");  /* dont display anything new */
+		end

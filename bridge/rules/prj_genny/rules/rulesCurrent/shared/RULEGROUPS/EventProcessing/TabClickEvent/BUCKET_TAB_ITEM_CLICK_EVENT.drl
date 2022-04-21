@@ -1,0 +1,40 @@
+package life.genny.rules;
+import java.util.ArrayList;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.utils.BucketUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.utils.TableUtils;
+import org.drools.core.spi.KnowledgeHelper;
+import life.genny.qwanda.datatype.Allowed;
+import life.genny.qwanda.datatype.CapabilityMode;
+
+rule "BUCKET_TAB_ITEM_CLICK_EVENT"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage((data.code matches "QUE_TAB.*" && 
+							(	data.parentCode == "QUE_TAB_BUCKET_VIEW" || 
+								data.parentCode == "QUE_TAB_DETAIL_VIEW" || 
+								data.parentCode == "QUE_TAB_TABLE_VIEW"))  || 
+								data.code matches "SCH_ACT_PRI_EVENT_QUE_TAB_BUCKET_VIEW.*"	
+							)	
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		output : OutputParam( )
+
+	then
+		System.out.println(drools.getRule().getName() + " triggered");
+		drools.setFocus("BucketProcessing");
+		output.setTypeOfResult("NONE");
+		output.setResultCode("NONE");  /* dont display anything new */
+		retract( $message);
+end

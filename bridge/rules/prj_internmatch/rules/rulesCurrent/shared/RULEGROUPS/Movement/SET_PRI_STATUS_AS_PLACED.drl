@@ -1,0 +1,299 @@
+package life.genny.rules;
+import life.genny.models.GennyToken;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.utils.VertxUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.SearchUtils;
+import life.genny.qwandautils.GennySettings;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import life.genny.utils.ShleemyUtils;
+import life.genny.qwandautils.MessageUtils;
+import life.genny.message.QMessageGennyMSG;
+import life.genny.qwanda.message.QBaseMSGMessageType;
+import life.genny.qwandautils.QwandaUtils;
+import life.genny.qwanda.entity.SearchEntity;
+
+rule "SET_PRI_STATUS_AS_PLACED"
+    ruleflow-group 'Movement'
+    no-loop true
+    salience 1
+    when
+	 	userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+		newApplication : BaseEntity()
+		bucketCode : String(bucketCode.equals("OFFERED"))
+		controlSignalCode : String(controlSignalCode.equals("PLACED"))
+		beUtils : BaseEntityUtils()
+
+    then
+        System.out.println(drools.getRule().getName() + " : Rule fired!! - newApplication = " + newApplication);
+        newApplication = beUtils.getBaseEntityByCode(newApplication.getCode());
+
+		BaseEntity defTypeApplication = beUtils.getBaseEntityByCode("DEF_APPLICATION");
+
+		Boolean sendOk = false;
+		BaseEntity checkApp = beUtils.getBaseEntityByCode(newApplication.getCode());
+		String status = checkApp.getValue("PRI_STATUS",null);
+		if (status != null) {
+			if (!"PLACED".equals(status)) {
+				sendOk = true;
+			}
+		} else {
+		   sendOk = true;
+		 }
+
+ 		Answer answer = new Answer(userToken.getUserCode(),newApplication.getCode(),"PRI_STATUS","PLACED");
+ 		beUtils.saveAnswer(defTypeApplication, answer);
+
+        Answer answerStage = new Answer(userToken.getUserCode(),newApplication.getCode(),"PRI_STAGE","PLACED");
+ 		beUtils.saveAnswer(defTypeApplication, answerStage);
+
+		System.out.println("SET_PRI_STATUS_AS_PLACED: Answer = " + answer);
+		System.out.println("SET_PRI_STATUS_AS_PLACED: newApplication = " + newApplication);
+
+		TableUtils.moveEntity(newApplication.getCode(), "SBE_OFFERED_APPLICATIONS", "SBE_PLACED_APPLICATIONS", beUtils);
+
+		/* Save status to the PER */
+		String assocIntern = newApplication.getValue("PRI_INTERN_CODE", null);
+		System.out.println("assocIntern: " +assocIntern);
+		if (assocIntern != null){
+			BaseEntity assocInternBe = beUtils.getBaseEntityByCode(assocIntern);
+			System.out.println("assocInternBe: " +assocInternBe);
+
+			String internStatus = assocInternBe.getValue("PRI_STATUS", null);
+			System.out.println("internStatus: " +internStatus);
+
+			if (internStatus.equals("AVAILABLE") || internStatus.equals("APPLIED") || internStatus.equals("SHORTLISTED") || internStatus.equals("INTERVIEWED") || internStatus.equals("OFFERED")){
+				Answer answerStatus = new Answer(userToken.getUserCode(), assocInternBe.getCode(), "PRI_STATUS", "PLACED");
+				beUtils.saveAnswer(answerStatus);
+				System.out.println("answerStatus: " +answerStatus);
+			}
+
+			String appCode = newApplication.getCode();
+        	System.out.println(appCode);
+
+        	String[] strippedAppCode = appCode.split("-");
+        	System.out.println(strippedAppCode[0]);
+
+        	String assocAppCode = "PRI_" +strippedAppCode[0];
+        	System.out.println(assocAppCode);
+
+        	Answer answerApp = new Answer(userToken.getUserCode(), assocInternBe.getCode(), assocAppCode, appCode);
+			beUtils.saveAnswer(answerApp);
+			System.out.println("answerApp: " +answerApp);
+
+			/* Remove from Available bucket */
+			Answer answerDisable = new Answer(userToken.getUserCode(), assocInternBe.getCode(), "PRI_DISABLED", true);
+			beUtils.saveAnswer(answerDisable);
+			System.out.println("answerDisable: " +answerDisable);
+			TableUtils.moveEntity(assocInternBe.getCode(), "SBE_AVAILABLE_INTERNS", null, beUtils);
+
+			/* Remove from other applications from all buckets */
+    		SearchEntity appSearch = new SearchEntity("SBE_PLACED", "SBE_PLACED")
+                .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+                .addFilter("PRI_INTERN_CODE", SearchEntity.StringFilter.EQUAL, assocIntern)
+                .addFilter("PRI_DISABLED", false)
+                .setPageStart(0).setPageSize(1000);
+
+    		appSearch.setRealm(serviceToken.getRealm());
+
+    		List<BaseEntity> apps = beUtils.getBaseEntitys(appSearch);
+			List<BaseEntity> updatedApps = new ArrayList<>();
+    		for(int i=0;i<apps.size();i++){
+    			System.out.println(apps.get(i));
+			}
+
+	        System.out.println("The number of apps is " + (apps == null ? "NULL" : apps.size()));
+    		if ((apps != null) && (apps.size() > 0)) {
+    			for (BaseEntity app : apps) {
+    				if (!app.getCode().equals(newApplication.getCode())) {
+    					Answer answerAppDisable = new Answer(userToken.getUserCode(), app.getCode(), "PRI_DISABLED", true);
+						beUtils.saveAnswer(defTypeApplication,answerAppDisable);
+						updatedApps.add(app);
+						TableUtils.moveEntity(app.getCode(), "SBE_APPLIED_APPLICATIONS", null, beUtils);
+						TableUtils.moveEntity(app.getCode(), "SBE_SHORTLISTED_APPLICATIONS", null, beUtils);
+						TableUtils.moveEntity(app.getCode(), "SBE_INTERVIEWED_APPLICATIONS", null, beUtils);
+						TableUtils.moveEntity(app.getCode(), "SBE_OFFERED_APPLICATIONS", null, beUtils);
+    				} else {
+						System.out.println("app code is:: " + app.getCode() + " current app code is:: " + newApplication.getCode());
+					}
+    			}
+
+				/*QDataBaseEntityMessage appBeMsg = new QDataBaseEntityMessage(updatedApps);
+				appBeMsg.setToken(userToken.getToken());
+				VertxUtils.writeMsg("webcmds", JsonUtils.toJson(appBeMsg));*/
+
+    		} else {
+    			System.out.println("No other applications to disable");
+    		}
+
+		} else {
+			System.out.println("$$$ assocIntern PRI_INTERN_CODE was null $$$");
+		}
+
+
+		/* ------EMAILS------ */
+		if (sendOk) {
+            String timezone = null;
+            BaseEntity durationBE = null;
+            BaseEntity agentBE = null;
+
+            BaseEntity internBE = beUtils.getBaseEntityFromLNKAttr(newApplication, "PRI_INTERN_CODE");
+            if (internBE != null) {
+                timezone = internBE.getValue("PRI_TIMEZONE_ID", null);
+                durationBE = beUtils.getBaseEntityFromLNKAttr(internBE, "LNK_INTERNSHIP_DURATION");
+                agentBE = beUtils.getBaseEntityFromLNKAttr(internBE, "LNK_AGENT");
+            } else {
+                System.out.println("intern BE is NULL");
+            }
+
+            BaseEntity hostCompany = null;
+            BaseEntity hostCompanyRep = null;
+            /*BaseEntity supervisorBE = null;*/
+
+            BaseEntity internship = beUtils.getBaseEntityFromLNKAttr(newApplication, "LNK_INTERNSHIP");
+            if (internship != null) {
+                hostCompany = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_HOST_COMPANY");
+                hostCompanyRep = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_HOST_COMPANY_REP");
+                /*supervisorBE = beUtils.getBaseEntityFromLNKAttr(internshipBE, "LNK_INTERN_SUPERVISOR");*/
+            }
+
+            /* Send Email to Intern */
+            QMessageGennyMSG sendGridInternMsg = new QMessageGennyMSG.Builder("MSG_INT8_PLACED")
+                .setUtils(beUtils)
+                .addRecipient(internBE)
+                .addContext("HC", hostCompany)
+                .addContext("HCR", hostCompanyRep)
+                .addContext("INTERNSHIP", internship)
+                .addContext("INTERN", internBE)
+                .addContext("APPLICATION", newApplication)
+                .addContext("DURATION", durationBE)
+                .addContext("DATEFORMAT","dd-MMM-yy")
+                .send();
+
+            System.out.println("Sendgrid msg: "+ JsonUtils.toJson(sendGridInternMsg));
+            System.out.println("Sendgrid email sent to intern!!");
+
+            /* Send Email to HCR */
+            Boolean sendEmail = false;
+            if (hostCompanyRep != null) {
+                sendEmail = hostCompanyRep.getValue("PRI_EMAIL_FLAG", false);
+                if (sendEmail) {
+                    /* Change Template, URL and Recipient */
+                    QMessageGennyMSG sendGridHcrMsg = new QMessageGennyMSG.Builder("MSG_HCR5_PLACED")
+                        .setUtils(beUtils)
+                        .addRecipient(hostCompanyRep)
+                        .addContext("HC", hostCompany)
+                        .addContext("HCR", hostCompanyRep)
+                        .addContext("INTERNSHIP", internship)
+                        .addContext("INTERN", internBE)
+                        .addContext("APPLICATION", newApplication)
+                        .addContext("DURATION", durationBE)
+                        .addContext("DATEFORMAT","dd-MMM-yy")
+                        .send();
+                    System.out.println("Sendgrid msg: "+ JsonUtils.toJson(sendGridHcrMsg));
+                    System.out.println("Sendgrid email sent to HCR!!");
+                } else {
+                    System.out.println("Email not sent to HCR");
+                }
+            } else {
+                System.out.println("HCR BE is NULL");
+            }
+
+            /* Email Agent */
+            QMessageGennyMSG sendGridAgentMsg = new QMessageGennyMSG.Builder("MSG_AGT8_PLACED")
+                .setUtils(beUtils)
+                .addRecipient(agentBE)
+                .addContext("HC", hostCompany)
+                .addContext("HCR", hostCompanyRep)
+                .addContext("INTERNSHIP", internship)
+                .addContext("INTERN", internBE)
+                .addContext("APPLICATION", newApplication)
+                .addContext("DURATION", durationBE)
+                .addContext("DATEFORMAT","dd-MMM-yy")
+                .send();
+
+            System.out.println("Sendgrid msg: "+ JsonUtils.toJson(sendGridAgentMsg));
+            System.out.println("Sendgrid email sent to agent!!");
+
+            if (timezone == null) {
+                timezone = "UTC";
+            }
+
+            if(timezone != null && timezone.isEmpty()){
+                timezone = "UTC";
+            }
+
+            System.out.println("timezone = " + timezone);
+
+            /* Schedule Reminder For Day Before */
+            LocalDate startDate = (LocalDate) newApplication.getValue("PRI_START_DATE", null);
+
+            System.out.println("startDate = " + startDate);
+            try{
+            if (startDate != null ) {
+                LocalDateTime trigger  = startDate.atStartOfDay().minusHours(8).minusHours(1).plusMinutes(20);
+                System.out.println("trigger = " + trigger);
+                ZonedDateTime zonedTime = trigger.atZone(ZoneId.of(timezone));
+                System.out.println("zonedTime = " + zonedTime);
+                ZonedDateTime converted = zonedTime.withZoneSameInstant(ZoneId.of("UTC"));
+                System.out.println("converted = " + converted);
+                LocalDateTime utcTrigger = converted.toLocalDateTime();
+                System.out.println("utcTrigger = " + utcTrigger);
+
+                /* LocalDateTime utcTrigger  = LocalDateTime.now(ZoneOffset.UTC).plusMinutes(1); */
+
+                String scheduleMessageCode = newApplication.getCode() + "_PRE_PROGRESS_REMINDER";
+                ShleemyUtils.scheduleMessage(userToken, "PRE_PROGRESS_REMINDER", scheduleMessageCode, utcTrigger, newApplication.getCode());
+
+                /* Schedule Move To Progress At The Same Time */
+                scheduleMessageCode = newApplication.getCode() + "_MOVE_TO_PROGRESS";
+                ShleemyUtils.scheduleMessage(userToken, "ACT_PRI_EVENT_INPROGRESS_APPLICATION", scheduleMessageCode, utcTrigger.plusMinutes(1), newApplication.getCode());
+
+                /* 3PM LOGBOOK REMINDER NEXT DAY OF START OF INTERNSHIP*/
+                /* LocalDateTime trigger  = LocalDateTime.now().with(LocalTime.MIN).plusDays(1).plusHours(15); */
+
+                scheduleMessageCode = newApplication.getCode() + "_LOGBOOK_REMINDER";
+                ShleemyUtils.scheduleMessage(userToken, "LOGBOOK_REMINDER", scheduleMessageCode, utcTrigger.plusDays(1).plusHours(15), newApplication.getCode());
+            } else {
+                System.out.println("Shleemy not activated as startDate is null!");
+            }
+            }catch(Exception ex){
+                System.out.println(ex.getMessage());
+                System.out.println(ex.getStackTrace());
+            }
+
+            String endPoint = GennySettings.projectUrl + "/v7/notes";
+            QwandaUtils.apiPostNote(endPoint, userToken.getUserCode(), "ni", newApplication.getCode(), internBE.getCode() + ", placed for the internship " + internship.getCode() + " at " + hostCompany.getCode(), serviceToken.getToken());
+
+            /* Send In Slack */
+            QMessageGennyMSG slackMsg = new QMessageGennyMSG.Builder("MSG_SLACK_INT_PLACED")
+                .addRecipient("TOL_TEST_SLACK_HOOK")
+                .addContext("INTERN", internBE)
+                .addContext("INTERNSHIP", internship)
+                .addContext("HC", hostCompany)
+                .setUtils(beUtils)
+                .send();
+             System.out.println("Slack msg: "+ JsonUtils.toJson(slackMsg));
+             System.out.println("Slack msg triggered!!");
+		} /* sendOk */
+
+		/* Re generate cached applications */
+		/*SearchUtils.regenerateCaches(beUtils, newApplication);*/
+
+		retract(newApplication)
+		retract(bucketCode)
+		retract(controlSignalCode)
+
+        System.out.println("End of " + drools.getRule().getName() + " :Rule for - newApplication = " + newApplication);
+end

@@ -1,0 +1,133 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QDataAnswerMessage;
+import life.genny.models.GennyToken;
+import life.genny.rules.QRules;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.Answer;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.utils.OutputParam;
+import java.util.List;
+import java.util.ArrayList;
+
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QScheduleMessage;
+import life.genny.utils.BucketUtils;
+import life.genny.utils.TableUtils;
+import life.genny.utils.ShleemyUtils;
+import life.genny.models.ThemePosition;
+import life.genny.models.ThemeAttributeType;
+import life.genny.qwandautils.GennySettings;
+import life.genny.notifications.EmailHelper;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+rule "SEND_EMAIL_MENTOR_AGREES_WITH_TIMES"
+    ruleflow-group 'Notification'
+    no-loop true
+    salience 5
+    when
+   		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken( code == "PER_SERVICE")
+		assocApplication : BaseEntity( code matches "APP_\\S+" )
+		output : OutputParam( )
+		controlSignalCode : String(controlSignalCode.equals("SCHEDULE_MENTORING_SESSIONS"))
+		beUtils : BaseEntityUtils()
+     then
+ 		System.out.println(drools.getRule().getName() + " : Rule fired" );
+ 		System.out.println("Current Time is "+LocalDateTime.now());
+
+ 		assocApplication = beUtils.getBaseEntityByCode(assocApplication.getCode());
+
+		System.out.println(drools.getRule().getName() +" :: assocApplication = " + assocApplication);
+
+		String menteeCode = assocApplication.getValue("PRI_MENTEE_CODE", null);
+		String mentorCode = assocApplication.getValue("PRI_MENTOR_CODE", null);
+
+ 		BaseEntity menteeBe = beUtils.getBaseEntityByCode(menteeCode);
+		BaseEntity mentorBe = beUtils.getBaseEntityByCode(mentorCode);
+
+		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_"+ serviceToken.getRealm().toUpperCase());
+
+		if (mentorBe != null) {
+			System.out.println("#### Sending email to mentee to that mentor agreed on meeting times ####");
+
+			/* SEND EMAIL */
+                String menteeEmail = menteeBe.getValue("PRI_EMAIL", null);
+				System.out.println("menteeEmail: " + menteeEmail);
+
+				String mentorName = mentorBe.getValue("PRI_NAME", null);
+				System.out.println("mentorName: " + mentorName);
+
+				String menteeName = menteeBe.getValue("PRI_NAME", null);
+				System.out.println("menteeName: " + menteeName);
+
+				if (menteeEmail != null) {
+
+						String subject = "Mentor agree to meeting times";
+						String template_id = "d-b5706833e31d40a78ec4af6c0d2624d0";
+
+						String urlParentCode = "QUE_FAKE_PARENT";
+                		String urlCode = "ACT_MEETING_REQUEST";
+
+					 	String token = KeycloakUtils.getImpersonatedToken(serviceToken.getKeycloakUrl(), serviceToken.getRealm(), project, menteeEmail, serviceToken.getToken());
+       					System.out.println("token: " + token);
+
+                		/* Encode each section of the url */
+                		urlParentCode = new String(Base64.getEncoder().encode(urlParentCode.getBytes()));
+                		urlCode = new String(Base64.getEncoder().encode(urlCode.getBytes()));
+
+                		String url = GennySettings.projectUrl+"/home/"+urlParentCode+"/"+urlCode;
+
+                		url = url + "?token=" + token;
+                		System.out.println("url: " + url);
+
+						HashMap<String, String> templateData = new HashMap<String, String>();
+
+                        templateData.put("Mentor", mentorName);
+						templateData.put("Mentee", menteeName);
+                        templateData.put("url", url);
+
+                        System.out.println("-------- EMAIL DATA --------");
+                        System.out.println("subject: " +subject);
+						System.out.println("template_id: " +template_id);
+						System.out.println("email: " + menteeEmail);
+						System.out.println("Mentee: " +menteeName);
+						System.out.println("Mentor: " +mentorName);
+						System.out.println("----------------------------");
+
+						if (!GennySettings.projectUrl.contains("dev")) {
+
+								List<String> bccList = Arrays.asList("mentormatch@gada.io");
+								EmailHelper.sendGrid(beUtils, menteeEmail, null, bccList, subject, template_id, templateData, true);
+
+								System.out.println("Email Sent ||| Subject: " + subject + "||| template_id: " + template_id);
+
+						} else {
+								List<String> bccList = Arrays.asList("mentormatch@gada.io");
+								EmailHelper.sendGrid(beUtils, menteeEmail, null, bccList, subject, template_id, templateData, true);
+
+								System.out.println("Email Sent To ||| " + menteeEmail + " Subject: " + subject + "||| template_id: " + template_id);
+
+							System.out.println("WARNING: Email not sent because on Dev server");
+						}
+				} else {
+					System.out.println("ERROR Null Mentee email");
+				}
+		}
+		retract(assocApplication)
+		retract(controlSignalCode)
+end

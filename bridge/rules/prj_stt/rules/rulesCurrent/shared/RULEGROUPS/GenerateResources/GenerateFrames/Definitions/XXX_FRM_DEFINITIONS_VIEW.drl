@@ -1,0 +1,74 @@
+package life.genny.rules;
+
+import life.genny.qwanda.ContextList;
+
+
+
+global org.apache.logging.log4j.Logger log;
+
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.message.QBulkMessage;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.rules.QRules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwandautils.JsonUtils;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.qwanda.entity.SearchEntity;
+import life.genny.utils.VertxUtils;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.models.GennyToken;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.models.Frame3;
+import life.genny.models.Theme;
+import life.genny.utils.FrameUtils2;
+import org.apache.commons.beanutils.BeanUtilsBean;
+
+rule "FRM_DEFINITIONS_ONE_VIEW"
+    ruleflow-group 'GenerateFrames'
+
+    when
+      not  Frame3(code == "FRM_DEFINITIONS_ONE_VIEW")
+      serviceToken : GennyToken( code == "PER_SERVICE")
+      /*FRM_NAME_IMAGE_DV_TOP_CARD : Frame3 ( code == "FRM_NAME_IMAGE_DV_TOP_CARD" )*/
+      FRM_DEFINITIONS_VIEW_CARD : Frame3 ( code == "FRM_DEFINITIONS_VIEW_CARD" )
+
+    then
+    	System.out.println("*************** prj_stt - FRM_DEFINITIONS_ONE_VIEW Rule  "+serviceToken.getUserCode());
+        System.out.println("Generate FRM_DEFINITIONS_VIEW Rule  "+serviceToken.getUserCode());
+        
+        
+		Frame3 Frame defintionsViewFrame =  Frame3.clone(FRM_DEFINITIONS_VIEW_CARD);
+		defintionsViewFrame.setCode("FRM_DEFINTIONS_ONE_BDV");
+		defintionsViewFrame.setName("FRM_DEFINTIONS_ONE_BDV");
+		defintionsViewFrame.setQuestionCode("QUE_NAME_TDV_GRP");
+		defintionsViewFrame.getQuestionGroup().setCode("QUE_NAME_TDV_GRP");
+
+
+ 	  	Frame3 frame = Frame3.builder("FRM_DEFINITIONS_VIEW_CARD")
+						/*.addTheme("THM_SCROLL_VERTICAL", ThemePosition.WRAPPER, serviceToken).end()
+						.addTheme("THM_DETAIL_VIEW_BODY", ThemePosition.WRAPPER, serviceToken).end()
+						.addTheme("THM_JUSTIFY_CONTENT_FLEX_START", ThemePosition.CENTRE, serviceToken).end()
+						.addFrame(FRM_NAME_IMAGE_DV_TOP_CARD,FramePosition.CENTRE).end()*/
+						.addFrame(defintionsViewFrame, FramePosition.CENTRE).end()
+						.build();
+
+			frame.setRealm(serviceToken.getRealm());
+			insert (frame);
+
+    /* Process and save to cache */
+    Set<QDataAskMessage> askSet = new HashSet<QDataAskMessage>();
+		Map<String, ContextList> contextListMap = new HashMap<String, ContextList>();
+
+		FrameUtils2.toMessage(frame, serviceToken,askSet,contextListMap);
+
+		VertxUtils.putObject(serviceToken.getRealm(), "", frame.getCode(), frame, serviceToken.getToken());
+		System.out.println("Writing to cache");
+		VertxUtils.writeCachedJson(serviceToken.getRealm(),"ASK_" + frame.getCode(), JsonUtils.toJson(askSet.toArray()),serviceToken.getToken());
+
+	end

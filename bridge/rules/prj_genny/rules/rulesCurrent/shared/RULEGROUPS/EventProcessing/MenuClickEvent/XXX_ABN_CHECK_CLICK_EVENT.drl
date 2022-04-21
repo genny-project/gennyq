@@ -1,0 +1,69 @@
+package life.genny.rules;
+
+import life.genny.qwanda.message.QEventMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.utils.OutputParam;
+import org.apache.commons.lang3.StringUtils;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.utils.VertxUtils;
+
+
+rule "ABN_CHECK_CLICK_EVENT"
+    ruleflow-group 'EventProcessing'
+		salience 2
+    no-loop
+    when
+		$message : QEventMessage((data.code matches "QUE_HOST_CPY_MENU" || data.code matches "QUE_EDU_PRO_MENU" || data.code matches "QUE_REF_PART_MENU" || data.code matches "QUE_AGENCY_MENU") && data.parentCode == "QUE_ADD_ITEMS_GRP")
+		userToken : GennyToken (code != "PER_SERVICE" )
+		output : OutputParam( )
+ 		ruleDetails : RuleDetails()
+    then
+		System.out.println("ABN_CHECK_CLICK_EVENT fired");
+		System.out.println(ruleDetails+" "+drools.getRule().getName()+" Processing : " + $message );
+		
+		/* Get User */
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+		
+		/* Get TargetCode */
+		String targetCode = $message.getData().getTargetCode();
+		System.out.println("targetCode: " + targetCode);
+
+		/* Get Type of Add */
+		String code = $message.getData().getCode();
+		System.out.println("code: " +code);
+		
+		String workflowSignalCode = StringUtils.removeEnd(code, "_MENU");
+		workflowSignalCode = StringUtils.removeStart(workflowSignalCode,"QUE_");
+		System.out.println("workflowSignalCode: " +workflowSignalCode);
+		
+		
+		
+		/* Set Parameters */
+		
+		output.setAskSourceCode(user);
+		output.setTargetCode(targetCode);
+		output.setTypeOfResult("SIGNAL");	
+		output.setResultCode("START_BASIC_QG");
+		output.setSuitCase("ABN");
+		output.setLuggage(workflowSignalCode);
+		output.setPath("HAVE_ABN");
+		
+		
+		/* Print Parameters */
+		
+		System.out.println("**************************************************");
+		System.out.println("AskSourceCode: " + output.getAskSourceCode());
+		System.out.println("TargetCode: "    + output.getTargetCode());
+		System.out.println("TypeOfResult: "  + output.getTypeOfResult());
+		System.out.println("ResultCode: "    + output.getResultCode());
+		System.out.println("SuitCase: "      + output.getSuitCase());
+		System.out.println("Luggage: "       + output.getLuggage());
+		System.out.println("Path: "          + output.getPath());
+		System.out.println("**************************************************");
+
+
+		retract( $message);
+	end

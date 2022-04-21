@@ -1,0 +1,153 @@
+package life.genny.rules;
+import io.vertx.core.json.JsonObject;
+import life.genny.qwanda.message.QDataBaseEntityMessage;
+import life.genny.qwanda.message.QEventBtnClickMessage;
+import life.genny.models.GennyToken;
+import life.genny.utils.VertxUtils;
+import life.genny.qwanda.utils.OutputParam;
+import life.genny.qwanda.message.QDataAskMessage;
+import life.genny.utils.BaseEntityUtils;
+import life.genny.qwanda.entity.BaseEntity;
+import life.genny.utils.QuestionUtils;
+import life.genny.qwandautils.JsonUtils;
+import life.genny.utils.SearchUtils;
+import java.util.ArrayList;
+import java.util.List;
+import life.genny.utils.SessionFacts;
+import java.util.Arrays;
+import java.util.HashMap;
+import life.genny.qwandautils.PDFHelper;
+import life.genny.qwanda.message.QCmdMessage;
+import life.genny.qwanda.Answer;
+
+rule "DOWNLOAD_INTERNSHIP_AGREEMENT_DOC"
+	ruleflow-group 'EventProcessing'
+	salience 2
+	no-loop
+	when
+		$message : QEventMessage(data.code == "ACT_PRI_EVENT_DOWNLOAD_INTERNSHIP_AGREEMENT_DOC" )
+		userToken : GennyToken (code != "PER_SERVICE" )
+		serviceToken : GennyToken (code == "PER_SERVICE" )
+
+	then
+		System.out.println("   Generate "+drools.getRule().getName() );
+		BaseEntityUtils beUtils = new BaseEntityUtils(serviceToken, userToken);
+		
+		String applicationCode =  $message.getData().getTargetCode();
+		System.out.println("applicationCode :: " +applicationCode);
+		
+		String user = userToken.getUserCode();
+		System.out.println("user: " + user);
+
+		if(applicationCode == null){
+			System.out.println("targetCode is null in the event messsage");
+			return;
+		}
+
+		BaseEntity applicationBe = beUtils.getBaseEntityByCode(applicationCode);
+		if(applicationBe != null){
+
+			/* back up template url, if project be doesn't have it */
+			String template = "https://raw.githubusercontent.com/genny-project/layouts/master/internmatch-new/document_templates/agreementPlan.html";
+			System.out.println(template);
+
+
+			BaseEntity project = beUtils.getBaseEntityByCode( "PRJ_" + serviceToken.getRealm().toUpperCase());
+
+
+
+			/* send TOAST msg */
+			QCmdMessage toastMsg = new QCmdMessage("TOAST", "INFO");
+			toastMsg.setMessage("Please wait while we prepare the Internship Agreement Document!");
+			toastMsg.setToken(beUtils.getGennyToken().getToken());
+			toastMsg.setSend(true);
+			VertxUtils.writeMsg("webcmds", toastMsg);
+			
+			/* Changing PRI_ASSOC_WORKSITE attribute value if value is 'Either' to 'Hybrid (Both On-Site & Remote)' 
+			to display it on download document*/
+			for (EntityAttribute ea : applicationBe.getBaseEntityAttributes()) {
+				if (ea.getAttributeCode().equals("PRI_ASSOC_WORKSITE")) {
+					String beCode = ea.getValueString();
+					if(beCode.equals("Either"))
+					{
+						beCode = beUtils.cleanUpAttributeValue(beCode);	
+						ea.setValueString("Hybrid (Both On-Site & Remote)");
+					}
+				}
+			}
+
+			BaseEntity internship = beUtils.getBaseEntityFromLNKAttr(applicationBe, "LNK_INTERNSHIP");
+			BaseEntity hostCompany = null;
+			BaseEntity supervisor = null;
+			BaseEntity hostCompanyRep = null;
+
+			BaseEntity worksite = null;
+			BaseEntity dressCode = null;
+
+			if (internship != null) {
+				hostCompany = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_HOST_COMPANY");
+				supervisor = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_INTERN_SUPERVISOR");
+				hostCompanyRep = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_HOST_COMPANY_REP");
+
+				worksite = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_WORKSITE_SELECT");
+				dressCode = beUtils.getBaseEntityFromLNKAttr(internship, "LNK_DRESS_CODE");
+			}
+			BaseEntity intern = beUtils.getBaseEntityFromLNKAttr(applicationBe, "PRI_INTERN_CODE");
+			BaseEntity agent = null;
+			BaseEntity internshipDuration = null;
+
+			if (intern != null) {
+				agent = beUtils.getBaseEntityFromLNKAttr(intern, "LNK_AGENT");
+				internshipDuration = beUtils.getBaseEntityFromLNKAttr(intern, "LNK_INTERNSHIP_DURATION");
+			}
+
+           if (intern != null) {
+                    System.out.println("*********************** internBe " + intern);
+                    String entityAddress = "";
+                    entityAddress = intern.getValue("PRI_ADDRESS_COUNTRY", null);
+
+                    if (entityAddress != null) {
+                        System.out.println("*********************** entityAddress " + entityAddress);
+                        if (entityAddress.equals("United Kingdom")) {
+                            template = project.getValue("PRI_UK_AGREEMENT_URL","");
+                            System.out.println("*********************** PRI_UK_AGREEMENT_URL: agreementHtml " + template );
+                        } else {
+                            template = project.getValue("PRI_AGREEMENT_URL","");
+                            System.out.println("*********************** PRI_AGREEMENT_URL: agreementHtml " + template );
+                        }
+                    } else {
+                        System.out.println("*********************** entityAddress is null");
+                    }
+                } else {
+                    System.out.println("*********************** internBe is null");
+                }
+
+			/* creating Hash Map */
+			HashMap<String, Object> contextMap = new HashMap<String, Object>();
+
+			contextMap.put("APPLICATION", applicationBe);
+			contextMap.put("INTERNSHIP", internship);
+			contextMap.put("AGENT", agent);
+			contextMap.put("INTERN", intern);
+			contextMap.put("SUPERVISOR", supervisor);
+			contextMap.put("HCR", hostCompanyRep);
+			contextMap.put("HC", hostCompany);
+
+			contextMap.put("WORKSITE", worksite);
+			contextMap.put("DURATION", internshipDuration);
+			contextMap.put("DRESS_CODE", dressCode);
+
+			String pdfUrl = PDFHelper.getDownloadablePdfLinkForHtml(template, contextMap);
+			System.out.println("PDF url :: " + pdfUrl);
+
+			/* Send Download QCmdMessage to FE */
+			QCmdMessage msg = new QCmdMessage("DOWNLOAD_FILE", pdfUrl);
+			msg.setToken(beUtils.getGennyToken().getToken());
+			msg.setSend(true);
+
+			VertxUtils.writeMsg("webcmds", msg);
+			
+		}else{
+			System.out.println("applicationBe is not in cache");
+		}
+	end
