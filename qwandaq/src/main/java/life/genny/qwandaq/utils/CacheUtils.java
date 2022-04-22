@@ -9,7 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.data.GennyCache;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 /*
  * A static utility class used for standard read and write 
@@ -129,5 +131,9 @@ public class CacheUtils {
 
 		String json = jsonb.toJson(obj);
 		cache.getRemoteCache(realm).put(key, json);
+	}
+
+	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
+		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 }

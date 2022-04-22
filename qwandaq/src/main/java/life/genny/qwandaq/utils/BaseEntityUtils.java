@@ -23,6 +23,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.attribute.Attribute;
@@ -48,6 +49,8 @@ public class BaseEntityUtils implements Serializable {
 	String realm;
 	GennyToken gennyToken;
 	GennyToken serviceToken;
+
+	public static final String BASEENTITY_CACHE = "baseentity";
 
 	public BaseEntityUtils() {
 	}
@@ -242,9 +245,10 @@ public class BaseEntityUtils implements Serializable {
 	 * @param baseEntity The BaseEntity to update
 	 */
 	public void updateBaseEntity(BaseEntity baseEntity) {
-		DatabaseUtils databaseUtils = new DatabaseUtils();
-		databaseUtils.saveBaseEntity(baseEntity);
-		CacheUtils.putObject(this.realm, baseEntity.getCode(), baseEntity);
+		/*DatabaseUtils databaseUtils = new DatabaseUtils();
+		databaseUtils.saveBaseEntity(baseEntity);*/
+		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),baseEntity.getCode());
+		CacheUtils.saveEntity(BASEENTITY_CACHE, key, baseEntity);
 	}
 
 	/**
