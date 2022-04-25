@@ -1,5 +1,10 @@
 package life.genny.qwandaq.models;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
@@ -19,19 +24,14 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
@@ -46,6 +46,7 @@ public class GennyToken implements Serializable {
 	public String token;
 	public Map<String, Object> adecodedTokenMap = null;
 	public String realm = null;
+	public String projectCode = null;
 	public Set<String> userRoles = new HashSet<String>();
 
 	public GennyToken() {
@@ -207,6 +208,9 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	public String getRealm() {
+		if (projectCode != null) {
+			return projectCode;
+		}
 		return realm;
 	}
 
@@ -502,6 +506,14 @@ public class GennyToken implements Serializable {
 
 	public void setUserRoles(Set<String> userRoles) {
 		this.userRoles = userRoles;
+	}
+
+	public String getProjectCode() {
+		return projectCode;
+	}
+
+	public void setProjectCode(String projectCode) {
+		this.projectCode = projectCode;
 	}
 	
 	
