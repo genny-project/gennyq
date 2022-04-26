@@ -151,6 +151,16 @@ public class BaseEntityUtils implements Serializable {
 	 * 
 	 * @return the user {@link BaseEntity}
 	 */
+	public BaseEntity getProjectBaseEntity() {
+		return this.getBaseEntityByCode("PRJ_" + this.getGennyToken().getRealm().toUpperCase());
+	}
+
+	/**
+	 * Fetch the user base entity of the {@link GennyToken} used to initialise the
+	 * BaseEntityUtils
+	 * 
+	 * @return the user {@link BaseEntity}
+	 */
 	public BaseEntity getUserBaseEntity() {
 		return this.getBaseEntityByCode(this.getGennyToken().getUserCode());
 	}
