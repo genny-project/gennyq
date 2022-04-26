@@ -71,7 +71,7 @@ public class InternalConsumer {
 
 		log.info("Handling search " + searchBE.getCode());
 
-        QBulkMessage bulkMsg = search.processSearchEntity(searchBE, userToken);
+        QBulkMessage bulkMsg = search.processSearchEntity(userToken, searchBE);
 
 		Instant end = Instant.now();
 		log.info("Finished! - Duration: " + Duration.between(start, end).toMillis() + " millSeconds.");

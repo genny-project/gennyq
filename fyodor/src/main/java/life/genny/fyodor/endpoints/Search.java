@@ -100,10 +100,11 @@ public class Search {
 
 		log.info("Search POST received..");
 
+		GennyToken userToken = null;
 		try {
 			String token = request.getHeader("authorization").split("Bearer ")[1];
 			if (token != null) {
-				GennyToken userToken = new GennyToken(token);
+				userToken = new GennyToken(token);
 			} else {
 				log.error("Bad token in Search GET provided");
 				return Response.status(Response.Status.FORBIDDEN).build();
@@ -114,7 +115,7 @@ public class Search {
 		}
 
 		// Process search
-		QSearchBeResult results = search.findBySearch25(searchEntity, false, false);
+		QSearchBeResult results = search.findBySearch25(userToken, searchEntity, false, false);
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);
@@ -136,10 +137,11 @@ public class Search {
 		log.info("Fetch POST received..");
 		String token = null;
 
+		GennyToken userToken = null;
 		try {
 			token = request.getHeader("authorization").split("Bearer ")[1];
 			if (token != null) {
-				GennyToken userToken = new GennyToken(token);
+				userToken = new GennyToken(token);
 			} else {
 				log.error("Bad token in Search GET provided");
 				return Response.status(Response.Status.FORBIDDEN).build();
@@ -150,7 +152,7 @@ public class Search {
 		}
 
 		// Process search
-		QSearchBeResult results = search.findBySearch25(searchEntity, false, true);
+		QSearchBeResult results = search.findBySearch25(userToken, searchEntity, false, true);
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);
