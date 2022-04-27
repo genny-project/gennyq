@@ -15,8 +15,8 @@
   <name>Kogitoq</name>
 
   <modules>
-    <module>basic</module>
-    <module>extended</module>
+    <!-- <module>basic</module> -->
+    <!-- <module>extended</module> -->
     <module>adi</module>
     <module>gadaq</module>
   </modules>
