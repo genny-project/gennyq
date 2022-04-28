@@ -27,11 +27,9 @@ import java.util.regex.Pattern;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
-
-
-
-
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
@@ -49,48 +47,50 @@ public class GennyToken implements Serializable {
 	public String projectCode = null;
 	public Set<String> userRoles = new HashSet<String>();
 
-	public GennyToken() {
-	}
+	public GennyToken() { }
 
 	public GennyToken(final String token) {
 
-		if ((token != null) && (!token.isEmpty())) {
-			// Getting decoded token in Hash Map from QwandaUtils
-			adecodedTokenMap = getJsonMap(token);
-
-			if (adecodedTokenMap == null) {
-				log.error("Token is not able to be decoded in GennyToken ..");
-
-			} else {
-				// Extracting realm name from iss value
-				String realm = null;
-				if (adecodedTokenMap.get("iss") != null) {
-					String[] issArray = adecodedTokenMap.get("iss").toString().split("/");
-					realm = issArray[issArray.length - 1];
-				} else if (adecodedTokenMap.get("azp") != null) {
-					// clientid
-					realm = (adecodedTokenMap.get("azp").toString());
-				}
-
-				// Adding realm name to the decoded token
-				adecodedTokenMap.put("realm", realm);
-				this.token = token;
-				this.realm = realm;
-
-				String username = (String) adecodedTokenMap.get("preferred_username");
-				this.userUUID = "PER_" + this.getUuid().toUpperCase();
-
-				if ("service".equals(username)) {
-					this.userCode = "PER_SERVICE";
-				} else {
-					this.userCode = userUUID;
-				}
-				setupRoles();
-			}
-		} else {
-			log.error("Token is null or zero length in GennyToken ..");
+		if (token == null || token.isEmpty()) {
+			log.error("Token must not be null or empty!");
+			return;
 		}
 
+		this.token = token;
+
+		// get decoded map of token
+		adecodedTokenMap = getJsonMap(token);
+
+		if (adecodedTokenMap == null) {
+			log.error("Token cannot be decoded!");
+			return;
+		}
+
+		// extract realm name from iss value
+		String realm = null;
+		if (adecodedTokenMap.get("iss") != null) {
+			String[] issArray = getString("iss").split("/");
+			realm = issArray[issArray.length - 1];
+
+		} else if (adecodedTokenMap.get("azp") != null) {
+			// clientid
+			realm = getString("azp");
+		}
+
+		// add realm name to the decoded token
+		adecodedTokenMap.put("realm", realm);
+		this.realm = realm;
+
+		String username = getString("preferred_username");
+		this.userUUID = "PER_" + this.getUuid().toUpperCase();
+
+		if ("service".equals(username)) {
+			this.userCode = "PER_SERVICE";
+		} else {
+			this.userCode = userUUID;
+		}
+
+		setupRoles();
 	}
 
 	public GennyToken(final String code, final String token) {

@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import java.security.Key;
@@ -74,6 +75,34 @@ public class SecurityUtils {
 		log.error(gennyToken.getUserCode() + " is not authorized!");
 
 		return false;
+	}
+
+	/**
+	* Function to validate the authority for a given token string 
+	* and return the GennyToken object. Returns null if token is not valid.
+	*
+	* @param token the jwt to check.
+	* @return The GennyToken object.
+	 */
+	public static GennyToken getAuthorizedToken(String token) {
+
+		if (token == null) {
+			log.error("Token is null!");
+			return null;
+		}
+
+		// clean bearer prefix and any whitespace
+		token = StringUtils.removeStart(token, "Bearer");
+		token = StringUtils.strip(token);
+
+		try {
+			return new GennyToken(token);
+		} catch (Exception e) {
+			log.errorv("Unable to create GennyToken from token: {}", token);
+			log.error(e);
+		}
+
+		return null;
 	}
 
 	/**
