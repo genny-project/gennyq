@@ -28,6 +28,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QScheduleMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.SecurityUtils;
 
 /**
  * Search - Endpoints providing classic Genny Search functionality
@@ -61,25 +62,17 @@ public class Search {
 
 		log.info("Scheduling test event for " + uuid);
 
-		GennyToken userToken = null;
+		GennyToken gennyToken = SecurityUtils.getAuthorizedToken(request.getHeader("Authorization"));
 
-		try {
-			String token = request.getHeader("authorization").split("Bearer ")[1];
-			if (token != null) {
-				userToken = new GennyToken(token);
-			} else {
-				log.error("Bad token in Search GET provided");
-				return Response.status(Response.Status.FORBIDDEN).build();
-			}
-		} catch (Exception e) {
+		if (gennyToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
-		QScheduleMessage msg = new QScheduleMessage.Builder("SCHEDULE_TEST")
+		new QScheduleMessage.Builder("SCHEDULE_TEST")
 			.setEventMessage("TEST_EVENT", uuid)
 			.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
-			.setGennyToken(userToken)
+			.setGennyToken(gennyToken)
 			.schedule();
 
 		log.info("Done!");
@@ -100,22 +93,15 @@ public class Search {
 
 		log.info("Search POST received..");
 
-		GennyToken userToken = null;
-		try {
-			String token = request.getHeader("authorization").split("Bearer ")[1];
-			if (token != null) {
-				userToken = new GennyToken(token);
-			} else {
-				log.error("Bad token in Search GET provided");
-				return Response.status(Response.Status.FORBIDDEN).build();
-			}
-		} catch (Exception e) {
+		GennyToken gennyToken = SecurityUtils.getAuthorizedToken(request.getHeader("Authorization"));
+
+		if (gennyToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
 		// Process search
-		QSearchBeResult results = search.findBySearch25(userToken, searchEntity, false, false);
+		QSearchBeResult results = search.findBySearch25(gennyToken, searchEntity, false, false);
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);
@@ -135,24 +121,16 @@ public class Search {
 	public Response fetch(SearchEntity searchEntity) {
 
 		log.info("Fetch POST received..");
-		String token = null;
 
-		GennyToken userToken = null;
-		try {
-			token = request.getHeader("authorization").split("Bearer ")[1];
-			if (token != null) {
-				userToken = new GennyToken(token);
-			} else {
-				log.error("Bad token in Search GET provided");
-				return Response.status(Response.Status.FORBIDDEN).build();
-			}
-		} catch (Exception e) {
+		GennyToken gennyToken = SecurityUtils.getAuthorizedToken(request.getHeader("Authorization"));
+
+		if (gennyToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
 		// Process search
-		QSearchBeResult results = search.findBySearch25(userToken, searchEntity, false, true);
+		QSearchBeResult results = search.findBySearch25(gennyToken, searchEntity, false, true);
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);

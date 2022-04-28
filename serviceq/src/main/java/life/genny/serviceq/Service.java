@@ -31,25 +31,25 @@ public class Service {
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	@ConfigProperty(name = "genny.show.values", defaultValue = "false")
+	@ConfigProperty(name = "genny.show.values")
 	Boolean showValues;
 
-	@ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak.gada.io")
+	@ConfigProperty(name = "genny.keycloak.url")
 	String keycloakUrl;
 
-	@ConfigProperty(name = "genny.keycloak.realm", defaultValue = "genny")
+	@ConfigProperty(name = "genny.keycloak.realm")
 	String keycloakRealm;
 
-	@ConfigProperty(name = "genny.service.username", defaultValue = "service")
+	@ConfigProperty(name = "genny.service.username")
 	String serviceUsername;
 
-	@ConfigProperty(name = "genny.service.password", defaultValue = "password")
+	@ConfigProperty(name = "genny.service.password")
 	String servicePassword;
 
-	@ConfigProperty(name = "genny.oidc.client.id", defaultValue = "dummy")
+	@ConfigProperty(name = "genny.client.id")
 	String clientId;
 
-	@ConfigProperty(name = "genny.oidc.client.secret", defaultValue = "secret")
+	@ConfigProperty(name = "genny.client.secret")
 	String secret;
 
 	@Inject
@@ -147,9 +147,6 @@ public class Service {
 
 	/**
 	 * Initialize the Kafka channels.
-	 *
-	 * NOTE: This is probably redundant.
-	 * We could move the KafkaBean code into KafkaUtils.
 	 */
 	public void initKafka() {
 		KafkaUtils.init(kafkaBean);
