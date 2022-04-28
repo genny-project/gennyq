@@ -139,8 +139,8 @@
       <modules>
         <module>qwandaq</module>
         <module>serviceq</module>
-        <module>kogitoq</module>
         <module>bridge</module>
+        <module>kogitoq</module>
         <module>fyodor</module>
         <module>dropkick</module>
         <module>lauchy</module>
@@ -165,9 +165,9 @@
         </property>
       </activation>
       <modules>
+        <module>kogitoq</module>
         <module>qwandaq</module>
         <module>serviceq</module>
-        <module>kogitoq</module>
         <module>bridge</module>
         <module>fyodor</module>
         <module>dropkick</module>
