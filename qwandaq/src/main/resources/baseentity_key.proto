@@ -1,0 +1,6 @@
+package genny;
+
+message baseentity_key {
+  optional string realm = 1;
+  optional string code = 2;
+}
