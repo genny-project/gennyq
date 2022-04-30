@@ -17,6 +17,7 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import io.vertx.core.http.HttpServerRequest;
+import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
@@ -41,6 +42,9 @@ public class Cache {
 	@Inject
 	Service service;
 
+	@Inject
+	TokenCollection tokens;
+
 	/**
 	* Read an item from the cache.
 	*
@@ -58,8 +62,8 @@ public class Cache {
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		String realm = service.getServiceToken().getRealm();
-		String json = (String) CacheUtils.readCache(realm, key);
+		String productCode = tokens.getGennyToken().getProductCode();
+		String json = (String) CacheUtils.readCache(productCode, key);
 
 		if (json == null) {
 			return Response.ok("null").build();
@@ -81,8 +85,8 @@ public class Cache {
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		String realm = service.getServiceToken().getRealm();
-		CacheUtils.writeCache(realm, key, value);
+		String productCode = tokens.getGennyToken().getProductCode();
+		CacheUtils.writeCache(productCode, key, value);
 
 		log.info("Wrote json of length " + value.length() + " for " + key);
 
@@ -100,8 +104,8 @@ public class Cache {
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		String realm = service.getServiceToken().getRealm();
-		CacheUtils.removeEntry(realm, key);
+		String productCode = tokens.getGennyToken().getProductCode();
+		CacheUtils.removeEntry(productCode, key);
 
 		log.info("Removed Item for " + key);
 

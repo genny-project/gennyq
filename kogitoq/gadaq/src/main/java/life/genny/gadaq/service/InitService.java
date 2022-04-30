@@ -12,6 +12,8 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -33,20 +35,23 @@ public class InitService {
     @Inject
     DatabaseUtils databaseUtils;
 
+    @Inject
+    BaseEntityUtils beUtils;
+
+	@Inject
+	TokenCollection tokens;
+
 	/**
 	* Send the Project BaseEntity.
-	*
-	* @param userToken The GennyToken of the user
 	 */
-	public void sendProject(String token) {
+	public void sendProject() {
 
 		log.info("Sending Project");
 
-		GennyToken userToken = new GennyToken(token);
-		BaseEntity projectBE = service.getBeUtils().getProjectBaseEntity();
+		BaseEntity projectBE = beUtils.getProjectBaseEntity();
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(projectBE);
-		msg.setToken(userToken.getToken());
+		msg.setToken(tokens.getGennyToken().getToken());
 		msg.setAliasCode("PROJECT");
 
 		log.info("Sending Project down kafka");
@@ -56,51 +61,45 @@ public class InitService {
 
 	/**
 	* Send the User.
-	*
-	* @param userToken The GennyToken of the user
 	 */
-	public void sendUser(String token) {
+	public void sendUser() {
 
 		log.info("Sending User");
 
-		GennyToken userToken = new GennyToken(token);
-		BaseEntity userBE = service.getBeUtils().getBaseEntityByCode(userToken.getCode());
+		BaseEntity userBE = beUtils.getBaseEntityByCode(tokens.getGennyToken().getCode());
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(userBE);
-		msg.setToken(userToken.getToken());
+		msg.setToken(tokens.getGennyToken().getToken());
 		msg.setAliasCode("USER");
 
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	/**
-	* Send All attributes for the realm.
-	*
-	* @param userToken The GennyToken of the user
+	* Send All attributes for the productCode.
 	 */
-	public void sendAllAttributes(String token) {
+	public void sendAllAttributes() {
 
 		log.info("Sending Attributes");
 
-		GennyToken userToken = new GennyToken(token);
-		String realm = userToken.getRealm();
+		GennyToken gennyToken = tokens.getGennyToken();
+		String productCode = gennyToken.getProductCode();
 
-		QDataAttributeMessage msg = CacheUtils.getObject(realm, "ALL_ATTRIBUTES", QDataAttributeMessage.class);
-		msg.setToken(userToken.getToken());
+		QDataAttributeMessage msg = CacheUtils.getObject(productCode, "ALL_ATTRIBUTES", QDataAttributeMessage.class);
+		msg.setToken(gennyToken.getToken());
 
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	/**
 	* Send PCM BaseEntities.
-	*
-	* @param userToken The GennyToken of the user
 	 */
-	public void sendPCMs(String token) {
+	public void sendPCMs() {
 
 		log.info("Sending PCMs");
 
-		GennyToken userToken = new GennyToken(token);
+		GennyToken gennyToken = tokens.getGennyToken();
+		String productCode = gennyToken.getProductCode();
 
 		// get pcms using search
 		SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
@@ -108,12 +107,12 @@ public class InitService {
 			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PCM_%")
 			.addColumn("*", "All Columns");
 
-		searchBE.setRealm(userToken.getRealm());
-		List<BaseEntity> pcms = service.getBeUtils().getBaseEntitys(searchBE);
+		searchBE.setRealm(productCode);
+		List<BaseEntity> pcms = beUtils.getBaseEntitys(searchBE);
 
 		// send to frontend
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
-		msg.setToken(userToken.getToken());
+		msg.setToken(gennyToken.getToken());
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg("webdata", msg);

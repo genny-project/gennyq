@@ -20,6 +20,7 @@ import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.MergeUtils;
@@ -35,6 +36,12 @@ public class MessageProcessor {
 	@Inject
 	QwandaUtils qwandaUtils;
 
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	TokenCollection tokens;
+
     /**
      * Generic Message Handling method.
      *
@@ -42,14 +49,14 @@ public class MessageProcessor {
      * @param serviceToken
      * @param userToken
      */
-    public void processGenericMessage(QMessageGennyMSG message, BaseEntityUtils beUtils) {
+    public void processGenericMessage(QMessageGennyMSG message) {
 
         // Begin recording duration
         long start = System.currentTimeMillis();
 
-        GennyToken userToken = beUtils.getGennyToken();
-        GennyToken serviceToken = beUtils.getServiceToken();
-        String realm = beUtils.getGennyToken().getRealm();
+        GennyToken userToken = tokens.getGennyToken();
+        GennyToken serviceToken = tokens.getServiceToken();
+        String realm = userToken.getProductCode();
 
         log.debug("Realm is " + realm + " - Incoming Message :: " + message.toString());
 
@@ -95,7 +102,7 @@ public class MessageProcessor {
 
         // Create context map with BaseEntities
         HashMap<String, Object> baseEntityContextMap = new HashMap<>();
-        baseEntityContextMap = createBaseEntityContextMap(beUtils, message);
+        baseEntityContextMap = createBaseEntityContextMap(message);
         baseEntityContextMap.put("PROJECT", projectBe);
 
         if (templateBe == null) {
@@ -215,13 +222,13 @@ public class MessageProcessor {
                      */
                     if (isUserUnsubscribed && !msgType.equals(QBaseMSGMessageType.EMAIL)) {
                         log.info("unsubscribed");
-                        provider.sendMessage(beUtils, templateBe, baseEntityContextMap);
+                        provider.sendMessage(templateBe, baseEntityContextMap);
                     }
 
                     /* if subscribed, allow messages */
                     if (!isUserUnsubscribed) {
                         log.info("subscribed");
-                        provider.sendMessage(beUtils, templateBe, baseEntityContextMap);
+                        provider.sendMessage(templateBe, baseEntityContextMap);
                     }
                 } else {
                     log.error(ANSIColour.RED + ">>>>>> Provider is NULL for entity: " + ", msgType: " + msgType.toString() + " <<<<<<<<<" + ANSIColour.RESET);
@@ -233,7 +240,7 @@ public class MessageProcessor {
         log.info("FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration));
     }
 
-    private static HashMap<String, Object> createBaseEntityContextMap(BaseEntityUtils beUtils, QMessageGennyMSG message) {
+    private HashMap<String, Object> createBaseEntityContextMap(QMessageGennyMSG message) {
 
         HashMap<String, Object> baseEntityContextMap = new HashMap<>();
 

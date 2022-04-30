@@ -292,7 +292,7 @@ public class Bridge {
 		Jsonb jsonb = JsonbBuilder.create();
 		// String dataMsgJson = jsonb.toJson(dataMsg);
 		String dataMsgJsonStr = jsonb.toJson(dataMsg);
-		String jti = userToken.getJti();
+		String jti = userToken.getJTI();
 		log.info("B2B sending!!! " + jti + " json=" + dataMsgJsonStr);
 		// producer.getToData().send(dataMsgJson);
 
@@ -350,7 +350,7 @@ public class Bridge {
 		}
 
 		String dataMsgJsonStr = jsonb.toJson(dataMsg);
-		String jti = userToken.getJti();
+		String jti = userToken.getJTI();
 		JsonObject dataMsgJson = new JsonObject(dataMsgJsonStr);
 
 		KafkaUtils.writeMsg("data", dataMsgJson);

@@ -1,5 +1,7 @@
 package life.genny.messages.managers;
 
+import javax.inject.Inject;
+
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -27,8 +29,11 @@ public class QSendGridMessageManager implements QMessageProvider {
 
 	private static final Logger log = Logger.getLogger(QSendGridMessageManager.class);
 
+	@Inject
+	BaseEntityUtils beUtils;
+
 	@Override
-	public void sendMessage(BaseEntityUtils beUtils, BaseEntity templateBe, Map<String, Object> contextMap) {
+	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 
 		log.info("SendGrid email type");
 

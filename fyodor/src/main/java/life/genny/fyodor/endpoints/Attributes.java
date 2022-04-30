@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.message.QDataAttributeMessage;
+import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
@@ -44,6 +45,9 @@ public class Attributes {
 	@Inject
 	Service service;
 
+	@Inject
+	TokenCollection tokens;
+
 	/**
 	 * Read an item from the cache.
 	 *
@@ -61,8 +65,8 @@ public class Attributes {
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		String realm = service.getServiceToken().getRealm();
-		Attribute attribute = databaseUtils.findAttributeByCode(realm, code);
+		String productCode = tokens.getGennyToken().getProductCode();
+		Attribute attribute = databaseUtils.findAttributeByCode(productCode, code);
 
 		return Response.ok(attribute).build();
 	}

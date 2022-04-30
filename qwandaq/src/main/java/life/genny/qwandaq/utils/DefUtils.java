@@ -17,6 +17,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
@@ -48,22 +49,20 @@ public class DefUtils {
 	@Inject
 	QwandaUtils qwandaUtils;
 
+	@Inject
 	BaseEntityUtils beUtils;
 
-	/**
-	 * @param baseEntityUtils the baseEntityUtils to set
-	 */
-	public void init(BaseEntityUtils baseEntityUtils) {
-		beUtils = baseEntityUtils;
-		initializeDefs();
-	}
+	@Inject
+	TokenCollection tokens;
+
+	public DefUtils() { }
 
 	/**
 	 * Initialize the in memory DEF store
 	 */
-	public void initializeDefs() {
+	public void initializeDefs(String productCode) {
 
-		String realm = beUtils.getGennyToken().getRealm();
+		// String productCode = tokens.getGennyToken().getProductCode();
 
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
 				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
@@ -72,7 +71,7 @@ public class DefUtils {
 				.setPageStart(0)
 				.setPageSize(1000);
 
-		searchBE.setRealm(realm);
+		searchBE.setRealm(productCode);
 
 		List<BaseEntity> items = beUtils.getBaseEntitys(searchBE);
 
@@ -81,7 +80,7 @@ public class DefUtils {
 			return;
 		}
 
-		defs.put(realm, new ConcurrentHashMap<String, BaseEntity>());
+		defs.put(productCode, new ConcurrentHashMap<String, BaseEntity>());
 
 		for (BaseEntity item : items) {
 
@@ -90,7 +89,7 @@ public class DefUtils {
 			if (item.getCode().equals("DEF_APPOINTMENT")) {
 
 				Attribute attribute = new AttributeText("DFT_PRI_START_DATETIME", "Default Start Time");
-				attribute.setRealm(realm);
+				attribute.setRealm(productCode);
 				EntityAttribute newEA = new EntityAttribute(item, attribute, 1.0, "2021-07-28 00:00:00");
 
 				try {
@@ -106,29 +105,33 @@ public class DefUtils {
 			}
 
 			item.setFastAttributes(true);
-			defs.get(realm).put(item.getCode(), item);
-			log.info("Saving (" + realm + ") DEF " + item.getCode());
+			defs.get(productCode).put(item.getCode(), item);
+			log.info("Saving (" + productCode + ") DEF " + item.getCode());
 		}
 	}
 
 	/**
-	 * @param userToken the userToken to get defs with
-	 * @return Map
+	 * Find the map of DEFs for using the productCode of a GennyToken.
+	 *
+	 * @param gennyToken the GennyToken used to find def map
+	 * @return a Map of DEF BaseEntitys
 	 */
-	public Map<String, BaseEntity> getDefMap(final GennyToken userToken) {
-		return getDefMap(userToken.getRealm());
+	public Map<String, BaseEntity> getDefMap(final GennyToken gennyToken) {
+		return getDefMap(gennyToken.getRealm());
 	}
 
 	/**
-	 * @param realm the realm to get defs from
-	 * @return Map
+	 * Find the map of DEFs for using a productCode.
+	 *
+	 * @param productCode the productCode to get defs from
+	 * @return a Map of DEF BaseEntitys
 	 */
-	public Map<String, BaseEntity> getDefMap(final String realm) {
+	public Map<String, BaseEntity> getDefMap(final String productCode) {
 		if ((defs == null) || (defs.isEmpty())) {
-			initializeDefs();
-			return defs.get(realm);
+			initializeDefs(productCode);
+			return defs.get(productCode);
 		}
-		return defs.get(realm);
+		return defs.get(productCode);
 	}
 
 	/**
@@ -139,8 +142,8 @@ public class DefUtils {
 	 */
 	public BaseEntity getDEF(final BaseEntity be) {
 
-		GennyToken gennyToken = beUtils.getGennyToken();
-		String realm = gennyToken.getRealm();
+		GennyToken gennyToken = tokens.getGennyToken();
+		String productCode = gennyToken.getProductCode();
 
 		if (be == null) {
 			log.error("be param is NULL");
@@ -157,7 +160,7 @@ public class DefUtils {
 		}
 		// some quick ones
 		if (be.getCode().startsWith("PRJ_")) {
-			BaseEntity defBe = getDefMap(realm).get("DEF_PROJECT");
+			BaseEntity defBe = getDefMap(productCode).get("DEF_PROJECT");
 			return defBe;
 		}
 
@@ -208,7 +211,7 @@ public class DefUtils {
 
 		if (isAs.size() == 1) {
 			// Easy
-			Map<String, BaseEntity> beMapping = getDefMap(realm);
+			Map<String, BaseEntity> beMapping = getDefMap(productCode);
 			String attrCode = isAs.get(0).getAttributeCode();
 			String trimedAttrCode = attrCode.substring("PRI_IS_".length());
 			BaseEntity defBe = beMapping.get("DEF_" + trimedAttrCode);
@@ -222,7 +225,7 @@ public class DefUtils {
 		} else if (isAs.isEmpty()) {
 			// THIS HANDLES CURRENT BAD BEs
 			// loop through the defs looking for matching prefix
-			for (BaseEntity defBe : getDefMap(realm).values()) {
+			for (BaseEntity defBe : getDefMap(productCode).values()) {
 				String prefix = defBe.getValue("PRI_PREFIX", null);
 				if (prefix == null) {
 					continue;
@@ -244,7 +247,7 @@ public class DefUtils {
 					.map(ea -> ea.getAttributeCode()).collect(Collectors.joining("_"));
 
 			mergedCode = mergedCode.replaceAll("_PRI_IS_DELETED", "");
-			BaseEntity mergedBe = getDefMap(realm).get(mergedCode);
+			BaseEntity mergedBe = getDefMap(productCode).get(mergedCode);
 
 			if (mergedBe == null) {
 
@@ -255,12 +258,12 @@ public class DefUtils {
 
 					// so this combination DEF inherits top dogs name
 					String topCode = topDog.get().getAttributeCode().substring("PRI_IS_".length());
-					BaseEntity defTopDog = getDefMap(realm).get("DEF_" + topCode);
+					BaseEntity defTopDog = getDefMap(productCode).get("DEF_" + topCode);
 					mergedBe = new BaseEntity(mergedCode, mergedCode);
 
 					// now copy all the combined DEF eas.
 					for (EntityAttribute isea : isAs) {
-						BaseEntity defEa = getDefMap(realm)
+						BaseEntity defEa = getDefMap(productCode)
 								.get("DEF_" + isea.getAttributeCode().substring("PRI_IS_".length()));
 						if (defEa != null) {
 							for (EntityAttribute ea : defEa.getBaseEntityAttributes()) {
@@ -276,7 +279,7 @@ public class DefUtils {
 							return null;
 						}
 					}
-					getDefMap(realm).put(mergedCode, mergedBe);
+					getDefMap(productCode).put(mergedCode, mergedBe);
 					return mergedBe;
 
 				} else {

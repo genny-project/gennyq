@@ -16,6 +16,7 @@ import javax.ws.rs.core.UriInfo;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
@@ -23,14 +24,10 @@ import life.genny.serviceq.Service;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
-
-
-
-
-
 /**
- * Entities --- Endpoints providing database entity access
+ * QwandaEndpoint --- A temporary replacement for the api service
  *
+ * @author adam@gada.io
  * @author jasper.robison@gada.io
  *
  */
@@ -53,6 +50,8 @@ public class QwandaEndpoint {
 	@Inject
 	QuestionUtils questionUtils;
 
+	@Inject
+	TokenCollection tokens;
 
 	@GET
 	@Consumes("application/json")
@@ -79,10 +78,8 @@ public class QwandaEndpoint {
 		}
 	
 
-		BaseEntityUtils beUtils = service.getBeUtils();
-		beUtils.getServiceToken().setProjectCode(userToken.getRealm());
-		beUtils.setGennyToken(userToken);
-		List<Ask> asks = questionUtils.createAsksByQuestionCode2(questionCode, sourceCode, targetCode, beUtils);
+		tokens.getServiceToken().setProductCode(userToken.getRealm());
+		List<Ask> asks = questionUtils.createAsksByQuestionCode(questionCode, sourceCode, targetCode);
 	
 		log.debug("Number of asks=" + asks.size());
 		log.debug("Number of asks=" + asks);

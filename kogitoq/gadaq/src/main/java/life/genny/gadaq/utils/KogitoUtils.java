@@ -16,11 +16,11 @@ import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
 
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.utils.HttpUtils;
 
 /*
- * A static utility class used for standard 
- * Kogito interactions
+ * A static utility class used for standard Kogito interactions
  * 
  * @author Adam Crow
  */
@@ -34,10 +34,15 @@ public class KogitoUtils implements Serializable {
     @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
     String kogitoServiceUrl;
 
+	@Inject
+	TokenCollection tokens;
+
     @Inject
     KieRuntimeBuilder kieRuntimeBuilder;
 
-    public String fetchGraphQL(final String graphTable, final String likeField, final String likeValue, final GennyToken userToken, String... fields) {
+    public String fetchGraphQL(final String graphTable, final String likeField, final String likeValue, String... fields) {
+
+		GennyToken gennyToken = tokens.getGennyToken();
 
         String data = " query {"
                 + "  " + graphTable + " (where: {"
@@ -51,13 +56,14 @@ public class KogitoUtils implements Serializable {
 
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
 
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", gennyToken.getToken());
 
         return response.body();
     }
 
-    public String fetchProcessId(final String graphTable, final String likeField, final String likeValue,
-            final GennyToken userToken) throws Exception {
+    public String fetchProcessId(final String graphTable, final String likeField, final String likeValue) throws Exception {
+
+		GennyToken gennyToken = tokens.getGennyToken();
 
         String data = " query {"
                 + "  " + graphTable + " (where: {"
@@ -68,7 +74,7 @@ public class KogitoUtils implements Serializable {
                 + "}";
 
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", gennyToken.getToken());
 
         if (response != null) {
 
@@ -98,16 +104,18 @@ public class KogitoUtils implements Serializable {
         }
     }
 
-    public String fetchProcessId(final String graphTable, final String graphQL, final GennyToken userToken) {
+    public String fetchProcessId(final String graphTable, final String graphQL) {
+
+		GennyToken gennyToken = tokens.getGennyToken();
 
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
 
-        if (userToken == null) {
-            log.error("userToken supplied is null");
+        if (gennyToken == null) {
+            log.error("gennyToken supplied is null");
 			return null;
 		}
 
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL", userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL", gennyToken.getToken());
 
 		if (response == null) {
 			log.error("Response was null!");
@@ -133,29 +141,33 @@ public class KogitoUtils implements Serializable {
 		return firstItem.getString("id");
     }
 
-    public String sendSignal(final String graphTable, final String processId, final String signalCode, GennyToken userToken) {
+    public String sendSignal(final String graphTable, final String processId, final String signalCode) {
 
-        return sendSignal(graphTable, processId, signalCode, "", userToken);
+        return sendSignal(graphTable, processId, signalCode, "");
     }
 
-    public String sendSignal(final String signal, final String processId, final String signalCode, final String entity, GennyToken userToken) {
+    public String sendSignal(final String signal, final String processId, final String signalCode, final String entity) {
+
+		GennyToken gennyToken = tokens.getGennyToken();
 
         String kogitoUrl = System.getenv("GENNY_KOGITO_SERVICE_URL") 
 			+ "/" + signal.toLowerCase() + "/" + processId + "/" + signalCode;
 
-        HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json", userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json", gennyToken.getToken());
 
         return response.body();
     }
 
-    public String triggerWorkflow(final String process, final QEventMessage message, GennyToken userToken) {
+    public String triggerWorkflow(final String process, final QEventMessage message) {
+
+		GennyToken gennyToken = tokens.getGennyToken();
 
         String url = kogitoServiceUrl + "/" + process.toLowerCase();
         String jsonStr = jsonb.toJson(message);
 
-        String workflowJsonStr = "{\"eventMessage\":" + jsonStr + ", \"token\":\"" + userToken.getToken() + "\"}";
+        String workflowJsonStr = "{\"eventMessage\":" + jsonStr + ", \"token\":\"" + gennyToken.getToken() + "\"}";
 
-        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, gennyToken.getToken());
 
         if (response.statusCode() == 201) {
 

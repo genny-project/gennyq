@@ -235,6 +235,11 @@ public class QMessageGennyMSG extends QMessage {
 
 		public QMessageGennyMSG send() {
 
+			if (this.msg.getToken() == null) {
+				log.error("No token set for message. Cannot send!!!");
+				return this.msg;
+			}
+
 			if (this.beUtils == null) {
 				log.error("No beUtils set for message. Cannot send!!!");
 				return this.msg;
@@ -270,8 +275,7 @@ public class QMessageGennyMSG extends QMessage {
 			if (this.msg.messageTypeArr.length == 0) {
 				this.msg.addMessageType(QBaseMSGMessageType.DEFAULT);
 			}
-			// Set token and send
-			this.msg.setToken(beUtils.getGennyToken().getToken());
+
 			KafkaUtils.writeMsg("messages", this.msg);
 			return this.msg;
 		}

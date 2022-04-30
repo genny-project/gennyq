@@ -30,7 +30,7 @@ public class QSlackMessageManager implements QMessageProvider {
 	private static final Logger log = Logger.getLogger(QSlackMessageManager.class);
 	
 	@Override
-	public void sendMessage(BaseEntityUtils beUtils, BaseEntity templateBe, Map<String, Object> contextMap) {
+	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 		log.info(ANSIColour.GREEN+">>>>>>>>>>> About to trigger SLACK <<<<<<<<<<<<<<"+ANSIColour.RESET);
 		
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");

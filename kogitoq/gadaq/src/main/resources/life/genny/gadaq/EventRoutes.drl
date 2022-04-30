@@ -18,7 +18,7 @@ then
 		CacheUtils.writeCache(userToken.getRealm(), "TOKEN:"+userToken.getCode(), userToken.getToken());
 	}
 
-	kogitoUtils.triggerWorkflow("authinit", msg, userToken);
+	kogitoUtils.triggerWorkflow("authinit", msg);
 end
 
 rule RouteEventDefault 
@@ -30,6 +30,6 @@ when
 then
 	System.out.println("Routing Default Event!");
 
-	kogitoUtils.triggerWorkflow(msg.getData().getCode(), msg, userToken);
+	kogitoUtils.triggerWorkflow(msg.getData().getCode(), msg);
 end
 

@@ -17,6 +17,7 @@ import life.genny.messages.process.MessageProcessor;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
@@ -32,10 +33,12 @@ public class InternalConsumer {
 	@Inject
 	MessageProcessor mp;
 
+	@Inject
+	BaseEntityUtils beUtils;
+
     void onStart(@Observes StartupEvent ev) {
 
 		service.fullServiceInit();
-		log.info("[*] Consumer Ready!");
     }
 
     void onStop(@Observes ShutdownEvent ev) {
@@ -68,12 +71,9 @@ public class InternalConsumer {
 
 		if (message != null && userToken != null) {
 
-			// update the beUtils with new token
-			service.getBeUtils().setGennyToken(userToken);
-
 			// Try Catch to stop consumer from dying upon error
 			try {
-				mp.processGenericMessage(message, service.getBeUtils());
+				mp.processGenericMessage(message);
 			} catch (Exception e) {
 				log.error(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);
 				log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
