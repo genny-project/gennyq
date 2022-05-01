@@ -94,7 +94,7 @@ public class CacheUtils {
 
 		String data = (String) readCache(realm, key);
 		if (StringUtils.isEmpty(data)) {
-			log.info("DEBUG, key:" + key + ", data:" + data);
+			log.debug("key: " + key + ", data: " + data);
 			return null;
 		}
 		Object object = jsonb.fromJson(data, c);

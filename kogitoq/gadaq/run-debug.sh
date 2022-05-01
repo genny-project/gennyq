@@ -9,14 +9,16 @@ echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 
+source ~/.genny/.env
 
+export PRODUCT_CODES=internmatch:mentormatch
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
 export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
 export GENNY_CLIENT_ID=backend
-export GENNY_CLIENT_SECRET=${GENNY_CLIENT_SECRET}:"invalidsecret"
+export GENNY_CLIENT_SECRET=${GENNY_CLIENT_SECRET}
 export GENNY_REALM=internmatch
 export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582

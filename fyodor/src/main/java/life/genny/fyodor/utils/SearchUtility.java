@@ -48,6 +48,7 @@ import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -91,11 +92,16 @@ public class SearchUtility {
 	@Inject
 	Service service;
 
+	@Inject
+	TokenCollection tokens;
+
 	BaseEntityUtils beUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	public QBulkMessage processSearchEntity(GennyToken gennyToken, SearchEntity searchBE) {
+	public QBulkMessage processSearchEntity(SearchEntity searchBE) {
+
+		GennyToken gennyToken = tokens.getGennyToken();
 
 		QSearchBeResult results = null;
 		Boolean isCountEntity = false;
@@ -125,7 +131,7 @@ public class SearchUtility {
 
 		// Perform search
 		if (results == null) {
-			results = findBySearch25(gennyToken, searchBE, isCountEntity, true);
+			results = findBySearch25(searchBE, isCountEntity, true);
 		}
 
 		List<EntityAttribute> cals = searchBE.findPrefixEntityAttributes("COL__");
@@ -175,7 +181,7 @@ public class SearchUtility {
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				SearchEntity combinedSearch = CacheUtils.getObject(gennyToken.getRealm(), combinedSearchCode,
+				SearchEntity combinedSearch = CacheUtils.getObject(gennyToken.getProductCode(), combinedSearchCode,
 						SearchEntity.class);
 
 				Long subTotal = performCount(gennyToken, combinedSearch);
@@ -220,14 +226,14 @@ public class SearchUtility {
 
 	public Long performCount(GennyToken gennyToken, SearchEntity searchBE) {
 
-		QSearchBeResult results = findBySearch25(gennyToken, searchBE, true, false);
+		QSearchBeResult results = findBySearch25(searchBE, true, false);
 		Long total = results.getTotal();
 
 		// Perform count for any combined search attributes
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				SearchEntity combinedSearch = CacheUtils.getObject(gennyToken.getRealm(), combinedSearchCode,
+				SearchEntity combinedSearch = CacheUtils.getObject(gennyToken.getProductCode(), combinedSearchCode,
 						SearchEntity.class);
 				Long subTotal = performCount(gennyToken, combinedSearch);
 				if (subTotal != null) {
@@ -244,19 +250,18 @@ public class SearchUtility {
 	 * Perform a safe search using named parameters to
 	 * protect from SQL Injection
 	 * 
-	 * @param realm         Realm to search in.
 	 * @param searchBE      SearchEntity used to search.
 	 * @param countOnly     Only perform a count.
 	 * @param fetchEntities Fetch Entities, or only codes.
 	 * @return Search Result Object.
 	 */
-	public QSearchBeResult findBySearch25(GennyToken gennyToken, final SearchEntity searchBE, Boolean countOnly, Boolean fetchEntities) {
+	public QSearchBeResult findBySearch25(final SearchEntity searchBE, Boolean countOnly, Boolean fetchEntities) {
 
 		Instant start = Instant.now();
 
 		log.info("About to search (" + searchBE.getCode() + ")");
 
-		String realm = gennyToken.getRealm();
+		String realm = searchBE.getRealm();
 		Integer defaultPageSize = 20;
 		// Init necessary vars
 		QSearchBeResult result = null;

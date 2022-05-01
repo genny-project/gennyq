@@ -83,6 +83,7 @@ public class Bridge {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/api/events/init")
 	public Response configObject() {
+
 		String url = uriInfo.getBaseUri().toString();
         log.info("Using URL for init: " + url);
 

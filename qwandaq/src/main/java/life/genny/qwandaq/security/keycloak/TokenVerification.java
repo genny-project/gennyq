@@ -83,7 +83,7 @@ public class TokenVerification {
 
 		if (keyMaybe.isEmpty()) {
 			throw new GennyKeycloakException(
-					"Code is : I dont'have code please define me",
+					"KEY_NOT_FOUND_ERROR",
 					"Not Certificate public key found for realm " + realm, 
 					new NullPointerException());
 		}
@@ -99,13 +99,13 @@ public class TokenVerification {
 
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException exception) {
 			throw new GennyKeycloakException(
-					"Code is : I dont'have code please define me", 
+					"CERTIFICATE_KEY_ERROR", 
 					"Something wrong with the Certificte key fields"+
 					" maybe the wrong algorithm is used or wrong jwt specifications",
 					exception);
 		} catch (ParseException exception) {
 			throw new GennyKeycloakException(
-					"Code is : I dont'have code please define me",
+					"PARSE_ERROR",
 					"An error occurred when parsing the token",
 					exception);
 		} catch (Exception e) {

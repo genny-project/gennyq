@@ -80,6 +80,8 @@ public class DefUtils {
 			return;
 		}
 
+		log.info("DEF search returned " + items.size() + " results for product " + productCode);
+
 		defs.put(productCode, new ConcurrentHashMap<String, BaseEntity>());
 
 		for (BaseEntity item : items) {

@@ -19,6 +19,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -102,20 +103,24 @@ public class BaseEntityUtils implements Serializable {
 		String json = jsonb.toJson(searchBE);
 		HttpResponse<String> response = HttpUtils.post(uri, json, tokens.getGennyToken().getToken());
 
-		if (response != null) {
-			String body = response.body();
-			log.info("Post " + searchBE.getCode() + " to url " + uri + ", response code:" + response.statusCode());
+		if (response == null) {
+			log.error("Null response from " + uri);
+			return null;
+		}
 
-			if (body != null) {
-				try {
-					// deserialise and grab entities
-					QSearchBeResult results = jsonb.fromJson(body, QSearchBeResult.class);
-					return Arrays.asList(results.getEntities());
-				} catch (Exception e) {
-					log.error(e.getMessage());
-					e.printStackTrace();
-				}
-			}
+		Integer status = response.statusCode();
+
+		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
+			log.error("Bad response status " + status + " from " + uri);
+		}
+
+		try {
+			// deserialise and grab entities
+			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+			return Arrays.asList(results.getEntities());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
 		}
 
 		return null;

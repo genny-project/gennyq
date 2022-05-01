@@ -4,12 +4,12 @@ import java.util.Map;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.inject.Inject;
 
 import org.apache.kafka.common.serialization.Deserializer;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.TokenCollection;
 
@@ -19,8 +19,11 @@ public class GennyDeserializer implements Deserializer<String> {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
 	TokenCollection tokens;
+
+	public GennyDeserializer() {
+		tokens = Arc.container().instance(TokenCollection.class).get();
+	}
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) { }

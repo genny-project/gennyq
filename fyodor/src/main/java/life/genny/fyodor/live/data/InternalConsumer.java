@@ -59,10 +59,10 @@ public class InternalConsumer {
 
 		// Deserialize msg
 		QSearchMessage msg = jsonb.fromJson(data, QSearchMessage.class);
-		GennyToken userToken = new GennyToken(msg.getToken());
+		// GennyToken userToken = new GennyToken(msg.getToken());
 
 		SearchEntity searchBE = msg.getSearchEntity();
-		log.info("Token: " + msg.getToken());
+		// log.info("Token: " + msg.getToken());
 
 		if (searchBE == null) {
 			log.error("Message did NOT contain a SearchEntity!!!");
@@ -71,7 +71,7 @@ public class InternalConsumer {
 
 		log.info("Handling search " + searchBE.getCode());
 
-        QBulkMessage bulkMsg = search.processSearchEntity(userToken, searchBE);
+        QBulkMessage bulkMsg = search.processSearchEntity(searchBE);
 
 		Instant end = Instant.now();
 		log.info("Finished! - Duration: " + Duration.between(start, end).toMillis() + " millSeconds.");

@@ -48,13 +48,13 @@ public class InitService {
 
 		log.info("Sending Project");
 
+		// grab baseentity for the project
 		BaseEntity projectBE = beUtils.getProjectBaseEntity();
 
+		// configure msg and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(projectBE);
 		msg.setToken(tokens.getGennyToken().getToken());
 		msg.setAliasCode("PROJECT");
-
-		log.info("Sending Project down kafka");
 
 		KafkaUtils.writeMsg("webdata", msg);
 	}
@@ -66,8 +66,10 @@ public class InitService {
 
 		log.info("Sending User");
 
-		BaseEntity userBE = beUtils.getBaseEntityByCode(tokens.getGennyToken().getCode());
+		// fetch the users baseentity
+		BaseEntity userBE = beUtils.getBaseEntityByCode(tokens.getGennyToken().getUserCode());
 
+		// configure msg and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(userBE);
 		msg.setToken(tokens.getGennyToken().getToken());
 		msg.setAliasCode("USER");
@@ -85,9 +87,16 @@ public class InitService {
 		GennyToken gennyToken = tokens.getGennyToken();
 		String productCode = gennyToken.getProductCode();
 
+		// fetch bulk attribute msg from cache
 		QDataAttributeMessage msg = CacheUtils.getObject(productCode, "ALL_ATTRIBUTES", QDataAttributeMessage.class);
-		msg.setToken(gennyToken.getToken());
+		
+		if (msg == null) {
+			log.error("No attribute msg cached for " + productCode);
+			return;
+		}
 
+		// set token and send
+		msg.setToken(gennyToken.getToken());
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
@@ -110,7 +119,7 @@ public class InitService {
 		searchBE.setRealm(productCode);
 		List<BaseEntity> pcms = beUtils.getBaseEntitys(searchBE);
 
-		// send to frontend
+		// configure msg and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
 		msg.setToken(gennyToken.getToken());
 		msg.setReplace(true);

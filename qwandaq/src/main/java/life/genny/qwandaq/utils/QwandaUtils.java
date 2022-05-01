@@ -30,6 +30,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.TokenCollection;
@@ -117,6 +118,8 @@ public class QwandaUtils {
 		log.info("About to load all attributes for productCode " + productCode);
 		log.info("Found " + attributeCount + " attributes");
 
+		QDataAttributeMessage msg = new QDataAttributeMessage();
+
 		try {
 			for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
@@ -128,6 +131,7 @@ public class QwandaUtils {
 					nextLoad = (int) (attributeCount - attributesLoaded);
 				}
 
+
 				attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
 
 				for (Attribute attribute : attributeList) {
@@ -135,6 +139,9 @@ public class QwandaUtils {
 					CacheUtils.putObject(productCode, key, attribute);
 					totalAttribsCached++;
 				}
+
+				// NOTE: Warning, this may cause OOM errors.
+				msg.add(attributeList);
 
 				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 
@@ -144,6 +151,8 @@ public class QwandaUtils {
 							+ attributeList.get(attributeList.size() - 1).getId());
 				}
 			}
+
+			CacheUtils.putObject(productCode, "ALL_ATTRIBUTES", msg);
 
 			log.info("Cached " + totalAttribsCached + " attributes");
 		} catch (Exception e) {

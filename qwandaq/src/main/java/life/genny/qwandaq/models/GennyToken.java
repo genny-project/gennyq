@@ -314,7 +314,7 @@ public class GennyToken implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		return getRealm() + ": " + getCode() + ": " + getUserCode() + ": " + this.userRoles;
+		return getProductCode() + ": " + getCode() + ": " + getUserCode() + ": " + this.userRoles;
 	}
 
 	/**

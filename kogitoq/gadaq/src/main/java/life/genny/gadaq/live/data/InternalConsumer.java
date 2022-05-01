@@ -77,7 +77,7 @@ public class InternalConsumer {
         try {
             msg = jsonb.fromJson(data, QEventMessage.class);
         } catch (Exception e) {
-            log.error("Cannot parse this event ..");
+            log.error("Cannot parse this event!");
             return;
         }
 
@@ -114,7 +114,7 @@ public class InternalConsumer {
         try {
             msg = jsonb.fromJson(data, QDataAnswerMessage.class);
         } catch (Exception e) {
-            log.warn("Cannot parse this data ..");
+            log.warn("Cannot parse this data!");
             return;
         }
 

@@ -19,12 +19,12 @@ public class TokenCollection {
 	public GennyToken gennyToken;
 	public GennyToken serviceToken;
 
-	public TokenCollection() { }
+	// public TokenCollection() { }
 
-	public TokenCollection(GennyToken gennyToken, GennyToken serviceToken) {
-		this.gennyToken = gennyToken;
-		this.serviceToken = serviceToken;
-	}
+	// public TokenCollection(GennyToken gennyToken, GennyToken serviceToken) {
+	// 	this.gennyToken = gennyToken;
+	// 	this.serviceToken = serviceToken;
+	// }
 
 	public GennyToken getGennyToken() {
 		return gennyToken;

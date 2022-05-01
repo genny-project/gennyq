@@ -101,7 +101,7 @@ public class Search {
 		}
 
 		// Process search
-		QSearchBeResult results = search.findBySearch25(gennyToken, searchEntity, false, false);
+		QSearchBeResult results = search.findBySearch25(searchEntity, false, false);
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);
@@ -130,7 +130,7 @@ public class Search {
 		}
 
 		// Process search
-		QSearchBeResult results = search.findBySearch25(gennyToken, searchEntity, false, true);
+		QSearchBeResult results = search.findBySearch25(searchEntity, false, true);
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);
