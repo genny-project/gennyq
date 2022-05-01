@@ -1,5 +1,10 @@
 package life.genny.qwandaq.models;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
@@ -19,19 +24,12 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
@@ -46,50 +44,53 @@ public class GennyToken implements Serializable {
 	public String token;
 	public Map<String, Object> adecodedTokenMap = null;
 	public String realm = null;
+	public String projectCode = null;
 	public Set<String> userRoles = new HashSet<String>();
 
-	public GennyToken() {
-	}
+	public GennyToken() { }
 
 	public GennyToken(final String token) {
 
-		if ((token != null) && (!token.isEmpty())) {
-			// Getting decoded token in Hash Map from QwandaUtils
-			adecodedTokenMap = getJsonMap(token);
-
-			if (adecodedTokenMap == null) {
-				log.error("Token is not able to be decoded in GennyToken ..");
-
-			} else {
-				// Extracting realm name from iss value
-				String realm = null;
-				if (adecodedTokenMap.get("iss") != null) {
-					String[] issArray = adecodedTokenMap.get("iss").toString().split("/");
-					realm = issArray[issArray.length - 1];
-				} else if (adecodedTokenMap.get("azp") != null) {
-					// clientid
-					realm = (adecodedTokenMap.get("azp").toString());
-				}
-
-				// Adding realm name to the decoded token
-				adecodedTokenMap.put("realm", realm);
-				this.token = token;
-				this.realm = realm;
-
-				String username = (String) adecodedTokenMap.get("preferred_username");
-				this.userUUID = "PER_" + this.getUuid().toUpperCase();
-
-				if ("service".equals(username)) {
-					this.userCode = "PER_SERVICE";
-				} else {
-					this.userCode = userUUID;
-				}
-				setupRoles();
-			}
-		} else {
-			log.error("Token is null or zero length in GennyToken ..");
+		if (token == null || token.isEmpty()) {
+			log.error("Token must not be null or empty!");
+			return;
 		}
 
+		this.token = token;
+
+		// get decoded map of token
+		adecodedTokenMap = getJsonMap(token);
+
+		if (adecodedTokenMap == null) {
+			log.error("Token cannot be decoded!");
+			return;
+		}
+
+		// extract realm name from iss value
+		String realm = null;
+		if (adecodedTokenMap.get("iss") != null) {
+			String[] issArray = getString("iss").split("/");
+			realm = issArray[issArray.length - 1];
+
+		} else if (adecodedTokenMap.get("azp") != null) {
+			// clientid
+			realm = getString("azp");
+		}
+
+		// add realm name to the decoded token
+		adecodedTokenMap.put("realm", realm);
+		this.realm = realm;
+
+		String username = getString("preferred_username");
+		this.userUUID = "PER_" + this.getUuid().toUpperCase();
+
+		if ("service".equals(username)) {
+			this.userCode = "PER_SERVICE";
+		} else {
+			this.userCode = userUUID;
+		}
+
+		setupRoles();
 	}
 
 	public GennyToken(final String code, final String token) {
@@ -207,6 +208,9 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	public String getRealm() {
+		if (projectCode != null) {
+			return projectCode;
+		}
 		return realm;
 	}
 
@@ -502,6 +506,14 @@ public class GennyToken implements Serializable {
 
 	public void setUserRoles(Set<String> userRoles) {
 		this.userRoles = userRoles;
+	}
+
+	public String getProjectCode() {
+		return projectCode;
+	}
+
+	public void setProjectCode(String projectCode) {
+		this.projectCode = projectCode;
 	}
 	
 	

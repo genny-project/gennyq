@@ -70,7 +70,7 @@ public class InternalConsumer {
         try {
             msg = jsonb.fromJson(data, QEventMessage.class);
         } catch (Exception e) {
-            log.warn("Cannot parse this event ..");
+            log.error("Cannot parse this event ..");
             return;
         }
 
@@ -92,6 +92,7 @@ public class InternalConsumer {
         session.insert(beUtils);
         session.insert(userToken);
         session.insert(msg);
+
         session.fireAllRules();
         session.dispose();
 
@@ -148,6 +149,7 @@ public class InternalConsumer {
 			} else {
 				kogitoUtils.sendSignal("processquestions", processId, "answer", data, userToken);
 			}
+
 		}
 
         Instant end = Instant.now();

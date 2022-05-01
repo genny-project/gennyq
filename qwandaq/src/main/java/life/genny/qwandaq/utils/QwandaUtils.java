@@ -172,6 +172,7 @@ public class QwandaUtils {
 			log.info("Cached " + totalAttribsCached + " attributes");
 		} catch (Exception e) {
 			log.error("Error loading attributes for realm " + realm);
+			e.printStackTrace();
 		}
 	}
 

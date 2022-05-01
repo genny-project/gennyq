@@ -337,6 +337,32 @@
         </executions>
       </plugin>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+        <execution>
+            <id>copy-resource-one</id>
+            <phase>generate-sources</phase>
+            <goals>
+                <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+                <outputDirectory>target/classes/life/genny/qwandaq/serialization/protos/</outputDirectory>
+                <resources>
+                    <resource>
+                        <directory>src/main/java/life/genny/qwandaq/serialization/protos/</directory>
+                        <includes>
+                            <include>*.proto</include>
+                        </includes>
+                    </resource>
+                </resources>
+            </configuration>
+        </execution>
+    </executions>
+      </plugin>
+
     </plugins>
 
   </build>

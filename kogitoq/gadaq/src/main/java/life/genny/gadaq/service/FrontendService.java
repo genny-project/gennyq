@@ -107,14 +107,14 @@ public class FrontendService {
 
         if (source == null) {
             log.error("Source BE not found for original " + sourceCode);
-            source = beUtils.getBaseEntityByCode(beUtils.getGennyToken().getUserCode());
+            source = beUtils.getBaseEntityByCode(beUtils.getGennyToken().getCode());
             if (source == null) {
-                log.error("Source BE not found for userToken sourceCode" + beUtils.getGennyToken().getUserCode());
+                log.error("Source BE not found for userToken sourceCode" + beUtils.getGennyToken().getCode());
                 // return null; // run exception
             }
         }
 
-        log.info("usercode = " + userToken.getUserCode() + " usernamer=[" + userToken.getUsername() + "]");
+        log.info("usercode = " + userToken.getCode() + " usernamer=[" + userToken.getUsername() + "]");
 
         // Fetch the Asks
 

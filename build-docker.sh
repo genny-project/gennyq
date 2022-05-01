@@ -12,7 +12,7 @@ fi
 
 ./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always
 
-for project in kogitoq-travels kogitoq-visas adi bridge fyodor dropkick lauchy messages shleemy
+for project in gadaq adi bridge fyodor dropkick lauchy messages shleemy
 do
     echo "Tagging $project"
 	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:latest
