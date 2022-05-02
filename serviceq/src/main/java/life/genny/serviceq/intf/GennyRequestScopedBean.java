@@ -33,11 +33,24 @@ public class GennyRequestScopedBean {
 
 		String token = httpHeaders.getHeaderString(HttpHeaders.AUTHORIZATION);
 
+		if (token == null) {
+			log.warn("No Authorization header sent in request!");
+			return;
+		}
+
 		token = StringUtils.removeStart(token, "Bearer ");
 
-		GennyToken gennyToken = new GennyToken(token);
-		tokens.setGennyToken(gennyToken);
+		GennyToken gennyToken = null;
+		try {
+			// build GennyToken from token string in headers
+			gennyToken = new GennyToken(token);
 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// update our gennyToken item
+		tokens.setGennyToken(gennyToken);
 		log.info("Token Initialized: " + gennyToken);
     }
 }

@@ -462,7 +462,7 @@ public class TopologyProducer {
 		searchBE.addFilter("PRI_NAME", SearchEntity.StringFilter.LIKE, searchText + "%")
 				.addOr("PRI_NAME", SearchEntity.StringFilter.LIKE, "% " + searchText + "%");
 
-		searchBE.setRealm(gennyToken.getRealm());
+		searchBE.setRealm(gennyToken.getProductCode());
 		searchBE.setPageStart(pageStart);
 		searchBE.setPageSize(pageSize);
 
