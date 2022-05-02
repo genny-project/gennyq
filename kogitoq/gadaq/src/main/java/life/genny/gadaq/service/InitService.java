@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
@@ -29,6 +31,8 @@ public class InitService {
 
     private static final Logger log = Logger.getLogger(InitService.class);
 
+	Jsonb jsonb = JsonbBuilder.create();
+
     @Inject
     Service service;
 
@@ -46,7 +50,7 @@ public class InitService {
 	 */
 	public void sendProject() {
 
-		log.info("Sending Project");
+		log.info("Sending Project PRJ_" + tokens.getGennyToken().getProductCode().toUpperCase());
 
 		// grab baseentity for the project
 		BaseEntity projectBE = beUtils.getProjectBaseEntity();
@@ -56,6 +60,8 @@ public class InitService {
 		msg.setToken(tokens.getGennyToken().getToken());
 		msg.setAliasCode("PROJECT");
 
+		log.info(jsonb.toJson(msg));
+
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
@@ -64,7 +70,7 @@ public class InitService {
 	 */
 	public void sendUser() {
 
-		log.info("Sending User");
+		log.info("Sending User " + tokens.getGennyToken().getUserCode());
 
 		// fetch the users baseentity
 		BaseEntity userBE = beUtils.getBaseEntityByCode(tokens.getGennyToken().getUserCode());
@@ -82,7 +88,7 @@ public class InitService {
 	 */
 	public void sendAllAttributes() {
 
-		log.info("Sending Attributes");
+		log.info("Sending Attributes for " + tokens.getGennyToken().getProductCode());
 
 		GennyToken gennyToken = tokens.getGennyToken();
 		String productCode = gennyToken.getProductCode();
@@ -105,7 +111,7 @@ public class InitService {
 	 */
 	public void sendPCMs() {
 
-		log.info("Sending PCMs");
+		log.info("Sending PCMs for " + tokens.getGennyToken().getProductCode());
 
 		GennyToken gennyToken = tokens.getGennyToken();
 		String productCode = gennyToken.getProductCode();

@@ -54,6 +54,7 @@ public class InternalConsumer {
 	public void getFromWebData(String arg) {
 
 		log.info("Message received in webdata");
+		log.info(arg);
 		handleIncomingMessage(arg);
 	}
 

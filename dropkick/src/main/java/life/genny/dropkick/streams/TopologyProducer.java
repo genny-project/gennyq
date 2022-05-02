@@ -15,7 +15,9 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
 
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -41,6 +43,7 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyDeserializer;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -83,10 +86,12 @@ public class TopologyProducer {
 	@Produces
 	public Topology buildTopology() {
 
+		Serde<String> customSerdes = Serdes.serdeFrom(new StringSerializer(), new GennyDeserializer());
+
 		// Read the input Kafka topic into a KStream instance.
 		StreamsBuilder builder = new StreamsBuilder();
 		builder
-				.stream("events", Consumed.with(Serdes.String(), Serdes.String()))
+				.stream("events", Consumed.with(Serdes.String(), customSerdes))
 				.peek((k, v) -> log.debug("Consumed message: " + v))
 
 				.filter((k, v) -> isValidDropdownMessage(v))

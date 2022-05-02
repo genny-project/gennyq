@@ -37,5 +37,7 @@ public class GennyRequestScopedBean {
 
 		GennyToken gennyToken = new GennyToken(token);
 		tokens.setGennyToken(gennyToken);
+
+		log.info("Token Initialized: " + gennyToken);
     }
 }

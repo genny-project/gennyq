@@ -31,6 +31,8 @@ public class GennyDeserializer implements Deserializer<String> {
     @Override
     public String deserialize(String topic, byte[] data) {
 
+		log.info("[*] Calling deserialize for GennyDeserializer");
+
 		if (data == null) {
 			log.error("Null received at deserializing");
 			return null;
@@ -44,6 +46,8 @@ public class GennyDeserializer implements Deserializer<String> {
 
 			GennyToken gennyToken = new GennyToken(token);
 			tokens.setGennyToken(gennyToken);
+
+			log.info("Token Initialized: " + gennyToken);
 
 			return deser;
 

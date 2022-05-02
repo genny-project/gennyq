@@ -13,7 +13,9 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -34,6 +36,7 @@ import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyDeserializer;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -78,10 +81,12 @@ public class TopologyProducer {
 	@Produces
 	public Topology buildTopology() {
 
+		Serde<String> customSerdes = Serdes.serdeFrom(new StringSerializer(), new GennyDeserializer());
+
 		// Read the input Kafka topic into a KStream instance.
 		StreamsBuilder builder = new StreamsBuilder();
 		builder
-				.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
+				.stream("data", Consumed.with(Serdes.String(), customSerdes))
 				.peek((k, v) -> log.info("Reveived message: " + v))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
