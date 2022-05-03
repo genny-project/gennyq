@@ -16,6 +16,7 @@ import javax.json.bind.JsonbBuilder;
 import life.genny.messages.process.MessageProcessor;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
 
