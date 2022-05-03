@@ -13,7 +13,7 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.intf.KafkaInterface;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.serviceq.live.data.InternalProducer;
 
 @ApplicationScoped
@@ -21,6 +21,9 @@ public class KafkaBean implements KafkaInterface {
 
 	@Inject 
 	InternalProducer producer;
+
+	@Inject 
+	UserToken userToken;
 
 	static final Logger log = Logger.getLogger(KafkaBean.class);
 
@@ -46,11 +49,12 @@ public class KafkaBean implements KafkaInterface {
 
 		// find GennyToken from payload contents
 		JsonObject payloadObj = null;
-		GennyToken gennyToken = null;
 
 		try {
 			payloadObj = jsonb.fromJson(payload, JsonObject.class);
-			gennyToken = new GennyToken(payloadObj.getString("token"));
+			if (!payloadObj.containsKey("token")) {
+				throw new Exception("Outgoing message must have a token. Found null!");
+			}
 		} catch (Exception e) {
 			log.debug("Message could not be deserialized to a JsonObject.");
 		}
@@ -60,11 +64,11 @@ public class KafkaBean implements KafkaInterface {
 
 		if ("webcmds".equals(channel) || "webdata".equals(channel)) {
 
-			String bridgeId = BridgeSwitch.get(gennyToken);
+			String bridgeId = BridgeSwitch.get(userToken);
 
 			if (bridgeId == null) {
-				log.warn("No Bridge ID found for " + gennyToken.getUserCode() + " : " + gennyToken.getJTI());
-				bridgeId = BridgeSwitch.findActiveBridgeId(gennyToken);
+				log.warn("No Bridge ID found for " + userToken.getUserCode() + " : " + userToken.getJTI());
+				bridgeId = BridgeSwitch.findActiveBridgeId(userToken);
 			}
 
 			if (bridgeId != null) {
@@ -106,11 +110,9 @@ public class KafkaBean implements KafkaInterface {
 				break;
 			case "webcmds":
 				producer.getToWebCmds().send(Message.of(payload).addMetadata(metadata));
-				// producer.getToWebCmds().send(payload);
 				break;
 			case "webdata":
 				producer.getToWebData().send(Message.of(payload).addMetadata(metadata));
-				// producer.getToWebData().send(payload);
 				break;
 			default:
 				log.error("Producer unable to write to channel " + channel);

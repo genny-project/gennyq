@@ -26,7 +26,6 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.DataType;
@@ -37,6 +36,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyDeserializer;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -65,7 +65,7 @@ public class TopologyProducer {
 	Service service;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	void onStart(@Observes StartupEvent ev) {
 
@@ -123,28 +123,6 @@ public class TopologyProducer {
 			return false;
 		}
 
-		// // create GennyToken from token in message
-		String token = json.getString("token");
-		// GennyToken gennyToken = null;
-
-		// try {
-		// 	gennyToken = new GennyToken(token);
-		// } catch (Exception e) {
-		// 	log.errorv("Invalid Token: {}", token);
-		// 	return false;
-		// }
-
-		// log.info(gennyToken);
-		//
-
-		GennyToken gennyToken = tokens.getGennyToken();
-
-		// check that token matches gennyToken
-		if (!gennyToken.getToken().equals(token)) {
-			log.errorv("Message Token and gennyToken DO NOT Match for {}", gennyToken.getEmail());
-			return blacklist(gennyToken);
-		}
-
 		JsonArray items = json.getJsonArray("items");
 
 		for (int i = 0; i < items.size(); i++) {
@@ -155,19 +133,19 @@ public class TopologyProducer {
 			// TODO: check askID by fetching from Tasks
 
 			// check that user is the source of message
-			if (!(gennyToken.getUserCode()).equals(answer.getSourceCode())) {
+			if (!(userToken.getUserCode()).equals(answer.getSourceCode())) {
 				// log.errorv("UserCode {} does not match answer source {}",
-				// gennyToken.getUserCode(), answer.getSourceCode());
-				log.error("UserCode " + gennyToken.getUserCode() + " does not match answer source "
+				// userToken.getUserCode(), answer.getSourceCode());
+				log.error("UserCode " + userToken.getUserCode() + " does not match answer source "
 						+ answer.getSourceCode());
-				return blacklist(gennyToken);
+				return blacklist();
 			}
 
 			// check source entity exists
 			BaseEntity sourceBe = beUtils.getBaseEntityByCode(answer.getSourceCode());
 			if (sourceBe == null) {
 				log.error("Source " + answer.getSourceCode() + " does not exist");
-				return blacklist(gennyToken);
+				return blacklist();
 			}
 			log.info("Source = " + sourceBe.getCode() + ":" + sourceBe.getName());
 
@@ -175,7 +153,7 @@ public class TopologyProducer {
 			BaseEntity targetBe = beUtils.getBaseEntityByCode(answer.getTargetCode());
 			if (targetBe == null) {
 				log.error("Target " + answer.getTargetCode() + " does not exist");
-				return blacklist(gennyToken);
+				return blacklist();
 			}
 
 			// check DEF was found for target
@@ -183,7 +161,7 @@ public class TopologyProducer {
 			if (defBe == null) {
 				// log.errorv("DEF entity not found for {}", targetBe.getCode());
 				log.error("DEF entity not found for " + targetBe.getCode());
-				return blacklist(gennyToken);
+				return blacklist();
 			}
 
 			// check attribute code is allowed by targetDEF
@@ -191,7 +169,7 @@ public class TopologyProducer {
 				// log.errorv("AttributeCode {} not allowed for {}", answer.getAttributeCode(),
 				// defBe.getCode());
 				log.error("AttributeCode " + answer.getAttributeCode() + " not allowed for " + defBe.getCode());
-				return blacklist(gennyToken);
+				return blacklist();
 			}
 
 			// check attribute exists
@@ -199,7 +177,7 @@ public class TopologyProducer {
 			if (attribute == null) {
 				// log.errorv("AttributeCode {} does not existing", answer.getAttributeCode());
 				log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
-				return blacklist(gennyToken);
+				return blacklist();
 			}
 
 			DataType dataType = attribute.getDataType();
@@ -216,10 +194,10 @@ public class TopologyProducer {
 					QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(targetBe);
 					responseMsg.setTotal(1L);
 					responseMsg.setReturnCount(1L);
-					responseMsg.setToken(gennyToken.getToken());
+					responseMsg.setToken(userToken.getToken());
 
 					KafkaUtils.writeMsg("webdata", responseMsg);
-					log.info("Detected cleared BKT_APPLICATIONS search from " + gennyToken.getEmailUserCode());
+					log.info("Detected cleared BKT_APPLICATIONS search from " + userToken.getEmailUserCode());
 
 				} catch (BadDataException e) {
 					e.printStackTrace();
@@ -231,7 +209,7 @@ public class TopologyProducer {
 				if (!isValidABN(answer.getValue())) {
 					// log.errorv("invalid ABN {}", answer.getValue());
 					log.error("invalid ABN " + answer.getValue());
-					return blacklist(gennyToken);
+					return blacklist();
 				}
 
 			} else if ("PRI_CREDITCARD".equals(answer.getAttributeCode())) {
@@ -239,7 +217,7 @@ public class TopologyProducer {
 				if (!isValidCreditCard(answer.getValue())) {
 					// log.errorv("invalid Credit Card {}", answer.getValue());
 					log.error("invalid Credit Card " + answer.getValue());
-					return blacklist(gennyToken);
+					return blacklist();
 				}
 
 			} else {
@@ -247,7 +225,7 @@ public class TopologyProducer {
 
 				// check the answer field and allow through if null
 				if (answer.getValue() == null) {
-					log.warn("Received a null answer field from: " + gennyToken.getUserCode() + ", for: "
+					log.warn("Received a null answer field from: " + userToken.getUserCode() + ", for: "
 							+ answer.getAttributeCode());
 					isAnyValid = true;
 					continue;
@@ -278,7 +256,7 @@ public class TopologyProducer {
 
 				// blacklist if none of the regex match
 				if (!isAnyValid) {
-					return blacklist(gennyToken);
+					return blacklist();
 				}
 			}
 		}
@@ -287,18 +265,17 @@ public class TopologyProducer {
 	}
 
 	/**
-	 * Blacklist a user if blacklists are enabled, and return
+	 * Blacklist the user if blacklists are enabled, and return
 	 * a Boolean representing whether or not the messsage
 	 * should be considered valid.
 	 *
-	 * @param gennyToken the gennyToken of the user to blacklist
 	 * @return Boolean
 	 */
-	public Boolean blacklist(GennyToken gennyToken) {
+	public Boolean blacklist() {
 
-		String uuid = gennyToken.getUuid();
+		String uuid = userToken.getUuid();
 
-		log.info("BLACKLIST " + (enableBlacklist ? "ON" : "OFF") + " " + gennyToken.getEmail() + ":" + uuid);
+		log.info("BLACKLIST " + (enableBlacklist ? "ON" : "OFF") + " " + userToken.getEmail() + ":" + uuid);
 
 		if (!enableBlacklist) {
 			return true;

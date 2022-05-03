@@ -21,7 +21,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -51,7 +51,7 @@ public class ProcessAnswerService {
     BaseEntityUtils beUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
     @Inject
     EntityManager entityManager;

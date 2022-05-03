@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.annotations.GennyProcessScoped;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,15 +28,26 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.InjectionPoint;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.ext.Provider;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 @RegisterForReflection
-@GennyProcessScoped
 public class GennyToken implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -56,7 +69,20 @@ public class GennyToken implements Serializable {
 
 	public GennyToken() { }
 
+	public GennyToken(final String code, final String token) {
+
+		this(token);
+		this.code = code;
+		if ("PER_SERVICE".equals(code)) {
+			this.userCode = code;
+		}
+	}
+
 	public GennyToken(final String token) {
+		init(token);
+	}
+
+	public void init(String token) {
 
 		if (token == null || token.isEmpty()) {
 			log.error("Token must not be null or empty!");
@@ -109,15 +135,6 @@ public class GennyToken implements Serializable {
 		}
 
 		setupRoles();
-	}
-
-	public GennyToken(final String code, final String token) {
-
-		this(token);
-		this.code = code;
-		if ("PER_SERVICE".equals(code)) {
-			this.userCode = code;
-		}
 	}
 
 	/**

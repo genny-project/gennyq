@@ -21,7 +21,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -48,7 +48,7 @@ public class FrontendService {
     BaseEntityUtils beUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
     @Inject
     EntityManager entityManager;
@@ -86,7 +86,7 @@ public class FrontendService {
     public BaseEntity setupProcessBE(final String targetCode, final BaseEntity processBE, QDataAskMessage qDataAskMessage) {
 
         // Force the realm
-        processBE.setRealm(tokens.getGennyToken().getProductCode());
+        processBE.setRealm(userToken.getProductCode());
 
         // only copy the entityAttributes used in the Asks
         BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
@@ -132,7 +132,7 @@ public class FrontendService {
         List<Ask> asks = questionUtils.findAsks(rootQuestion, sourceBE, targetBE);
 
         QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[0]));
-        msg.setToken(tokens.getGennyToken().getToken());
+        msg.setToken(userToken.getToken());
 
         return msg;
     }
@@ -178,7 +178,7 @@ public class FrontendService {
 
         // // Send to front end
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
-        msg.setToken(tokens.getGennyToken().getToken());
+        msg.setToken(userToken.getToken());
         msg.setReplace(true);
         KafkaUtils.writeMsg("webcmds", msg);
     }
@@ -219,13 +219,13 @@ public class FrontendService {
             msg = new QCmdMessage(displayParms[0], displayParms[1]);
         }
 
-		msg.setToken(tokens.getGennyToken().getToken());
+		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("webcmds", msg);
     }
 
     public void sendQuestions(QDataAskMessage askMsg, BaseEntity target) {
 
-		String token = tokens.getGennyToken().getToken();
+		String token = userToken.getToken();
 
         QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
         msg.setToken(token);

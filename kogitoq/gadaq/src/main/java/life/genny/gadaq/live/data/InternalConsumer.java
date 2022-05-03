@@ -13,8 +13,7 @@ import life.genny.gadaq.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -46,7 +45,7 @@ public class InternalConsumer {
     KogitoUtils kogitoUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
     KieSession ksession;
 
@@ -81,14 +80,12 @@ public class InternalConsumer {
             return;
         }
 
-		GennyToken gennyToken = tokens.getGennyToken();
-
 		// start new session
         KieSession session = kieRuntimeBuilder.newKieSession();
 
         session.insert(kogitoUtils);
         session.insert(beUtils);
-        session.insert(gennyToken);
+        session.insert(userToken);
         session.insert(msg);
 
         session.fireAllRules();

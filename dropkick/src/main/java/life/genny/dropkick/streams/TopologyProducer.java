@@ -28,7 +28,7 @@ import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.data.BridgeSwitch;
@@ -69,7 +69,7 @@ public class TopologyProducer {
 	Service service;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -212,12 +212,6 @@ public class TopologyProducer {
 	public String fetchDropdownResults(String data) {
 
 		JsonObject jsonStr = jsonb.fromJson(data, JsonObject.class);
-
-		// // create usertoken and use it to update beUtils
-		// String token = jsonStr.getString("token");
-		// GennyToken userToken = new GennyToken(token);
-
-		GennyToken gennyToken = tokens.getGennyToken();
 
 		JsonObject dataJson = jsonStr.getJsonObject("data");
 
@@ -462,7 +456,7 @@ public class TopologyProducer {
 		searchBE.addFilter("PRI_NAME", SearchEntity.StringFilter.LIKE, searchText + "%")
 				.addOr("PRI_NAME", SearchEntity.StringFilter.LIKE, "% " + searchText + "%");
 
-		searchBE.setRealm(gennyToken.getProductCode());
+		searchBE.setRealm(userToken.getProductCode());
 		searchBE.setPageStart(pageStart);
 		searchBE.setPageSize(pageSize);
 
@@ -507,7 +501,7 @@ public class TopologyProducer {
 		// Set all required message fields and return msg
 		msg.setParentCode(parentCode);
 		msg.setQuestionCode(questionCode);
-		msg.setToken(gennyToken.getToken());
+		msg.setToken(userToken.getToken());
 		msg.setLinkCode("LNK_CORE");
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);

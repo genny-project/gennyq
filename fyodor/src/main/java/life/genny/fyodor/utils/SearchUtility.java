@@ -7,13 +7,10 @@ import java.util.Comparator;
 import java.util.Collections;
 import java.time.*;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Arrays;
 import java.util.Optional;
-import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -21,8 +18,6 @@ import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.StartupEvent;
 
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.core.types.dsl.ComparableExpressionBase;
@@ -47,13 +42,11 @@ import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
@@ -93,15 +86,13 @@ public class SearchUtility {
 	Service service;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	BaseEntityUtils beUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
 	public QBulkMessage processSearchEntity(SearchEntity searchBE) {
-
-		GennyToken gennyToken = tokens.getGennyToken();
 
 		QSearchBeResult results = null;
 		Boolean isCountEntity = false;
@@ -181,10 +172,10 @@ public class SearchUtility {
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				SearchEntity combinedSearch = CacheUtils.getObject(gennyToken.getProductCode(), combinedSearchCode,
+				SearchEntity combinedSearch = CacheUtils.getObject(userToken.getProductCode(), combinedSearchCode,
 						SearchEntity.class);
 
-				Long subTotal = performCount(gennyToken, combinedSearch);
+				Long subTotal = performCount(combinedSearch);
 				if (subTotal != null) {
 					totalResultCount += subTotal;
 					results.setTotal(totalResultCount);
@@ -204,10 +195,10 @@ public class SearchUtility {
 		log.info("Results = " + results.getTotal().toString());
 
 		QBulkMessage bulkMsg = new QBulkMessage();
-		bulkMsg.setToken(gennyToken.getToken());
+		bulkMsg.setToken(userToken.getToken());
 
 		QDataBaseEntityMessage searchBEMsg = new QDataBaseEntityMessage(searchBE);
-		searchBEMsg.setToken(gennyToken.getToken());
+		searchBEMsg.setToken(userToken.getToken());
 		searchBEMsg.setReplace(true);
 		bulkMsg.add(searchBEMsg);
 
@@ -217,14 +208,14 @@ public class SearchUtility {
 			entityMsg.setTotal(results.getTotal());
 			entityMsg.setReplace(true);
 			entityMsg.setParentCode(searchBE.getCode());
-			entityMsg.setToken(gennyToken.getToken());
+			entityMsg.setToken(userToken.getToken());
 			bulkMsg.add(entityMsg);
 		}
 
 		return bulkMsg;
 	}
 
-	public Long performCount(GennyToken gennyToken, SearchEntity searchBE) {
+	public Long performCount(SearchEntity searchBE) {
 
 		QSearchBeResult results = findBySearch25(searchBE, true, false);
 		Long total = results.getTotal();
@@ -233,9 +224,9 @@ public class SearchUtility {
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				SearchEntity combinedSearch = CacheUtils.getObject(gennyToken.getProductCode(), combinedSearchCode,
+				SearchEntity combinedSearch = CacheUtils.getObject(userToken.getProductCode(), combinedSearchCode,
 						SearchEntity.class);
-				Long subTotal = performCount(gennyToken, combinedSearch);
+				Long subTotal = performCount(combinedSearch);
 				if (subTotal != null) {
 					total += subTotal;
 				} else {
@@ -438,11 +429,12 @@ public class SearchUtility {
 				}
 				// Create a filter for wildcard
 			} else if (attributeCode.startsWith("SCH_WILDCARD")) {
+
 				if (ea.getValueString() != null) {
+
 					if (!StringUtils.isBlank(ea.getValueString())) {
-						String wildcardValue = ea.getValueString();
-						// wildcardValue = wildcardValue.replaceAll("[^A-zA-Z0-9 .,'@()_-]", "");
-						wildcardValue = "%" + wildcardValue + "%";
+
+						String wildcardValue = "%" + ea.getValueString() + "%";
 						log.info("WILDCARD like " + wildcardValue);
 
 						QEntityAttribute eaWildcardJoin = new QEntityAttribute("eaWildcardJoin");
@@ -493,83 +485,6 @@ public class SearchUtility {
 																wildcardWhiteList, wildcardBlackList))
 												: null));
 
-						/*
-						 * NOTE: the comments below will be deleted shortly, once confirmed that the
-						 * above code functions well.
-						 */
-
-						// only wildcard on associations if depth is non zero
-						// if (depth != null && depth > 0) {
-
-						// if (wildcardWhiteList.length > 0) {
-						// builder.and(baseEntity.name.like(wildcardValue)
-						// .or(eaWildcardJoin.valueString.like(wildcardValue).and(eaWildcardJoin.attributeCode.in(wildcardWhiteList)))
-						// .or(Expressions.stringTemplate("replace({0},'[\"','')",
-						// Expressions.stringTemplate("replace({0},'\"]','')",
-						// eaWildcardJoin.valueString)
-						// ).in(generateWildcardSubQuery(wildcardValue, depth, wildcardWhiteList,
-						// wildcardBlackList))
-						// )
-						// );
-
-						// } else if (wildcardBlackList.length > 0) {
-						// builder.and(baseEntity.name.like(wildcardValue)
-						// .or(eaWildcardJoin.valueString.like(wildcardValue).and(eaWildcardJoin.attributeCode.notIn(wildcardBlackList)))
-						// .or(Expressions.stringTemplate("replace({0},'[\"','')",
-						// Expressions.stringTemplate("replace({0},'\"]','')",
-						// eaWildcardJoin.valueString)
-						// ).in(generateWildcardSubQuery(wildcardValue, depth, wildcardWhiteList,
-						// wildcardBlackList))
-						// )
-						// );
-
-						// } else {
-						// builder.and(baseEntity.name.like(wildcardValue)
-						// .or(eaWildcardJoin.valueString.like(wildcardValue))
-						// .or(Expressions.stringTemplate("replace({0},'[\"','')",
-						// Expressions.stringTemplate("replace({0},'\"]','')",
-						// eaWildcardJoin.valueString)
-						// ).in(generateWildcardSubQuery(wildcardValue, depth, wildcardWhiteList,
-						// wildcardBlackList))
-						// )
-						// );
-						// }
-
-						// } else {
-
-						// builder.and(
-						// baseEntity.name.like(wildcardValue)
-						// // check code for Dev UI searches
-						// .or(searchBE.getCode().equals("SBE_DEV_UI") ?
-						// baseEntity.code.like(wildcardValue) : null)
-						// .or(eaWildcardJoin.valueString.like(wildcardValue)
-						// .and(
-						// // build wildcard for whitelist
-						// wildcardWhiteList.length > 0 ?
-						// eaWildcardJoin.attributeCode.in(wildcardWhiteList)
-						// // build wildcard for blacklist
-						// : wildcardBlackList.length > 0 ?
-						// eaWildcardJoin.attributeCode.notIn(wildcardBlackList)
-						// // nothing for ordinary cases
-						// : null)
-						// )
-						// );
-
-						// if (wildcardWhiteList.length > 0) {
-						// builder.and(baseEntity.name.like(wildcardValue)
-						// .or(eaWildcardJoin.valueString.like(wildcardValue).and(eaWildcardJoin.attributeCode.in(wildcardWhiteList))));
-
-						// // build wildcard for blacklist
-						// } else if (wildcardBlackList.length > 0) {
-						// builder.and(baseEntity.name.like(wildcardValue)
-						// .or(eaWildcardJoin.valueString.like(wildcardValue).and(eaWildcardJoin.attributeCode.notIn(wildcardBlackList))));
-
-						// // build wildcard for ordinary cases
-						// } else {
-						// builder.and(baseEntity.name.like(wildcardValue)
-						// .or(eaWildcardJoin.valueString.like(wildcardValue)));
-						// }
-						// }
 					}
 				}
 			} else if (attributeCode.startsWith("SCH_LINK_CODE")) {

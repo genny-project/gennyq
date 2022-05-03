@@ -19,7 +19,7 @@ import life.genny.fyodor.utils.SearchUtility;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
 
@@ -34,6 +34,9 @@ public class InternalConsumer {
 	Service service;
 
 	@Inject
+	UserToken userToken;
+
+	@Inject
 	SearchUtility search;
 
     void onStart(@Observes StartupEvent ev) {
@@ -41,7 +44,6 @@ public class InternalConsumer {
 		service.showConfiguration();
 
 		service.initToken();
-		service.initDatabase();
 		service.initCache();
 		service.initAttributes();
 		service.initKafka();
@@ -59,10 +61,7 @@ public class InternalConsumer {
 
 		// Deserialize msg
 		QSearchMessage msg = jsonb.fromJson(data, QSearchMessage.class);
-		// GennyToken userToken = new GennyToken(msg.getToken());
-
 		SearchEntity searchBE = msg.getSearchEntity();
-		// log.info("Token: " + msg.getToken());
 
 		if (searchBE == null) {
 			log.error("Message did NOT contain a SearchEntity!!!");

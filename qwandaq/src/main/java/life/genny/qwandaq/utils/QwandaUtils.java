@@ -32,16 +32,11 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
  * and Answer operations.
- * <p>
- * The class should be initialized with a GennyToken
- * to ensure successful operation
- * <p>
  * 
  * @author Jasper Robison
  */
@@ -70,7 +65,7 @@ public class QwandaUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	public QwandaUtils() { }
 
@@ -83,7 +78,7 @@ public class QwandaUtils {
 	 */
 	public Attribute getAttribute(final String attributeCode) {
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
 
 		if (attribute == null) {
@@ -102,10 +97,11 @@ public class QwandaUtils {
 
 	/**
 	 * Load all attributes into the cache from the database.
+	 *
+	 * @param productCode The product of the attributes to initialize
 	 */
 	public void loadAllAttributesIntoCache(String productCode) {
 
-		// String productCode = tokens.getGennyToken().getProductCode();
 		List<Attribute> attributeList = null;
 
 		Long attributeCount = databaseUtils.countAttributes(productCode);
@@ -166,7 +162,7 @@ public class QwandaUtils {
 	 */
 	public void loadAllAttributes() {
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 		List<Attribute> attributeList = null;
 
 		log.info("About to load all attributes for productCode " + productCode);
@@ -205,7 +201,7 @@ public class QwandaUtils {
 	 */
 	public void removeAttributeFromMemory(String code) {
 
-		attributes.get(tokens.getGennyToken().getProductCode()).remove(code);
+		attributes.get(userToken.getProductCode()).remove(code);
 	}
 
 	/**
@@ -222,14 +218,13 @@ public class QwandaUtils {
 		}
 
 		// fetch from cache
-		GennyToken gennyToken = tokens.getGennyToken();
-		Question question = CacheUtils.getObject(gennyToken.getProductCode(), code, Question.class);
+		Question question = CacheUtils.getObject(userToken.getProductCode(), code, Question.class);
 
 		if (question == null) {
 
 			// fetch from database if not found in cache
 			log.warn("Could NOT read " + code + " from cache! Checking Database...");
-			question = databaseUtils.findQuestionByCode(gennyToken.getProductCode(), code);
+			question = databaseUtils.findQuestionByCode(userToken.getProductCode(), code);
 
 			if (question == null) {
 				log.error("Could not find question " + code + " in database!");
@@ -237,7 +232,7 @@ public class QwandaUtils {
 			}
 
 			// cache the fetched question for quicker access
-			CacheUtils.writeCache(gennyToken.getProductCode(), code, jsonb.toJson(question));
+			CacheUtils.writeCache(userToken.getProductCode(), code, jsonb.toJson(question));
 			log.info(question.getCode() + " written to cache!");
 		}
 
@@ -252,7 +247,7 @@ public class QwandaUtils {
 	public void deleteSchedule(String code) {
 
 		String uri = GennySettings.shleemyServiceUrl() + "/api/schedule/code/" + code;
-		HttpUtils.delete(uri, tokens.getGennyToken().getToken());
+		HttpUtils.delete(uri, userToken.getToken());
 	}
 
 	/**
@@ -263,10 +258,6 @@ public class QwandaUtils {
 	 */
 	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
 
-		// init tokens
-		GennyToken gennyToken = tokens.getGennyToken();
-		String token = gennyToken.getToken();
-
 		// grab def entity
 		BaseEntity defBE = defUtils.getDEF(baseEntity);
 
@@ -274,11 +265,11 @@ public class QwandaUtils {
 		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
 		Question question = new Question("QUE_EDIT_GRP", "Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
 				questionAttribute);
-		Ask ask = new Ask(question, gennyToken.getUserCode(), baseEntity.getCode());
+		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
 
 		List<Ask> childAsks = new ArrayList<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
-		entityMessage.setToken(token);
+		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid atribute
@@ -290,7 +281,7 @@ public class QwandaUtils {
 							+ StringUtils.removeStart(StringUtils.removeStart(ea.getAttributeCode(), "PRI_"), "LNK_");
 
 					Question childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
-					Ask childAsk = new Ask(childQues, gennyToken.getUserCode(), baseEntity.getCode());
+					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
 
 					childAsks.add(childAsk);
 
@@ -307,7 +298,7 @@ public class QwandaUtils {
 					}
 
 					if (defBE.containsEntityAttribute("SER_" + ea.getAttributeCode())) {
-						searchUtils.performDropdownSearch(childAsk, gennyToken);
+						searchUtils.performDropdownSearch(childAsk);
 					}
 				});
 
@@ -327,11 +318,10 @@ public class QwandaUtils {
 	 */
 	public void updateAskDisabled(Ask ask, Boolean disabled) {
 
-		GennyToken gennyToken = tokens.getGennyToken();
 		ask.setDisabled(disabled);
 
 		QDataAskMessage askMsg = new QDataAskMessage(ask);
-		askMsg.setToken(gennyToken.getToken());
+		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		String json = jsonb.toJson(askMsg);
 		KafkaUtils.writeMsg("webcmds", json);
@@ -354,8 +344,7 @@ public class QwandaUtils {
 			return;
 		}
 
-		GennyToken gennyToken = tokens.getGennyToken();
-		String productCode = gennyToken.getProductCode();
+		String productCode = userToken.getProductCode();
 
 		// sort answers into target BaseEntitys
 		Map<String, List<Answer>> answersPerTargetCodeMap = Stream.of(answers)
@@ -368,7 +357,7 @@ public class QwandaUtils {
 			if (target != null) {
 
 				BaseEntity be = new BaseEntity(target.getCode(), target.getName());
-				be.setRealm(gennyToken.getProductCode());
+				be.setRealm(userToken.getProductCode());
 
 				for (Answer answer : answers) {
 
@@ -382,7 +371,7 @@ public class QwandaUtils {
 				}
 				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
 				msg.setReplace(true);
-				msg.setToken(gennyToken.getToken());
+				msg.setToken(userToken.getToken());
 				KafkaUtils.writeMsg("webcmds", msg);
 			}
 		}
@@ -398,11 +387,10 @@ public class QwandaUtils {
 	public void sendFeedback(Answer answer, String prefix, String message) {
 
 		// find the baseentity
-		GennyToken gennyToken = tokens.getGennyToken();
-		BaseEntity target = CacheUtils.getObject(gennyToken.getProductCode(), answer.getTargetCode(), BaseEntity.class);
+		BaseEntity target = CacheUtils.getObject(userToken.getProductCode(), answer.getTargetCode(), BaseEntity.class);
 
 		BaseEntity be = new BaseEntity(target.getCode(), target.getName());
-		be.setRealm(gennyToken.getProductCode());
+		be.setRealm(userToken.getProductCode());
 
 		try {
 
@@ -416,7 +404,7 @@ public class QwandaUtils {
 
 				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
 				msg.setReplace(true);
-				msg.setToken(gennyToken.getToken());
+				msg.setToken(userToken.getToken());
 				KafkaUtils.writeMsg("webcmds", msg);
 			}
 		} catch (BadDataException e) {

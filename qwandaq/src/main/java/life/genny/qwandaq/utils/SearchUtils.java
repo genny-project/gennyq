@@ -30,8 +30,8 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.handlers.RuleFlowGroupWorkItemHandler;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -61,7 +61,10 @@ public class SearchUtils {
 	CapabilityUtils capabilityUtils;
 
 	@Inject
-	TokenCollection tokens;
+	ServiceToken serviceToken;
+
+	@Inject
+	UserToken userToken;
 
 	/**
 	 * Evaluate any conditional filters for a {@link SearchEntity}
@@ -130,7 +133,7 @@ public class SearchUtils {
 
 		log.info("SBE CODE   ::   " + searchCode);
 
-		SearchEntity searchEntity = CacheUtils.getObject(tokens.getGennyToken().getProductCode(), 
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
 				searchCode, SearchEntity.class);
 
 		if (searchEntity == null) {
@@ -169,7 +172,7 @@ public class SearchUtils {
 			}
 		}
 
-		CacheUtils.putObject(tokens.getGennyToken().getProductCode(),
+		CacheUtils.putObject(userToken.getProductCode(),
 				"LAST-SEARCH:" + searchEntity.getCode(),
 				searchEntity);
 
@@ -179,7 +182,7 @@ public class SearchUtils {
 
 		// package and send search message to fyodor
 		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
-		searchBeMsg.setToken(tokens.getGennyToken().getToken());
+		searchBeMsg.setToken(userToken.getToken());
 		searchBeMsg.setDestination("webcmds");
 		KafkaUtils.writeMsg("search_events", searchBeMsg);
 	}
@@ -197,8 +200,8 @@ public class SearchUtils {
 		List<EntityAttribute> filters = new ArrayList<>();
 
 		Map<String, Object> facts = new ConcurrentHashMap<>();
-		facts.put("serviceToken", tokens.getServiceToken());
-		facts.put("userToken", tokens.getGennyToken());
+		facts.put("serviceToken", serviceToken);
+		facts.put("userToken", userToken);
 		facts.put("searchBE", searchBE);
 
 		Map<String, Object> results = new RuleFlowGroupWorkItemHandler()
@@ -322,15 +325,13 @@ public class SearchUtils {
 	 */
 	public SearchEntity getSessionSearch(SearchEntity searchEntity) {
 
-		GennyToken gennyToken = tokens.getGennyToken();
-
 		// don't bother if the code is already a session search
-		if (searchEntity.getCode().contains(gennyToken.getJTI().toUpperCase())) {
+		if (searchEntity.getCode().contains(userToken.getJTI().toUpperCase())) {
 			return searchEntity;
 		}
 
 		// we need to set the searchEntity's code to session search code
-		String sessionSearchCode = searchEntity.getCode() + "_" + gennyToken.getJTI().toUpperCase();
+		String sessionSearchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
 		log.info("sessionSearchCode  ::  " + searchEntity.getCode());
 
 		// update code and any nested codes
@@ -339,11 +340,11 @@ public class SearchUtils {
 		searchEntity.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith("SBE_"))
 				.forEach(ea -> {
-					ea.setAttributeCode(ea.getAttributeCode() + "_" + gennyToken.getJTI().toUpperCase());
+					ea.setAttributeCode(ea.getAttributeCode() + "_" + userToken.getJTI().toUpperCase());
 				});
 
 		// put/update in the cache
-		CacheUtils.putObject(gennyToken.getProductCode(), searchEntity.getCode(), searchEntity);
+		CacheUtils.putObject(userToken.getProductCode(), searchEntity.getCode(), searchEntity);
 
 		return searchEntity;
 	}
@@ -355,9 +356,8 @@ public class SearchUtils {
 
 		Instant start = Instant.now();
 
-		GennyToken gennyToken = tokens.getGennyToken();
-		String productCode = gennyToken.getProductCode();
-		String sessionCode = gennyToken.getJTI().toUpperCase();
+		String productCode = userToken.getProductCode();
+		String sessionCode = userToken.getJTI().toUpperCase();
 
 		// convert to entity list
 		log.info("dropdownValue = " + dropdownValue);
@@ -529,7 +529,7 @@ public class SearchUtils {
 				// send the results
 				log.info("Sending Results: " + finalResultList.size());
 				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(finalResultList);
-				msg.setToken(gennyToken.getToken());
+				msg.setToken(userToken.getToken());
 				msg.setReplace(true);
 				msg.setParentCode(searchBE.getCode());
 				KafkaUtils.writeMsg("webcmds", msg);
@@ -553,7 +553,7 @@ public class SearchUtils {
 					log.error("SearchEntity is NULLLLL!!!!");
 				}
 				QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
-				searchMsg.setToken(gennyToken.getToken());
+				searchMsg.setToken(userToken.getToken());
 				searchMsg.setReplace(true);
 				KafkaUtils.writeMsg("webcmds", searchMsg);
 			}
@@ -636,9 +636,8 @@ public class SearchUtils {
 	 * Perform a dropdown search through dropkick.
 	 *
 	 * @param ask       the ask to perform dropdown search for
-	 * @param userToken the userToken used to perform the search
 	 */
-	public void performDropdownSearch(Ask ask, GennyToken userToken) {
+	public void performDropdownSearch(Ask ask) {
 
 		// setup message data
 		MessageData messageData = new MessageData();

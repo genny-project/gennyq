@@ -15,9 +15,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
-import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.serviceq.Service;
@@ -51,7 +49,7 @@ public class QwandaEndpoint {
 	QuestionUtils questionUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	@GET
 	@Consumes("application/json")
@@ -61,32 +59,22 @@ public class QwandaEndpoint {
 			@PathParam("questionCode") final String questionCode, @PathParam("targetCode") final String targetCode,
 			@Context final UriInfo uriInfo) {
 
-				String token = null;
-
-		GennyToken userToken = null;
-		try {
-			token = request.getHeader("authorization").split("Bearer ")[1];
-			if (token != null) {
-				userToken = new GennyToken(token);
-			} else {
-				log.error("Bad token in Search GET provided");
-				return Response.status(Response.Status.FORBIDDEN).build();
+			if (userToken == null) {
+				log.error("Bad or no header token in Search POST provided");
+				return Response.status(Response.Status.BAD_REQUEST).build();
 			}
-		} catch (Exception e) {
-			log.error("Bad or no header token in Search POST provided");
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
-	
 
-		tokens.getServiceToken().setProductCode(userToken.getRealm());
-		List<Ask> asks = questionUtils.createAsksByQuestionCode(questionCode, sourceCode, targetCode);
-	
-		log.debug("Number of asks=" + asks.size());
-		log.debug("Number of asks=" + asks);
-		final QDataAskMessage askMsgs = new QDataAskMessage(asks.toArray(new Ask[0]));
-		askMsgs.setToken(userToken.getToken());
-		String json = jsonb.toJson(askMsgs);
-		return Response.status(200).entity(json).build();
+			List<Ask> asks = questionUtils.createAsksByQuestionCode(questionCode, sourceCode, targetCode);
+
+			log.debug("Number of asks=" + asks.size());
+			log.debug("Number of asks=" + asks);
+
+			final QDataAskMessage askMsgs = new QDataAskMessage(asks.toArray(new Ask[0]));
+			askMsgs.setToken(userToken.getToken());
+			String json = jsonb.toJson(askMsgs);
+
+			return Response.ok().entity(json).build();
+
 	}
 
 }

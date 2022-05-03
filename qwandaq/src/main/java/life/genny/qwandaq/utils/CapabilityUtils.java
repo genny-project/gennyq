@@ -22,7 +22,7 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -44,7 +44,7 @@ public class CapabilityUtils implements Serializable {
 	QwandaUtils qwandaUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -126,12 +126,12 @@ public class CapabilityUtils implements Serializable {
 
 		// check if the userToken is allowed to do this!
 		if (!hasCapability(capabilityCode, mode)) {
-			log.error(tokens.getGennyToken().getUserCode() + " is NOT ALLOWED TO ADD THIS CAPABILITY TO A ROLE :"
+			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD THIS CAPABILITY TO A ROLE :"
 					+ role.getCode());
 			return role;
 		}
 
-		Answer answer = new Answer(tokens.getServiceToken().getUserCode(), role.getCode(), "PRM_" + capabilityCode,
+		Answer answer = new Answer(userToken.getUserCode(), role.getCode(), "PRM_" + capabilityCode,
 				mode.toString());
 
 		String prefixedCode = capabilityCode;
@@ -185,7 +185,7 @@ public class CapabilityUtils implements Serializable {
 	 */
 	private void updateCachedRoleSet(String code, String capabilityCode, CapabilityMode mode) {
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 
 		String key = productCode + ":" + capabilityCode + ":" + mode.name();
 		log.debug("Updating cached roleset: " + key);
@@ -215,11 +215,10 @@ public class CapabilityUtils implements Serializable {
 	 */
 	public boolean hasCapability(String code, CapabilityMode mode) {
 
-		GennyToken gennyToken = tokens.getGennyToken();
-		String productCode = gennyToken.getProductCode();
+		String productCode = userToken.getProductCode();
 
 		// allow keycloak admin and devcs to do anything
-		if (gennyToken.hasRole("admin") || gennyToken.hasRole("dev") || ("service".equals(gennyToken.getUsername()))) {
+		if (userToken.hasRole("admin") || userToken.hasRole("dev") || ("service".equals(userToken.getUsername()))) {
 			return true;
 		}
 
@@ -231,8 +230,7 @@ public class CapabilityUtils implements Serializable {
 		List<String> roleCodes = Arrays.asList(json.split(","));
 
 		// fetch user baseentity
-		String userCode = gennyToken.getUserCode();
-		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
+		BaseEntity user = beUtils.getUserBaseEntity();
 
 		// check if the user has any of these roles
 		for (String roleCode : roleCodes) {
@@ -256,11 +254,10 @@ public class CapabilityUtils implements Serializable {
 	 */
 	public boolean hasCapabilityThroughPriIs(String code, CapabilityMode mode) {
 
-		GennyToken gennyToken = tokens.getGennyToken();
-		String productCode = gennyToken.getProductCode();
+		String productCode = userToken.getProductCode();
 
 		// allow keycloak admin and devcs to do anything
-		if (gennyToken.hasRole("admin") || gennyToken.hasRole("dev") || ("service".equals(gennyToken.getUsername()))) {
+		if (userToken.hasRole("admin") || userToken.hasRole("dev") || ("service".equals(userToken.getUsername()))) {
 			return true;
 		}
 
@@ -272,8 +269,7 @@ public class CapabilityUtils implements Serializable {
 		List<String> roleCodes = Arrays.asList(json.split(","));
 
 		// fetch user baseentity
-		String userCode = gennyToken.getUserCode();
-		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
+		BaseEntity user = beUtils.getUserBaseEntity();
 
 		for (String roleCode : roleCodes) {
 			String priIsCode = "PRI_IS_" + roleCode.split("ROL_")[1];
@@ -290,7 +286,7 @@ public class CapabilityUtils implements Serializable {
 	 */
 	public void process() {
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 		List<Attribute> existingCapability = new ArrayList<Attribute>();
 
 		// iterate attributes in memory

@@ -16,8 +16,7 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
@@ -53,16 +52,16 @@ public class DefUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	public DefUtils() { }
 
 	/**
 	 * Initialize the in memory DEF store
+	 *
+	 * @param productCode The product of DEFs to initialize
 	 */
 	public void initializeDefs(String productCode) {
-
-		// String productCode = tokens.getGennyToken().getProductCode();
 
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
 				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
@@ -113,13 +112,12 @@ public class DefUtils {
 	}
 
 	/**
-	 * Find the map of DEFs for using the productCode of a GennyToken.
+	 * Find the map of DEFs for using the productCode of the userToken.
 	 *
-	 * @param gennyToken the GennyToken used to find def map
 	 * @return a Map of DEF BaseEntitys
 	 */
-	public Map<String, BaseEntity> getDefMap(final GennyToken gennyToken) {
-		return getDefMap(gennyToken.getRealm());
+	public Map<String, BaseEntity> getDefMap() {
+		return getDefMap(userToken.getRealm());
 	}
 
 	/**
@@ -144,8 +142,7 @@ public class DefUtils {
 	 */
 	public BaseEntity getDEF(final BaseEntity be) {
 
-		GennyToken gennyToken = tokens.getGennyToken();
-		String productCode = gennyToken.getProductCode();
+		String productCode = userToken.getProductCode();
 
 		if (be == null) {
 			log.error("be param is NULL");

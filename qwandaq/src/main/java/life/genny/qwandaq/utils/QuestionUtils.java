@@ -46,8 +46,7 @@ import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QwandaMessage;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.validation.Validation;
 
 /**
@@ -74,7 +73,7 @@ public class QuestionUtils implements Serializable {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	@Inject
 	EntityManager entityManager;
@@ -152,7 +151,7 @@ public class QuestionUtils implements Serializable {
 			// otherwise we fetch the question and update the ask
 			Question question = ask.getQuestion();
 
-			Question cachedQuestion = CacheUtils.getObject(tokens.getGennyToken().getProductCode(), 
+			Question cachedQuestion = CacheUtils.getObject(userToken.getProductCode(), 
 					question.getCode(), Question.class);
 
 			if (cachedQuestion != null) {
@@ -192,7 +191,7 @@ public class QuestionUtils implements Serializable {
 			Boolean childQuestionIsMandatory, Boolean childQuestionIsReadonly, Boolean childQuestionIsFormTrigger,
 			Boolean childQuestionIsCreateOnTrigger) {
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 
 		if (rootQuestion == null) {
 			log.error(
@@ -289,7 +288,7 @@ public class QuestionUtils implements Serializable {
 	public List<Ask> createAsksByQuestionCode(final String questionCode, final String sourceCode,
 			final String targetCode) {
 
-		Question rootQuestion = databaseUtils.findQuestionByCode(tokens.getGennyToken().getProductCode(), questionCode);
+		Question rootQuestion = databaseUtils.findQuestionByCode(userToken.getProductCode(), questionCode);
 		BaseEntity source = null;
 		BaseEntity target = null;
 
@@ -329,7 +328,7 @@ public class QuestionUtils implements Serializable {
 	 */
 	public QDataAskMessage getAsks(String sourceCode, String targetCode, String questionCode) {
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 
 		// TODO: Ensure migration from api to Database worked fine
 		List<Ask> asks = databaseUtils.findAsksByQuestionCode(productCode, questionCode, sourceCode, targetCode);
@@ -584,7 +583,7 @@ public class QuestionUtils implements Serializable {
 									if (validationString.startsWith("GRP_")) {
 
 										// Grab the parent
-										BaseEntity parent = CacheUtils.getObject(tokens.getGennyToken().getProductCode(),
+										BaseEntity parent = CacheUtils.getObject(userToken.getProductCode(),
 												validationString, BaseEntity.class);
 
 										// we have a GRP. we push it to FE
@@ -692,7 +691,7 @@ public class QuestionUtils implements Serializable {
 		// generate question and return
 		Ask ask = new Ask(newQuestion, (sourceAlias != null ? sourceAlias : be.getCode()),
 				(targetAlias != null ? targetAlias : be.getCode()), false, 1.0, false, false, true);
-		ask.setRealm(tokens.getGennyToken().getProductCode());
+		ask.setRealm(userToken.getProductCode());
 
 		return ask;
 
@@ -733,7 +732,7 @@ public class QuestionUtils implements Serializable {
 	 */
 	public Question getQuestion(String code) {
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 
 		// fetch from cache
 		Question question = CacheUtils.getObject(productCode, code, Question.class);
@@ -767,7 +766,7 @@ public class QuestionUtils implements Serializable {
 			return null;
 		}
 
-		String productCode = tokens.getGennyToken().getProductCode();
+		String productCode = userToken.getProductCode();
 		List<BaseEntity> result = new ArrayList<>();
 
 		BaseEntity parent = CacheUtils.getObject(productCode, beCode, BaseEntity.class);
@@ -811,7 +810,7 @@ public class QuestionUtils implements Serializable {
 
 	public void sendQuestions(final String rootQuestionCode, BaseEntity recipient) {
 
-		QDataAskMessage askMsg = getAsks(tokens.getGennyToken().getUserCode(), 
+		QDataAskMessage askMsg = getAsks(userToken.getUserCode(), 
 				recipient.getCode(), rootQuestionCode);
 		sendQuestions(askMsg, recipient);
 	}
@@ -819,19 +818,18 @@ public class QuestionUtils implements Serializable {
 	public void sendQuestions(QDataAskMessage askMsg, BaseEntity target) {
 
 		log.info("AskMsg=" + askMsg);
-		GennyToken gennyToken = tokens.getGennyToken();
 
 		QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
-		msg.setToken(gennyToken.getToken());
+		msg.setToken(userToken.getToken());
 
 		KafkaUtils.writeMsg("webcmds", msg);
 
 		QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(target);
-		beMsg.setToken(gennyToken.getToken());
+		beMsg.setToken(userToken.getToken());
 
 		KafkaUtils.writeMsg("webdata", beMsg);
 
-		askMsg.setToken(gennyToken.getToken());
+		askMsg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("webdata", askMsg);
 	}
 

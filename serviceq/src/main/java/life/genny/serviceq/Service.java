@@ -10,11 +10,11 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.data.GennyCache;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
-import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
@@ -75,41 +75,43 @@ public class Service {
 	QwandaUtils qwandaUtils;
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
+
+	@Inject
+	ServiceToken serviceToken;
 
 	private Boolean initialised = false;
+	
+	public Service() {
+		// activate our request scope
+		Arc.container().requestContext().activate();
+	}
 
 	/**
-	 * Initialize the serviceToken for our TokenCollection.
+	 * Initialize the serviceTok
 	 */
 	public void initToken() {
 
 		// fetch token and init entity utility
-		GennyToken serviceToken = KeycloakUtils.getToken(keycloakUrl, keycloakRealm, clientId, secret, serviceUsername, servicePassword);
+		String token = KeycloakUtils.getToken(keycloakUrl, keycloakRealm, clientId, secret, serviceUsername, servicePassword);
 
-		if (serviceToken == null) {
+		if (token == null) {
 			log.error("Service token is null for realm!: " + keycloakRealm);
 		}
-		log.info("ServiceToken: " + (serviceToken != null ? serviceToken.getToken() : " null"));
+		log.info("ServiceToken: " + token);
+
+		// init the injected serviceToken
+		serviceToken.init(token);
+		// set gennyToken as serviceToken just for initialisation purposes
+		userToken.init(token);
 
 		// add list of allowed products
 		String allowedProducts = System.getenv("PRODUCT_CODES");
 		if (allowedProducts != null) {
 			serviceToken.setAllowedProducts(allowedProducts.split(":"));
+		} else {
+			log.error("No PRODUCT_CODES Found");
 		}
-
-		// update the serviceToken in our token collection
-		tokens.setServiceToken(serviceToken);
-
-		// set gennyToken as serviceToken just for initialisation purposes
-		tokens.setGennyToken(serviceToken);
-	}
-
-	/**
-	 * Initialize the database connection
-	 */
-	public void initDatabase() {
-		databaseUtils.init(entityManager);
 	}
 
 	/**
@@ -131,7 +133,13 @@ public class Service {
 	 */
 	public void initAttributes() {
 
-		for (String productCode : tokens.getServiceToken().getAllowedProducts()) {
+		// null check the allowed codes
+		String[] allowedProducts = serviceToken.getAllowedProducts();
+		if (allowedProducts == null) {
+			log.error("You must set up the PRODUCT_CODES environment variable!");
+		}
+
+		for (String productCode : allowedProducts) {
 			qwandaUtils.loadAllAttributesIntoCache(productCode);
 		}
 	}
@@ -141,7 +149,13 @@ public class Service {
 	 */
 	public void initDefinitions() {
 
-		for (String productCode : tokens.getServiceToken().getAllowedProducts()) {
+		// null check the allowed codes
+		String[] allowedProducts = serviceToken.getAllowedProducts();
+		if (allowedProducts == null) {
+			log.error("You must set up the PRODUCT_CODES environment variable!");
+		}
+
+		for (String productCode : allowedProducts) {
 			defUtils.initializeDefs(productCode);
 		}
 	}
@@ -176,7 +190,6 @@ public class Service {
 
 		// init all
 		initToken();
-		initDatabase();
 		initCache();
 		initKafka();
 		initAttributes();

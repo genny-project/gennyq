@@ -34,7 +34,7 @@ import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.bridge.exception.BridgeException;
 import life.genny.qwandaq.models.AttributeCodeValueString;
 import life.genny.qwandaq.models.GennyItem;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.bridge.model.InitProperties;
 import life.genny.qwandaq.message.QDataB2BMessage;
@@ -55,6 +55,9 @@ public class Bridge {
 	private static final Logger log = Logger.getLogger(Bridge.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	UserToken userToken;
 
 	@Inject
 	BlackListInfo blackList;
@@ -222,22 +225,6 @@ public class Bridge {
 	public Response apiB2BHandlerGet() {
 
 		log.info("B2B Get received..");
-		GennyToken userToken = null;
-
-		// Because of the RolesAllowed, this token checking code should always work
-		String token = null;
-		try {
-			token = request.getHeader("authorization").split("Bearer ")[1];
-			if (token != null) {
-				userToken = new GennyToken(token);
-			} else {
-				log.error("Bad token in b2b GET provided");
-				return Response.ok().build(); // just absorb it.
-			}
-		} catch (Exception e) {
-			log.error("Bad or no header token in b2b GET provided");
-			return Response.ok().build(); // just absorb it.
-		}
 
 		List<GennyItem> gennyItems = new ArrayList<GennyItem>();
 
@@ -287,7 +274,7 @@ public class Bridge {
 		gennyItems.add(gennyItem);
 
 		QDataB2BMessage dataMsg = new QDataB2BMessage(gennyItems.toArray(new GennyItem[0]));
-		dataMsg.setToken(token);
+		dataMsg.setToken(userToken.getToken());
 		dataMsg.setAliasCode("STATELESS");
 
 		Jsonb jsonb = JsonbBuilder.create();
@@ -320,24 +307,9 @@ public class Bridge {
 	public Response apiB2BHandlerPost(QDataB2BMessage dataMsg) {
 
 		log.info("B2B POST received..");
-		GennyToken userToken = null;
-
-		String token = null;
-		try {
-			token = request.getHeader("authorization").split("Bearer ")[1];
-			if (token != null) {
-				userToken = new GennyToken(token);
-			} else {
-				log.error("Bad token in b2b GET provided");
-				return Response.ok().build(); // just absorb it.
-			}
-		} catch (Exception e) {
-			log.error("Bad or no header token in b2b POST provided");
-			return Response.ok().build(); // just absorb it.
-		}
 
 		Jsonb jsonb = JsonbBuilder.create();
-		dataMsg.setToken(token);
+		dataMsg.setToken(userToken.getToken());
 		dataMsg.setAliasCode("STATELESS");
 
 		// loop through all the gennyitems adding this..

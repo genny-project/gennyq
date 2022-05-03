@@ -1,6 +1,9 @@
 package life.genny.serviceq.intf;
 
+import io.quarkus.arc.Arc;
+
 import java.util.Map;
+
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -9,20 +12,27 @@ import org.apache.kafka.common.serialization.Deserializer;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.arc.Arc;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 
+/**
+ * Custom Deserializer class for initializing the UserToken through Genny Kafka consumers.
+ **/
 public class GennyDeserializer implements Deserializer<String> {
 
 	static final Logger log = Logger.getLogger(GennyDeserializer.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	TokenCollection tokens;
+	UserToken userToken;
 
+	/**
+	 * Constructor. Used to activate request scope and fetch token bean.
+	 **/
 	public GennyDeserializer() {
-		tokens = Arc.container().instance(TokenCollection.class).get();
+		// activate our request scope
+		Arc.container().requestContext().activate();
+		// find beans in container
+		userToken = Arc.container().instance(UserToken.class).get();
 	}
 
     @Override
@@ -44,10 +54,9 @@ public class GennyDeserializer implements Deserializer<String> {
 			JsonObject json = jsonb.fromJson(deser, JsonObject.class);
 			String token = json.getString("token");
 
-			GennyToken gennyToken = new GennyToken(token);
-			tokens.setGennyToken(gennyToken);
-
-			log.info("Token Initialized: " + gennyToken);
+			// init GennyToken from token string
+			userToken.init(token);
+			log.info("Token Initialized: " + userToken);
 
 			return deser;
 

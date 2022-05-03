@@ -19,8 +19,8 @@ import life.genny.qwandaq.message.QBaseMSGMessageType;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.MergeUtils;
@@ -40,7 +40,10 @@ public class MessageProcessor {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	TokenCollection tokens;
+	ServiceToken serviceToken;
+
+	@Inject
+	UserToken userToken;
 
     /**
      * Generic Message Handling method.
@@ -54,8 +57,6 @@ public class MessageProcessor {
         // Begin recording duration
         long start = System.currentTimeMillis();
 
-        GennyToken userToken = tokens.getGennyToken();
-        GennyToken serviceToken = tokens.getServiceToken();
         String realm = userToken.getProductCode();
 
         log.debug("Realm is " + realm + " - Incoming Message :: " + message.toString());

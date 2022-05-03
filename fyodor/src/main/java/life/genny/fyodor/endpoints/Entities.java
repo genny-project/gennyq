@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
@@ -42,7 +43,7 @@ public class Entities {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	Service service;
+	UserToken userToken;
 
 	/**
 	 * Read an item from the cache.
@@ -53,17 +54,14 @@ public class Entities {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{code}")
-	public Response read(@HeaderParam("Authorization") String token, @PathParam("code") String code) {
+	public Response read(@PathParam("code") String code) {
 
-		Boolean authorized = SecurityUtils.isAuthorizedToken(token);
-		if (!authorized) {
+		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		GennyToken userToken = new GennyToken(token);
-		String realm = userToken.getRealm();
-		BaseEntity entity = databaseUtils.findBaseEntityByCode(realm, code);
+		BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
 
 		return Response.ok(entity).build();
 	}

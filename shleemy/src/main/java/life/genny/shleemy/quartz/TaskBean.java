@@ -33,6 +33,9 @@ public class TaskBean {
 	@Inject
 	org.quartz.Scheduler quartz;
 
+	@Inject
+	UserToken userToken;
+
 	/**
 	 * A new instance of ShleemyJob is created by Quartz for every job execution
 	 */
@@ -47,18 +50,18 @@ public class TaskBean {
 	}
 
 	@Transactional
-	public void addSchedule(QScheduleMessage scheduleMessage, GennyToken userToken) throws SchedulerException {
+	public void addSchedule(QScheduleMessage scheduleMessage) throws SchedulerException {
 
 		log.info(jsonb.toJson(scheduleMessage));
 
 		// setup message for persistance
 		scheduleMessage.id = null;
-		scheduleMessage.setRealm(userToken.getRealm());
+		scheduleMessage.setRealm(userToken.getProductCode());
 		scheduleMessage.setSourceCode(userToken.getUserCode());
 		scheduleMessage.setToken(userToken.getToken());
 
 		// grab fields of message
-		String realm = scheduleMessage.getRealm();
+		String productCode = scheduleMessage.getProductCode();
 		String code = scheduleMessage.getCode();
 		String sourceCode = scheduleMessage.getSourceCode();
 		String channel = scheduleMessage.getChannel();
@@ -81,7 +84,7 @@ public class TaskBean {
 		jobDataMap.put("message", messageJson);
 
 		JobDetail job = JobBuilder.newJob(ShleemyJob.class)
-			.withIdentity(code, realm)
+			.withIdentity(code, productCode)
 			.setJobData(jobDataMap)
 			.build();
 
@@ -93,7 +96,7 @@ public class TaskBean {
 
 			CronScheduleBuilder cronSchedule = CronScheduleBuilder.cronSchedule(cron);
 			jobTrigger = TriggerBuilder.newTrigger()
-				.withIdentity(code, realm)
+				.withIdentity(code, productCode)
 				.startNow()
 				.withSchedule(cronSchedule)
 				.build();
@@ -105,9 +108,9 @@ public class TaskBean {
 
 			Date scheduledDateTime = Date.from(triggerTime.atZone(ZoneId.systemDefault()).toInstant());
 			jobTrigger = TriggerBuilder.newTrigger()
-				.withIdentity(code, realm)
+				.withIdentity(code, productCode)
 				.startAt(scheduledDateTime)
-				.forJob(code, realm)
+				.forJob(code, productCode)
 				.build();
 
 			scheduledFor = scheduledDateTime.toString();
@@ -115,16 +118,16 @@ public class TaskBean {
 			log.error("No valid triggerTime or cron was provided!");
 		}
 
-		log.info("Scheduling " + userToken.getUserCode() + ":" + code + ":" + userToken.getEmail() + " for Realm: " + realm
+		log.info("Scheduling " + userToken.getUserCode() + ":" + code + ":" + userToken.getEmail() + " for Realm: " + productCode
 				+ ", Trigger: " + scheduledFor + ", Current time: " + LocalDateTime.now());
 
 		// schedule the job
 		quartz.scheduleJob(job, jobTrigger);
 	}
 
-	public void abortSchedule(String code, GennyToken userToken) throws SchedulerException {
+	public void abortSchedule(String code) throws SchedulerException {
 
-		JobKey jobKey = new JobKey(code, userToken.getRealm());
+		JobKey jobKey = new JobKey(code, userToken.getProductCode());
 		quartz.deleteJob(jobKey);
 	}
 
@@ -137,12 +140,12 @@ public class TaskBean {
 		String channel = context.getJobDetail().getJobDataMap().getString("channel");
 		String code = context.getJobDetail().getJobDataMap().getString("code");
 		String token = context.getJobDetail().getJobDataMap().getString("token");
-		GennyToken userToken = new GennyToken(token);
+		GennyToken gennyToken = new GennyToken(token);
 
 		String jsonMessage = (String) context.getJobDetail().getJobDataMap().get("message");
 
-		log.info("Sending " + sourceCode + ":" + code + ":" + userToken.getEmail() + " to " + channel + " for " 
-				+ userToken.getRealm() + " at " + LocalDateTime.now() + ", jsonMessage:" + jsonMessage);
+		log.info("Sending " + sourceCode + ":" + code + ":" + gennyToken.getEmail() + " to " + channel + " for " 
+				+ gennyToken.getProductCode() + " at " + LocalDateTime.now() + ", jsonMessage:" + jsonMessage);
 
 		// send to channel specified by schedule message
 		KafkaUtils.writeMsg(channel, jsonMessage);

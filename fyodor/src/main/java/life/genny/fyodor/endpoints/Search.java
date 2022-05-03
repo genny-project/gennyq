@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -27,14 +26,13 @@ import life.genny.fyodor.utils.SearchUtility;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QScheduleMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.utils.SecurityUtils;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 
 /**
  * Search - Endpoints providing classic Genny Search functionality
  */
 @Path("/")
-@ApplicationScoped
 public class Search {
 
 	private static final Logger log = Logger.getLogger(Search.class);
@@ -51,6 +49,12 @@ public class Search {
 	@Inject
 	SearchUtility search;
 
+	@Inject
+	UserToken userToken;
+
+	@Inject
+	ServiceToken serviceToken;
+
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@GET
@@ -62,17 +66,19 @@ public class Search {
 
 		log.info("Scheduling test event for " + uuid);
 
-		GennyToken gennyToken = SecurityUtils.getAuthorizedToken(request.getHeader("Authorization"));
+		 if (userToken == null) {
+		 	log.error("Bad or no header token in Search POST provided");
+		 	return Response.status(Response.Status.BAD_REQUEST).build();
+		 }
+		
 
-		if (gennyToken == null) {
-			log.error("Bad or no header token in Search POST provided");
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
+		log.info("GENNY_TOKEN = " + userToken);
+		log.info("SERVICE_TOKEN = " + serviceToken);
 
 		new QScheduleMessage.Builder("SCHEDULE_TEST")
 			.setEventMessage("TEST_EVENT", uuid)
 			.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
-			.setGennyToken(gennyToken)
+			.setGennyToken(userToken)
 			.schedule();
 
 		log.info("Done!");
@@ -93,9 +99,7 @@ public class Search {
 
 		log.info("Search POST received..");
 
-		GennyToken gennyToken = SecurityUtils.getAuthorizedToken(request.getHeader("Authorization"));
-
-		if (gennyToken == null) {
+		if (userToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
@@ -122,9 +126,7 @@ public class Search {
 
 		log.info("Fetch POST received..");
 
-		GennyToken gennyToken = SecurityUtils.getAuthorizedToken(request.getHeader("Authorization"));
-
-		if (gennyToken == null) {
+		if (userToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}

@@ -25,8 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.TokenCollection;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Answers;
@@ -52,30 +51,28 @@ public class BaseEntityUtils implements Serializable {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	TokenCollection tokens;
+	UserToken userToken;
 
 	public static final String BASEENTITY_CACHE = "baseentity";
 
 	public BaseEntityUtils() { }
 
 	/**
-	 * Fetch the user base entity of the {@link GennyToken} used to initialise the
-	 * BaseEntityUtils
+	 * Fetch the user base entity of the {@link UserToken}.
 	 * 
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-		return this.getBaseEntityByCode("PRJ_" + tokens.getGennyToken().getProductCode().toUpperCase());
+		return this.getBaseEntityByCode("PRJ_" + userToken.getProductCode().toUpperCase());
 	}
 
 	/**
-	 * Fetch the user base entity of the {@link GennyToken} used to initialise the
-	 * BaseEntityUtils
+	 * Fetch the user base entity of the {@link UserToken}
 	 * 
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
-		return this.getBaseEntityByCode(tokens.getGennyToken().getUserCode());
+		return this.getBaseEntityByCode(userToken.getUserCode());
 	}
 
 	/**
@@ -86,7 +83,7 @@ public class BaseEntityUtils implements Serializable {
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
 
-		return CacheUtils.getObject(tokens.getGennyToken().getProductCode(), code, BaseEntity.class);
+		return CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
 	}
 
 	/**
@@ -101,7 +98,7 @@ public class BaseEntityUtils implements Serializable {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, tokens.getGennyToken().getToken());
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
 
 		if (response == null) {
 			log.error("Null response from " + uri);
@@ -138,7 +135,7 @@ public class BaseEntityUtils implements Serializable {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, tokens.getGennyToken().getToken());
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
 		String body = response.body();
 
 		if (body != null) {
@@ -478,7 +475,7 @@ public class BaseEntityUtils implements Serializable {
 			}
 
 			// update target in the cache
-			CacheUtils.putObject(tokens.getGennyToken().getProductCode(), target.getCode(), target);
+			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
 
 			// update target in the DB
 			DatabaseUtils databaseUtils = new DatabaseUtils();
@@ -500,7 +497,7 @@ public class BaseEntityUtils implements Serializable {
 	public BaseEntity create(final String defCode) throws Exception {
 
 		DefUtils defUtils = new DefUtils();
-		BaseEntity defBE = defUtils.getDefMap(tokens.getGennyToken()).get(defCode);
+		BaseEntity defBE = defUtils.getDefMap().get(defCode);
 
 		return create(defBE);
 	}
@@ -577,7 +574,7 @@ public class BaseEntityUtils implements Serializable {
 			}
 			item = new BaseEntity(code.toUpperCase(), name);
 
-			item.setRealm(tokens.getGennyToken().getProductCode());
+			item.setRealm(userToken.getProductCode());
 		}
 
 		if (item != null) {
@@ -642,8 +639,6 @@ public class BaseEntityUtils implements Serializable {
 	 */
 	public BaseEntity createUser(final BaseEntity defBE, final String email) throws Exception {
 
-		GennyToken gennyToken = tokens.getGennyToken();
-
 		QwandaUtils qwandaUtils = new QwandaUtils();
 		BaseEntity item = null;
 		String uuid = null;
@@ -659,13 +654,13 @@ public class BaseEntityUtils implements Serializable {
 				}
 			}
 			// this is a user, generate keycloak id
-			uuid = KeycloakUtils.createDummyUser(gennyToken.getToken(), gennyToken.getKeycloakRealm());
+			uuid = KeycloakUtils.createDummyUser(userToken.getToken(), userToken.getKeycloakRealm());
 			Optional<String> optCode = defBE.getValue("PRI_PREFIX");
 			if (optCode.isPresent()) {
 				String name = defBE.getName();
 				String code = optCode.get() + "_" + uuid.toUpperCase();
 				item = new BaseEntity(code, name);
-				item.setRealm(gennyToken.getProductCode());
+				item.setRealm(userToken.getProductCode());
 				// item = QwandaUtils.createBaseEntityByCode(code, name, qwandaServiceUrl,
 				// this.token);
 				if (item != null) {
@@ -691,7 +686,7 @@ public class BaseEntityUtils implements Serializable {
 					// NOTE: Maybe should be moved to run for all BEs
 					Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
 					item.addAnswer(
-							new Answer(item, item, lnkAuthorAttr, "[\"" + gennyToken.getUserCode() + "\"]"));
+							new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 				} else {
 					log.error("create BE returned NULL for " + code);
 				}

@@ -22,7 +22,7 @@ import javax.ws.rs.core.UriInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
+iport org.jboss.resteasy.annotations.jaxrs.PathParam;
 import org.quartz.SchedulerException;
 
 import io.quarkus.runtime.ShutdownEvent;
@@ -43,10 +43,10 @@ public class ScheduleResource {
 	String defaultRealm;
 
 	@Inject
-	JsonWebToken accessToken;
+	TaskBean taskBean;
 
 	@Inject
-	TaskBean taskBean;
+	UserToken userToken;
 
 	void onStart(@Observes StartupEvent ev) {
 		log.info("ScheduleResource Endpoint starting");
@@ -60,11 +60,8 @@ public class ScheduleResource {
 	@Transactional
 	public Response scheduleMessage(@Context UriInfo uriInfo, @Valid QScheduleMessage scheduleMessage) {
 
-		GennyToken userToken = new GennyToken(accessToken.getRawToken());
-		log.info("User is " + userToken.getEmail());
-
 		try {
-			taskBean.addSchedule(scheduleMessage, userToken);
+			taskBean.addSchedule(scheduleMessage);
 
 			URI uri = uriInfo.getAbsolutePathBuilder().path(ScheduleResource.class, "findById")
 					.build(scheduleMessage.id);
@@ -82,15 +79,12 @@ public class ScheduleResource {
 	@Path("/code/{code}")
 	public Response findByCode(@PathParam("code") final String code) {
 
-		GennyToken userToken = new GennyToken(accessToken.getRawToken());
-		log.info("User is " + userToken.getEmail());
-
 		QScheduleMessage scheduleMessage = QScheduleMessage.findByCode(code);
 		if (scheduleMessage == null) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with code of " + code + " does not exist.")
 					.build();
 		}
-		if (scheduleMessage.realm != userToken.getRealm()) {
+		if (scheduleMessage.realm != userToken.getProductCode()) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with bad realm")
 					.build();
 		}
@@ -102,15 +96,12 @@ public class ScheduleResource {
 	@Path("/id/{id}")
 	public Response findById(@PathParam("id") final Long id) {
 
-		GennyToken userToken = new GennyToken(accessToken.getRawToken());
-		log.info("User is " + userToken.getEmail());
-
 		QScheduleMessage scheduleMessage = QScheduleMessage.findById(id);
 		if (scheduleMessage == null) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with id of " + id + " does not exist.")
 					.build();
 		}
-		if (scheduleMessage.realm != userToken.getRealm()) {
+		if (scheduleMessage.realm != userToken.getProductCode()) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with id of " + id + " does not exist.")
 					.build();
 		}
@@ -123,16 +114,13 @@ public class ScheduleResource {
 	@Transactional
 	public Response deleteSchedule(@PathParam("id") final Long id) {
 
-		GennyToken userToken = new GennyToken(accessToken.getRawToken());
-		log.info("User is " + userToken.getEmail());
-
 		QScheduleMessage scheduleMessage = QScheduleMessage.findById(id);
 		if (scheduleMessage == null) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with id of " + id + " does not exist.")
 					.build();
 		}
 
-		if (scheduleMessage.realm != userToken.getRealm()) {
+		if (scheduleMessage.realm != userToken.getProductCode()) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with id of " + id + " does not exist.")
 					.build();
 		}
@@ -150,7 +138,7 @@ public class ScheduleResource {
 
 		// attempt to abort schedule
 		try {
-			taskBean.abortSchedule(msg.code, userToken);
+			taskBean.abortSchedule(msg.code);
 
 		} catch (org.quartz.SchedulerException e) {
 			log.error(e.getMessage());
@@ -169,16 +157,13 @@ public class ScheduleResource {
 	@Path("/code/{code}")
 	public Response deleteSchedule(@PathParam("code") final String code) {
 
-		GennyToken userToken = new GennyToken(accessToken.getRawToken());
-		log.info("User is " + userToken.getEmail());
-
 		QScheduleMessage scheduleMessage = QScheduleMessage.findByCode(code);
 		if (scheduleMessage == null) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with code of " + code + " does not exist.")
 					.build();
 		}
 
-		if (scheduleMessage.realm != userToken.getRealm()) {
+		if (scheduleMessage.realm != userToken.getProductCode()) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage has a different realm to user.").build();
 		}
 
@@ -189,7 +174,7 @@ public class ScheduleResource {
 
 		// attempt to abort schedule
 		try {
-			taskBean.abortSchedule(code, userToken);
+			taskBean.abortSchedule(code);
 
 		} catch (org.quartz.SchedulerException e) {
 			log.error(e.getMessage());

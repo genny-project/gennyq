@@ -46,7 +46,7 @@ public class KeycloakUtils {
     static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
-    * Fetch an access token for a user using a username and password.
+    * Fetch a GennyToken for a user using a username, password and client details.
 	* 
 	* @param keycloakUrl the keycloakUrl to use
 	* @param realm the realm to use
@@ -56,7 +56,26 @@ public class KeycloakUtils {
 	* @param password the password to use
 	* @return GennyToken
 	 */
-    public static GennyToken getToken(String keycloakUrl, String realm, String clientId, String secret, String username, String password) {
+    public static GennyToken getGennyToken(String keycloakUrl, String realm, String clientId, String secret, String username, String password) {
+
+		String token = getToken(keycloakUrl, realm, clientId, secret, username, password);
+
+        GennyToken gennyToken = new GennyToken(token);
+        return gennyToken;
+	}
+
+	/**
+    * Fetch an access token for a user using a username, password and client details.
+	* 
+	* @param keycloakUrl the keycloakUrl to use
+	* @param realm the realm to use
+	* @param clientId the clientId to use
+	* @param secret the secret to use
+	* @param username the username to use
+	* @param password the password to use
+	* @return String
+	 */
+    public static String getToken(String keycloakUrl, String realm, String clientId, String secret, String username, String password) {
 
         Map<String, String> params = new HashMap<>();
 
@@ -79,8 +98,7 @@ public class KeycloakUtils {
 
 		String token = fetchOIDCToken(keycloakUrl, realm, params);
 
-        GennyToken gennyToken = new GennyToken(token);
-        return gennyToken;
+		return token;
     }
 
 	/**
