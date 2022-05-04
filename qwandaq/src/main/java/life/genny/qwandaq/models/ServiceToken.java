@@ -8,6 +8,11 @@ import javax.enterprise.context.ApplicationScoped;
 
 import org.jboss.logging.Logger;
 
+/**
+ * An extension of the GennyToken clas that represents the service user.
+ *
+ * Annotated with ApplicationScoped to provide access throughout the service lifecycle.
+ **/
 @RegisterForReflection
 @ApplicationScoped
 public class ServiceToken extends GennyToken {

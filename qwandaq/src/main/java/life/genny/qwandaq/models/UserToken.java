@@ -8,6 +8,13 @@ import javax.enterprise.context.RequestScoped;
 
 import org.jboss.logging.Logger;
 
+/**
+ * An extension of the GennyToken clas that represents the user
+ *
+ * Annotated with RequestScoped to ensure a more transient state 
+ * with access that lasts only as long as the http request or 
+ * kafka consumption flow is active.
+ **/
 @RegisterForReflection
 @RequestScoped
 public class UserToken extends GennyToken {

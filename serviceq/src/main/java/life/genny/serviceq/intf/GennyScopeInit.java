@@ -30,6 +30,12 @@ public class GennyScopeInit {
 	 **/
 	public GennyScopeInit() { }
 
+	/**
+	 * Activate the UserToken using the request context 
+	 * and initialise the UserToken using consumed data.
+	 *
+	 * @param data The consumed message from kafka
+	 **/
 	public void init(String data) { 
 
 		// activate request scope and fetch UserToken
@@ -54,6 +60,9 @@ public class GennyScopeInit {
 		}
     }
 
+	/**
+	 * Destroy the UserToken using the request context.
+	 **/
 	public void destroy() { 
 		Arc.container().requestContext().activate();
 	}
