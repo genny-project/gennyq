@@ -4,6 +4,8 @@ import io.quarkus.arc.Arc;
 
 import java.util.Map;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -26,20 +28,19 @@ public class GennyDeserializer implements Deserializer<String> {
 	UserToken userToken;
 
 	/**
-	 * Constructor. Used to activate request scope and fetch token bean.
+	 * Default Constructor.
 	 **/
-	public GennyDeserializer() {
-		// activate our request scope
-		Arc.container().requestContext().activate();
-		// find beans in container
-		userToken = Arc.container().instance(UserToken.class).get();
-	}
+	public GennyDeserializer() { }
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) { }
 
     @Override
     public String deserialize(String topic, byte[] data) {
+
+		// activate request scope and fetch UserToken
+		Arc.container().requestContext().activate();
+		userToken = Arc.container().instance(UserToken.class).get();
 
 		log.info("[*] Calling deserialize for GennyDeserializer");
 

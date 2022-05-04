@@ -1,11 +1,14 @@
 #!/bin/bash
 
-project=$1
-
-if [ "$#" -eq 1 ]; then
-	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$1
-	exit 0
+if [ "$#" -ge 1 ]; then
+	projects=( $@ )
+else
+	projects=( qwandaq serviceq gadaq bridge fyodor dropkick lauchy messages shleemy )
 fi
 
-echo "Building all sub-projects!"
-./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always 
+for project in "${projects[@]}"
+do
+    echo "Building $project"
+	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
+done
+
