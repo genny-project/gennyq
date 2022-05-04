@@ -88,7 +88,6 @@ public class InternalConsumer {
 	public void handleIncomingMessage(String arg) {
 
 		log.debug("Outgoing Payload = " + arg);
-
 		String incoming = arg;
 		if ("{}".equals(incoming)) {
 			log.warn("The payload sent from the webcmd producer is empty");

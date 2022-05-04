@@ -3,6 +3,7 @@ package life.genny.qwandaq.security.keycloak;
 import java.math.BigInteger;
 
 import javax.json.bind.annotation.JsonbProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.jose4j.base64url.Base64Url;
 
@@ -27,9 +28,9 @@ public class KeycloakRealmKey {
     public String alg;
     public String sig;
 
-	@JsonbProperty("n")
+	@JsonProperty("n")
     public String modulus;
-	@JsonbProperty("e")
+	@JsonProperty("e")
     public String exponent;
 
 	public KeycloakRealmKey() { }
