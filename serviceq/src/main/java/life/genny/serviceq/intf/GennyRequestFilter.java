@@ -44,7 +44,7 @@ public class GennyRequestFilter implements ContainerRequestFilter {
 		try {
 			// build GennyToken from token string in headers
 			userToken.init(token);
-			log.info("Token Initialized: " + userToken);
+			log.debug("Token Initialized: " + userToken);
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -15,13 +15,13 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.fyodor.utils.SearchUtility;
-
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -29,6 +29,9 @@ public class InternalConsumer {
 	static final Logger log = Logger.getLogger(InternalConsumer.class);
 
     static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	GennyScopeInit scope;
 
 	@Inject
 	Service service;
@@ -53,6 +56,8 @@ public class InternalConsumer {
 	@Incoming("search_events")
 	@Blocking
 	public void getSearchEvents(String data) {
+
+		scope.init(data);
 
 		log.info("Received incoming Search Event... ");
 		log.debug(data);
@@ -100,5 +105,6 @@ public class InternalConsumer {
 
 		// publish results to destination channel
 		KafkaUtils.writeMsg(msg.getDestination(), bulkMsg);
+		scope.destroy();
 	}
 }

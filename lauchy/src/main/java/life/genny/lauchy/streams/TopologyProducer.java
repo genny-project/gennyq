@@ -35,12 +35,12 @@ import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.serviceq.Service;
-import life.genny.serviceq.intf.GennyDeserializer;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -53,6 +53,15 @@ public class TopologyProducer {
 	Boolean enableBlacklist;
 
 	@Inject
+	GennyScopeInit scope;
+
+	@Inject
+	Service service;
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
 	DefUtils defUtils;
 
 	@Inject
@@ -60,12 +69,6 @@ public class TopologyProducer {
 
 	@Inject
 	BaseEntityUtils beUtils;
-
-	@Inject
-	Service service;
-
-	@Inject
-	UserToken userToken;
 
 	void onStart(@Observes StartupEvent ev) {
 
@@ -81,12 +84,11 @@ public class TopologyProducer {
 	@Produces
 	public Topology buildTopology() {
 
-		Serde<String> customSerdes = Serdes.serdeFrom(new StringSerializer(), new GennyDeserializer());
-
 		// Read the input Kafka topic into a KStream instance.
 		StreamsBuilder builder = new StreamsBuilder();
 		builder
-				.stream("data", Consumed.with(Serdes.String(), customSerdes))
+				.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
+				.peek((k, v) -> scope.init(v))
 				.peek((k, v) -> log.info("Reveived message: " + v))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))

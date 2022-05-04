@@ -29,7 +29,6 @@ import life.genny.qwandaq.validation.Validation;
  * @author Jasper Robison
  * @author Bryn Mecheam
  */
-@RegisterForReflection
 @ApplicationScoped
 public class DatabaseUtils {
 

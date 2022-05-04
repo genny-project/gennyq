@@ -55,9 +55,8 @@ import life.genny.qwandaq.validation.Validation;
  * @author Adam Crow
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
-public class QuestionUtils implements Serializable {
+public class QuestionUtils {
 
 	static final Logger log = Logger.getLogger(QuestionUtils.class);
 

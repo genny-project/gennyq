@@ -35,7 +35,6 @@ import life.genny.qwandaq.models.ANSIColour;
  * @author Adam Crow
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
 public class DefUtils {
 
