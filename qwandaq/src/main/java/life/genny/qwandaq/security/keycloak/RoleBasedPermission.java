@@ -42,7 +42,7 @@ public class RoleBasedPermission {
     public Boolean rolesAllowed(GennyToken gennyToken, String...roles) {
 		
         try {
-            gennyToken = verification.verify(gennyToken.getRealm(), gennyToken.getToken());
+            gennyToken = verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

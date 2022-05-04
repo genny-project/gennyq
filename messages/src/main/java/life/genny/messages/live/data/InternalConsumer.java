@@ -16,7 +16,8 @@ import javax.json.bind.JsonbBuilder;
 import life.genny.messages.process.MessageProcessor;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
@@ -32,10 +33,14 @@ public class InternalConsumer {
 	@Inject
 	MessageProcessor mp;
 
-    void onStart(@Observes StartupEvent ev) {
+	@Inject
+	BaseEntityUtils beUtils;
 
+	@Inject
+	UserToken userToken;
+
+    void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
-		log.info("[*] Consumer Ready!");
     }
 
     void onStop(@Observes ShutdownEvent ev) {
@@ -53,31 +58,28 @@ public class InternalConsumer {
 
 		// Log entire payload for debugging purposes
 		log.info("payload ----> " + payload);
+
+		if (userToken == null) {
+			log.error("UserToken is null!");
+			return;
+		}
 		
 		QMessageGennyMSG message = null;
-		GennyToken userToken = null;
 
 		// Try Catch to stop consumer from dying upon error
 		try {
 			message = jsonb.fromJson(payload, QMessageGennyMSG.class);
-			userToken = new GennyToken(message.getToken());
 		} catch (Exception e) {
 			log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
 			log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
 		}
 
-		if (message != null && userToken != null) {
-
-			// update the beUtils with new token
-			service.getBeUtils().setGennyToken(userToken);
-
-			// Try Catch to stop consumer from dying upon error
-			try {
-				mp.processGenericMessage(message, service.getBeUtils());
-			} catch (Exception e) {
-				log.error(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);
-				log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
-			}
+		// Try Catch to stop consumer from dying upon error
+		try {
+			mp.processGenericMessage(message);
+		} catch (Exception e) {
+			log.error(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);
+			log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
 		}
 	}
 }

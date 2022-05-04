@@ -6,7 +6,6 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 
 public class QErrorManager implements QMessageProvider {
 	
@@ -16,7 +15,7 @@ public class QErrorManager implements QMessageProvider {
 	private static final Logger log = Logger.getLogger(QErrorManager.class);
 	
 	@Override
-	public void sendMessage(BaseEntityUtils beUtils, BaseEntity templateBe, Map<String, Object> contextMap) {
+	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 
 		/*
 		 * If a message makes it to this point, then something is probably 

@@ -40,15 +40,6 @@ public class DatabaseUtils {
 	EntityManager entityManager;
 
 	/**
-	 * Initialise the EntityManager interface.
-	 *
-	 * @param em The EntityManager.
-	 */
-	public void init(EntityManager em) {
-		// entityManager = em;
-	}
-
-	/**
 	 * Check if entityManager is present.
 	 * 
 	 * @return whether or not entityManager is present

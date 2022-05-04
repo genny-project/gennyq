@@ -10,10 +10,11 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.data.GennyCache;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
@@ -73,69 +74,44 @@ public class Service {
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	GennyToken serviceToken;
+	@Inject
+	UserToken userToken;
 
-	BaseEntityUtils beUtils;
+	@Inject
+	ServiceToken serviceToken;
 
 	private Boolean initialised = false;
-
-	/**
-	 * Get the BaseEntityUtils instance.
-	 *
-	 * @return The BaseEntityUtils object
-	 */
-	public BaseEntityUtils getBeUtils() {
-		return beUtils;
+	
+	public Service() {
+		// activate our request scope
+		Arc.container().requestContext().activate();
 	}
 
 	/**
-	 * Set the BaseEntityUtils instance.
-	 *
-	 * @param beUtils The BaseEntityUtils object
-	 */
-	public void setBeUtils(BaseEntityUtils beUtils) {
-		this.beUtils = beUtils;
-	}
-
-	/**
-	 * Get the serviceToken.
-	 *
-	 * @return The serviceToken
-	 */
-	public GennyToken getServiceToken() {
-		return serviceToken;
-	}
-
-	/**
-	 * Set the serviceToken.
-	 *
-	 * @param serviceToken The serviceToken
-	 */
-	public void setServiceToken(GennyToken serviceToken) {
-		this.serviceToken = serviceToken;
-	}
-
-	/**
-	 * Initialize the serviceToken and BE Utility.
+	 * Initialize the serviceTok
 	 */
 	public void initToken() {
 
 		// fetch token and init entity utility
-		serviceToken = KeycloakUtils.getToken(keycloakUrl, keycloakRealm, clientId, secret, serviceUsername, servicePassword);
+		String token = KeycloakUtils.getToken(keycloakUrl, keycloakRealm, clientId, secret, serviceUsername, servicePassword);
 
-		if (serviceToken == null) {
+		if (token == null) {
 			log.error("Service token is null for realm!: " + keycloakRealm);
 		}
-		log.info("ServiceToken: " + (serviceToken != null ? serviceToken.getToken() : " null"));
+		log.info("ServiceToken: " + token);
 
-		beUtils = new BaseEntityUtils(serviceToken, serviceToken);
-	}
+		// init the injected serviceToken
+		serviceToken.init(token);
+		// set gennyToken as serviceToken just for initialisation purposes
+		userToken.init(token);
 
-	/**
-	 * Initialize the database connection
-	 */
-	public void initDatabase() {
-		databaseUtils.init(entityManager);
+		// add list of allowed products
+		String allowedProducts = System.getenv("PRODUCT_CODES");
+		if (allowedProducts != null) {
+			serviceToken.setAllowedProducts(allowedProducts.split(":"));
+		} else {
+			log.error("No PRODUCT_CODES Found");
+		}
 	}
 
 	/**
@@ -153,17 +129,35 @@ public class Service {
 	}
 
 	/**
-	 * Initialize the Attribute cache.
+	 * Initialize the Attribute cache for each allowed productCode.
 	 */
 	public void initAttributes() {
-		qwandaUtils.init(serviceToken);
+
+		// null check the allowed codes
+		String[] allowedProducts = serviceToken.getAllowedProducts();
+		if (allowedProducts == null) {
+			log.error("You must set up the PRODUCT_CODES environment variable!");
+		}
+
+		for (String productCode : allowedProducts) {
+			qwandaUtils.loadAllAttributesIntoCache(productCode);
+		}
 	}
 
 	/**
-	 * Initialize BaseEntity Definitions.
+	 * Initialize BaseEntity Definitions for each allowed productCode.
 	 */
 	public void initDefinitions() {
-		defUtils.init(beUtils);
+
+		// null check the allowed codes
+		String[] allowedProducts = serviceToken.getAllowedProducts();
+		if (allowedProducts == null) {
+			log.error("You must set up the PRODUCT_CODES environment variable!");
+		}
+
+		for (String productCode : allowedProducts) {
+			defUtils.initializeDefs(productCode);
+		}
 	}
 
 	/**
@@ -184,7 +178,6 @@ public class Service {
 	/**
 	 * Perform a full initialization of the service.
 	 */
-	
 	public void fullServiceInit() {
 
 		if (initialised) {
@@ -197,13 +190,14 @@ public class Service {
 
 		// init all
 		initToken();
-		initDatabase();
 		initCache();
 		initKafka();
 		initAttributes();
 		initDefinitions();
 
 		initialised = true;
+
+		log.info("[@] Service Initialised!");
 	}
 
 	/**
@@ -213,14 +207,5 @@ public class Service {
 	 */
 	public Boolean showValues() {
 		return showValues;
-	}
-
-	/**
-	 * Update the utils gennyToken
-	 *
-	 * @param gennyToken the gennyToken to update with
-	 */
-	public void updateGennyToken(GennyToken gennyToken) {
-		this.beUtils.updateGennyToken(gennyToken);
 	}
 }

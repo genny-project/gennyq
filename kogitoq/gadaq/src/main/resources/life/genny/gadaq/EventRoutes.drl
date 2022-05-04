@@ -1,35 +1,36 @@
 package life.genny.gadaq;
 
 import life.genny.qwandaq.message.QEventMessage;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.gadaq.utils.KogitoUtils;
 
 rule RouteAuthInit 
 when
 	msg: QEventMessage( data.code == "AUTH_INIT" )
-	userToken : GennyToken()
+	userToken : UserToken()
 	kogitoUtils : KogitoUtils()
 then
 	System.out.println("Routing AUTH_INIT!");
 
+	// TODO: move this to bridge
 	if (userToken.hasRole("test")) {
 		System.out.println("Saving token for " + userToken.getUsername());
 		CacheUtils.writeCache(userToken.getRealm(), "TOKEN:"+userToken.getCode(), userToken.getToken());
 	}
 
-	kogitoUtils.triggerWorkflow("authinit", msg, userToken);
+	kogitoUtils.triggerWorkflow("authinit", msg);
 end
 
 rule RouteEventDefault 
 salience 0
 when
 	msg: QEventMessage()
-	userToken : GennyToken()
+	userToken : UserToken()
 	kogitoUtils : KogitoUtils()
 then
 	System.out.println("Routing Default Event!");
 
-	kogitoUtils.triggerWorkflow(msg.getData().getCode(), msg, userToken);
+	kogitoUtils.triggerWorkflow(msg.getData().getCode(), msg);
 end
 

@@ -4,16 +4,16 @@ echo "Project Version: $VERSION"
 
 # Usage: ./build-docker.sh [project] 
 
-if [ "$#" -eq 1 ]; then
-	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always -pl :$1
-	docker tag gennyproject/${1}:${VERSION} gennyproject/${1}:latest
-	exit 0
+if [ "$#" -ge 1 ]; then
+	projects=( $@ )
+else
+	projects=( qwandaq serviceq gadaq bridge fyodor dropkick lauchy messages shleemy )
 fi
 
-./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dstyle.color=always
-
-for project in gadaq adi bridge fyodor dropkick lauchy messages shleemy
+for project in "${projects[@]}"
 do
+    echo "Building $project"
+	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
     echo "Tagging $project"
 	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:latest
 done

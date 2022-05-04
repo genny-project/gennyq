@@ -54,6 +54,7 @@ public class InternalConsumer {
 	public void getFromWebData(String arg) {
 
 		log.info("Message received in webdata");
+		log.info(arg);
 		handleIncomingMessage(arg);
 	}
 
@@ -98,7 +99,7 @@ public class InternalConsumer {
 		try {
 			final JsonObject json = new JsonObject(incoming);
 			GennyToken gennyToken = new GennyToken(json.getString("token"));
-			verification.verify(gennyToken.getRealm(), gennyToken.getToken());
+			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
 
 			if (!incoming.contains("<body>Unauthorized</body>")) {
 				String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");

@@ -13,7 +13,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 
 import life.genny.qwandaq.message.QScheduleMessage;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.serviceq.Service;
 import life.genny.shleemy.quartz.TaskBean;
 
@@ -30,12 +30,14 @@ public class InternalConsumer {
 	@Inject
 	TaskBean taskBean;
 
+	@Inject
+	UserToken userToken;
+
     void onStart(@Observes StartupEvent event) {
 
 		service.showConfiguration();
 
 		service.initToken();
-		service.initDatabase();
 		service.initKafka();
 		log.info("[*] Finished Startup!");
     }
@@ -48,12 +50,9 @@ public class InternalConsumer {
 		log.debug(data);
 
 		QScheduleMessage msg = jsonb.fromJson(data, QScheduleMessage.class);
-		GennyToken userToken = new GennyToken(msg.getToken());
-
-		log.info("Token: " + msg.getToken());
 
 		try {
-			taskBean.addSchedule(msg, userToken);
+			taskBean.addSchedule(msg);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

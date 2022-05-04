@@ -1,5 +1,6 @@
 package life.genny.messages.managers;
 
+import javax.inject.Inject;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -14,6 +15,8 @@ import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 
+import life.genny.qwandaq.models.UserToken;
+
 @ApplicationScoped
 public class QToastMessageManager implements QMessageProvider {
 	
@@ -21,8 +24,14 @@ public class QToastMessageManager implements QMessageProvider {
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	UserToken userToken;
+
 	@Override
-	public void sendMessage(BaseEntityUtils beUtils, BaseEntity templateBe, Map<String, Object> contextMap) {
+	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 		
 		log.info("About to send TOAST message!");
 		
@@ -63,7 +72,7 @@ public class QToastMessageManager implements QMessageProvider {
 		// build toast command msg
 		QCmdMessage msg = new QCmdMessage("TOAST", style);
 		msg.setMessage(body);
-		msg.setToken(beUtils.getGennyToken().getToken());
+		msg.setToken(userToken.getToken());
 		msg.setSend(true);
 
 		// send to frontend

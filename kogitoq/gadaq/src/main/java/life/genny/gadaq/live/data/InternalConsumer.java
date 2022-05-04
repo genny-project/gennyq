@@ -13,7 +13,7 @@ import life.genny.gadaq.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -29,9 +29,6 @@ public class InternalConsumer {
 
     static Jsonb jsonb = JsonbBuilder.create();
 
-    @Inject
-    KogitoUtils kogitoUtils;
-
     @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
     String myUrl;
 
@@ -41,6 +38,15 @@ public class InternalConsumer {
     @Inject
     Service service;
 
+    @Inject
+    BaseEntityUtils beUtils;
+
+    @Inject
+    KogitoUtils kogitoUtils;
+
+	@Inject
+	UserToken userToken;
+
     KieSession ksession;
 
     /**
@@ -49,8 +55,8 @@ public class InternalConsumer {
      * @param ev
      */
     void onStart(@Observes StartupEvent ev) {
+
         service.fullServiceInit();
-        log.info("[*] Finished Events Startup!");
     }
 
     /**
@@ -70,20 +76,9 @@ public class InternalConsumer {
         try {
             msg = jsonb.fromJson(data, QEventMessage.class);
         } catch (Exception e) {
-            log.error("Cannot parse this event ..");
+            log.error("Cannot parse this event!");
             return;
         }
-
-		// check if token is valid
-		GennyToken userToken = null;
-		try {
-			userToken = new GennyToken("USERTOKEN", msg.getToken());
-		} catch (Exception e) {
-			log.error("Bad Token sent in message!");
-			return;
-		}
-
-        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), userToken);
 
 		// start new session
         KieSession session = kieRuntimeBuilder.newKieSession();
@@ -116,18 +111,9 @@ public class InternalConsumer {
         try {
             msg = jsonb.fromJson(data, QDataAnswerMessage.class);
         } catch (Exception e) {
-            log.warn("Cannot parse this data ..");
+            log.warn("Cannot parse this data!");
             return;
         }
-
-		// check if token is valid
-		GennyToken userToken = null;
-		try {
-			userToken = new GennyToken("USERTOKEN", msg.getToken());
-		} catch (Exception e) {
-			log.error("Bad Token sent in message!");
-			return;
-		}
 
 		// check for null or empty answer array
 		if (msg.getItems() == null || msg.getItems().length == 0) {
@@ -141,13 +127,13 @@ public class InternalConsumer {
 			String processId = answer.getProcessId();
 
 			if ("PRI_SUBMIT".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "submit", data, userToken);
+				kogitoUtils.sendSignal("processquestions", processId, "submit", data);
 
 			} else if ("PRI_CANCEL".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "cancel", data, userToken);
+				kogitoUtils.sendSignal("processquestions", processId, "cancel", data);
 
 			} else {
-				kogitoUtils.sendSignal("processquestions", processId, "answer", data, userToken);
+				kogitoUtils.sendSignal("processquestions", processId, "answer", data);
 			}
 
 		}

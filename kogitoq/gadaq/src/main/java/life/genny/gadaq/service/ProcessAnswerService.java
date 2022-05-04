@@ -21,6 +21,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -47,28 +48,19 @@ public class ProcessAnswerService {
     TaskService taskService;
 
     @Inject
+    BaseEntityUtils beUtils;
+
+	@Inject
+	UserToken userToken;
+
+    @Inject
     EntityManager entityManager;
 
     @Inject
     Service service;
 
-    public String processBaseEntityJson(
-            String qDataAnswerMessageJson,
-            final String qDataAskMessageJson,
-            String processBEJson) {
-        BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-        BaseEntity retBE = processBaseEntity(qDataAnswerMessageJson, qDataAskMessageJson, processBE);
-        String beJson = jsonb.toJson(retBE);
-        // log.info("beJson=" + beJson);
-        return beJson;
-    }
+    public BaseEntity processBaseEntity(QDataAnswerMessage answerMessage, QDataAskMessage askMessage, BaseEntity processBE) {
 
-    public BaseEntity processBaseEntity(final String qDataAnswerMessageJson, final String qDataAskMessageJson,
-            BaseEntity processBE) {
-        Boolean allMandatoryAttributesAnswered = false;
-        log.info("In processBaseEntity :");
-        // log.info("AnswerMsg " + qDataAnswerMessageJson);
-        QDataAnswerMessage answerMessage = jsonb.fromJson(qDataAnswerMessageJson, QDataAnswerMessage.class);
         Answer answer = null;
         if (answerMessage.getItems().length > 0) {
             answer = answerMessage.getItems()[0];
@@ -78,7 +70,6 @@ public class ProcessAnswerService {
             try {
                 processBE.addAnswer(answer);
             } catch (BadDataException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -90,12 +81,8 @@ public class ProcessAnswerService {
         return processBE;
     }
 
-    public Boolean checkMandatory(String qDataAskMessageJson, String processBEJson, String userTokenStr) {
+    public Boolean checkMandatory(QDataAskMessage askMessage, BaseEntity processBE) {
 
-        QDataAskMessage qDataAskMessage = jsonb.fromJson(qDataAskMessageJson, QDataAskMessage.class);
-        BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-
-        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken());
         Boolean mandatoryUnanswered = false;
         Map<String, Boolean> mandatoryAttributeMap = new HashMap<>();
 
@@ -104,7 +91,7 @@ public class ProcessAnswerService {
 
         Ask submitAsk = null; // identify the submit ask
 
-        for (Ask ask : qDataAskMessage.getItems()) {
+        for (Ask ask : askMessage.getItems()) {
             if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
                 // dumb single level
                 for (Ask childAsk : ask.getChildAsks()) {
@@ -130,7 +117,7 @@ public class ProcessAnswerService {
             }
         }
 
-        String targetCode = qDataAskMessage.getItems()[0].getTargetCode();
+        String targetCode = askMessage.getItems()[0].getTargetCode();
         BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
         if (target == null) {
             log.error("Target is null : targetCode=" + targetCode);
@@ -159,35 +146,22 @@ public class ProcessAnswerService {
             log.info("===>" + resultLine);
 
             if ((StringUtils.isBlank(value)) && (mandatory)) {
-                // log.info("Mandatory Unaswered! " + ea.getAttributeCode());
                 mandatoryUnanswered = true;
             }
         }
 
-        // for (Ask ask : qDataAskMessage.getItems()) {
-        // Object val = processBE.getValue(ask.getAttributeCode(), null);
-        // if (val == null) {
-        // if (ask.getMandatory().equals(Boolean.TRUE)) {
-        // mandatoryUnanswered = true;
-        // return false;
-        // }
-        // }
-        // }
         log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " filled in ");
         if (submitAsk != null) {
-            taskService.enableTaskQuestion(submitAsk, !mandatoryUnanswered, userTokenStr);
+            taskService.enableTaskQuestion(submitAsk, !mandatoryUnanswered);
         }
         return !mandatoryUnanswered;
     }
 
     @Transactional
-    public void saveAllAnswers(String sourceCode, String targetCode, String processBEJson) {
-        BaseEntityUtils beUtils = new BaseEntityUtils(service.getServiceToken(), service.getServiceToken());
+    public void saveAllAnswers(String sourceCode, String targetCode, BaseEntity processBE) {
 
-        BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+        BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
-        BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-        BaseEntity target = databaseUtils.findBaseEntityByCode(processBE.getRealm(), targetCode); // .getBaseEntityByCode(targetCode);
         // Now to go through all the fields and override them in the target BE
         for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
             Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
@@ -196,27 +170,16 @@ public class ProcessAnswerService {
                 try {
                     target.setValue(attribute, ea.getValue());
                 } catch (BadDataException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             } else {
-                // try {
                 EntityAttribute newEA = new EntityAttribute(target, attribute, ea.getWeight(), ea.getValue());
                 newEA.setRealm(target.getRealm());
                 entityManager.persist(newEA);
                 target.getBaseEntityAttributes().add(newEA);
-                // Answer ans = new Answer(source, target, attribute, ea.getValueString());
-                // ans.setWeight(ea.getWeight());
-                // ans.setRealm(target.getRealm());
-                // ans.setAttribute(attribute);
-                // try {
-                // target.addAnswer(ans);
-                // } catch (BadDataException e) {
-                // // TODO Auto-generated catch block
-                // e.printStackTrace();
-                // }
             }
         }
+
         CacheUtils.putObject(target.getRealm(), target.getCode(), target);
 
         // update target in the DB
@@ -226,9 +189,6 @@ public class ProcessAnswerService {
             entityManager.merge(target);
         }
         log.info("Saved target " + target.getCode());
-        // databaseUtils.saveBaseEntity(target); // TODO, should not be needed with
-        // infinispan persist
-
     }
 
 }
