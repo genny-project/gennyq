@@ -16,7 +16,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
@@ -43,9 +46,8 @@ import life.genny.qwandaq.message.QSearchBeResult;
  * @author Adam Crow
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
-public class BaseEntityUtils implements Serializable {
+public class BaseEntityUtils {
 
 	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
 	Jsonb jsonb = JsonbBuilder.create();

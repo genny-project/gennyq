@@ -9,6 +9,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -59,8 +60,6 @@ public class InitService {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(projectBE);
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("PROJECT");
-
-		log.info(jsonb.toJson(msg));
 
 		KafkaUtils.writeMsg("webdata", msg);
 	}

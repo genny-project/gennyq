@@ -44,7 +44,6 @@ import life.genny.qwandaq.message.QEventDropdownMessage;
  * 
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
 public class SearchUtils {
 

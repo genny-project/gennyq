@@ -15,6 +15,7 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.message.QScheduleMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.shleemy.quartz.TaskBean;
 
 @ApplicationScoped
@@ -28,10 +29,13 @@ public class InternalConsumer {
 	Service service;
 
 	@Inject
-	TaskBean taskBean;
+	GennyScopeInit scope;
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	TaskBean taskBean;
 
     void onStart(@Observes StartupEvent event) {
 
@@ -46,6 +50,8 @@ public class InternalConsumer {
 	@Blocking
 	public void getSchedule(String data) {
 
+		scope.init(data);
+
 		log.info("Received incoming Schedule Message... ");
 		log.debug(data);
 
@@ -56,5 +62,7 @@ public class InternalConsumer {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		scope.destroy();
 	}
 }

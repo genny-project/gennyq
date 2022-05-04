@@ -27,11 +27,13 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
@@ -42,7 +44,13 @@ public class InternalConsumer {
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	KieRuntimeBuilder ruleRuntime;
+	GennyScopeInit scope;
+
+	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
+	UserToken userToken;
 
 	@Inject
 	Service service;
@@ -55,6 +63,9 @@ public class InternalConsumer {
 
 	@Inject
 	SearchUtils searchUtils;
+
+	@Inject
+	KieRuntimeBuilder ruleRuntime;
 
 	KieSession ksession;
 
@@ -78,12 +89,10 @@ public class InternalConsumer {
 	@Blocking
 	public void getValidData(String data) {
 
+		scope.init(data);
+
 		log.infov("Incoming Valid Data : {}", data);
 		Instant start = Instant.now();
-
-		BaseEntityUtils beUtils = service.getBeUtils();
-		GennyToken serviceToken = beUtils.getServiceToken();
-		GennyToken userToken = null;
 
 		// deserialise to msg
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
@@ -115,7 +124,6 @@ public class InternalConsumer {
 		ksession.insert(answersToSave);
 
 		// insert utils into session
-		ksession.insert(beUtils);
 		ksession.insert(databaseUtils);
 		ksession.insert(qwandaUtils);
 		ksession.insert(searchUtils);
@@ -129,6 +137,8 @@ public class InternalConsumer {
 
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+
+		scope.destroy();
 	}
 
 }

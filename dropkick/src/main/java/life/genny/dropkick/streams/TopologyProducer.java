@@ -43,7 +43,7 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
-import life.genny.serviceq.intf.GennyDeserializer;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -52,6 +52,15 @@ public class TopologyProducer {
 
 	@ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
 	Integer defaultDropDownSize;
+
+	@Inject
+	GennyScopeInit scope;
+
+	@Inject
+	Service service;
+
+	@Inject
+	UserToken userToken;
 
 	@Inject
 	DefUtils defUtils;
@@ -64,12 +73,6 @@ public class TopologyProducer {
 
 	@Inject
 	CapabilityUtils capabilityUtils;
-
-	@Inject
-	Service service;
-
-	@Inject
-	UserToken userToken;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -86,12 +89,11 @@ public class TopologyProducer {
 	@Produces
 	public Topology buildTopology() {
 
-		Serde<String> customSerdes = Serdes.serdeFrom(new StringSerializer(), new GennyDeserializer());
-
 		// Read the input Kafka topic into a KStream instance.
 		StreamsBuilder builder = new StreamsBuilder();
 		builder
-				.stream("events", Consumed.with(Serdes.String(), customSerdes))
+				.stream("events", Consumed.with(Serdes.String(), Serdes.String()))
+				.peek((k, v) -> scope.init(v))
 				.peek((k, v) -> log.debug("Consumed message: " + v))
 
 				.filter((k, v) -> isValidDropdownMessage(v))

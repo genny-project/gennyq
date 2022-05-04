@@ -27,12 +27,12 @@ public class UserToken extends GennyToken {
 
     @PostConstruct
     void init() {
-		log.info("CONSTRUCTING UserToken Bean");
+		log.debug("CONSTRUCTING UserToken Bean");
     }
 
     @PreDestroy
     void destroy() {
-		log.info("DESTROYING UserToken Bean");
+		log.debug("DESTROYING UserToken Bean");
     }
 
 }

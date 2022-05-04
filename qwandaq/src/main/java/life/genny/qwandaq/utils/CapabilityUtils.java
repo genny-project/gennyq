@@ -31,9 +31,8 @@ import life.genny.qwandaq.models.UserToken;
  * @author Jasper Robison
  * @author Bryn Mecheam
  */
-@RegisterForReflection
 @ApplicationScoped
-public class CapabilityUtils implements Serializable {
+public class CapabilityUtils {
 
 	static final Logger log = Logger.getLogger(CapabilityUtils.class);
 

@@ -5,12 +5,14 @@ import io.vertx.core.json.JsonObject;
 import javax.inject.Inject;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.security.keycloak.TokenVerification;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 /**
  * InternalConsumer --- The class where all messages from the backends such as lauchy,
@@ -26,6 +28,8 @@ public class InternalConsumer {
 	@Inject TokenVerification verification;
 	@Inject EventBus bus;
 	@Inject BlackListInfo blackList;
+	@Inject GennyScopeInit scope;
+	@Inject UserToken userToken;
 
 	/**
 	 * A request with a protocol which will add, delete all or delete just a record depending on the
@@ -44,18 +48,25 @@ public class InternalConsumer {
 	}
 
 	@Incoming("webcmds")
-	public void getFromWebCmds(String arg) {
+	public void getFromWebCmds(String data) {
+
+		scope.init(data);
 
 		log.info("Message received in webcmd");
-		handleIncomingMessage(arg);
+		handleIncomingMessage(data);
+
+		scope.destroy();
 	}
 
 	@Incoming("webdata")
-	public void getFromWebData(String arg) {
+	public void getFromWebData(String data) {
+
+		scope.init(data);
 
 		log.info("Message received in webdata");
-		log.info(arg);
-		handleIncomingMessage(arg);
+		handleIncomingMessage(data);
+
+		scope.destroy();
 	}
 
 	/**

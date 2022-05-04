@@ -11,11 +11,14 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import life.genny.gadaq.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
@@ -33,10 +36,13 @@ public class InternalConsumer {
     String myUrl;
 
     @Inject
-    KieRuntimeBuilder kieRuntimeBuilder;
-
-    @Inject
     Service service;
+
+	@Inject
+	GennyScopeInit scope;
+
+	@Inject
+	UserToken userToken;
 
     @Inject
     BaseEntityUtils beUtils;
@@ -44,8 +50,8 @@ public class InternalConsumer {
     @Inject
     KogitoUtils kogitoUtils;
 
-	@Inject
-	UserToken userToken;
+    @Inject
+    KieRuntimeBuilder kieRuntimeBuilder;
 
     KieSession ksession;
 
@@ -55,7 +61,6 @@ public class InternalConsumer {
      * @param ev
      */
     void onStart(@Observes StartupEvent ev) {
-
         service.fullServiceInit();
     }
 
@@ -67,6 +72,8 @@ public class InternalConsumer {
     @Incoming("events")
     @Blocking
     public void getEvent(String data) {
+
+		scope.init(data);
 
         log.info("Incoming Event : " + data);
         Instant start = Instant.now();
@@ -93,6 +100,8 @@ public class InternalConsumer {
 
         Instant end = Instant.now();
         log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+
+		scope.destroy();
     }
 
     /**
@@ -103,6 +112,8 @@ public class InternalConsumer {
     @Incoming("valid_data")
     @Blocking
     public void getData(String data) {
+
+		scope.init(data);
 
         Instant start = Instant.now();
 
@@ -140,5 +151,7 @@ public class InternalConsumer {
 
         Instant end = Instant.now();
         log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+
+		scope.destroy();
     }
 }

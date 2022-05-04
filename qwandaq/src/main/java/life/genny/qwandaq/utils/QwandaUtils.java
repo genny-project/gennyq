@@ -40,7 +40,6 @@ import life.genny.qwandaq.models.UserToken;
  * 
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
 public class QwandaUtils {
 

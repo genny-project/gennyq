@@ -39,7 +39,6 @@ import org.keycloak.util.JsonSerialization;
  * @author Adam Crow
  * @author Jasper Robison
  */
-@RegisterForReflection
 public class KeycloakUtils {
 
     static final Logger log = Logger.getLogger(KeycloakUtils.class);

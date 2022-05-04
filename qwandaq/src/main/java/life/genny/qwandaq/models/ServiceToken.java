@@ -27,12 +27,12 @@ public class ServiceToken extends GennyToken {
 
     @PostConstruct
     void init() {
-		log.info("CONSTRUCTING ServiceToken Bean");
+		log.debug("CONSTRUCTING ServiceToken Bean");
     }
 
     @PreDestroy
     void destroy() {
-		log.info("DESTROYING ServiceToken Bean");
+		log.debug("DESTROYING ServiceToken Bean");
     }
 
 }

@@ -72,7 +72,7 @@ public class KafkaBean implements KafkaInterface {
 			}
 
 			if (bridgeId != null) {
-				log.info("Sending to " + bridgeId);
+				log.debug("Sending to " + bridgeId);
 
 				metadata = OutgoingKafkaRecordMetadata.<String>builder()
 					.withTopic(bridgeId + "-" + channel)

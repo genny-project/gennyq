@@ -23,11 +23,13 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.vertx.core.http.HttpServerRequest;
 
 import life.genny.fyodor.utils.SearchUtility;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QScheduleMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 
 /**
  * Search - Endpoints providing classic Genny Search functionality
@@ -45,6 +47,9 @@ public class Search {
 
 	@Inject
 	EntityManager entityManager;
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	@Inject
 	SearchUtility search;
@@ -70,10 +75,12 @@ public class Search {
 		 	log.error("Bad or no header token in Search POST provided");
 		 	return Response.status(Response.Status.BAD_REQUEST).build();
 		 }
-		
+
 
 		log.info("GENNY_TOKEN = " + userToken);
 		log.info("SERVICE_TOKEN = " + serviceToken);
+
+		BaseEntity user = beUtils.getUserBaseEntity();
 
 		new QScheduleMessage.Builder("SCHEDULE_TEST")
 			.setEventMessage("TEST_EVENT", uuid)
