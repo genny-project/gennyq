@@ -1,6 +1,5 @@
 package life.genny.serviceq;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -15,6 +14,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
@@ -106,7 +106,7 @@ public class Service {
 		userToken.init(token);
 
 		// add list of allowed products
-		String allowedProducts = System.getenv("PRODUCT_CODES");
+		String allowedProducts = CommonUtils.getSystemEnv("PRODUCT_CODES");
 		if (allowedProducts != null) {
 			serviceToken.setAllowedProducts(allowedProducts.split(":"));
 		} else {
