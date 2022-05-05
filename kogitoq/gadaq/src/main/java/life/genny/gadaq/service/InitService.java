@@ -30,24 +30,24 @@ import life.genny.serviceq.Service;
 @ApplicationScoped
 public class InitService {
 
-    private static final Logger log = Logger.getLogger(InitService.class);
+	private static final Logger log = Logger.getLogger(InitService.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-    @Inject
-    Service service;
+	@Inject
+	Service service;
 
-    @Inject
-    DatabaseUtils databaseUtils;
+	@Inject
+	DatabaseUtils databaseUtils;
 
-    @Inject
-    BaseEntityUtils beUtils;
+	@Inject
+	BaseEntityUtils beUtils;
 
 	@Inject
 	UserToken userToken;
 
 	/**
-	* Send the Project BaseEntity.
+	 * Send the Project BaseEntity.
 	 */
 	public void sendProject() {
 
@@ -65,7 +65,7 @@ public class InitService {
 	}
 
 	/**
-	* Send the User.
+	 * Send the User.
 	 */
 	public void sendUser() {
 
@@ -83,7 +83,7 @@ public class InitService {
 	}
 
 	/**
-	* Send All attributes for the productCode.
+	 * Send All attributes for the productCode.
 	 */
 	public void sendAllAttributes() {
 
@@ -92,7 +92,7 @@ public class InitService {
 
 		// fetch bulk attribute msg from cache
 		QDataAttributeMessage msg = CacheUtils.getObject(productCode, "ALL_ATTRIBUTES", QDataAttributeMessage.class);
-		
+
 		if (msg == null) {
 			log.error("No attribute msg cached for " + productCode);
 			return;
@@ -104,7 +104,7 @@ public class InitService {
 	}
 
 	/**
-	* Send PCM BaseEntities.
+	 * Send PCM BaseEntities.
 	 */
 	public void sendPCMs() {
 
