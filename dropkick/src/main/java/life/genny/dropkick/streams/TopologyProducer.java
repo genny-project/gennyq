@@ -15,7 +15,9 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
 
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -26,6 +28,7 @@ import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.data.BridgeSwitch;
@@ -40,6 +43,7 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -50,13 +54,25 @@ public class TopologyProducer {
 	Integer defaultDropDownSize;
 
 	@Inject
+	GennyScopeInit scope;
+
+	@Inject
+	Service service;
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
 	DefUtils defUtils;
 
 	@Inject
 	QwandaUtils qwandaUtils;
 
 	@Inject
-	Service service;
+	BaseEntityUtils beUtils;
+
+	@Inject
+	CapabilityUtils capabilityUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -77,6 +93,7 @@ public class TopologyProducer {
 		StreamsBuilder builder = new StreamsBuilder();
 		builder
 				.stream("events", Consumed.with(Serdes.String(), Serdes.String()))
+				.peek((k, v) -> scope.init(v))
 				.peek((k, v) -> log.debug("Consumed message: " + v))
 
 				.filter((k, v) -> isValidDropdownMessage(v))
@@ -115,20 +132,20 @@ public class TopologyProducer {
 			return false;
 		}
 
-		// Check if it has a token
-		if (!json.containsKey("token")) {
-			return false;
-		}
+		// // Check if it has a token
+		// if (!json.containsKey("token")) {
+		// 	return false;
+		// }
 
-		String token = json.getString("token");
+		// String token = json.getString("token");
 
-		// Check if token is valid
-		try {
-			GennyToken userToken = new GennyToken(token);
-		} catch (Exception e) {
-			log.error("Bad Token sent in dropdown message!");
-			return false;
-		}
+		// // Check if token is valid
+		// try {
+		// 	GennyToken userToken = new GennyToken(token);
+		// } catch (Exception e) {
+		// 	log.error("Bad Token sent in dropdown message!");
+		// 	return false;
+		// }
 
 		JsonObject dataJson = json.getJsonObject("data");
 
@@ -153,7 +170,7 @@ public class TopologyProducer {
 		// Grab info required to find the DEF
 		String attributeCode = json.getString("attributeCode");
 		String targetCode = dataJson.getString("targetCode");
-		BaseEntity target = service.getBeUtils().getBaseEntityByCode(targetCode);
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
 		if (target == null) {
 			return false;
@@ -198,14 +215,6 @@ public class TopologyProducer {
 
 		JsonObject jsonStr = jsonb.fromJson(data, JsonObject.class);
 
-		// create usertoken and use it to update beUtils
-		String token = jsonStr.getString("token");
-		GennyToken userToken = new GennyToken(token);
-
-		BaseEntityUtils beUtils = service.getBeUtils();
-		GennyToken serviceToken = beUtils.getServiceToken();
-		beUtils.setGennyToken(userToken);
-
 		JsonObject dataJson = jsonStr.getJsonObject("data");
 
 		String attrCode = jsonStr.getString("attributeCode");
@@ -236,7 +245,7 @@ public class TopologyProducer {
 		log.info("Target DEF is " + defBE.getCode() + " : " + defBE.getName());
 		log.info("Attribute is " + attrCode);
 
-		CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
+		// CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
 
 		// Because it is a drop down event we will search the DEF for the search
 		// attribute
@@ -449,7 +458,7 @@ public class TopologyProducer {
 		searchBE.addFilter("PRI_NAME", SearchEntity.StringFilter.LIKE, searchText + "%")
 				.addOr("PRI_NAME", SearchEntity.StringFilter.LIKE, "% " + searchText + "%");
 
-		searchBE.setRealm(serviceToken.getRealm());
+		searchBE.setRealm(userToken.getProductCode());
 		searchBE.setPageStart(pageStart);
 		searchBE.setPageSize(pageSize);
 
@@ -494,7 +503,7 @@ public class TopologyProducer {
 		// Set all required message fields and return msg
 		msg.setParentCode(parentCode);
 		msg.setQuestionCode(questionCode);
-		msg.setToken(token);
+		msg.setToken(userToken.getToken());
 		msg.setLinkCode("LNK_CORE");
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);

@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
@@ -31,33 +32,34 @@ public class TaskService {
     @Inject
     QwandaUtils qwandaUtils;
 
+	@Inject
+	UserToken userToken;
+
     @Inject
     EntityManager entityManager;
 
     @Inject
     Service service;
 
-    public void enableTaskQuestion(Ask ask, Boolean enabled, String userTokenStr) {
+    public void enableTaskQuestion(Ask ask, Boolean enabled) {
 
         ask.setDisabled(!enabled);
 
         QDataAskMessage askMsg = new QDataAskMessage(ask);
-        askMsg.setToken(userTokenStr);
+        askMsg.setToken(userToken.getToken());
         askMsg.setReplace(true);
-        String sendingMsg = jsonb.toJson(askMsg);
-        KafkaUtils.writeMsg("webcmds", sendingMsg);
+        KafkaUtils.writeMsg("webcmds", askMsg);
     }
 
-    public void hideTaskQuestion(Ask ask, Boolean hidden, String userTokenStr) {
+    public void hideTaskQuestion(Ask ask, Boolean hidden) {
 
         // Hide and Disable
         ask.setHidden(!hidden);
         ask.setDisabled(!hidden);
 
         QDataAskMessage askMsg = new QDataAskMessage(ask);
-        askMsg.setToken(userTokenStr);
+        askMsg.setToken(userToken.getToken());
         askMsg.setReplace(true);
-        String sendingMsg = jsonb.toJson(askMsg);
         KafkaUtils.writeMsg("webcmds", askMsg);
     }
 

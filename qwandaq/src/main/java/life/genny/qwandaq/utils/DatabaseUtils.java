@@ -29,7 +29,6 @@ import life.genny.qwandaq.validation.Validation;
  * @author Jasper Robison
  * @author Bryn Mecheam
  */
-@RegisterForReflection
 @ApplicationScoped
 public class DatabaseUtils {
 
@@ -38,15 +37,6 @@ public class DatabaseUtils {
 
 	@Inject
 	EntityManager entityManager;
-
-	/**
-	 * Initialise the EntityManager interface.
-	 *
-	 * @param em The EntityManager.
-	 */
-	public void init(EntityManager em) {
-		// entityManager = em;
-	}
 
 	/**
 	 * Check if entityManager is present.

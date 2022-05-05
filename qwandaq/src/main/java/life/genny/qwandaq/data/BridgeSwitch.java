@@ -77,7 +77,7 @@ public class BridgeSwitch {
 		String realm = gennyToken.getRealm();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
 
-		log.info("Adding Switch to Cache --- " + key + " :: " + bridgeId);
+		log.debug("Adding Switch to Cache --- " + key + " :: " + bridgeId);
 		
 		// grab from cache or create if null
 		BridgeInfo info = CacheUtils.getObject(realm, key, BridgeInfo.class);
@@ -117,7 +117,7 @@ public class BridgeSwitch {
 		String jti = gennyToken.getJTI();
 		String bridgeId = info.mappings.get(jti);
 
-		log.info("Found Switch --- " + key + " :: " + bridgeId);
+		log.debug("Found Switch --- " + key + " :: " + bridgeId);
 
 		return bridgeId;
 	}

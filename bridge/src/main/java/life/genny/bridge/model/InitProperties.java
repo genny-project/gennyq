@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import javax.json.bind.annotation.JsonbProperty;
 
+import org.apache.commons.lang3.StringUtils;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.bridge.exception.BridgeException;
 
@@ -35,24 +37,22 @@ public class InitProperties {
         setMediaProxyUrl(url);
         setApiUrl(url);
 
-		// TODO: Find another way of doing this
-		if (url.contains("internmatch") || url.contains("alyson")) {
-			setClientId("alyson");
-		} else if (url.contains("mentormatch") || url.contains("mentor-match")) {
-			setClientId("mentormatch");
-		} else if (url.contains("lojing")) {
-			setClientId("lojing");
-		} else if (url.contains("credmatch") || url.contains("cred-match")) {
-			setClientId("credmatch");
-		} else {
-            System.err.println("INITPROPS Fallback to alyson from url: [" + url + "] !");
-            setClientId("alyson");
-        }
+		String cid = url;
+		cid = StringUtils.removeStart(cid, "http://");
+		cid = StringUtils.removeStart(cid, "https://");
+		cid = StringUtils.removeEnd(cid, "/");
+		cid = StringUtils.removeEnd(cid, ".gada.io");
+		cid = StringUtils.removeEnd(cid, ".genny.life");
+
+		if ("internmatch".equals(cid)) {
+			cid = "alyson";
+		}
+
+		setClientId(cid);
     }
 
     public InitProperties() throws BridgeException {
 
-    	// TODO: fetch these values from Kafka dependent upon the project url
         setRealm("internmatch");
         setKeycloakRedirectUri(System.getenv("ENV_KEYCLOAK_REDIRECTURI"));
     }
@@ -78,7 +78,7 @@ public class InitProperties {
 	}
 
     public void setMediaProxyUrl(String url) {
-        this.mediaProxyUrl = url + "/web/public";
+        this.mediaProxyUrl = url + "web/public";
     }
 
 	public String getApiUrl() {

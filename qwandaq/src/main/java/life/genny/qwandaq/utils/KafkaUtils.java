@@ -16,7 +16,6 @@ import life.genny.qwandaq.intf.KafkaInterface;
  * 
  * @author Jasper Robison
  */
-@ApplicationScoped
 public class KafkaUtils implements Serializable {
 
 	private static final long serialVersionUID = 1L;

@@ -15,13 +15,13 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.fyodor.utils.SearchUtility;
-
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -31,7 +31,13 @@ public class InternalConsumer {
     static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
+	GennyScopeInit scope;
+
+	@Inject
 	Service service;
+
+	@Inject
+	UserToken userToken;
 
 	@Inject
 	SearchUtility search;
@@ -41,7 +47,6 @@ public class InternalConsumer {
 		service.showConfiguration();
 
 		service.initToken();
-		service.initDatabase();
 		service.initCache();
 		service.initAttributes();
 		service.initKafka();
@@ -52,6 +57,8 @@ public class InternalConsumer {
 	@Blocking
 	public void getSearchEvents(String data) {
 
+		scope.init(data);
+
 		log.info("Received incoming Search Event... ");
 		log.debug(data);
 
@@ -59,10 +66,7 @@ public class InternalConsumer {
 
 		// Deserialize msg
 		QSearchMessage msg = jsonb.fromJson(data, QSearchMessage.class);
-		GennyToken userToken = new GennyToken(msg.getToken());
-
 		SearchEntity searchBE = msg.getSearchEntity();
-		log.info("Token: " + msg.getToken());
 
 		if (searchBE == null) {
 			log.error("Message did NOT contain a SearchEntity!!!");
@@ -71,7 +75,7 @@ public class InternalConsumer {
 
 		log.info("Handling search " + searchBE.getCode());
 
-        QBulkMessage bulkMsg = search.processSearchEntity(userToken, searchBE);
+        QBulkMessage bulkMsg = search.processSearchEntity(searchBE);
 
 		Instant end = Instant.now();
 		log.info("Finished! - Duration: " + Duration.between(start, end).toMillis() + " millSeconds.");
@@ -101,5 +105,6 @@ public class InternalConsumer {
 
 		// publish results to destination channel
 		KafkaUtils.writeMsg(msg.getDestination(), bulkMsg);
+		scope.destroy();
 	}
 }

@@ -6,6 +6,6 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 
 public interface QMessageProvider {
 	
-	public void sendMessage(BaseEntityUtils beUtils, BaseEntity templateBe, Map<String, Object> contextMap);
+	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap);
 
 }

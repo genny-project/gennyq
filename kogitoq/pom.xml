@@ -17,7 +17,7 @@
   <modules>
     <!-- <module>basic</module> -->
     <!-- <module>extended</module> -->
-    <module>adi</module>
+    <!-- <module>adi</module> -->
     <module>gadaq</module>
   </modules>
 

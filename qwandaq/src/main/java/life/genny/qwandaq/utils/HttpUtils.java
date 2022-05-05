@@ -21,7 +21,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * 
  * @author Jasper Robison
  */
-@RegisterForReflection
 public class HttpUtils {
 
 	static final Logger log = Logger.getLogger(CacheUtils.class);

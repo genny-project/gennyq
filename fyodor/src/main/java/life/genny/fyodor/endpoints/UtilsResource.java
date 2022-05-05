@@ -13,6 +13,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
@@ -41,7 +44,10 @@ public class UtilsResource {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	Service service;
+	ServiceToken serviceToken;
+
+	@Inject
+	UserToken userToken;
 
 	/**
 	 * Read a list of Realms.
@@ -52,20 +58,19 @@ public class UtilsResource {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/realms")
-	public Response read(@HeaderParam("Authorization") String token) {
-		log.info("Called api realms");
-		Boolean authorized = SecurityUtils.isAuthorizedToken(token);
-		if (!authorized) {
+	public Response read() {
+
+		log.info("Calling API realms endpoint...");
+
+		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		Set<String> realmSet = new HashSet<>();
-		realmSet.add("internmatch");
-		realmSet.add("mentormatch");
-		realmSet.add("credmatch");
-		realmSet.add("lojing");
-
+		for (String realm : serviceToken.getAllowedProducts()) {
+			realmSet.add(realm);
+		}
 
 		return Response.ok(realmSet).build();
 	}

@@ -4,9 +4,13 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -24,9 +28,21 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.InjectionPoint;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTransient;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.ext.Provider;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -35,21 +51,38 @@ import org.jboss.logging.Logger;
 public class GennyToken implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
+	static final Logger log = Logger.getLogger(GennyToken.class);
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	public String code;
 	public String userCode;
 	public String userUUID;
 	public String token;
+	public String realm;
+
+	public String keycloakRealm;
+	public String productCode;
+	public String[] allowedProducts;
+
 	public Map<String, Object> adecodedTokenMap = null;
-	public String realm = null;
-	public String projectCode = null;
 	public Set<String> userRoles = new HashSet<String>();
 
 	public GennyToken() { }
 
+	public GennyToken(final String code, final String token) {
+
+		this(token);
+		this.code = code;
+		if ("PER_SERVICE".equals(code)) {
+			this.userCode = code;
+		}
+	}
+
 	public GennyToken(final String token) {
+		init(token);
+	}
+
+	public void init(String token) {
 
 		if (token == null || token.isEmpty()) {
 			log.error("Token must not be null or empty!");
@@ -59,27 +92,38 @@ public class GennyToken implements Serializable {
 		this.token = token;
 
 		// get decoded map of token
-		adecodedTokenMap = getJsonMap(token);
+		this.adecodedTokenMap = getJsonMap(token);
 
-		if (adecodedTokenMap == null) {
+		if (this.adecodedTokenMap == null) {
 			log.error("Token cannot be decoded!");
 			return;
 		}
 
 		// extract realm name from iss value
-		String realm = null;
-		if (adecodedTokenMap.get("iss") != null) {
-			String[] issArray = getString("iss").split("/");
-			realm = issArray[issArray.length - 1];
+		String iss = getString("iss");
 
-		} else if (adecodedTokenMap.get("azp") != null) {
-			// clientid
-			realm = getString("azp");
+		if (iss != null) {
+			String[] issArray = iss.split("/");
+			String tokenRealm = issArray[issArray.length - 1];
+
+			this.realm = tokenRealm;
+			this.keycloakRealm = tokenRealm;
+		}
+
+		// extract product code from azp
+		String azp = getString("azp");
+
+		if (azp != null) {
+			this.productCode = azp;
+
+			// use client id as realm if not already found
+			if (this.realm == null) {
+				this.realm = azp;
+			}
 		}
 
 		// add realm name to the decoded token
-		adecodedTokenMap.put("realm", realm);
-		this.realm = realm;
+		this.adecodedTokenMap.put("realm", this.realm);
 
 		String username = getString("preferred_username");
 		this.userUUID = "PER_" + this.getUuid().toUpperCase();
@@ -93,20 +137,90 @@ public class GennyToken implements Serializable {
 		setupRoles();
 	}
 
-	public GennyToken(final String code, final String token) {
-
-		this(token);
-		this.code = code;
-		if ("PER_SERVICE".equals(code)) {
-			this.userCode = code;
-		}
-	}
-
 	/**
 	 * @return String
 	 */
 	public String getToken() {
 		return token;
+	}
+
+	/**
+	 * @return String
+	 */
+	public String getRealm() {
+		if (productCode != null) {
+			return productCode;
+		}
+		return realm;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public void setUserUUID(String userUUID) {
+		this.userUUID = userUUID;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+	public void setRealm(String realm) {
+		this.realm = realm;
+	}
+
+	/**
+	 * Set the userCode
+	 *
+	 * @param userCode the user code to set
+	 * @return String
+	 */
+	public String setUserCode(String userCode) {
+		return this.userCode = userCode;
+	}
+
+	/**
+	 * @return String
+	 */
+	public String getUserUUID() {
+		return userUUID;
+	}
+
+
+	public void setUserRoles(Set<String> userRoles) {
+		this.userRoles = userRoles;
+	}
+
+	/**
+	 * @return the userRoles
+	 */
+	public Set<String> getUserRoles() {
+		return userRoles;
+	}
+
+	public String getProductCode() {
+		return productCode;
+	}
+
+	public void setProductCode(String productCode) {
+		this.productCode = productCode;
+	}
+
+	public String[] getAllowedProducts() {
+		return allowedProducts;
+	}
+
+	public void setAllowedProducts(String[] allowedProducts) {
+		this.allowedProducts = allowedProducts;
+	}
+
+	public String getKeycloakRealm() {
+		return keycloakRealm;
+	}
+
+	public void setKeycloakRealm(String keycloakRealm) {
+		this.keycloakRealm = keycloakRealm;
 	}
 
 	/**
@@ -121,6 +235,112 @@ public class GennyToken implements Serializable {
 	 */
 	public void setAdecodedTokenMap(Map<String, Object> adecodedTokenMap) {
 		this.adecodedTokenMap = adecodedTokenMap;
+	}
+
+	/**
+	 * @return String
+	 */
+	public String getCode() {
+		return code;
+	}
+
+	/**
+	 * @return String
+	 */
+	@JsonbTransient
+	public String getSessionCode() {
+		return getString("session_state");
+	}
+
+	/**
+	 * @return String
+	 */
+	@JsonbTransient
+	public String getUsername() {
+		return getString("preferred_username");
+	}
+
+	/**
+	 * @return String
+	 */
+	@JsonbTransient
+	public String getKeycloakUrl() {
+		String fullUrl = getString("iss");
+		URI uri;
+		try {
+			uri = new URI(fullUrl);
+			String domain = uri.getHost();
+			String proto = uri.getScheme();
+			Integer port = uri.getPort();
+			return proto + "://" + domain + ":" + port;
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		return "http://keycloak.genny.life";
+	}
+
+	/**
+	 * @return String
+	 */
+	@JsonbTransient
+	public String getClientCode() {
+		return getString("aud");
+	}
+
+	/**
+	 * @return String
+	 */
+	@JsonbTransient
+	public String getEmail() {
+		return getString("email");
+	}
+
+	/**
+	 * @return String the userCode
+	 */
+	public String getUserCode() {
+		return userCode;
+	}
+
+	/**
+	 * @return String the token jti field
+	 */
+	@JsonbTransient
+	public String getJTI() {
+		return getString("jti");
+	}
+
+	/**
+	 * @return String
+	 */
+	@JsonbTransient
+	public String getUuid() {
+		String uuid = null;
+
+		try {
+			uuid = (String) adecodedTokenMap.get("sub");
+		} catch (Exception e) {
+			log.info("Not a valid user");
+		}
+
+		return uuid;
+	}
+
+	/**
+	 * @return String
+	 */
+	@Override
+	public String toString() {
+		return getProductCode() + ": " + getCode() + ": " + getUserCode() + ": " + this.userRoles;
+	}
+
+	/**
+	 * @param key the key of the string item to get
+	 * @return String
+	 */
+	@JsonbTransient
+	public String getString(final String key) {
+		return (String) adecodedTokenMap.get(key);
 	}
 
 	private void setupRoles() {
@@ -197,118 +417,9 @@ public class GennyToken implements Serializable {
 	}
 
 	/**
-	 * @return String
-	 */
-	@Override
-	public String toString() {
-		return getRealm() + ": " + getCode() + ": " + getUserCode() + ": " + this.userRoles;
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getRealm() {
-		if (projectCode != null) {
-			return projectCode;
-		}
-		return realm;
-	}
-
-	/**
-	 * @param key the key of the string item to get
-	 * @return String
-	 */
-	public String getString(final String key) {
-		return (String) adecodedTokenMap.get(key);
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getCode() {
-		return code;
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getSessionCode() {
-		return getString("session_state");
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getUsername() {
-		return getString("preferred_username");
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getJti() {
-		return getString("jti");
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getKeycloakUrl() {
-		String fullUrl = getString("iss");
-		URI uri;
-		try {
-			uri = new URI(fullUrl);
-			String domain = uri.getHost();
-			String proto = uri.getScheme();
-			Integer port = uri.getPort();
-			return proto + "://" + domain + ":" + port;
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-		}
-		return "http://keycloak.genny.life";
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getClientCode() {
-		return getString("aud");
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getEmail() {
-		return getString("email");
-	}
-
-	/**
-	 * @return String the userCode
-	 */
-	public String getUserCode() {
-		return userCode;
-	}
-
-	/**
-	 * Set the userCode
-	 *
-	 * @param userCode the user code to set
-	 * @return String
-	 */
-	public String setUserCode(String userCode) {
-		return this.userCode = userCode;
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getUserUUID() {
-		return userUUID;
-	}
-
-	/**
 	 * @return LocalDateTime
 	 */
+	@JsonbTransient
 	public LocalDateTime getAuthDateTime() {
 		Long auth_timestamp = ((Number) adecodedTokenMap.get("auth_time")).longValue();
 		LocalDateTime authTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(auth_timestamp),
@@ -319,6 +430,7 @@ public class GennyToken implements Serializable {
 	/**
 	 * @return LocalDateTime
 	 */
+	@JsonbTransient
 	public LocalDateTime getExpiryDateTime() {
 		Long exp_timestamp = ((Number) adecodedTokenMap.get("exp")).longValue();
 		LocalDateTime expTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(exp_timestamp),
@@ -329,6 +441,7 @@ public class GennyToken implements Serializable {
 	/**
 	 * @return OffsetDateTime
 	 */
+	@JsonbTransient
 	public OffsetDateTime getExpiryDateTimeInUTC() {
 
 		Long exp_timestamp = ((Number) adecodedTokenMap.get("exp")).longValue();
@@ -343,6 +456,7 @@ public class GennyToken implements Serializable {
 	/**
 	 * @return Integer
 	 */
+	@JsonbTransient
 	public Integer getSecondsUntilExpiry() {
 
 		OffsetDateTime expiry = getExpiryDateTimeInUTC();
@@ -354,6 +468,7 @@ public class GennyToken implements Serializable {
 	/**
 	 * @return LocalDateTime the JWT Issue datetime object
 	 */
+	@JsonbTransient
 	public LocalDateTime getiatDateTime() {
 		Long iat_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue();
 		LocalDateTime iatTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(iat_timestamp),
@@ -362,30 +477,9 @@ public class GennyToken implements Serializable {
 	}
 
 	/**
-	 * @return String the token jti field
-	 */
-	public String getJTI() {
-		return (String) adecodedTokenMap.get("jti");
-	}
-
-	/**
 	 * @return String
 	 */
-	public String getUuid() {
-		String uuid = null;
-
-		try {
-			uuid = (String) adecodedTokenMap.get("sub");
-		} catch (Exception e) {
-			log.info("Not a valid user");
-		}
-
-		return uuid;
-	}
-
-	/**
-	 * @return String
-	 */
+	@JsonbTransient
 	public String getEmailUserCode() {
 		String username = (String) adecodedTokenMap.get("preferred_username");
 		String normalisedUsername = getNormalisedUsername(username);
@@ -397,6 +491,7 @@ public class GennyToken implements Serializable {
 	 * @param rawUsername the raw username to normalize
 	 * @return String
 	 */
+	@JsonbTransient
 	public String getNormalisedUsername(final String rawUsername) {
 		if (rawUsername == null) {
 			return null;
@@ -425,15 +520,9 @@ public class GennyToken implements Serializable {
 	}
 
 	/**
-	 * @return the userRoles
-	 */
-	public Set<String> getUserRoles() {
-		return userRoles;
-	}
-
-	/**
 	 * @return the realm and usercode concatenated
 	 */
+	@JsonbTransient
 	public String getRealmUserCode() {
 		return getRealm() + "+" + getUserCode();
 	}
@@ -442,7 +531,7 @@ public class GennyToken implements Serializable {
 	 * @param json the json string to get
 	 * @return Map&lt;String, Object&gt;
 	 */
-	// Send the decoded Json token in the map
+	@JsonbTransient
 	public Map<String, Object> getJsonMap(final String json) {
 		final JsonObject jsonObj = getDecodedToken(json);
 		return getJsonMap(jsonObj);
@@ -452,6 +541,7 @@ public class GennyToken implements Serializable {
 	 * @param jsonObj the json object to get
 	 * @return Map&lt;String, Object&gt;
 	 */
+	@JsonbTransient
 	public static Map<String, Object> getJsonMap(final JsonObject jsonObj) {
 		final String json = jsonObj.toString();
 		Map<String, Object> map = new HashMap<String, Object>();
@@ -478,6 +568,7 @@ public class GennyToken implements Serializable {
 	 * @param bearerToken the bearer token to set
 	 * @return JsonObject
 	 */
+	@JsonbTransient
 	public JsonObject getDecodedToken(final String bearerToken) {
 
 		final String[] chunks = bearerToken.split("\\.");
@@ -488,33 +579,4 @@ public class GennyToken implements Serializable {
 		return json;
 	}
 
-	public void setCode(String code) {
-		this.code = code;
-	}
-
-	public void setUserUUID(String userUUID) {
-		this.userUUID = userUUID;
-	}
-
-	public void setToken(String token) {
-		this.token = token;
-	}
-
-	public void setRealm(String realm) {
-		this.realm = realm;
-	}
-
-	public void setUserRoles(Set<String> userRoles) {
-		this.userRoles = userRoles;
-	}
-
-	public String getProjectCode() {
-		return projectCode;
-	}
-
-	public void setProjectCode(String projectCode) {
-		this.projectCode = projectCode;
-	}
-	
-	
 }

@@ -1,21 +1,25 @@
 package life.genny.bridge.live.data;
 
 import javax.inject.Inject;
+import life.genny.bridge.blacklisting.BlackListInfo;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.security.keycloak.TokenVerification;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.json.JsonObject;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.bridge.model.grpc.Item;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 import life.genny.qwandaq.security.keycloak.TokenVerification;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 /**
- * InternalConsumer --- The class where all messages from the backends such as lauchy,
  * wildfly-rulesservice and other internal applications are received to dispatch to the requested
  * client by reading the token and routing by sesssion id.
  *
@@ -25,10 +29,12 @@ public class InternalConsumer {
 
 	private static final Logger log = Logger.getLogger(InternalConsumer.class);
 
-  @Inject TokenVerification verification;
-  @Inject EventBus bus;
-  @Inject BlackListInfo blackList;
-  @Inject BridgeGrpcService grpcService;
+  	@Inject TokenVerification verification;
+  	@Inject EventBus bus;
+  	@Inject BlackListInfo blackList;
+  	@Inject BridgeGrpcService grpcService;
+	@Inject GennyScopeInit scope;
+	@Inject UserToken userToken;
 
 	/**
 	 * A request with a protocol which will add, delete all or delete just a record depending on the
@@ -47,17 +53,25 @@ public class InternalConsumer {
 	}
 
 	@Incoming("webcmds")
-	public void getFromWebCmds(String arg) {
+	public void getFromWebCmds(String data) {
+
+		scope.init(data);
 
 		log.info("Message received in webcmd");
-		handleIncomingMessage(arg);
+		handleIncomingMessage(data);
+
+		scope.destroy();
 	}
 
 	@Incoming("webdata")
-	public void getFromWebData(String arg) {
+	public void getFromWebData(String data) {
+
+		scope.init(data);
 
 		log.info("Message received in webdata");
-		handleIncomingMessage(arg);
+		handleIncomingMessage(data);
+
+		scope.destroy();
 	}
 
 	/**

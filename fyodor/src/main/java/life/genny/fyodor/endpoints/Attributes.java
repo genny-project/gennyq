@@ -14,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.message.QDataAttributeMessage;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
@@ -42,7 +43,7 @@ public class Attributes {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	Service service;
+	UserToken userToken;
 
 	/**
 	 * Read an item from the cache.
@@ -53,16 +54,15 @@ public class Attributes {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{code}")
-	public Response read(@HeaderParam("Authorization") String token, @PathParam("code") String code) {
+	public Response read(@PathParam("code") String code) {
 
-		Boolean authorized = SecurityUtils.isAuthorizedToken(token);
-		if (!authorized) {
+		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		String realm = service.getServiceToken().getRealm();
-		Attribute attribute = databaseUtils.findAttributeByCode(realm, code);
+		String productCode = userToken.getProductCode();
+		Attribute attribute = databaseUtils.findAttributeByCode(productCode, code);
 
 		return Response.ok(attribute).build();
 	}
@@ -76,15 +76,14 @@ public class Attributes {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/realms/{realm}")
-	public Response readAttributes(@HeaderParam("Authorization") String token,@PathParam("realm") String realm) {
+	public Response readAttributes(@PathParam("realm") String realm) {
 
-		Boolean authorized = SecurityUtils.isAuthorizedToken(token);
-		if (!authorized) {
+		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		List<Attribute> attributeList = databaseUtils.findAttributes(realm, 0,10000, "");
+		List<Attribute> attributeList = databaseUtils.findAttributes(realm, 0, 10000, "");
 
 		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList.toArray(new Attribute[0]));
 		return Response.ok(attributeMsg).build();

@@ -30,7 +30,8 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.handlers.RuleFlowGroupWorkItemHandler;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -43,7 +44,6 @@ import life.genny.qwandaq.message.QEventDropdownMessage;
  * 
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
 public class SearchUtils {
 
@@ -53,16 +53,25 @@ public class SearchUtils {
 	@Inject
 	QwandaUtils qwandaUtils;
 
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	CapabilityUtils capabilityUtils;
+
+	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
+	UserToken userToken;
+
 	/**
 	 * Evaluate any conditional filters for a {@link SearchEntity}
 	 *
-	 * @param beUtils  the utils to use
 	 * @param searchBE the SearchEntity to evaluate filters of
 	 * @return SearchEntity
 	 */
-	public SearchEntity evaluateConditionalFilters(BaseEntityUtils beUtils, SearchEntity searchBE) {
-
-		CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
+	public SearchEntity evaluateConditionalFilters(SearchEntity searchBE) {
 
 		List<String> shouldRemove = new ArrayList<>();
 
@@ -110,12 +119,9 @@ public class SearchUtils {
 	 * The respective {@link SearchEntity} will be fetched from the cache befor
 	 * processing.
 	 *
-	 * @param beUtils the utils to use
 	 * @param code    the code of the SearchEntity to grab from cache and search
 	 */
-	public void searchTable(BaseEntityUtils beUtils, String code) {
-
-		String realm = beUtils.getRealm();
+	public void searchTable(String code) {
 
 		String searchCode = code;
 		if (searchCode.startsWith("CNS_")) {
@@ -126,7 +132,8 @@ public class SearchUtils {
 
 		log.info("SBE CODE   ::   " + searchCode);
 
-		SearchEntity searchEntity = CacheUtils.getObject(realm, searchCode, SearchEntity.class);
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
+				searchCode, SearchEntity.class);
 
 		if (searchEntity == null) {
 			log.info("Could not fetch " + searchCode + " from cache!!!");
@@ -136,28 +143,25 @@ public class SearchUtils {
 			searchEntity.setCode(code);
 		}
 
-		searchTable(beUtils, searchEntity);
+		searchTable(searchEntity);
 	}
 
 	/**
 	 * Perform a table like search in Genny using a {@link SearchEntity}.
 	 *
-	 * @param beUtils      the utils to use
 	 * @param searchEntity the SearchEntity to search
 	 */
-	public void searchTable(BaseEntityUtils beUtils, SearchEntity searchEntity) {
-
-		String realm = beUtils.getRealm();
+	public void searchTable(SearchEntity searchEntity) {
 
 		if (searchEntity == null) {
 			System.out.println("SearchBE is null");
 		}
 
 		// update code to session search code
-		searchEntity = getSessionSearch(beUtils, searchEntity);
+		searchEntity = getSessionSearch(searchEntity);
 
 		// Add any necessary extra filters
-		List<EntityAttribute> filters = getUserFilters(beUtils, searchEntity);
+		List<EntityAttribute> filters = getUserFilters(searchEntity);
 
 		if (!filters.isEmpty()) {
 			log.info("Found " + filters.size() + " additional filters for " + searchEntity.getCode());
@@ -167,7 +171,9 @@ public class SearchUtils {
 			}
 		}
 
-		CacheUtils.putObject(realm, "LAST-SEARCH:" + searchEntity.getCode(), searchEntity);
+		CacheUtils.putObject(userToken.getProductCode(),
+				"LAST-SEARCH:" + searchEntity.getCode(),
+				searchEntity);
 
 		// ensure column and action indexes are accurate
 		searchEntity.updateColumnIndex();
@@ -175,7 +181,7 @@ public class SearchUtils {
 
 		// package and send search message to fyodor
 		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
-		searchBeMsg.setToken(beUtils.getGennyToken().getToken());
+		searchBeMsg.setToken(userToken.getToken());
 		searchBeMsg.setDestination("webcmds");
 		KafkaUtils.writeMsg("search_events", searchBeMsg);
 	}
@@ -185,17 +191,16 @@ public class SearchUtils {
 	 * {@link SearchEntity}
 	 * from the SearchFilters rulegroup.
 	 *
-	 * @param beUtils  the utils to use
 	 * @param searchBE the SearchEntity to get additional filters for
 	 * @return List
 	 */
-	public List<EntityAttribute> getUserFilters(BaseEntityUtils beUtils, SearchEntity searchBE) {
+	public List<EntityAttribute> getUserFilters(SearchEntity searchBE) {
 
 		List<EntityAttribute> filters = new ArrayList<>();
 
 		Map<String, Object> facts = new ConcurrentHashMap<>();
-		facts.put("serviceToken", beUtils.getServiceToken());
-		facts.put("userToken", beUtils.getGennyToken());
+		facts.put("serviceToken", serviceToken);
+		facts.put("userToken", userToken);
 		facts.put("searchBE", searchBE);
 
 		Map<String, Object> results = new RuleFlowGroupWorkItemHandler()
@@ -229,20 +234,18 @@ public class SearchUtils {
 	}
 
 	/**
-	 * @param beUtils  the utils to use
 	 * @param searchBE the SearchEntity to send filter questions for
 	 */
-	public void sendFilterQuestions(BaseEntityUtils beUtils, SearchEntity searchBE) {
+	public void sendFilterQuestions(SearchEntity searchBE) {
 		log.error("Function not complete!");
 	}
 
 	/**
-	 * @param beUtils   the utils to use
 	 * @param baseBE    the baseBE to get associated column for
 	 * @param calEACode the calEACode to get
 	 * @return Answer
 	 */
-	public Answer getAssociatedColumnValue(BaseEntityUtils beUtils, BaseEntity baseBE, String calEACode) {
+	public Answer getAssociatedColumnValue(BaseEntity baseBE, String calEACode) {
 
 		String[] calFields = calEACode.substring("COL__".length()).split("__");
 		if (calFields.length == 1) {
@@ -316,22 +319,18 @@ public class SearchUtils {
 	/**
 	 * Get a session search for a given SearchEntity
 	 *
-	 * @param beUtils      the utility used in operation
 	 * @param searchEntity the searchEntity
 	 * @return SearchEntity
 	 */
-	public SearchEntity getSessionSearch(BaseEntityUtils beUtils, SearchEntity searchEntity) {
-
-		GennyToken gennyToken = beUtils.getGennyToken();
-		String realm = gennyToken.getRealm();
+	public SearchEntity getSessionSearch(SearchEntity searchEntity) {
 
 		// don't bother if the code is already a session search
-		if (searchEntity.getCode().contains(gennyToken.getJTI().toUpperCase())) {
+		if (searchEntity.getCode().contains(userToken.getJTI().toUpperCase())) {
 			return searchEntity;
 		}
 
 		// we need to set the searchEntity's code to session search code
-		String sessionSearchCode = searchEntity.getCode() + "_" + gennyToken.getJTI().toUpperCase();
+		String sessionSearchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
 		log.info("sessionSearchCode  ::  " + searchEntity.getCode());
 
 		// update code and any nested codes
@@ -340,33 +339,31 @@ public class SearchUtils {
 		searchEntity.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith("SBE_"))
 				.forEach(ea -> {
-					ea.setAttributeCode(ea.getAttributeCode() + "_" + gennyToken.getJTI().toUpperCase());
+					ea.setAttributeCode(ea.getAttributeCode() + "_" + userToken.getJTI().toUpperCase());
 				});
 
 		// put/update in the cache
-		CacheUtils.putObject(realm, searchEntity.getCode(), searchEntity);
+		CacheUtils.putObject(userToken.getProductCode(), searchEntity.getCode(), searchEntity);
 
 		return searchEntity;
 	}
 
 	/**
-	 * @param beUtils       the utils to use
 	 * @param dropdownValue the dropdownValue to perform for
 	 */
-	public void performQuickSearch(BaseEntityUtils beUtils, String dropdownValue) {
+	public void performQuickSearch(String dropdownValue) {
 
 		Instant start = Instant.now();
 
-		String realm = beUtils.getServiceToken().getRealm();
-		String gToken = beUtils.getGennyToken().getToken();
-		String sessionCode = beUtils.getGennyToken().getJTI().toUpperCase();
+		String productCode = userToken.getProductCode();
+		String sessionCode = userToken.getJTI().toUpperCase();
 
 		// convert to entity list
 		log.info("dropdownValue = " + dropdownValue);
 		String cleanCode = beUtils.cleanUpAttributeValue(dropdownValue);
 		BaseEntity target = beUtils.getBaseEntityByCode(cleanCode);
 
-		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_" + realm.toUpperCase());
+		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_" + productCode.toUpperCase());
 
 		if (project == null) {
 			log.error("Null project Entity!!!");
@@ -393,7 +390,7 @@ public class SearchUtils {
 
 			String bucketMapCode = bucketMap.getString("code");
 
-			SearchEntity baseSearch = CacheUtils.getObject(realm, bucketMapCode, SearchEntity.class);
+			SearchEntity baseSearch = CacheUtils.getObject(productCode, bucketMapCode, SearchEntity.class);
 
 			if (baseSearch == null) {
 				log.error("SearchEntity " + bucketMapCode + " is NULL in cache!");
@@ -488,7 +485,7 @@ public class SearchUtils {
 				}
 
 				// fetch each search from cache
-				SearchEntity searchBE = CacheUtils.getObject(realm, targetedBucketCode + "_" + sessionCode,
+				SearchEntity searchBE = CacheUtils.getObject(productCode, targetedBucketCode + "_" + sessionCode,
 						SearchEntity.class);
 
 				if (searchBE == null) {
@@ -497,7 +494,7 @@ public class SearchUtils {
 				}
 
 				// Attach any extra filters from SearchFilters rulegroup
-				List<EntityAttribute> filters = getUserFilters(beUtils, searchBE);
+				List<EntityAttribute> filters = getUserFilters(searchBE);
 
 				if (!filters.isEmpty()) {
 					log.info("User Filters are NOT empty");
@@ -516,7 +513,7 @@ public class SearchUtils {
 
 					for (EntityAttribute calEA : cals) {
 
-						Answer ans = getAssociatedColumnValue(beUtils, be, calEA.getAttributeCode());
+						Answer ans = getAssociatedColumnValue(be, calEA.getAttributeCode());
 
 						if (ans != null) {
 							try {
@@ -531,7 +528,7 @@ public class SearchUtils {
 				// send the results
 				log.info("Sending Results: " + finalResultList.size());
 				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(finalResultList);
-				msg.setToken(gToken);
+				msg.setToken(userToken.getToken());
 				msg.setReplace(true);
 				msg.setParentCode(searchBE.getCode());
 				KafkaUtils.writeMsg("webcmds", msg);
@@ -547,7 +544,7 @@ public class SearchUtils {
 				} catch (BadDataException e) {
 					log.error("Could not update total results");
 				}
-				CacheUtils.putObject(beUtils.getGennyToken().getRealm(), searchBE.getCode(), searchBE);
+				CacheUtils.putObject(productCode, searchBE.getCode(), searchBE);
 
 				if (searchBE != null) {
 					log.info("Sending Search Entity : " + searchBE.getCode());
@@ -555,7 +552,7 @@ public class SearchUtils {
 					log.error("SearchEntity is NULLLLL!!!!");
 				}
 				QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
-				searchMsg.setToken(gToken);
+				searchMsg.setToken(userToken.getToken());
 				searchMsg.setReplace(true);
 				KafkaUtils.writeMsg("webcmds", searchMsg);
 			}
@@ -638,9 +635,8 @@ public class SearchUtils {
 	 * Perform a dropdown search through dropkick.
 	 *
 	 * @param ask       the ask to perform dropdown search for
-	 * @param userToken the userToken used to perform the search
 	 */
-	public void performDropdownSearch(Ask ask, GennyToken userToken) {
+	public void performDropdownSearch(Ask ask) {
 
 		// setup message data
 		MessageData messageData = new MessageData();

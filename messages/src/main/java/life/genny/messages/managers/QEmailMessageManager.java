@@ -1,5 +1,6 @@
 package life.genny.messages.managers;
 
+import javax.inject.Inject;
 import java.util.Map;
 import javax.inject.Inject;
 
@@ -23,10 +24,13 @@ public class QEmailMessageManager implements QMessageProvider {
 	private static final Logger log = Logger.getLogger(QEmailMessageManager.class);
 
 	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
 	Mailer mailer;
 
 	@Override
-	public void sendMessage(BaseEntityUtils beUtils, BaseEntity templateBe, Map<String, Object> contextMap) {
+	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 
 		log.info("Sending an Email Type Message...");
 

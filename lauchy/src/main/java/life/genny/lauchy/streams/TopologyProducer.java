@@ -13,7 +13,9 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -33,10 +35,12 @@ import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.serviceq.Service;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -49,13 +53,22 @@ public class TopologyProducer {
 	Boolean enableBlacklist;
 
 	@Inject
+	GennyScopeInit scope;
+
+	@Inject
+	Service service;
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
 	DefUtils defUtils;
 
 	@Inject
 	QwandaUtils qwandaUtils;
 
 	@Inject
-	Service service;
+	BaseEntityUtils beUtils;
 
 	void onStart(@Observes StartupEvent ev) {
 
@@ -75,6 +88,7 @@ public class TopologyProducer {
 		StreamsBuilder builder = new StreamsBuilder();
 		builder
 				.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
+				.peek((k, v) -> scope.init(v))
 				.peek((k, v) -> log.info("Reveived message: " + v))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
@@ -104,32 +118,11 @@ public class TopologyProducer {
 	 */
 	public Boolean validate(String data) {
 
-		BaseEntityUtils beUtils = service.getBeUtils();
 		JsonObject json = jsonb.fromJson(data, JsonObject.class);
 
 		if(json.containsKey("empty")) {
 			log.info("Detected a payload with empty=false.. ignoring & proceding..");
 			return false;
-		}
-
-		// create GennyToken from token in message
-		String token = json.getString("token");
-		GennyToken userToken = null;
-
-		try {
-			userToken = new GennyToken(token);
-		} catch (Exception e) {
-			log.errorv("Invalid Token: {}", token);
-			return false;
-		}
-
-		beUtils.setGennyToken(userToken);
-		log.info(userToken);
-
-		// check that token matches userToken
-		if (!userToken.getToken().equals(token)) {
-			log.errorv("Message Token and userToken DO NOT Match for {}", userToken.getEmail());
-			return blacklist(userToken);
 		}
 
 		JsonArray items = json.getJsonArray("items");
@@ -147,14 +140,14 @@ public class TopologyProducer {
 				// userToken.getUserCode(), answer.getSourceCode());
 				log.error("UserCode " + userToken.getUserCode() + " does not match answer source "
 						+ answer.getSourceCode());
-				return blacklist(userToken);
+				return blacklist();
 			}
 
 			// check source entity exists
 			BaseEntity sourceBe = beUtils.getBaseEntityByCode(answer.getSourceCode());
 			if (sourceBe == null) {
 				log.error("Source " + answer.getSourceCode() + " does not exist");
-				return blacklist(userToken);
+				return blacklist();
 			}
 			log.info("Source = " + sourceBe.getCode() + ":" + sourceBe.getName());
 
@@ -162,7 +155,7 @@ public class TopologyProducer {
 			BaseEntity targetBe = beUtils.getBaseEntityByCode(answer.getTargetCode());
 			if (targetBe == null) {
 				log.error("Target " + answer.getTargetCode() + " does not exist");
-				return blacklist(userToken);
+				return blacklist();
 			}
 
 			// check DEF was found for target
@@ -170,7 +163,7 @@ public class TopologyProducer {
 			if (defBe == null) {
 				// log.errorv("DEF entity not found for {}", targetBe.getCode());
 				log.error("DEF entity not found for " + targetBe.getCode());
-				return blacklist(userToken);
+				return blacklist();
 			}
 
 			// check attribute code is allowed by targetDEF
@@ -178,7 +171,7 @@ public class TopologyProducer {
 				// log.errorv("AttributeCode {} not allowed for {}", answer.getAttributeCode(),
 				// defBe.getCode());
 				log.error("AttributeCode " + answer.getAttributeCode() + " not allowed for " + defBe.getCode());
-				return blacklist(userToken);
+				return blacklist();
 			}
 
 			// check attribute exists
@@ -186,7 +179,7 @@ public class TopologyProducer {
 			if (attribute == null) {
 				// log.errorv("AttributeCode {} does not existing", answer.getAttributeCode());
 				log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
-				return blacklist(userToken);
+				return blacklist();
 			}
 
 			DataType dataType = attribute.getDataType();
@@ -218,7 +211,7 @@ public class TopologyProducer {
 				if (!isValidABN(answer.getValue())) {
 					// log.errorv("invalid ABN {}", answer.getValue());
 					log.error("invalid ABN " + answer.getValue());
-					return blacklist(userToken);
+					return blacklist();
 				}
 
 			} else if ("PRI_CREDITCARD".equals(answer.getAttributeCode())) {
@@ -226,7 +219,7 @@ public class TopologyProducer {
 				if (!isValidCreditCard(answer.getValue())) {
 					// log.errorv("invalid Credit Card {}", answer.getValue());
 					log.error("invalid Credit Card " + answer.getValue());
-					return blacklist(userToken);
+					return blacklist();
 				}
 
 			} else {
@@ -265,7 +258,7 @@ public class TopologyProducer {
 
 				// blacklist if none of the regex match
 				if (!isAnyValid) {
-					return blacklist(userToken);
+					return blacklist();
 				}
 			}
 		}
@@ -274,14 +267,13 @@ public class TopologyProducer {
 	}
 
 	/**
-	 * Blacklist a user if blacklists are enabled, and return
+	 * Blacklist the user if blacklists are enabled, and return
 	 * a Boolean representing whether or not the messsage
 	 * should be considered valid.
 	 *
-	 * @param userToken the userToken of the user to blacklist
 	 * @return Boolean
 	 */
-	public Boolean blacklist(GennyToken userToken) {
+	public Boolean blacklist() {
 
 		String uuid = userToken.getUuid();
 

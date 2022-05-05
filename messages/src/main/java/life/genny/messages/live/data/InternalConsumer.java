@@ -16,7 +16,9 @@ import javax.json.bind.JsonbBuilder;
 import life.genny.messages.process.MessageProcessor;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
@@ -27,15 +29,22 @@ public class InternalConsumer {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
+	GennyScopeInit scope;
+
+	@Inject
 	Service service;
 
 	@Inject
 	MessageProcessor mp;
 
-    void onStart(@Observes StartupEvent ev) {
+	@Inject
+	BaseEntityUtils beUtils;
 
+	@Inject
+	UserToken userToken;
+
+    void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
-		log.info("[*] Consumer Ready!");
     }
 
     void onStop(@Observes ShutdownEvent ev) {
@@ -43,7 +52,9 @@ public class InternalConsumer {
     }
 
 	@Incoming("messages")
-	public void getFromMessages(String payload) {
+	public void getFromMessages(String data) {
+
+		scope.init(data);
 
 		log.info("Received EVENT :" + (System.getenv("PROJECT_REALM") == null ? "tokenRealm" : System.getenv("PROJECT_REALM")));
 
@@ -51,33 +62,32 @@ public class InternalConsumer {
 		log.info(">>>>>>>>>>>>>>>>>> PROCESSING NEW MESSAGE <<<<<<<<<<<<<<<<<<<<<<");
 		log.info("################################################################");
 
-		// Log entire payload for debugging purposes
-		log.info("payload ----> " + payload);
+		// Log entire data for debugging purposes
+		log.info("data ----> " + data);
+
+		if (userToken == null) {
+			log.error("UserToken is null!");
+			return;
+		}
 		
 		QMessageGennyMSG message = null;
-		GennyToken userToken = null;
 
 		// Try Catch to stop consumer from dying upon error
 		try {
-			message = jsonb.fromJson(payload, QMessageGennyMSG.class);
-			userToken = new GennyToken(message.getToken());
+			message = jsonb.fromJson(data, QMessageGennyMSG.class);
 		} catch (Exception e) {
 			log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
 			log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
 		}
 
-		if (message != null && userToken != null) {
-
-			// update the beUtils with new token
-			service.getBeUtils().setGennyToken(userToken);
-
-			// Try Catch to stop consumer from dying upon error
-			try {
-				mp.processGenericMessage(message, service.getBeUtils());
-			} catch (Exception e) {
-				log.error(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);
-				log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
-			}
+		// Try Catch to stop consumer from dying upon error
+		try {
+			mp.processGenericMessage(message);
+		} catch (Exception e) {
+			log.error(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);
+			log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
 		}
+
+		scope.destroy();
 	}
 }

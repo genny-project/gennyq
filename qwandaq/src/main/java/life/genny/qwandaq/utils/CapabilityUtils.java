@@ -22,6 +22,7 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -30,9 +31,8 @@ import life.genny.qwandaq.models.GennyToken;
  * @author Jasper Robison
  * @author Bryn Mecheam
  */
-@RegisterForReflection
 @ApplicationScoped
-public class CapabilityUtils implements Serializable {
+public class CapabilityUtils {
 
 	static final Logger log = Logger.getLogger(CapabilityUtils.class);
 
@@ -42,23 +42,15 @@ public class CapabilityUtils implements Serializable {
 	@Inject
 	QwandaUtils qwandaUtils;
 
+	@Inject
+	UserToken userToken;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
 	List<Attribute> capabilityManifest = new ArrayList<Attribute>();
 
-	public BaseEntityUtils beUtils;
-
-	public CapabilityUtils() {
-	}
-
-	public CapabilityUtils(BaseEntityUtils beUtils) {
-		this.beUtils = beUtils;
-	}
-
-	/**
-	 * @return the beUtils
-	 */
-	public BaseEntityUtils getBeUtils() {
-		return beUtils;
-	}
+	public CapabilityUtils() { }
 
 	/**
 	 * @return the capabilityManifest
@@ -79,8 +71,7 @@ public class CapabilityUtils implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		return "CapabilityUtils [" + (capabilityManifest != null ? "capabilityManifest=" + capabilityManifest : "")
-				+ "]";
+		return "CapabilityUtils [" + (capabilityManifest != null ? "capabilityManifest=" + capabilityManifest : "") + "]";
 	}
 
 	/**
@@ -134,12 +125,12 @@ public class CapabilityUtils implements Serializable {
 
 		// check if the userToken is allowed to do this!
 		if (!hasCapability(capabilityCode, mode)) {
-			log.error(beUtils.getGennyToken().getUserCode() + " is NOT ALLOWED TO ADD THIS CAPABILITY TO A ROLE :"
+			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD THIS CAPABILITY TO A ROLE :"
 					+ role.getCode());
 			return role;
 		}
 
-		Answer answer = new Answer(beUtils.getServiceToken().getUserCode(), role.getCode(), "PRM_" + capabilityCode,
+		Answer answer = new Answer(userToken.getUserCode(), role.getCode(), "PRM_" + capabilityCode,
 				mode.toString());
 
 		String prefixedCode = capabilityCode;
@@ -193,13 +184,13 @@ public class CapabilityUtils implements Serializable {
 	 */
 	private void updateCachedRoleSet(String code, String capabilityCode, CapabilityMode mode) {
 
-		String realm = beUtils.getGennyToken().getRealm();
+		String productCode = userToken.getProductCode();
 
-		String key = realm + ":" + capabilityCode + ":" + mode.name();
+		String key = productCode + ":" + capabilityCode + ":" + mode.name();
 		log.debug("Updating cached roleset: " + key);
 
 		// fetch from cache and parse as arraylist
-		String json = (String) CacheUtils.readCache(realm, key);
+		String json = (String) CacheUtils.readCache(productCode, key);
 		List<String> roleCodes = Arrays.asList(json.split(","));
 
 		// add to role set if not already existing
@@ -210,7 +201,7 @@ public class CapabilityUtils implements Serializable {
 			json = roleCodes.toString().replaceAll("[ \\[\\]]", "");
 
 			// write back to cache
-			CacheUtils.writeCache(realm, key, json);
+			CacheUtils.writeCache(productCode, key, json);
 		}
 	}
 
@@ -223,24 +214,22 @@ public class CapabilityUtils implements Serializable {
 	 */
 	public boolean hasCapability(String code, CapabilityMode mode) {
 
-		GennyToken gennyToken = beUtils.getGennyToken();
-		String realm = gennyToken.getRealm();
+		String productCode = userToken.getProductCode();
 
 		// allow keycloak admin and devcs to do anything
-		if (gennyToken.hasRole("admin") || gennyToken.hasRole("dev") || ("service".equals(gennyToken.getUsername()))) {
+		if (userToken.hasRole("admin") || userToken.hasRole("dev") || ("service".equals(userToken.getUsername()))) {
 			return true;
 		}
 
 		// create a capability code and mode combined unique key
-		String key = realm + ":" + code + ":" + mode.name();
+		String key = productCode + ":" + code + ":" + mode.name();
 
 		// fetch from cache and parse as arraylist
-		String json = (String) CacheUtils.readCache(realm, key);
+		String json = (String) CacheUtils.readCache(productCode, key);
 		List<String> roleCodes = Arrays.asList(json.split(","));
 
 		// fetch user baseentity
-		String userCode = gennyToken.getUserCode();
-		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
+		BaseEntity user = beUtils.getUserBaseEntity();
 
 		// check if the user has any of these roles
 		for (String roleCode : roleCodes) {
@@ -264,24 +253,22 @@ public class CapabilityUtils implements Serializable {
 	 */
 	public boolean hasCapabilityThroughPriIs(String code, CapabilityMode mode) {
 
-		GennyToken gennyToken = beUtils.getGennyToken();
-		String realm = gennyToken.getRealm();
+		String productCode = userToken.getProductCode();
 
 		// allow keycloak admin and devcs to do anything
-		if (gennyToken.hasRole("admin") || gennyToken.hasRole("dev") || ("service".equals(gennyToken.getUsername()))) {
+		if (userToken.hasRole("admin") || userToken.hasRole("dev") || ("service".equals(userToken.getUsername()))) {
 			return true;
 		}
 
 		// create a capability code and mode combined unique key
-		String key = realm + ":" + code + ":" + mode.name();
+		String key = productCode + ":" + code + ":" + mode.name();
 
 		// fetch from cache and parse as arraylist
-		String json = (String) CacheUtils.readCache(realm, key);
+		String json = (String) CacheUtils.readCache(productCode, key);
 		List<String> roleCodes = Arrays.asList(json.split(","));
 
 		// fetch user baseentity
-		String userCode = gennyToken.getUserCode();
-		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
+		BaseEntity user = beUtils.getUserBaseEntity();
 
 		for (String roleCode : roleCodes) {
 			String priIsCode = "PRI_IS_" + roleCode.split("ROL_")[1];
@@ -298,11 +285,11 @@ public class CapabilityUtils implements Serializable {
 	 */
 	public void process() {
 
-		String realm = beUtils.getGennyToken().getRealm();
+		String productCode = userToken.getProductCode();
 		List<Attribute> existingCapability = new ArrayList<Attribute>();
 
 		// iterate attributes in memory
-		for (String existingAttributeCode : qwandaUtils.attributes.get(realm).keySet()) {
+		for (String existingAttributeCode : qwandaUtils.attributes.get(productCode).keySet()) {
 			if (existingAttributeCode.startsWith("PRM_")) {
 				// fetch and add attribute to list
 				Attribute attribute = qwandaUtils.getAttribute(existingAttributeCode);
@@ -317,10 +304,10 @@ public class CapabilityUtils implements Serializable {
 		for (Attribute toBeRemovedCapability : existingCapability) {
 
 			qwandaUtils.removeAttributeFromMemory(toBeRemovedCapability.getCode());
-			databaseUtils.deleteAttribute(realm, toBeRemovedCapability.getCode());
+			databaseUtils.deleteAttribute(productCode, toBeRemovedCapability.getCode());
 
 			// update all the roles that use this attribute by reloading them into cache
-			QDataBaseEntityMessage msg = CacheUtils.getObject(realm, "ROLES_" + realm, QDataBaseEntityMessage.class);
+			QDataBaseEntityMessage msg = CacheUtils.getObject(productCode, "ROLES_" + productCode, QDataBaseEntityMessage.class);
 
 			if (msg != null) {
 

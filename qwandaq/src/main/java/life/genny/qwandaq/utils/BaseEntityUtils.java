@@ -15,14 +15,20 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Answers;
@@ -40,141 +46,35 @@ import life.genny.qwandaq.message.QSearchBeResult;
  * @author Adam Crow
  * @author Jasper Robison
  */
-@RegisterForReflection
-public class BaseEntityUtils implements Serializable {
+@ApplicationScoped
+public class BaseEntityUtils {
 
 	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
 	Jsonb jsonb = JsonbBuilder.create();
-	String token;
-	String realm;
-	GennyToken gennyToken;
-	GennyToken serviceToken;
+
+	@Inject
+	UserToken userToken;
 
 	public static final String BASEENTITY_CACHE = "baseentity";
 
-	public BaseEntityUtils() {
-	}
-
-	public BaseEntityUtils(String token, String realm) {
-		this(new GennyToken(token));
-		this.realm = realm;
-	}
-
-	public BaseEntityUtils(GennyToken serviceToken, GennyToken userToken) {
-		this(userToken);
-		this.serviceToken = serviceToken;
-	}
-
-	public BaseEntityUtils(GennyToken gennyToken) {
-		this.token = gennyToken.getToken();
-		this.realm = gennyToken.getRealm();
-		this.gennyToken = gennyToken;
-	}
+	public BaseEntityUtils() { }
 
 	/**
-	 * Get the Token
-	 *
-	 * @return The token
-	 */
-	public String getToken() {
-		return token;
-	}
-
-	/**
-	 * Set the Token
-	 *
-	 * @param token The token to set
-	 */
-	public void setToken(String token) {
-		this.token = token;
-	}
-
-	/**
-	 * Get the current realm
-	 *
-	 * @return The realm
-	 */
-	public String getRealm() {
-		return gennyToken.getRealm();
-	}
-
-	/**
-	 * Get the GennyToken
-	 *
-	 * @return The gennyToken
-	 */
-	public GennyToken getGennyToken() {
-		return gennyToken;
-	}
-
-	/**
-	 * Set the GennyToken
-	 *
-	 * @param gennyToken The genny token to set
-	 */
-	public void setGennyToken(GennyToken gennyToken) {
-		this.gennyToken = gennyToken;
-	}
-
-	/**
-	 * Get the ServiceToken
-	 *
-	 * @return The serviceToken
-	 */
-	public GennyToken getServiceToken() {
-		return serviceToken;
-	}
-
-	/**
-	 * Set the ServiceToken
-	 *
-	 * @param serviceToken The serviceToken to set
-	 */
-	public void setServiceToken(GennyToken serviceToken) {
-		this.serviceToken = serviceToken;
-	}
-
-	/**
-	 * Get a string representation of the instance
-	 *
-	 * @return A string representation of the object
-	 */
-	@Override
-	public String toString() {
-		return "BaseEntityUtils [" + (realm != null ? "realm=" + realm : "") + ": "
-				+ StringUtils.abbreviateMiddle(token, "...", 30) + "]";
-	}
-
-	/**
-	 * Fetch the user base entity of the {@link GennyToken} used to initialise the
-	 * BaseEntityUtils
+	 * Fetch the user base entity of the {@link UserToken}.
 	 * 
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-		return this.getBaseEntityByCode("PRJ_" + this.getGennyToken().getRealm().toUpperCase());
+		return this.getBaseEntityByCode("PRJ_" + userToken.getProductCode().toUpperCase());
 	}
 
 	/**
-	 * Fetch the user base entity of the {@link GennyToken} used to initialise the
-	 * BaseEntityUtils
+	 * Fetch the user base entity of the {@link UserToken}
 	 * 
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
-		return this.getBaseEntityByCode(this.getGennyToken().getUserCode());
-	}
-
-	/**
-	 * Update the {@link GennyToken} of this utils instance. Unlike the standard
-	 * setter method, this will also update the token and the realm.
-	 *
-	 * @param gennyToken The genny token to update with
-	 */
-	public void updateGennyToken(GennyToken gennyToken) {
-		this.token = gennyToken.getToken();
-		this.realm = gennyToken.getRealm();
-		this.gennyToken = gennyToken;
+		return this.getBaseEntityByCode(userToken.getUserCode());
 	}
 
 	/**
@@ -185,7 +85,7 @@ public class BaseEntityUtils implements Serializable {
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
 
-		return CacheUtils.getObject(this.realm, code, BaseEntity.class);
+		return CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
 	}
 
 	/**
@@ -200,22 +100,26 @@ public class BaseEntityUtils implements Serializable {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, this.token);
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
 
-		if (response != null) {
-			String body = response.body();
-			log.info("Post " + searchBE.getCode() + " to url " + uri + ", response code:" + response.statusCode());
+		if (response == null) {
+			log.error("Null response from " + uri);
+			return null;
+		}
 
-			if (body != null) {
-				try {
-					// deserialise and grab entities
-					QSearchBeResult results = jsonb.fromJson(body, QSearchBeResult.class);
-					return Arrays.asList(results.getEntities());
-				} catch (Exception e) {
-					log.error(e.getMessage());
-					e.printStackTrace();
-				}
-			}
+		Integer status = response.statusCode();
+
+		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
+			log.error("Bad response status " + status + " from " + uri);
+		}
+
+		try {
+			// deserialise and grab entities
+			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+			return Arrays.asList(results.getEntities());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
 		}
 
 		return null;
@@ -233,7 +137,7 @@ public class BaseEntityUtils implements Serializable {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, this.token);
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
 		String body = response.body();
 
 		if (body != null) {
@@ -573,7 +477,7 @@ public class BaseEntityUtils implements Serializable {
 			}
 
 			// update target in the cache
-			CacheUtils.putObject(realm, target.getCode(), target);
+			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
 
 			// update target in the DB
 			DatabaseUtils databaseUtils = new DatabaseUtils();
@@ -594,9 +498,8 @@ public class BaseEntityUtils implements Serializable {
 	 */
 	public BaseEntity create(final String defCode) throws Exception {
 
-		String realm = this.getGennyToken().getRealm();
 		DefUtils defUtils = new DefUtils();
-		BaseEntity defBE = defUtils.getDefMap(realm).get(defCode);
+		BaseEntity defBE = defUtils.getDefMap().get(defCode);
 
 		return create(defBE);
 	}
@@ -673,7 +576,7 @@ public class BaseEntityUtils implements Serializable {
 			}
 			item = new BaseEntity(code.toUpperCase(), name);
 
-			item.setRealm(getRealm());
+			item.setRealm(userToken.getProductCode());
 		}
 
 		if (item != null) {
@@ -753,13 +656,13 @@ public class BaseEntityUtils implements Serializable {
 				}
 			}
 			// this is a user, generate keycloak id
-			uuid = KeycloakUtils.createDummyUser(serviceToken.getToken(), serviceToken.getRealm());
+			uuid = KeycloakUtils.createDummyUser(userToken.getToken(), userToken.getKeycloakRealm());
 			Optional<String> optCode = defBE.getValue("PRI_PREFIX");
 			if (optCode.isPresent()) {
 				String name = defBE.getName();
 				String code = optCode.get() + "_" + uuid.toUpperCase();
 				item = new BaseEntity(code, name);
-				item.setRealm(getRealm());
+				item.setRealm(userToken.getProductCode());
 				// item = QwandaUtils.createBaseEntityByCode(code, name, qwandaServiceUrl,
 				// this.token);
 				if (item != null) {
@@ -785,7 +688,7 @@ public class BaseEntityUtils implements Serializable {
 					// NOTE: Maybe should be moved to run for all BEs
 					Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
 					item.addAnswer(
-							new Answer(item, item, lnkAuthorAttr, "[\"" + getGennyToken().getUserCode() + "\"]"));
+							new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 				} else {
 					log.error("create BE returned NULL for " + code);
 				}
