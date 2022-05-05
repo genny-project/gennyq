@@ -5,6 +5,13 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
+import javax.sql.CommonDataSource;
+
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import org.jboss.logging.Logger;
@@ -106,12 +113,32 @@ public class Service {
 		userToken.init(token);
 
 		// add list of allowed products
+		String[] products = getProductCodes();
+		if(products != null)
+			serviceToken.setAllowedProducts(products);
+		else log.error("Could not resolve allowed products from either PROJECT_REALM or PRODUCT_CODES env. Ensure they are defined!");
+	}
+
+	/**
+	 * Fetch the Product Codes from the PRODUCT_CODES. If PRODUCT_CODES are unset use PROJECT_REALM
+	 * @return
+	 */
+	private String[] getProductCodes() {
+		String projectRealm = CommonUtils.getSystemEnv("PROJECT_REALM", false);
 		String allowedProducts = CommonUtils.getSystemEnv("PRODUCT_CODES");
+		String[] products = null;
 		if (allowedProducts != null) {
-			serviceToken.setAllowedProducts(allowedProducts.split(":"));
-		} else {
-			log.error("No PRODUCT_CODES Found");
+			// Ensure we have unique product codes
+			products = Arrays.asList(allowedProducts.split(":"))
+							.stream()
+							.collect(Collectors.toSet())
+							.toArray(new String[0]);
+		} else if(projectRealm != null) {
+			products = new String[1];
+			products[0] = projectRealm;
 		}
+
+		return products;
 	}
 
 	/**
