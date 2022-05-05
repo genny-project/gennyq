@@ -336,7 +336,7 @@ public class QuestionUtils {
 		// Identify all the attributeCodes and build up a working active Set
 		Set<String> activeAttributeCodes = new HashSet<String>();
 		for (Ask ask : msg.getItems()) {
-			activeAttributeCodes.addAll(getAttributeCodes(ask));
+			activeAttributeCodes.addAll(recursivelyGetAttributeCodes(activeAttributeCodes, ask));
 
 			// Go down through the child asks and get cached questions
 			setCachedQuestionsRecursively(ask);
@@ -360,27 +360,28 @@ public class QuestionUtils {
 	}
 
 	/**
-	 * Get all attributes used by an {@link Ask} and its children.
-	 *
-	 * @param ask The ask to traverse.
-	 * @return A set of Strings containing the attribute codes.
+	* Get all attribute codes active within an ask using recursion.
+	*
+	* @param codes The set of codes to add to
+	* @param ask The ask to traverse
+	* @return The udpated set of codes
 	 */
-	private Set<String> getAttributeCodes(Ask ask) {
+	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
 
 		// grab attribute code of current ask
-		Set<String> activeCodes = new HashSet<String>();
-		activeCodes.add(ask.getAttributeCode());
+		codes.add(ask.getAttributeCode());
 
 		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
 
 			// grab all child ask attribute codes
 			for (Ask childAsk : ask.getChildAsks()) {
 
-				activeCodes.addAll(getAttributeCodes(childAsk));
+				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
 			}
 		}
-		return activeCodes;
+		return codes;
 	}
+	
 
 	/**
 	 * @param sourceCode   the sourceCode to use

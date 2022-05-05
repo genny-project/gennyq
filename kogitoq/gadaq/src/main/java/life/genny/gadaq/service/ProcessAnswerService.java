@@ -2,6 +2,8 @@ package life.genny.gadaq.service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -23,7 +25,6 @@ import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -32,163 +33,206 @@ import life.genny.serviceq.Service;
 @ApplicationScoped
 public class ProcessAnswerService {
 
-    private static final Logger log = Logger.getLogger(ProcessAnswerService.class);
+	private static final Logger log = Logger.getLogger(ProcessAnswerService.class);
 
-    Jsonb jsonb = JsonbBuilder.create();
-    @Inject
-    QuestionUtils questionUtils;
-
-    @Inject
-    DatabaseUtils databaseUtils;
-
-    @Inject
-    QwandaUtils qwandaUtils;
-
-    @Inject
-    TaskService taskService;
-
-    @Inject
-    BaseEntityUtils beUtils;
+	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
 	UserToken userToken;
 
-    @Inject
-    EntityManager entityManager;
+	@Inject
+	QuestionUtils questionUtils;
 
-    @Inject
-    Service service;
+	@Inject
+	DatabaseUtils databaseUtils;
 
-    public BaseEntity processBaseEntity(QDataAnswerMessage answerMessage, QDataAskMessage askMessage, BaseEntity processBE) {
+	@Inject
+	QwandaUtils qwandaUtils;
 
-        Answer answer = null;
-        if (answerMessage.getItems().length > 0) {
-            answer = answerMessage.getItems()[0];
-            answer.setAttribute(qwandaUtils.getAttribute(answer.getAttributeCode()));
-            String originalValue = processBE.getValueAsString(answer.getAttributeCode());
-            log.info("Original Value for " + answer.getAttributeCode() + " into processBE as " + originalValue);
-            try {
-                processBE.addAnswer(answer);
-            } catch (BadDataException e) {
-                e.printStackTrace();
-            }
-        }
+	@Inject
+	TaskService taskService;
 
-        // Check value saved
-        String savedValue = processBE.getValueAsString(answer.getAttributeCode());
-        log.info("Saved Value into processBE " + answer.getAttributeCode() + " as " + savedValue);
+	@Inject
+	BaseEntityUtils beUtils;
 
-        return processBE;
-    }
+	@Inject
+	Service service;
 
-    public Boolean checkMandatory(QDataAskMessage askMessage, BaseEntity processBE) {
+	@Inject
+	EntityManager entityManager;
 
-        Boolean mandatoryUnanswered = false;
-        Map<String, Boolean> mandatoryAttributeMap = new HashMap<>();
+	/**
+	 * Save incoming answers to the process baseentity.
+	 *
+	 * @param answerMessage The incoming answers
+	 * @param askMessage The ask message representing the questions
+	 * @param processBE The process entity to store the answer data
+	 * @return The updated process baseentity
+	 */
+	public BaseEntity storeIncomingAnswers(QDataAnswerMessage answerMessage, QDataAskMessage askMessage, BaseEntity processBE) {
 
-        // Show the Current Answer List
-        log.info("Current ProcessQuestion Results for: " + processBE.getCode());
+		// iterate incoming answers
+		for (Answer answer : answerMessage.getItems()) {
 
-        Ask submitAsk = null; // identify the submit ask
+			// ensure the target code matches
+			if (!answer.getTargetCode().equals(processBE.getCode())) {
+				log.warn("Found an Answer with a bad target code : " + answer.getTargetCode());
+				continue;
+			}
 
-        for (Ask ask : askMessage.getItems()) {
-            if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
-                // dumb single level
-                for (Ask childAsk : ask.getChildAsks()) {
-                    if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
-                        for (Ask grandChildAsk : childAsk.getChildAsks()) {
-                            mandatoryAttributeMap.put(grandChildAsk.getAttributeCode(), grandChildAsk.getMandatory());
-                            if (grandChildAsk.getAttributeCode().equals("PRI_SUBMIT")) {
-                                submitAsk = grandChildAsk;
-                            }
-                        }
-                    } else {
-                        mandatoryAttributeMap.put(childAsk.getAttributeCode(), childAsk.getMandatory());
-                        if (childAsk.getAttributeCode().equals("PRI_SUBMIT")) {
-                            submitAsk = childAsk;
-                        }
-                    }
-                }
-            } else {
-                mandatoryAttributeMap.put(ask.getAttributeCode(), ask.getMandatory());
-                if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
-                    submitAsk = ask;
-                }
-            }
-        }
+			// find the attribute
+			String attributeCode = answer.getAttributeCode();
+			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+			answer.setAttribute(attribute);
 
-        String targetCode = askMessage.getItems()[0].getTargetCode();
-        BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-        if (target == null) {
-            log.error("Target is null : targetCode=" + targetCode);
-        }
-        for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
-            Boolean mandatory = mandatoryAttributeMap.get(ea.getAttributeCode());
-            if (mandatory == null) {
-                mandatory = false;
-            }
-            String oldValue = target.getValueAsString(ea.getAttributeCode());
-            String value = ea.getAsString();
-            if (oldValue == null) {
-                oldValue = "";
-            }
-            if (value == null) {
-                value = "";
-            }
-            Boolean changed = !oldValue.equals(value);
+			// debug log the value before saving
+			String currentValue = processBE.getValueAsString(attributeCode);
+			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
 
-            String resultLine = (mandatory ? "M" : "o") + ":"
-                    + (changed ? "X"
-                            : ".")
-                    + ":"
-                    + ea.getAttributeCode() + ":"
-                    + ":" + value;
-            log.info("===>" + resultLine);
+			// update the baseentity
+			try {
+				processBE.addAnswer(answer);
+			} catch (BadDataException e) {
+				e.printStackTrace();
+			}
 
-            if ((StringUtils.isBlank(value)) && (mandatory)) {
-                mandatoryUnanswered = true;
-            }
-        }
+			// log the new value
+			String savedValue = processBE.getValueAsString(answer.getAttributeCode());
+			log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue);
+		}
 
-        log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " filled in ");
-        if (submitAsk != null) {
-            taskService.enableTaskQuestion(submitAsk, !mandatoryUnanswered);
-        }
-        return !mandatoryUnanswered;
-    }
+		return processBE;
+	}
 
-    @Transactional
-    public void saveAllAnswers(String sourceCode, String targetCode, BaseEntity processBE) {
+	/**
+	 * Check if all mandatory questions have been answered.
+	 *
+	 * @param askMessage The ask message representing the questions
+	 * @param processBE The process entity storing the answer data
+	 * @return Boolean representing whether all mandatory questions have been answered
+	 */
+	public Boolean checkMandatory(QDataAskMessage askMessage, BaseEntity processBE) {
 
-        BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		log.info("Checking mandatorys against " + processBE.getCode());
 
-        // Now to go through all the fields and override them in the target BE
-        for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
-            Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
+		Boolean mandatoryUnanswered = false;
 
-            if (target.containsEntityAttribute(ea.getAttributeCode())) {
-                try {
-                    target.setValue(attribute, ea.getValue());
-                } catch (BadDataException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                EntityAttribute newEA = new EntityAttribute(target, attribute, ea.getWeight(), ea.getValue());
-                newEA.setRealm(target.getRealm());
-                entityManager.persist(newEA);
-                target.getBaseEntityAttributes().add(newEA);
-            }
-        }
+		// find the submit ask
+		Ask submit = null;
+		for (Ask ask : askMessage.getItems()) {
+			submit = recursivelyCheckForSubmit(ask);
+			if (submit != null) {
+				break;
+			}
+		}
 
-        CacheUtils.putObject(target.getRealm(), target.getCode(), target);
+		// find all the mandatory booleans
+		Map<String, Boolean> map = new HashMap<>();
+		for (Ask ask : askMessage.getItems()) {
+			map = recursivelyFillMandatoryMap(map, ask);
+		}
 
-        // update target in the DB
-        if (target.getId() == null) {
-            entityManager.persist(target);
-        } else {
-            entityManager.merge(target);
-        }
-        log.info("Saved target " + target.getCode());
-    }
+		// TODO: Fix this!
+		// this assumes all asks are targeting the same entity
+		BaseEntity target = beUtils.getBaseEntityByCode(askMessage.getItems()[0].getTargetCode());
+		if (target == null) {
+			log.error("Target is null");
+			return null;
+		}
+
+		Boolean answered = true;
+
+		// iterate entity attributes to check which have been answered
+		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
+
+			String attributeCode = ea.getAttributeCode();
+			Boolean mandatory = map.get(attributeCode);
+
+			String value = ea.getAsString();
+
+			// if any are both blank and mandatory, then task is not complete
+			if ((StringUtils.isBlank(value)) && (mandatory)) {
+				answered = false;
+			}
+
+			String resultLine = (mandatory?"M":"O")+ " : " + ea.getAttributeCode() + " : " + value; 
+			log.info("===>" + resultLine);
+		}
+
+		log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " complete");
+
+		// enable/disable the submit according to answered var
+		if (submit != null) {
+			taskService.enableTaskQuestion(submit, answered);
+		}
+
+		return answered;
+	}
+
+	/**
+	 * Find the submit ask using recursion.
+	 *
+	 * @param ask The ask to traverse
+	 * @return The submit ask
+	 */
+	public Ask recursivelyCheckForSubmit(Ask ask) {
+
+		if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
+			return ask;
+		}
+
+		for (Ask child : ask.getChildAsks()) {
+
+			Ask childSubmit = recursivelyCheckForSubmit(child);
+
+			if (childSubmit != null) {
+				return childSubmit;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Fill the mandatory map using recursion.
+	 *
+	 * @param map The map to fill
+	 * @param ask The ask to traverse
+	 * @return The filled map
+	 */
+	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
+
+		map.put(ask.getAttributeCode(), ask.getMandatory());
+
+		for (Ask child : ask.getChildAsks()) {
+			map = recursivelyFillMandatoryMap(map, child);
+		}
+
+		return map;
+	}
+
+	/**
+	 * Save all answers gathered in the processBE.
+	 *
+	 * @param sourceCode The source of the answers
+	 * @param targetCode The target of the answers
+	 * @param processBE The process entity that is storing the answer data
+	 */
+	@Transactional
+	public void saveAllAnswers(String sourceCode, String targetCode, BaseEntity processBE) {
+
+		List<Answer> answers = new ArrayList<>();
+
+		// iterate our stored process updates and create an answer
+		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
+			// TODO: Check if this needs greater dataType precision
+			Answer answer = new Answer(sourceCode, targetCode, ea.getAttributeCode(), ea.getValueString());
+			answers.add(answer);
+		}
+
+		// save these answrs to db and cache
+		beUtils.saveAnswers(answers);
+		log.info("Saved answers for target " + targetCode);
+	}
 
 }
