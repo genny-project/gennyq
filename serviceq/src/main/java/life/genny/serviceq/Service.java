@@ -5,11 +5,8 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-import javax.sql.CommonDataSource;
 
 import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -45,8 +42,8 @@ public class Service {
 	@ConfigProperty(name = "genny.keycloak.url")
 	String keycloakUrl;
 
-	@ConfigProperty(name = "genny.keycloak.realm")
-	String keycloakRealm;
+	// @ConfigProperty(name = "genny.keycloak.realm")
+	String keycloakRealm = "internmatch";
 
 	@ConfigProperty(name = "genny.service.username")
 	String serviceUsername;
@@ -191,7 +188,7 @@ public class Service {
 	 * log the service confiduration details.
 	 */
 	public void showConfiguration() {
-
+		log.info("Based updates");
 		if (showValues) {
 			log.info("service username  : " + serviceUsername);
 			log.info("service password  : " + servicePassword);

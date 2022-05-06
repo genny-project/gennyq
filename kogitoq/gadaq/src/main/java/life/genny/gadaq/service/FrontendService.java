@@ -32,210 +32,175 @@ import life.genny.serviceq.Service;
 @ApplicationScoped
 public class FrontendService {
 
-    private static final Logger log = Logger.getLogger(FrontendService.class);
+	private static final Logger log = Logger.getLogger(FrontendService.class);
 
-    Jsonb jsonb = JsonbBuilder.create();
-    @Inject
-    QuestionUtils questionUtils;
-
-    @Inject
-    DatabaseUtils databaseUtils;
-
-    @Inject
-    QwandaUtils qwandaUtils;
-
-    @Inject
-    BaseEntityUtils beUtils;
+	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
 	UserToken userToken;
 
-    @Inject
-    EntityManager entityManager;
+	@Inject
+	Service service;
 
-    @Inject
-    Service service;
+	@Inject
+	QuestionUtils questionUtils;
 
-    public void sendQDataAskMessage(final QDataAskMessage askMsg) {
-        KafkaUtils.writeMsg("webcmds", askMsg);
-    }
+	@Inject
+	DatabaseUtils databaseUtils;
 
-    public void sendQuestions(final String questionCode, final String sourceCode, final String targetCode) {
+	@Inject
+	QwandaUtils qwandaUtils;
 
-        log.info("Sending Question using Service! : " + questionCode + ":" + sourceCode + ":" + targetCode);
+	@Inject
+	BaseEntityUtils beUtils;
 
-        QDataAskMessage msg = null;
+	@Inject
+	EntityManager entityManager;
 
-        BaseEntity source = null;
-        BaseEntity target = null;
+	/**
+	 * Get asks using a question code, for a given source and target.
+	 *
+	 * @param questionCode The question code used to fetch asks
+	 * @param sourceCode The code of the source entity
+	 * @param targetCode The code of the target entity
+	 * @param processId The processId to set in the asks
+	 * @return The ask message
+	 */
+	public QDataAskMessage getAsks(String questionCode, String sourceCode, String targetCode, String processId) {
 
-        source = beUtils.getBaseEntityByCode(sourceCode);
-        target = beUtils.getBaseEntityByCode(targetCode);
+		log.info("questionCode :" + questionCode);
+		log.info("sourceCode :" + sourceCode);
+		log.info("targetCode :" + targetCode);
+		log.info("processId :" + processId);
 
-        if (source == null) {
-            log.error("Source BE not found for original " + sourceCode);
-            source = beUtils.getUserBaseEntity();
-        }
+		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
-        // Fetch the Asks
-        msg = getQDataAskMessage(questionCode, source, target);
+		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 
-        questionUtils.sendQuestions(msg, target);
-    }
+		Question rootQuestion = questionUtils.getQuestion(questionCode);
+		List<Ask> asks = questionUtils.findAsks(rootQuestion, source, target);
 
-    public BaseEntity setupProcessBE(final String targetCode, final BaseEntity processBE, QDataAskMessage qDataAskMessage) {
+		// create ask msg from asks
+		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
 
-        // Force the realm
-        processBE.setRealm(userToken.getProductCode());
+		// TODO: make this recursive
+		// update the processId
+		for (Ask ask : msg.getItems()) {
+			ask.setProcessId(processId);
+		}
 
-        // only copy the entityAttributes used in the Asks
-        BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-        Set<String> allowedAttributeCodes = new HashSet<>();
+		return msg;
+	}
 
-        for (Ask ask : qDataAskMessage.getItems()) {
-            allowedAttributeCodes.add(ask.getAttributeCode());
-            if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
-                // dumb single level
-                for (Ask childAsk : ask.getChildAsks()) {
-                    if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
-                        for (Ask grandChildAsk : childAsk.getChildAsks()) {
-                            allowedAttributeCodes.add(grandChildAsk.getAttributeCode());
-                        }
-                    } else {
-                        allowedAttributeCodes.add(childAsk.getAttributeCode());
-                    }
-                }
-            }
-        }
-        log.info("Number of Asks = " + allowedAttributeCodes.size());
-        for (String attributeCode : allowedAttributeCodes) {
-            EntityAttribute ea = target.findEntityAttribute(attributeCode).orElse(null);
-            if (ea == null) {
-                Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-                ea = new EntityAttribute(processBE, attribute, 1.0, null);
-            }
-            processBE.getBaseEntityAttributes().add(ea);
-        }
-        log.info("Number of BE eas = " + processBE.getBaseEntityAttributes().size());
+	/**
+	 * Setup the process entity used to store task data.
+	 *
+	 * @param targetCode The code of the target entity
+	 * @param processBE The process entity to setup
+	 * @param askMsg The ask message to use in setup
+	 * @return The updated process entity
+	 */
+	public BaseEntity setupProcessBE(String targetCode, BaseEntity processBE, QDataAskMessage askMsg) {
 
-        log.info("Leaving updateProcessBE");
-        return processBE;
-    }
+		// force the realm
+		processBE.setRealm(userToken.getProductCode());
 
-    public QDataAskMessage getQDataAskMessage(String questionGroupCode, BaseEntity sourceBE, BaseEntity targetBE) {
+		// only copy the entityAttributes used in the Asks
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
-        log.info("getting QDataAskMessage using Service!  : " + questionGroupCode + ":" + sourceBE.getCode()
-                + ":" + targetBE.getCode());
+		// find all allowed attribute codes
+		Set<String> attributeCodes = new HashSet<>();
+		for (Ask ask : askMsg.getItems()) {
+			attributeCodes.addAll(questionUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
+		}
 
-        Question rootQuestion = questionUtils.getQuestion(questionGroupCode);
+		log.info("Found " + attributeCodes.size() + " active attributes in asks");
 
-        List<Ask> asks = questionUtils.findAsks(rootQuestion, sourceBE, targetBE);
+		// add an entityAttribute to process entity for each attribute
+		for (String code : attributeCodes) {
 
-        QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[0]));
-        msg.setToken(userToken.getToken());
+			EntityAttribute ea = target.findEntityAttribute(code).orElse(null);
+			if (ea == null) {
+				Attribute attribute = qwandaUtils.getAttribute(code);
+				ea = new EntityAttribute(processBE, attribute, 1.0, null);
+			}
+			processBE.getBaseEntityAttributes().add(ea);
+		}
 
-        return msg;
-    }
+		log.info("ProcessBE contains " + processBE.getBaseEntityAttributes().size() + " entity attributes");
 
-    public void sendBaseEntityJson(final String beCode, final String qDataAskMessageJson) {
+		return processBE;
+	}
 
-        QDataAskMessage askMsg = jsonb.fromJson(qDataAskMessageJson, QDataAskMessage.class);
-        sendBaseEntity(beCode, askMsg);
-    }
+	/**
+	 * Send a baseentity after filtering the entity attributes 
+	 * based on the questions in the ask message.
+	 *
+	 * @param code The code of the baseentity to send
+	 * @param askMsg The ask message used to filter attributes
+	 */
+	public void sendBaseEntity(final String code, final QDataAskMessage askMsg) {
 
-    public void sendBaseEntity(final String beCode, final QDataAskMessage qDataAskMessage) {
+		// only send the attribute values that are in the questions
+		BaseEntity entity = beUtils.getBaseEntityByCode(code);
 
-        // only send the attribute values that are in the questions
-        BaseEntity be = beUtils.getBaseEntityByCode(beCode);
-        Set<String> allowedAttributeCodes = new HashSet<>();
-        // FIX TODO
-        for (Ask ask : qDataAskMessage.getItems()) {
-            allowedAttributeCodes.add(ask.getAttributeCode());
-            if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
-                // dumb single level
-                for (Ask childAsk : ask.getChildAsks()) {
-                    if ((childAsk.getChildAsks() != null) && (childAsk.getChildAsks().length > 0)) {
-                        for (Ask grandChildAsk : childAsk.getChildAsks()) {
-                            allowedAttributeCodes.add(grandChildAsk.getAttributeCode());
-                        }
-                    } else {
-                        allowedAttributeCodes.add(childAsk.getAttributeCode());
-                    }
-                }
-            }
-        }
+		// find all allowed attribute codes
+		Set<String> attributeCodes = new HashSet<>();
+		for (Ask ask : askMsg.getItems()) {
+			attributeCodes.addAll(questionUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
+		}
 
-        Set<EntityAttribute> eas = ConcurrentHashMap.newKeySet(be.getBaseEntityAttributes().size());
-        for (EntityAttribute ea : be.getBaseEntityAttributes()) {
-            eas.add(ea);
-        }
-        // Now delete any attribute that is not in the allowed Set
-        for (EntityAttribute ea : eas) {
-            if (!allowedAttributeCodes.contains(ea.getAttributeCode())) {
-                be.removeAttribute(ea.getAttributeCode());
-            }
-        }
+		// grab all entityAttributes from the entity
+		Set<EntityAttribute> entityAttributes = ConcurrentHashMap.newKeySet(entity.getBaseEntityAttributes().size());
+		for (EntityAttribute ea : entity.getBaseEntityAttributes()) {
+			entityAttributes.add(ea);
+		}
 
-        // // Send to front end
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
-        msg.setToken(userToken.getToken());
-        msg.setReplace(true);
-        KafkaUtils.writeMsg("webcmds", msg);
-    }
+		// delete any attribute that is not in the allowed Set
+		for (EntityAttribute ea : entityAttributes) {
+			if (!attributeCodes.contains(ea.getAttributeCode())) {
+				entity.removeAttribute(ea.getAttributeCode());
+			}
+		}
 
-    public QDataAskMessage getAsks(final String questionGroupCode, final String sourceCode, final String targetCode,
-            final String processId) {
+		// send entity front end
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(entity);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg("webcmds", msg);
+	}
 
-        log.info("questionGroupCode :" + questionGroupCode);
-        log.info("sourceCode :" + sourceCode);
-        log.info("targetCode :" + targetCode);
-        log.info("processId :" + processId);
+	/**
+	 * Send an ask message to the frontend through the webdata topic.
+	 *
+	 * @param askMsg The ask message to send
+	 */
+	public void sendQDataAskMessage(final QDataAskMessage askMsg) {
+		KafkaUtils.writeMsg("webdata", askMsg);
+	}
 
-        log.info("Getting Asks using Service! : " + questionGroupCode + ":" + sourceCode
-                + ":" + targetCode);
+	/**
+	 * Send a command message based on a PCM code.
+	 *
+	 * @param code The code of the PCM baseentity
+	 */
+	public void sendPCM(final String code) {
 
-        BaseEntity source = null;
-        BaseEntity target = null;
+		// default command
+		QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
 
-        source = beUtils.getBaseEntityByCode(sourceCode);
-        target = beUtils.getBaseEntityByCode(targetCode);
+		// only change the command if code is not for a PCM
+		if (!code.startsWith("PCM")) {
+			String[] displayParms = code.split(":");
+			msg = new QCmdMessage(displayParms[0], displayParms[1]);
+		}
 
-        QDataAskMessage askMsg = getQDataAskMessage(questionGroupCode, source, target);
-
-        for (Ask ask : askMsg.getItems()) {
-            ask.setProcessId(processId);
-        }
-
-        return askMsg;
-    }
-
-    public void sendPCM(final String pcmCode) {
-
-		QCmdMessage msg = null;
-        if (pcmCode.startsWith("PCM")) {
-            msg = new QCmdMessage("DISPLAY", "FORM");
-        } else {
-            String[] displayParms = pcmCode.split(":");
-            msg = new QCmdMessage(displayParms[0], displayParms[1]);
-        }
-
+		// send to frontend
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("webcmds", msg);
-    }
+	}
 
-    public void sendQuestions(QDataAskMessage askMsg, BaseEntity target) {
-
-		String token = userToken.getToken();
-
-        QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
-        msg.setToken(token);
-        KafkaUtils.writeMsg("webcmds", msg);
-
-        QDataBaseEntityMessage beMsg = new QDataBaseEntityMessage(target);
-        beMsg.setToken(token);
-        KafkaUtils.writeMsg("webdata", beMsg);
-
-        askMsg.setToken(token);
-        KafkaUtils.writeMsg("webdata", askMsg);
-    }
 }
