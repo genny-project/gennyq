@@ -58,6 +58,7 @@ public class GennyCache {
 
 	@PostConstruct
 	public void init() {
+		log.info("Initialiing RemoteCacheManager");
 		initRemoteCacheManager();
 		log.info("RemoteCacheManager Initialized!");
 	}
