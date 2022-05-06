@@ -38,7 +38,6 @@ import org.infinispan.protostream.SerializationContextInitializer;
  * 
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
 public class GennyCache {
 
