@@ -41,20 +41,21 @@ import org.infinispan.protostream.SerializationContextInitializer;
 @RegisterForReflection
 @ApplicationScoped
 public class GennyCache {
-	
+
 	static final Logger log = Logger.getLogger(GennyCache.class);
 
-    Set<String> realms = new HashSet<String>();
+	Set<String> realms = new HashSet<String>();
 
-    private Map<String, RemoteCache> caches = new HashMap<>();
+	private Map<String, RemoteCache> caches = new HashMap<>();
 
-    private RemoteCacheManager remoteCacheManager;
+	@Inject
+	private RemoteCacheManager remoteCacheManager;
 
 	public static final String HOTROD_CLIENT_PROPERTIES = "hotrod-client.properties";
 
 	/*@Inject GennyCache(RemoteCacheManager remoteCacheManager) {
-       this.remoteCacheManager = remoteCacheManager;
-    }*/
+	  this.remoteCacheManager = remoteCacheManager;
+	  }*/
 
 	@PostConstruct
 	public void init() {
@@ -83,7 +84,7 @@ public class GennyCache {
 		remoteCacheManager = new RemoteCacheManager(config);
 		remoteCacheManager.getConfiguration().marshallerClass();
 	}
- 
+
 	private List<SerializationContextInitializer> getAllSerializationContextInitializers() {
 		List<SerializationContextInitializer> serCtxInitList = new LinkedList<>();
 		SerializationContextInitializer sci = new BaseEntityInitializerImpl();
@@ -102,12 +103,12 @@ public class GennyCache {
 	}
 
 	/**
-	* Return a remote cache for the given realm.
-	*
-	* @param realm 
-	* 		the associated realm of the desired cache
-	* @return RemoteCache&lt;String, String&gt; 
-	* 		the remote cache associatd with the realm
+	 * Return a remote cache for the given realm.
+	 *
+	 * @param realm 
+	 * 		the associated realm of the desired cache
+	 * @return RemoteCache&lt;String, String&gt; 
+	 * 		the remote cache associatd with the realm
 	 */
 	public RemoteCache<String, String> getRemoteCache(final String realm) {
 
