@@ -126,6 +126,7 @@ public class QwandaUtils {
 
 
 				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
+				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 
 				for (Attribute attribute : attributeList) {
 					String key = attribute.getCode();
@@ -134,9 +135,10 @@ public class QwandaUtils {
 				}
 
 				// NOTE: Warning, this may cause OOM errors.
+				log.info("pre oom");
 				msg.add(attributeList);
+				log.info("post oom");
 
-				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 
 				if (attributeList.size() > 0) {
 					log.debug("Start AttributeID:" 
