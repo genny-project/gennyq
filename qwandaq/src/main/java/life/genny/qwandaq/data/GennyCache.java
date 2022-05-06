@@ -47,7 +47,7 @@ public class GennyCache {
 
 	private Map<String, RemoteCache> caches = new HashMap<>();
 
-	@Inject
+	// @Inject
 	private RemoteCacheManager remoteCacheManager;
 
 	public static final String HOTROD_CLIENT_PROPERTIES = "hotrod-client.properties";
