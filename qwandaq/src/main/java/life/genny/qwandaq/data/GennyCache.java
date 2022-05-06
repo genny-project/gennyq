@@ -52,9 +52,10 @@ public class GennyCache {
 
 	public static final String HOTROD_CLIENT_PROPERTIES = "hotrod-client.properties";
 
-	/*@Inject GennyCache(RemoteCacheManager remoteCacheManager) {
-	  this.remoteCacheManager = remoteCacheManager;
-	  }*/
+	// @Inject GennyCache(RemoteCacheManager remoteCacheManager) {
+	// 	log.info("RemoteCacheManager null thing: " + (remoteCacheManager != null));
+	//   this.remoteCacheManager = remoteCacheManager;
+	//   }
 
 	@PostConstruct
 	public void init() {
@@ -64,24 +65,37 @@ public class GennyCache {
 	}
 
 	private void initRemoteCacheManager() {
+		// TODO: Remove bad logs
+		log.info("1");
 		ConfigurationBuilder builder = new ConfigurationBuilder();
+		log.info("2");
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		log.info("3");
 		builder.classLoader(cl);
+		log.info("4");
 		InputStream stream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
+		log.info("5");
 		if (stream == null) {
 			log.error("Could not find infinispan hotrod client properties file: " + HOTROD_CLIENT_PROPERTIES);
 			return;
 		} else {
 			try {
+				log.info("6");
 				builder.withProperties(loadFromStream(stream));
+				log.info("7");
 			} finally {
 				Util.close(stream);
+				log.info("8");
 			}
 		}
 		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
+		log.info("9");
 		Configuration config = builder.build();
+		log.info("10");
 		remoteCacheManager = new RemoteCacheManager(config);
+		log.info("11");
 		remoteCacheManager.getConfiguration().marshallerClass();
+		log.info("12");
 	}
 
 	private List<SerializationContextInitializer> getAllSerializationContextInitializers() {
