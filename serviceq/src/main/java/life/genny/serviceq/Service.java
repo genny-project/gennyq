@@ -42,8 +42,8 @@ public class Service {
 	@ConfigProperty(name = "genny.keycloak.url")
 	String keycloakUrl;
 
-	// @ConfigProperty(name = "genny.keycloak.realm")
-	String keycloakRealm = "internmatch";
+	@ConfigProperty(name = "genny.keycloak.realm")
+	String keycloakRealm;
 
 	@ConfigProperty(name = "genny.service.username")
 	String serviceUsername;

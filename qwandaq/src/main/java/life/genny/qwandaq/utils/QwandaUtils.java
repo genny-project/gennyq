@@ -100,8 +100,6 @@ public class QwandaUtils {
 	 */
 	public void loadAllAttributesIntoCache(String productCode) {
 
-		List<Attribute> attributeList = null;
-
 		Long attributeCount = databaseUtils.countAttributes(productCode);
 		final Integer CHUNK_LOAD_SIZE = 200;
 
@@ -117,6 +115,7 @@ public class QwandaUtils {
 		try {
 			for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
+
 				int attributesLoaded = currentPage * CHUNK_LOAD_SIZE;
 
 				// Correctly determine how many more attributes we need to load in
@@ -126,7 +125,8 @@ public class QwandaUtils {
 				}
 
 
-				attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
+				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
+				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 
 				for (Attribute attribute : attributeList) {
 					String key = attribute.getCode();
@@ -135,9 +135,10 @@ public class QwandaUtils {
 				}
 
 				// NOTE: Warning, this may cause OOM errors.
+				log.info("pre oom");
 				msg.add(attributeList);
+				log.info("post oom");
 
-				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 
 				if (attributeList.size() > 0) {
 					log.debug("Start AttributeID:" 
