@@ -4,8 +4,10 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import javax.inject.Inject;
 import life.genny.bridge.blacklisting.BlackListInfo;
+import life.genny.bridge.model.grpc.Item;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 import life.genny.qwandaq.security.keycloak.TokenVerification;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -28,6 +30,7 @@ public class InternalConsumer {
 	@Inject TokenVerification verification;
 	@Inject EventBus bus;
 	@Inject BlackListInfo blackList;
+	@Inject BridgeGrpcService grpcService;
 	@Inject GennyScopeInit scope;
 	@Inject UserToken userToken;
 
@@ -111,10 +114,12 @@ public class InternalConsumer {
 			final JsonObject json = new JsonObject(incoming);
 			GennyToken gennyToken = new GennyToken(json.getString("token"));
 			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
+			KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
 
 			if (!incoming.contains("<body>Unauthorized</body>")) {
 				String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");
 				log.info("Publishing message to session " + sessionState);
+				grpcService.send(payload.jti, Item.newBuilder().setBody(removeKeys(json).toString()).build());
 				bus.publish(sessionState, removeKeys(json));
 
 			} else {

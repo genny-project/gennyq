@@ -30,6 +30,10 @@
 
 	<dependencies>
 		<dependency>
+  			<groupId>io.quarkus</groupId>
+  			<artifactId>quarkus-grpc</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>life.genny</groupId>
 			<artifactId>serviceq</artifactId>
 			<version>${genny.version}</version>
