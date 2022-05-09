@@ -55,27 +55,6 @@ public class SearchUtility {
 
 	private static final Logger log = Logger.getLogger(SearchUtility.class);
 
-	@ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak.gada.io")
-	String baseKeycloakUrl;
-
-	@ConfigProperty(name = "genny.keycloak.realm", defaultValue = "genny")
-	String keycloakRealm;
-
-	@ConfigProperty(name = "genny.service.username", defaultValue = "service")
-	String serviceUsername;
-
-	@ConfigProperty(name = "genny.service.password", defaultValue = "password")
-	String servicePassword;
-
-	@ConfigProperty(name = "genny.oidc.client-id", defaultValue = "backend")
-	String clientId;
-
-	@ConfigProperty(name = "genny.oidc.credentials.secret", defaultValue = "secret")
-	String secret;
-
-	@ConfigProperty(name = "genny.service.cache.db", defaultValue = "false")
-	Boolean cacheDB;
-
 	@Inject
 	EntityManager entityManager;
 

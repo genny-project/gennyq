@@ -37,59 +37,78 @@ import org.infinispan.protostream.SerializationContextInitializer;
  * A remote cache management class for accessing realm caches.
  * 
  * @author Jasper Robison
+ * @author Varun Shastry
  */
-@RegisterForReflection
 @ApplicationScoped
 public class GennyCache {
-	
+
 	static final Logger log = Logger.getLogger(GennyCache.class);
 
-    Set<String> realms = new HashSet<String>();
+	Set<String> realms = new HashSet<String>();
 
-    private Map<String, RemoteCache> caches = new HashMap<>();
+	private Map<String, RemoteCache> caches = new HashMap<>();
 
-    private RemoteCacheManager remoteCacheManager;
+	private RemoteCacheManager remoteCacheManager;
 
 	public static final String HOTROD_CLIENT_PROPERTIES = "hotrod-client.properties";
 
-	/*@Inject GennyCache(RemoteCacheManager remoteCacheManager) {
-       this.remoteCacheManager = remoteCacheManager;
-    }*/
-
 	@PostConstruct
 	public void init() {
+		log.info("Initializing RemoteCacheManager");
 		initRemoteCacheManager();
-		log.info("RemoteCacheManager Initialized!");
 	}
 
+	/**
+	 * Initialize the remote cache manager using the 
+	 * hotrod clcient properties file.
+	 **/
 	private void initRemoteCacheManager() {
+
 		ConfigurationBuilder builder = new ConfigurationBuilder();
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		builder.classLoader(cl);
+
+		// load infinispan properties
 		InputStream stream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
 		if (stream == null) {
 			log.error("Could not find infinispan hotrod client properties file: " + HOTROD_CLIENT_PROPERTIES);
 			return;
-		} else {
-			try {
-				builder.withProperties(loadFromStream(stream));
-			} finally {
-				Util.close(stream);
-			}
 		}
+
+		try {
+			builder.withProperties(loadFromStream(stream));
+		} finally {
+			Util.close(stream);
+		}
+
+		// create cache manager
 		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
 		remoteCacheManager = new RemoteCacheManager(config);
 		remoteCacheManager.getConfiguration().marshallerClass();
 	}
- 
+
+	/**
+	 * Get a list of {@link SerializationContextInitializer} objects 
+	 * used in configureing the cache.
+	 *
+	 * @return The list of SerializationContextInitializer objects
+	 */
 	private List<SerializationContextInitializer> getAllSerializationContextInitializers() {
+
 		List<SerializationContextInitializer> serCtxInitList = new LinkedList<>();
 		SerializationContextInitializer sci = new BaseEntityInitializerImpl();
 		serCtxInitList.add(sci);
+
 		return serCtxInitList;
 	}
 
+	/**
+	 * Load properties from an input stream.
+	 *
+	 * @param stream The stream to load from
+	 * @return The Properties object
+	 */
 	private Properties loadFromStream(InputStream stream) {
 		Properties properties = new Properties();
 		try {
@@ -101,23 +120,24 @@ public class GennyCache {
 	}
 
 	/**
-	* Return a remote cache for the given realm.
-	*
-	* @param realm 
-	* 		the associated realm of the desired cache
-	* @return RemoteCache&lt;String, String&gt; 
-	* 		the remote cache associatd with the realm
+	 * Return a remote cache for the given realm.
+	 *
+	 * @param realm 
+	 * 		the associated realm of the desired cache
+	 * @return RemoteCache&lt;String, String&gt; 
+	 * 		the remote cache associatd with the realm
 	 */
 	public RemoteCache<String, String> getRemoteCache(final String realm) {
 
 		if (realms.contains(realm)) {
 			return caches.get(realm); 
-		} else {
-			remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
-			realms.add(realm);
-			caches.put(realm, remoteCacheManager.getCache(realm)); 
-			return caches.get(realm); 
 		}
+
+		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
+		realms.add(realm);
+		caches.put(realm, remoteCacheManager.getCache(realm)); 
+
+		return caches.get(realm); 
 	}
 
 	public CoreEntity getEntityFromCache(String cacheName, String key) {
