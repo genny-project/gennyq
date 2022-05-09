@@ -1,5 +1,6 @@
 package life.genny.qwandaq.models;
 
+import life.genny.qwandaq.utils.CommonUtils;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -9,47 +10,47 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public class GennySettings {
 
 	// URLs
-	public static final String projectUrl = System.getenv("PROJECT_URL") != null ? System.getenv("PROJECT_URL")
+	public static final String projectUrl = CommonUtils.getSystemEnv("PROJECT_URL") != null ? CommonUtils.getSystemEnv("PROJECT_URL")
 			: "http://alyson7.genny.life";
-	public static final String qwandaServiceUrl = System.getenv("GENNY_API_URL") != null
-			? System.getenv("GENNY_API_URL")
+	public static final String qwandaServiceUrl = CommonUtils.getSystemEnv("GENNY_API_URL") != null
+			? CommonUtils.getSystemEnv("GENNY_API_URL")
 			: projectUrl + ":8280";
-	public static final String bridgeServiceUrl = System.getenv("BRIDGE_SERVICE_API") != null
-			? System.getenv("BRIDGE_SERVICE_API")
+	public static final String bridgeServiceUrl = CommonUtils.getSystemEnv("BRIDGE_SERVICE_API") != null
+			? CommonUtils.getSystemEnv("BRIDGE_SERVICE_API")
 			: projectUrl + "/api/service/commands";
-	public static final String fyodorServiceUrl = System.getenv("FYODOR_SERVICE_API") != null 
-			? System.getenv("FYODOR_SERVICE_API") 
+	public static final String fyodorServiceUrl = CommonUtils.getSystemEnv("FYODOR_SERVICE_API") != null 
+			? CommonUtils.getSystemEnv("FYODOR_SERVICE_API") 
 			: "http://erstwhile-wolf-genny-fyodor-svc:4242";
-	public static final String shleemyServiceUrl = System.getenv("SHLEEMY_SERVICE_API") != null
-			? System.getenv("SHLEEMY_SERVICE_API")
+	public static final String shleemyServiceUrl = CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null
+			? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
 			: (projectUrl + ":4242");
-	public static final String infinispanHost = System.getenv("INFINISPAN_HOST") != null
-			? System.getenv("INFINISPAN_HOST")
+	public static final String infinispanHost = CommonUtils.getSystemEnv("INFINISPAN_HOST") != null
+			? CommonUtils.getSystemEnv("INFINISPAN_HOST")
 			: (projectUrl + ":11222");
 
 	// RULES
-	public static final String realmDir = System.getenv("REALM_DIR") != null ? System.getenv("REALM_DIR") : "./realm";
-	public static final String rulesDir = System.getenv("RULES_DIR") != null ? System.getenv("RULES_DIR") : "/rules";
-	public static final String keycloakUrl = System.getenv("KEYCLOAK_URL") != null ? System.getenv("KEYCLOAK_URL")
+	public static final String realmDir = CommonUtils.getSystemEnv("REALM_DIR") != null ? CommonUtils.getSystemEnv("REALM_DIR") : "./realm";
+	public static final String rulesDir = CommonUtils.getSystemEnv("RULES_DIR") != null ? CommonUtils.getSystemEnv("RULES_DIR") : "/rules";
+	public static final String keycloakUrl = CommonUtils.getSystemEnv("KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("KEYCLOAK_URL")
 			: "http://keycloak.genny.life";
 
 	// UI Defaults
-	public static final Integer defaultPageSize = System.getenv("DEFAULT_PAGE_SIZE") == null ? 10
-			: (Integer.parseInt(System.getenv("DEFAULT_PAGE_SIZE")));
-	public static final Integer defaultDropDownPageSize = System.getenv("DEFAULT_DROPDOWN_PAGE_SIZE") == null ? 25
-			: (Integer.parseInt(System.getenv("DEFAULT_DROPDOWN_PAGE_SIZE")));
-	public static final Integer defaultBucketSize = System.getenv("DEFAULT_BUCKET_SIZE") == null ? 8
-			: (Integer.parseInt(System.getenv("DEFAULT_BUCKET_SIZE")));
+	public static final Integer defaultPageSize = CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE") == null ? 10
+			: (Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE")));
+	public static final Integer defaultDropDownPageSize = CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE") == null ? 25
+			: (Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE")));
+	public static final Integer defaultBucketSize = CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE") == null ? 8
+			: (Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE")));
 
 	// TWILIO
-	public static final String twilioAccountSid = System.getenv("TWILIO_ACCOUNT_SID") != null
-			? System.getenv("TWILIO_ACCOUNT_SID")
+	public static final String twilioAccountSid = CommonUtils.getSystemEnv("TWILIO_ACCOUNT_SID") != null
+			? CommonUtils.getSystemEnv("TWILIO_ACCOUNT_SID")
 			: "TWILIO_ACCOUNT_SID";
-	public static final String twilioAuthToken = System.getenv("TWILIO_AUTH_TOKEN") != null
-			? System.getenv("TWILIO_AUTH_TOKEN")
+	public static final String twilioAuthToken = CommonUtils.getSystemEnv("TWILIO_AUTH_TOKEN") != null
+			? CommonUtils.getSystemEnv("TWILIO_AUTH_TOKEN")
 			: "TWILIO_AUTH_TOKEN";
-	public static final String twilioSenderMobile = System.getenv("TWILIO_SENDER_MOBILE") != null
-			? System.getenv("TWILIO_SENDER_MOBILE")
+	public static final String twilioSenderMobile = CommonUtils.getSystemEnv("TWILIO_SENDER_MOBILE") != null
+			? CommonUtils.getSystemEnv("TWILIO_SENDER_MOBILE")
 			: "TWILIO_SENDER_MOBILE";
 
 	/*
@@ -64,7 +65,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String projectUrl() {
-		return System.getenv("PROJECT_URL") != null ? System.getenv("PROJECT_URL")
+		return CommonUtils.getSystemEnv("PROJECT_URL") != null ? CommonUtils.getSystemEnv("PROJECT_URL")
 			: "http://alyson7.genny.life";
 	}
 
@@ -73,7 +74,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String qwandaServiceUrl() {
-		return System.getenv("GENNY_API_URL") != null ? System.getenv("GENNY_API_URL") 
+		return CommonUtils.getSystemEnv("GENNY_API_URL") != null ? CommonUtils.getSystemEnv("GENNY_API_URL") 
 			: (projectUrl() + ":8280");
 	}
 
@@ -82,7 +83,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String fyodorServiceUrl() {
-		return System.getenv("FYODOR_SERVICE_API") != null ? System.getenv("FYODOR_SERVICE_API") 
+		return CommonUtils.getSystemEnv("FYODOR_SERVICE_API") != null ? CommonUtils.getSystemEnv("FYODOR_SERVICE_API") 
 			: (projectUrl() + ":4242");
 	}
 
@@ -91,7 +92,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String shleemyServiceUrl() {
-		return System.getenv("SHLEEMY_SERVICE_API") != null ? System.getenv("SHLEEMY_SERVICE_API")
+		return CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null ? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
 			: (projectUrl() + ":4242");
 	}
 
@@ -100,7 +101,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String infinispanHost() {
-		return System.getenv("INFINISPAN_HOST") != null ? System.getenv("INFINISPAN_HOST")
+		return CommonUtils.getSystemEnv("INFINISPAN_HOST") != null ? CommonUtils.getSystemEnv("INFINISPAN_HOST")
 			: (projectUrl() + ":11222");
 	}
 
@@ -109,7 +110,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String keycloakUrl() {
-		return System.getenv("KEYCLOAK_URL") != null ? System.getenv("KEYCLOAK_URL")
+		return CommonUtils.getSystemEnv("KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("KEYCLOAK_URL")
 			: "http://keycloak.genny.life";
 	}
 
