@@ -63,21 +63,6 @@ public class GennyCache {
 		initRemoteCacheManager();
 	}
 
-
-	private String peekConfig() {
-		ConfigurationBuilder builder = new ConfigurationBuilder();
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		builder.classLoader(cl);
-		InputStream inputStream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
-
-		String text = new BufferedReader(
-		new InputStreamReader(inputStream, StandardCharsets.UTF_8))
-			.lines()
-			.collect(Collectors.joining("\n"));
-
-		return text;
-	}
-
 	/**
 	 * Initialize the remote cache manager using the 
 	 * hotrod clcient properties file.
@@ -89,7 +74,7 @@ public class GennyCache {
 
 		// load infinispan properties
 		InputStream stream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
-		System.out.println("Config: " + peekConfig());
+		
 		if (stream == null) {
 			log.error("Could not find infinispan hotrod client properties file: " + HOTROD_CLIENT_PROPERTIES);
 			return;
