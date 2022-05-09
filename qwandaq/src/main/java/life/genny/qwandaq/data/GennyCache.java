@@ -1,7 +1,12 @@
 package life.genny.qwandaq.data;
 
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -37,6 +42,7 @@ import org.infinispan.protostream.SerializationContextInitializer;
  * A remote cache management class for accessing realm caches.
  * 
  * @author Jasper Robison
+ * @author Varun Shastry
  */
 @ApplicationScoped
 public class GennyCache {
@@ -47,64 +53,82 @@ public class GennyCache {
 
 	private Map<String, RemoteCache> caches = new HashMap<>();
 
-	// @Inject
 	private RemoteCacheManager remoteCacheManager;
 
 	public static final String HOTROD_CLIENT_PROPERTIES = "hotrod-client.properties";
 
-	// @Inject GennyCache(RemoteCacheManager remoteCacheManager) {
-	// 	log.info("RemoteCacheManager null thing: " + (remoteCacheManager != null));
-	//   this.remoteCacheManager = remoteCacheManager;
-	//   }
-
 	@PostConstruct
 	public void init() {
-		log.info("Initialiing RemoteCacheManager");
+		log.info("Initializing RemoteCacheManager");
 		initRemoteCacheManager();
-		log.info("RemoteCacheManager Initialized!");
 	}
 
-	private void initRemoteCacheManager() {
-		// TODO: Remove bad logs
-		log.info("1");
+
+	private String peekConfig() {
 		ConfigurationBuilder builder = new ConfigurationBuilder();
-		log.info("2");
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		log.info("3");
 		builder.classLoader(cl);
-		log.info("4");
+		InputStream inputStream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
+
+		String text = new BufferedReader(
+		new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+			.lines()
+			.collect(Collectors.joining("\n"));
+
+		return text;
+	}
+
+	/**
+	 * Initialize the remote cache manager using the 
+	 * hotrod clcient properties file.
+	 **/
+	private void initRemoteCacheManager() {
+		ConfigurationBuilder builder = new ConfigurationBuilder();
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		builder.classLoader(cl);
+
+		// load infinispan properties
 		InputStream stream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
-		log.info("5");
+		System.out.println("Config: " + peekConfig());
 		if (stream == null) {
 			log.error("Could not find infinispan hotrod client properties file: " + HOTROD_CLIENT_PROPERTIES);
 			return;
-		} else {
-			try {
-				log.info("6");
-				builder.withProperties(loadFromStream(stream));
-				log.info("7");
-			} finally {
-				Util.close(stream);
-				log.info("8");
-			}
 		}
+
+		try {
+			builder.withProperties(loadFromStream(stream));
+		} finally {
+			Util.close(stream);
+		}
+
+		// create cache manager
 		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
-		log.info("9");
 		Configuration config = builder.build();
-		log.info("10");
 		remoteCacheManager = new RemoteCacheManager(config);
-		log.info("11");
 		remoteCacheManager.getConfiguration().marshallerClass();
-		log.info("12");
 	}
 
+	/**
+	 * Get a list of {@link SerializationContextInitializer} objects 
+	 * used in configureing the cache.
+	 *
+	 * @return The list of SerializationContextInitializer objects
+	 */
 	private List<SerializationContextInitializer> getAllSerializationContextInitializers() {
+
 		List<SerializationContextInitializer> serCtxInitList = new LinkedList<>();
 		SerializationContextInitializer sci = new BaseEntityInitializerImpl();
 		serCtxInitList.add(sci);
+
 		return serCtxInitList;
 	}
 
+	/**
+	 * Load properties from an input stream.
+	 *
+	 * @param stream The stream to load from
+	 * @return The Properties object
+	 */
 	private Properties loadFromStream(InputStream stream) {
 		Properties properties = new Properties();
 		try {
@@ -127,12 +151,13 @@ public class GennyCache {
 
 		if (realms.contains(realm)) {
 			return caches.get(realm); 
-		} else {
-			remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
-			realms.add(realm);
-			caches.put(realm, remoteCacheManager.getCache(realm)); 
-			return caches.get(realm); 
 		}
+
+		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
+		realms.add(realm);
+		caches.put(realm, remoteCacheManager.getCache(realm)); 
+
+		return caches.get(realm); 
 	}
 
 	public CoreEntity getEntityFromCache(String cacheName, String key) {
