@@ -156,7 +156,7 @@ public class KogitoUtils {
 
         String workflowJsonStr = "{\"eventMessage\":" + jsonStr + ", \"token\":\"" + userToken.getToken() + "\"}";
 
-        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, null);
 
         if (response.statusCode() == 201) {
 
