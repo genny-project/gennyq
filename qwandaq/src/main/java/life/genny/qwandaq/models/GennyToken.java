@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
+import life.genny.qwandaq.utils.CommonUtils;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -113,6 +115,14 @@ public class GennyToken implements Serializable {
 		// extract product code from azp
 		String azp = getString("azp");
 
+		// If azp is alyson then its a bad client id lol
+		// We will need to discuss further tomorrow how we choose to tackle this
+		// but this is the best I got in the meantime (Mon, 9/5/22)
+		if("backend".equals(azp) || "alyson".equals(azp)) {
+			log.warn(azp + " clientid detected. Using project realm env");
+			azp = CommonUtils.getSystemEnv("PROJECT_REALM");
+		}
+
 		if (azp != null) {
 			this.productCode = azp;
 
@@ -148,8 +158,8 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	public String getRealm() {
-		if (productCode != null) {
-			return productCode;
+		if(realm == null) {
+			log.error("Null realm in GennyToken!");
 		}
 		return realm;
 	}

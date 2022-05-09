@@ -100,6 +100,10 @@ public class QwandaUtils {
 	 */
 	public void loadAllAttributesIntoCache(String productCode) {
 
+		if(StringUtils.isBlank(productCode)) {
+			log.error("RECEIVED NULL PRODUCT CODE WHILE LOADING ATTRIBUTES INTO CACHE!");
+		}
+
 		Long attributeCount = databaseUtils.countAttributes(productCode);
 		final Integer CHUNK_LOAD_SIZE = 200;
 
@@ -135,10 +139,7 @@ public class QwandaUtils {
 				}
 
 				// NOTE: Warning, this may cause OOM errors.
-				log.info("pre oom");
 				msg.add(attributeList);
-				log.info("post oom");
-
 
 				if (attributeList.size() > 0) {
 					log.debug("Start AttributeID:" 
@@ -151,7 +152,7 @@ public class QwandaUtils {
 
 			log.info("Cached " + totalAttribsCached + " attributes");
 		} catch (Exception e) {
-			log.error("Error loading attributes for productCode " + productCode);
+			log.error("Error loading attributes for productCode: " + productCode);
 			e.printStackTrace();
 		}
 	}

@@ -1,7 +1,12 @@
 package life.genny.qwandaq.data;
 
 import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -63,13 +68,13 @@ public class GennyCache {
 	 * hotrod clcient properties file.
 	 **/
 	private void initRemoteCacheManager() {
-
 		ConfigurationBuilder builder = new ConfigurationBuilder();
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		builder.classLoader(cl);
 
 		// load infinispan properties
 		InputStream stream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
+		
 		if (stream == null) {
 			log.error("Could not find infinispan hotrod client properties file: " + HOTROD_CLIENT_PROPERTIES);
 			return;
