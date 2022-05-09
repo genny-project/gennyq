@@ -113,6 +113,14 @@ public class GennyToken implements Serializable {
 		// extract product code from azp
 		String azp = getString("azp");
 
+		// If azp is alyson then its a bad client id lol
+		// We will need to discuss further tomorrow how we choose to tackle this
+		// but this is the best I got in the meantime (Mon, 9/5/22)
+		if("alyson".equals(azp)) {
+			log.warn("Alyson clientid detected. Using project realm env");
+			azp = CommonUtils.getSystemEnv("PROJECT_REALM");
+		}
+
 		if (azp != null) {
 			this.productCode = azp;
 
