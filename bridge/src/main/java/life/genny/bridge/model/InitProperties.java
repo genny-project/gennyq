@@ -43,6 +43,10 @@ public class InitProperties {
 		cid = StringUtils.removeEnd(cid, "/");
 		cid = StringUtils.removeEnd(cid, ".gada.io");
 		cid = StringUtils.removeEnd(cid, ".genny.life");
+		cid = StringUtils.removeEnd(cid, "-prod");
+		cid = StringUtils.removeEnd(cid, "-staging");
+		cid = StringUtils.removeEnd(cid, "-dev");
+		cid = StringUtils.removeEnd(cid, "-interns");
 
 		if ("internmatch".equals(cid)) {
 			cid = "alyson";

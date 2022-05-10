@@ -118,8 +118,8 @@ public class GennyToken implements Serializable {
 		// If azp is alyson then its a bad client id lol
 		// We will need to discuss further tomorrow how we choose to tackle this
 		// but this is the best I got in the meantime (Mon, 9/5/22)
-		if("alyson".equals(azp)) {
-			log.warn("Alyson clientid detected. Using project realm env");
+		if("backend".equals(azp) || "alyson".equals(azp)) {
+			log.warn(azp + " clientid detected. Using project realm env");
 			azp = CommonUtils.getSystemEnv("PROJECT_REALM");
 		}
 
@@ -158,8 +158,8 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	public String getRealm() {
-		if (productCode != null) {
-			return productCode;
+		if(realm == null) {
+			log.error("Null realm in GennyToken!");
 		}
 		return realm;
 	}
