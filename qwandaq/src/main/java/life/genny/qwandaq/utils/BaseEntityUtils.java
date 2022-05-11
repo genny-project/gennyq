@@ -85,6 +85,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
 
+		log.info("Using ProductCode " + userToken.getProductCode());
 		return CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
 	}
 
