@@ -16,10 +16,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
@@ -71,16 +68,16 @@ public class BaseEntityUtils {
 	/**
 	 * Fetch the user base entity of the {@link UserToken}
 	 * 
-	 * @return the user {@link BaseEntity}
+	 * @return the user's {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
 		return this.getBaseEntityByCode(userToken.getUserCode());
 	}
 
 	/**
-	 * Fetch A {@link BaseEntity} from cache the using a code.
+	 * Fetch A {@link BaseEntity} from the cache using a code.
 	 *
-	 * @param code The code of the {@link BaseEntity} to fetch
+	 * @param code The code of the BaseEntity to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
