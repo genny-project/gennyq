@@ -73,6 +73,7 @@ public class FrontendService {
 		log.info("targetCode :" + targetCode);
 		log.info("processId :" + processId);
 
+		log.info("Product Code: " + userToken.getProductCode());
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
