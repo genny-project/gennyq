@@ -1,5 +1,7 @@
 package life.genny.qwandaq;
 
+import java.lang.Override;
+
 public enum VisualControlType {
 	VCL_DEFAULT ("VCL_DEFAULT"),
 	VCL_WRAPPER ("VCL_WRAPPER"),
@@ -31,8 +33,6 @@ public enum VisualControlType {
 	GROUP_ICON ("GROUP_ICON"),
 	GROUP_CONTENT_WRAPPER ("GROUP_CONTENT_WRAPPER");
 
-
-
 	private final String name;
 
 	private VisualControlType(String s) {
@@ -45,6 +45,7 @@ public enum VisualControlType {
 		return name.equals(otherName);
 	}
 
+	@Override
 	public String toString() {
 		return this.name;
 	}

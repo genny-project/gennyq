@@ -304,6 +304,13 @@ public class Ask extends CoreEntity implements Serializable {
 	}
 
 	/**
+	 * @return the mandatory
+	 */
+	public Boolean isMandatory() {
+		return getMandatory();
+	}
+
+	/**
 	 * @param mandatory the mandatory to set
 	 */
 	public void setMandatory(Boolean mandatory) {
@@ -334,7 +341,7 @@ public class Ask extends CoreEntity implements Serializable {
 	/**
 	 * @param sourceCode the sourceCode to set
 	 */
-	private void setSourceCode(final String sourceCode) {
+	public void setSourceCode(final String sourceCode) {
 		this.sourceCode = sourceCode;
 	}
 
@@ -367,6 +374,13 @@ public class Ask extends CoreEntity implements Serializable {
 	}
 
 	/**
+	 * @return the disabled
+	 */
+	public Boolean isDisabled() {
+		return getDisabled();
+	}
+
+	/**
 	 * @param disabled the disabled to set
 	 */
 	public void setDisabled(Boolean disabled) {
@@ -378,6 +392,13 @@ public class Ask extends CoreEntity implements Serializable {
 	 */
 	public Boolean getHidden() {
 		return hidden;
+	}
+
+	/**
+	 * @return the hidden
+	 */
+	public Boolean isHidden() {
+		return getHidden();
 	}
 
 	/**
@@ -483,6 +504,13 @@ public class Ask extends CoreEntity implements Serializable {
 	}
 
 	/**
+	 * @return the oneshot
+	 */
+	public Boolean isOneshot() {
+		return getOneshot();
+	}
+
+	/**
 	 * @param oneshot the oneshot to set
 	 */
 	public void setOneshot(Boolean oneshot) {
@@ -494,6 +522,13 @@ public class Ask extends CoreEntity implements Serializable {
 	 */
 	public Boolean getReadonly() {
 		return readonly;
+	}
+
+	/**
+	 * @return the readonly
+	 */
+	public Boolean isReadonly() {
+		return getReadonly();
 	}
 
 	/**
@@ -511,6 +546,13 @@ public class Ask extends CoreEntity implements Serializable {
 	}
 
 	/**
+	 * @return the formTrigger
+	 */
+	public Boolean isFormTrigger() {
+		return getFormTrigger();
+	}
+
+	/**
 	 * @param formTrigger the formTrigger to set
 	 */
 	public void setFormTrigger(Boolean formTrigger) {
@@ -522,6 +564,13 @@ public class Ask extends CoreEntity implements Serializable {
 	 */
 	public Boolean getCreateOnTrigger() {
 		return createOnTrigger;
+	}
+
+	/**
+	 * @return the createOnTrigger
+	 */
+	public Boolean isCreateOnTrigger() {
+		return getCreateOnTrigger();
 	}
 
 	/**
