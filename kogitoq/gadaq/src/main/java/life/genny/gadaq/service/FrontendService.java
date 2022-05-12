@@ -73,9 +73,18 @@ public class FrontendService {
 		log.info("targetCode :" + targetCode);
 		log.info("processId :" + processId);
 
-		log.info("Product Code: " + userToken.getProductCode());
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+
+		if (source == null) {
+			log.error("No Source entity found!");
+			return null;
+		}
+
+		if (target == null) {
+			log.error("No Target entity found!");
+			return null;
+		}
 
 		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 

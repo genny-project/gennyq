@@ -28,15 +28,15 @@ import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
 @ApplicationScoped
 public class InternalConsumer {
 
-    static final Logger log = Logger.getLogger(InternalConsumer.class);
+	static final Logger log = Logger.getLogger(InternalConsumer.class);
 
-    static Jsonb jsonb = JsonbBuilder.create();
+	static Jsonb jsonb = JsonbBuilder.create();
 
-    @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
-    String myUrl;
+	@ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
+	String myUrl;
 
-    @Inject
-    Service service;
+	@Inject
+	Service service;
 
 	@Inject
 	GennyScopeInit scope;
@@ -44,87 +44,87 @@ public class InternalConsumer {
 	@Inject
 	UserToken userToken;
 
-    @Inject
-    BaseEntityUtils beUtils;
+	@Inject
+	BaseEntityUtils beUtils;
 
-    @Inject
-    KogitoUtils kogitoUtils;
+	@Inject
+	KogitoUtils kogitoUtils;
 
-    @Inject
-    KieRuntimeBuilder kieRuntimeBuilder;
+	@Inject
+	KieRuntimeBuilder kieRuntimeBuilder;
 
-    KieSession ksession;
+	KieSession ksession;
 
-    /**
-     * Execute on start up.
-     *
-     * @param ev
-     */
-    void onStart(@Observes StartupEvent ev) {
-        service.fullServiceInit();
-    }
+	/**
+	 * Execute on start up.
+	 *
+	 * @param ev
+	 */
+	void onStart(@Observes StartupEvent ev) {
+		service.fullServiceInit();
+	}
 
-    /**
-     * Consume from the events topic.
-     *
-     * @param data
-     */
-    @Incoming("events")
-    @Blocking
-    public void getEvent(String data) {
+	/**
+	 * Consume from the events topic.
+	 *
+	 * @param data
+	 */
+	@Incoming("events")
+	@Blocking
+	public void getEvent(String data) {
 
 		scope.init(data);
 
-        log.info("Incoming Event : " + data);
-        Instant start = Instant.now();
+		log.info("Incoming Event : " + data);
+		Instant start = Instant.now();
 
 		// is data a valid event
 		QEventMessage msg = null;
-        try {
-            msg = jsonb.fromJson(data, QEventMessage.class);
-        } catch (Exception e) {
-            log.error("Cannot parse this event!");
-            return;
-        }
+		try {
+			msg = jsonb.fromJson(data, QEventMessage.class);
+		} catch (Exception e) {
+			log.error("Cannot parse this event!");
+			return;
+		}
 
 		// start new session
-        KieSession session = kieRuntimeBuilder.newKieSession();
+		KieSession session = kieRuntimeBuilder.newKieSession();
 
-        session.insert(kogitoUtils);
-        session.insert(beUtils);
-        session.insert(userToken);
-        session.insert(msg);
+		session.insert(kogitoUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+		session.insert(msg);
 
-        session.fireAllRules();
-        session.dispose();
+		session.fireAllRules();
+		session.dispose();
 
-        Instant end = Instant.now();
-        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 
 		scope.destroy();
-    }
+	}
 
-    /**
-     * Consume from the valid_data topic.
-     *
-     * @param data
-     */
-    @Incoming("valid_data")
-    @Blocking
-    public void getData(String data) {
+	/**
+	 * Consume from the valid_data topic.
+	 *
+	 * @param data
+	 */
+	@Incoming("valid_data")
+	@Blocking
+	public void getData(String data) {
 
 		scope.init(data);
 
-        Instant start = Instant.now();
+		Instant start = Instant.now();
 
 		// is data a valid event
 		QDataAnswerMessage msg = null;
-        try {
-            msg = jsonb.fromJson(data, QDataAnswerMessage.class);
-        } catch (Exception e) {
-            log.warn("Cannot parse this data!");
-            return;
-        }
+		try {
+			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+		} catch (Exception e) {
+			log.warn("Cannot parse this data!");
+			return;
+		}
 
 		// check for null or empty answer array
 		if (msg.getItems() == null || msg.getItems().length == 0) {
@@ -149,9 +149,9 @@ public class InternalConsumer {
 
 		}
 
-        Instant end = Instant.now();
-        log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 
 		scope.destroy();
-    }
+	}
 }

@@ -35,6 +35,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QSearchBeResult;
+import life.genny.qwandaq.utils.DatabaseUtils;
 
 /**
  * A non-static utility class used for standard
@@ -48,6 +49,9 @@ public class BaseEntityUtils {
 
 	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	DatabaseUtils databaseUtils;
 
 	@Inject
 	UserToken userToken;
@@ -83,7 +87,16 @@ public class BaseEntityUtils {
 	public BaseEntity getBaseEntityByCode(String code) {
 
 		log.info("Using ProductCode " + userToken.getProductCode());
-		return CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
+
+		// check for entity in the cache
+		BaseEntity entity = CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
+
+		// check in database if not in cache
+		if (entity == null) {
+			entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
+		}
+
+		return entity;
 	}
 
 	/**
