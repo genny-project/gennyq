@@ -4,15 +4,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -28,6 +24,10 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
+import org.jboss.logging.Logger;
+
+
+
 
 @ApplicationScoped
 public class FrontendService {
@@ -108,6 +108,24 @@ public class FrontendService {
 		}
 
 		return msg;
+	}
+
+	/**
+	 * Setup the process entity used to store task data.
+	 *
+	 * @param targetCode The code of the target entity
+	 * @param processBEJson The process entity json to setup
+	 * @param askMsg The ask message to use in setup
+	 * @return The updated process entity json
+	 */
+	public String setupProcessBE(String targetCode, String processBEJson, QDataAskMessage askMsg) {
+		BaseEntity processBE = jsonb.fromJson(processBEJson,BaseEntity.class);
+
+		BaseEntity ret = setupProcessBE(targetCode, processBE, askMsg);
+
+		String json = jsonb.toJson(ret);
+
+		return json;
 	}
 
 	/**
