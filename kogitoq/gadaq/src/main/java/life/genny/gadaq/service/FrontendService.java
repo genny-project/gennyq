@@ -91,6 +91,11 @@ public class FrontendService {
 		Question rootQuestion = questionUtils.getQuestion(questionCode);
 		List<Ask> asks = questionUtils.findAsks(rootQuestion, source, target);
 
+		if (asks == null || asks.isEmpty()) {
+			log.error("No asks returned for " + questionCode);
+			return null;
+		}
+
 		// create ask msg from asks
 		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
 		msg.setToken(userToken.getToken());
@@ -114,6 +119,16 @@ public class FrontendService {
 	 * @return The updated process entity
 	 */
 	public BaseEntity setupProcessBE(String targetCode, BaseEntity processBE, QDataAskMessage askMsg) {
+
+		if (processBE == null) {
+			log.error("processBE must not be null!");
+			return null;
+		}
+
+		if (askMsg == null) {
+			log.error("askMsg must not be null!");
+			return null;
+		}
 
 		// force the realm
 		processBE.setRealm(userToken.getProductCode());
