@@ -118,12 +118,10 @@ public class FrontendService {
 	 * @param askMsg The ask message to use in setup
 	 * @return The updated process entity json
 	 */
-	public String setupProcessBE(String targetCode, String processBEJson, QDataAskMessage askMsg) {
-		BaseEntity processBE = jsonb.fromJson(processBEJson,BaseEntity.class);
+	public String setupProcessBEJson(String targetCode, QDataAskMessage askMsg) {
 
-		BaseEntity ret = setupProcessBE(targetCode, processBE, askMsg);
-
-		String json = jsonb.toJson(ret);
+		BaseEntity processBE = setupProcessBE(targetCode, askMsg);
+		String json = jsonb.toJson(processBE);
 
 		return json;
 	}
@@ -136,19 +134,15 @@ public class FrontendService {
 	 * @param askMsg The ask message to use in setup
 	 * @return The updated process entity
 	 */
-	public BaseEntity setupProcessBE(String targetCode, BaseEntity processBE, QDataAskMessage askMsg) {
-
-		if (processBE == null) {
-			log.error("processBE must not be null!");
-			return null;
-		}
+	public BaseEntity setupProcessBE(String targetCode, QDataAskMessage askMsg) {
 
 		if (askMsg == null) {
 			log.error("askMsg must not be null!");
 			return null;
 		}
 
-		// force the realm
+		// init entity and force the realm
+		BaseEntity processBE = new BaseEntity("QBE_"+targetCode.substring(4), "QuestionBE");
 		processBE.setRealm(userToken.getProductCode());
 
 		// only copy the entityAttributes used in the Asks
