@@ -140,7 +140,7 @@ public class CapabilityUtils {
 
 		Attribute capabilityAttribute = qwandaUtils.getAttribute(prefixedCode);
 		answer.setAttribute(capabilityAttribute);
-		role = beUtils.saveAnswer(answer);
+		role = qwandaUtils.saveAnswer(answer);
 
 		// now update the list of roles associated with the key
 		switch (mode) {

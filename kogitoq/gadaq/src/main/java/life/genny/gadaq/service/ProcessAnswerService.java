@@ -1,9 +1,9 @@
 package life.genny.gadaq.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -234,7 +234,7 @@ public class ProcessAnswerService {
 		}
 
 		// save these answrs to db and cache
-		beUtils.saveAnswers(answers);
+		qwandaUtils.saveAnswers(answers);
 		log.info("Saved answers for target " + targetCode);
 	}
 

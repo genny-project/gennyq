@@ -17,5 +17,11 @@ do
 
 	# perform clean install
 	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
+
+	# exit if build failed
+	if [[ "$?" -ne 0 ]] ; then
+		echo "Build failed"
+		exit $rc
+	fi
 done
 

@@ -1,6 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +23,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
@@ -302,6 +304,90 @@ public class QwandaUtils {
 		}
 		return codes;
 	}
+
+	/**
+	 * Save an {@link Answer} object.
+	 *
+	 * @param answer The answer to save
+	 * @return The target BaseEntity
+	 */
+	public BaseEntity saveAnswer(Answer answer) {
+
+		List<BaseEntity> targets = saveAnswers(Arrays.asList(answer));
+
+		if (targets != null && targets.size() > 0) {
+			return targets.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Save {@link Answers}.
+	 * 
+	 * @param answers The answers to save
+	 * @return The target BaseEntitys
+	 */
+	public List<BaseEntity> saveAnswers(Answers answers) {
+
+		return saveAnswers(answers.getAnswers());
+	}
+
+	/**
+	 * Save a List of {@link Answer} objects.
+	 *
+	 * @param answers The list of answers to save
+	 * @return The target BaseEntitys
+	 */
+	public List<BaseEntity> saveAnswers(List<Answer> answers) {
+
+		List<BaseEntity> targets = new ArrayList<>();
+
+		// sort answers into target BaseEntitys
+		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()
+				.collect(Collectors.groupingBy(Answer::getTargetCode));
+
+		for (String targetCode : answersPerTargetCodeMap.keySet()) {
+
+			// check if target is valid
+			BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+			if (target == null) {
+				log.error(targetCode + " does not exist!");
+				continue;
+			}
+
+			// fetch the DEF for this target
+			DefUtils defUtils = new DefUtils();
+			BaseEntity defBE = defUtils.getDEF(target);
+
+			// filter Non-valid answers using def
+			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
+			List<Answer> validAnswers = group.stream()
+					.filter(item -> defUtils.answerValidForDEF(defBE, item))
+					.collect(Collectors.toList());
+
+			// update target using valid answers
+			for (Answer answer : validAnswers) {
+				try {
+					target.addAnswer(answer);
+				} catch (BadDataException e) {
+					log.error(e);
+				}
+			}
+
+			// update target in the cache
+			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
+
+			// update target in the DB
+			DatabaseUtils databaseUtils = new DatabaseUtils();
+			databaseUtils.saveBaseEntity(target);
+
+			targets.add(target);
+		}
+
+		return targets;
+	}
+
 
 	/**
 	 * Delete a currently scheduled message via shleemy.
