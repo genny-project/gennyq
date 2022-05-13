@@ -1,9 +1,9 @@
 #!/bin/bash
 
 if [ "$#" -ge 1 ]; then
-	projects=( $@ )
+	projects=( gennyq $@ )
 else
-	projects=( qwandaq serviceq gadaq bridge fyodor dropkick lauchy messages shleemy )
+	projects=( gennyq qwandaq serviceq gadaq bridge fyodor dropkick lauchy messages shleemy )
 fi
 
 # iterate projects

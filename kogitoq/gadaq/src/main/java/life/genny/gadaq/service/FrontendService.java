@@ -97,6 +97,7 @@ public class FrontendService {
 		}
 
 		// create ask msg from asks
+		log.info("Creating ask Message...");
 		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
@@ -114,15 +115,20 @@ public class FrontendService {
 	 * Setup the process entity used to store task data.
 	 *
 	 * @param targetCode The code of the target entity
-	 * @param processBE The process entity to setup
-	 * @param askMsg The ask message to use in setup
+	 * @param askMessageJson The ask message to use in setup
 	 * @return The updated process entity
 	 */
 	public String setupProcessBE(String targetCode, String askMessageJson) {
 
+		if (askMessageJson == null) {
+			log.error("Ask message Json must not be null!");
+			return null;
+		}
+
 		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		// init entity and force the realm
+		log.info("Creating Process Entity...");
 		BaseEntity processBE = new BaseEntity("QBE_"+targetCode.substring(4), "QuestionBE");
 		processBE.setRealm(userToken.getProductCode());
 

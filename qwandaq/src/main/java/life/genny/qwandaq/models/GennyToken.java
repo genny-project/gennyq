@@ -5,15 +5,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import life.genny.qwandaq.utils.CommonUtils;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
@@ -31,22 +28,11 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.ext.Provider;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 @RegisterForReflection
@@ -69,8 +55,18 @@ public class GennyToken implements Serializable {
 	public Map<String, Object> adecodedTokenMap = null;
 	public Set<String> userRoles = new HashSet<String>();
 
+	/**
+	* Constructor. Default.
+	 */
 	public GennyToken() { }
 
+	/**
+	* Constructor.
+	* Create a GennyToken from a code and jwt string.
+	*
+	* @param code The code and userCode to set
+	* @param token The jwt string
+	 */
 	public GennyToken(final String code, final String token) {
 
 		this(token);
@@ -80,6 +76,12 @@ public class GennyToken implements Serializable {
 		}
 	}
 
+	/**
+	* Constructor.
+	* Create a GennyToken from a jwt string.
+	*
+	* @param token The jwt string
+	 */
 	public GennyToken(final String token) {
 		init(token);
 	}
@@ -115,12 +117,12 @@ public class GennyToken implements Serializable {
 		// extract product code from azp
 		String azp = getString("azp");
 
-		// If azp is alyson then its a bad client id lol
-		// We will need to discuss further tomorrow how we choose to tackle this
-		// but this is the best I got in the meantime (Mon, 9/5/22)
-		if("backend".equals(azp) || "alyson".equals(azp)) {
-			log.warn(azp + " clientid detected. Using project realm env");
-			azp = CommonUtils.getSystemEnv("PROJECT_REALM");
+		// If azp is alyson then it must be internmatch
+		// NOTE: solution would be to eliminate any internmatch 
+		// tokens using this client id.
+		if ("alyson".equals(azp)) {
+			log.warn("alyson clientid detected.");
+			azp = "internmatch";
 		}
 
 		if (azp != null) {
@@ -158,7 +160,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	public String getRealm() {
-		if(realm == null) {
+		if (realm == null) {
 			log.error("Null realm in GennyToken!");
 		}
 		return realm;
