@@ -137,12 +137,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@JsonbTransient
 	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
-	@JsonIgnore
+	/*@JsonIgnore
 	@XmlTransient
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
 	@Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	@JsonbTransient
-	private Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
+	@JsonbTransient*/
+	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
 
 	@XmlTransient
 	@Transient

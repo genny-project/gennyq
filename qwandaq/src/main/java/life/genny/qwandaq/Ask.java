@@ -114,7 +114,7 @@ public class Ask extends CoreEntity implements Serializable {
 	private Boolean createOnTrigger = false;
 
 	@Transient
-	private Ask[] childAsks;
+	private transient Ask[] childAsks;
 
 	// @Embedded
 	// @Valid

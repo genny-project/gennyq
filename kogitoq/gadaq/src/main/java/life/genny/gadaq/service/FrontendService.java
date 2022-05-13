@@ -4,15 +4,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -28,6 +24,10 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
+import org.jboss.logging.Logger;
+
+
+
 
 @ApplicationScoped
 public class FrontendService {
@@ -91,6 +91,11 @@ public class FrontendService {
 		Question rootQuestion = questionUtils.getQuestion(questionCode);
 		List<Ask> asks = questionUtils.findAsks(rootQuestion, source, target);
 
+		if (asks == null || asks.isEmpty()) {
+			log.error("No asks returned for " + questionCode);
+			return null;
+		}
+
 		// create ask msg from asks
 		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
 		msg.setToken(userToken.getToken());
@@ -109,13 +114,35 @@ public class FrontendService {
 	 * Setup the process entity used to store task data.
 	 *
 	 * @param targetCode The code of the target entity
+	 * @param processBEJson The process entity json to setup
+	 * @param askMsg The ask message to use in setup
+	 * @return The updated process entity json
+	 */
+	public String setupProcessBEJson(String targetCode, QDataAskMessage askMsg) {
+
+		BaseEntity processBE = setupProcessBE(targetCode, askMsg);
+		String json = jsonb.toJson(processBE);
+
+		return json;
+	}
+
+	/**
+	 * Setup the process entity used to store task data.
+	 *
+	 * @param targetCode The code of the target entity
 	 * @param processBE The process entity to setup
 	 * @param askMsg The ask message to use in setup
 	 * @return The updated process entity
 	 */
-	public BaseEntity setupProcessBE(String targetCode, BaseEntity processBE, QDataAskMessage askMsg) {
+	public BaseEntity setupProcessBE(String targetCode, QDataAskMessage askMsg) {
 
-		// force the realm
+		if (askMsg == null) {
+			log.error("askMsg must not be null!");
+			return null;
+		}
+
+		// init entity and force the realm
+		BaseEntity processBE = new BaseEntity("QBE_"+targetCode.substring(4), "QuestionBE");
 		processBE.setRealm(userToken.getProductCode());
 
 		// only copy the entityAttributes used in the Asks
