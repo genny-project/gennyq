@@ -114,32 +114,13 @@ public class FrontendService {
 	 * Setup the process entity used to store task data.
 	 *
 	 * @param targetCode The code of the target entity
-	 * @param processBEJson The process entity json to setup
-	 * @param askMsg The ask message to use in setup
-	 * @return The updated process entity json
-	 */
-	public String setupProcessBEJson(String targetCode, QDataAskMessage askMsg) {
-
-		BaseEntity processBE = setupProcessBE(targetCode, askMsg);
-		String json = jsonb.toJson(processBE);
-
-		return json;
-	}
-
-	/**
-	 * Setup the process entity used to store task data.
-	 *
-	 * @param targetCode The code of the target entity
 	 * @param processBE The process entity to setup
 	 * @param askMsg The ask message to use in setup
 	 * @return The updated process entity
 	 */
-	public BaseEntity setupProcessBE(String targetCode, QDataAskMessage askMsg) {
+	public String setupProcessBE(String targetCode, String askMessageJson) {
 
-		if (askMsg == null) {
-			log.error("askMsg must not be null!");
-			return null;
-		}
+		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		// init entity and force the realm
 		BaseEntity processBE = new BaseEntity("QBE_"+targetCode.substring(4), "QuestionBE");
@@ -169,7 +150,7 @@ public class FrontendService {
 
 		log.info("ProcessBE contains " + processBE.getBaseEntityAttributes().size() + " entity attributes");
 
-		return processBE;
+		return jsonb.toJson(processBE);
 	}
 
 	/**
@@ -179,7 +160,9 @@ public class FrontendService {
 	 * @param code The code of the baseentity to send
 	 * @param askMsg The ask message used to filter attributes
 	 */
-	public void sendBaseEntity(final String code, final QDataAskMessage askMsg) {
+	public void sendBaseEntity(final String code, final String askMessageJson) {
+
+		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		// only send the attribute values that are in the questions
 		BaseEntity entity = beUtils.getBaseEntityByCode(code);
@@ -215,8 +198,8 @@ public class FrontendService {
 	 *
 	 * @param askMsg The ask message to send
 	 */
-	public void sendQDataAskMessage(final QDataAskMessage askMsg) {
-		KafkaUtils.writeMsg("webdata", askMsg);
+	public void sendQDataAskMessage(String askMessageJson) {
+		KafkaUtils.writeMsg("webdata", askMessageJson);
 	}
 
 	/**

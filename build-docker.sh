@@ -5,10 +5,25 @@ echo "Project Version: $VERSION"
 # Usage: ./build-docker.sh [project] 
 
 if [ "$#" -ge 1 ]; then
+	dependencies=( )
 	projects=( $@ )
 else
-	projects=( qwandaq serviceq gadaq bridge fyodor dropkick lauchy messages shleemy )
+	dependencies=( qwandaq serviceq )
+	projects=( gadaq bridge fyodor dropkick lauchy messages shleemy )
 fi
+
+# iterate dependencies
+for dependency in "${dependencies[@]}"
+do
+    echo "Building $dependency"
+
+	# remove target dir
+	rm -rf $project/target
+	rm -rf kogito/$project/target
+
+	# perform clean install
+	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$dependency
+done
 
 # iterate projects
 for project in "${projects[@]}"
@@ -19,7 +34,7 @@ do
 	rm -rf $project/target
 	rm -rf kogito/$project/target
 
-	# perform clean install
+	# perform clean install with docker build
 	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
 
 	# tag the docker container
