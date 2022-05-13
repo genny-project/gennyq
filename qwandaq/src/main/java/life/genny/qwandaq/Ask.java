@@ -17,6 +17,8 @@
 package life.genny.qwandaq;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.json.bind.annotation.JsonbTransient;
@@ -631,6 +633,18 @@ public class Ask extends CoreEntity implements Serializable {
 			newAsk.contextList = ask.getContextList();
 		}
 		return newAsk;
+	}
+
+	/**
+	* Add a child to childAsks
+	*
+	* @param child The child ask to add
+	 */
+	public void addChildAsk(Ask child) {
+
+		List<Ask> children = Arrays.asList(getChildAsks());
+		children.add(child);
+		setChildAsks(children.toArray(new Ask[children.size()]));
 	}
 
 }

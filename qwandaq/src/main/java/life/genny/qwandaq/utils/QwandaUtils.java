@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,13 +24,14 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 
@@ -205,38 +207,100 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Get a Question using a code.
-	 *
-	 * @param code      the code of the question to get
-	 * @return Question
+	* Generate an ask for a question using the question code, the 
+	* source and the target. This operation is recursive if the 
+	* question is a group.
+	*
+	* @param code The code of the question
+	* @param source The source entity
+	* @param target The target entity
+	* @return The generated Ask
 	 */
-	public Question getQuestion(String code) {
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
 
 		if (code == null) {
-			log.error("Code must not be null!");
+			log.error("Code must not be null");
 			return null;
 		}
 
-		// fetch from cache
-		Question question = CacheUtils.getObject(userToken.getProductCode(), code, Question.class);
-
-		if (question == null) {
-
-			// fetch from database if not found in cache
-			log.warn("Could NOT read " + code + " from cache! Checking Database...");
-			question = databaseUtils.findQuestionByCode(userToken.getProductCode(), code);
-
-			if (question == null) {
-				log.error("Could not find question " + code + " in database!");
-				return null;
-			}
-
-			// cache the fetched question for quicker access
-			CacheUtils.writeCache(userToken.getProductCode(), code, jsonb.toJson(question));
-			log.info(question.getCode() + " written to cache!");
+		if (source == null) {
+			log.error("Source must not be null");
+			return null;
 		}
 
-		return question;
+		if (target == null) {
+			log.error("Target must not be null");
+			return null;
+		}
+
+		String productCode = userToken.getProductCode();
+
+		// find the question in the database
+		Question question = databaseUtils.findQuestionByCode(productCode, code);
+		Boolean mandatory = question.getMandatory();
+
+		// init new parent ask
+		Ask ask = new Ask(question);
+		ask.setSourceCode(source.getCode());
+		ask.setTargetCode(target.getCode());
+		ask.setMandatory(mandatory);
+		ask.setCreateOnTrigger(mandatory);
+		ask.setRealm(productCode);
+
+		// check if it is a question group
+		if (question.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
+
+			// fetch questionQuestions from the DB
+			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode, question.getCode());
+
+			// recursively operate on child questions
+			for (QuestionQuestion questionQuestion : questionQuestions) {
+				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
+				ask.addChildAsk(child);
+			}
+		}
+
+		return ask;
+	}
+
+	/**
+	* Recursively set the processId down through an ask tree.
+	*
+	* @param ask The ask to traverse
+	* @param processId The processId to set
+	 */
+	public void recursivelySetProcessId(Ask ask, String processId) {
+
+		ask.setProcessId(processId);
+
+		if (ask.getChildAsks() != null) {
+			for (Ask child : ask.getChildAsks()) {
+				child.setProcessId(processId);
+			}
+		}
+	}
+
+	/**
+	* Get all attribute codes active within an ask using recursion.
+	*
+	* @param codes The set of codes to add to
+	* @param ask The ask to traverse
+	* @return The udpated set of codes
+	 */
+	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
+
+		// grab attribute code of current ask
+		codes.add(ask.getAttributeCode());
+
+		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+
+			// grab all child ask attribute codes
+			for (Ask childAsk : ask.getChildAsks()) {
+
+				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
+			}
+		}
+		return codes;
 	}
 
 	/**

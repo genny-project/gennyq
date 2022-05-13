@@ -26,7 +26,6 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
@@ -39,9 +38,6 @@ public class ProcessAnswerService {
 
 	@Inject
 	UserToken userToken;
-
-	@Inject
-	QuestionUtils questionUtils;
 
 	@Inject
 	DatabaseUtils databaseUtils;

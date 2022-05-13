@@ -1,7 +1,6 @@
 package life.genny.rules;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Answer;
@@ -23,7 +22,6 @@ when
 	userToken : GennyToken( code != "PER_SERVICE")
 	beUtils : BaseEntityUtils()
 	qwandaUtils : QwandaUtils()
-	questionUtils : QuestionUtils()
 then
 	System.out.println(drools.getRule().getName() + " triggered");
 	System.out.println("answer  ::  " + answer); 

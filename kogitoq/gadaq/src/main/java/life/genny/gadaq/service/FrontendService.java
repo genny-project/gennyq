@@ -1,16 +1,18 @@
 package life.genny.gadaq.service;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
+
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -21,10 +23,8 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class FrontendService {
@@ -38,9 +38,6 @@ public class FrontendService {
 
 	@Inject
 	Service service;
-
-	@Inject
-	QuestionUtils questionUtils;
 
 	@Inject
 	DatabaseUtils databaseUtils;
@@ -85,25 +82,21 @@ public class FrontendService {
 
 		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 
-		Question rootQuestion = questionUtils.getQuestion(questionCode);
-		List<Ask> asks = questionUtils.findAsks(rootQuestion, source, target);
+		// fetch question from DB
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
 
-		if (asks == null || asks.isEmpty()) {
-			log.error("No asks returned for " + questionCode);
+		if (ask == null) {
+			log.error("No ask returned for " + questionCode);
 			return null;
 		}
 
+		qwandaUtils.recursivelySetProcessId(ask, processId);
+
 		// create ask msg from asks
 		log.info("Creating ask Message...");
-		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
+		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-
-		// TODO: make this recursive
-		// update the processId
-		for (Ask ask : msg.getItems()) {
-			ask.setProcessId(processId);
-		}
 
 		return jsonb.toJson(msg);
 	}
@@ -135,7 +128,7 @@ public class FrontendService {
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
 		for (Ask ask : askMsg.getItems()) {
-			attributeCodes.addAll(questionUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
+			attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
 		}
 
 		log.info("Found " + attributeCodes.size() + " active attributes in asks");
@@ -173,7 +166,7 @@ public class FrontendService {
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
 		for (Ask ask : askMsg.getItems()) {
-			attributeCodes.addAll(questionUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
+			attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
 		}
 
 		// grab all entityAttributes from the entity
