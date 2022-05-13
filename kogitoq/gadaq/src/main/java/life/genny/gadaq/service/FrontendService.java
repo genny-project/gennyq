@@ -26,9 +26,6 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import org.jboss.logging.Logger;
 
-
-
-
 @ApplicationScoped
 public class FrontendService {
 
@@ -66,7 +63,7 @@ public class FrontendService {
 	 * @param processId The processId to set in the asks
 	 * @return The ask message
 	 */
-	public QDataAskMessage getAsks(String questionCode, String sourceCode, String targetCode, String processId) {
+	public String getAsks(String questionCode, String sourceCode, String targetCode, String processId) {
 
 		log.info("questionCode :" + questionCode);
 		log.info("sourceCode :" + sourceCode);
@@ -108,7 +105,7 @@ public class FrontendService {
 			ask.setProcessId(processId);
 		}
 
-		return msg;
+		return jsonb.toJson(msg);
 	}
 
 	/**
