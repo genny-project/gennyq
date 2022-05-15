@@ -3,15 +3,11 @@ package life.genny.gadaq.service;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -25,6 +21,10 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
+import org.jboss.logging.Logger;
+
+
+
 
 @ApplicationScoped
 public class FrontendService {
@@ -99,6 +99,19 @@ public class FrontendService {
 		msg.setReplace(true);
 
 		return jsonb.toJson(msg);
+	}
+
+
+		/**
+	 * Setup the process entity used to store task data.
+	 *
+	 * @param targetCode The code of the target entity
+	 * @param askMessageJson The ask message to use in setup
+	 * @return The updated process entity
+	 */
+	public String setupProcessBEJson(String targetCode, String askMessageJson) {
+
+		return setupProcessBE(targetCode, askMessageJson);
 	}
 
 	/**
