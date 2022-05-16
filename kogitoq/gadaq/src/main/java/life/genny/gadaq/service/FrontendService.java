@@ -37,19 +37,10 @@ public class FrontendService {
 	UserToken userToken;
 
 	@Inject
-	Service service;
-
-	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
 	QwandaUtils qwandaUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
-
-	@Inject
-	EntityManager entityManager;
 
 	/**
 	 * Get asks using a question code, for a given source and target.

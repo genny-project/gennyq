@@ -257,7 +257,9 @@ public class QwandaUtils {
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
+
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
+				child.setDisabled(questionQuestion.getDisabled());
 				ask.addChildAsk(child);
 			}
 		}

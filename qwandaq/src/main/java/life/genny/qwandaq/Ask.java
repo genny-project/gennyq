@@ -643,8 +643,13 @@ public class Ask extends CoreEntity implements Serializable {
 	 */
 	public void addChildAsk(Ask child) {
 
+		if (child == null) {
+			return;
+		}
+
 		List<Ask> children = getChildAsks() == null ? new ArrayList<Ask>()
 			: Arrays.asList(getChildAsks());
+
 		children.add(child);
 		setChildAsks(children.toArray(new Ask[children.size()]));
 	}
