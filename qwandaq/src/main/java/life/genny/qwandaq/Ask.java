@@ -17,6 +17,7 @@
 package life.genny.qwandaq;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -642,7 +643,8 @@ public class Ask extends CoreEntity implements Serializable {
 	 */
 	public void addChildAsk(Ask child) {
 
-		List<Ask> children = Arrays.asList(getChildAsks());
+		List<Ask> children = getChildAsks() == null ? new ArrayList<Ask>()
+			: Arrays.asList(getChildAsks());
 		children.add(child);
 		setChildAsks(children.toArray(new Ask[children.size()]));
 	}
