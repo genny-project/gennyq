@@ -31,7 +31,7 @@ public class GennySettings {
 	// RULES
 	public static final String realmDir = CommonUtils.getSystemEnv("REALM_DIR") != null ? CommonUtils.getSystemEnv("REALM_DIR") : "./realm";
 	public static final String rulesDir = CommonUtils.getSystemEnv("RULES_DIR") != null ? CommonUtils.getSystemEnv("RULES_DIR") : "/rules";
-	public static final String keycloakUrl = CommonUtils.getSystemEnv("KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("KEYCLOAK_URL")
+	public static final String keycloakUrl = CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL")
 			: "http://keycloak.genny.life";
 
 	// UI Defaults
