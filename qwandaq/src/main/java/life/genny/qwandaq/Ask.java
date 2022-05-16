@@ -647,8 +647,12 @@ public class Ask extends CoreEntity implements Serializable {
 			return;
 		}
 
-		List<Ask> children = getChildAsks() == null ? new ArrayList<Ask>()
-			: Arrays.asList(getChildAsks());
+		List<Ask> children = new ArrayList<>();
+		if (this.childAsks != null) {
+			for (Ask a : childAsks) {
+				children.add(a);
+			}
+		}
 
 		children.add(child);
 		setChildAsks(children.toArray(new Ask[children.size()]));

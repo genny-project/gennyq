@@ -8,7 +8,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 
 import org.jboss.logging.Logger;
 
@@ -24,7 +23,6 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class FrontendService {
@@ -38,6 +36,9 @@ public class FrontendService {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Inject
+	DatabaseUtils databaseUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -208,6 +209,26 @@ public class FrontendService {
 		// send to frontend
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("webcmds", msg);
+	}
+
+	public void createBaseEntity(String defCode) {
+
+		if (defCode == null || !defCode.startsWith("DEF_")) {
+			log.error("Invalid defCode: " + defCode);
+			return;
+		}
+
+		// fetch the def baseentity
+		BaseEntity defBE = beUtils.getBaseEntityByCode(defCode);
+
+		// use entity create function and save to db
+		try {
+			BaseEntity entity = beUtils.create(defBE);
+			databaseUtils.saveBaseEntity(entity);
+		} catch (Exception e) {
+			log.error("Error creating baseentity");
+			e.printStackTrace();
+		}
 	}
 
 }
