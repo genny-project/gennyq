@@ -24,8 +24,8 @@ public class GennySettings {
 	public static final String shleemyServiceUrl = CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null
 			? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
 			: (projectUrl + ":4242");
-	public static final String infinispanHost = CommonUtils.getSystemEnv("INFINISPAN_HOST") != null
-			? CommonUtils.getSystemEnv("INFINISPAN_HOST")
+	public static final String infinispanHost = CommonUtils.getSystemEnv("INFINISPAN_URL") != null
+			? CommonUtils.getSystemEnv("INFINISPAN_URL")
 			: (projectUrl + ":11222");
 
 	// RULES
@@ -101,7 +101,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String infinispanHost() {
-		return CommonUtils.getSystemEnv("INFINISPAN_HOST") != null ? CommonUtils.getSystemEnv("INFINISPAN_HOST")
+		return CommonUtils.getSystemEnv("INFINISPAN_URL") != null ? CommonUtils.getSystemEnv("INFINISPAN_URL")
 			: (projectUrl() + ":11222");
 	}
 
