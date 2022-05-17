@@ -339,7 +339,7 @@ public class KeycloakUtils {
 
 		Integer statusCode = response.statusCode();
 		Response.Status status = Response.Status.fromStatusCode(statusCode);
-		log.error("Response statusCode: " + statusCode);
+		log.info("Create User Response Status: " + statusCode);
 
         try {
 
@@ -350,7 +350,7 @@ public class KeycloakUtils {
 			}
 
 			if (Response.Status.Family.familyOf(statusCode) == Response.Status.Family.SUCCESSFUL) {
-				log.error("Successfully Created User");
+				log.info("Successfully Created User");
 				return getKeycloakUserId(token, realm, username);
 			}
 
@@ -409,7 +409,7 @@ public class KeycloakUtils {
             }
 
             int statusCode = response.statusCode();
-            log.info("StatusCode: " + statusCode);
+            log.info("Fetch User Response Status: " + statusCode);
 
             if (statusCode != 200) {
                 log.error("Failed to get users from Keycloak, url:" + uri + ", response code:" + statusCode + ", token:" + token);

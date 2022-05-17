@@ -226,7 +226,7 @@ public class FrontendService {
 			BaseEntity entity = beUtils.create(defBE);
 			databaseUtils.saveBaseEntity(entity);
 		} catch (Exception e) {
-			log.error("Error creating baseentity");
+			log.error("Error creating BaseEntity!");
 			e.printStackTrace();
 		}
 	}

@@ -145,19 +145,46 @@ public class GennyCache {
 		return caches.get(realm); 
 	}
 
+	/**
+	* Get an Entity from the cache.
+	*
+	* @param cacheName The cache to get from
+	* @param key The key to the entity to fetch
+	* @return The entity
+	 */
 	public CoreEntity getEntityFromCache(String cacheName, String key) {
+
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
 		RemoteCache<String, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
+
+		if (cache == null) {
+			log.error("Could not find a cache called " + cacheName);
+		}
+
 		return cache.get(key);
 	}
 
+	/**
+	* Put an Entity into the cache.
+	* 
+	* @param cacheName The cache to get from
+	* @param key The key to put the entity under
+	* @param value The entity
+	* @return The Entity
+	 */
 	public CoreEntity putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntity value) {
+
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
 		RemoteCache<CoreEntityKey, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
+
+		if (cache == null) {
+			log.error("Could not find a cache called " + cacheName);
+		}
+
 		return cache.put(key, value);
 	}
 

@@ -167,7 +167,7 @@ public class BaseEntityUtils {
 	public void updateBaseEntity(BaseEntity baseEntity) {
 		/*DatabaseUtils databaseUtils = new DatabaseUtils();
 		databaseUtils.saveBaseEntity(baseEntity);*/
-		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),baseEntity.getCode());
+		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
 		CacheUtils.saveEntity(BASEENTITY_CACHE, key, baseEntity);
 	}
 
@@ -481,8 +481,9 @@ public class BaseEntityUtils {
 			if (StringUtils.isBlank(name)) {
 				name = defBE.getName();
 			}
-			item = new BaseEntity(code.toUpperCase(), name);
 
+			// create entity and set realm
+			item = new BaseEntity(code.toUpperCase(), name);
 			item.setRealm(userToken.getProductCode());
 		}
 
@@ -527,12 +528,18 @@ public class BaseEntityUtils {
 			}
 		}
 
-		// update in DB and cache
-		updateBaseEntity(item);
-
 		// force the type of baseentity
-		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defBE.getCode().substring("DEF_".length()));
+		String defSuffix = StringUtils.removeStart(defBE.getCode(), "DEF_");
+		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defSuffix);
 		item = qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
+		item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
+
+		// update in cache
+		try {
+			updateBaseEntity(item);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return item;
 	}
