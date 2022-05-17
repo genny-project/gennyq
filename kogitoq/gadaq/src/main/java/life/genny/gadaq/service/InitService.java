@@ -9,8 +9,13 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -124,6 +129,34 @@ public class InitService {
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg("webdata", msg);
+
+		// send basic add items
+		String sourceCode = userToken.getUserCode();
+		String targetCode = userToken.getUserCode();
+
+		Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
+		Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
+
+		/* ADD ITEMS group */
+		Question addItemsQues = new Question("QUE_ADD_ITEMS_GRP", "Add Items", questionAttribute, true);
+		Ask addItemsAsk = new Ask(addItemsQues, sourceCode, targetCode);
+
+		Question customerQues = new Question("QUE_CUSTOMER_MENU", "Add Customer", eventAttribute, true);
+		Ask customerAsk = new Ask(customerQues, sourceCode, targetCode);
+
+		Question internQues = new Question("QUE_QA_INTERN_MENU", "Intern", eventAttribute, true);
+		Ask internAsk = new Ask(internQues, sourceCode, targetCode);
+
+		Ask[] children = { customerAsk, internAsk };
+
+		addItemsAsk.setChildAsks(children);
+
+		// configure msg and send
+		QDataAskMessage askMsg = new QDataAskMessage(addItemsAsk);
+		askMsg.setToken(userToken.getToken());
+		askMsg.setReplace(true);
+
+		KafkaUtils.writeMsg("webdata", askMsg);
 	}
 
 }

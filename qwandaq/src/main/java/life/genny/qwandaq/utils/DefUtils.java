@@ -15,8 +15,6 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
@@ -27,6 +25,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.DebugException;
 import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.UserToken;
 
 /*
  * A static utility class for operations regarding 
@@ -106,7 +105,7 @@ public class DefUtils {
 
 			item.setFastAttributes(true);
 			defs.get(productCode).put(item.getCode(), item);
-			log.info("Saving (" + productCode + ") DEF " + item.getCode());
+			log.info("Saving Def (" + productCode + ") " + item.getCode());
 		}
 	}
 
