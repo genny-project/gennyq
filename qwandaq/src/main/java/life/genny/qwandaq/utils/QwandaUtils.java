@@ -377,11 +377,8 @@ public class QwandaUtils {
 				}
 			}
 
-			// update target in the cache
+			// update target in the cache and DB
 			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
-
-			// update target in the DB
-			DatabaseUtils databaseUtils = new DatabaseUtils();
 			databaseUtils.saveBaseEntity(target);
 
 			targets.add(target);

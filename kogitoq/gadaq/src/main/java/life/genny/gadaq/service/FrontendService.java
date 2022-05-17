@@ -224,11 +224,12 @@ public class FrontendService {
 		// use entity create function and save to db
 		try {
 			BaseEntity entity = beUtils.create(defBE);
-			databaseUtils.saveBaseEntity(entity);
+			log.info("BaseEntity Created: " + entity.getCode());
 		} catch (Exception e) {
 			log.error("Error creating BaseEntity!");
 			e.printStackTrace();
 		}
+
 	}
 
 }

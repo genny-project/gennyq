@@ -487,43 +487,49 @@ public class BaseEntityUtils {
 			item.setRealm(userToken.getProductCode());
 		}
 
-		if (item != null) {
-			// Establish all mandatory base entity attributes
-			for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
-				if (ea.getAttributeCode().startsWith("ATT_")) {
+		// save to DB and cache
+		databaseUtils.saveBaseEntity(item);
+		try {
+			updateBaseEntity(item);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-					String attrCode = ea.getAttributeCode().substring("ATT_".length());
-					Attribute attribute = qwandaUtils.getAttribute(attrCode);
+		// Establish all mandatory base entity attributes
+		for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
+			if (ea.getAttributeCode().startsWith("ATT_")) {
 
-					if (attribute != null) {
+				String attrCode = ea.getAttributeCode().substring("ATT_".length());
+				Attribute attribute = qwandaUtils.getAttribute(attrCode);
 
-						// if not already filled in
-						if (!item.containsEntityAttribute(attribute.getCode())) {
-							// Find any default val for this Attr
-							String defaultDefValueAttr = "DFT_" + attrCode;
-							Object defaultVal = defBE.getValue(defaultDefValueAttr, attribute.getDefaultValue());
+				if (attribute != null) {
 
-							// Only process mandatory attributes, or defaults
-							Boolean mandatory = ea.getValueBoolean();
-							if (mandatory == null) {
-								mandatory = false;
-								log.warn("**** DEF attribute ATT_" + attrCode + " has no mandatory boolean set in "
-										+ defBE.getCode());
-							}
-							// Only process mandatory attributes, or defaults
-							if (mandatory || defaultVal != null) {
-								EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(),
-										defaultVal);
-								item.addAttribute(newEA);
+					// if not already filled in
+					if (!item.containsEntityAttribute(attribute.getCode())) {
+						// Find any default val for this Attr
+						String defaultDefValueAttr = "DFT_" + attrCode;
+						Object defaultVal = defBE.getValue(defaultDefValueAttr, attribute.getDefaultValue());
 
-							}
-						} else {
-							log.info(item.getCode() + " already has value for " + attribute.getCode());
+						// Only process mandatory attributes, or defaults
+						Boolean mandatory = ea.getValueBoolean();
+						if (mandatory == null) {
+							mandatory = false;
+							log.warn("**** DEF attribute ATT_" + attrCode + " has no mandatory boolean set in "
+									+ defBE.getCode());
 						}
+						// Only process mandatory attributes, or defaults
+						if (mandatory || defaultVal != null) {
+							EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(),
+									defaultVal);
+							item.addAttribute(newEA);
 
+						}
 					} else {
-						log.warn("No Attribute found for def attr " + attrCode);
+						log.info(item.getCode() + " already has value for " + attribute.getCode());
 					}
+
+				} else {
+					log.warn("No Attribute found for def attr " + attrCode);
 				}
 			}
 		}
@@ -533,13 +539,6 @@ public class BaseEntityUtils {
 		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defSuffix);
 		item = qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
 		item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
-
-		// update in cache
-		try {
-			updateBaseEntity(item);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 
 		return item;
 	}

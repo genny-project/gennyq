@@ -92,7 +92,7 @@ public class CacheUtils {
 	 */
 	public static <T> T getObject(String realm, String key, Class c) {
 
-		log.info("Cache Realm is " + realm);
+		log.debug("Cache Realm is " + realm);
 
 		String data = (String) readCache(realm, key);
 		if (StringUtils.isEmpty(data)) {
