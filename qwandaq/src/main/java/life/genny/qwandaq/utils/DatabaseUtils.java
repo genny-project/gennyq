@@ -13,7 +13,6 @@ import javax.transaction.Transactional;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
@@ -91,8 +90,7 @@ public class DatabaseUtils {
 			return query.getResultList();
 
 		} catch (NoResultException e) {
-			log.error("No attributes found from DB search");
-			log.error(e.getStackTrace());
+			log.debug("No attributes found from DB search");
 		}
 
 		return null;
@@ -110,8 +108,7 @@ public class DatabaseUtils {
 
 			return (Long) query.getResultList().get(0);
 		} catch (NoResultException e) {
-			log.error("No Attributes found from DB Search");
-			log.error(e.getStackTrace());
+			log.debug("No Attributes found from DB Search");
 		}
 
 		return 0L;
@@ -156,8 +153,7 @@ public class DatabaseUtils {
 			return query.getResultList();
 
 		} catch (NoResultException e) {
-			log.error("No attributes found from DB search");
-			log.error(e.getStackTrace());
+			log.debug("No attributes found from DB search");
 		}
 
 		return null;
@@ -202,7 +198,7 @@ public class DatabaseUtils {
 			return query.getResultList();
 
 		} catch (NoResultException e) {
-			log.error("No BaseEntitys found in DB for realm " + realm);
+			log.debug("No BaseEntitys found in DB for realm " + realm);
 		}
 
 		return null;
@@ -247,7 +243,7 @@ public class DatabaseUtils {
 			return query.getResultList();
 
 		} catch (NoResultException e) {
-			log.error("No Question found in DB for realm " + realm);
+			log.debug("No Question found in DB for realm " + realm);
 		}
 
 		return null;
@@ -295,7 +291,7 @@ public class DatabaseUtils {
 			return query.getResultList();
 
 		} catch (NoResultException e) {
-			log.error("No QuestionQuestion found in DB for realm " + realm);
+			log.debug("No QuestionQuestion found in DB for realm " + realm);
 		}
 
 		return null;
@@ -323,8 +319,7 @@ public class DatabaseUtils {
 					.getSingleResult();
 
 		} catch (NoResultException e) {
-			log.error("No Validation found in DB for " + code + " in realm " + realm);
-			log.error(e.getStackTrace());
+			log.debug("No Validation found in DB for " + code + " in realm " + realm);
 		}
 
 		return null;
@@ -351,7 +346,7 @@ public class DatabaseUtils {
 					.getSingleResult();
 
 		} catch (NoResultException e) {
-			log.error("No Attribute found in DB for " + code + " in realm " + realm);
+			log.debug("No Attribute found in DB for " + code + " in realm " + realm);
 		}
 
 		return null;
@@ -378,7 +373,7 @@ public class DatabaseUtils {
 					.getSingleResult();
 
 		} catch (NoResultException e) {
-			log.error("No BaseEntity found in DB for " + code + " in realm " + realm);
+			log.debug("No BaseEntity found in DB for " + code + " in realm " + realm);
 		}
 
 		return null;
@@ -405,7 +400,7 @@ public class DatabaseUtils {
 					.getSingleResult();
 
 		} catch (NoResultException e) {
-			log.error("No Question found in DB for " + code + " in realm " + realm);
+			log.debug("No Question found in DB for " + code + " in realm " + realm);
 		}
 
 		return null;
@@ -437,7 +432,7 @@ public class DatabaseUtils {
 					.getSingleResult();
 
 		} catch (NoResultException e) {
-			log.error("No QuestionQuestion found in DB for " + sourceCode + ":" + targetCode + " in realm " + realm);
+			log.debug("No QuestionQuestion found in DB for " + sourceCode + ":" + targetCode + " in realm " + realm);
 		}
 
 		return null;
@@ -466,7 +461,7 @@ public class DatabaseUtils {
 					.getResultList();
 
 		} catch (NoResultException e) {
-			log.error("No QuestionQuestion found in DB for " + sourceCode);
+			log.debug("No QuestionQuestion found in DB for " + sourceCode);
 		}
 
 		return null;
@@ -498,7 +493,7 @@ public class DatabaseUtils {
 					.getResultList();
 
 		} catch (NoResultException e) {
-			log.error("No Asks found in DB for " + questionCode + ":" + sourceCode + ":" + targetCode + " in realm "
+			log.debug("No Asks found in DB for " + questionCode + ":" + sourceCode + ":" + targetCode + " in realm "
 					+ realm);
 		}
 
