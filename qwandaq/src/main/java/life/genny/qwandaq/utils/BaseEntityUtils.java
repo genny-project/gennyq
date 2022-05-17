@@ -165,8 +165,9 @@ public class BaseEntityUtils {
 	 * @param baseEntity The BaseEntity to update
 	 */
 	public void updateBaseEntity(BaseEntity baseEntity) {
-		/*DatabaseUtils databaseUtils = new DatabaseUtils();
-		databaseUtils.saveBaseEntity(baseEntity);*/
+
+		databaseUtils.saveBaseEntity(baseEntity);
+
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
 		CacheUtils.saveEntity(BASEENTITY_CACHE, key, baseEntity);
 	}
@@ -539,6 +540,12 @@ public class BaseEntityUtils {
 		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defSuffix);
 		item = qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
 		item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
+
+		try {
+			updateBaseEntity(item);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return item;
 	}
