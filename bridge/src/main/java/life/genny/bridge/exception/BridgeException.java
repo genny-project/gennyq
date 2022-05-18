@@ -10,6 +10,10 @@ package life.genny.bridge.exception;
  */
 public class BridgeException extends Exception {
 
+    public static final String NULL_FIELD = "GEN_000";
+    public static final String MISSING_PRODUCT_CODE = "GEN_001";
+    public static final String MALFORMED_PRODUCT_CODES = "GEN_002";
+
     private String code;
 
     public BridgeException(String code, String message) {
