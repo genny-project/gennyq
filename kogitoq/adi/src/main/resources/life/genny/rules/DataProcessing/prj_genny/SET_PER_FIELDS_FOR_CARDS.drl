@@ -70,7 +70,7 @@ then
 	answers.add(new Answer(userToken.getUserCode(), newBe.getCode(),"PRI_COMPASS", compass));
 	answers.add(new Answer(userToken.getUserCode(), newBe.getCode(),"PRI_TRANSPORT", transport));
 
-	beUtils.saveAnswers(answers);
+	qwandaUtils.saveAnswers(answers);
 
 	System.out.println("##################################### DUDE: ANSWER = " +answers);
 	System.out.println("##################################### DUDE: NEW_APPLICATION = " + newBe);

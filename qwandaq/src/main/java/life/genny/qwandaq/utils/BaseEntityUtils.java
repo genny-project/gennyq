@@ -1,25 +1,17 @@
 package life.genny.qwandaq.utils;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import java.io.Serializable;
 import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
@@ -28,17 +20,15 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QSearchBeResult;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 
 /**
  * A non-static utility class used for standard
@@ -52,6 +42,12 @@ public class BaseEntityUtils {
 
 	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	DatabaseUtils databaseUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	UserToken userToken;
@@ -73,26 +69,31 @@ public class BaseEntityUtils {
 	/**
 	 * Fetch the user base entity of the {@link UserToken}
 	 * 
-	 * @return the user {@link BaseEntity}
+	 * @return the user's {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
 		return this.getBaseEntityByCode(userToken.getUserCode());
 	}
 
 	/**
-	 * Fetch A {@link BaseEntity} from cache the using a code.
+	 * Fetch A {@link BaseEntity} from the cache using a code.
 	 *
-	 * @param code The code of the {@link BaseEntity} to fetch
+	 * @param code The code of the BaseEntity to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
-		
-		DatabaseUtils databaseUtils = new DatabaseUtils();
-		log.info("Getting from Cache " + userToken.getRealm());
-		// // return databaseUtils.entityManager.
-		// databaseUtils
-		// return databaseUtils.findBaseEntityByCode(userToken.getRealm(), code);
-		return CacheUtils.getObject(userToken.getRealm(), code, BaseEntity.class);
+
+		log.info("Using ProductCode " + userToken.getProductCode());
+
+		// check for entity in the cache
+		BaseEntity entity = CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
+
+		// check in database if not in cache
+		if (entity == null) {
+			entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
+		}
+
+		return entity;
 	}
 
 	/**
@@ -166,9 +167,10 @@ public class BaseEntityUtils {
 	 * @param baseEntity The BaseEntity to update
 	 */
 	public void updateBaseEntity(BaseEntity baseEntity) {
-		/*DatabaseUtils databaseUtils = new DatabaseUtils();
-		databaseUtils.saveBaseEntity(baseEntity);*/
-		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),baseEntity.getCode());
+
+		databaseUtils.saveBaseEntity(baseEntity);
+
+		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
 		CacheUtils.saveEntity(BASEENTITY_CACHE, key, baseEntity);
 	}
 
@@ -414,104 +416,6 @@ public class BaseEntityUtils {
 	}
 
 	/**
-	 * Save an {@link Answer} object.
-	 *
-	 * @param answer The answer to save
-	 * @return The target BaseEntity
-	 */
-	public BaseEntity saveAnswer(Answer answer) {
-
-		List<BaseEntity> targets = saveAnswers(Arrays.asList(answer));
-
-		if (targets != null && targets.size() > 0) {
-			return targets.get(0);
-		}
-
-		return null;
-	}
-
-	/**
-	 * Save {@link Answers}.
-	 * 
-	 * @param answers The answers to save
-	 * @return The target BaseEntitys
-	 */
-	public List<BaseEntity> saveAnswers(Answers answers) {
-
-		return saveAnswers(answers.getAnswers());
-	}
-
-	/**
-	 * Save a List of {@link Answer} objects.
-	 *
-	 * @param answers The list of answers to save
-	 * @return The target BaseEntitys
-	 */
-	public List<BaseEntity> saveAnswers(List<Answer> answers) {
-
-		List<BaseEntity> targets = new ArrayList<>();
-
-		// sort answers into target BaseEntitys
-		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()
-				.collect(Collectors.groupingBy(Answer::getTargetCode));
-
-		for (String targetCode : answersPerTargetCodeMap.keySet()) {
-
-			// check if target is valid
-			BaseEntity target = getBaseEntityByCode(targetCode);
-			if (target == null) {
-				log.error(targetCode + " does not exist!");
-				continue;
-			}
-
-			// fetch the DEF for this target
-			DefUtils defUtils = new DefUtils();
-			BaseEntity defBE = defUtils.getDEF(target);
-
-			// filter Non-valid answers using def
-			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
-			List<Answer> validAnswers = group.stream()
-					.filter(item -> defUtils.answerValidForDEF(defBE, item))
-					.collect(Collectors.toList());
-
-			// update target using valid answers
-			for (Answer answer : validAnswers) {
-				try {
-					target.addAnswer(answer);
-				} catch (BadDataException e) {
-					log.error(e);
-				}
-			}
-
-			// update target in the cache
-			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
-
-			// update target in the DB
-			DatabaseUtils databaseUtils = new DatabaseUtils();
-			databaseUtils.saveBaseEntity(target);
-
-			targets.add(target);
-		}
-
-		return targets;
-	}
-
-	/**
-	 * Create a new {@link BaseEntity} using a DEF entity code.
-	 *
-	 * @param defCode The defCode to use
-	 * @return The created BaseEntity
-	 * @throws Exception If the entity could not be created
-	 */
-	public BaseEntity create(final String defCode) throws Exception {
-
-		DefUtils defUtils = new DefUtils();
-		BaseEntity defBE = defUtils.getDefMap().get(defCode);
-
-		return create(defBE);
-	}
-
-	/**
 	 * Create a new {@link BaseEntity} using a DEF entity.
 	 *
 	 * @param defBE The def entity to use
@@ -556,7 +460,6 @@ public class BaseEntityUtils {
 			log.error(errorMsg);
 			throw new Exception(errorMsg);
 		}
-		QwandaUtils qwandaUtils = new QwandaUtils();
 
 		BaseEntity item = null;
 		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
@@ -581,59 +484,70 @@ public class BaseEntityUtils {
 			if (StringUtils.isBlank(name)) {
 				name = defBE.getName();
 			}
-			item = new BaseEntity(code.toUpperCase(), name);
 
+			// create entity and set realm
+			item = new BaseEntity(code.toUpperCase(), name);
 			item.setRealm(userToken.getProductCode());
 		}
 
-		if (item != null) {
-			// Establish all mandatory base entity attributes
-			for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
-				if (ea.getAttributeCode().startsWith("ATT_")) {
+		// save to DB and cache
+		databaseUtils.saveBaseEntity(item);
+		try {
+			updateBaseEntity(item);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-					String attrCode = ea.getAttributeCode().substring("ATT_".length());
-					Attribute attribute = qwandaUtils.getAttribute(attrCode);
+		// Establish all mandatory base entity attributes
+		for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
+			if (ea.getAttributeCode().startsWith("ATT_")) {
 
-					if (attribute != null) {
+				String attrCode = ea.getAttributeCode().substring("ATT_".length());
+				Attribute attribute = qwandaUtils.getAttribute(attrCode);
 
-						// if not already filled in
-						if (!item.containsEntityAttribute(attribute.getCode())) {
-							// Find any default val for this Attr
-							String defaultDefValueAttr = "DFT_" + attrCode;
-							Object defaultVal = defBE.getValue(defaultDefValueAttr, attribute.getDefaultValue());
+				if (attribute != null) {
 
-							// Only process mandatory attributes, or defaults
-							Boolean mandatory = ea.getValueBoolean();
-							if (mandatory == null) {
-								mandatory = false;
-								log.warn("**** DEF attribute ATT_" + attrCode + " has no mandatory boolean set in "
-										+ defBE.getCode());
-							}
-							// Only process mandatory attributes, or defaults
-							if (mandatory || defaultVal != null) {
-								EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(),
-										defaultVal);
-								item.addAttribute(newEA);
+					// if not already filled in
+					if (!item.containsEntityAttribute(attribute.getCode())) {
+						// Find any default val for this Attr
+						String defaultDefValueAttr = "DFT_" + attrCode;
+						Object defaultVal = defBE.getValue(defaultDefValueAttr, attribute.getDefaultValue());
 
-							}
-						} else {
-							log.info(item.getCode() + " already has value for " + attribute.getCode());
+						// Only process mandatory attributes, or defaults
+						Boolean mandatory = ea.getValueBoolean();
+						if (mandatory == null) {
+							mandatory = false;
+							log.warn("**** DEF attribute ATT_" + attrCode + " has no mandatory boolean set in "
+									+ defBE.getCode());
 						}
+						// Only process mandatory attributes, or defaults
+						if (mandatory || defaultVal != null) {
+							EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(),
+									defaultVal);
+							item.addAttribute(newEA);
 
+						}
 					} else {
-						log.warn("No Attribute found for def attr " + attrCode);
+						log.info(item.getCode() + " already has value for " + attribute.getCode());
 					}
+
+				} else {
+					log.warn("No Attribute found for def attr " + attrCode);
 				}
 			}
 		}
 
-		// update in DB and cache
-		updateBaseEntity(item);
-
 		// force the type of baseentity
+		String defSuffix = StringUtils.removeStart(defBE.getCode(), "DEF_");
+		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defSuffix);
+		item = qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
+		item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
 
-		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defBE.getCode().substring("DEF_".length()));
-		item = saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
+		try {
+			updateBaseEntity(item);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return item;
 	}
@@ -648,7 +562,6 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity createUser(final BaseEntity defBE, final String email) throws Exception {
 
-		QwandaUtils qwandaUtils = new QwandaUtils();
 		BaseEntity item = null;
 		String uuid = null;
 		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
@@ -665,13 +578,14 @@ public class BaseEntityUtils {
 			// this is a user, generate keycloak id
 			uuid = KeycloakUtils.createDummyUser(userToken.getToken(), userToken.getKeycloakRealm());
 			Optional<String> optCode = defBE.getValue("PRI_PREFIX");
+
 			if (optCode.isPresent()) {
+
 				String name = defBE.getName();
 				String code = optCode.get() + "_" + uuid.toUpperCase();
 				item = new BaseEntity(code, name);
 				item.setRealm(userToken.getProductCode());
-				// item = QwandaUtils.createBaseEntityByCode(code, name, qwandaServiceUrl,
-				// this.token);
+
 				if (item != null) {
 					// Add PRI_EMAIL
 					if (!email.startsWith("random+")) {

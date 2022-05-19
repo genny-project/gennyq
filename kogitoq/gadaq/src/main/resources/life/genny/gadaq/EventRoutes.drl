@@ -16,7 +16,8 @@ then
 	// TODO: move this to bridge
 	if (userToken.hasRole("test")) {
 		System.out.println("Saving token for " + userToken.getUsername());
-		CacheUtils.writeCache(userToken.getRealm(), "TOKEN:"+userToken.getCode(), userToken.getToken());
+		System.out.println("Key: TOKEN:" + userToken.getUserCode() + ", Value: " + userToken.getToken());
+		CacheUtils.writeCache(userToken.getRealm(), "TOKEN:"+userToken.getUserCode(), userToken.getToken());
 	}
 
 	kogitoUtils.triggerWorkflow("authinit", msg);

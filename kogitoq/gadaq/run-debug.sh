@@ -54,6 +54,7 @@ export GENNY_MYSQL_PASSWORD=password
 export GENNY_MYSQL_URL=alyson.genny.life
 export GENNY_MYSQL_PORT=3310
 export GENNY_MYSQL_DB=gennydb
+export INFINISPAN_URL=alyson.genny.life:11222
 echo "infinispan url $GENNY_INFINISPAN_URL"
 echo "infinispan username $GENNY_INFINISPAN_CLIENT_AUTH_USERNAME"
 echo "infinispan password $GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD"

@@ -1,9 +1,9 @@
 package life.genny.gadaq.service;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -26,7 +26,6 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
@@ -39,9 +38,6 @@ public class ProcessAnswerService {
 
 	@Inject
 	UserToken userToken;
-
-	@Inject
-	QuestionUtils questionUtils;
 
 	@Inject
 	DatabaseUtils databaseUtils;
@@ -65,11 +61,13 @@ public class ProcessAnswerService {
 	 * Save incoming answers to the process baseentity.
 	 *
 	 * @param answerMessage The incoming answers
-	 * @param askMessage The ask message representing the questions
-	 * @param processBE The process entity to store the answer data
+	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public BaseEntity storeIncomingAnswers(QDataAnswerMessage answerMessage, QDataAskMessage askMessage, BaseEntity processBE) {
+	public String storeIncomingAnswers(String answerMessageJson, String processBEJson) {
+
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		QDataAnswerMessage answerMessage = jsonb.fromJson(answerMessageJson, QDataAnswerMessage.class);
 
 		// iterate incoming answers
 		for (Answer answer : answerMessage.getItems()) {
@@ -101,17 +99,20 @@ public class ProcessAnswerService {
 			log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue);
 		}
 
-		return processBE;
+		return jsonb.toJson(processBE);
 	}
 
 	/**
 	 * Check if all mandatory questions have been answered.
 	 *
-	 * @param askMessage The ask message representing the questions
-	 * @param processBE The process entity storing the answer data
+	 * @param askMessageJson The ask message representing the questions
+	 * @param processBEJson The process entity storing the answer data
 	 * @return Boolean representing whether all mandatory questions have been answered
 	 */
-	public Boolean checkMandatory(QDataAskMessage askMessage, BaseEntity processBE) {
+	public Boolean checkMandatory(String askMessageJson, String processBEJson) {
+
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		log.info("Checking mandatorys against " + processBE.getCode());
 
@@ -216,10 +217,12 @@ public class ProcessAnswerService {
 	 *
 	 * @param sourceCode The source of the answers
 	 * @param targetCode The target of the answers
-	 * @param processBE The process entity that is storing the answer data
+	 * @param processBEJson The process entity that is storing the answer data
 	 */
 	@Transactional
-	public void saveAllAnswers(String sourceCode, String targetCode, BaseEntity processBE) {
+	public void saveAllAnswers(String sourceCode, String targetCode, String processBEJson) {
+
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 
 		List<Answer> answers = new ArrayList<>();
 
@@ -231,7 +234,7 @@ public class ProcessAnswerService {
 		}
 
 		// save these answrs to db and cache
-		beUtils.saveAnswers(answers);
+		qwandaUtils.saveAnswers(answers);
 		log.info("Saved answers for target " + targetCode);
 	}
 

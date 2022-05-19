@@ -325,12 +325,6 @@ public class Question extends CodedEntity implements Serializable {
 	// return childQuestions;
 	// }
 	//
-	// /**
-	// * @param childQuestions the childQuestions to set
-	// */
-	// public void setChildQuestions(final Set<QuestionQuestion> childQuestions) {
-	// this.childQuestions = childQuestions;
-	// }
 
 	/**
 	 * @return the attributeCode
@@ -374,6 +368,13 @@ public class Question extends CodedEntity implements Serializable {
 	 */
 	public Boolean getMandatory() {
 		return mandatory;
+	}
+
+	/**
+	 * @return the mandatory
+	 */
+	public Boolean isMandatory() {
+		return getMandatory();
 	}
 
 	/**
@@ -423,6 +424,13 @@ public class Question extends CodedEntity implements Serializable {
 	 */
 	public void setChildQuestions(Set<QuestionQuestion> childQuestions) {
 		this.childQuestions = childQuestions;
+	}
+
+	/**
+	 * @param childQuestions the childQuestions to set
+	 */
+	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
+		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);;
 	}
 
 	/**
@@ -569,6 +577,13 @@ public class Question extends CodedEntity implements Serializable {
 	}
 
 	/**
+	 * @return the oneshot
+	 */
+	public Boolean isOneshot() {
+		return getOneshot();
+	}
+
+	/**
 	 * @param oneshot the oneshot to set
 	 */
 	public void setOneshot(Boolean oneshot) {
@@ -580,6 +595,13 @@ public class Question extends CodedEntity implements Serializable {
 	 */
 	public Boolean getReadonly() {
 		return readonly;
+	}
+
+	/**
+	 * @return the readonly
+	 */
+	public Boolean isReadonly() {
+		return getReadonly();
 	}
 
 	/**

@@ -85,7 +85,7 @@ public class Service {
 	ServiceToken serviceToken;
 
 	private Boolean initialised = false;
-	
+
 	public Service() {
 		// activate our request scope
 		Arc.container().requestContext().activate();
@@ -111,9 +111,11 @@ public class Service {
 
 		// add list of allowed products
 		String[] products = getProductCodes();
-		if(products != null)
+		if (products != null) {
 			serviceToken.setAllowedProducts(products);
-		else log.error("Could not resolve allowed products from either PROJECT_REALM or PRODUCT_CODES env. Ensure they are defined!");
+		} else {
+			log.error("Could not resolve allowed products from either PROJECT_REALM or PRODUCT_CODES env. Ensure they are defined!");
+		}
 	}
 
 	/**
@@ -121,21 +123,21 @@ public class Service {
 	 * @return
 	 */
 	private String[] getProductCodes() {
+
 		String projectRealm = CommonUtils.getSystemEnv("PROJECT_REALM", false);
 		String allowedProducts = CommonUtils.getSystemEnv("PRODUCT_CODES");
-		String[] products = null;
+
 		if (allowedProducts != null) {
 			// Ensure we have unique product codes
-			products = Arrays.asList(allowedProducts.split(":"))
-							.stream()
-							.collect(Collectors.toSet())
-							.toArray(new String[0]);
-		} else if(projectRealm != null) {
-			products = new String[1];
-			products[0] = projectRealm;
+			return Arrays.asList(allowedProducts.split(":")).stream()
+				.collect(Collectors.toSet())
+				.toArray(new String[0]);
+
+		} else if (projectRealm != null) {
+			return new String[]{ projectRealm };
 		}
 
-		return products;
+		return null;
 	}
 
 	/**
@@ -188,7 +190,7 @@ public class Service {
 	 * log the service confiduration details.
 	 */
 	public void showConfiguration() {
-		log.info("Based updates");
+
 		if (showValues) {
 			log.info("service username  : " + serviceUsername);
 			log.info("service password  : " + servicePassword);

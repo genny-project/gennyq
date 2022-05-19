@@ -8,7 +8,7 @@ public interface FIGetStringCallBack<T> {
     /**
      * Takes in an object of type T and returns a stringified representation of the object
      * @param object
-     * @return
+     * @return A String
      */
     String getString(T object);
 }

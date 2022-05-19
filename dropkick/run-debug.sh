@@ -5,7 +5,7 @@ export GENNY_SERVICE_USERNAME=service
 export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
 export GENNY_API_URL=http://internmatch.genny.life:8280
 
-export INFINISPAN_HOST='0.0.0.0'
+export INFINISPAN_URL='0.0.0.0:11222'
 export INFINISPAN_USERNAME=genny
 export INFINISPAN_PASSWORD=password
 

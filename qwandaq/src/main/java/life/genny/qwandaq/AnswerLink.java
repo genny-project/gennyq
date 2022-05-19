@@ -12,16 +12,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.StringReader;
 
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -53,12 +44,6 @@ import life.genny.qwandaq.entity.BaseEntity;
  * @author Adam Crow
  * @author Byron Aguirre
  */
-@Entity
-@Table(name = "answerlinks")
-@AssociationOverrides({ 
-	@AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID")),
-	@AssociationOverride(name = "pk.target", joinColumns = @JoinColumn(name = "TARGET_ID")) 
-})
 @RegisterForReflection
 public class AnswerLink implements java.io.Serializable {
 
@@ -66,21 +51,17 @@ public class AnswerLink implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@EmbeddedId
 	private AnswerLinkId pk = new AnswerLinkId();
 
 	/**
 	 * Stores the Created UMT DateTime that this object was created
 	 */
 
-	@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
-	@Column(name = "updated")
-	// @Version
 	private LocalDateTime updated;
 
 	/**
@@ -138,7 +119,6 @@ public class AnswerLink implements java.io.Serializable {
 	/**
 	 * Store the BaseEntity Code value of the attribute for the baseEntity
 	 */
-	@Column(name = "be_list", length = 512)
 	@Convert(converter = StringListConverter.class)
 	private List<String> ValueBaseEntityCodeList;
 
@@ -722,12 +702,10 @@ public class AnswerLink implements java.io.Serializable {
 		this.refused = refused;
 	}
 
-	@PreUpdate
 	public void autocreateUpdate() {
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	@PrePersist
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
@@ -948,3 +926,4 @@ public class AnswerLink implements java.io.Serializable {
 
 	}
 }
+

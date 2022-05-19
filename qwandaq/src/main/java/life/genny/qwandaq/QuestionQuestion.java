@@ -296,6 +296,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	}
 
 	/**
+	 * @return the mandatory
+	 */
+	public Boolean isMandatory() {
+		return getMandatory();
+	}
+
+	/**
 	 * @param mandatory
 	 *                  the mandatory to set
 	 */
@@ -308,6 +315,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	public Boolean getOneshot() {
 		return oneshot;
+	}
+
+	/**
+	 * @return the oneshot
+	 */
+	public Boolean isOneshot() {
+		return getOneshot();
 	}
 
 	/**
@@ -325,6 +339,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	}
 
 	/**
+	 * @return the disabled
+	 */
+	public Boolean isDisabled() {
+		return getDisabled();
+	}
+
+	/**
 	 * @param disabled the disabled to set
 	 */
 	public void setDisabled(Boolean disabled) {
@@ -339,6 +360,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	}
 
 	/**
+	 * @return the hidden
+	 */
+	public Boolean isHidden() {
+		return getHidden();
+	}
+
+	/**
 	 * @param hidden the hidden to set
 	 */
 	public void setHidden(Boolean hidden) {
@@ -350,6 +378,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	public Boolean getReadonly() {
 		return readonly;
+	}
+
+	/**
+	 * @return the readonly
+	 */
+	public Boolean isReadonly() {
+		return getReadonly();
 	}
 
 	/**
@@ -463,6 +498,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	}
 
 	/**
+	 * @return the formTrigger
+	 */
+	public Boolean isFormTrigger() {
+		return getFormTrigger();
+	}
+
+	/**
 	 * @param formTrigger the formTrigger to set
 	 */
 	public void setFormTrigger(Boolean formTrigger) {
@@ -474,6 +516,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	public Boolean getCreateOnTrigger() {
 		return createOnTrigger;
+	}
+
+	/**
+	 * @return the createOnTrigger
+	 */
+	public Boolean isCreateOnTrigger() {
+		return getCreateOnTrigger();
 	}
 
 	/**

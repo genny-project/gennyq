@@ -133,7 +133,7 @@ public class InternalConsumer {
 		ksession.dispose();
 
 		// TODO: ensure that answersToSave has been updated by our rules
-		beUtils.saveAnswers(answersToSave);
+		qwandaUtils.saveAnswers(answersToSave);
 
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");

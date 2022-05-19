@@ -102,7 +102,7 @@ public class Bridge {
 			e.printStackTrace();
 		}
 
-		return Response.status(404).build();
+		return Response.status(404).entity("Error getting config for uri: " + url).build();
 	}
 
 	/**

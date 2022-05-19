@@ -206,7 +206,14 @@ public class Context extends CoreEntity implements Serializable {
 		return contextCode;
 	}
 
-
+	/**
+	* set the contextCode.
+	*
+	* @param contextCode The context code to set
+	 */
+	public void setContextCode(String contextCode) {
+		this.contextCode = contextCode;
+	}
 
 	/**
 	 * @return the dataType
