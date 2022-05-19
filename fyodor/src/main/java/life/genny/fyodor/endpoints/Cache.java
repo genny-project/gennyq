@@ -56,16 +56,19 @@ public class Cache {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
 	public Response read(@PathParam("key") String key) {
-
+		log.info("[!] read(" + key + ")");
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
+		log.info("User: " + userToken.getUserCode());
+		log.info("Product Code/Cache: " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 		String json = (String) CacheUtils.readCache(productCode, key);
 
 		if (json == null) {
+			log.info("Could not find in cache: " + key);
 			return Response.ok("null").build();
 		}
 
@@ -79,7 +82,7 @@ public class Cache {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
 	public Response write(@PathParam("key") String key, String value) {
-
+		log.info("Writing to cache " + userToken.getProductCode() + ": [" + key + ":" + value + "]");
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
