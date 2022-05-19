@@ -25,8 +25,10 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QuestionUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+// import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.serviceq.Service;
+// import life.genny.fyodor.endpoints;
 
 /**
  * A Service class used for Auth Init operations.
@@ -53,7 +55,9 @@ public class InitService {
 	UserToken userToken;
 
 	@Inject
-	QuestionUtils questionUtils;
+	QwandaUtils qwandaUtils;
+	// @Inject
+	// QuestionUtils questionUtils;
 	/**
 	 * Send the Project BaseEntity.
 	 */
@@ -179,49 +183,59 @@ public class InitService {
 		// sendASKs(entity);
 	}
 	public void getASKs(EntityAttribute attribute, BaseEntity entity) {
-		log.info("Got attribute " + attribute);
-		log.info("questionCode :" + attribute.getValueString());
-		log.info("sourceCode :" + attribute.getBaseEntityCode());
-		log.info("targetCode :" + entity.getCode());
-		log.info("processId :" + entity.getId());
-		String questionCode = userToken.getUserCode();
+		// log.info("Got attribute " + attribute);
+		// log.info("questionCode :" + attribute.getValueString());
+		// log.info("sourceCode :" + attribute.getBaseEntityCode());
+		// log.info("targetCode :" + entity.getCode());
+		// log.info("processId :" + entity.getId());
+		// String questionCode = userToken.getUserCode();
 		// BaseEntity source = beUtils.getBaseEntityByCode(attribute.getBaseEntityCode());
 		// BaseEntity target = beUtils.getBaseEntityByCode(attribute.getBaseEntityCode());
 
-		log.info("Fetching asks -> " + questionCode + ":" + entity.getCode() + ":" + entity.getCode());
-		if(attribute.getValueString() == null){
-			log.info("Value is null");
-			attribute.setValueString("");
-		}
-		log.info("Attribute " + attribute);
-		if(!attribute.getValueString().startsWith("QUE_") || attribute.getValue().getClass() != String.class){
-			log.info("Break! " + attribute.getValueString());
-		} else {
+		// log.info("Fetching asks -> " + questionCode + ":" + entity.getCode() + ":" + entity.getCode());
+		// if(attribute.getValueString() == null){
+		// 	log.info("Value is null");
+		// 	attribute.setValueString("");
+		// }
+		// log.info("Attribute " + attribute);
+		// if(!attribute.getValueString().startsWith("QUE_") || attribute.getValue().getClass() != String.class){
+		// 	log.info("Break! " + attribute.getValueString());
+		// } else {
 
-		log.info("Getting question with code " + attribute.getValueString());
-		Question rootQuestion = questionUtils.getQuestion(attribute.getValueString());
-		List<Ask> asks = questionUtils.findAsks(rootQuestion, entity, entity);
-		log.info("Got question " + rootQuestion);
-		log.info("Got asks " + asks);
+		// log.info("Getting question with code " + attribute.getValueString());
+		// Question rootQuestion = qwandaUtils.getQuestion(attribute.getValueString());
+		// List<Ask> asks = qwandaUtils.generateAskFromQuestionCode(attribute.getValueString(), entity, entity);
+		// log.info("Got question " + rootQuestion);
+		// log.info("Got asks " + asks);
 		// create ask msg from asks11
-		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
+		// QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
+		// msg.setToken(userToken.getToken());
+		// msg.setReplace(true);
 
 		// TODO: make this recursive
 		// update the processId
-		for (Ask ask : msg.getItems()) {
-			ask.setProcessId(entity.getId().toString());
-		}
+		// for (Ask ask : msg.getItems()) {
+		// 	ask.setProcessId(entity.getId().toString());
+		// }
 
-		KafkaUtils.writeMsg("webdata", msg);}
+		// KafkaUtils.writeMsg("webdata", msg);}
 	}
 	public void sendASKs(BaseEntity entity) {
 		log.info("Sending asks for " + userToken.getRealm());
 		log.info("Entity is " + entity.getBaseEntityAttributes());
+		
+		List<Ask> asks = new ArrayList<>();
 		entity.getBaseEntityAttributes().forEach(attribute -> {
-			System.out.println(attribute);
+			System.out.println(attribute.getValueString());
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(attribute.getValueString(), entity, entity);
+			asks.add(ask);
 		});
+		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		for (Ask ask : msg.getItems()) {
+			ask.setProcessId(entity.getId().toString());
+		}
 		List<EntityAttribute> attributeList = new ArrayList<>(entity.getBaseEntityAttributes());
 		// EntityAttribute attribute = attributeList.get(1);
 		attributeList.forEach(attribute -> {
