@@ -2,8 +2,7 @@
 set -e
 password=`echo $USER_PASSWORD`
 secret=`echo $GENNY_CLIENT_SECRET`
-clientid=`echo $GENNY_CLIENT_ID`
-clientid=kogito-console-quarkus
+clientid=$1
 #echo "password = $password"
 #echo "clientid = $clientid"
 #echo "secret = $secret"

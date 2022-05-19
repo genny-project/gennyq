@@ -268,7 +268,7 @@ public class TopologyProducer {
 
 		Integer pageStart = 0;
 		Integer pageSize = searchValueJson.containsKey("dropdownSize") ? searchValueJson.getInt("dropdownSize")
-				: GennySettings.defaultDropDownPageSize;
+				: GennySettings.defaultDropDownPageSize();
 		Boolean searchingOnLinks = false;
 
 		SearchEntity searchBE = new SearchEntity("SBE_DROPDOWN", " Search")
