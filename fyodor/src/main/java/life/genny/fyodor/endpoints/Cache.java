@@ -74,6 +74,7 @@ public class Cache {
 	}
 
 	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
 	public Response write(@PathParam("key") String key, String value) {

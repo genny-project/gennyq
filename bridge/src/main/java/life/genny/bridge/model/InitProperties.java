@@ -41,8 +41,8 @@ public class InitProperties {
         setApiUrl(url);
 
 		String cid = determineClientId(url);
-		if ("internmatch".equals(cid)) {
-			cid = "alyson";
+		if ("alyson".equals(cid)) {
+			cid = "internmatch";
 		}
 
 		setClientId(cid);
