@@ -68,6 +68,9 @@ public class CacheUtils {
 	public static void writeCache(String realm, String key, String value) {
 
 		cache.getRemoteCache(realm).put(key, value);
+
+		String result = (String)readCache(realm, key);
+		log.info("Written key:" + key + " to cache " + realm + " [" + result + "]");
 	}
 
 	/**
