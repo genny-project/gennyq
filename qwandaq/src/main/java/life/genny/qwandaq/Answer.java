@@ -16,7 +16,6 @@
 
 package life.genny.qwandaq;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,6 +23,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
+import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorColumn;
@@ -48,16 +48,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.querydsl.core.annotations.QueryExclude;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Type;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.querydsl.core.annotations.QueryExclude;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -549,8 +547,7 @@ public class Answer {
 	/**
 	 * @return Date
 	 */
-	@Transient
-	@JsonIgnore
+	@JsonbTransient
 	public Date getCreatedDate() {
 		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
 		return out;
@@ -559,8 +556,7 @@ public class Answer {
 	/**
 	 * @return Date
 	 */
-	@Transient
-	@JsonIgnore
+	@JsonbTransient
 	public Date getUpdatedDate() {
 		final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
 		return out;

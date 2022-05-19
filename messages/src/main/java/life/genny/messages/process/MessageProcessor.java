@@ -198,7 +198,7 @@ public class MessageProcessor {
 				String accessToken = KeycloakUtils.getImpersonatedToken(recipientBe, serviceToken, projectBe);
 
                 // Encode URL and put back in the map
-                String url = MsgUtils.encodedUrlBuilder(GennySettings.projectUrl + "/home", parentCode, code, targetCode, accessToken);
+                String url = MsgUtils.encodedUrlBuilder(GennySettings.projectUrl() + "/home", parentCode, code, targetCode, accessToken);
                 log.info("Access URL: " + url);
                 baseEntityContextMap.put("URL", url);
             }

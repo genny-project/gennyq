@@ -5,7 +5,6 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -21,7 +20,6 @@ import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.HttpUtils;
-import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 
 /**

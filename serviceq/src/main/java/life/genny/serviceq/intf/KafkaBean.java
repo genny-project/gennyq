@@ -60,7 +60,8 @@ public class KafkaBean implements KafkaInterface {
 		}
 
 		// create metadata for correct bridge if outgoing
-		OutgoingKafkaRecordMetadata<String> metadata = null;
+		OutgoingKafkaRecordMetadata<String> metadata = OutgoingKafkaRecordMetadata.<String>builder()
+					.build();
 
 		if ("webcmds".equals(channel) || "webdata".equals(channel)) {
 

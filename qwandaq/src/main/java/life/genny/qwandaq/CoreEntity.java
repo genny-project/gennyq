@@ -16,8 +16,6 @@
 
 package life.genny.qwandaq;
 
-import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -37,13 +35,12 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
 import com.cdi.crud.infra.model.CoreEntityInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
 
 /**
@@ -68,7 +65,7 @@ import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
 
 @MappedSuperclass
 @RegisterForReflection
-public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Serializable, Comparable<Object> {
+public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Comparable<Object> {
 
 	private static final long serialVersionUID = 1L;
 
