@@ -1,29 +1,30 @@
 package life.genny.gadaq.live.data;
 
-import io.quarkus.runtime.StartupEvent;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import java.time.Duration;
 import java.time.Instant;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import life.genny.gadaq.utils.KogitoUtils;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.message.QEventMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.serviceq.Service;
-import life.genny.serviceq.intf.GennyScopeInit;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 import org.kie.api.runtime.KieSession;
 import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
+
+import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
+import life.genny.gadaq.utils.KogitoUtils;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -58,7 +59,7 @@ public class InternalConsumer {
 	/**
 	 * Execute on start up.
 	 *
-	 * @param ev
+	 * @param ev The startup event
 	 */
 	void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
@@ -67,21 +68,21 @@ public class InternalConsumer {
 	/**
 	 * Consume from the events topic.
 	 *
-	 * @param data
+	 * @param event The incoming event
 	 */
 	@Incoming("events")
 	@Blocking
-	public void getEvent(String data) {
+	public void getEvent(String event) {
 
-		scope.init(data);
+		scope.init(event);
 
-		log.info("Incoming Event : " + data);
+		log.info("Incoming Event : " + event);
 		Instant start = Instant.now();
 
-		// is data a valid event
+		// check if event is a valid event
 		QEventMessage msg = null;
 		try {
-			msg = jsonb.fromJson(data, QEventMessage.class);
+			msg = jsonb.fromJson(event, QEventMessage.class);
 		} catch (Exception e) {
 			log.error("Cannot parse this event!");
 			return;
@@ -107,7 +108,7 @@ public class InternalConsumer {
 	/**
 	 * Consume from the valid_data topic.
 	 *
-	 * @param data
+	 * @param data The incoming data
 	 */
 	@Incoming("valid_data")
 	@Blocking
@@ -115,9 +116,10 @@ public class InternalConsumer {
 
 		scope.init(data);
 
+		log.info("Incoming Data : " + data);
 		Instant start = Instant.now();
 
-		// is data a valid event
+		// check if data is a valid answer msg
 		QDataAnswerMessage msg = null;
 		try {
 			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
@@ -135,16 +137,22 @@ public class InternalConsumer {
 		// check for event based answers
 		for (Answer answer : msg.getItems()) {
 
+			// skip if no processId is present
+			if (answer.getProcessId() == null) {
+				continue;
+			}
+
 			String processId = answer.getProcessId();
+			String answerJson = jsonb.toJson(answer);
 
 			if ("PRI_SUBMIT".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "submit", data);
+				kogitoUtils.sendSignal("processquestions", processId, "submit", answerJson);
 
 			} else if ("PRI_CANCEL".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "cancel", data);
+				kogitoUtils.sendSignal("processquestions", processId, "cancel", answerJson);
 
 			} else {
-				kogitoUtils.sendSignal("processquestions", processId, "answer", data);
+				kogitoUtils.sendSignal("processquestions", processId, "answer", answerJson);
 			}
 
 		}

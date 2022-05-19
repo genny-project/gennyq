@@ -1,14 +1,5 @@
 package life.genny.qwandaq.models;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import life.genny.qwandaq.utils.CommonUtils;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -33,7 +24,14 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public class GennyToken implements Serializable {

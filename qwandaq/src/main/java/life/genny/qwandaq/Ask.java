@@ -16,7 +16,6 @@
 
 package life.genny.qwandaq;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,15 +41,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.commons.lang3.builder.CompareToBuilder;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.querydsl.core.annotations.QueryExclude;
+
+import org.apache.commons.lang3.builder.CompareToBuilder;
 
 import life.genny.qwandaq.exception.BadDataException;
-
-import com.querydsl.core.annotations.QueryExclude;
 
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
@@ -80,14 +78,23 @@ import com.querydsl.core.annotations.QueryExclude;
  */
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "ask", indexes = { @Index(columnList = "id", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { "id",
-				"realm" }))
+@Table(name = "ask", 
+	indexes = { 
+		@Index(columnList = "id", name = "code_idx"),
+		@Index(columnList = "realm", name = "code_idx") 
+	}, 
+	uniqueConstraints = @UniqueConstraint(
+		columnNames = { 
+			"id",
+			"realm" 
+		}
+	)
+)
 @Entity
 @QueryExclude
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
-public class Ask extends CoreEntity implements Serializable {
+public class Ask extends CoreEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -113,11 +120,9 @@ public class Ask extends CoreEntity implements Serializable {
 	private Long parentId = 0L;
 
 	private Boolean formTrigger = false;
-
 	private Boolean createOnTrigger = false;
 
-	@Transient
-	private transient Ask[] childAsks;
+	private Ask[] childAsks;
 
 	// @Embedded
 	// @Valid
@@ -487,7 +492,7 @@ public class Ask extends CoreEntity implements Serializable {
 	/**
 	 * @return the childAsks
 	 */
-	@Transient
+	// @Transient
 	public Ask[] getChildAsks() {
 		return childAsks;
 	}
@@ -647,15 +652,14 @@ public class Ask extends CoreEntity implements Serializable {
 			return;
 		}
 
-		List<Ask> children = new ArrayList<>();
-		if (this.childAsks != null) {
-			for (Ask a : childAsks) {
-				children.add(a);
-			}
+		if (this.childAsks == null) {
+			setChildAsks(new Ask[0]);
 		}
 
-		children.add(child);
-		setChildAsks(children.toArray(new Ask[children.size()]));
+		Ask[] children = Arrays.copyOf(this.childAsks, this.childAsks.length + 1);
+		children[children.length - 1] = child;
+
+		setChildAsks(children);
 	}
 
 }

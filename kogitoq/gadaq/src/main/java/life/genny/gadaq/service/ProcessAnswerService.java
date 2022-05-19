@@ -58,46 +58,42 @@ public class ProcessAnswerService {
 	EntityManager entityManager;
 
 	/**
-	 * Save incoming answers to the process baseentity.
+	 * Save incoming answer to the process baseentity.
 	 *
-	 * @param answerMessage The incoming answers
+	 * @param answerJson The incoming answer
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswers(String answerMessageJson, String processBEJson) {
+	public String storeIncomingAnswer(String answerJson, String processBEJson) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		QDataAnswerMessage answerMessage = jsonb.fromJson(answerMessageJson, QDataAnswerMessage.class);
+		Answer answer = jsonb.fromJson(answerJson, Answer.class);
 
-		// iterate incoming answers
-		for (Answer answer : answerMessage.getItems()) {
-
-			// ensure the target code matches
-			if (!answer.getTargetCode().equals(processBE.getCode())) {
-				log.warn("Found an Answer with a bad target code : " + answer.getTargetCode());
-				continue;
-			}
-
-			// find the attribute
-			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-			answer.setAttribute(attribute);
-
-			// debug log the value before saving
-			String currentValue = processBE.getValueAsString(attributeCode);
-			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
-
-			// update the baseentity
-			try {
-				processBE.addAnswer(answer);
-			} catch (BadDataException e) {
-				e.printStackTrace();
-			}
-
-			// log the new value
-			String savedValue = processBE.getValueAsString(answer.getAttributeCode());
-			log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue);
+		// ensure the target code matches
+		if (!answer.getTargetCode().equals(processBE.getCode())) {
+			log.warn("Found an Answer with a bad target code : " + answer.getTargetCode());
+			return processBEJson;
 		}
+
+		// find the attribute
+		String attributeCode = answer.getAttributeCode();
+		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+		answer.setAttribute(attribute);
+
+		// debug log the value before saving
+		String currentValue = processBE.getValueAsString(attributeCode);
+		log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
+
+		// update the baseentity
+		try {
+			processBE.addAnswer(answer);
+		} catch (BadDataException e) {
+			e.printStackTrace();
+		}
+
+		// log the new value
+		String savedValue = processBE.getValueAsString(answer.getAttributeCode());
+		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue);
 
 		return jsonb.toJson(processBE);
 	}
@@ -156,8 +152,8 @@ public class ProcessAnswerService {
 				answered = false;
 			}
 
-			String resultLine = (mandatory?"M":"O")+ " : " + ea.getAttributeCode() + " : " + value; 
-			log.info("===>" + resultLine);
+			String resultLine = (mandatory?"[M]":"[O]")+ " : " + ea.getAttributeCode() + " : " + value; 
+			log.info("===> " + resultLine);
 		}
 
 		log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " complete");
@@ -178,10 +174,17 @@ public class ProcessAnswerService {
 	 */
 	public Ask recursivelyCheckForSubmit(Ask ask) {
 
+		// return ask if submit is found
 		if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
 			return ask;
 		}
 
+		// ensure child asks is not null
+		if (ask.getChildAsks() == null) {
+			return null;
+		}
+
+		// recursively check child asks for submit
 		for (Ask child : ask.getChildAsks()) {
 
 			Ask childSubmit = recursivelyCheckForSubmit(child);
@@ -203,8 +206,15 @@ public class ProcessAnswerService {
 	 */
 	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
 
+		// add current ask attribute code to map
 		map.put(ask.getAttributeCode(), ask.getMandatory());
 
+		// ensure child asks is not null
+		if (ask.getChildAsks() == null) {
+			return map;
+		}
+
+		// recursively add child ask attribute codes
 		for (Ask child : ask.getChildAsks()) {
 			map = recursivelyFillMandatoryMap(map, child);
 		}

@@ -132,7 +132,6 @@ public class QwandaUtils {
 					nextLoad = (int) (attributeCount - attributesLoaded);
 				}
 
-
 				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
 				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 
@@ -237,6 +236,8 @@ public class QwandaUtils {
 
 		String productCode = userToken.getProductCode();
 
+		log.info("Fetching Question from database: " + code);
+
 		// find the question in the database
 		Question question = databaseUtils.findQuestionByCode(productCode, code);
 		Boolean mandatory = question.getMandatory();
@@ -257,6 +258,8 @@ public class QwandaUtils {
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
+
+				log.info(" [*] Found Child Question in database: " + questionQuestion.getTargetCode());
 
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 				child.setDisabled(questionQuestion.getDisabled());
