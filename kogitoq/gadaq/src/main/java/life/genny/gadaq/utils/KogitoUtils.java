@@ -158,11 +158,8 @@ public class KogitoUtils {
         String url = kogitoServiceUrl + "/" + process.toLowerCase();
         String jsonStr = jsonb.toJson(message);
 
-<<<<<<< HEAD
         log.info("TOKEN = " + userToken.getToken());
 
-=======
->>>>>>> 10.1.0
         String workflowJsonStr = "{\"eventMessage\":" + jsonStr + ", \"token\":\"" + userToken.getToken() + "\"}";
 
         HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
