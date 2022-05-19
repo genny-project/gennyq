@@ -326,7 +326,7 @@ public class KeycloakUtils {
 
         log.debug("CreateUserjsonDummy = " + json);
 
-        String uri = GennySettings.keycloakUrl + "/auth/admin/realms/" + realm + "/users";
+        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users";
 
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
@@ -391,7 +391,7 @@ public class KeycloakUtils {
      */
     public static List<LinkedHashMap> fetchKeycloakUser(final String token, final String realm, final String username) {
 
-        String uri = GennySettings.keycloakUrl + "/auth/admin/realms/" + realm + "/users?username=" + username;
+        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users?username=" + username;
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uri))
@@ -451,7 +451,7 @@ public class KeycloakUtils {
 		String uuid = user.getValue("PRI_UUID", null);
 
 		String json = "{\""  + field  + "\":\"" + value + "\"}";
-        String uri = GennySettings.keycloakUrl + "/auth/admin/realms/" + realm + "/users/" + uuid;
+        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users/" + uuid;
 		HttpResponse<String> response = HttpUtils.put(uri, json, token);
 
 		return response.statusCode();
@@ -473,7 +473,7 @@ public class KeycloakUtils {
 		String uuid = user.getValue("PRI_UUID", null);
 
 		String json = "{ \"email\" : \"" + email + "\" , \"enabled\" : true, \"emailVerified\" : true}";
-        String uri = GennySettings.keycloakUrl + "/auth/admin/realms/" + realm + "/users/" + uuid;
+        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users/" + uuid;
 		HttpResponse<String> response = HttpUtils.put(uri, json, token);
 
 		return response.statusCode();

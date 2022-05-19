@@ -35,7 +35,7 @@ public class BridgeSwitch {
 	 */
 	public static void addActiveBridgeId(GennyToken gennyToken, String bridgeId) {
 
-		String realm = gennyToken.getRealm();
+		String realm = gennyToken.getProductCode();
 		Set<String> activeBridgeIds = CacheUtils.getObject(realm, BRIDGE_SWITCH_KEY, Set.class);
 
 		if (activeBridgeIds == null) {
@@ -55,10 +55,16 @@ public class BridgeSwitch {
 	 */
 	public static String findActiveBridgeId(GennyToken gennyToken) {
 
-		String realm = gennyToken.getRealm();
+		String realm = gennyToken.getProductCode();
 
 		Set<String> activeBridgeIds = CacheUtils.getObject(realm, BRIDGE_SWITCH_KEY, Set.class);
 
+		// null check
+		if (activeBridgeIds == null) {
+			return null;
+		}
+
+		// find first
 		if (activeBridgeIds.iterator().hasNext()) {
 			return activeBridgeIds.iterator().next();
 		}
@@ -74,7 +80,7 @@ public class BridgeSwitch {
 	 */
 	public static void put(GennyToken gennyToken, String bridgeId) {
 
-		String realm = gennyToken.getRealm();
+		String realm = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
 
 		log.debug("Adding Switch to Cache --- " + key + " :: " + bridgeId);
@@ -102,7 +108,7 @@ public class BridgeSwitch {
 	 */
 	public static String get(GennyToken gennyToken) {
 
-		String realm = gennyToken.getRealm();
+		String realm = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
 		
 		// grab from cache

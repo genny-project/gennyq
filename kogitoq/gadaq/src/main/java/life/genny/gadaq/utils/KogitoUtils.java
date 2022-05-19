@@ -15,6 +15,7 @@ import org.jboss.logging.Logger;
 import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
 
 import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.HttpUtils;
 
@@ -142,11 +143,11 @@ public class KogitoUtils {
         return sendSignal(graphTable, processId, signalCode, "");
     }
 
-    public String sendSignal(final String signal, final String processId, final String signalCode,
-            final String entity) {
+    public String sendSignal(final String workflow, final String processId, final String signalCode, final String entity) {
 
-        String kogitoUrl = System.getenv("GENNY_KOGITO_SERVICE_URL")
-                + "/" + signal.toLowerCase() + "/" + processId + "/" + signalCode;
+        String kogitoUrl = GennySettings.kogitoServiceUrl() + "/" + workflow.toLowerCase() + "/" + processId + "/" + signalCode;
+
+		log.debug("Sending Signal to uri: " + kogitoUrl);
 
         HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json", userToken.getToken());
 

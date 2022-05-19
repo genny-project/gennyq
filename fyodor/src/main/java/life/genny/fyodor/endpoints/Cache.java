@@ -5,7 +5,6 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -21,7 +20,6 @@ import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.HttpUtils;
-import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 
 /**
@@ -56,16 +54,19 @@ public class Cache {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
 	public Response read(@PathParam("key") String key) {
-
+		log.info("[!] read(" + key + ")");
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
+		log.info("User: " + userToken.getUserCode());
+		log.info("Product Code/Cache: " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 		String json = (String) CacheUtils.readCache(productCode, key);
 
 		if (json == null) {
+			log.info("Could not find in cache: " + key);
 			return Response.ok("null").build();
 		}
 
@@ -79,7 +80,7 @@ public class Cache {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
 	public Response write(@PathParam("key") String key, String value) {
-
+		log.info("Writing to cache " + userToken.getProductCode() + ": [" + key + ":" + value + "]");
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
