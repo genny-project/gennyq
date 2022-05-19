@@ -94,13 +94,14 @@ public class HttpUtils {
 		HttpRequest request = requestBuilder
 				.POST(HttpRequest.BodyPublishers.ofString(body))
 				.build();
-
+		log.info("Posting request " + request);
 		try {
 			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 			return response;
 		} catch (IOException | InterruptedException e) {
+			
 			log.error("Error getting response back from " + uri);
-			log.error(e);
+			log.error(e.getLocalizedMessage());
 			e.printStackTrace();
 		}
 

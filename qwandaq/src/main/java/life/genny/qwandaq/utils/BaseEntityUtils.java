@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +66,7 @@ public class BaseEntityUtils {
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
+		log.info("Trying to retrieve " + userToken.getProductCode().toUpperCase());
 		return this.getBaseEntityByCode("PRJ_" + userToken.getProductCode().toUpperCase());
 	}
 
@@ -84,8 +86,13 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
-
-		return CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
+		
+		DatabaseUtils databaseUtils = new DatabaseUtils();
+		log.info("Getting from Cache " + userToken.getRealm());
+		// // return databaseUtils.entityManager.
+		// databaseUtils
+		// return databaseUtils.findBaseEntityByCode(userToken.getRealm(), code);
+		return CacheUtils.getObject(userToken.getRealm(), code, BaseEntity.class);
 	}
 
 	/**

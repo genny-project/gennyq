@@ -33,13 +33,14 @@ public class KogitoUtils {
     @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
     String kogitoServiceUrl;
 
-	@Inject
-	UserToken userToken;
+    @Inject
+    UserToken userToken;
 
     @Inject
     KieRuntimeBuilder kieRuntimeBuilder;
 
-    public String fetchGraphQL(final String graphTable, final String likeField, final String likeValue, String... fields) {
+    public String fetchGraphQL(final String graphTable, final String likeField, final String likeValue,
+            String... fields) {
 
         String data = " query {"
                 + "  " + graphTable + " (where: {"
@@ -58,7 +59,8 @@ public class KogitoUtils {
         return response.body();
     }
 
-    public String fetchProcessId(final String graphTable, final String likeField, final String likeValue) throws Exception {
+    public String fetchProcessId(final String graphTable, final String likeField, final String likeValue)
+            throws Exception {
 
         String data = " query {"
                 + "  " + graphTable + " (where: {"
@@ -105,33 +107,34 @@ public class KogitoUtils {
 
         if (userToken == null) {
             log.error("userToken supplied is null");
-			return null;
-		}
+            return null;
+        }
 
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL", userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL",
+                userToken.getToken());
 
-		if (response == null) {
-			log.error("Response was null!");
-			return null;
-		}
+        if (response == null) {
+            log.error("Response was null!");
+            return null;
+        }
 
-		String responseBody = response.body();
-		if (responseBody.contains("Error id")) {
-			log.error("Error fetching ProcessId");
-			return null;
-		}
+        String responseBody = response.body();
+        if (responseBody.contains("Error id")) {
+            log.error("Error fetching ProcessId");
+            return null;
+        }
 
-		// isolate the id
-		JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
-		JsonObject json = responseJson.getJsonObject("data");
-		JsonArray jsonArray = json.getJsonArray(graphTable);
+        // isolate the id
+        JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
+        JsonObject json = responseJson.getJsonObject("data");
+        JsonArray jsonArray = json.getJsonArray(graphTable);
 
-		if (jsonArray == null || jsonArray.isEmpty()) {
-			log.error("No processId found");
-		}
+        if (jsonArray == null || jsonArray.isEmpty()) {
+            log.error("No processId found");
+        }
 
-		JsonObject firstItem = jsonArray.getJsonObject(0);
-		return firstItem.getString("id");
+        JsonObject firstItem = jsonArray.getJsonObject(0);
+        return firstItem.getString("id");
     }
 
     public String sendSignal(final String graphTable, final String processId, final String signalCode) {
@@ -139,10 +142,11 @@ public class KogitoUtils {
         return sendSignal(graphTable, processId, signalCode, "");
     }
 
-    public String sendSignal(final String signal, final String processId, final String signalCode, final String entity) {
+    public String sendSignal(final String signal, final String processId, final String signalCode,
+            final String entity) {
 
-        String kogitoUrl = System.getenv("GENNY_KOGITO_SERVICE_URL") 
-			+ "/" + signal.toLowerCase() + "/" + processId + "/" + signalCode;
+        String kogitoUrl = System.getenv("GENNY_KOGITO_SERVICE_URL")
+                + "/" + signal.toLowerCase() + "/" + processId + "/" + signalCode;
 
         HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json", userToken.getToken());
 
@@ -154,21 +158,21 @@ public class KogitoUtils {
         String url = kogitoServiceUrl + "/" + process.toLowerCase();
         String jsonStr = jsonb.toJson(message);
 
-		log.info("TOKEN = " + userToken.getToken());
+        log.info("TOKEN = " + userToken.getToken());
 
         String workflowJsonStr = "{\"eventMessage\":" + jsonStr + ", \"token\":\"" + userToken.getToken() + "\"}";
 
-        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, null);
+        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
 
         if (response.statusCode() == 201) {
 
             JsonObject json = jsonb.fromJson(response.body(), JsonObject.class);
 
-			// return the processId
-			return json.getString("id");
+            // return the processId
+            return json.getString("id");
 
         } else {
-            log.error("TriggerWorkflow Response Status:  " + response.statusCode());
+            log.error("TriggerWorkflow Response Status:  " + response);
         }
 
         return null;
