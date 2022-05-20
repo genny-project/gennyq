@@ -1,26 +1,26 @@
 package life.genny.fyodor.endpoints;
 
+import io.vertx.core.http.HttpServerRequest;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
-
-import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+
 
 /**
  * Cache --- Endpoints providing cache access
@@ -43,6 +43,43 @@ public class Cache {
 
 	@Inject
 	UserToken userToken;
+
+
+	/**
+	* Read an item from the cache.
+	*
+	* @param productCode The productCode of the cache item
+	* @param key The key of the cache item
+	* @return The json item
+	 */
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{productCode}/{key}")
+	public Response readProductCodeKey(@PathParam("productCode") String productCode,@PathParam("key") String key) {
+		log.info("[!] read(" + productCode+":"+key + ")");
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+		
+		if (!"service".equals(userToken.getUsername())) {
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(HttpUtils.error("User not authorized to make this request")).build();
+		}
+
+		log.info("User: " + userToken.getUserCode());
+		log.info("Product Code/Cache: " + productCode);
+		String json = (String) CacheUtils.readCache(productCode, key);
+
+		if (json == null) {
+			log.info("Could not find in cache: " + key);
+			return Response.ok("null").build();
+		}
+
+		log.info("Found json of length " + json.length() + " for " + key);
+
+		return Response.ok(json).build();
+	}
 
 	/**
 	* Read an item from the cache.
