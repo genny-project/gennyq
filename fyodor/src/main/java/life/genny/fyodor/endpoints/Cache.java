@@ -81,6 +81,30 @@ public class Cache {
 		return Response.ok(json).build();
 	}
 
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{productCode}/{key}")
+	public Response write(@@PathParam("productCode") String productCode,PathParam("key") String key, String value) {
+		log.info("[!] write(" + productCode+":"+key + ":"+value+")");
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		if (!"service".equals(userToken.getUsername())) {
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(HttpUtils.error("User not authorized to make this request")).build();
+		}
+
+
+		CacheUtils.writeCache(productCode, key, value);
+
+		log.info("Wrote json of length " + value.length() + " for " + key);
+
+		return Response.ok().build();
+	}
+
 	/**
 	* Read an item from the cache.
 	*
