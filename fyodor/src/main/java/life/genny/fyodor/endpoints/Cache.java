@@ -62,7 +62,7 @@ public class Cache {
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 		
-		if (!"service".equals(userToken.getUsername())) {
+		if (!"service".equals(userToken.getUsername()) && !userToken.hasRole("test")) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
@@ -85,7 +85,7 @@ public class Cache {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{productCode}/{key}")
-	public Response write(@@PathParam("productCode") String productCode,PathParam("key") String key, String value) {
+	public Response write(@PathParam("productCode") String productCode,@PathParam("key") String key, String value) {
 		log.info("[!] write(" + productCode+":"+key + ":"+value+")");
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
