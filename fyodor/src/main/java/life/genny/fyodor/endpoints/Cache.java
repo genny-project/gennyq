@@ -15,10 +15,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
 
 
 
@@ -43,6 +46,9 @@ public class Cache {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	DatabaseUtils databaseUtils;
 
 
 	/**
@@ -71,8 +77,9 @@ public class Cache {
 		log.info("Product Code/Cache: " + productCode);
 		String json = (String) CacheUtils.readCache(productCode, key);
 
-		if (json == null) {
+		if (StringUtils.isBlank(json)) {
 			log.info("Could not find in cache: " + key);
+			
 			return Response.ok("null").build();
 		}
 
