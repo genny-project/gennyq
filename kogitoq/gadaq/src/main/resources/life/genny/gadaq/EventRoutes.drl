@@ -23,6 +23,18 @@ then
 	kogitoUtils.triggerWorkflow("authinit", msg);
 end
 
+rule RouteSubmit 
+when
+	msg: QEventMessage( data.code == "QUE_SUBMIT" )
+	userToken : UserToken()
+	kogitoUtils : KogitoUtils()
+then
+	System.out.println("Routing SUBMIT!");
+
+	String processId = msg.getData().getProcessId();
+	kogitoUtils.sendSignal("processquestions", processId, "submit", "");
+end
+
 rule RouteEventDefault 
 salience 0
 when
