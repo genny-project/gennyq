@@ -229,7 +229,5 @@ public class FrontendService {
 			log.error("Error creating BaseEntity!");
 			e.printStackTrace();
 		}
-
 	}
-
 }

@@ -77,6 +77,8 @@ public class InternalConsumer {
 		scope.init(event);
 
 		log.info("Incoming Event : " + event);
+		log.info("userToken = " + userToken);
+		log.info("productCode = " + userToken.getProductCode());
 		Instant start = Instant.now();
 
 		// check if event is a valid event
@@ -85,6 +87,7 @@ public class InternalConsumer {
 			msg = jsonb.fromJson(event, QEventMessage.class);
 		} catch (Exception e) {
 			log.error("Cannot parse this event!");
+			e.printStackTrace();
 			return;
 		}
 

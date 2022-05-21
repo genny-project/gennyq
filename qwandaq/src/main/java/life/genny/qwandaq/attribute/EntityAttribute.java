@@ -1,6 +1,7 @@
 package life.genny.qwandaq.attribute;
 
-import java.lang.invoke.MethodHandles;
+import java.io.StringReader;
+import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -13,9 +14,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.math.BigDecimal;
-import java.io.StringReader;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbTransient;
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.Cacheable;
@@ -32,44 +38,32 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
-
 import org.javamoney.moneta.Money;
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
-
-import javax.json.Json;
-import javax.json.JsonReader;
-import javax.json.bind.annotation.JsonbCreator;
-import javax.json.bind.annotation.JsonbProperty;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.json.JsonObject;
-
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.entity.BaseEntity;
 
 @Entity
-
 @Table(name = "baseentity_attribute", indexes = {
 		@Index(columnList = "baseEntityCode", name = "ba_idx"),
 		@Index(columnList = "attributeCode", name = "ba_idx"),
 		@Index(columnList = "valueString", name = "ba_idx"),
 		@Index(columnList = "valueBoolean", name = "ba_idx")
 }, uniqueConstraints = @UniqueConstraint(columnNames = { "attributeCode", "baseEntityCode", "realm" }))
-@AssociationOverrides({ @AssociationOverride(name = "pk.baseEntity", joinColumns = @JoinColumn(name = "BASEENTITY_ID")),
-		@AssociationOverride(name = "pk.attribute", joinColumns = @JoinColumn(name = "ATTRIBUTE_ID")) })
-
+@AssociationOverrides({
+	@AssociationOverride(name = "pk.baseEntity", joinColumns = @JoinColumn(name = "BASEENTITY_ID")),
+	@AssociationOverride(name = "pk.attribute", joinColumns = @JoinColumn(name = "ATTRIBUTE_ID")) 
+})
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -101,36 +95,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 
 	@Transient
 	private String feedback = null;
-
-	/**
-	 * @return the baseEntityCode
-	 */
-	public String getBaseEntityCode() {
-		return baseEntityCode;
-	}
-
-	/**
-	 * @param baseEntityCode
-	 *                       the baseEntityCode to set
-	 */
-	public void setBaseEntityCode(final String baseEntityCode) {
-		this.baseEntityCode = baseEntityCode;
-	}
-
-	/**
-	 * @return the attributeCode
-	 */
-	public String getAttributeCode() {
-		return attributeCode;
-	}
-
-	/**
-	 * @param attributeCode
-	 *                      the attributeCode to set
-	 */
-	public void setAttributeCode(final String attributeCode) {
-		this.attributeCode = attributeCode;
-	}
 
 	@EmbeddedId
 	@Column
@@ -267,8 +231,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		setAttribute(attribute);
 		this.setPrivacyFlag(attribute.getDefaultPrivacyFlag());
 		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-							// attribute from scoring.
+			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
 		}
 		setWeight(weight);
 		// Assume that Attribute Validation has been performed
@@ -284,6 +247,36 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	@JsonbTransient
 	public EntityAttributeId getPk() {
 		return pk;
+	}
+
+	/**
+	 * @return the baseEntityCode
+	 */
+	public String getBaseEntityCode() {
+		return baseEntityCode;
+	}
+
+	/**
+	 * @param baseEntityCode
+	 *                       the baseEntityCode to set
+	 */
+	public void setBaseEntityCode(final String baseEntityCode) {
+		this.baseEntityCode = baseEntityCode;
+	}
+
+	/**
+	 * @return the attributeCode
+	 */
+	public String getAttributeCode() {
+		return attributeCode;
+	}
+
+	/**
+	 * @param attributeCode
+	 *                      the attributeCode to set
+	 */
+	public void setAttributeCode(final String attributeCode) {
+		this.attributeCode = attributeCode;
 	}
 
 	/**

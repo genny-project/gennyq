@@ -296,8 +296,15 @@ public class QwandaUtils {
 	 */
 	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
 
+		String[] excludes = new String[]{ 
+			Question.QUESTION_GROUP_ATTRIBUTE_CODE, 
+			"PRI_SUBMIT"
+		};
+
 		// grab attribute code of current ask
-		codes.add(ask.getAttributeCode());
+		if (!Arrays.asList(excludes).contains(ask.getAttributeCode())) {
+			codes.add(ask.getAttributeCode());
+		}
 
 		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
 
@@ -362,7 +369,6 @@ public class QwandaUtils {
 			}
 
 			// fetch the DEF for this target
-			DefUtils defUtils = new DefUtils();
 			BaseEntity defBE = defUtils.getDEF(target);
 
 			// filter Non-valid answers using def

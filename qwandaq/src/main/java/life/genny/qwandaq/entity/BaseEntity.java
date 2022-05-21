@@ -491,7 +491,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			existing.get().setWeight(weight);
 			// removeAttribute(existing.get().getAttributeCode());
 		} else {
-			getBaseEntityAttributes().add(entityAttribute);
+			Set<EntityAttribute> eas = this.getBaseEntityAttributes();
+			eas.add(entityAttribute);
+			this.setBaseEntityAttributes(eas);
+			log.info("Adding attr " + attribute.getCode());
 		}
 		return entityAttribute;
 	}

@@ -522,8 +522,10 @@ public class BaseEntityUtils {
 						if (mandatory || defaultVal != null) {
 							EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(),
 									defaultVal);
-							item.addAttribute(newEA);
 
+							log.info("Adding mandatory/default -> " + attribute.getCode());
+							item.addAttribute(newEA);
+							log.info("AFTER ADD = " + jsonb.toJson(item));
 						}
 					} else {
 						log.info(item.getCode() + " already has value for " + attribute.getCode());
@@ -538,11 +540,14 @@ public class BaseEntityUtils {
 		// force the type of baseentity
 		String defSuffix = StringUtils.removeStart(defBE.getCode(), "DEF_");
 		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defSuffix);
-		item = qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
-		item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
+		qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
+		EntityAttribute isAttribute = new EntityAttribute(item, attributeDEF, 1.0, true);
+		item.addAttribute(isAttribute);
+		// item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
 
 		try {
 			updateBaseEntity(item);
+			CacheUtils.putObject(userToken.getProductCode(), item.getCode(), item);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
