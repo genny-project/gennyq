@@ -59,6 +59,30 @@ public class Entities {
 
 		BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
 		if (entity == null) {
+			log.error("productCode=[" + userToken.getProductCode() + "] , code=" + code);
+		}
+
+		return Response.ok(entity).build();
+	}
+	
+	/**
+	 * Read an item from the cache.
+	 *
+	 * @param key The key of the cache item
+	 * @return The json item
+	 */
+	@DELETE
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{code}")
+	public Response read(@PathParam("code") String code) {
+
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
+		if (entity == null) {
 			log.error("productCode=["+userToken.getProductCode()+"] , code="+code);
 		}
 

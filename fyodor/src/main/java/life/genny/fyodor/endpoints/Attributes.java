@@ -5,8 +5,8 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -17,8 +17,6 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
-import life.genny.qwandaq.utils.SecurityUtils;
-import life.genny.serviceq.Service;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
@@ -87,5 +85,27 @@ public class Attributes {
 
 		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList.toArray(new Attribute[0]));
 		return Response.ok(attributeMsg).build();
+	}
+
+	/**
+	 * Read an item from the cache.
+	 *
+	 * @param key The key of the cache item
+	 * @return The json item
+	 */
+	@DELETE
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{realm}/{attributeCode}")
+	public Response deleteAttribute(@PathParam("realm") String realm,@PathParam("attributeCode") String attributeCode) {
+
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		log.info("Api Attribute delete of "+realm+" : "+attributeCode);
+
+		
+		return Response.ok().build();
 	}
 }
