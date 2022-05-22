@@ -84,7 +84,7 @@ echo $TOKEN
 echo ""
 echo "******** READ CACHE **********"
 echo "http://alyson.genny.life:4242/cache/${productCode}/${key}"
-CACHEREAD=`curl -s -X GET --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Bearer $TOKEN"  "http://alyson.genny.life:4242/cache/${productCode}/${key}"`
+CACHEREAD=`curl -s -X GET --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Bearer $TOKEN"  "http://alyson.genny.life:4242/cache/${productCode}/${key}/json"`
 #CR=`echo "$CACHEREAD" | jq -r '.value'`
 #CR2=`echo "${CR}" | jq .  `
 echo -e "${Green}${CACHEREAD}${Color_Off}\n"
