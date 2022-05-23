@@ -4,6 +4,7 @@ import io.vertx.core.http.HttpServerRequest;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -74,7 +75,7 @@ public class Entities {
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{code}")
-	public Response read(@PathParam("code") String code) {
+	public Response delete(@PathParam("code") String code) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)

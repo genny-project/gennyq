@@ -1,8 +1,6 @@
 package life.genny.fyodor.endpoints;
 
 import io.vertx.core.http.HttpServerRequest;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -82,11 +80,12 @@ public class Search {
 
 		BaseEntity user = beUtils.getUserBaseEntity();
 
-		new QScheduleMessage.Builder("SCHEDULE_TEST")
-			.setEventMessage("TEST_EVENT", uuid)
-			.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
-			.setGennyToken(userToken)
-			.schedule();
+		// TODO
+		// new QScheduleMessage.Builder("SCHEDULE_TEST")
+		// 	.setEventMessage("TEST_EVENT", uuid)
+		// 	.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
+		// 	.setGennyToken(userToken)
+		// 	.schedule();
 
 		log.info("Done!");
 
@@ -181,7 +180,7 @@ public class Search {
 		log.info("GENNY_TOKEN = " + userToken);
 		log.info("SERVICE_TOKEN = " + serviceToken);
 
-		search.getEntityEntitys()
+
 
 		return Response.ok().build();
 	}
