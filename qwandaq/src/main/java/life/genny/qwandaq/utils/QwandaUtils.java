@@ -236,10 +236,15 @@ public class QwandaUtils {
 
 		String productCode = userToken.getProductCode();
 
-		log.info("Fetching Question from database: " + code);
+		log.debug("Fetching Question: " + code);
 
 		// find the question in the database
 		Question question = databaseUtils.findQuestionByCode(productCode, code);
+
+		if (question == null) {
+			log.error("Error fetching Question from database: " + code);
+		}
+
 		Boolean mandatory = question.getMandatory();
 
 		// init new parent ask

@@ -148,16 +148,7 @@ public class InternalConsumer {
 			String processId = answer.getProcessId();
 			String answerJson = jsonb.toJson(answer);
 
-			if ("PRI_SUBMIT".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "submit", answerJson);
-
-			} else if ("PRI_CANCEL".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "cancel", answerJson);
-
-			} else {
-				kogitoUtils.sendSignal("processquestions", processId, "answer", answerJson);
-			}
-
+			kogitoUtils.sendSignal("processquestions", processId, "answer", answerJson);
 		}
 
 		Instant end = Instant.now();

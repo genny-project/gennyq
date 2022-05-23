@@ -21,6 +21,7 @@ then
 	}
 
 	kogitoUtils.triggerWorkflow("authinit", msg);
+	retract(msg);
 end
 
 rule RouteSubmit 
@@ -33,6 +34,7 @@ then
 
 	String processId = msg.getData().getProcessId();
 	kogitoUtils.sendSignal("processquestions", processId, "submit", "");
+	retract(msg);
 end
 
 rule RouteEventDefault 
@@ -45,5 +47,6 @@ then
 	System.out.println("Routing Default Event!");
 
 	kogitoUtils.triggerWorkflow(msg.getData().getCode(), msg);
+	retract(msg);
 end
 

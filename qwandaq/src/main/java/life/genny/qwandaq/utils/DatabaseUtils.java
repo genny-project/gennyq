@@ -566,8 +566,6 @@ public class DatabaseUtils {
 	@Transactional
 	public void saveBaseEntity(BaseEntity entity) {
 
-		log.info(jsonb.toJson(entity));
-
 		log.info("Saving BaseEntity " + entity.getCode());
 
 		checkEntityManager();

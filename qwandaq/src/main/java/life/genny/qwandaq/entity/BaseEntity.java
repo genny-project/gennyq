@@ -491,10 +491,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			existing.get().setWeight(weight);
 			// removeAttribute(existing.get().getAttributeCode());
 		} else {
-			Set<EntityAttribute> eas = this.getBaseEntityAttributes();
-			eas.add(entityAttribute);
-			this.setBaseEntityAttributes(eas);
-			log.info("Adding attr " + attribute.getCode());
+			this.getBaseEntityAttributes().add(entityAttribute);
 		}
 		return entityAttribute;
 	}
@@ -655,6 +652,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			ea.get().setValue(answerLink.getValue());
 			ea.get().setInferred(answer.getInferred());
 			ea.get().setWeight(answer.getWeight());
+			ea.get().setBaseEntity(this);
 		} else {
 			EntityAttribute newEA = new EntityAttribute(this, answerLink.getAttribute(), weight, answerLink.getValue());
 			newEA.setInferred(answerLink.getInferred());
