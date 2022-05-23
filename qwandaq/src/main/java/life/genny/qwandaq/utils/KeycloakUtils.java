@@ -324,7 +324,7 @@ public class KeycloakUtils {
                 + "\"value\":\"" + defaultPassword + "\","
                 + "\"temporary\":true }]}";
 
-        log.debug("CreateUserjsonDummy = " + json);
+        log.info("CreateUserjsonDummy = " + json);
 
         String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users";
 
@@ -359,7 +359,7 @@ public class KeycloakUtils {
 			e.printStackTrace();
         }
 
-		log.error("Could not return keycloak user Id" + statusCode);
+		log.error("Could not return keycloak user Id");
         return null;
     }
 

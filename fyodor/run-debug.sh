@@ -27,6 +27,6 @@ export INFINISPAN_PASSWORD=password
 export PROJECT_REALM=internmatch
 export PROJECT_URL=https://internmatch.genny.life
 export realm=mentormatch
-./mvnw clean  quarkus:dev -Ddebug=5558 -Dquarkus.http.port=${port} -DskipTests=true 
+./mvnw clean  quarkus:dev -Ddebug=5558 -Dquarkus.http.port=${port} -DskipTests=true  -Dinfinispan.client.hotrod.server_list=${gennyhost}:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC  
 #./mvnw clean  quarkus:dev -Ddebug=5558 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 

@@ -1,13 +1,10 @@
 package life.genny.qwandaq.attribute;
 
-import javax.persistence.CascadeType;
+import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
-import javax.json.bind.annotation.JsonbTransient;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 

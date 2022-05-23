@@ -6,26 +6,14 @@ public class MessageData implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	/** 
-	 * @return String
-	 */
-	@Override
-	public String toString() {
-		return " MessageData [code=" + code + "   " + id + "]";
-	}
-
 	private String code;
-
 	private String parentCode;
-
 	private String rootCode;
-
 	private String targetCode;
-	
 	private String sourceCode;
-	
 	private Long id;
 	private String value;
+	private String processId;
 	private String content;
 
 	public MessageData() { }
@@ -40,7 +28,6 @@ public class MessageData implements Serializable {
 	public String getCode() {
 		return code;
 	}
-
 	
 	/** 
 	 * @param code the code to set
@@ -48,7 +35,6 @@ public class MessageData implements Serializable {
 	public void setCode(String code) {
 		this.code = code;
 	}
-
 	
 	/** 
 	 * @return Long
@@ -56,7 +42,6 @@ public class MessageData implements Serializable {
 	public Long getId() {
 		return id;
 	}
-
 	
 	/** 
 	 * @param id the id to set
@@ -65,7 +50,6 @@ public class MessageData implements Serializable {
 		this.id = id;
 	}
 
-	
 	/** 
 	 * @return String
 	 */
@@ -73,7 +57,6 @@ public class MessageData implements Serializable {
 		return value;
 	}
 
-	
 	/** 
 	 * @param value the valu to set
 	 */
@@ -81,14 +64,12 @@ public class MessageData implements Serializable {
 		this.value = value;
 	}
 	
-	
 	/** 
 	 * @return String
 	 */
 	public String getContent() {
 		return content;
 	}
-
 	
 	/** 
 	 * @param content the content to set
@@ -153,4 +134,20 @@ public class MessageData implements Serializable {
 		this.sourceCode = sourceCode;
 	}
 
+	public String getProcessId() {
+		return processId;
+	}
+
+	public void setProcessId(String processId) {
+		this.processId = processId;
+	}
+
+
+	/** 
+	 * @return String
+	 */
+	@Override
+	public String toString() {
+		return " MessageData [code=" + code + "   " + id + "]";
+	}
 }

@@ -15,51 +15,22 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 
 	private static final long serialVersionUID = 1L;
 
-	public enum MsgOption {
-		CACHE, // cache this message as a response to a trigger event
-		EXEC, // execute this
-		EXEC_CACHE, // execute this AND set up as a cached response
-		LOCAL, // This message (if triggered, does not need to be sent through to the back end
-				// as well
-		IGNORE // the front end can ignore and handling of this message (useful for testing)
-	}
-
-	/**
-	 * @return String
-	 */
-	@Override
-	public String toString() {
-		return "QMessage [msg_type=" + msg_type + "]," + option.toString();
-	}
-
 	private String msg_type;
-
 	private String token;
-
-	private String option = MsgOption.EXEC.toString();
-
-	// This can be used to trigger any option
-	private String triggerCode;
-
 	private List<String> targetCodes;
-
 	private String sourceAddress;
-
 	private String sourceCode;
-
 	private String targetCode;
-
 	private String attributeCode;
-
 	private String questionCode;
-
 	private String message;
-
-	private Boolean redirect;
-
-	private String bridgeId;
-
 	private List<String> recipientCodeArray = new ArrayList<>();
+
+	public QMessage() { }
+
+	public QMessage(String msg_type) {
+		this.msg_type = msg_type;
+	}
 
 	/**
 	 * @return String
@@ -75,13 +46,6 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 		this.msg_type = msg_type;
 	}
 
-	public QMessage() {
-	}
-
-	public QMessage(String msg_type) {
-		this.msg_type = msg_type;
-	}
-
 	/**
 	 * @return String
 	 */
@@ -94,41 +58,6 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 	 */
 	public void setToken(String token) {
 		this.token = token;
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getOption() {
-		return option;
-	}
-
-	/**
-	 * @param option the option to set
-	 */
-	public void setOption(MsgOption option) {
-		this.option = option.toString();
-	}
-
-	/**
-	 * @param option the option string to set
-	 */
-	public void setOption(String option) {
-		this.option = option;
-	}
-
-	/**
-	 * @return the triggerCode
-	 */
-	public String getTriggerCode() {
-		return triggerCode;
-	}
-
-	/**
-	 * @param triggerCode the triggerCode to set
-	 */
-	public void setTriggerCode(String triggerCode) {
-		this.triggerCode = triggerCode;
 	}
 
 	/**
@@ -216,27 +145,6 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 	}
 
 	/**
-	 * @return Boolean
-	 */
-	public Boolean getRedirect() {
-		return redirect;
-	}
-
-	/**
-	 * @return Boolean
-	 */
-	public Boolean isRedirect() {
-		return getRedirect();
-	}
-
-	/**
-	 * @param redirect the redirect status
-	 */
-	public void setRedirect(Boolean redirect) {
-		this.redirect = redirect;
-	}
-
-	/**
 	 * @return the recipientCodeArray
 	 */
 	public List<String> getRecipientCodeArray() {
@@ -281,14 +189,8 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 	/**
 	 * @return String
 	 */
-	public String getBridgeId() {
-		return bridgeId;
-	}
-
-	/**
-	 * @param bridgeId the bridge ID to set
-	 */
-	public void setBridgeId(String bridgeId) {
-		this.bridgeId = bridgeId;
+	@Override
+	public String toString() {
+		return "QMessage [msg_type=" + msg_type + "],";
 	}
 }

@@ -1,7 +1,11 @@
 package life.genny.fyodor.endpoints;
 
 import io.vertx.core.http.HttpServerRequest;
+import java.io.StringReader;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.Consumes;
@@ -15,10 +19,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+
+
+
 
 
 
@@ -44,6 +54,40 @@ public class Cache {
 	@Inject
 	UserToken userToken;
 
+	@Inject
+	DatabaseUtils databaseUtils;
+
+		/**
+	* Read an item from the cache and return in json status format.
+	*
+	* @param productCode The productCode of the cache item
+	* @param key The key of the cache item
+	* @return The json item
+	 */
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{productCode}/{key}/json")
+	public Response readProductCodeKeyJson(@PathParam("productCode") String productCode, @PathParam("key") String key) {
+		Response res = readProductCodeKey(productCode, key);
+		String replyString = res.getEntity().toString();
+		log.info("response=["+replyString+"]");
+    JsonReader jsonReader = Json.createReader(new StringReader(replyString));
+    JsonObject reply = jsonReader.readObject();
+JsonObject json = null;
+		if (res.getStatus() == 200 ) {
+			json = javax.json.Json.createObjectBuilder()
+			.add("status", "ok")
+					.add("value", reply)
+					.build();
+
+		} else {
+					json = javax.json.Json.createObjectBuilder()
+			.add("status", "error")
+					.add("value", res.getStatusInfo().toString())
+					.build();
+		}
+		return Response.ok().entity(json).build();
+	}
 
 	/**
 	* Read an item from the cache.
@@ -62,7 +106,7 @@ public class Cache {
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 		
-		if (!"service".equals(userToken.getUsername())) {
+		if (!"service".equals(userToken.getUsername()) && !userToken.hasRole("test")) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
@@ -71,14 +115,39 @@ public class Cache {
 		log.info("Product Code/Cache: " + productCode);
 		String json = (String) CacheUtils.readCache(productCode, key);
 
-		if (json == null) {
+		if (StringUtils.isBlank(json)) {
 			log.info("Could not find in cache: " + key);
+			
 			return Response.ok("null").build();
 		}
 
 		log.info("Found json of length " + json.length() + " for " + key);
 
 		return Response.ok(json).build();
+	}
+
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{productCode}/{key}")
+	public Response write(@PathParam("productCode") String productCode,@PathParam("key") String key, String value) {
+		log.info("[!] write(" + productCode+":"+key + ":"+value+")");
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		if (!"service".equals(userToken.getUsername())) {
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(HttpUtils.error("User not authorized to make this request")).build();
+		}
+
+
+		CacheUtils.writeCache(productCode, key, value);
+
+		log.info("Wrote json of length " + value.length() + " for " + key);
+
+		return Response.ok().build();
 	}
 
 	/**
