@@ -4,6 +4,7 @@ import io.vertx.core.http.HttpServerRequest;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -51,6 +52,30 @@ public class Entities {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{code}")
 	public Response read(@PathParam("code") String code) {
+
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
+		if (entity == null) {
+			log.error("productCode=[" + userToken.getProductCode() + "] , code=" + code);
+		}
+
+		return Response.ok(entity).build();
+	}
+	
+	/**
+	 * Read an item from the cache.
+	 *
+	 * @param key The key of the cache item
+	 * @return The json item
+	 */
+	@DELETE
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{code}")
+	public Response delete(@PathParam("code") String code) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
