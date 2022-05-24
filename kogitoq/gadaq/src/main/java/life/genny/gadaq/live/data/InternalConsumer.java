@@ -77,6 +77,8 @@ public class InternalConsumer {
 		scope.init(event);
 
 		log.info("Incoming Event : " + event);
+		log.info("userToken = " + userToken);
+		log.info("productCode = " + userToken.getProductCode());
 		Instant start = Instant.now();
 
 		// check if event is a valid event
@@ -85,6 +87,7 @@ public class InternalConsumer {
 			msg = jsonb.fromJson(event, QEventMessage.class);
 		} catch (Exception e) {
 			log.error("Cannot parse this event!");
+			e.printStackTrace();
 			return;
 		}
 
@@ -145,16 +148,7 @@ public class InternalConsumer {
 			String processId = answer.getProcessId();
 			String answerJson = jsonb.toJson(answer);
 
-			if ("PRI_SUBMIT".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "submit", answerJson);
-
-			} else if ("PRI_CANCEL".equals(answer.getAttributeCode())) {
-				kogitoUtils.sendSignal("processquestions", processId, "cancel", answerJson);
-
-			} else {
-				kogitoUtils.sendSignal("processquestions", processId, "answer", answerJson);
-			}
-
+			kogitoUtils.sendSignal("processquestions", processId, "answer", answerJson);
 		}
 
 		Instant end = Instant.now();

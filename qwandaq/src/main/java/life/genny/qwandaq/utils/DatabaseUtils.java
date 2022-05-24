@@ -14,6 +14,7 @@ import javax.transaction.Transactional;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.QuestionQuestionId;
@@ -495,6 +496,24 @@ public class DatabaseUtils {
 		} catch (NoResultException e) {
 			log.debug("No Asks found in DB for " + questionCode + ":" + sourceCode + ":" + targetCode + " in realm "
 					+ realm);
+		}
+
+		return null;
+	}
+
+	public List<Link> findParentLinks(String realm, String targetCode) {
+
+		checkEntityManager();
+
+		try {
+			return entityManager.createQuery("SELECT ee.link FROM EntityEntity ee"
+					+ " where ee.pk.targetCode=:targetCode and ee.pk.source.realm=:realmStr", Link.class)
+				.setParameter("targetCode", targetCode)
+				.setParameter("realmStr", realm)
+				.getResultList();
+
+		} catch (NoResultException e) {
+			log.debug("No Links found in DB for " + targetCode + " in realm " + realm);
 		}
 
 		return null;

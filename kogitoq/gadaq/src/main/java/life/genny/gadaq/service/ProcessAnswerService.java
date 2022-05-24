@@ -21,7 +21,6 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -68,12 +67,6 @@ public class ProcessAnswerService {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
-
-		// ensure the target code matches
-		if (!answer.getTargetCode().equals(processBE.getCode())) {
-			log.warn("Found an Answer with a bad target code : " + answer.getTargetCode());
-			return processBEJson;
-		}
 
 		// find the attribute
 		String attributeCode = answer.getAttributeCode();
@@ -229,22 +222,30 @@ public class ProcessAnswerService {
 	 * @param targetCode The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
-	@Transactional
+	// @Transactional
 	public void saveAllAnswers(String sourceCode, String targetCode, String processBEJson) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
-		List<Answer> answers = new ArrayList<>();
+		// List<Answer> answers = new ArrayList<>();
 
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
-			// TODO: Check if this needs greater dataType precision
-			Answer answer = new Answer(sourceCode, targetCode, ea.getAttributeCode(), ea.getValueString());
-			answers.add(answer);
+			// // TODO: Check if this needs greater dataType precision
+			// Answer answer = new Answer(sourceCode, targetCode, ea.getAttributeCode(), ea.getValueString());
+			// answers.add(answer);
+
+			ea.setBaseEntity(target);
+			try {
+				target.addAttribute(ea);
+			} catch (BadDataException e) {
+				e.printStackTrace();
+			}
 		}
 
 		// save these answrs to db and cache
-		qwandaUtils.saveAnswers(answers);
+		beUtils.updateBaseEntity(target);
 		log.info("Saved answers for target " + targetCode);
 	}
 

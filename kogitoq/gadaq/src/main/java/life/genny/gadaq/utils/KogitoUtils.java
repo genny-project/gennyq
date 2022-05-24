@@ -144,7 +144,7 @@ public class KogitoUtils {
 
         String kogitoUrl = GennySettings.kogitoServiceUrl() + "/" + workflow.toLowerCase() + "/" + processId + "/" + signalCode;
 
-		log.debug("Sending Signal to uri: " + kogitoUrl);
+		log.info("Sending Signal to uri: " + kogitoUrl);
 
         HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json", userToken.getToken());
 

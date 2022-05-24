@@ -1,9 +1,6 @@
 package life.genny.qwandaq.message;
 
-import java.io.Serializable;
-
-
-public class QEventMessage extends QMessage implements Serializable {
+public class QEventMessage extends QMessage {
 	
 	private static final long serialVersionUID = 1L;
 	private static final String MESSAGE_TYPE = "EVT_MSG";
@@ -13,13 +10,15 @@ public class QEventMessage extends QMessage implements Serializable {
 	public QEventMessage() {
 		super();
 	}
+
+	public QEventMessage(String eventType) {
+		super(MESSAGE_TYPE);
+	}
 	
-	/** 
-	 * @return String
-	 */
-	@Override
-	public String toString() {
-		return "QEventMessage [event_type=" + event_type + ", data=" + data + "]";
+	public QEventMessage(String eventType, String code) {
+		super(MESSAGE_TYPE);
+		this.event_type = eventType;
+		this.data = new MessageData(code);
 	}
 	
 	/** 
@@ -50,14 +49,11 @@ public class QEventMessage extends QMessage implements Serializable {
 		this.data = data;
 	}
 
-	public QEventMessage(String eventType) {
-		super(MESSAGE_TYPE);
+	/** 
+	 * @return String
+	 */
+	@Override
+	public String toString() {
+		return "QEventMessage [event_type=" + event_type + ", data=" + data + "]";
 	}
-	
-	public QEventMessage(String eventType, String code) {
-		super(MESSAGE_TYPE);
-		this.event_type = eventType;
-		this.data = new MessageData(code);
-	}
-	
 }

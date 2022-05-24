@@ -1,12 +1,11 @@
 package life.genny.fyodor.endpoints;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -14,18 +13,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.persistence.EntityManager;
-
-import org.jboss.logging.Logger;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
 import io.vertx.core.http.HttpServerRequest;
-
 import life.genny.fyodor.utils.SearchUtility;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.message.QScheduleMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
@@ -63,18 +58,18 @@ public class Search {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@GET
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/api/schedule")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response schedule() {
 
 		String uuid = UUID.randomUUID().toString().toUpperCase();
 
 		log.info("Scheduling test event for " + uuid);
 
-		 if (userToken == null) {
-		 	log.error("Bad or no header token in Search POST provided");
-		 	return Response.status(Response.Status.BAD_REQUEST).build();
-		 }
+		if (userToken == null) {
+			log.error("Bad or no header token in Search POST provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
 
 
 		log.info("GENNY_TOKEN = " + userToken);
@@ -82,11 +77,12 @@ public class Search {
 
 		BaseEntity user = beUtils.getUserBaseEntity();
 
-		new QScheduleMessage.Builder("SCHEDULE_TEST")
-			.setEventMessage("TEST_EVENT", uuid)
-			.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
-			.setGennyToken(userToken)
-			.schedule();
+		// TODO
+		// new QScheduleMessage.Builder("SCHEDULE_TEST")
+		// 	.setEventMessage("TEST_EVENT", uuid)
+		// 	.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
+		// 	.setGennyToken(userToken)
+		// 	.schedule();
 
 		log.info("Done!");
 
@@ -100,8 +96,8 @@ public class Search {
 	 * @return Success
 	 */
 	@POST
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/api/search")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response search(SearchEntity searchEntity) {
 
 		log.info("Search POST received..");
@@ -127,8 +123,8 @@ public class Search {
 	 * @return Success
 	 */
 	@POST
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/api/search/fetch")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetch(SearchEntity searchEntity) {
 
 		log.info("Fetch POST received..");
@@ -145,4 +141,23 @@ public class Search {
 		String json = jsonb.toJson(results);
 		return Response.ok().entity(json).build();
 	}
+
+	@POST
+	@Path("/count25")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String count(SearchEntity searchBE) {
+
+		if (userToken == null) {
+			log.error("Bad or no header token in Search POST provided");
+			return "0";
+		}
+
+		log.info("GENNY_TOKEN = " + userToken);
+		log.info("SERVICE_TOKEN = " + serviceToken);
+
+		Long count = search.performCount(searchBE);
+
+		return ""+count;
+	}
+
 }

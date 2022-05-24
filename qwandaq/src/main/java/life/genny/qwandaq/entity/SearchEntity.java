@@ -1,11 +1,5 @@
 package life.genny.qwandaq.entity;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.attribute.*;
-import life.genny.qwandaq.exception.BadDataException;
-import org.jboss.logging.Logger;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -13,9 +7,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.attribute.AttributeBoolean;
+import life.genny.qwandaq.attribute.AttributeDate;
+import life.genny.qwandaq.attribute.AttributeDateTime;
+import life.genny.qwandaq.attribute.AttributeDouble;
+import life.genny.qwandaq.attribute.AttributeInteger;
+import life.genny.qwandaq.attribute.AttributeLong;
+import life.genny.qwandaq.attribute.AttributeText;
+import life.genny.qwandaq.attribute.AttributeTime;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.exception.BadDataException;
+
 /* 
- * SearchEntity class implements the search of base entities applying different filters/search to the
- * baseEntity and its attributes
+ * SearchEntity class implements the search of base entities applying 
+ * different filters/search to the baseEntity and its attributes.
  */
 @RegisterForReflection
 public class SearchEntity extends BaseEntity {
@@ -40,8 +49,8 @@ public class SearchEntity extends BaseEntity {
 	Map<String, Map<String, String>> formatters = new HashMap<>();
 
 	/*
-	 * This Sort Enum is used to sort the search results in either Ascending and
-	 * descending order
+	 * Enum used to sort the search results in either ascending or 
+	 * descending order.
 	 */
 	public enum Sort {
 		ASC {
@@ -57,8 +66,8 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	/*
-	 * This StringFilter Enum is used to put the filter to the search entity. It
-	 * filters the string values in the attributes
+	 * Enum used to determine the operator of a string filter 
+	 * added to the SearchEntity.
 	 */
 	public enum StringFilter {
 		EQUAL {
@@ -105,8 +114,8 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	/*
-	 * This Filter Enum is used to put the filter to the search entity. It filtesr
-	 * the numeric and bit masked values of the attributes
+	 * Enum used to determine the operator of a standard filter 
+	 * added to the SearchEntity.
 	 */
 	public enum Filter {
 		EQUALS {
@@ -156,19 +165,22 @@ public class SearchEntity extends BaseEntity {
 	 * @return Filter
 	 */
 	static public SearchEntity.Filter convertOperatorToFilter(final String operator) {
-		SearchEntity.Filter ret = null;
-		switch (operator) {
-			case ">": ret =  SearchEntity.Filter.GREATER_THAN; break;
-			case "<": ret =  SearchEntity.Filter.LESS_THAN; break;
-			case ">=": ret =  SearchEntity.Filter.GREATER_THAN_AND_EQUAL; break;
-			case "<=": ret =  SearchEntity.Filter.LESS_THAN_AND_EQUAL; break;
-			case "<>":
-			case "!=": ret =  SearchEntity.Filter.NOT_EQUALS;break;
-			default:
-					   ret = SearchEntity.Filter.EQUALS;
-		}
 
-		return ret;
+		switch (operator) {
+			case ">": 
+				return SearchEntity.Filter.GREATER_THAN;
+			case "<": 
+				return SearchEntity.Filter.LESS_THAN;
+			case ">=": 
+				return SearchEntity.Filter.GREATER_THAN_AND_EQUAL;
+			case "<=": 
+				return SearchEntity.Filter.LESS_THAN_AND_EQUAL;
+			case "<>":
+			case "!=": 
+				return SearchEntity.Filter.NOT_EQUALS;
+			default:
+				return SearchEntity.Filter.EQUALS;
+		}
 	}
 	
 	/** 
@@ -176,6 +188,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return StringFilter
 	 */
 	static public SearchEntity.StringFilter convertOperatorToStringFilter(final String operator) {
+
 		SearchEntity.StringFilter ret = null;
 		switch (operator) {
 			case "REGEXP": ret =  SearchEntity.StringFilter.REGEXP; break;

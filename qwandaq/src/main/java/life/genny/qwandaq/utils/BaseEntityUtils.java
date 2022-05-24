@@ -9,16 +9,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -26,8 +21,14 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+
+
 
 /**
  * A non-static utility class used for standard
@@ -43,13 +44,16 @@ public class BaseEntityUtils {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
 	DatabaseUtils databaseUtils;
 
 	@Inject
 	QwandaUtils qwandaUtils;
-
-	@Inject
-	UserToken userToken;
 
 	public static final String BASEENTITY_CACHE = "baseentity";
 
@@ -165,6 +169,19 @@ public class BaseEntityUtils {
 	 * @param baseEntity The BaseEntity to update
 	 */
 	public void updateBaseEntity(BaseEntity baseEntity) {
+
+		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
+			if (ea.getPk() == null) {
+				log.info("Attribute: " + ea.getAttributeCode() + ", PK is NULL");
+				continue;
+			}
+			if (ea.getPk().getBaseEntity() == null) {
+				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
+				continue;
+			}
+
+			log.info("Attribute: " + ea.getAttributeCode() + ", entity: " + ea.getPk().getBaseEntity().getCode());
+		}
 
 		databaseUtils.saveBaseEntity(baseEntity);
 
@@ -522,8 +539,9 @@ public class BaseEntityUtils {
 						if (mandatory || defaultVal != null) {
 							EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(),
 									defaultVal);
-							item.addAttribute(newEA);
 
+							log.info("Adding mandatory/default -> " + attribute.getCode());
+							item.addAttribute(newEA);
 						}
 					} else {
 						log.info(item.getCode() + " already has value for " + attribute.getCode());
@@ -538,11 +556,14 @@ public class BaseEntityUtils {
 		// force the type of baseentity
 		String defSuffix = StringUtils.removeStart(defBE.getCode(), "DEF_");
 		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defSuffix);
-		item = qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
-		item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
+		qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
+		EntityAttribute isAttribute = new EntityAttribute(item, attributeDEF, 1.0, true);
+		item.addAttribute(isAttribute);
+		// item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
 
 		try {
 			updateBaseEntity(item);
+			CacheUtils.putObject(userToken.getProductCode(), item.getCode(), item);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -574,7 +595,7 @@ public class BaseEntityUtils {
 				}
 			}
 			// this is a user, generate keycloak id
-			uuid = KeycloakUtils.createDummyUser(userToken.getToken(), userToken.getKeycloakRealm());
+			uuid = KeycloakUtils.createDummyUser(serviceToken.getToken(), userToken.getKeycloakRealm());
 			Optional<String> optCode = defBE.getValue("PRI_PREFIX");
 
 			if (optCode.isPresent()) {
@@ -606,8 +627,7 @@ public class BaseEntityUtils {
 					// Author of the BE
 					// NOTE: Maybe should be moved to run for all BEs
 					Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
-					item.addAnswer(
-							new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
+					item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\""+userToken.getUserCode()+"\"]"));
 				} else {
 					log.error("create BE returned NULL for " + code);
 				}

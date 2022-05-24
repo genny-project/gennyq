@@ -236,10 +236,15 @@ public class QwandaUtils {
 
 		String productCode = userToken.getProductCode();
 
-		log.info("Fetching Question from database: " + code);
+		log.debug("Fetching Question: " + code);
 
 		// find the question in the database
 		Question question = databaseUtils.findQuestionByCode(productCode, code);
+
+		if (question == null) {
+			log.error("Error fetching Question from database: " + code);
+		}
+
 		Boolean mandatory = question.getMandatory();
 
 		// init new parent ask
@@ -296,8 +301,15 @@ public class QwandaUtils {
 	 */
 	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
 
+		String[] excludes = new String[]{ 
+			Question.QUESTION_GROUP_ATTRIBUTE_CODE, 
+			"PRI_SUBMIT"
+		};
+
 		// grab attribute code of current ask
-		codes.add(ask.getAttributeCode());
+		if (!Arrays.asList(excludes).contains(ask.getAttributeCode())) {
+			codes.add(ask.getAttributeCode());
+		}
 
 		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
 
@@ -362,7 +374,6 @@ public class QwandaUtils {
 			}
 
 			// fetch the DEF for this target
-			DefUtils defUtils = new DefUtils();
 			BaseEntity defBE = defUtils.getDEF(target);
 
 			// filter Non-valid answers using def

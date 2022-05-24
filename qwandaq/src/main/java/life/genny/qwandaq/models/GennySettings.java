@@ -154,7 +154,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String keycloakUrl() {
-		return CommonUtils.getSystemEnv("KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("KEYCLOAK_URL")
+		return CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL")
 			: "http://keycloak.genny.life";
 	}
 
@@ -163,7 +163,7 @@ public class GennySettings {
 	/**
 	* Get The default search page size.
 	*
-	* @return
+	* @return String
 	 */
 	public static Integer defaultPageSize() {
 		return CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE") != null
@@ -173,7 +173,7 @@ public class GennySettings {
 	/**
 	* Get the default dropdown page size.
 	*
-	* @return
+	* @return String
 	 */
 	public static Integer defaultDropDownPageSize() {
 		return CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE") != null
@@ -183,7 +183,7 @@ public class GennySettings {
 	/**
 	* Get the default bucket size.
 	*
-	* @return
+	* @return String
 	 */
 	public static Integer defaultBucketSize() {
 		return CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE") != null
