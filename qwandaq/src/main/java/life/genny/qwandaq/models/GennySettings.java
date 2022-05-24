@@ -1,6 +1,9 @@
 package life.genny.qwandaq.models;
 
 import life.genny.qwandaq.utils.CommonUtils;
+
+import org.jboss.logging.Logger;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
@@ -8,6 +11,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  **/
 @RegisterForReflection
 public class GennySettings {
+	private static final Logger log = Logger.getLogger(GennySettings.class);
 
 	// URLs
 	// public static final String projectUrl = CommonUtils.getSystemEnv("PROJECT_URL") != null ? CommonUtils.getSystemEnv("PROJECT_URL")
@@ -53,6 +57,37 @@ public class GennySettings {
 			? CommonUtils.getSystemEnv("TWILIO_SENDER_MOBILE")
 			: "TWILIO_SENDER_MOBILE";
 
+	private static final String getConfig(String env) {
+		return getConfig(env, null, false, false);
+	}
+
+	private static final String getConfig(String env, String fallback) {
+		return getConfig(env, fallback, false, false);
+	}
+
+	/**
+	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException}
+	 * if mandatory is true
+	 * @param env - key of the system environment variable to get
+	 * @param fallback - default value in the case the environment variable is not present
+	 * @param alert - whether or not to log a warning if the environment variable is missing
+	 * @param mandatory - whether or not to throw an errow if the environment variable is missing, 
+	 * and there is no fallback
+	 * */
+	private static final String getConfig(String env, String fallback, boolean alert, boolean mandatory) {
+		String value = CommonUtils.getSystemEnv(env, alert);
+		if(value == null) {
+			if(fallback != null)
+				return fallback;
+			else if(mandatory) {
+				log.error("Missing required ENV: " + env);
+				log.error("Please define this in your genny.env or System environment variables");
+				throw new IllegalStateException("Missing required environment variable: " + env);
+			}
+		}
+		return value;
+	}
+	
 	/*
 	 * NOTE: The variables above seem to be defaulting all the time.
 	 * likely due to an issue with the environment variables not being present at initialisation.
