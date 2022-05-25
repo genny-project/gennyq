@@ -1,7 +1,7 @@
 package life.genny.fyodor.endpoints;
 
+import io.vertx.core.http.HttpServerRequest;
 import java.io.StringReader;
-
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -17,12 +17,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
-
-import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
@@ -31,6 +25,12 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+
+
 
 
 
@@ -119,7 +119,7 @@ JsonObject json = null;
 
 		log.info("User: " + userToken.getUserCode());
 		log.info("Product Code/Cache: " + productCode);
-		if (key.contains(":")) {
+		if ((key.contains(":")) ||("attributes".equals(key))){
 			// It's a token
 			String json = (String) CacheUtils.readCache(productCode, key);
 
@@ -135,9 +135,18 @@ JsonObject json = null;
 		} else if (key.charAt(3) == '_') {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
-			BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey);
+			try {
+			BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+					baseEntityKey);
+			
 			String baseEntityJsonString = jsonb.toJson(baseEntity);
 			return Response.ok(baseEntityJsonString).build();
+		} catch (Exception e) {
+			// TODO: just to get something going..
+			log.warn("BaseEntity not found in cache, fetching from database");
+			BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
+			return Response.ok(be).build();
+			}
 		} else {
 			throw new UnsupportedOperationException(
 					"This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key + "]");
