@@ -148,7 +148,8 @@ JsonObject json = null;
 			// TODO: just to get something going..
 			log.warn("BaseEntity not found in cache, fetching from database");
 			BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
-			return Response.ok(be).build();
+			String baseEntityJsonString = jsonb.toJson(be);
+			return Response.ok(baseEntityJsonString).build();
 			}
 		} else {
 			throw new UnsupportedOperationException(
