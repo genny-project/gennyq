@@ -140,6 +140,9 @@ JsonObject json = null;
 					baseEntityKey);
 			
 			String baseEntityJsonString = jsonb.toJson(baseEntity);
+			if (baseEntityJsonString.contains("Error id")) {
+				throw new Exception("Not found in cache");
+			}
 			return Response.ok(baseEntityJsonString).build();
 		} catch (Exception e) {
 			// TODO: just to get something going..
