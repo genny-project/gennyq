@@ -1,7 +1,7 @@
 package life.genny.fyodor.endpoints;
 
-import io.vertx.core.http.HttpServerRequest;
 import java.util.UUID;
+
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -9,11 +9,15 @@ import javax.persistence.EntityManager;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.SearchUtility;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -21,13 +25,6 @@ import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
-
-
-
-
 
 /**
  * Search - Endpoints providing classic Genny Search functionality
@@ -61,18 +58,18 @@ public class Search {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@GET
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/api/schedule")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response schedule() {
 
 		String uuid = UUID.randomUUID().toString().toUpperCase();
 
 		log.info("Scheduling test event for " + uuid);
 
-		 if (userToken == null) {
-		 	log.error("Bad or no header token in Search POST provided");
-		 	return Response.status(Response.Status.BAD_REQUEST).build();
-		 }
+		if (userToken == null) {
+			log.error("Bad or no header token in Search POST provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
 
 
 		log.info("GENNY_TOKEN = " + userToken);
@@ -99,8 +96,8 @@ public class Search {
 	 * @return Success
 	 */
 	@POST
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/api/search")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response search(SearchEntity searchEntity) {
 
 		log.info("Search POST received..");
@@ -126,8 +123,8 @@ public class Search {
 	 * @return Success
 	 */
 	@POST
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/api/search/fetch")
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetch(SearchEntity searchEntity) {
 
 		log.info("Fetch POST received..");
@@ -146,16 +143,14 @@ public class Search {
 	}
 
 	@POST
-	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/count25")
+	@Produces(MediaType.APPLICATION_JSON)
 	public String count(SearchEntity searchBE) {
 
-	
-		 if (userToken == null) {
-		 	log.error("Bad or no header token in Search POST provided");
-		 	return "0";
-		 }
-
+		if (userToken == null) {
+			log.error("Bad or no header token in Search POST provided");
+			return "0";
+		}
 
 		log.info("GENNY_TOKEN = " + userToken);
 		log.info("SERVICE_TOKEN = " + serviceToken);
@@ -165,47 +160,4 @@ public class Search {
 		return ""+count;
 	}
 
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/qwanda/entityentitys/{targetCode}")
-	public Response getEntityEntitys(@PathParam("targetCode") String targetCode) {
-
-		log.info("entityentitys " + targetCode);
-
-		if (userToken == null) {
-			log.error("Bad or no header token in entityentity GET provided");
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
-
-		log.info("GENNY_TOKEN = " + userToken);
-		log.info("SERVICE_TOKEN = " + serviceToken);
-
-
-
-		return Response.ok().build();
-	}
-	
-		@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/qwanda/entityentitys/{targetCode}/parents")
-	public Response getEntityEntitysParents(@PathParam("targetCode") String targetCode) {
-
-	
-		log.info("entityentitys Parents "+targetCode);
-
-		 if (userToken == null) {
-		 	log.error("Bad or no header token in entityentityParents GET provided");
-		 	return Response.status(Response.Status.BAD_REQUEST).build();
-		 }
-
-
-		log.info("GENNY_TOKEN = " + userToken);
-		log.info("SERVICE_TOKEN = " + serviceToken);
-
-	
-
-		
-
-		return Response.ok().build();
-	}
 }

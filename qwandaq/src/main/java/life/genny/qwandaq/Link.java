@@ -18,18 +18,9 @@
 package life.genny.qwandaq;
 
 import java.io.Serializable;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.Objects;
 
 import javax.persistence.Embeddable;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 

@@ -1,7 +1,5 @@
 package life.genny.fyodor.endpoints;
 
-import io.vertx.core.http.HttpServerRequest;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,20 +19,25 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.ContextList;
+import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 /**
  * QwandaEndpoint --- A temporary replacement for the api service
@@ -66,35 +69,78 @@ public class QwandaEndpoint {
 	UserToken userToken;
 
 	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
 	QwandaUtils qwandaUtils;
 
 	@Inject
 	EntityManager entityManager;
 
 	@GET
-	@Consumes("application/json")
 	@Path("/baseentitys/{sourceCode}/asks2" + "/{questionCode}/{targetCode}")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response createAsks3(@PathParam("sourceCode") final String sourceCode,
 			@PathParam("questionCode") final String questionCode, @PathParam("targetCode") final String targetCode,
 			@Context final UriInfo uriInfo) {
 
-			if (userToken == null) {
-				log.error("Bad or no header token in Search POST provided");
-				return Response.status(Response.Status.BAD_REQUEST).build();
-			}
+		if (userToken == null) {
+			log.error("Bad or no header token in Search POST provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
 
-			List<Ask> asks = createAsksByQuestionCode(questionCode, sourceCode, targetCode);
+		List<Ask> asks = createAsksByQuestionCode(questionCode, sourceCode, targetCode);
 
-			log.debug("Number of asks=" + asks.size());
-			log.debug("Number of asks=" + asks);
+		log.debug("Number of asks=" + asks.size());
+		log.debug("Number of asks=" + asks);
 
-			final QDataAskMessage askMsgs = new QDataAskMessage(asks.toArray(new Ask[0]));
-			askMsgs.setToken(userToken.getToken());
-			String json = jsonb.toJson(askMsgs);
+		final QDataAskMessage askMsgs = new QDataAskMessage(asks.toArray(new Ask[0]));
+		askMsgs.setToken(userToken.getToken());
+		String json = jsonb.toJson(askMsgs);
 
-			return Response.ok().entity(json).build();
+		return Response.ok().entity(json).build();
 
+	}
+
+	@GET
+	@Path("/entityentitys/{targetCode}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getEntityEntitys(@PathParam("targetCode") String targetCode) {
+
+		log.info("Resquest for EntityEntitys " + targetCode);
+
+		if (userToken == null) {
+			log.error("Bad or no header token in entityentity GET provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+
+		log.info("GENNY_TOKEN = " + userToken);
+		log.info("SERVICE_TOKEN = " + serviceToken);
+
+		return Response.ok().build();
+	}
+
+	@GET
+	@Path("/entityentitys/{targetCode}/parents")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getEntityEntitysParents(@PathParam("targetCode") String targetCode) {
+
+		log.info("Resquest for EntityEntitys Parents " + targetCode);
+
+		log.info("GENNY_TOKEN = " + userToken);
+		log.info("SERVICE_TOKEN = " + serviceToken);
+
+		if (userToken == null) {
+			log.error("Bad or no header token in entityentityParents GET provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+
+		List<Link> items = databaseUtils.findParentLinks(userToken.getProductCode(), targetCode);
+		Link[] array = items.toArray(new Link[0]);
+		String json = jsonb.toJson(array);
+
+		return Response.ok().entity(json).build();
 	}
 
 	/**

@@ -141,4 +141,8 @@ public class CacheUtils {
 	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
+
+	public static CoreEntity getEntity(String cacheName, CoreEntityKey key) {
+		return cache.getEntityFromCache(cacheName, key);
+	}
 }
