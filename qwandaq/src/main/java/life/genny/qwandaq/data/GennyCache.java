@@ -152,12 +152,12 @@ public class GennyCache {
 	* @param key The key to the entity to fetch
 	* @return The entity
 	 */
-	public CoreEntity getEntityFromCache(String cacheName, String key) {
+	public CoreEntity getEntityFromCache(String cacheName, CoreEntityKey key) {
 
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
-		RemoteCache<String, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
+		RemoteCache<CoreEntityKey, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
 
 		if (cache == null) {
 			log.error("Could not find a cache called " + cacheName);
