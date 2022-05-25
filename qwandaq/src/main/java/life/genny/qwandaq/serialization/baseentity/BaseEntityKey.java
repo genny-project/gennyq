@@ -32,7 +32,13 @@ public class BaseEntityKey implements CoreEntityKey {
 		this.code = code;
 	}
 
-	public String toString() {
+	@Override
+	public String getKeyString() {
 		return realm + ":" + code;
+	}
+
+	@Override
+	public String toString() {
+		return getKeyString();
 	}
 }
