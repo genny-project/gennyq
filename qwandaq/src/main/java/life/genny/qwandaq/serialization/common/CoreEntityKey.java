@@ -1,5 +1,8 @@
 package life.genny.qwandaq.serialization.common;
 
-// Marker interface for infinispan cache keys
-public interface CoreEntityKey {
+import java.io.Serializable;
+
+// Interface for infinispan cache keys
+public interface CoreEntityKey extends Serializable {
+    public String getKeyString();
 }
