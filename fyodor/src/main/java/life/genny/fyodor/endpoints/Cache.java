@@ -1,7 +1,7 @@
 package life.genny.fyodor.endpoints;
 
-import io.vertx.core.http.HttpServerRequest;
 import java.io.StringReader;
+
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -17,14 +17,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+import io.vertx.core.http.HttpServerRequest;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 
 
@@ -99,31 +105,43 @@ JsonObject json = null;
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{productCode}/{key}")
-	public Response readProductCodeKey(@PathParam("productCode") String productCode,@PathParam("key") String key) {
-		log.info("[!] read(" + productCode+":"+key + ")");
+	public Response readProductCodeKey(@PathParam("productCode") String productCode, @PathParam("key") String key) {
+		log.info("[!] read(" + productCode + ":" + key + ")");
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
-		
+
 		if (!"service".equals(userToken.getUsername()) && !userToken.hasRole("test")) {
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("User not authorized to make this request")).build();
+					.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
 
 		log.info("User: " + userToken.getUserCode());
 		log.info("Product Code/Cache: " + productCode);
-		String json = (String) CacheUtils.readCache(productCode, key);
+		if (key.contains(":")) {
+			// It's a token
+			String json = (String) CacheUtils.readCache(productCode, key);
 
-		if (StringUtils.isBlank(json)) {
-			log.info("Could not find in cache: " + key);
-			
-			return Response.ok("null").build();
+			if (StringUtils.isBlank(json)) {
+				log.info("Could not find in cache: " + key);
+
+				return Response.ok("null").build();
+			}
+
+			log.info("Found json of length " + json.length() + " for " + key);
+
+			return Response.ok(json).build();
+		} else if (key.charAt(3) == '_') {
+			// It's a baseentity
+			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
+			BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey);
+			String baseEntityJsonString = jsonb.toJson(baseEntity);
+			return Response.ok(baseEntityJsonString).build();
+		} else {
+			throw new UnsupportedOperationException(
+					"This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key + "]");
 		}
-
-		log.info("Found json of length " + json.length() + " for " + key);
-
-		return Response.ok(json).build();
 	}
 
 	@POST
