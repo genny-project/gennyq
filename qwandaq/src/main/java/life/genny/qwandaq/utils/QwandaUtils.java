@@ -245,14 +245,10 @@ public class QwandaUtils {
 			log.error("Error fetching Question from database: " + code);
 		}
 
-		Boolean mandatory = question.getMandatory();
-
 		// init new parent ask
 		Ask ask = new Ask(question);
 		ask.setSourceCode(source.getCode());
 		ask.setTargetCode(target.getCode());
-		ask.setMandatory(mandatory);
-		ask.setCreateOnTrigger(mandatory);
 		ask.setRealm(productCode);
 
 		// check if it is a question group
@@ -267,7 +263,14 @@ public class QwandaUtils {
 				log.info(" [*] Found Child Question in database: " + questionQuestion.getTargetCode());
 
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
+				
+				// set boolean fields
+				child.setMandatory(questionQuestion.getMandatory());
 				child.setDisabled(questionQuestion.getDisabled());
+				child.setHidden(questionQuestion.getHidden());
+				child.setDisabled(questionQuestion.getDisabled());
+				child.setReadonly(questionQuestion.getReadonly());
+
 				ask.addChildAsk(child);
 			}
 		}

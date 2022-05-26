@@ -1,6 +1,6 @@
-package genny;
+package life.genny.qwandaq.serialization.baseentity;
 
-message baseentity_key {
+message BaseEntityKey {
   optional string realm = 1;
   optional string code = 2;
 }
