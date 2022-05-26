@@ -138,16 +138,6 @@ public class InitService {
 		List<BaseEntity> pcms = beUtils.getBaseEntitys(searchBE);
 		// sendASKs(pcms.get(1));
 		sendBulkASKs(pcms);
-
-		//REMOVE THIS LATER
-		log.info("Sending fake ask");
-		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_INTERN_GRP", pcms.get(0), pcms.get(1));
-		ask.setProcessId(pcms.get(0).getId().toString());
-		QDataAskMessage queAsk = new QDataAskMessage(ask);
-		queAsk.setToken(userToken.getToken());
-		log.info("Fake ask " + ask);
-		
-		KafkaUtils.writeMsg("webdata", queAsk);
 		// configure msg and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
 		msg.setToken(userToken.getToken());
@@ -252,10 +242,9 @@ public class InitService {
 				try {
 					Ask ask = qwandaUtils.generateAskFromQuestionCode(attribute.getValueString(), entity, entity);
 					asks.add(ask);
-				} catch(Exception e) {
+				} catch (Exception e) {
 					log.info("Could not find ASK " + attribute.getValueString() + e);
 				}
-
 
 			}
 		});
@@ -269,7 +258,7 @@ public class InitService {
 		List<EntityAttribute> attributeList = new ArrayList<>(entity.getBaseEntityAttributes());
 		// EntityAttribute attribute = attributeList.get(1);
 		// attributeList.forEach(attribute -> {
-		// 	getASKs(attribute, entity);
+		// getASKs(attribute, entity);
 		// });
 		KafkaUtils.writeMsg("webdata", msg);
 		// return msg;
