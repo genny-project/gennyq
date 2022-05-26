@@ -1,6 +1,6 @@
-package genny;
+package life.genny.qwandaq.entity;
 
-message baseentity {
+message BaseEntity {
   optional string dtype = 1;
   optional int64 id = 2;
   optional int64 created = 3;
