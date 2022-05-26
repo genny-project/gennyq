@@ -26,6 +26,7 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.engine.spi.Status;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
@@ -75,12 +76,13 @@ public class Cache {
 	@Path("/{productCode}/{key}/json")
 	public Response readProductCodeKeyJson(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 		Response res = readProductCodeKey(productCode, key);
+
+JsonObject json = null;
+if (res.getStatus() == 200) {
 		String replyString = res.getEntity().toString();
 		log.info("response=["+replyString+"]");
     JsonReader jsonReader = Json.createReader(new StringReader(replyString));
     JsonObject reply = jsonReader.readObject();
-JsonObject json = null;
-		if (res.getStatus() == 200 ) {
 			json = javax.json.Json.createObjectBuilder()
 			.add("status", "ok")
 					.add("value", reply)
@@ -126,7 +128,7 @@ JsonObject json = null;
 			if (StringUtils.isBlank(json)) {
 				log.info("Could not find in cache: " + key);
 
-				return Response.ok("null").build();
+				return Response.status(Response.Status.NO_CONTENT).build();
 			}
 
 			log.info("Found json of length " + json.length() + " for " + key);
