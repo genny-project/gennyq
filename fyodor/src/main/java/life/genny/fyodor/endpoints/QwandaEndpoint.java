@@ -78,29 +78,61 @@ public class QwandaEndpoint {
 	EntityManager entityManager;
 
 	@GET
-	@Path("/baseentitys/{sourceCode}/asks2" + "/{questionCode}/{targetCode}")
+	@Path("/baseentitys/{sourceCode}/asks2/{questionCode}/{targetCode}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response createAsks3(@PathParam("sourceCode") final String sourceCode,
-			@PathParam("questionCode") final String questionCode, @PathParam("targetCode") final String targetCode,
-			@Context final UriInfo uriInfo) {
+	public Response createAsks3(
+			@PathParam("sourceCode") final String sourceCode,
+			@PathParam("questionCode") final String questionCode, 
+			@PathParam("targetCode") final String targetCode,
+			@Context final UriInfo uriInfo
+			) {
 
 		if (userToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
-		List<Ask> asks = createAsksByQuestionCode(questionCode, sourceCode, targetCode);
+		BaseEntity source = null;
+		BaseEntity target = null;
 
-		log.debug("Number of asks=" + asks.size());
-		log.debug("Number of asks=" + asks);
+		if ("PER_SOURCE".equals(sourceCode) && "PER_TARGET".equals(targetCode)) {
+			source = new BaseEntity(sourceCode, "SourceCode");
+			target = new BaseEntity(targetCode, "TargetCode");
+		} else {
+			source = beUtils.getBaseEntityByCode(sourceCode);
+			target = beUtils.getBaseEntityByCode(targetCode);
+		}
 
-		final QDataAskMessage askMsgs = new QDataAskMessage(asks.toArray(new Ask[0]));
-		askMsgs.setToken(userToken.getToken());
-		String json = jsonb.toJson(askMsgs);
+		if (source == null) {
+			log.error("No Source entity found!");
+			return null;
+		}
+
+		if (target == null) {
+			log.error("No Target entity found!");
+			return null;
+		}
+
+		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
+
+		// fetch question from DB
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
+
+		if (ask == null) {
+			log.error("No ask returned for " + questionCode);
+			return null;
+		}
+
+		// create ask msg from asks
+		log.info("Creating ask Message...");
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+
+		String json = jsonb.toJson(msg);
 
 		return Response.ok().entity(json).build();
-
 	}
 
 	@GET
@@ -108,7 +140,7 @@ public class QwandaEndpoint {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEntityEntitys(@PathParam("targetCode") String targetCode) {
 
-		log.info("Resquest for EntityEntitys " + targetCode);
+		log.info("Request for EntityEntitys " + targetCode);
 
 		if (userToken == null) {
 			log.error("Bad or no header token in entityentity GET provided");
@@ -126,7 +158,7 @@ public class QwandaEndpoint {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getEntityEntitysParents(@PathParam("targetCode") String targetCode) {
 
-		log.info("Resquest for EntityEntitys Parents " + targetCode);
+		log.info("Request for EntityEntitys Parents " + targetCode);
 
 		log.info("GENNY_TOKEN = " + userToken);
 		log.info("SERVICE_TOKEN = " + serviceToken);

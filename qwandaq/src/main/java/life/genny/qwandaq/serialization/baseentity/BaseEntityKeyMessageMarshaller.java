@@ -7,13 +7,13 @@ import org.infinispan.protostream.MessageMarshaller;
 public class BaseEntityKeyMessageMarshaller implements MessageMarshaller<BaseEntityKey> {
 
 	@Override
-	public Class<? extends BaseEntityKey> getJavaClass() {
+	public Class<BaseEntityKey> getJavaClass() {
 		return BaseEntityKey.class;
 	}
 
 	@Override
 	public String getTypeName() {
-		return "genny.baseentity_key";
+		return "life.genny.qwandaq.serialization.baseentity.BaseEntityKey";
 	}
 
 	@Override
