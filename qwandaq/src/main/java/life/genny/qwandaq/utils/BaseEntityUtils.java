@@ -9,14 +9,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchBeResult;
@@ -24,11 +30,6 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-
-
 
 /**
  * A non-static utility class used for standard
@@ -54,8 +55,6 @@ public class BaseEntityUtils {
 
 	@Inject
 	QwandaUtils qwandaUtils;
-
-	public static final String BASEENTITY_CACHE = "baseentity";
 
 	public BaseEntityUtils() { }
 
@@ -88,10 +87,13 @@ public class BaseEntityUtils {
 		log.info("Using ProductCode " + userToken.getProductCode());
 
 		// check for entity in the cache
-		BaseEntity entity = CacheUtils.getObject(userToken.getProductCode(), code, BaseEntity.class);
+		// BaseEntityKey key = new BaseEntityKey(userToken.getProductCode(), code);
+		// BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		BaseEntity entity = null;
 
 		// check in database if not in cache
 		if (entity == null) {
+			log.debug("BaseEntity " + code + " not in cache, checking in database...");
 			entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
 		}
 
@@ -145,19 +147,28 @@ public class BaseEntityUtils {
 	public Long getBaseEntityCount(SearchEntity searchBE) {
 
 		// build uri, serialize payload and fetch data from fyodor
-		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
+		String uri = GennySettings.fyodorServiceUrl() + "/api/search/count";
 		String json = jsonb.toJson(searchBE);
 		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
-		String body = response.body();
 
-		if (body != null) {
-			try {
-				// deserialise and grab entities
-				QSearchBeResult results = jsonb.fromJson(body, QSearchBeResult.class);
-				return results.getTotal();
-			} catch (Exception e) {
-				log.error(e);
-			}
+		if (response == null) {
+			log.error("Null response from " + uri);
+			return null;
+		}
+
+		Integer status = response.statusCode();
+
+		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
+			log.error("Bad response status " + status + " from " + uri);
+		}
+
+		try {
+			// deserialise and grab entities
+			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+			return results.getTotal();
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
 		}
 
 		return null;
@@ -186,7 +197,7 @@ public class BaseEntityUtils {
 		databaseUtils.saveBaseEntity(baseEntity);
 
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		CacheUtils.saveEntity(BASEENTITY_CACHE, key, baseEntity);
+		CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
 	}
 
 	/**

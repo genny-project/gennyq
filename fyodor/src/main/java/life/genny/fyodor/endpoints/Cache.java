@@ -26,24 +26,13 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.engine.spi.Status;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
-
-
-
-
-
-
-
-
-
 
 /**
  * Cache --- Endpoints providing cache access
  *
  * @author jasper.robison@gada.io
- *
  */
 @Path("/cache")
 public class Cache {
@@ -64,59 +53,65 @@ public class Cache {
 	@Inject
 	DatabaseUtils databaseUtils;
 
-		/**
-	* Read an item from the cache and return in json status format.
-	*
-	* @param productCode The productCode of the cache item
-	* @param key The key of the cache item
-	* @return The json item
+	/**
+	 * Read an item from the cache and return in json status format.
+	 *
+	 * @param productCode The productCode of the cache item
+	 * @param key The key of the cache item
+	 * @return The json item
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{productCode}/{key}/json")
 	public Response readProductCodeKeyJson(@PathParam("productCode") String productCode, @PathParam("key") String key) {
+
 		Response res = readProductCodeKey(productCode, key);
 
 JsonObject json = null;
 if (res.getStatus() == 200) {
 		String replyString = res.getEntity().toString();
+
 		log.info("response=["+replyString+"]");
+
     JsonReader jsonReader = Json.createReader(new StringReader(replyString));
     JsonObject reply = jsonReader.readObject();
-			json = javax.json.Json.createObjectBuilder()
-			.add("status", "ok")
-					.add("value", reply)
-					.build();
 
+			json = javax.json.Json.createObjectBuilder()
+				.add("status", "ok")
+				.add("value", reply)
+				.build();
 		} else {
-					json = javax.json.Json.createObjectBuilder()
-			.add("status", "error")
-					.add("value", res.getStatusInfo().toString())
-					.build();
+			json = javax.json.Json.createObjectBuilder()
+				.add("status", "error")
+				.add("value", res.getStatusInfo().toString())
+				.build();
 		}
+
 		return Response.ok().entity(json).build();
 	}
 
 	/**
-	* Read an item from the cache.
-	*
-	* @param productCode The productCode of the cache item
-	* @param key The key of the cache item
-	* @return The json item
+	 * Read an item from the cache.
+	 *
+	 * @param productCode The productCode of the cache item
+	 * @param key The key of the cache item
+	 * @return The json item
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{productCode}/{key}")
 	public Response readProductCodeKey(@PathParam("productCode") String productCode, @PathParam("key") String key) {
+
 		log.info("[!] read(" + productCode + ":" + key + ")");
+
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		if (!"service".equals(userToken.getUsername()) && !userToken.hasRole("test")) {
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("User not authorized to make this request")).build();
+				.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
 
 		log.info("User: " + userToken.getUserCode());
@@ -127,31 +122,31 @@ if (res.getStatus() == 200) {
 
 			if (StringUtils.isBlank(json)) {
 				log.info("Could not find in cache: " + key);
-
 				return Response.status(Response.Status.NO_CONTENT).build();
 			}
 
 			log.info("Found json of length " + json.length() + " for " + key);
 
 			return Response.ok(json).build();
+
 		} else if (key.charAt(3) == '_') {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
-			BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
-					baseEntityKey);
-			
-			String baseEntityJsonString = jsonb.toJson(baseEntity);
-			if (baseEntityJsonString.contains("Error id")) {
-				throw new Exception("Not found in cache");
-			}
-			return Response.ok(baseEntityJsonString).build();
-		} catch (Exception e) {
-			// TODO: just to get something going..
-			log.warn("BaseEntity not found in cache, fetching from database");
-			BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
-			String baseEntityJsonString = jsonb.toJson(be);
-			return Response.ok(baseEntityJsonString).build();
+				BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+						baseEntityKey);
+
+				String baseEntityJsonString = jsonb.toJson(baseEntity);
+				if (baseEntityJsonString.contains("Error id")) {
+					throw new Exception("Not found in cache");
+				}
+				return Response.ok(baseEntityJsonString).build();
+			} catch (Exception e) {
+				// TODO: just to get something going..
+				log.warn("BaseEntity not found in cache, fetching from database");
+				BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
+				String baseEntityJsonString = jsonb.toJson(be);
+				return Response.ok(baseEntityJsonString).build();
 			}
 		} else {
 			throw new UnsupportedOperationException(
@@ -164,7 +159,9 @@ if (res.getStatus() == 200) {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{productCode}/{key}")
 	public Response write(@PathParam("productCode") String productCode,@PathParam("key") String key, String value) {
+
 		log.info("[!] write(" + productCode+":"+key + ":"+value+")");
+
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
@@ -175,7 +172,6 @@ if (res.getStatus() == 200) {
 				.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
 
-
 		CacheUtils.writeCache(productCode, key, value);
 
 		log.info("Wrote json of length " + value.length() + " for " + key);
@@ -184,16 +180,18 @@ if (res.getStatus() == 200) {
 	}
 
 	/**
-	* Read an item from the cache.
-	*
-	* @param key The key of the cache item
-	* @return The json item
+	 * Read an item from the cache.
+	 *
+	 * @param key The key of the cache item
+	 * @return The json item
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
 	public Response read(@PathParam("key") String key) {
+
 		log.info("[!] read(" + key + ")");
+
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
@@ -201,6 +199,7 @@ if (res.getStatus() == 200) {
 
 		log.info("User: " + userToken.getUserCode());
 		log.info("Product Code/Cache: " + userToken.getProductCode());
+
 		String productCode = userToken.getProductCode();
 		String json = (String) CacheUtils.readCache(productCode, key);
 
@@ -219,7 +218,9 @@ if (res.getStatus() == 200) {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
 	public Response write(@PathParam("key") String key, String value) {
+
 		log.info("Writing to cache " + userToken.getProductCode() + ": [" + key + ":" + value + "]");
+
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("Not authorized to make this request")).build();

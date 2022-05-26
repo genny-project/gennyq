@@ -15,6 +15,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -128,12 +129,19 @@ public class FrontendService {
 		// add an entityAttribute to process entity for each attribute
 		for (String code : attributeCodes) {
 
-			EntityAttribute ea = target.findEntityAttribute(code).orElse(null);
-			if (ea == null) {
+			// check for existing attribute in target
+			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
+
+				// otherwise create new attribute
 				Attribute attribute = qwandaUtils.getAttribute(code);
-				ea = new EntityAttribute(processBE, attribute, 1.0, null);
+				return new EntityAttribute(processBE, attribute, 1.0, null);
+			});
+
+			try {
+				processBE.addAttribute(ea);
+			} catch (BadDataException e) {
+				e.printStackTrace();
 			}
-			processBE.getBaseEntityAttributes().add(ea);
 		}
 
 		log.info("ProcessBE contains " + processBE.getBaseEntityAttributes().size() + " entity attributes");
@@ -186,8 +194,44 @@ public class FrontendService {
 	 *
 	 * @param askMsg The ask message to send
 	 */
-	public void sendQDataAskMessage(String askMessageJson) {
+	public void sendQDataAskMessage(String askMessageJson, String processBEJson) {
+
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+
+		// NOTE: We only ever check the first ask in the message
+		Ask ask = askMessage.getItems()[0];
+
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
+		recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+
 		KafkaUtils.writeMsg("webdata", askMessageJson);
+	}
+
+	/**
+	 * Find the submit ask and update its disabled value.
+	 *
+	 * @param ask The ask to traverse
+	 * @param disabled The value to set
+	 * @return The submit ask
+	 */
+	public void recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
+
+		// return ask if submit is found
+		if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
+			ask.setDisabled(disabled);
+			return;
+		}
+
+		// ensure child asks is not null
+		if (ask.getChildAsks() == null) {
+			return;
+		}
+
+		// recursively check child asks for submit
+		for (Ask child : ask.getChildAsks()) {
+			recursivelyFindAndUpdateSubmitDisabled(child, disabled);
+		}
 	}
 
 	/**

@@ -1,8 +1,6 @@
 package life.genny.gadaq.service;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -10,7 +8,6 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -103,53 +100,12 @@ public class ProcessAnswerService {
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
-		log.info("Checking mandatorys against " + processBE.getCode());
-
-		Boolean mandatoryUnanswered = false;
+		// NOTE: We only ever check the first ask in the message
+		Ask ask = askMessage.getItems()[0];
 
 		// find the submit ask
-		Ask submit = null;
-		for (Ask ask : askMessage.getItems()) {
-			submit = recursivelyCheckForSubmit(ask);
-			if (submit != null) {
-				break;
-			}
-		}
-
-		// find all the mandatory booleans
-		Map<String, Boolean> map = new HashMap<>();
-		for (Ask ask : askMessage.getItems()) {
-			map = recursivelyFillMandatoryMap(map, ask);
-		}
-
-		// TODO: Fix this!
-		// this assumes all asks are targeting the same entity
-		BaseEntity target = beUtils.getBaseEntityByCode(askMessage.getItems()[0].getTargetCode());
-		if (target == null) {
-			log.error("Target is null");
-			return null;
-		}
-
-		Boolean answered = true;
-
-		// iterate entity attributes to check which have been answered
-		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
-
-			String attributeCode = ea.getAttributeCode();
-			Boolean mandatory = map.get(attributeCode);
-
-			String value = ea.getAsString();
-
-			// if any are both blank and mandatory, then task is not complete
-			if ((StringUtils.isBlank(value)) && (mandatory)) {
-				answered = false;
-			}
-
-			String resultLine = (mandatory?"[M]":"[O]")+ " : " + ea.getAttributeCode() + " : " + value; 
-			log.info("===> " + resultLine);
-		}
-
-		log.info("Mandatory fields are " + (mandatoryUnanswered ? "not" : "ALL") + " complete");
+		Ask submit = recursivelyCheckForSubmit(ask);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 
 		// enable/disable the submit according to answered var
 		if (submit != null) {
@@ -191,31 +147,6 @@ public class ProcessAnswerService {
 	}
 
 	/**
-	 * Fill the mandatory map using recursion.
-	 *
-	 * @param map The map to fill
-	 * @param ask The ask to traverse
-	 * @return The filled map
-	 */
-	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
-
-		// add current ask attribute code to map
-		map.put(ask.getAttributeCode(), ask.getMandatory());
-
-		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
-			return map;
-		}
-
-		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildAsks()) {
-			map = recursivelyFillMandatoryMap(map, child);
-		}
-
-		return map;
-	}
-
-	/**
 	 * Save all answers gathered in the processBE.
 	 *
 	 * @param sourceCode The source of the answers
@@ -228,15 +159,23 @@ public class ProcessAnswerService {
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
-		// List<Answer> answers = new ArrayList<>();
-
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
-			// // TODO: Check if this needs greater dataType precision
-			// Answer answer = new Answer(sourceCode, targetCode, ea.getAttributeCode(), ea.getValueString());
-			// answers.add(answer);
+
+			if (ea.getAttribute() == null) {
+				log.warn("Attribute is null, fetching " + ea.getAttributeCode());
+
+				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
+				ea.setAttribute(attribute);
+			}
+			if (ea.getPk().getBaseEntity() == null) {
+				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
+			}
 
 			ea.setBaseEntity(target);
+			if (ea.getPk().getBaseEntity() == null) {
+				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is STILLLLLLL NULL");
+			}
 			try {
 				target.addAttribute(ea);
 			} catch (BadDataException e) {
