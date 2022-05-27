@@ -213,6 +213,11 @@ public class QMessageGennyMSG extends QMessage {
 			return this;
 		}
 
+		public Builder setMessageContextMap(Map<String, String> ctxMap) {
+			this.msg.setMessageContextMap(ctxMap);
+			return this;
+		}
+
 		public Builder addContext(String key, Object value) {
 			this.msg.addContext(key, value);
 			return this;

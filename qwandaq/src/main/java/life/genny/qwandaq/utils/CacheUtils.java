@@ -138,11 +138,26 @@ public class CacheUtils {
 		cache.getRemoteCache(realm).put(key, json);
 	}
 
-	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
-		return cache.putEntityIntoCache(cacheName, key, entity);
-	}
-
+	/**
+	* Get a CoreEntity object from the cache using a CoreEntityKey.
+	* 
+	* @param cacheName The cache to read from
+	* @param key The key they item is saved against
+	* @return The CoreEntity returned
+	 */
 	public static CoreEntity getEntity(String cacheName, CoreEntityKey key) {
 		return cache.getEntityFromCache(cacheName, key);
+	}
+
+	/**
+	* Save a CoreEntity to the cache using a CoreEntityKey.
+	*
+	* @param cacheName The cache to save to
+	* @param key The key to save against
+	* @param entity The CoreEntity to save
+	* @return The CoreEntity being saved
+	 */
+	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
+		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 }

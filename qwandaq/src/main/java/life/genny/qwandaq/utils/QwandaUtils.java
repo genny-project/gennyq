@@ -2,6 +2,7 @@ package life.genny.qwandaq.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -324,6 +325,69 @@ public class QwandaUtils {
 		}
 		return codes;
 	}
+
+	/**
+	* Check if all Ask mandatory fields are answered for a BaseEntity.
+	*
+	* @param ask The ask to check
+	* @param baseEntity The BaseEntity to check against
+	* @return Boolean
+	 */
+	public Boolean mandatoryFieldsAreAnswered(Ask ask, BaseEntity baseEntity) {
+
+		log.info("Checking " + ask.getQuestionCode() + " mandatorys against " + baseEntity.getCode());
+
+		// find all the mandatory booleans
+		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<String, Boolean>(), ask);
+		Boolean answered = true;
+
+		// iterate entity attributes to check which have been answered
+		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
+
+			String attributeCode = ea.getAttributeCode();
+			Boolean mandatory = map.get(attributeCode);
+
+			String value = ea.getAsString();
+
+			// if any are both blank and mandatory, then task is not complete
+			if ((StringUtils.isBlank(value)) && (mandatory)) {
+				answered = false;
+			}
+
+			String resultLine = (mandatory?"[M]":"[O]")+ " : " + ea.getAttributeCode() + " : " + value; 
+			log.info("===> " + resultLine);
+		}
+
+		log.info("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
+
+		return answered;
+	}
+
+	/**
+	 * Fill the mandatory map using recursion.
+	 *
+	 * @param map The map to fill
+	 * @param ask The ask to traverse
+	 * @return The filled map
+	 */
+	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
+
+		// add current ask attribute code to map
+		map.put(ask.getAttributeCode(), ask.getMandatory());
+
+		// ensure child asks is not null
+		if (ask.getChildAsks() == null) {
+			return map;
+		}
+
+		// recursively add child ask attribute codes
+		for (Ask child : ask.getChildAsks()) {
+			map = recursivelyFillMandatoryMap(map, child);
+		}
+
+		return map;
+	}
+
 
 	/**
 	 * Save an {@link Answer} object.
