@@ -35,6 +35,7 @@ import life.genny.bridge.exception.BridgeException;
 import life.genny.qwandaq.models.AttributeCodeValueString;
 import life.genny.qwandaq.models.GennyItem;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.bridge.model.InitProperties;
 import life.genny.qwandaq.message.QDataB2BMessage;
@@ -98,7 +99,9 @@ public class Bridge {
 			return Response.ok(json).build();
 
 		} catch (Exception e) {
-			log.error("The configuration does not exist or cannot be find please check the ENVs");
+			log.error("The configuration does not exist or cannot be found please check the ENVs");
+			String productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES");
+			log.error(productCodes != null ? ("Product Codes: " + productCodes) : "UNDEFINED PRODUCT CODES. Please define PRODUCT_CODES as an env (a ':' delimited string of product codes)");
 			e.printStackTrace();
 		}
 
