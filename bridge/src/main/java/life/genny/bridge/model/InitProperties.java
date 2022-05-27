@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import javax.json.bind.annotation.JsonbProperty;
 
+import org.jboss.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -33,6 +34,8 @@ public class InitProperties {
     String apiUrl;
     @JsonbProperty
     String clientId;
+
+	private static final Logger log = Logger.getLogger(InitProperties.class);
 
     public InitProperties(String url) throws BridgeException {
 
@@ -74,7 +77,13 @@ public class InitProperties {
 		return mediaProxyUrl;
 	}
 
-    public void setMediaProxyUrl(String url) {
+    public void setMediaProxyUrl(String url) throws BridgeException {
+		final String matcher = "genny.life";
+		if(!StringUtils.isBlank(url) && url.contains(matcher)) {
+			String productCode = determineClientId(url);
+			url = productCode + "-dev.gada.io/";
+			log.info("Local bridge detected! Overriding media-proxy url to: " + url + "web/public");
+		}
         this.mediaProxyUrl = url + "web/public";
     }
 
