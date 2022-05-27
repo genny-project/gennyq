@@ -121,7 +121,7 @@ if (res.getStatus() == 200) {
 		log.info("User: " + userToken.getUserCode());
 		log.info("Product Code/Cache: " + productCode);
 
-		if ((key.contains(":")) ||("attributes".equals(key)) ){
+		if ((key.contains(":")) ||("attributes".equals(key))){
 			// It's a token
 			String json = (String) CacheUtils.readCache(productCode, key);
 
@@ -155,6 +155,9 @@ if (res.getStatus() == 200) {
 			}
 		} else {
 			if ("jenny".equals(productCode)) {
+				return Response.ok(serviceToken.getToken()).build();
+			}
+			if (key.startsWith("TOKEN")) {
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			throw new UnsupportedOperationException(
