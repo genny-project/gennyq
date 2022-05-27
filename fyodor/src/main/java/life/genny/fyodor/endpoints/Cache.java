@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -46,6 +47,9 @@ public class Cache {
 
 	@Inject
 	Service service;
+
+	@Inject
+	ServiceToken serviceToken;
 
 	@Inject
 	UserToken userToken;
@@ -116,7 +120,8 @@ if (res.getStatus() == 200) {
 
 		log.info("User: " + userToken.getUserCode());
 		log.info("Product Code/Cache: " + productCode);
-		if ((key.contains(":")) ||("attributes".equals(key))){
+
+		if ((key.contains(":")) ||("attributes".equals(key)) ){
 			// It's a token
 			String json = (String) CacheUtils.readCache(productCode, key);
 
@@ -149,6 +154,9 @@ if (res.getStatus() == 200) {
 				return Response.ok(baseEntityJsonString).build();
 			}
 		} else {
+			if ("jenny".equals(productCode)) {
+				return Response.ok(serviceToken.getToken()).build();
+			}
 			throw new UnsupportedOperationException(
 					"This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key + "]");
 		}
