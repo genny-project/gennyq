@@ -155,9 +155,11 @@ if (res.getStatus() == 200) {
 			}
 		} else {
 			if ("jenny".equals(productCode)) {
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			if (key.startsWith("TOKEN")) {
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "]");
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			throw new UnsupportedOperationException(
