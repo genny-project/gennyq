@@ -155,6 +155,10 @@ if (res.getStatus() == 200) {
 				return Response.ok(baseEntityJsonString).build();
 			}
 		} else {
+			if ("JENNY".equals(productCode) && "SKIP".equals(key)) {
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
+				return Response.ok("TRUE").build(); // always return true
+			}
 			if ("jenny".equals(productCode)) {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
 				return Response.ok(serviceToken.getToken()).build();
