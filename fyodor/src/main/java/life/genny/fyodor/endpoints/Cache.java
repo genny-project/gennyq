@@ -75,7 +75,10 @@ JsonObject json = null;
 if (res.getStatus() == 200) {
 		String replyString = res.getEntity().toString();
 
-		log.info("response=["+replyString+"]");
+		log.info("response=[" + replyString + "]");
+		if ("jenny".equals(productCode)) {
+			return Response.ok().entity(replyString).build();
+		}
 
     JsonReader jsonReader = Json.createReader(new StringReader(replyString));
     JsonObject reply = jsonReader.readObject();
