@@ -172,6 +172,11 @@ if (res.getStatus() == 200) {
 				return Response.ok(baseEntityJsonString).build();
 			}
 		} else {
+			if ("CAPABILITIES".equals(key)) {
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
+				String json = (String) CacheUtils.readCache(productCode, key);
+					return Response.ok(json).build();
+			}
 			if ("JENNY".equals(productCode) && "SKIP".equals(key)) {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
 				return Response.ok("TRUE").build(); // always return true
