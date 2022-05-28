@@ -113,7 +113,8 @@ if (res.getStatus() == 200) {
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		if ( !userToken.hasRole("test","service")) {
+		if (!userToken.hasRole("test", "service")) {
+			log.error("User does not have valid role:"+userToken.getUserRoles());
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
