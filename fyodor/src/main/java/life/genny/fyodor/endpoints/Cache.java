@@ -173,6 +173,11 @@ if (res.getStatus() == 200) {
 			}
 		} else {
 			if ("CAPABILITIES".equals(key)) {
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
+				String json = (String) CacheUtils.readCache(productCode, key);
+				return Response.ok(json).build();
+			}
+			if ("ACTIVE_BRIDGE_IDS".equals(key)) {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
 				String json = (String) CacheUtils.readCache(productCode, key);
 					return Response.ok(json).build();
