@@ -119,6 +119,12 @@ if (res.getStatus() == 200) {
 			if ("jenny".equals(productCode) && (key.startsWith("TOKEN"))) {
 				return Response.ok(serviceToken.getToken()).build();
 			}
+			if ("JENNY".equals(productCode) && (key.startsWith("TOKEN"))) {
+				return Response.ok(serviceToken.getToken()).build();
+			}
+			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
+				return Response.ok("TRUE").build();
+			}
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
