@@ -287,4 +287,21 @@ if (res.getStatus() == 200) {
 		return Response.ok().build();
 	}
 
+	@DELETE
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{productCode}/{key}")
+	public Response delete(@PathParam("productCode") String productCode,@PathParam("key") String key) {
+
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+				.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		CacheUtils.removeEntry(productCode, key);
+
+		log.info("Removed Item for " + key);
+
+		return Response.ok().build();
+	}
+
 }
