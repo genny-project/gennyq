@@ -117,14 +117,18 @@ if (res.getStatus() == 200) {
 			log.error("User [" + userToken.userCode + "] does not have valid role:" + userToken.getUserRoles());
 			// TODO -> Do not permit access from externally
 			if ("jenny".equals(productCode) && (key.startsWith("TOKEN"))) {
+				log.warn("jenny and TOKEN returning "+serviceToken.getToken().substring(0, 10));
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("TOKEN"))) {
+				log.warn("JENNY and TOKEN returning "+serviceToken.getToken().substring(0, 10));
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
+				log.warn("JENNY and SKIP returning " + serviceToken.getToken().substring(0, 10));
 				return Response.ok("TRUE").build();
 			}
+			log.warn("No token,  returning BAD-REQUEST "+serviceToken.getToken().substring(0, 10));
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
