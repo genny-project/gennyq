@@ -80,13 +80,20 @@ if (res.getStatus() == 200) {
 			return Response.ok().entity(replyString).build();
 		}
 
-    JsonReader jsonReader = Json.createReader(new StringReader(replyString));
-    JsonObject reply = jsonReader.readObject();
+		if (key.charAt(3) == '_') {
+			JsonReader jsonReader = Json.createReader(new StringReader(replyString));
+			JsonObject reply = jsonReader.readObject();
 
 			json = javax.json.Json.createObjectBuilder()
+					.add("status", "ok")
+					.add("value", reply)
+					.build();
+		} else {
+			json = javax.json.Json.createObjectBuilder()
 				.add("status", "ok")
-				.add("value", reply)
+				.add("value", replyString)
 				.build();
+		}
 		} else {
 			json = javax.json.Json.createObjectBuilder()
 				.add("status", "error")
