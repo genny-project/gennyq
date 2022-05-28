@@ -75,12 +75,12 @@ JsonObject json = null;
 if (res.getStatus() == 200) {
 		String replyString = res.getEntity().toString();
 
-		log.info("response=[" + replyString + "]");
+		//log.info("response=[" + replyString + "]");
 		if ("jenny".equals(productCode)) {
 			return Response.ok().entity(replyString).build();
 		}
 
-		if (key.charAt(3) == '_') {
+		
 			JsonReader jsonReader = Json.createReader(new StringReader(replyString));
 			JsonObject reply = jsonReader.readObject();
 
@@ -88,12 +88,7 @@ if (res.getStatus() == 200) {
 					.add("status", "ok")
 					.add("value", reply)
 					.build();
-		} else {
-			json = javax.json.Json.createObjectBuilder()
-				.add("status", "ok")
-				.add("value", replyString)
-				.build();
-		}
+		
 		} else {
 			json = javax.json.Json.createObjectBuilder()
 				.add("status", "error")
