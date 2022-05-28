@@ -73,14 +73,26 @@ public class Cache {
 
 JsonObject json = null;
 if (res.getStatus() == 200) {
-		String replyString = res.getEntity().toString();
+	String replyString = res.getEntity().toString();
 
-		//log.info("response=[" + replyString + "]");
-		if ("jenny".equals(productCode)) {
-			return Response.ok().entity(replyString).build();
-		}
+	//log.info("response=[" + replyString + "]");
+	if ("jenny".equals(productCode)) {
+		return Response.ok().entity(replyString).build();
+	}
+	if ("JENNY".equals(productCode)) {
+		return Response.ok().entity(replyString).build();
+	}
+	if ("ACTIVE_BRIDGE_IDS".equals(key)) {
+		return Response.ok().entity(replyString).build();
+	}
+	if ("CACHE:SERVICE_TOKEN".equals(key)) {
+		log.info("CACHE:SERVICE_TOKEN->"+replyString);
+		return Response.ok().entity(replyString).build();
+	}
 
-		
+		if ("CAPABILITIES".equals(key)) {
+		return Response.ok().entity(replyString).build();
+	}
 			JsonReader jsonReader = Json.createReader(new StringReader(replyString));
 			JsonObject reply = jsonReader.readObject();
 
@@ -114,8 +126,10 @@ if (res.getStatus() == 200) {
 		log.info("[!] read(" + productCode + ":" + key + ")");
 
 		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("Not authorized to make this request")).build();
+			// TODO - using serviceToken
+			log.warn("userToken is NULL - FIX!");
+			// return Response.status(Response.Status.BAD_REQUEST)
+			// 	.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		if (!userToken.hasRole("test", "service")) {
@@ -133,6 +147,13 @@ if (res.getStatus() == 200) {
 				log.warn("JENNY and SKIP returning " + serviceToken.getToken().substring(0, 10));
 				return Response.ok("TRUE").build();
 			}
+
+		if ("CACHE:SERVICE_TOKEN".equals(key)) {
+				log.warn("JENNY and TOKEN returning "+serviceToken.getToken().substring(0, 10));
+				return Response.ok(serviceToken.getToken()).build();
+			}
+
+
 			log.warn("No token,  returning BAD-REQUEST "+serviceToken.getToken().substring(0, 10));
 			return Response.status(Response.Status.BAD_REQUEST)
 				.entity(HttpUtils.error("User not authorized to make this request")).build();
