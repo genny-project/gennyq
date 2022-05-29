@@ -3,7 +3,7 @@ package life.genny.bridge.blacklisting;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.inject.Singleton;
+import javax.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 
 /**
@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
  *
  * @author    hello@gada.io
  */
-@Singleton
+@ApplicationScoped
 public class BlackListInfo {
 
     private static final Logger log = Logger.getLogger(BlackListInfo.class);

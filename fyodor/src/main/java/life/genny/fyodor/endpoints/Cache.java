@@ -94,6 +94,7 @@ public class Cache {
 			// return Response.ok().entity(replyString).build();
 			// }
 			try {
+				log.info("preparing Json : "+key);
 				JsonReader jsonReader = Json.createReader(new StringReader(replyString));
 				JsonObject reply = jsonReader.readObject();
 
@@ -101,7 +102,9 @@ public class Cache {
 						.add("status", "ok")
 						.add("value", reply)
 						.build();
-			} catch (javax.json.stream.JsonParsingException je) {
+						log.info("returning Json ok : "+key);
+					} catch (javax.json.stream.JsonParsingException je) {
+				log.info("returning String : "+key);
 				json = javax.json.Json.createObjectBuilder()
 						.add("status", "ok")
 						.add("value", replyString)
@@ -223,8 +226,10 @@ public class Cache {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "]");
 				return Response.ok(serviceToken.getToken()).build();
 			}
-			throw new UnsupportedOperationException(
-					"This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key + "]");
+			String json = (String) CacheUtils.readCache(productCode, key);
+				return Response.ok(json).build();
+			// throw new UnsupportedOperationException(
+			// 		"This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key + "]");
 		}
 	}
 
