@@ -140,7 +140,7 @@ public class Cache {
 		}
 
 		if (!userToken.hasRole("test", "service")) {
-			log.error("User [" + userToken.userCode + "] does not have valid role:" + userToken.getUserRoles());
+			log.warn("User [" + userToken.userCode + "] does not have valid role:" + userToken.getUserRoles());
 			// TODO -> Do not permit access from externally
 			if ("jenny".equals(productCode) && (key.startsWith("TOKEN"))) {
 				log.warn("jenny and TOKEN returning " + serviceToken.getToken().substring(0, 10));
@@ -234,7 +234,11 @@ public class Cache {
 	@Path("/{productCode}/{key}")
 	public Response write(@PathParam("productCode") String productCode, @PathParam("key") String key, String value) {
 
-		log.info("[!] write(" + productCode + ":" + key + ":" + value + ")");
+		if (value != null) {
+			log.info("[!] write(" + productCode + ":" + key + ":" + StringUtils.abbreviate(value, 20) + ")");
+		} else {
+			log.info("[!] write(" + productCode + ":" + key + ":null)");
+		}
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
