@@ -79,9 +79,9 @@ public class Cache {
 			// if ("jenny".equals(productCode)) {
 			// return Response.ok().entity(replyString).build();
 			// }
-			// if ("JENNY".equals(productCode)) {
-			// return Response.ok().entity(replyString).build();
-			// }
+			if ("JENNY".equals(productCode)) {
+				return Response.ok().entity(replyString).build();
+			}
 			// if ("ACTIVE_BRIDGE_IDS".equals(key)) {
 			// return Response.ok().entity(replyString).build();
 			// }
