@@ -61,7 +61,7 @@ public class Cache {
 	 * Read an item from the cache and return in json status format.
 	 *
 	 * @param productCode The productCode of the cache item
-	 * @param key The key of the cache item
+	 * @param key         The key of the cache item
 	 * @return The json item
 	 */
 	@GET
@@ -71,41 +71,48 @@ public class Cache {
 
 		Response res = readProductCodeKey(productCode, key);
 
-JsonObject json = null;
-if (res.getStatus() == 200) {
-	String replyString = res.getEntity().toString();
+		JsonObject json = null;
+		if (res.getStatus() == 200) {
+			String replyString = res.getEntity().toString();
 
-	//log.info("response=[" + replyString + "]");
-	if ("jenny".equals(productCode)) {
-		return Response.ok().entity(replyString).build();
-	}
-	if ("JENNY".equals(productCode)) {
-		return Response.ok().entity(replyString).build();
-	}
-	if ("ACTIVE_BRIDGE_IDS".equals(key)) {
-		return Response.ok().entity(replyString).build();
-	}
-	if ("CACHE:SERVICE_TOKEN".equals(key)) {
-		log.info("CACHE:SERVICE_TOKEN->"+replyString);
-		return Response.ok().entity(replyString).build();
-	}
+			// log.info("response=[" + replyString + "]");
+			// if ("jenny".equals(productCode)) {
+			// return Response.ok().entity(replyString).build();
+			// }
+			// if ("JENNY".equals(productCode)) {
+			// return Response.ok().entity(replyString).build();
+			// }
+			// if ("ACTIVE_BRIDGE_IDS".equals(key)) {
+			// return Response.ok().entity(replyString).build();
+			// }
+			// if ("CACHE:SERVICE_TOKEN".equals(key)) {
+			// log.info("CACHE:SERVICE_TOKEN->" + replyString);
+			// return Response.ok().entity(replyString).build();
+			// }
 
-		if ("CAPABILITIES".equals(key)) {
-		return Response.ok().entity(replyString).build();
-	}
-			JsonReader jsonReader = Json.createReader(new StringReader(replyString));
-			JsonObject reply = jsonReader.readObject();
+			// if ("CAPABILITIES".equals(key)) {
+			// return Response.ok().entity(replyString).build();
+			// }
+			try {
+				JsonReader jsonReader = Json.createReader(new StringReader(replyString));
+				JsonObject reply = jsonReader.readObject();
 
-			json = javax.json.Json.createObjectBuilder()
-					.add("status", "ok")
-					.add("value", reply)
-					.build();
-		
+				json = javax.json.Json.createObjectBuilder()
+						.add("status", "ok")
+						.add("value", reply)
+						.build();
+			} catch (javax.json.stream.JsonParsingException je) {
+				json = javax.json.Json.createObjectBuilder()
+						.add("status", "ok")
+						.add("value", replyString)
+						.build();
+			}
+
 		} else {
 			json = javax.json.Json.createObjectBuilder()
-				.add("status", "error")
-				.add("value", res.getStatusInfo().toString())
-				.build();
+					.add("status", "error")
+					.add("value", res.getStatusInfo().toString())
+					.build();
 		}
 
 		return Response.ok().entity(json).build();
@@ -115,7 +122,7 @@ if (res.getStatus() == 200) {
 	 * Read an item from the cache.
 	 *
 	 * @param productCode The productCode of the cache item
-	 * @param key The key of the cache item
+	 * @param key         The key of the cache item
 	 * @return The json item
 	 */
 	@GET
@@ -129,18 +136,18 @@ if (res.getStatus() == 200) {
 			// TODO - using serviceToken
 			log.warn("userToken is NULL - FIX!");
 			// return Response.status(Response.Status.BAD_REQUEST)
-			// 	.entity(HttpUtils.error("Not authorized to make this request")).build();
+			// .entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		if (!userToken.hasRole("test", "service")) {
 			log.error("User [" + userToken.userCode + "] does not have valid role:" + userToken.getUserRoles());
 			// TODO -> Do not permit access from externally
 			if ("jenny".equals(productCode) && (key.startsWith("TOKEN"))) {
-				log.warn("jenny and TOKEN returning "+serviceToken.getToken().substring(0, 10));
+				log.warn("jenny and TOKEN returning " + serviceToken.getToken().substring(0, 10));
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("TOKEN"))) {
-				log.warn("JENNY and TOKEN returning "+serviceToken.getToken().substring(0, 10));
+				log.warn("JENNY and TOKEN returning " + serviceToken.getToken().substring(0, 10));
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
@@ -148,21 +155,20 @@ if (res.getStatus() == 200) {
 				return Response.ok("TRUE").build();
 			}
 
-		if ("CACHE:SERVICE_TOKEN".equals(key)) {
-				log.warn("JENNY and TOKEN returning "+serviceToken.getToken().substring(0, 10));
+			if ("CACHE:SERVICE_TOKEN".equals(key)) {
+				log.warn("JENNY and TOKEN returning " + serviceToken.getToken().substring(0, 10));
 				return Response.ok(serviceToken.getToken()).build();
 			}
 
-
-			log.warn("No token,  returning BAD-REQUEST "+serviceToken.getToken().substring(0, 10));
+			log.warn("No token,  returning BAD-REQUEST " + serviceToken.getToken().substring(0, 10));
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("User not authorized to make this request")).build();
+					.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
 
 		log.info("User: " + userToken.getUserCode());
 		log.info("Product Code/Cache: " + productCode);
 
-		if ((key.contains(":")) ||("attributes".equals(key))){
+		if ((key.contains(":")) || ("attributes".equals(key))) {
 			// It's a token
 			String json = (String) CacheUtils.readCache(productCode, key);
 
@@ -201,16 +207,16 @@ if (res.getStatus() == 200) {
 				return Response.ok(json).build();
 			}
 			if ("ACTIVE_BRIDGE_IDS".equals(key)) {
-				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
 				String json = (String) CacheUtils.readCache(productCode, key);
-					return Response.ok(json).build();
+				return Response.ok(json).build();
 			}
 			if ("JENNY".equals(productCode) && "SKIP".equals(key)) {
-				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
 				return Response.ok("TRUE").build(); // always return true
 			}
 			if ("jenny".equals(productCode)) {
-				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] "+serviceToken.getToken());
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			if (key.startsWith("TOKEN")) {
@@ -226,18 +232,18 @@ if (res.getStatus() == 200) {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{productCode}/{key}")
-	public Response write(@PathParam("productCode") String productCode,@PathParam("key") String key, String value) {
+	public Response write(@PathParam("productCode") String productCode, @PathParam("key") String key, String value) {
 
-		log.info("[!] write(" + productCode+":"+key + ":"+value+")");
+		log.info("[!] write(" + productCode + ":" + key + ":" + value + ")");
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		if (!"service".equals(userToken.getUsername())) {
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("User not authorized to make this request")).build();
+					.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
 
 		CacheUtils.writeCache(productCode, key, value);
@@ -262,7 +268,7 @@ if (res.getStatus() == 200) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		log.info("User: " + userToken.getUserCode());
@@ -291,7 +297,7 @@ if (res.getStatus() == 200) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		String productCode = userToken.getProductCode();
@@ -309,7 +315,7 @@ if (res.getStatus() == 200) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		String productCode = userToken.getProductCode();
@@ -323,11 +329,11 @@ if (res.getStatus() == 200) {
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{productCode}/{key}")
-	public Response delete(@PathParam("productCode") String productCode,@PathParam("key") String key) {
+	public Response delete(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-				.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
 		CacheUtils.removeEntry(productCode, key);
