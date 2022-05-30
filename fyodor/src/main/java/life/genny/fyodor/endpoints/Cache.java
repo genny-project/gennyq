@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
+
 /**
  * Cache --- Endpoints providing cache access
  *
@@ -255,8 +256,15 @@ public class Cache {
 					.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
 
-		CacheUtils.writeCache(productCode, key, value);
-
+		if (key.charAt(3) == '_') {
+			// It's a baseentity
+			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
+			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
+			CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+						baseEntityKey,entity);
+		} else {
+			CacheUtils.writeCache(productCode, key, value);
+		}
 		log.info("Wrote json of length " + value.length() + " for " + key);
 
 		return Response.ok().build();
