@@ -81,7 +81,7 @@ public class InitProperties {
 		final String matcher = "genny.life";
 		if(!StringUtils.isBlank(url) && url.contains(matcher)) {
 			String productCode = determineClientId(url);
-			url = productCode + "-dev.gada.io/";
+			url = "https://" + productCode + "-dev.gada.io/";
 			log.info("Local bridge detected! Overriding media-proxy url to: " + url + "web/public");
 		}
         this.mediaProxyUrl = url + "web/public";
