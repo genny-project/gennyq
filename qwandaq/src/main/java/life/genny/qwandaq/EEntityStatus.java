@@ -32,9 +32,15 @@ public enum EEntityStatus {
 	}
   
 
-	public Integer valueOf(EEntityStatus e)
+	public EEntityStatus valueOf(Integer value)
 	{
-		return e.getStatus();
+		for (EEntityStatus enumValue : EEntityStatus.values()) {
+			if (enumValue.getStatus().equals(value)) {
+				return enumValue;
+			}
+
+		}
+		return null;
 	}
 
 }
