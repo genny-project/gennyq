@@ -36,13 +36,17 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 
 	// @Override
 	public void writeTo(ProtoStreamWriter writer, BaseEntity be) throws IOException {
-		writer.writeLong("id", be.getId());
+		// writer.writeLong("id", be.getId());
 		writer.writeString("code", be.getCode());
-		writer.writeLong("created", be.getCreated().toEpochSecond(ZoneOffset.UTC)*1000);
+		LocalDateTime created = be.getCreated();
+		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC)*1000 : null;
+		writer.writeLong("created", createdLong);
 		writer.writeString("name", be.getName());
 		writer.writeString("realm", be.getRealm());
 		writer.writeInt("status", be.getStatus().ordinal());
-		writer.writeLong("updated", be.getUpdated().toEpochSecond(ZoneOffset.UTC)*1000);
+		LocalDateTime updated = be.getUpdated();
+		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC)*1000 : null;
+		writer.writeLong("updated", updatedLong);
 	}
 
 }
