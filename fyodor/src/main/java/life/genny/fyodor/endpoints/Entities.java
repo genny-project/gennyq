@@ -6,6 +6,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -13,10 +14,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
+import life.genny.serviceq.Service;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
 
 
 
@@ -41,6 +45,12 @@ public class Entities {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	Service service;
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	/**
 	 * Read an item from the cache.
@@ -84,8 +94,28 @@ public class Entities {
 
 		BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
 		if (entity == null) {
-			log.error("productCode=["+userToken.getProductCode()+"] , code="+code);
+			log.error("productCode=[" + userToken.getProductCode() + "] , code=" + code);
 		}
+
+		return Response.ok(entity).build();
+	}
+	
+	/**
+	 * Read an item from the cache.
+	 *
+	 * @param key The key of the cache item
+	 * @return The json item
+	 */
+	@PUT
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response update(BaseEntity entity) {
+		log.info("Put BE "+entity.getCode());
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		beUtils.updateBaseEntity(entity);
 
 		return Response.ok(entity).build();
 	}

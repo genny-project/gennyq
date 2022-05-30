@@ -1,5 +1,10 @@
 package life.genny.qwandaq.models;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -18,20 +23,15 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
+
+
+
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
@@ -119,7 +119,7 @@ public class GennyToken implements Serializable {
 		// NOTE: solution would be to eliminate any internmatch 
 		// tokens using this client id.
 		if ("alyson".equals(azp)) {
-			log.warn("alyson clientid detected.");
+			//log.warn("alyson clientid detected.");
 			azp = "internmatch";
 		}
 
