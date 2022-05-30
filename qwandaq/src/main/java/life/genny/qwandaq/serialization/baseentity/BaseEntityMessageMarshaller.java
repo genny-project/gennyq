@@ -26,11 +26,17 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		BaseEntity be = new BaseEntity();
 		be.setId(reader.readLong("id"));
 		be.setCode(reader.readString("code"));
-		be.setCreated(LocalDateTime.ofEpochSecond(reader.readLong("created")/1000, 0, ZoneOffset.UTC));
+		Long createdLong = reader.readLong("created");
+		if (createdLong != null) {
+			be.setCreated(LocalDateTime.ofEpochSecond(createdLong / 1000, 0, ZoneOffset.UTC));
+		}
 		be.setName(reader.readString("name"));
 		be.setRealm(reader.readString("realm"));
 		be.setStatus(EEntityStatus.valueOf(""+reader.readInt("status")));
-		be.setUpdated(LocalDateTime.ofEpochSecond(reader.readLong("updated")/1000, 0, ZoneOffset.UTC));
+		Long updatedLong = reader.readLong("updated");
+		if (updatedLong != null) {
+			be.setUpdated(LocalDateTime.ofEpochSecond(updatedLong / 1000, 0, ZoneOffset.UTC));
+		}
 		return be;
 	}
 
