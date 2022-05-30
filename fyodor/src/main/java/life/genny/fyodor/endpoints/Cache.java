@@ -164,8 +164,8 @@ public class Cache {
 			}
 
 			log.warn("No token,  returning BAD-REQUEST " + serviceToken.getToken().substring(0, 10));
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("User not authorized to make this request")).build();
+			// return Response.status(Response.Status.BAD_REQUEST)
+			// 		.entity(HttpUtils.error("User not authorized to make this request , productCode:"+productCode+",key="+key)).build();
 		}
 
 		log.info("User: " + userToken.getUserCode());
