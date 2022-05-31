@@ -67,15 +67,12 @@ public class CacheUtils {
 	 * @param value The value to save.
 	 */
 	public static void writeCache(String realm, String key, String value) {
-		log.info("cache is " + cache);
 		log.info("realm is " + realm);
 		log.info("key is " + key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
 		log.info("remoteCache was returned");
 		remoteCache.put(key, value);
 		log.info("cache finished writing for "+realm+" "+key);
-		// String result = (String)readCache(realm, key);
-		// log.info("Written key:" + key + " to cache " + realm + " [" + result + "]");
 	}
 
 	/**

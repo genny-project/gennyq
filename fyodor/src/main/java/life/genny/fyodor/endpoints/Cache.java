@@ -166,13 +166,7 @@ public class Cache {
 			}
 
 			log.warn("No token,  returning BAD-REQUEST " + serviceToken.getToken().substring(0, 10));
-			// return Response.status(Response.Status.BAD_REQUEST)
-			// .entity(HttpUtils.error("User not authorized to make this request ,
-			// productCode:"+productCode+",key="+key)).build();
 		}
-
-		//log.info("User: " + userToken.getUserCode());
-		//log.info("Product Code/Cache: " + productCode);
 
 		if ((key.contains(":")) || ("attributes".equals(key))) {
 			// It's a token
@@ -183,21 +177,19 @@ public class Cache {
 				return Response.status(Response.Status.NO_CONTENT).build();
 			}
 
-			//log.info("Found json of length " + json.length() + " for " + key);
-
 			return Response.ok(json).build();
 
 		} else if (key.charAt(3) == '_' 
 				&& !key.startsWith("SBE")
+				&& !key.startsWith("QUE")
 				&& !key.startsWith("FRM")) {
+
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
 				log.info("Getting BE with code " + key);
 				BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
 						baseEntityKey);
-
-				log.info("BE = " + baseEntity);
 
 				if (baseEntity == null) {
 					throw new Exception("Not found in cache");
@@ -208,10 +200,12 @@ public class Cache {
 				// TODO: just to get something going..
 				log.warn("BaseEntity not found in cache, fetching from database");
 				BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
-				String baseEntityJsonString = jsonb.toJson(be);
-				return Response.ok(baseEntityJsonString).build();
+
+				return Response.ok(jsonb.toJson(be)).build();
 			}
+
 		} else {
+
 			if ("CAPABILITIES".equals(key)) {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
 				String json = (String) CacheUtils.readCache(productCode, key);
@@ -234,11 +228,10 @@ public class Cache {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "]");
 				return Response.ok(serviceToken.getToken()).build();
 			}
+
 			String json = (String) CacheUtils.readCache(productCode, key);
+
 			return Response.ok(json).build();
-			// throw new UnsupportedOperationException(
-			// "This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key
-			// + "]");
 		}
 	}
 
@@ -259,13 +252,9 @@ public class Cache {
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		// if (!"service".equals(userToken.getUsername())) {
-		// 	return Response.status(Response.Status.BAD_REQUEST)
-		// 			.entity(HttpUtils.error("User not authorized to make this request")).build();
-		// }
-
 		if (key.charAt(3) == '_'
 				&& !key.startsWith("SBE")
+				&& !key.startsWith("QUE")
 				&& !key.startsWith("FRM")) {
 			log.info("Writing to baseentity cache " + productCode + ":" + key);
 			// It's a baseentity
