@@ -74,8 +74,8 @@ public class CacheUtils {
 		log.info("remoteCache was returned");
 		remoteCache.put(key, value);
 		log.info("cache finished writing for "+realm+" "+key);
-		String result = (String)readCache(realm, key);
-		log.info("Written key:" + key + " to cache " + realm + " [" + result + "]");
+		// String result = (String)readCache(realm, key);
+		// log.info("Written key:" + key + " to cache " + realm + " [" + result + "]");
 	}
 
 	/**

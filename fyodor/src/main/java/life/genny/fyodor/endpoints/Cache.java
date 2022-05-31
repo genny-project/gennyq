@@ -69,6 +69,8 @@ public class Cache {
 	@Path("/{productCode}/{key}/json")
 	public Response readProductCodeKeyJson(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 
+		log.info("[!] JSON read(" + productCode + ":" + key + ")");
+
 		Response res = readProductCodeKey(productCode, key);
 
 		JsonObject json = null;
@@ -79,9 +81,9 @@ public class Cache {
 			// if ("jenny".equals(productCode)) {
 			// return Response.ok().entity(replyString).build();
 			// }
-			if ("JENNY".equals(productCode)) {
-				return Response.ok().entity(replyString).build();
-			}
+			// if ("JENNY".equals(productCode)) {
+			// 	return Response.ok().entity(replyString).build();
+			// }
 			// if ("ACTIVE_BRIDGE_IDS".equals(key)) {
 			// return Response.ok().entity(replyString).build();
 			// }
@@ -155,7 +157,7 @@ public class Cache {
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
 				log.warn("JENNY and SKIP returning " + serviceToken.getToken().substring(0, 10));
-				return Response.ok("TRUE").build();
+				return Response.ok("false").build();
 			}
 
 			if ("CACHE:SERVICE_TOKEN".equals(key)) {
@@ -185,18 +187,22 @@ public class Cache {
 
 			return Response.ok(json).build();
 
-		} else if (key.charAt(3) == '_') {
+		} else if (key.charAt(3) == '_' 
+				&& !key.startsWith("SBE")
+				&& !key.startsWith("FRM")) {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
+				log.info("Getting BE with code " + key);
 				BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
 						baseEntityKey);
 
-				String baseEntityJsonString = jsonb.toJson(baseEntity);
-				if (baseEntityJsonString.contains("Error id")) {
+				log.info("BE = " + baseEntity);
+
+				if (baseEntity == null) {
 					throw new Exception("Not found in cache");
 				}
-				return Response.ok(baseEntityJsonString).build();
+				return Response.ok(jsonb.toJson(baseEntity)).build();
 			} catch (Exception e) {
 				// TODO: just to get something going..
 				log.warn("BaseEntity not found in cache, fetching from database");
@@ -252,12 +258,14 @@ public class Cache {
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		if (!"service".equals(userToken.getUsername())) {
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("User not authorized to make this request")).build();
-		}
+		// if (!"service".equals(userToken.getUsername())) {
+		// 	return Response.status(Response.Status.BAD_REQUEST)
+		// 			.entity(HttpUtils.error("User not authorized to make this request")).build();
+		// }
 
-		if (key.charAt(3) == '_') {
+		if (key.charAt(3) == '_'
+				&& !key.startsWith("SBE")
+				&& !key.startsWith("FRM")) {
 			log.info("Writing to baseentity cache " + productCode + ":" + key);
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
