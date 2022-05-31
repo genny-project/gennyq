@@ -128,8 +128,9 @@ public class Entities {
 	 * @return The json item
 	 */
 	@POST
+	@Path("/{productCode}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response create(String baseentityJson) {
+	public Response create(@PathParam("productCode") String productCode,String baseentityJson) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
@@ -137,13 +138,13 @@ public class Entities {
 		}
 
 		BaseEntity be = jsonb.fromJson(baseentityJson, BaseEntity.class);
-
+		be.setRealm(productCode);
 		databaseUtils.saveBaseEntity(be);
 
-	BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), be.getCode());
+	BaseEntity entity = databaseUtils.findBaseEntityByCode(productCode, be.getCode());
 
 		if (entity == null) {
-			log.error("productCode=[" + userToken.getProductCode() + "] , code=" + be.getCode());
+			log.error("productCode=[" + productCode + "] , code=" + be.getCode());
 		}
 
 		return Response.ok(entity.getId()).build();
