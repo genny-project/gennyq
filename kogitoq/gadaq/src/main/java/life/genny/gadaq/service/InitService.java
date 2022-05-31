@@ -68,7 +68,7 @@ public class InitService {
 		log.info("Sending Project PRJ_" + userToken.getProductCode().toUpperCase());
 
 		// grab baseentity for the project
-		BaseEntity projectBE = databaseUtils.findBaseEntityByCode(userToken.getRealm(),
+		BaseEntity projectBE = databaseUtils.findBaseEntityByCode(userToken.getProductCode(),
 				"PRJ_" + userToken.getProductCode().toUpperCase());
 		// BaseEntity projectBE = beUtils.getProjectBaseEntity();
 
@@ -104,8 +104,8 @@ public class InitService {
 	 */
 	public void sendAllAttributes() {
 
-		log.info("Sending Attributes for " + userToken.getRealm());
-		String productCode = userToken.getRealm();
+		log.info("Sending Attributes for " + userToken.getProductCode());
+		String productCode = userToken.getProductCode();
 
 		// fetch bulk attribute msg from cache
 		QDataAttributeMessage msg = CacheUtils.getObject(productCode, "ALL_ATTRIBUTES", QDataAttributeMessage.class);
@@ -125,8 +125,8 @@ public class InitService {
 	 */
 	public void sendPCMs() {
 		// sendProject();
-		log.info("Sending PCMs for " + userToken.getRealm());
-		String productCode = userToken.getRealm();
+		log.info("Sending PCMs for " + userToken.getProductCode());
+		String productCode = userToken.getProductCode();
 
 		// get pcms using search
 		SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
@@ -232,7 +232,7 @@ public class InitService {
 	}
 
 	public void sendASKs(BaseEntity entity) {
-		log.info("Sending asks for " + userToken.getRealm());
+		log.info("Sending asks for " + userToken.getProductCode());
 		log.info("Entity is " + entity.getBaseEntityAttributes());
 
 		List<Ask> asks = new ArrayList<>();
