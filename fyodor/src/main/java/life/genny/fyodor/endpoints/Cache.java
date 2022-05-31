@@ -94,7 +94,7 @@ public class Cache {
 			// return Response.ok().entity(replyString).build();
 			// }
 			try {
-				log.info("preparing Json : " + key);
+				//log.info("preparing Json : " + key);
 				JsonReader jsonReader = Json.createReader(new StringReader(replyString));
 				JsonObject reply = jsonReader.readObject();
 
@@ -102,9 +102,9 @@ public class Cache {
 						.add("status", "ok")
 						.add("value", reply)
 						.build();
-				log.info("returning Json ok : " + key);
+				//log.info("returning Json ok : " + key);
 			} catch (javax.json.stream.JsonParsingException je) {
-				log.info("returning String : " + key);
+				//log.info("returning String : " + key);
 				json = javax.json.Json.createObjectBuilder()
 						.add("status", "ok")
 						.add("value", replyString)
@@ -133,7 +133,7 @@ public class Cache {
 	@Path("/{productCode}/{key}")
 	public Response readProductCodeKey(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 
-		log.info("[!] read(" + productCode + ":" + key + ")");
+		//log.info("[!] read(" + productCode + ":" + key + ")");
 
 		if (userToken == null) {
 			// TODO - using serviceToken
@@ -169,8 +169,8 @@ public class Cache {
 			// productCode:"+productCode+",key="+key)).build();
 		}
 
-		log.info("User: " + userToken.getUserCode());
-		log.info("Product Code/Cache: " + productCode);
+		//log.info("User: " + userToken.getUserCode());
+		//log.info("Product Code/Cache: " + productCode);
 
 		if ((key.contains(":")) || ("attributes".equals(key))) {
 			// It's a token
@@ -181,12 +181,17 @@ public class Cache {
 				return Response.status(Response.Status.NO_CONTENT).build();
 			}
 
-			log.info("Found json of length " + json.length() + " for " + key);
+			//log.info("Found json of length " + json.length() + " for " + key);
 
 			return Response.ok(json).build();
 
-		} else if (key.charAt(3) == '_') {
-			// It's a baseentity
+		} else if ((key.charAt(3) == '_') && (!key.startsWith("PRF"))) { // 'PRF???'
+		
+			// TODO - Hack, until cache query works
+		// BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
+		// 		String baseEntityJsonString = jsonb.toJson(be);
+		// 		return Response.ok(baseEntityJsonString).build();
+
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
 				BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
@@ -196,6 +201,8 @@ public class Cache {
 				if (baseEntityJsonString.contains("Error id")) {
 					throw new Exception("Not found in cache");
 				}
+
+
 				return Response.ok(baseEntityJsonString).build();
 			} catch (Exception e) {
 				// TODO: just to get something going..

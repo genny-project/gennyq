@@ -6,6 +6,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -118,5 +119,33 @@ public class Entities {
 		beUtils.updateBaseEntity(entity);
 
 		return Response.ok(entity).build();
+	}
+
+	/**
+	 * Read an item from the cache.
+	 *
+	 * @param key The key of the cache item
+	 * @return The json item
+	 */
+	@POST
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response create(String baseentityJson) {
+
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+		BaseEntity be = jsonb.fromJson(baseentityJson, BaseEntity.class);
+
+		databaseUtils.saveBaseEntity(be);
+
+	BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), be.getCode());
+
+		if (entity == null) {
+			log.error("productCode=[" + userToken.getProductCode() + "] , code=" + be.getCode());
+		}
+
+		return Response.ok(entity.getId()).build();
 	}
 }
