@@ -94,7 +94,7 @@ public class Cache {
 			// return Response.ok().entity(replyString).build();
 			// }
 			try {
-				log.info("preparing Json : "+key);
+				log.info("preparing Json : " + key);
 				JsonReader jsonReader = Json.createReader(new StringReader(replyString));
 				JsonObject reply = jsonReader.readObject();
 
@@ -102,9 +102,9 @@ public class Cache {
 						.add("status", "ok")
 						.add("value", reply)
 						.build();
-						log.info("returning Json ok : "+key);
-					} catch (javax.json.stream.JsonParsingException je) {
-				log.info("returning String : "+key);
+				log.info("returning Json ok : " + key);
+			} catch (javax.json.stream.JsonParsingException je) {
+				log.info("returning String : " + key);
 				json = javax.json.Json.createObjectBuilder()
 						.add("status", "ok")
 						.add("value", replyString)
@@ -164,8 +164,9 @@ public class Cache {
 			}
 
 			log.warn("No token,  returning BAD-REQUEST " + serviceToken.getToken().substring(0, 10));
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("User not authorized to make this request")).build();
+			// return Response.status(Response.Status.BAD_REQUEST)
+			// .entity(HttpUtils.error("User not authorized to make this request ,
+			// productCode:"+productCode+",key="+key)).build();
 		}
 
 		log.info("User: " + userToken.getUserCode());
@@ -227,9 +228,10 @@ public class Cache {
 				return Response.ok(serviceToken.getToken()).build();
 			}
 			String json = (String) CacheUtils.readCache(productCode, key);
-				return Response.ok(json).build();
+			return Response.ok(json).build();
 			// throw new UnsupportedOperationException(
-			// 		"This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key + "]");
+			// "This should NEVER occur!! productCode: [" + productCode + "] ; key: [" + key
+			// + "]");
 		}
 	}
 
@@ -255,8 +257,16 @@ public class Cache {
 					.entity(HttpUtils.error("User not authorized to make this request")).build();
 		}
 
-		CacheUtils.writeCache(productCode, key, value);
-
+		if (key.charAt(3) == '_') {
+			log.info("Writing to baseentity cache " + productCode + ":" + key);
+			// It's a baseentity
+			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
+			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
+			CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+					baseEntityKey, entity);
+		} else {
+			CacheUtils.writeCache(productCode, key, value);
+		}
 		log.info("Wrote json of length " + value.length() + " for " + key);
 
 		return Response.ok().build();
@@ -310,7 +320,16 @@ public class Cache {
 		}
 
 		String productCode = userToken.getProductCode();
-		CacheUtils.writeCache(productCode, key, value);
+		if (key.charAt(3) == '_') {
+			log.info("Writing to baseentity cache " + productCode + ":" + key);
+			// It's a baseentity
+			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
+			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
+			CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+					baseEntityKey, entity);
+		} else {
+			CacheUtils.writeCache(productCode, key, value);
+		}
 
 		log.info("Wrote json of length " + value.length() + " for " + key);
 

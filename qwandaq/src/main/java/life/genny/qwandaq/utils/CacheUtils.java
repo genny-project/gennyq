@@ -1,17 +1,18 @@
 package life.genny.qwandaq.utils;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.lang.reflect.Type;
-
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import org.apache.commons.lang3.StringUtils;
+import org.infinispan.client.hotrod.RemoteCache;
+import org.jboss.logging.Logger;
+
+
+
 
 /*
  * A static utility class used for standard read and write 
@@ -66,9 +67,13 @@ public class CacheUtils {
 	 * @param value The value to save.
 	 */
 	public static void writeCache(String realm, String key, String value) {
-
-		cache.getRemoteCache(realm).put(key, value);
-
+		log.info("cache is " + cache);
+		log.info("realm is " + realm);
+		log.info("key is " + key);
+		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
+		log.info("remoteCache was returned");
+		remoteCache.put(key, value);
+		log.info("cache finished writing for "+realm+" "+key);
 		String result = (String)readCache(realm, key);
 		log.info("Written key:" + key + " to cache " + realm + " [" + result + "]");
 	}

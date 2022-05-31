@@ -3,6 +3,12 @@ set -e
 password=`echo $USER_PASSWORD`
 secret=`echo $GENNY_CLIENT_SECRET`
 clientid=$1
+
+if [ -z $clientid ]; then
+	echo "No clientid specified"
+	echo "Usage: $0 <clientId>"
+fi
+
 #echo "password = $password"
 #echo "clientid = $clientid"
 #echo "secret = $secret"
