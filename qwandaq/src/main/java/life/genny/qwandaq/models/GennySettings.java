@@ -58,28 +58,26 @@ public class GennySettings {
 			: "TWILIO_SENDER_MOBILE";
 
 	private static final String getConfig(String env) {
-		return getConfig(env, null, false, false);
+		return getConfig(env, null, false);
 	}
 
 	private static final String getConfig(String env, String fallback) {
-		return getConfig(env, fallback, false, false);
+		return getConfig(env, fallback, false);
 	}
 
 	/**
-	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException}
-	 * if mandatory is true
+	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException} if
+	 * no fallback is present
 	 * @param env - key of the system environment variable to get
 	 * @param fallback - default value in the case the environment variable is not present
 	 * @param alert - whether or not to log a warning if the environment variable is missing
-	 * @param mandatory - whether or not to throw an errow if the environment variable is missing, 
-	 * and there is no fallback
 	 * */
-	private static final String getConfig(String env, String fallback, boolean alert, boolean mandatory) {
+	private static final String getConfig(String env, String fallback, boolean alert) {
 		String value = CommonUtils.getSystemEnv(env, alert);
 		if(value == null) {
 			if(fallback != null)
 				return fallback;
-			else if(mandatory) {
+			else {
 				log.error("Missing required ENV: " + env);
 				log.error("Please define this in your genny.env or System environment variables");
 				throw new IllegalStateException("Missing required environment variable: " + env);
@@ -102,40 +100,43 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String projectUrl() {
-		return CommonUtils.getSystemEnv("PROJECT_URL") != null ? CommonUtils.getSystemEnv("PROJECT_URL")
-			: "http://alyson7.genny.life";
+		return getConfig("PROJECT_URL", "http://alyson7.genny.life", true);
+		// return CommonUtils.getSystemEnv("PROJECT_URL") != null ? CommonUtils.getSystemEnv("PROJECT_URL")
+		// 	: "http://alyson7.genny.life";
 	}
 	
 	/** 
 	 * @return String
 	 */
 	public static String qwandaServiceUrl() {
-		return CommonUtils.getSystemEnv("GENNY_API_URL") != null ? CommonUtils.getSystemEnv("GENNY_API_URL") 
-			: (projectUrl() + ":8280");
+		return getConfig("GENNY_API_URL", projectUrl() + ":8280");
 	}
 	
 	/** 
 	 * @return String
 	 */
 	public static String fyodorServiceUrl() {
-		return CommonUtils.getSystemEnv("FYODOR_SERVICE_API") != null ? CommonUtils.getSystemEnv("FYODOR_SERVICE_API") 
-			: (projectUrl() + ":4242");
+		return getConfig("FYODOR_SERVICE_API", projectUrl() + ":4242", true);
+		// return CommonUtils.getSystemEnv("FYODOR_SERVICE_API") != null ? CommonUtils.getSystemEnv("FYODOR_SERVICE_API") 
+		// 	: (projectUrl() + ":4242");
 	}
 
 	/**
 	* @return String
 	 */
 	public static String kogitoServiceUrl() {
-		return CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") != null ? CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") 
-			: (projectUrl() + ":4242");
+		return getConfig("GENNY_KOGITO_SERVICE_URL", projectUrl() + ":4242", true);
+		// return CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") != null ? CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") 
+		// 	: (projectUrl() + ":4242");
 	}
 
 	/** 
 	 * @return String
 	 */
 	public static String shleemyServiceUrl() {
-		return CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null ? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
-			: (projectUrl() + ":4242");
+		return getConfig("SHLEEMY_SERVICE_API", projectUrl() + ":4242", true);
+		// return CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null ? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
+		// 	: (projectUrl() + ":4242");
 	}
 	
 	/** 
@@ -144,8 +145,9 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String infinispanHost() {
-		return CommonUtils.getSystemEnv("INFINISPAN_URL") != null ? CommonUtils.getSystemEnv("INFINISPAN_URL")
-			: (projectUrl() + ":11222");
+		return getConfig("INFINISPAN_URL", projectUrl() + ":11222");
+		// return CommonUtils.getSystemEnv("INFINISPAN_URL") != null ? CommonUtils.getSystemEnv("INFINISPAN_URL")
+		// 	: (projectUrl() + ":11222");
 	}
 
 	/** 
@@ -154,8 +156,9 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String keycloakUrl() {
-		return CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL")
-			: "http://keycloak.genny.life";
+		return getConfig("GENNY_KEYCLOAK_URL", "http://keycloak.genny.life");
+		// return CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL")
+		// 	: "http://keycloak.genny.life";
 	}
 
 	/* ############ UI Defaults ############## */
@@ -166,8 +169,9 @@ public class GennySettings {
 	* @return String
 	 */
 	public static Integer defaultPageSize() {
-		return CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE") != null
-			? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE")) : 10;
+		return Integer.parseInt(getConfig("DEFAULT_PAGE_SIZE", "10"));
+		// return CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE") != null
+		// 	? Integer.parseInt(CommonUtils.gsetSystemEnv("DEFAULT_PAGE_SIZE")) : 10;
 	}
 
 	/**
@@ -176,8 +180,9 @@ public class GennySettings {
 	* @return String
 	 */
 	public static Integer defaultDropDownPageSize() {
-		return CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE") != null
-			? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE")) : 25;
+		return Integer.parseInt(getConfig("DEFAULT_DROPDOWN_PAGE_SIZE", "25"));
+		// return CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE") != null
+		// 	? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE")) : 25;
 	}
 
 	/**
@@ -186,8 +191,9 @@ public class GennySettings {
 	* @return String
 	 */
 	public static Integer defaultBucketSize() {
-		return CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE") != null
-			? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE")) : 8;
+		return Integer.parseInt(getConfig("DEFAULT_BUCKET_SIZE", "8"));
+		// return CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE") != null
+		// 	? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE")) : 8;
 	}
 
 }

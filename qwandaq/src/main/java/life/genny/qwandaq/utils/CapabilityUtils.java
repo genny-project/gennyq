@@ -1,27 +1,26 @@
 package life.genny.qwandaq.utils;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.JsonObject;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
 /*
@@ -33,24 +32,254 @@ import life.genny.qwandaq.models.UserToken;
  */
 @ApplicationScoped
 public class CapabilityUtils {
+	protected static final Logger log = Logger.getLogger(CapabilityUtils.class);
 
-	static final Logger log = Logger.getLogger(CapabilityUtils.class);
+	// Capability Attribute Prefix
+	public static final String CAP_CODE_PREFIX = "PRM_";
+	public static final String ROLE_BE_PREFIX = "ROL_";
 
-	@Inject
-	DatabaseUtils databaseUtils;
+	// TODO: Confirm we want DEFs to have capabilities as well
+	public static final String[] ACCEPTED_CAP_PREFIXES = { ROLE_BE_PREFIX, "PER_", "DEF_" };
 
-	@Inject
-	QwandaUtils qwandaUtils;
+	public static final String LNK_ROLE_CODE = "LNK_ROLE";
+
+	List<Attribute> capabilityManifest = new ArrayList<Attribute>();
 
 	@Inject
 	UserToken userToken;
 
 	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
 	BaseEntityUtils beUtils;
 
-	List<Attribute> capabilityManifest = new ArrayList<Attribute>();
+	public CapabilityUtils() {
+	}
 
-	public CapabilityUtils() { }
+	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
+		BaseEntity ret = role;
+		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
+		for (EntityAttribute permissionEA : perms) {
+			Attribute permission = permissionEA.getAttribute();
+			CapabilityMode[] modes = getCapModesFromString(permissionEA.getValue());
+			ret = addCapabilityToBaseEntity(ret, permission.getCode(), modes);
+		}
+		return ret;
+	}
+
+	public Attribute addCapability(final String rawCapabilityCode, final String name) {
+		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		log.info("Setting Capability : " + cleanCapabilityCode + " : " + name);
+		// TODO: AHHHHHH
+		Attribute attribute = RulesUtils.realmAttributeMap.get(userToken.getProductCode())
+				.get(cleanCapabilityCode);
+		if (attribute != null) {
+			capabilityManifest.add(attribute);
+			return attribute;
+		} else {
+			// create new attribute
+			attribute = new AttributeText(cleanCapabilityCode, name);
+			// save to database and cache
+
+			try {
+				beUtils.saveAttribute(attribute, serviceToken.getToken());
+				// no roles would have this attribute yet
+				// return
+				capabilityManifest.add(attribute);
+				return attribute;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return attribute;
+
+		}
+	}
+
+	@Deprecated
+	/**
+	 * Deprecated since 10.0.0. To be removed 10.1.0. Use
+	 * {@link CapabilityUtilsRefactored#addCapabilityToBaseEntity(BaseEntity, String, CapabilityMode...)}
+	 * instead
+	 * 
+	 * @param role
+	 * @param rawCapabilityCode
+	 * @param modes
+	 * @return
+	 */
+	public BaseEntity addCapabilityRoRole(BaseEntity role, final String rawCapabilityCode,
+			final CapabilityMode... modes) {
+		return addCapabilityToBaseEntity(role, rawCapabilityCode, modes);
+
+	}
+
+	public BaseEntity addCapabilityToBaseEntity(BaseEntity targetBe, final String rawCapabilityCode,
+			final CapabilityMode... modes) {
+		// Ensure the capability is well defined
+		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		// Check the user token has required capabilities
+		if (!hasCapability(cleanCapabilityCode, modes)) {
+			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + cleanCapabilityCode
+					+ " TO BASE ENTITITY: " + targetBe.getCode());
+			return targetBe;
+		}
+
+		updateCachedRoleSet(targetBe.getCode(), cleanCapabilityCode, modes);
+		return targetBe;
+	}
+
+	private CapabilityMode[] getCapabilitiesFromCache(final String roleCode, final String cleanCapabilityCode) {
+		String productCode = userToken.getProductCode();
+		String key = getCacheKey(productCode, roleCode, cleanCapabilityCode);
+		JsonObject object = VertxUtils.readCachedJson(productCode, key);
+		if ("error".equals(object.getString("status"))) {
+			log.error("Error reading cache for realm: " + productCode + " with key: " + key);
+			return null;
+		}
+
+		String modeString = object.getString("value");
+		return getCapModesFromString(modeString);
+	}
+
+	/**
+	 * @param role
+	 * @param capabilityCode
+	 * @param mode
+	 */
+	private JsonObject updateCachedRoleSet(final String roleCode, final String cleanCapabilityCode,
+			final CapabilityMode... modes) {
+		String productCode = userToken.getProductCode();
+		String key = getCacheKey(productCode, roleCode, cleanCapabilityCode);
+		String modesString = getModeString(modes);
+
+		log.info("updateCachedRoleSet test:: " + key);
+		// if no cache then create
+		return VertxUtils.writeCachedJson(productCode, key, modesString, token.getToken());
+	}
+
+	/**
+	 * Go through a list of capability modes and check that the token can manipulate
+	 * the modes for the provided capabilityCode
+	 * 
+	 * @param capabilityCode capabilityCode to check against
+	 * @param modes          array of modes to check against
+	 * @return whether or not the token can manipulate all the supplied modes for
+	 *         the supplied capabilityCode
+	 */
+	public boolean hasCapability(final String rawCapabilityCode, final CapabilityMode... checkModes) {
+		// allow keycloak admin and devcs to do anything
+		if (userToken.hasRole("admin", "dev") || (beUtils.tokenIsServiceUser())) {
+			return true;
+		}
+		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		BaseEntity user = beUtils.getUserBaseEntity();
+
+		// Look through all the user entity attributes for the capability code. If it is
+		// there check the cache with the roleCode as the userCode
+		// TODO: Will need to revisit this implementation with Jasper
+
+		Optional<EntityAttribute> lnkRole = user.findEntityAttribute(LNK_ROLE_CODE);
+
+		// Make a list for the modes that have been found in the user's various roles
+		// TODO: Potentially change this to a system that matches from multiple roles
+		// instead of a single role
+		// List<CapabilityMode> foundModes = new ArrayList<>();
+
+		if (lnkRole.isPresent()) {
+			String rolesValue = lnkRole.get().getValueString();
+			try {
+				// Look through cache using each role
+				JsonArray roleArray = new JsonArray(rolesValue);
+				for (int i = 0; i < roleArray.size(); i++) {
+					String roleCode = roleArray.getString(i);
+
+					CapabilityMode[] modes = getCapabilitiesFromCache(roleCode, cleanCapabilityCode);
+					List<CapabilityMode> modeList = Arrays.asList(modes);
+					for (CapabilityMode checkMode : checkModes) {
+						if (!modeList.contains(checkMode))
+							return false;
+					}
+				}
+
+				// There is a malformed LNK_ROLE Attribute, so we assume they don't have the
+				// capability
+			} catch (DecodeException exception) {
+				log.error("Error decoding LNK_ROLE for BaseEntity: " + user.getCode());
+				log.error("Value: " + rolesValue + ". Expected: a json array of roles");
+				return false;
+			}
+		}
+
+		// TODO: Implement user checking
+		// Set<EntityAttribute> entityAttributes = user.getBaseEntityAttributes();
+		// for(EntityAttribute eAttribute : entityAttributes) {
+		// if(!eAttribute.getAttributeCode().startsWith(CAP_CODE_PREFIX))
+		// continue;
+		// }
+
+		// Since we are iterating through an array of modes to check, the above impl
+		// will have returned false if any of them were missing
+		return true;
+	}
+
+	public void process() {
+		List<Attribute> existingCapability = new ArrayList<Attribute>();
+
+		String productCode = userToken.getProductCode();
+
+		for (String existingAttributeCode : RulesUtils.realmAttributeMap.get(productCode)
+				.keySet()) {
+			if (existingAttributeCode.startsWith(CAP_CODE_PREFIX)) {
+				existingCapability.add(RulesUtils.realmAttributeMap.get(productCode)
+						.get(existingAttributeCode));
+			}
+		}
+
+		/* Remove any capabilities not in this forced list from roles */
+		existingCapability.removeAll(getCapabilityManifest());
+
+		/*
+		 * for every capability that exists that is not in the manifest , find all
+		 * entityAttributes
+		 */
+		for (Attribute toBeRemovedCapability : existingCapability) {
+			try {
+				RulesUtils.realmAttributeMap.get(productCode)
+						.remove(toBeRemovedCapability.getCode()); // remove from cache
+				if (!VertxUtils.cachedEnabled) { // only post if not in junit
+					QwandaUtils.apiDelete(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/attributes/"
+							+ toBeRemovedCapability.getCode(), serviceToken.getToken());
+				}
+				/* update all the roles that use this attribute by reloading them into cache */
+				QDataBaseEntityMessage rolesMsg = VertxUtils.getObject(productCode, "ROLES",
+						productCode, QDataBaseEntityMessage.class);
+				if (rolesMsg != null) {
+
+					for (BaseEntity role : rolesMsg.getItems()) {
+						role.removeAttribute(toBeRemovedCapability.getCode());
+						/* Now update the db role to only have the attributes we want left */
+						if (!VertxUtils.cachedEnabled) { // only post if not in junit
+							QwandaUtils.apiPutEntity(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/force",
+									JsonUtils.toJson(role), productCode);
+						}
+
+					}
+				}
+
+			} catch (IOException e) {
+				/* TODO Auto-generated catch block */
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * @return the beUtils
+	 */
+	public BaseEntityUtils getBeUtils() {
+		return beUtils;
+	}
 
 	/**
 	 * @return the capabilityManifest
@@ -66,390 +295,140 @@ public class CapabilityUtils {
 		this.capabilityManifest = capabilityManifest;
 	}
 
-	/**
-	 * @return String
-	 */
 	@Override
 	public String toString() {
-		return "CapabilityUtils [" + (capabilityManifest != null ? "capabilityManifest=" + capabilityManifest : "") + "]";
+		return "CapabilityUtils [" + (capabilityManifest != null ? "capabilityManifest=" + capabilityManifest : "")
+				+ "]";
 	}
 
 	/**
-	 * @param role       the role to add to
-	 * @param parentRole the parentRole to inherit
-	 * @return BaseEntity
+	 * @param userToken
+	 * @param user
+	 * @return
 	 */
-	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
+	public static List<AllowedSafe> generateAlloweds(GennyToken userToken, BaseEntity user) {
+		List<AllowedSafe> allowables = new CopyOnWriteArrayList<AllowedSafe>();
 
-		BaseEntity ret = role;
-		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes("PRM_");
-		for (EntityAttribute permissionEA : perms) {
-			Attribute permission = permissionEA.getAttribute();
-			CapabilityMode mode = CapabilityMode.getMode(permissionEA.getValue());
-			ret = addCapabilityToRole(ret, permission.getCode(), mode);
+		// Look for user capabilities
+		List<EntityAttribute> capabilities = user.findPrefixEntityAttributes(CAP_CODE_PREFIX);
+		for (EntityAttribute capability : capabilities) {
+			String modeString = capability.getValueString();
+			if (modeString != null) {
+				CapabilityMode[] modes = getCapModesFromString(modeString);
+				String cleanCapabilityCode = cleanCapabilityCode(capability.getAttributeCode());
+				allowables.add(new AllowedSafe(cleanCapabilityCode, modes));
+			}
 		}
-		return ret;
-	}
 
-	/**
-	 * @param capabilityCode the capabilityCode to add to
-	 * @param name           the name to add
-	 * @return Attribute
-	 */
-	public Attribute addCapability(final String capabilityCode, final String name) {
+		Optional<EntityAttribute> LNK_ROLEOpt = user.findEntityAttribute(LNK_ROLE_CODE);
 
-		String fullCapabilityCode = "PRM_" + capabilityCode.toUpperCase();
-		log.info("Setting Capability : " + fullCapabilityCode + " : " + name);
-		Attribute attribute = qwandaUtils.getAttribute(fullCapabilityCode);
+		JsonArray roleCodesArray = null;
 
-		if (attribute != null) {
-			// add to manifest
-			capabilityManifest.add(attribute);
+		if (LNK_ROLEOpt.isPresent()) {
+			roleCodesArray = new JsonArray(LNK_ROLEOpt.get().getValueString());
 		} else {
-			// create new attribute and save it
-			attribute = new AttributeText(fullCapabilityCode, name);
-			databaseUtils.saveAttribute(attribute);
-			capabilityManifest.add(attribute);
+			roleCodesArray = new JsonArray("[]");
+			log.info("Could not find " + LNK_ROLE_CODE + " in user: " + user.getCode());
 		}
 
-		return attribute;
-	}
+		// Add keycloak roles
+		// for (String role : userToken.getUserRoles()) {
+		// roleCodesArray.add(role);
+		// }
 
-	/**
-	 * @param role           the role to add to
-	 * @param capabilityCode the capabilityCode to add
-	 * @param mode           the mode to add
-	 * @return BaseEntity
-	 */
-	public BaseEntity addCapabilityToRole(BaseEntity role, final String capabilityCode, final CapabilityMode mode) {
+		for (int i = 0; i < roleCodesArray.size(); i++) {
+			String roleBECode = roleCodesArray.getString(i);
 
-		// check if the userToken is allowed to do this!
-		if (!hasCapability(capabilityCode, mode)) {
-			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD THIS CAPABILITY TO A ROLE :"
-					+ role.getCode());
-			return role;
-		}
-
-		Answer answer = new Answer(userToken.getUserCode(), role.getCode(), "PRM_" + capabilityCode,
-				mode.toString());
-
-		String prefixedCode = capabilityCode;
-		if (!capabilityCode.startsWith("PRM_")) {
-			prefixedCode = "PRM_" + capabilityCode;
-		}
-
-		Attribute capabilityAttribute = qwandaUtils.getAttribute(prefixedCode);
-		answer.setAttribute(capabilityAttribute);
-		role = qwandaUtils.saveAnswer(answer);
-
-		// now update the list of roles associated with the key
-		switch (mode) {
-			case NONE:
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.NONE);
-				break;
-			case VIEW:
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.NONE);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.VIEW);
-				break;
-			case EDIT:
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.NONE);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.VIEW);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.EDIT);
-				break;
-			case ADD:
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.NONE);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.VIEW);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.EDIT);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.ADD);
-				break;
-			case DELETE:
-			case SELF:
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.NONE);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.VIEW);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.EDIT);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.ADD);
-				updateCachedRoleSet(role.getCode(), capabilityCode, CapabilityMode.DELETE);
-				break;
-		}
-
-		return role;
-	}
-
-	/**
-	 * Update the cached role set for a capability.
-	 *
-	 * @param code           The code of the role of which to update the set.
-	 * @param capabilityCode The code of the capability for the role set.
-	 * @param mode           The mode of the roleset.
-	 */
-	private void updateCachedRoleSet(String code, String capabilityCode, CapabilityMode mode) {
-
-		String productCode = userToken.getProductCode();
-
-		String key = productCode + ":" + capabilityCode + ":" + mode.name();
-		log.debug("Updating cached roleset: " + key);
-
-		// fetch from cache and parse as arraylist
-		String json = (String) CacheUtils.readCache(productCode, key);
-		List<String> roleCodes = Arrays.asList(json.split(","));
-
-		// add to role set if not already existing
-		if (!roleCodes.contains(code)) {
-			roleCodes.add(code);
-
-			// replace all spaces and hard brackets
-			json = roleCodes.toString().replaceAll("[ \\[\\]]", "");
-
-			// write back to cache
-			CacheUtils.writeCache(productCode, key, json);
-		}
-	}
-
-	/**
-	 * Checks if the user has a capability
-	 *
-	 * @param code The code of the capability.
-	 * @param mode The mode of the capability.
-	 * @return Boolean True if the user has the capability, False otherwise.
-	 */
-	public boolean hasCapability(String code, CapabilityMode mode) {
-
-		String productCode = userToken.getProductCode();
-
-		// allow keycloak admin and devcs to do anything
-		if (userToken.hasRole("admin") || userToken.hasRole("dev") || ("service".equals(userToken.getUsername()))) {
-			return true;
-		}
-
-		// create a capability code and mode combined unique key
-		String key = productCode + ":" + code + ":" + mode.name();
-
-		// fetch from cache and parse as arraylist
-		String json = (String) CacheUtils.readCache(productCode, key);
-		List<String> roleCodes = Arrays.asList(json.split(","));
-
-		// fetch user baseentity
-		BaseEntity user = beUtils.getUserBaseEntity();
-
-		// check if the user has any of these roles
-		for (String roleCode : roleCodes) {
-			if (user.getBaseEntityAttributes().parallelStream()
-					.anyMatch(item -> item.getAttributeCode().equals(roleCode))) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Checks if the user has a capability using any PRI_IS_ attributes.
-	 *
-	 * NOTE: This should be temporary until ROL_ attributes are properly in place
-	 *
-	 * @param code The code of the capability.
-	 * @param mode The mode of the capability.
-	 * @return Boolean True if the user has the capability, False otherwise.
-	 */
-	public boolean hasCapabilityThroughPriIs(String code, CapabilityMode mode) {
-
-		String productCode = userToken.getProductCode();
-
-		// allow keycloak admin and devcs to do anything
-		if (userToken.hasRole("admin") || userToken.hasRole("dev") || ("service".equals(userToken.getUsername()))) {
-			return true;
-		}
-
-		// create a capability code and mode combined unique key
-		String key = productCode + ":" + code + ":" + mode.name();
-
-		// fetch from cache and parse as arraylist
-		String json = (String) CacheUtils.readCache(productCode, key);
-		List<String> roleCodes = Arrays.asList(json.split(","));
-
-		// fetch user baseentity
-		BaseEntity user = beUtils.getUserBaseEntity();
-
-		for (String roleCode : roleCodes) {
-			String priIsCode = "PRI_IS_" + roleCode.split("ROL_")[1];
-			if (user.getBaseEntityAttributes().parallelStream()
-					.anyMatch(item -> item.getAttributeCode().equals(priIsCode))) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Process capability attributes. This should remove any unused capabilities.
-	 */
-	public void process() {
-
-		String productCode = userToken.getProductCode();
-		List<Attribute> existingCapability = new ArrayList<Attribute>();
-
-		// iterate attributes in memory
-		for (String existingAttributeCode : qwandaUtils.attributes.get(productCode).keySet()) {
-			if (existingAttributeCode.startsWith("PRM_")) {
-				// fetch and add attribute to list
-				Attribute attribute = qwandaUtils.getAttribute(existingAttributeCode);
-				existingCapability.add(attribute);
-			}
-		}
-
-		// Remove any capabilities not in this forced list from roles
-		existingCapability.removeAll(getCapabilityManifest());
-
-		// find all entityAttributes for each existing capability not in the manifest
-		for (Attribute toBeRemovedCapability : existingCapability) {
-
-			qwandaUtils.removeAttributeFromMemory(toBeRemovedCapability.getCode());
-			databaseUtils.deleteAttribute(productCode, toBeRemovedCapability.getCode());
-
-			// update all the roles that use this attribute by reloading them into cache
-			QDataBaseEntityMessage msg = CacheUtils.getObject(productCode, "ROLES_" + productCode, QDataBaseEntityMessage.class);
-
-			if (msg != null) {
-
-				for (BaseEntity role : msg.getItems()) {
-					// update the db role to only have the attributes we want left
-					role.removeAttribute(toBeRemovedCapability.getCode());
-					beUtils.updateBaseEntity(role);
-				}
-			}
-		}
-	}
-
-	/**
-	 * @param condition the condition to check
-	 * @return Boolean
-	 */
-	public Boolean conditionMet(String condition) {
-
-		if (condition == null) {
-			log.error("condition is NULL!");
-			return false;
-		}
-
-		log.info("Testing condition with value: " + condition);
-		String[] conditionArray = condition.split(":");
-
-		String capability = conditionArray[0];
-		String mode = conditionArray[1];
-
-		// check for NOT operator
-		Boolean not = capability.startsWith("!");
-		capability = not ? capability.substring(1) : capability;
-
-		// check for Capability
-		Boolean hasCap = hasCapabilityThroughPriIs(capability, CapabilityMode.getMode(mode));
-
-		// XNOR operator
-		return hasCap ^ not;
-	}
-
-	/**
-	 * Generate a list of {@link Allowed} objects for the user.
-	 *
-	 * @param userToken A {@link GennyToken}.
-	 * @param user      The user {@link BaseEntity} to process.
-	 * @return List A list of {@link Allowed} objects.
-	 */
-	public static List<Allowed> generateAlloweds(GennyToken userToken, BaseEntity user) {
-
-		List<EntityAttribute> roles = user.findPrefixEntityAttributes("PRI_IS_");
-		List<Allowed> allowable = new CopyOnWriteArrayList<Allowed>();
-
-		// should store in cached map
-		for (EntityAttribute role : roles) {
-
-			Boolean value = false;
-			if (role.getValue() instanceof Boolean) {
-				value = role.getValue();
-			} else if (role.getValue() instanceof String) {
-				value = "TRUE".equalsIgnoreCase(role.getValue());
+			BaseEntity roleBE = VertxUtils.readFromDDT(userToken.getRealm(), roleBECode, userToken.getToken());
+			if (roleBE == null) {
+				log.info("facts: could not find roleBe: " + roleBECode + " in cache: " + userToken.getRealm());
+				continue;
 			}
 
-			if (value) {
+			// Go through all the entity
+			capabilities = roleBE.findPrefixEntityAttributes(CAP_CODE_PREFIX);
+			for (EntityAttribute ea : capabilities) {
+				String modeString = null;
+				Boolean ignore = false;
 
-				String roleBeCode = "ROL_" + role.getAttributeCode().substring("PRI_IS_".length());
-				BaseEntity roleBE = CacheUtils.getObject(userToken.getRealm(), roleBeCode, BaseEntity.class);
-				if (roleBE == null) {
-					continue;
-				}
-
-				// Add the actual role to capabilities
-				allowable.add(new Allowed(role.getAttributeCode().substring("PRI_IS_".length()), CapabilityMode.VIEW));
-				List<EntityAttribute> capabilities = roleBE.findPrefixEntityAttributes("PRM_");
-
-				for (EntityAttribute ea : capabilities) {
-
-					String modeString = null;
-					Boolean ignore = false;
-
-					try {
-						Object val = ea.getValue();
-						if (val instanceof Boolean) {
-							log.error("capability attributeCode=" + ea.getAttributeCode() + " is BOOLEAN??????");
-							ignore = true;
-						} else {
-							modeString = ea.getValue();
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
+				String cleanCapabilityCode = cleanCapabilityCode(ea.getAttributeCode());
+				try {
+					Object val = ea.getValue();
+					if (val instanceof Boolean) {
+						log.error("capability attributeCode=" + cleanCapabilityCode + " is BOOLEAN??????");
+						ignore = true;
+					} else {
+						modeString = ea.getValue();
 					}
-
-					if (!ignore) {
-						CapabilityMode mode = CapabilityMode.getMode(modeString);
-						// This is my cunning switch statement that takes into consideration the
-						// priority order of the modes... (note, no breaks and it relies upon the fall
-						// through)
-						switch (mode) {
-							case DELETE:
-								allowable.add(new Allowed(ea.getAttributeCode().substring(4), CapabilityMode.DELETE));
-							case ADD:
-								allowable.add(new Allowed(ea.getAttributeCode().substring(4), CapabilityMode.ADD));
-							case EDIT:
-								allowable.add(new Allowed(ea.getAttributeCode().substring(4), CapabilityMode.EDIT));
-							case VIEW:
-								allowable.add(new Allowed(ea.getAttributeCode().substring(4), CapabilityMode.VIEW));
-							case NONE:
-								allowable.add(new Allowed(ea.getAttributeCode().substring(4), CapabilityMode.NONE));
-						}
-					}
-
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
+				if (!ignore) {
+					CapabilityMode[] modes = getCapModesFromString(modeString);
+					allowables.add(new AllowedSafe(cleanCapabilityCode, modes));
+				}
+
 			}
 		}
 
-		// now force the keycloak ones
+		/* now force the keycloak ones */
 		for (String role : userToken.getUserRoles()) {
-			allowable.add(new Allowed(role.toUpperCase(), CapabilityMode.VIEW));
+			allowables.add(
+					new AllowedSafe(role.toUpperCase(), CapabilityMode.VIEW));
 		}
 
-		return allowable;
+		return allowables;
 	}
 
-	/**
-	 * Recursively ensure the user has the capability to view each ask in a group
-	 *
-	 * @param ask The ask to traverse
-	 */
-	public void recursivelyCheckSidebarAskForCapability(Ask ask) {
+	public static String getModeString(CapabilityMode... modes) {
+		String modeString = "[";
+		for (CapabilityMode mode : modes) {
+			modeString += "\"" + mode.name() + "\"" + ",";
+		}
 
-		ArrayList<Ask> askList = new ArrayList<>();
+		return modeString.substring(0, modeString.length() - 1) + "]";
+	}
 
-		for (Ask childAsk : ask.getChildAsks()) {
-			String code = "SIDEBAR_" + childAsk.getQuestionCode();
+	public static CapabilityMode[] getCapModesFromString(String modeString) {
+		JsonArray array = new JsonArray(modeString);
+		CapabilityMode[] modes = new CapabilityMode[array.size()];
 
-			if (hasCapabilityThroughPriIs(code, CapabilityMode.VIEW)) {
+		for (int i = 0; i < array.size(); i++) {
+			modes[i] = CapabilityMode.valueOf(array.getString(i));
+		}
 
-				recursivelyCheckSidebarAskForCapability(childAsk);
-				askList.add(childAsk);
+		return modes;
+	}
+
+	public static String cleanCapabilityCode(final String rawCapabilityCode) {
+		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
+		if (!cleanCapabilityCode.startsWith(CAP_CODE_PREFIX)) {
+			cleanCapabilityCode = CAP_CODE_PREFIX + cleanCapabilityCode;
+		}
+
+		String[] components = cleanCapabilityCode.split("_");
+		// Should be of the form PRM_<OWN/OTHER>_<CODE>
+		/*
+		 * 1. PRM
+		 * 2. OWN or OTHER
+		 * 3. CODE
+		 */
+		if (components.length < 3) {
+			log.warn("Capability Code: " + rawCapabilityCode + " missing OWN/OTHER declaration.");
+		} else {
+			Boolean affectsOwn = "OWN".equals(components[1]);
+			Boolean affectsOther = "OTHER".equals(components[1]);
+
+			if (!affectsOwn && !affectsOther) {
+				log.warn("Capability Code: " + rawCapabilityCode + " has malformed OWN/OTHER declaration.");
 			}
 		}
 
-		Ask[] items = askList.toArray(new Ask[askList.size()]);
-		ask.setChildAsks(items);
+		return cleanCapabilityCode;
+	}
+
+	private static String getCacheKey(String realm, String keyCode, String capCode) {
+		return realm + ":" + keyCode + ":" + capCode;
 	}
 }
