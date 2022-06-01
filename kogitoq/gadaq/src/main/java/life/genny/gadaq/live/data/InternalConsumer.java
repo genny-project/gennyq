@@ -53,6 +53,9 @@ public class InternalConsumer {
 	GennyScopeInit scope;
 
 	@Inject
+	QwandaUtils qwandaUtils;
+
+	@Inject
 	UserToken userToken;
 
 	@Inject
@@ -103,7 +106,7 @@ public class InternalConsumer {
 			log.debug("================= END ANSWER ==================");
 		}
 
-		QwandaUtils.saveAnswer(answer);
+		qwandaUtils.saveAnswer(answer);
 
 		scope.destroy();
 		Instant end = Instant.now();
