@@ -249,6 +249,12 @@ public class InitService {
 			}
 		});
 		log.info("Asks " + asks);
+
+		if (asks.size() == 0) {
+			log.info("Empty asks for be " + entity.getCode() + "!");
+			return;
+		}
+
 		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
