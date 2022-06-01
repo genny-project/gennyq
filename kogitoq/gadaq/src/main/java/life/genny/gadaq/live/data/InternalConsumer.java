@@ -13,7 +13,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Message;
+
 import org.jboss.logging.Logger;
 import org.kie.api.runtime.KieSession;
 import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
@@ -29,11 +29,6 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
@@ -97,7 +92,9 @@ public class InternalConsumer {
 		String attributeCode = answer.getAttributeCode();
 		String ansValue = answer.getValue();
 
-		if (answer.getValue() != null && answer.getValue().length() <= 50) {
+		log.info("Processing answer:" + targetCode + ":" + attributeCode + "=" + ansValue);
+
+		if (ansValue != null && ansValue.length() <= 50) {
 			log.debug("[!] Received Kafka Answer!");
 			log.debug("Target: " + targetCode);
 			log.debug("Attribute Code: " + attributeCode);
