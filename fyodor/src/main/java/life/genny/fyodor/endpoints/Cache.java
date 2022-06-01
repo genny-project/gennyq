@@ -139,7 +139,7 @@ public class Cache {
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
 				log.warn("JENNY and SKIP returning " + serviceToken.getToken().substring(0, 10));
-				return Response.ok("false").build();
+				return Response.ok("TRUE").build();
 			}
 
 			if ("CACHE:SERVICE_TOKEN".equals(key)) {
