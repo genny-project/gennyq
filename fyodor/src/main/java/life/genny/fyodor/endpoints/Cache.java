@@ -192,7 +192,7 @@ public class Cache {
 				return Response.ok(json).build();
 			}
 			if ("ACTIVE_BRIDGE_IDS".equals(key)) {
-				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + StringUtils.abbreviate(serviceToken.getToken(),20));
 				String json = (String) CacheUtils.readCache(productCode, key);
 				return Response.ok(json).build();
 			}
@@ -250,6 +250,30 @@ public class Cache {
 
 		return Response.ok().build();
 	}
+
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{productCode}/{key}/savenull")
+	public Response writeNull(@PathParam("productCode") String productCode, @PathParam("key") String key) {
+
+	
+			log.info("[!] saveNull(" + productCode + ":" + key + ")");
+
+
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+
+			CacheUtils.writeCache(productCode, key, null);
+
+		log.info("Wrote null for " + key);
+
+		return Response.ok().build();
+	}
+
 
 	/**
 	 * Read an item from the cache.
@@ -315,6 +339,7 @@ public class Cache {
 		return Response.ok().build();
 	}
 
+	
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")
