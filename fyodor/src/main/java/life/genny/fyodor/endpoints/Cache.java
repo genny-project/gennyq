@@ -73,6 +73,9 @@ public class Cache {
 
 		JsonObject json = null;
 		if (res.getStatus() == 200) {
+			if (res.getEntity() == null) {
+				return Response.ok().build();
+			}
 			String replyString = res.getEntity().toString();
 
 			try {
