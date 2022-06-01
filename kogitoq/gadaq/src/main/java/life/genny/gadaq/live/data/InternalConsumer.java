@@ -103,45 +103,7 @@ public class InternalConsumer {
 			log.debug("================= END ANSWER ==================");
 		}
 
-		// Retrieve Base Entity from cache 
-
-		BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, targetCode);
-		log.info("Fetching BaseEntity from '" + GennyConstants.CACHE_NAME_BASEENTITY + "': " + targetCode);
-		log.info("	- Key: " + baseEntityKey);
-
-		BaseEntity targetBaseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey);
-
-		if(targetBaseEntity == null) {
-			log.error("Error retrieving base entity: [" + targetCode + "] for product code: " + productCode);
-			
-			scope.destroy();
-			return;
-		}
-
-		// Update the EntityAttribute
-		Optional<EntityAttribute> optEA = targetBaseEntity.findEntityAttribute(attributeCode);
-
-		if(optEA.isPresent()) {
-			EntityAttribute entityAttribute = optEA.get();
-			entityAttribute.setValue(ansValue);
-		} else {
-			log.error("Could not find attribute " + attributeCode + " in BaseEntity: " + targetBaseEntity.getCode());
-			
-			scope.destroy();
-			return;
-		}
-
-		// Send the baseentity back into the cache
-		BaseEntity cachedBaseEntity = (BaseEntity)CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey, targetBaseEntity);
-		
-		if(cachedBaseEntity == null) {
-			log.error("Error Saving BaseEntity: " + targetBaseEntity.getCode());
-			log.error("Cache: " + GennyConstants.CACHE_NAME_BASEENTITY);
-			log.error("BaseEntityKey: " + baseEntityKey);
-
-			scope.destroy();
-			return;
-		}
+		QwandaUtils.saveAnswer(answer);
 
 		scope.destroy();
 		Instant end = Instant.now();

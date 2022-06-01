@@ -459,9 +459,7 @@ public class QwandaUtils {
 			}
 
 			// update target in the cache and DB
-			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
-			databaseUtils.saveBaseEntity(target);
-
+			beUtils.updateBaseEntity(target);
 			targets.add(target);
 		}
 
