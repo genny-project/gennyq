@@ -69,34 +69,13 @@ public class Cache {
 	@Path("/{productCode}/{key}/json")
 	public Response readProductCodeKeyJson(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 
-		log.info("[!] JSON read(" + productCode + ":" + key + ")");
-
 		Response res = readProductCodeKey(productCode, key);
 
 		JsonObject json = null;
 		if (res.getStatus() == 200) {
 			String replyString = res.getEntity().toString();
 
-			// log.info("response=[" + replyString + "]");
-			// if ("jenny".equals(productCode)) {
-			// return Response.ok().entity(replyString).build();
-			// }
-			// if ("JENNY".equals(productCode)) {
-			// 	return Response.ok().entity(replyString).build();
-			// }
-			// if ("ACTIVE_BRIDGE_IDS".equals(key)) {
-			// return Response.ok().entity(replyString).build();
-			// }
-			// if ("CACHE:SERVICE_TOKEN".equals(key)) {
-			// log.info("CACHE:SERVICE_TOKEN->" + replyString);
-			// return Response.ok().entity(replyString).build();
-			// }
-
-			// if ("CAPABILITIES".equals(key)) {
-			// return Response.ok().entity(replyString).build();
-			// }
 			try {
-				//log.info("preparing Json : " + key);
 				JsonReader jsonReader = Json.createReader(new StringReader(replyString));
 				JsonObject reply = jsonReader.readObject();
 
@@ -104,9 +83,9 @@ public class Cache {
 						.add("status", "ok")
 						.add("value", reply)
 						.build();
-				//log.info("returning Json ok : " + key);
+
 			} catch (javax.json.stream.JsonParsingException je) {
-				//log.info("returning String : " + key);
+
 				json = javax.json.Json.createObjectBuilder()
 						.add("status", "ok")
 						.add("value", replyString)
@@ -182,7 +161,8 @@ public class Cache {
 		} else if (key.charAt(3) == '_' 
 				&& !key.startsWith("SBE")
 				&& !key.startsWith("QUE")
-				&& !key.startsWith("FRM")) {
+				&& !key.startsWith("FRM")
+				&& !key.startsWith("ADD")) {
 
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
@@ -255,7 +235,8 @@ public class Cache {
 		if (key.charAt(3) == '_'
 				&& !key.startsWith("SBE")
 				&& !key.startsWith("QUE")
-				&& !key.startsWith("FRM")) {
+				&& !key.startsWith("FRM")
+				&& !key.startsWith("ADD")) {
 			log.info("Writing to baseentity cache " + productCode + ":" + key);
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
