@@ -39,7 +39,10 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * Attribute represents a distinct abstract Fact about a target entity
@@ -249,6 +252,49 @@ public class Attribute extends CodedEntity implements Serializable {
 	 */
 	public String getIcon() {
 		return this.icon;
+	}
+
+
+	/**
+	 * Deep-compare two attributes
+	 * @param other attribute to compare against
+	 * @param checkId whether to check the id or not (database equality) (default: false)
+	 * @return true if all fields are the same. False if one is different
+	 */
+	public boolean equals(Attribute other) {
+		return equals(other, false);
+	}
+
+	/**
+	 * Deep-compare two attributes
+	 * @param other attribute to compare against
+	 * @param checkId whether to check the id or not (database equality) (default: false)
+	 * @return true if all fields are the same. False if one is different
+	 */
+	public boolean equals(Attribute other, boolean checkId) {
+		boolean sameDesc = CommonUtils.compare(description, other.description);
+		if(!sameDesc) return false;
+
+		boolean samePrivacy = (defaultPrivacyFlag == other.defaultPrivacyFlag);
+		if(!samePrivacy) return false;
+
+		boolean sameDTT = CommonUtils.compare(dataType, other.dataType);
+		if(!sameDTT) return false;
+
+		boolean sameHelp = CommonUtils.compare(help, other.help);
+		if(!sameHelp) return false;
+
+		boolean samePlaceholder = CommonUtils.compare(placeholder, other.placeholder);
+		if(!samePlaceholder) return false;
+
+		boolean sameDefault = CommonUtils.compare(defaultValue, other.defaultValue);
+		if(!sameDefault) return false;
+
+		boolean sameIcon = CommonUtils.compare(icon, other.icon);
+		if(!sameIcon) return false;
+
+		// Check the id if necessary
+		return checkId ? (other.getId() == getId()) : true;
 	}
 
 }

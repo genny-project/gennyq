@@ -6,10 +6,6 @@ public class BaseEntityKey implements CoreEntityKey {
 	String realm;
 	String code;
 
-	public BaseEntityKey() {
-		this(null, null);
-	}
-
 	public BaseEntityKey(String realm, String code) {
 		super();
 		this.realm = realm;

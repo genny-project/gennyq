@@ -57,11 +57,27 @@ public class GennySettings {
 			? CommonUtils.getSystemEnv("TWILIO_SENDER_MOBILE")
 			: "TWILIO_SENDER_MOBILE";
 
-	private static final String getConfig(String env) {
+	/**
+	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException} if
+	 * no fallback is present
+	 * @param env - key of the system environment variable to get
+	 * @param fallback - default value in the case the environment variable is not present
+	 * @param alert - whether or not to log a warning if the environment variable is missing
+	 * */
+	private static final String getConfig(String env) 
+		throws IllegalStateException {
 		return getConfig(env, null, false);
 	}
 
-	private static final String getConfig(String env, String fallback) {
+	/**
+	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException} if
+	 * no fallback is present
+	 * @param env - key of the system environment variable to get
+	 * @param fallback - default value in the case the environment variable is not present
+	 * @param alert - whether or not to log a warning if the environment variable is missing
+	 * */
+	private static final String getConfig(String env, String fallback) 
+		throws IllegalStateException {
 		return getConfig(env, fallback, false);
 	}
 
@@ -72,7 +88,8 @@ public class GennySettings {
 	 * @param fallback - default value in the case the environment variable is not present
 	 * @param alert - whether or not to log a warning if the environment variable is missing
 	 * */
-	private static final String getConfig(String env, String fallback, boolean alert) {
+	private static final String getConfig(String env, String fallback, boolean alert) 
+		throws IllegalStateException {
 		String value = CommonUtils.getSystemEnv(env, alert);
 		if(value == null) {
 			if(fallback != null)
@@ -125,7 +142,7 @@ public class GennySettings {
 	* @return String
 	 */
 	public static String kogitoServiceUrl() {
-		return getConfig("GENNY_KOGITO_SERVICE_URL", projectUrl() + ":4242", true);
+		return getConfig("GENNY_KOGITO_SERVICE_URL", projectUrl() + ":6590", true);
 		// return CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") != null ? CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") 
 		// 	: (projectUrl() + ":4242");
 	}
@@ -134,7 +151,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String shleemyServiceUrl() {
-		return getConfig("SHLEEMY_SERVICE_API", projectUrl() + ":4242", true);
+		return getConfig("SHLEEMY_SERVICE_API", projectUrl() + ":6969", true);
 		// return CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null ? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
 		// 	: (projectUrl() + ":4242");
 	}
@@ -145,7 +162,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String infinispanHost() {
-		return getConfig("INFINISPAN_URL", projectUrl() + ":11222");
+		return getConfig("INFINISPAN_URL", projectUrl() + ":11222", true);
 		// return CommonUtils.getSystemEnv("INFINISPAN_URL") != null ? CommonUtils.getSystemEnv("INFINISPAN_URL")
 		// 	: (projectUrl() + ":11222");
 	}
@@ -194,6 +211,14 @@ public class GennySettings {
 		return Integer.parseInt(getConfig("DEFAULT_BUCKET_SIZE", "8"));
 		// return CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE") != null
 		// 	? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE")) : 8;
+	}
+
+	/**
+	 * Get executorThreadCount
+	 * @return Integer
+	 */
+	public static Integer executorThreadCount() {
+		return Integer.parseInt(getConfig("EXECUTOR_THREAD_COUNT", "200"));
 	}
 
 }

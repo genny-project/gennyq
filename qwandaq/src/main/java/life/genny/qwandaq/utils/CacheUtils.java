@@ -65,14 +65,18 @@ public class CacheUtils {
 	 * @param realm The realm cache to use.
 	 * @param key   The key to save under.
 	 * @param value The value to save.
+	 * 
+	 * @return returns the newly written value
 	 */
-	public static void writeCache(String realm, String key, String value) {
+	public static String writeCache(String realm, String key, String value) {
 		log.info("realm is " + realm);
 		log.info("key is " + key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
 		log.info("remoteCache was returned");
 		remoteCache.put(key, value);
 		log.info("cache finished writing for "+realm+" "+key);
+
+		return remoteCache.get(key);
 	}
 
 	/**
@@ -95,7 +99,7 @@ public class CacheUtils {
 	 * @param c the Class to get as
 	 * @return T
 	 */
-	public static <T> T getObject(String realm, String key, Class c) {
+	public static <T> T getObject(String realm, String key, Class<T> c) {
 
 		log.debug("Cache Realm is " + realm);
 
@@ -104,8 +108,9 @@ public class CacheUtils {
 			log.debug("key: " + key + ", data: " + data);
 			return null;
 		}
-		Object object = jsonb.fromJson(data, c);
-		return (T) object;
+
+		T object = jsonb.fromJson(data, c);
+		return object;
 	}
 
 	/**
@@ -123,8 +128,8 @@ public class CacheUtils {
 		if (data == null) {
 			return null;
 		}
-		Object object = jsonb.fromJson(data, t);
-		return (T) object;
+		T object = jsonb.fromJson(data, t);
+		return object;
 	}
 
 	/**

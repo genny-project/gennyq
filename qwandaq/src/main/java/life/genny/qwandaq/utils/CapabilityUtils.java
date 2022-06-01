@@ -3,18 +3,28 @@ package life.genny.qwandaq.utils;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import io.vertx.core.json.DecodeException;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -22,6 +32,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -33,6 +44,8 @@ import life.genny.qwandaq.models.UserToken;
 @ApplicationScoped
 public class CapabilityUtils {
 	protected static final Logger log = Logger.getLogger(CapabilityUtils.class);
+	
+	static Jsonb jsonb = JsonbBuilder.create();
 
 	// Capability Attribute Prefix
 	public static final String CAP_CODE_PREFIX = "PRM_";
@@ -50,6 +63,9 @@ public class CapabilityUtils {
 
 	@Inject
 	ServiceToken serviceToken;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -71,47 +87,16 @@ public class CapabilityUtils {
 	public Attribute addCapability(final String rawCapabilityCode, final String name) {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		log.info("Setting Capability : " + cleanCapabilityCode + " : " + name);
-		// TODO: AHHHHHH
-		Attribute attribute = RulesUtils.realmAttributeMap.get(userToken.getProductCode())
-				.get(cleanCapabilityCode);
-		if (attribute != null) {
-			capabilityManifest.add(attribute);
-			return attribute;
-		} else {
-			// create new attribute
+		
+		Attribute attribute = qwandaUtils.getAttribute(cleanCapabilityCode);
+
+		if (attribute == null) {
 			attribute = new AttributeText(cleanCapabilityCode, name);
-			// save to database and cache
-
-			try {
-				beUtils.saveAttribute(attribute, serviceToken.getToken());
-				// no roles would have this attribute yet
-				// return
-				capabilityManifest.add(attribute);
-				return attribute;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return attribute;
-
+			qwandaUtils.saveAttribute(attribute);
 		}
-	}
 
-	@Deprecated
-	/**
-	 * Deprecated since 10.0.0. To be removed 10.1.0. Use
-	 * {@link CapabilityUtilsRefactored#addCapabilityToBaseEntity(BaseEntity, String, CapabilityMode...)}
-	 * instead
-	 * 
-	 * @param role
-	 * @param rawCapabilityCode
-	 * @param modes
-	 * @return
-	 */
-	public BaseEntity addCapabilityRoRole(BaseEntity role, final String rawCapabilityCode,
-			final CapabilityMode... modes) {
-		return addCapabilityToBaseEntity(role, rawCapabilityCode, modes);
-
+		capabilityManifest.add(attribute);
+		return attribute;
 	}
 
 	public BaseEntity addCapabilityToBaseEntity(BaseEntity targetBe, final String rawCapabilityCode,
@@ -131,8 +116,11 @@ public class CapabilityUtils {
 
 	private CapabilityMode[] getCapabilitiesFromCache(final String roleCode, final String cleanCapabilityCode) {
 		String productCode = userToken.getProductCode();
-		String key = getCacheKey(productCode, roleCode, cleanCapabilityCode);
-		JsonObject object = VertxUtils.readCachedJson(productCode, key);
+		String key = getCacheKey(roleCode, cleanCapabilityCode);
+		String cachedObject = (String) CacheUtils.readCache(productCode, key);
+
+		JsonObject object = jsonb.fromJson(cachedObject, JsonObject.class);
+
 		if ("error".equals(object.getString("status"))) {
 			log.error("Error reading cache for realm: " + productCode + " with key: " + key);
 			return null;
@@ -147,15 +135,15 @@ public class CapabilityUtils {
 	 * @param capabilityCode
 	 * @param mode
 	 */
-	private JsonObject updateCachedRoleSet(final String roleCode, final String cleanCapabilityCode,
+	private String updateCachedRoleSet(final String roleCode, final String cleanCapabilityCode,
 			final CapabilityMode... modes) {
 		String productCode = userToken.getProductCode();
-		String key = getCacheKey(productCode, roleCode, cleanCapabilityCode);
+		String key = getCacheKey(roleCode, cleanCapabilityCode);
 		String modesString = getModeString(modes);
 
 		log.info("updateCachedRoleSet test:: " + key);
 		// if no cache then create
-		return VertxUtils.writeCachedJson(productCode, key, modesString, token.getToken());
+		return CacheUtils.writeCache(productCode, key, modesString);
 	}
 
 	/**
@@ -169,7 +157,7 @@ public class CapabilityUtils {
 	 */
 	public boolean hasCapability(final String rawCapabilityCode, final CapabilityMode... checkModes) {
 		// allow keycloak admin and devcs to do anything
-		if (userToken.hasRole("admin", "dev") || (beUtils.tokenIsServiceUser())) {
+		if (userToken.hasRole("admin", "dev")) {
 			return true;
 		}
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
@@ -190,7 +178,7 @@ public class CapabilityUtils {
 			String rolesValue = lnkRole.get().getValueString();
 			try {
 				// Look through cache using each role
-				JsonArray roleArray = new JsonArray(rolesValue);
+				JsonArray roleArray = jsonb.fromJson(rolesValue, JsonArray.class);
 				for (int i = 0; i < roleArray.size(); i++) {
 					String roleCode = roleArray.getString(i);
 
@@ -223,6 +211,7 @@ public class CapabilityUtils {
 		return true;
 	}
 
+	// TODO: Rewrite
 	public void process() {
 		List<Attribute> existingCapability = new ArrayList<Attribute>();
 
@@ -306,8 +295,9 @@ public class CapabilityUtils {
 	 * @param user
 	 * @return
 	 */
-	public static List<AllowedSafe> generateAlloweds(GennyToken userToken, BaseEntity user) {
-		List<AllowedSafe> allowables = new CopyOnWriteArrayList<AllowedSafe>();
+	public List<Allowed> generateAlloweds(BaseEntity user) {
+		String productCode = userToken.getProductCode();
+		List<Allowed> allowables = new CopyOnWriteArrayList<Allowed>();
 
 		// Look for user capabilities
 		List<EntityAttribute> capabilities = user.findPrefixEntityAttributes(CAP_CODE_PREFIX);
@@ -316,7 +306,7 @@ public class CapabilityUtils {
 			if (modeString != null) {
 				CapabilityMode[] modes = getCapModesFromString(modeString);
 				String cleanCapabilityCode = cleanCapabilityCode(capability.getAttributeCode());
-				allowables.add(new AllowedSafe(cleanCapabilityCode, modes));
+				allowables.add(new Allowed(cleanCapabilityCode, modes));
 			}
 		}
 
@@ -325,9 +315,9 @@ public class CapabilityUtils {
 		JsonArray roleCodesArray = null;
 
 		if (LNK_ROLEOpt.isPresent()) {
-			roleCodesArray = new JsonArray(LNK_ROLEOpt.get().getValueString());
+			roleCodesArray = jsonb.fromJson(LNK_ROLEOpt.get().getValueString(), JsonArray.class);
 		} else {
-			roleCodesArray = new JsonArray("[]");
+			roleCodesArray = jsonb.fromJson("[]", JsonArray.class);
 			log.info("Could not find " + LNK_ROLE_CODE + " in user: " + user.getCode());
 		}
 
@@ -339,9 +329,10 @@ public class CapabilityUtils {
 		for (int i = 0; i < roleCodesArray.size(); i++) {
 			String roleBECode = roleCodesArray.getString(i);
 
-			BaseEntity roleBE = VertxUtils.readFromDDT(userToken.getRealm(), roleBECode, userToken.getToken());
+			BaseEntityKey beKey = new BaseEntityKey(productCode, roleBECode);
+			BaseEntity roleBE = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
 			if (roleBE == null) {
-				log.info("facts: could not find roleBe: " + roleBECode + " in cache: " + userToken.getRealm());
+				log.info("facts: could not find roleBe: " + roleBECode + " in cache: " + userToken.getProductCode());
 				continue;
 			}
 
@@ -366,7 +357,7 @@ public class CapabilityUtils {
 				}
 				if (!ignore) {
 					CapabilityMode[] modes = getCapModesFromString(modeString);
-					allowables.add(new AllowedSafe(cleanCapabilityCode, modes));
+					allowables.add(new Allowed(cleanCapabilityCode, modes));
 				}
 
 			}
@@ -375,7 +366,7 @@ public class CapabilityUtils {
 		/* now force the keycloak ones */
 		for (String role : userToken.getUserRoles()) {
 			allowables.add(
-					new AllowedSafe(role.toUpperCase(), CapabilityMode.VIEW));
+					new Allowed(role.toUpperCase(), CapabilityMode.VIEW));
 		}
 
 		return allowables;
@@ -391,7 +382,7 @@ public class CapabilityUtils {
 	}
 
 	public static CapabilityMode[] getCapModesFromString(String modeString) {
-		JsonArray array = new JsonArray(modeString);
+		JsonArray array = jsonb.fromJson(modeString, JsonArray.class);
 		CapabilityMode[] modes = new CapabilityMode[array.size()];
 
 		for (int i = 0; i < array.size(); i++) {
@@ -428,7 +419,7 @@ public class CapabilityUtils {
 		return cleanCapabilityCode;
 	}
 
-	private static String getCacheKey(String realm, String keyCode, String capCode) {
-		return realm + ":" + keyCode + ":" + capCode;
+	private static String getCacheKey(String keyCode, String capCode) {
+		return keyCode + ":" + capCode;
 	}
 }

@@ -554,7 +554,11 @@ public class DatabaseUtils {
 	 * @param attribute An {@link Attribute} object to save
 	 */
 	@Transactional
-	public void saveAttribute(Attribute attribute) {
+	public boolean saveAttribute(Attribute attribute) {
+		if(attribute == null) {
+			log.error("Attempting to save null attribute!");
+			return false;
+		}
 
 		log.info("Saving Attribute " + attribute.getCode());
 
@@ -569,12 +573,15 @@ public class DatabaseUtils {
 			} else {
 				entityManager.merge(attribute);
 			}
-
+			
 			log.info("Successfully saved Attribute " + attribute.getCode());
-
+			return true;
 		} catch (Exception e) {
-			log.error(e);
+			log.error("Error saving attribute!: " + attribute.getCode());
+			e.printStackTrace();
 		}
+
+		return false;
 	}
 
 	/**
