@@ -34,6 +34,7 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -74,12 +75,11 @@ public class InternalConsumer {
 		service.fullServiceInit();
 	}
 
-
 	/**
 	 * Fetch target baseentity from cache 'baseentity'
 	 * Add/Replace EntityAttribute value from answer
 	 * Push back the baseentity into 'baseentity' cache
-	 * */
+	 */
 	@Blocking
 	@Incoming("answer")
 	public void fromAnswers(String payload) {
@@ -94,7 +94,7 @@ public class InternalConsumer {
 		String attributeCode = answer.getAttributeCode();
 		String ansValue = answer.getValue();
 
-		if(answer.getValue() != null && answer.getValue().length() <= 50) {
+		if (answer.getValue() != null && answer.getValue().length() <= 50) {
 			log.debug("[!] Received Kafka Answer!");
 			log.debug("Target: " + targetCode);
 			log.debug("Attribute Code: " + attributeCode);
