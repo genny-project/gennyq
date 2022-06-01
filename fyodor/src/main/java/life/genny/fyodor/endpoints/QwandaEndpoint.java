@@ -13,6 +13,7 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -89,7 +90,7 @@ public class QwandaEndpoint {
 			) {
 
 		if (userToken == null) {
-			log.error("Bad or no header token in Search POST provided");
+			log.error("Bad or no header token in request");
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
@@ -173,6 +174,27 @@ public class QwandaEndpoint {
 		String json = jsonb.toJson(array);
 
 		return Response.ok().entity(json).build();
+	}
+
+	@POST
+	@Path("/baseentitys")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response saveBaseEntity(BaseEntity baseEntity) {
+
+		log.info("Request to SAVE BaseEntity");
+
+		log.info("GENNY_TOKEN = " + userToken);
+		log.info("SERVICE_TOKEN = " + serviceToken);
+
+		if (userToken == null) {
+			log.error("Bad or no header token in entityentityParents GET provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+
+		beUtils.updateBaseEntity(baseEntity);
+
+		return Response.ok().build();
 	}
 
 	/**

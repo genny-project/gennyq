@@ -1,14 +1,17 @@
 package life.genny.fyodor.utils;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.Comparator;
-import java.util.Collections;
-import java.time.*;
-import java.util.UUID;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -16,35 +19,33 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.core.types.dsl.DateTimePath;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.attribute.QEntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
-import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.entity.QEntityEntity;
-import life.genny.qwandaq.message.QSearchBeResult;
+import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -67,6 +68,7 @@ public class SearchUtility {
 	@Inject
 	UserToken userToken;
 
+	@Inject
 	BaseEntityUtils beUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();

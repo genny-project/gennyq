@@ -129,6 +129,12 @@ public class InitService {
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg("webdata", msg);
+	}
+
+	/**
+	 * Send Add Items Menu
+	 */
+	public void sendAddItems() {
 
 		// send basic add items
 		String sourceCode = userToken.getUserCode();
@@ -158,5 +164,4 @@ public class InitService {
 
 		KafkaUtils.writeMsg("webdata", askMsg);
 	}
-
 }
