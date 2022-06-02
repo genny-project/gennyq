@@ -157,8 +157,8 @@ public class CapabilityUtils {
 	 * Go through a list of capability modes and check that the token can manipulate
 	 * the modes for the provided capabilityCode
 	 * 
-	 * @param capabilityCode capabilityCode to check against
-	 * @param modes          array of modes to check against
+	 * @param rawCapabilityCode capabilityCode to check against (will be cleaned before use)
+	 * @param checkModes          array of modes to check against
 	 * @return whether or not the token can manipulate all the supplied modes for
 	 *         the supplied capabilityCode
 	 */
@@ -260,7 +260,7 @@ public class CapabilityUtils {
 	 * NOTE: This should be temporary until the LNK_ROLE attribute is properly in place!
 	 * Lets do it in 10.1.0!!!
 	 *
-	 * @param code The code of the capability.
+	 * @param rawCapabilityCode The code of the capability.
 	 * @param mode The mode of the capability.
 	 * @return Boolean True if the user has the capability, False otherwise.
 	 */
@@ -355,9 +355,8 @@ public class CapabilityUtils {
 	}
 
 	/**
-	 * @param userToken
-	 * @param user
-	 * @return
+	 * @param user User BaseEntity to generate alloweds for (TODO: Migrate this)
+	 * @return a list of alloweds ready to be inserted into the kieSessions
 	 */
 	public List<Allowed> generateAlloweds(BaseEntity user) {
 		String productCode = userToken.getProductCode();

@@ -17,8 +17,8 @@ public class CommonUtils {
 
     /**
      * Safe-compare two Objects (null-safe)
-     * @param stringA
-     * @param stringB
+     * @param objA Object1 to compare
+     * @param objB Object2 to compare
      * @return true if both strings are the same or false if not
      */
     public static <T> Boolean compare(T objA, T objB) {

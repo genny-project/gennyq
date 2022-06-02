@@ -178,6 +178,7 @@ public class BaseEntityUtils {
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
 	 * @param baseEntity The BaseEntity to update
+	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
 

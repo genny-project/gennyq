@@ -258,7 +258,6 @@ public class Attribute extends CodedEntity implements Serializable {
 	/**
 	 * Deep-compare two attributes
 	 * @param other attribute to compare against
-	 * @param checkId whether to check the id or not (database equality) (default: false)
 	 * @return true if all fields are the same. False if one is different
 	 */
 	public boolean equals(Attribute other) {
