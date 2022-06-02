@@ -194,7 +194,28 @@ public class QwandaEndpoint {
 
 		beUtils.updateBaseEntity(baseEntity);
 
-		return Response.ok().build();
+		return Response.ok().entity(jsonb.toJson(baseEntity)).build();
+	}
+
+	@GET
+	@Path("/questioncodes/{code}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getQuestion(@PathParam("code") String code) {
+
+		log.info("Request for Question " + code);
+
+		log.info("GENNY_TOKEN = " + userToken);
+		log.info("SERVICE_TOKEN = " + serviceToken);
+
+		if (userToken == null) {
+			log.error("Bad or no header token in entityentityParents GET provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+
+		String productCode = userToken.getProductCode();
+		Question question = databaseUtils.findQuestionByCode(productCode, code);
+
+		return Response.ok().entity(jsonb.toJson(question)).build();
 	}
 
 	/**
