@@ -139,7 +139,7 @@ public class Cache {
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
 				log.warn("JENNY and SKIP returning " + serviceToken.getToken().substring(0, 10));
-				return Response.ok("TRUE").build();
+				return Response.ok("FALSE").build();
 			}
 
 			if ("CACHE:SERVICE_TOKEN".equals(key)) {
@@ -171,8 +171,11 @@ public class Cache {
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
 				log.info("Getting BE with code " + key);
-				BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
-						baseEntityKey);
+
+				BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, key);
+
+				// BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+				// 		baseEntityKey);
 
 				if (baseEntity == null) {
 					throw new Exception("Not found in cache");
