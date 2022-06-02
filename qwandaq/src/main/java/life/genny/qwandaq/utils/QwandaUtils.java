@@ -350,7 +350,7 @@ public class QwandaUtils {
 			String value = ea.getAsString();
 
 			// if any are both blank and mandatory, then task is not complete
-			if ((StringUtils.isBlank(value)) && (mandatory)) {
+			if (mandatory && StringUtils.isBlank(value)) {
 				answered = false;
 			}
 
@@ -459,9 +459,7 @@ public class QwandaUtils {
 			}
 
 			// update target in the cache and DB
-			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
-			databaseUtils.saveBaseEntity(target);
-
+			beUtils.updateBaseEntity(target);
 			targets.add(target);
 		}
 

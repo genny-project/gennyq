@@ -13,7 +13,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Message;
+
 import org.jboss.logging.Logger;
 import org.kie.api.runtime.KieSession;
 import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
@@ -29,11 +29,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -50,6 +46,9 @@ public class InternalConsumer {
 
 	@Inject
 	GennyScopeInit scope;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	UserToken userToken;
@@ -74,12 +73,11 @@ public class InternalConsumer {
 		service.fullServiceInit();
 	}
 
-
 	/**
 	 * Fetch target baseentity from cache 'baseentity'
 	 * Add/Replace EntityAttribute value from answer
 	 * Push back the baseentity into 'baseentity' cache
-	 * */
+	 */
 	@Blocking
 	@Incoming("answer")
 	public void fromAnswers(String payload) {
@@ -94,7 +92,9 @@ public class InternalConsumer {
 		String attributeCode = answer.getAttributeCode();
 		String ansValue = answer.getValue();
 
-		if(answer.getValue() != null && answer.getValue().length() <= 50) {
+		log.info("Processing answer:" + targetCode + ":" + attributeCode + "=" + ansValue);
+
+		if (ansValue != null && ansValue.length() <= 50) {
 			log.debug("[!] Received Kafka Answer!");
 			log.debug("Target: " + targetCode);
 			log.debug("Attribute Code: " + attributeCode);
@@ -103,45 +103,7 @@ public class InternalConsumer {
 			log.debug("================= END ANSWER ==================");
 		}
 
-		// Retrieve Base Entity from cache 
-
-		BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, targetCode);
-		log.info("Fetching BaseEntity from '" + GennyConstants.CACHE_NAME_BASEENTITY + "': " + targetCode);
-		log.info("	- Key: " + baseEntityKey);
-
-		BaseEntity targetBaseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey);
-
-		if(targetBaseEntity == null) {
-			log.error("Error retrieving base entity: [" + targetCode + "] for product code: " + productCode);
-			
-			scope.destroy();
-			return;
-		}
-
-		// Update the EntityAttribute
-		Optional<EntityAttribute> optEA = targetBaseEntity.findEntityAttribute(attributeCode);
-
-		if(optEA.isPresent()) {
-			EntityAttribute entityAttribute = optEA.get();
-			entityAttribute.setValue(ansValue);
-		} else {
-			log.error("Could not find attribute " + attributeCode + " in BaseEntity: " + targetBaseEntity.getCode());
-			
-			scope.destroy();
-			return;
-		}
-
-		// Send the baseentity back into the cache
-		BaseEntity cachedBaseEntity = (BaseEntity)CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey, targetBaseEntity);
-		
-		if(cachedBaseEntity == null) {
-			log.error("Error Saving BaseEntity: " + targetBaseEntity.getCode());
-			log.error("Cache: " + GennyConstants.CACHE_NAME_BASEENTITY);
-			log.error("BaseEntityKey: " + baseEntityKey);
-
-			scope.destroy();
-			return;
-		}
+		qwandaUtils.saveAnswer(answer);
 
 		scope.destroy();
 		Instant end = Instant.now();

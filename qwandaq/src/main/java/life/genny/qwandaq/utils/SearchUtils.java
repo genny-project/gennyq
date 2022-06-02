@@ -136,7 +136,8 @@ public class SearchUtils {
 				searchCode, SearchEntity.class);
 
 		if (searchEntity == null) {
-			log.info("Could not fetch " + searchCode + " from cache!!!");
+			log.error("Could not fetch " + searchCode + " from cache!!!");
+			return;
 		}
 
 		if (code.startsWith("CNS_")) {
@@ -154,7 +155,8 @@ public class SearchUtils {
 	public void searchTable(SearchEntity searchEntity) {
 
 		if (searchEntity == null) {
-			System.out.println("SearchBE is null");
+			log.error("SearchBE is null (searchTable)");
+			return;
 		}
 
 		// update code to session search code
