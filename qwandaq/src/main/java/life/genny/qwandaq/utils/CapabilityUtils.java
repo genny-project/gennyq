@@ -347,7 +347,34 @@ public class CapabilityUtils {
 	public void setCapabilityManifest(List<Attribute> capabilityManifest) {
 		this.capabilityManifest = capabilityManifest;
 	}
+/**
+	 * @param condition the condition to check
+	 * @return Boolean
+	 */
+	public Boolean conditionMet(String condition) {
 
+		if (condition == null) {
+			log.error("condition is NULL!");
+			return false;
+		}
+
+		log.info("Testing condition with value: " + condition);
+		String[] conditionArray = condition.split(":");
+
+		String capability = conditionArray[0];
+		String mode = conditionArray[1];
+
+		// check for NOT operator
+		Boolean not = capability.startsWith("!");
+		capability = not ? capability.substring(1) : capability;
+
+		// check for Capability
+		Boolean hasCap = hasCapabilityThroughPriIs(capability, CapabilityMode.getMode(mode));
+
+		// XNOR operator
+		return hasCap ^ not;
+	}
+	
 	@Override
 	public String toString() {
 		return "CapabilityUtils [" + (capabilityManifest != null ? "capabilityManifest=" + capabilityManifest : "")
