@@ -179,7 +179,7 @@ public class BaseEntityUtils {
 	 *
 	 * @param baseEntity The BaseEntity to update
 	 */
-	public void updateBaseEntity(BaseEntity baseEntity) {
+	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
 
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 			if (ea.getPk() == null) {
@@ -191,13 +191,13 @@ public class BaseEntityUtils {
 				continue;
 			}
 
-			log.info("Attribute: " + ea.getAttributeCode() + ", entity: " + ea.getPk().getBaseEntity().getCode());
+			log.debug("Attribute: " + ea.getAttributeCode() + ", entity: " + ea.getPk().getBaseEntity().getCode());
 		}
 
 		databaseUtils.saveBaseEntity(baseEntity);
 
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		return (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
 	}
 
 	/**

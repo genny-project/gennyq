@@ -76,6 +76,9 @@ public class Cache {
 
 		JsonObject json = null;
 		if (res.getStatus() == 200) {
+			if (res.getEntity() == null) {
+				return Response.ok().build();
+			}
 			String replyString = res.getEntity().toString();
 
 			try {
@@ -126,7 +129,7 @@ public class Cache {
 			// .entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		if (!userToken.hasRole("test", "service")) {
+		if (!userToken.hasRole("test", "service") && false) {  // TODO : make work for non service users.
 			log.warn("User [" + userToken.userCode + "] does not have valid role:" + userToken.getUserRoles());
 			// TODO -> Do not permit access from externally
 			if ("jenny".equals(productCode) && (key.startsWith("TOKEN"))) {
@@ -139,7 +142,7 @@ public class Cache {
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
 				log.warn("JENNY and SKIP returning " + serviceToken.getToken().substring(0, 10));
-				return Response.ok("false").build();
+				return Response.ok("FALSE").build();
 			}
 
 			if ("CACHE:SERVICE_TOKEN".equals(key)) {
@@ -172,8 +175,11 @@ public class Cache {
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
 				log.info("Getting BE with code " + key);
-				BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
-						baseEntityKey);
+
+				BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, key);
+
+				// BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+				// 		baseEntityKey);
 
 				if (baseEntity == null) {
 					throw new Exception("Not found in cache");
@@ -196,7 +202,7 @@ public class Cache {
 				return Response.ok(json).build();
 			}
 			if ("ACTIVE_BRIDGE_IDS".equals(key)) {
-				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
+				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + StringUtils.abbreviate(serviceToken.getToken(),20));
 				String json = (String) CacheUtils.readCache(productCode, key);
 				return Response.ok(json).build();
 			}
@@ -256,6 +262,30 @@ public class Cache {
 
 		return Response.ok().build();
 	}
+
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("/{productCode}/{key}/savenull")
+	public Response writeNull(@PathParam("productCode") String productCode, @PathParam("key") String key) {
+
+	
+			log.info("[!] saveNull(" + productCode + ":" + key + ")");
+
+
+		if (userToken == null) {
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		}
+
+
+			CacheUtils.writeCache(productCode, key, null);
+
+		log.info("Wrote null for " + key);
+
+		return Response.ok().build();
+	}
+
 
 	/**
 	 * Read an item from the cache.
@@ -321,6 +351,7 @@ public class Cache {
 		return Response.ok().build();
 	}
 
+	
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/{key}")

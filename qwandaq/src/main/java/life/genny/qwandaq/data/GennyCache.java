@@ -168,6 +168,9 @@ public class GennyCache {
 	* @return The Entity
 	 */
 	public CoreEntity putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntity value) {
+		if(value == null) {
+			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
+		}
 
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
@@ -178,6 +181,7 @@ public class GennyCache {
 			log.error("Could not find a cache called " + cacheName);
 		}
 
-		return cache.put(key, value);
+		cache.put(key, value);
+		return cache.get(key);
 	}
 }
