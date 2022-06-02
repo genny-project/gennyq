@@ -54,6 +54,17 @@ public class DatabaseUtils {
 	}
 
 	/**
+	 * Get all attributes with a specific Prefix
+	 * @param productCode - Product Code to load from
+	 * @param prefix - Prefix to check for
+	 * @return
+	 */
+	// TODO: Lint this against accepted prefixes
+	public List<Attribute> findAttributesWithPrefix(String productCode, String prefix) {
+		return findAttributes(productCode, null, null, "PRM_");		
+	}
+
+	/**
 	 * Fetch Validations from the database using page size and num.
 	 * If pageSize and pageNumber are both null, all results will be returned at
 	 * once.
@@ -128,7 +139,7 @@ public class DatabaseUtils {
 	 * @return List
 	 */
 	// @Transactional
-	public List<Attribute> findAttributes(String realm, int startIdx, int pageSize, String wildcard) {
+	public List<Attribute> findAttributes(String realm, Integer startIdx, Integer pageSize, String wildcard) {
 
 		checkEntityManager();
 
@@ -145,7 +156,7 @@ public class DatabaseUtils {
 				query.setParameter("code", "%" + wildcard + "%");
 			}
 
-			if (startIdx == 0 && pageSize == 0) {
+			if ((startIdx == null || startIdx == 0) && (pageSize == null || pageSize == 0)) {
 				log.info("Fetching all Attributes (unset pageNumber or pageSize)");
 			} else {
 				query = query.setFirstResult(startIdx).setMaxResults(pageSize);

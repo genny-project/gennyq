@@ -66,7 +66,7 @@ public class CommonUtils {
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
-    public <T> String getArrayString(List<T> list, FIGetStringCallBack<T> stringCallback) {
+    public static <T> String getArrayString(List<T> list, FIGetStringCallBack<T> stringCallback) {
         String result = "";
         for(T object : list) {
             result += "\"" + stringCallback.getString(object) + "\",";
@@ -80,7 +80,7 @@ public class CommonUtils {
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
-    public <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
+    public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
         String result = "";
         for(T object : array) {
             result += "\"" + stringCallback.getString(object) + "\",";

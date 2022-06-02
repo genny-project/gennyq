@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -17,6 +18,7 @@ import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.vertx.core.json.DecodeException;
@@ -51,6 +53,8 @@ public class CapabilityUtils {
 	public static final String CAP_CODE_PREFIX = "PRM_";
 	public static final String ROLE_BE_PREFIX = "ROL_";
 
+	public static final String PRI_IS_PREFIX = "PRI_IS_";
+
 	// TODO: Confirm we want DEFs to have capabilities as well
 	public static final String[] ACCEPTED_CAP_PREFIXES = { ROLE_BE_PREFIX, "PER_", "DEF_" };
 
@@ -63,6 +67,9 @@ public class CapabilityUtils {
 
 	@Inject
 	ServiceToken serviceToken;
+
+	@Inject
+	DatabaseUtils dbUtils;
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -211,19 +218,88 @@ public class CapabilityUtils {
 		return true;
 	}
 
+	private boolean shouldOverride() {
+		// allow keycloak admin and devcs to do anything
+		return (userToken.hasRole("admin", "dev") || ("service".equals(userToken.getUsername())));
+	}
+
+	public boolean hasCapabilityThroughRoles(String rawCapabilityCode, CapabilityMode mode) {
+		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		BaseEntity user = beUtils.getUserBaseEntity();
+		JsonArray roles = jsonb.fromJson(user.getValueAsString(LNK_ROLE_CODE), JsonArray.class);
+
+		BaseEntity currentRole;
+		for(int i = 0; i < roles.size(); i++) {
+			String roleCode = roles.getString(i);
+			currentRole = beUtils.getBaseEntityByCode(roleCode);
+			if(currentRole == null) {
+				log.error("Could not find role when looking at PRI IS: " + roleCode);
+				continue;
+			}
+
+			Optional<EntityAttribute> optEa = currentRole.findEntityAttribute(cleanCapabilityCode);
+			if(!optEa.isPresent())
+				continue;
+			EntityAttribute ea = optEa.get();
+			String modes = ea.getValueString();
+			if(StringUtils.isBlank(modes)) {
+				log.error("Dumb Capability detected! Role: " + roleCode + " has capability " + cleanCapabilityCode + " but not modes attached!");
+				continue;
+			}
+
+			if(modes.contains(mode.name()))
+				return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if the user has a capability using any PRI_IS_ attributes.
+	 *
+	 * NOTE: This should be temporary until the LNK_ROLE attribute is properly in place!
+	 * Lets do it in 10.1.0!!!
+	 *
+	 * @param code The code of the capability.
+	 * @param mode The mode of the capability.
+	 * @return Boolean True if the user has the capability, False otherwise.
+	 */
+	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
+		if(shouldOverride())
+			return true;
+		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		BaseEntity user = beUtils.getUserBaseEntity();
+		
+		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
+
+		if(priIsAttributes.size() == 0) {
+			log.error("Could not find any PRI_IS attributes for base entity: " + user.getCode());
+			return false;
+		}
+
+		for (EntityAttribute priIsAttribute: priIsAttributes) {
+			String priIsCode = priIsAttribute.getAttributeCode();
+			String roleCode = ROLE_BE_PREFIX + priIsCode.substring(PRI_IS_PREFIX.length());
+			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
+			if (roleBe.getValueAsString(cleanCapabilityCode).contains(mode.name()))
+				return true;
+		}
+
+		return false;
+	}
+
 	// TODO: Rewrite
 	public void process() {
-		List<Attribute> existingCapability = new ArrayList<Attribute>();
-
 		String productCode = userToken.getProductCode();
 
-		for (String existingAttributeCode : RulesUtils.realmAttributeMap.get(productCode)
-				.keySet()) {
-			if (existingAttributeCode.startsWith(CAP_CODE_PREFIX)) {
-				existingCapability.add(RulesUtils.realmAttributeMap.get(productCode)
-						.get(existingAttributeCode));
-			}
-		}
+		// Find all existing capabilities for a given product code
+		// remove all capabilities in the manifest
+
+		// Process the rest of the existing capabilities??
+			// remove existing capability 
+			// remove said capability from all roles that contain it
+			// update roles in database and cache
+		List<Attribute> existingCapability = dbUtils.findAttributesWithPrefix(productCode, CAP_CODE_PREFIX);
 
 		/* Remove any capabilities not in this forced list from roles */
 		existingCapability.removeAll(getCapabilityManifest());
@@ -233,32 +309,20 @@ public class CapabilityUtils {
 		 * entityAttributes
 		 */
 		for (Attribute toBeRemovedCapability : existingCapability) {
-			try {
-				RulesUtils.realmAttributeMap.get(productCode)
-						.remove(toBeRemovedCapability.getCode()); // remove from cache
-				if (!VertxUtils.cachedEnabled) { // only post if not in junit
-					QwandaUtils.apiDelete(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/attributes/"
-							+ toBeRemovedCapability.getCode(), serviceToken.getToken());
+			// Remove capability from db
+			String attributeCode = toBeRemovedCapability.getCode();
+			dbUtils.deleteAttribute(productCode, attributeCode);
+			/* update all the roles that use this attribute by reloading them into cache */
+			List<BaseEntity> cachedRoles = CacheUtils.getBaseEntitiesByPrefix(productCode, ROLE_BE_PREFIX);
+			if(cachedRoles.size() > 0) {
+				for (BaseEntity role : cachedRoles) {
+					String roleCode = role.getCode();
+					CacheUtils.removeEntry(productCode, getCacheKey(roleCode, attributeCode));
+					role.removeAttribute(toBeRemovedCapability.getCode());
+					/* Now update the db role to only have the attributes we want left */
+					BaseEntityKey beKey = new BaseEntityKey(productCode, role.getCode());
+					CacheUtils.saveEntity(productCode, beKey, role);
 				}
-				/* update all the roles that use this attribute by reloading them into cache */
-				QDataBaseEntityMessage rolesMsg = VertxUtils.getObject(productCode, "ROLES",
-						productCode, QDataBaseEntityMessage.class);
-				if (rolesMsg != null) {
-
-					for (BaseEntity role : rolesMsg.getItems()) {
-						role.removeAttribute(toBeRemovedCapability.getCode());
-						/* Now update the db role to only have the attributes we want left */
-						if (!VertxUtils.cachedEnabled) { // only post if not in junit
-							QwandaUtils.apiPutEntity(GennySettings.qwandaServiceUrl + "/qwanda/baseentitys/force",
-									JsonUtils.toJson(role), productCode);
-						}
-
-					}
-				}
-
-			} catch (IOException e) {
-				/* TODO Auto-generated catch block */
-				e.printStackTrace();
 			}
 		}
 	}
@@ -373,12 +437,7 @@ public class CapabilityUtils {
 	}
 
 	public static String getModeString(CapabilityMode... modes) {
-		String modeString = "[";
-		for (CapabilityMode mode : modes) {
-			modeString += "\"" + mode.name() + "\"" + ",";
-		}
-
-		return modeString.substring(0, modeString.length() - 1) + "]";
+		return CommonUtils.getArrayString(modes, (mode) -> mode.name());
 	}
 
 	public static CapabilityMode[] getCapModesFromString(String modeString) {
@@ -419,7 +478,13 @@ public class CapabilityUtils {
 		return cleanCapabilityCode;
 	}
 
-	private static String getCacheKey(String keyCode, String capCode) {
-		return keyCode + ":" + capCode;
+	/**
+	 * Construct a cache key for fetching capabilities
+	 * @param roleCode
+	 * @param capCode
+	 * @return
+	 */
+	private static String getCacheKey(String roleCode, String capCode) {
+		return roleCode + ":" + capCode;
 	}
 }

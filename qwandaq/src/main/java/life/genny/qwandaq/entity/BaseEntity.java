@@ -372,7 +372,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			// attributeCode);
 			return Optional.ofNullable(attributeMap.get(attributeCode));
 		}
-		Optional<EntityAttribute> foundEntity = null;
+		Optional<EntityAttribute> foundEntity = Optional.empty();
 
 		try {
 			// log.info("We are in the long filter part of getValue, attributeCode:" +
@@ -380,7 +380,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			foundEntity = getBaseEntityAttributes().stream().filter(x -> (x.getAttributeCode().equals(attributeCode)))
 					.findFirst();
 		} catch (Exception e) {
-			log.error("Error in fetching attribute value");
+			log.error("Error in fetching attribute value: " + attributeCode);
 		}
 
 		// Optional.of(getBaseEntityAttributes().stream()
