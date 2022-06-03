@@ -14,8 +14,6 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
 /**
  * A Static utility class for standard HTTP requests.
  * 

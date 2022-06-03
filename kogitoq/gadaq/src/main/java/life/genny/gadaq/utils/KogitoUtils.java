@@ -160,7 +160,7 @@ public class KogitoUtils {
 
         HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
 
-        if (response.statusCode() == 201) {
+        if (response != null && response.statusCode() == 201) {
 
             JsonObject json = jsonb.fromJson(response.body(), JsonObject.class);
 
@@ -168,7 +168,7 @@ public class KogitoUtils {
 			return json.getString("id");
 
         } else {
-            log.error("TriggerWorkflow Response Status:  " + response.statusCode());
+            log.error("TriggerWorkflow Response Status:  " + (response != null ? response.statusCode() : "NULL RESPONSE"));
         }
 
         return null;
