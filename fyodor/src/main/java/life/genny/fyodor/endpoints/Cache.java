@@ -77,7 +77,11 @@ public class Cache {
 		JsonObject json = null;
 		if (res.getStatus() == 200) {
 			if (res.getEntity() == null) {
-				return Response.ok().build();
+				json = javax.json.Json.createObjectBuilder()
+						.add("status", "error")
+						.add("value", "null")
+						.build();
+				return Response.ok().entity(json).build();
 			}
 			String replyString = res.getEntity().toString();
 
@@ -169,10 +173,11 @@ public class Cache {
 				&& !key.startsWith("QUE")
 				&& !key.startsWith("FRM")
 				&& !key.startsWith("BIF")
+				&& !key.startsWith("RUL")
 				&& !key.startsWith("ADD")) {
 
 			// It's a baseentity
-			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
+			// BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
 				log.info("Getting BE with code " + key);
 
@@ -194,6 +199,11 @@ public class Cache {
 				return Response.ok(jsonb.toJson(be)).build();
 			}
 
+		} else if (key.startsWith("RUL_")) {
+			log.info("Reading rule entity from raw cache: " + key);
+			BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
+
+			return Response.ok(jsonb.toJson(be)).build();
 		} else {
 
 			if ("CAPABILITIES".equals(key)) {
@@ -248,6 +258,7 @@ public class Cache {
 				&& !key.startsWith("QUE")
 				&& !key.startsWith("FRM")
 				&& !key.startsWith("BIF")
+				&& !key.startsWith("RUL")
 				&& !key.startsWith("ADD")) {
 			log.info("Writing to baseentity cache " + productCode + ":" + key);
 			// It's a baseentity
