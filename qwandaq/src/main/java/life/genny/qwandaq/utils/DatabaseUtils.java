@@ -620,9 +620,10 @@ public class DatabaseUtils {
 			log.info("Successfully saved BaseEntity " + entity.getCode());
 
 		} catch (Exception e) {
-			log.error(e);
+			e.printStackTrace();
 		}
 	}
+
 
 	/**
 	 * Save a {@link Question} to the database.

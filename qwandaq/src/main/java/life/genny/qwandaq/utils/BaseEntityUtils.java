@@ -182,18 +182,27 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
 
+		log.info("BE = " + jsonb.toJson(baseEntity));
+
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
-			if (ea.getPk() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", PK is NULL");
-				continue;
-			}
+
 			if (ea.getPk().getBaseEntity() == null) {
 				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
-				continue;
+				ea.getPk().setBaseEntity(baseEntity);
 			}
 
-			log.debug("Attribute: " + ea.getAttributeCode() + ", entity: " + ea.getPk().getBaseEntity().getCode());
+			if (ea.getPk().getAttribute() == null) {
+				log.info("Attribute: " + ea.getAttributeCode() + ", ATTRIBUTE is NULL");
+				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
+				ea.getPk().setAttribute(attribute);
+			}
+
+			log.info("Attribute: " + ea.getAttributeCode() 
+					+ ", entity: " + ea.getPk().getBaseEntity().getCode()
+					+ ", attribute" + ea.getPk().getAttribute().getCode());
 		}
+
+		log.info("BE = " + jsonb.toJson(baseEntity));
 
 		databaseUtils.saveBaseEntity(baseEntity);
 
