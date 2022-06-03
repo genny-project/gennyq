@@ -224,8 +224,15 @@ public class CapabilityUtils {
 	}
 
 	public boolean hasCapabilityThroughRoles(String rawCapabilityCode, CapabilityMode mode) {
+		if(shouldOverride())
+			return true;
+
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		BaseEntity user = beUtils.getUserBaseEntity();
+		if(user == null) {
+			log.error("Null user detected for token: " + userToken.getToken());
+			return false;
+		}
 		JsonArray roles = jsonb.fromJson(user.getValueAsString(LNK_ROLE_CODE), JsonArray.class);
 
 		BaseEntity currentRole;
@@ -233,7 +240,7 @@ public class CapabilityUtils {
 			String roleCode = roles.getString(i);
 			currentRole = beUtils.getBaseEntityByCode(roleCode);
 			if(currentRole == null) {
-				log.error("Could not find role when looking at PRI IS: " + roleCode);
+				log.error("Could not find role when looking at PRI IS for base entity " + user.getCode() + ": " + roleCode);
 				continue;
 			}
 
@@ -267,9 +274,13 @@ public class CapabilityUtils {
 	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
 		if(shouldOverride())
 			return true;
+
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		BaseEntity user = beUtils.getUserBaseEntity();
-		
+		if(user == null) {
+			log.error("Null user detected for token: " + userToken.getToken());
+			return false;
+		}
 		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
 
 		if(priIsAttributes.size() == 0) {
@@ -277,15 +288,20 @@ public class CapabilityUtils {
 			return false;
 		}
 
-		for (EntityAttribute priIsAttribute: priIsAttributes) {
+		return priIsAttributes.stream().anyMatch((EntityAttribute priIsAttribute) -> {
 			String priIsCode = priIsAttribute.getAttributeCode();
 			String roleCode = ROLE_BE_PREFIX + priIsCode.substring(PRI_IS_PREFIX.length());
-			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
-			if (roleBe.getValueAsString(cleanCapabilityCode).contains(mode.name()))
-				return true;
-		}
 
-		return false;
+			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
+			if(roleBe == null) {
+				return false;
+			}
+
+			String modeString = roleBe.getValueAsString(cleanCapabilityCode);
+			if(StringUtils.isBlank(modeString))
+				return false;
+			return modeString.contains(mode.name());
+		});
 	}
 
 	// TODO: Rewrite
