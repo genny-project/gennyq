@@ -1,20 +1,15 @@
 package life.genny.qwandaq.utils;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -29,9 +24,6 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -272,6 +264,7 @@ public class CapabilityUtils {
 	 * @return Boolean True if the user has the capability, False otherwise.
 	 */
 	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
+		log.info("Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
 		if(shouldOverride())
 			return true;
 
@@ -291,7 +284,7 @@ public class CapabilityUtils {
 		return priIsAttributes.stream().anyMatch((EntityAttribute priIsAttribute) -> {
 			String priIsCode = priIsAttribute.getAttributeCode();
 			String roleCode = ROLE_BE_PREFIX + priIsCode.substring(PRI_IS_PREFIX.length());
-
+			log.debug("[!] Scanning Role: " + roleCode);
 			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
 			if(roleBe == null) {
 				return false;
