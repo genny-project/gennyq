@@ -1,7 +1,7 @@
 package life.genny.fyodor.endpoints;
 
-import io.vertx.core.http.HttpServerRequest;
 import java.io.StringReader;
+
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -17,6 +17,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+import io.vertx.core.http.HttpServerRequest;
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ServiceToken;
@@ -26,9 +33,6 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 /**
  * Cache --- Endpoints providing cache access
@@ -74,7 +78,11 @@ public class Cache {
 		JsonObject json = null;
 		if (res.getStatus() == 200) {
 			if (res.getEntity() == null) {
-				return Response.ok().build();
+				json = javax.json.Json.createObjectBuilder()
+						.add("status", "error")
+						.add("value", "null")
+						.build();
+				return Response.ok().entity(json).build();
 			}
 			String replyString = res.getEntity().toString();
 
@@ -139,7 +147,7 @@ public class Cache {
 			}
 			if ("JENNY".equals(productCode) && (key.startsWith("SKIP"))) {
 				log.warn("JENNY and SKIP returning " + serviceToken.getToken().substring(0, 10));
-				return Response.ok("TRUE").build();
+				return Response.ok("FALSE").build();
 			}
 
 			if ("CACHE:SERVICE_TOKEN".equals(key)) {
@@ -165,14 +173,19 @@ public class Cache {
 				&& !key.startsWith("SBE")
 				&& !key.startsWith("QUE")
 				&& !key.startsWith("FRM")
+				&& !key.startsWith("BIF")
+				&& !key.startsWith("RUL")
 				&& !key.startsWith("ADD")) {
 
 			// It's a baseentity
-			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
+			// BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			try {
 				log.info("Getting BE with code " + key);
-				BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
-						baseEntityKey);
+
+				BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, key);
+
+				// BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+				// 		baseEntityKey);
 
 				if (baseEntity == null) {
 					throw new Exception("Not found in cache");
@@ -187,6 +200,11 @@ public class Cache {
 				return Response.ok(jsonb.toJson(be)).build();
 			}
 
+		} else if (key.startsWith("RUL_")) {
+			log.info("Reading rule entity from raw cache: " + key);
+			BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
+
+			return Response.ok(jsonb.toJson(be)).build();
 		} else {
 
 			if ("CAPABILITIES".equals(key)) {
@@ -212,7 +230,12 @@ public class Cache {
 				return Response.ok(serviceToken.getToken()).build();
 			}
 
+			log.info("reading " + key + " from raw cache");
 			String json = (String) CacheUtils.readCache(productCode, key);
+			if ((json == null) && (key.startsWith("QUE_"))) {
+				Question q = databaseUtils.findQuestionByCode(productCode, key);
+				json = jsonb.toJson(q);
+			}
 
 			return Response.ok(json).build();
 		}
@@ -239,6 +262,8 @@ public class Cache {
 				&& !key.startsWith("SBE")
 				&& !key.startsWith("QUE")
 				&& !key.startsWith("FRM")
+				&& !key.startsWith("BIF")
+				&& !key.startsWith("RUL")
 				&& !key.startsWith("ADD")) {
 			log.info("Writing to baseentity cache " + productCode + ":" + key);
 			// It's a baseentity

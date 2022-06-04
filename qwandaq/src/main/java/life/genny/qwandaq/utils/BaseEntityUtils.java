@@ -180,20 +180,21 @@ public class BaseEntityUtils {
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
 	 * @param baseEntity The BaseEntity to update
+	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
 
+		// ensure for all entityAttribute that baseentity and attribute are not null
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
-			if (ea.getPk() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", PK is NULL");
-				continue;
-			}
+
 			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
-				continue;
+				ea.getPk().setBaseEntity(baseEntity);
 			}
 
-			log.debug("Attribute: " + ea.getAttributeCode() + ", entity: " + ea.getPk().getBaseEntity().getCode());
+			if (ea.getPk().getAttribute() == null) {
+				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
+				ea.getPk().setAttribute(attribute);
+			}
 		}
 
 		databaseUtils.saveBaseEntity(baseEntity);

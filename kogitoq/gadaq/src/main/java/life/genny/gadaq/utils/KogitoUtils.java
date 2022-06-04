@@ -143,11 +143,13 @@ public class KogitoUtils {
         return sendSignal(graphTable, processId, signalCode, "");
     }
 
-    public String sendSignal(final String workflow, final String processId, final String signalCode, final String entity) {
+    public String sendSignal(final String workflow, final String processId, final String signalCode,
+            final String entity) {
 
-        String kogitoUrl = GennySettings.kogitoServiceUrl() + "/" + workflow.toLowerCase() + "/" + processId + "/" + signalCode;
+        String kogitoUrl = GennySettings.kogitoServiceUrl() + "/" + workflow.toLowerCase() + "/" + processId + "/"
+                + signalCode;
 
-		log.info("Sending Signal to uri: " + kogitoUrl);
+        log.info("Sending Signal to uri: " + kogitoUrl);
 
         HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json", userToken.getToken());
 
@@ -165,7 +167,7 @@ public class KogitoUtils {
 
         HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
 
-        if (response.statusCode() == 201) {
+        if (response != null && response.statusCode() == 201) {
 
             JsonObject json = jsonb.fromJson(response.body(), JsonObject.class);
 
@@ -173,7 +175,8 @@ public class KogitoUtils {
             return json.getString("id");
 
         } else {
-            log.error("TriggerWorkflow Response Status:  " + response);
+            log.error("TriggerWorkflow Response Status:  "
+                    + (response != null ? response.statusCode() : "NULL RESPONSE"));
         }
 
         return null;

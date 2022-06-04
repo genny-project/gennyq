@@ -1,6 +1,5 @@
 package life.genny.fyodor.endpoints;
 
-import io.vertx.core.http.HttpServerRequest;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -13,14 +12,21 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.transaction.Transactional;
+
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+import io.vertx.core.http.HttpServerRequest;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 
 
@@ -52,6 +58,9 @@ public class Entities {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	/**
 	 * Read an item from the cache.
@@ -116,9 +125,46 @@ public class Entities {
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
+		// NOTE: Forgive me for this, but the rulesservice needs it :(
+		userToken.setProductCode(entity.getRealm());
+
 		beUtils.updateBaseEntity(entity);
 
 		return Response.ok(entity).build();
+	}
+
+	/**
+	 * Read an item from the cache.
+	 *
+	 * @param key The key of the cache item
+	 * @return The json item
+	 */
+	@GET
+	@Path("/create")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Transactional
+	public Response create() {
+
+		log.info("received request to create entity");
+
+		BaseEntity be = new BaseEntity("Test Entity");
+
+		log.info("Created BaseEntity " + be.getCode());
+		Attribute attr = qwandaUtils.getAttribute("LNK_AUTHOR");
+		EntityAttribute attribute = new EntityAttribute(be, attr, 1.0, "TEST");
+
+		try {
+            be.addAttribute(attribute);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+		beUtils.updateBaseEntity(be);
+
+		BaseEntity saved = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), be.getCode());
+		log.info("SAVED = " + jsonb.toJson(saved));
+
+		return Response.ok(be).build();
 	}
 
 	/**
