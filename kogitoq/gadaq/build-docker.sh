@@ -1,4 +1,5 @@
 #!/bin/bash
+cp -rp ../../docker/* src/main/docker/
 PROJECT_VERSION=$(cd ../ && mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
 file="src/main/resources/${project}-git.properties"

@@ -34,6 +34,9 @@ do
 	rm -rf $project/target
 	rm -rf kogito/$project/target
 
+	# copy each project with the latest docker
+	cp -f docker/* $project/src/main/docker/ 
+	cp -f docker/* kogito/$project/src/main/docker/ 
 	# perform clean install with docker build
 	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
 
