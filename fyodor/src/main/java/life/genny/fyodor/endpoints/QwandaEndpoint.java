@@ -94,6 +94,8 @@ public class QwandaEndpoint {
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
+		userToken.setProductCode("internmatch");
+
 		BaseEntity source = null;
 		BaseEntity target = null;
 
