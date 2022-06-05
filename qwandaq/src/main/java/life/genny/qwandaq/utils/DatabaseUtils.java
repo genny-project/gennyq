@@ -54,6 +54,17 @@ public class DatabaseUtils {
 	}
 
 	/**
+	 * Get all attributes with a specific Prefix
+	 * @param productCode - Product Code to load from
+	 * @param prefix - Prefix to check for
+	 * @return
+	 */
+	// TODO: Lint this against accepted prefixes
+	public List<Attribute> findAttributesWithPrefix(String productCode, String prefix) {
+		return findAttributes(productCode, null, null, "PRM_");		
+	}
+
+	/**
 	 * Fetch Validations from the database using page size and num.
 	 * If pageSize and pageNumber are both null, all results will be returned at
 	 * once.
@@ -128,7 +139,7 @@ public class DatabaseUtils {
 	 * @return List
 	 */
 	// @Transactional
-	public List<Attribute> findAttributes(String realm, int startIdx, int pageSize, String wildcard) {
+	public List<Attribute> findAttributes(String realm, Integer startIdx, Integer pageSize, String wildcard) {
 
 		checkEntityManager();
 
@@ -145,7 +156,7 @@ public class DatabaseUtils {
 				query.setParameter("code", "%" + wildcard + "%");
 			}
 
-			if (startIdx == 0 && pageSize == 0) {
+			if ((startIdx == null || startIdx == 0) && (pageSize == null || pageSize == 0)) {
 				log.info("Fetching all Attributes (unset pageNumber or pageSize)");
 			} else {
 				query = query.setFirstResult(startIdx).setMaxResults(pageSize);
@@ -554,7 +565,11 @@ public class DatabaseUtils {
 	 * @param attribute An {@link Attribute} object to save
 	 */
 	@Transactional
-	public void saveAttribute(Attribute attribute) {
+	public boolean saveAttribute(Attribute attribute) {
+		if(attribute == null) {
+			log.error("Attempting to save null attribute!");
+			return false;
+		}
 
 		log.info("Saving Attribute " + attribute.getCode());
 
@@ -569,12 +584,15 @@ public class DatabaseUtils {
 			} else {
 				entityManager.merge(attribute);
 			}
-
+			
 			log.info("Successfully saved Attribute " + attribute.getCode());
-
+			return true;
 		} catch (Exception e) {
-			log.error(e);
+			log.error("Error saving attribute!: " + attribute.getCode());
+			e.printStackTrace();
 		}
+
+		return false;
 	}
 
 	/**
@@ -602,9 +620,10 @@ public class DatabaseUtils {
 			log.info("Successfully saved BaseEntity " + entity.getCode());
 
 		} catch (Exception e) {
-			log.error(e);
+			e.printStackTrace();
 		}
 	}
+
 
 	/**
 	 * Save a {@link Question} to the database.

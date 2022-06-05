@@ -144,6 +144,12 @@ public class InitService {
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg("webdata", msg);
+	}
+
+	/**
+	 * Send Add Items Menu
+	 */
+	public void sendAddItems() {
 
 		// send basic add items
 		String sourceCode = userToken.getUserCode();
@@ -167,11 +173,11 @@ public class InitService {
 		addItemsAsk.setChildAsks(children);
 
 		// configure msg and send
-		QDataAskMessage askMsg = new QDataAskMessage(addItemsAsk);
-		askMsg.setToken(userToken.getToken());
-		askMsg.setReplace(true);
+		QDataAskMessage msg = new QDataAskMessage(addItemsAsk);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
 
-		KafkaUtils.writeMsg("webdata", askMsg);
+		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	/**

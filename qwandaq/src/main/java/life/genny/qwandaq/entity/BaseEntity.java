@@ -16,8 +16,15 @@
 
 package life.genny.qwandaq.entity;
 
-import java.lang.invoke.MethodHandles;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -27,6 +34,7 @@ import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.CascadeType;
 import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -37,25 +45,21 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ParamDef;
-
-import org.infinispan.protostream.annotations.ProtoFactory;
-import org.infinispan.protostream.annotations.ProtoField;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+// import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
@@ -84,19 +88,22 @@ import life.genny.qwandaq.exception.BadDataException;
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { "code",
-				"realm" })) // ,
+	@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { 
+	"code",
+	"realm" 
+	}
+))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-
 @FilterDefs({
-		@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
-				@ParamDef(name = "attributeCodes", type = "string") }),
-		@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
-				@ParamDef(name = "attributeCode", type = "string") }) })
-
+	@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
+		@ParamDef(name = "attributeCodes", type = "string") 
+		}),
+	@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
+		@ParamDef(name = "attributeCode", type = "string") 
+	}) 
+})
 @Cacheable
 @RegisterForReflection
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -116,20 +123,19 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
 	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity")
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade=CascadeType.ALL)
 	@JsonBackReference(value = "entityAttribute")
-	@Cascade({ CascadeType.MERGE, CascadeType.DELETE })
+	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
 	@Filters({
 			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
 			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
-
 	})
 	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
 	@JsonBackReference(value = "entityEntity")
-	@Cascade({ CascadeType.MERGE, CascadeType.DELETE })
+	// @Cascade({ CascadeType.MERGE, CascadeType.REMOVE })
 	/* Stores the links of BaseEntity to another BaseEntity */
 	private Set<EntityEntity> links = new LinkedHashSet<>();
 
@@ -372,7 +378,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			// attributeCode);
 			return Optional.ofNullable(attributeMap.get(attributeCode));
 		}
-		Optional<EntityAttribute> foundEntity = null;
+		Optional<EntityAttribute> foundEntity = Optional.empty();
 
 		try {
 			// log.info("We are in the long filter part of getValue, attributeCode:" +
@@ -380,7 +386,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			foundEntity = getBaseEntityAttributes().stream().filter(x -> (x.getAttributeCode().equals(attributeCode)))
 					.findFirst();
 		} catch (Exception e) {
-			log.error("Error in fetching attribute value");
+			log.error("Error in fetching attribute value: " + attributeCode);
 		}
 
 		// Optional.of(getBaseEntityAttributes().stream()

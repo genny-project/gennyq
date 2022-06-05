@@ -18,9 +18,9 @@ public class BaseEntityKeyMessageMarshaller implements MessageMarshaller<BaseEnt
 
 	@Override
 	public BaseEntityKey readFrom(ProtoStreamReader reader) throws IOException {
-		BaseEntityKey bek = new BaseEntityKey();
-		bek.setRealm(reader.readString("realm"));
-		bek.setCode(reader.readString("code"));
+		String productCode = reader.readString("realm");
+		String beCode = reader.readString("code");
+		BaseEntityKey bek = new BaseEntityKey(productCode, beCode);
 		return bek;
 	}
 

@@ -264,13 +264,16 @@ public class FrontendService {
 
 		// fetch the def baseentity
 		BaseEntity defBE = beUtils.getBaseEntityByCode(defCode);
+		if(defBE == null) {
+			log.error("Could not find DEF BaseEntity with code: " + defCode);
+		}
 
 		// use entity create function and save to db
 		try {
 			BaseEntity entity = beUtils.create(defBE);
 			log.info("BaseEntity Created: " + entity.getCode());
 		} catch (Exception e) {
-			log.error("Error creating BaseEntity!");
+			log.error("Error creating BaseEntity! DEF Code: " + defCode);
 			e.printStackTrace();
 		}
 	}

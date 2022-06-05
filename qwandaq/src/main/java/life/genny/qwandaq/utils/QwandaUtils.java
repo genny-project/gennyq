@@ -47,11 +47,12 @@ import life.genny.qwandaq.models.UserToken;
 @ApplicationScoped
 public class QwandaUtils {
 
+	// TODO: POPULATE THIS
+	public static final String[] ACCEPTED_PREFIXES = {};
+
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(200);
-
-	Map<String, Map<String, Attribute>> attributes = new ConcurrentHashMap<>();
+	private final ExecutorService executorService = Executors.newFixedThreadPool(GennySettings.executorThreadCount());
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -71,6 +72,26 @@ public class QwandaUtils {
 	UserToken userToken;
 
 	public QwandaUtils() { }
+
+	// Deliberately package private!
+	Attribute saveAttribute(final Attribute attribute) {
+		String productCode = userToken.getProductCode();
+		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
+		
+		if(existingAttrib != null) {
+			if(CommonUtils.compare(attribute, existingAttrib)) {
+				log.error("Attribute already exists with same fields: " + existingAttrib.getCode());
+				return existingAttrib;
+			}
+
+			log.info("Updating existing attribute!: "  + existingAttrib.getCode());
+		}
+
+		CacheUtils.putObject(productCode, attribute.getCode(), attribute);
+		databaseUtils.saveAttribute(attribute);
+
+		return CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
+	}
 
 	/**
 	 * Get an attribute from the in memory attribute map. If productCode not found, it
@@ -159,53 +180,6 @@ public class QwandaUtils {
 			log.error("Error loading attributes for productCode: " + productCode);
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Load all attributes into the in memory map from the database.
-	 */
-	public void loadAllAttributes() {
-
-		String productCode = userToken.getProductCode();
-		List<Attribute> attributeList = null;
-
-		log.info("About to load all attributes for productCode " + productCode);
-
-		try {
-			log.info("Fetching Attributes from database...");
-			attributeList = databaseUtils.findAttributes(productCode, 0, 0, null);
-
-			log.info("Loaded all attributes for productCode " + productCode);
-			if (attributeList == null) {
-				log.error("Null attributeList, not putting in map!!!");
-				return;
-			}
-
-			// check for existing map
-			if (!attributes.containsKey(productCode)) {
-				attributes.put(productCode, new ConcurrentHashMap<String, Attribute>());
-			}
-			Map<String, Attribute> attributeMap = attributes.get(productCode);
-
-			// insert attributes into map
-			for (Attribute attribute : attributeList) {
-				attributeMap.put(attribute.getCode(), attribute);
-			}
-
-			log.info("All attributes have been loaded: " + attributeMap.size() + " attributes");
-		} catch (Exception e) {
-			log.error("Error loading attributes for productCode " + productCode);
-		}
-	}
-
-	/**
-	 * Remove an atttribute from the in memory set using the code.
-	 *
-	 * @param code the code of the attribute to remove.
-	 */
-	public void removeAttributeFromMemory(String code) {
-
-		attributes.get(userToken.getProductCode()).remove(code);
 	}
 
 	/**
@@ -350,7 +324,7 @@ public class QwandaUtils {
 			String value = ea.getAsString();
 
 			// if any are both blank and mandatory, then task is not complete
-			if ((StringUtils.isBlank(value)) && (mandatory)) {
+			if (mandatory && StringUtils.isBlank(value)) {
 				answered = false;
 			}
 
@@ -459,9 +433,7 @@ public class QwandaUtils {
 			}
 
 			// update target in the cache and DB
-			CacheUtils.putObject(userToken.getProductCode(), target.getCode(), target);
-			databaseUtils.saveBaseEntity(target);
-
+			beUtils.updateBaseEntity(target);
 			targets.add(target);
 		}
 
