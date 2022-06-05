@@ -70,7 +70,9 @@ public class DefUtils {
 
 		searchBE.setRealm(productCode);
 
+		log.info("About To Fetch DEFS");
 		List<BaseEntity> items = beUtils.getBaseEntitys(searchBE);
+		log.info("Defs Fetched");
 
 		if (items == null) {
 			log.error("Could not fetch DEFS!");
@@ -82,26 +84,6 @@ public class DefUtils {
 		defs.put(productCode, new ConcurrentHashMap<String, BaseEntity>());
 
 		for (BaseEntity item : items) {
-
-			// if the item is a def appointment, then add a default datetime for the start
-			// (Mandatory)
-			if (item.getCode().equals("DEF_APPOINTMENT")) {
-
-				Attribute attribute = new AttributeText("DFT_PRI_START_DATETIME", "Default Start Time");
-				attribute.setRealm(productCode);
-				EntityAttribute newEA = new EntityAttribute(item, attribute, 1.0, "2021-07-28 00:00:00");
-
-				try {
-					item.addAttribute(newEA);
-				} catch (BadDataException e) {
-					e.printStackTrace();
-				}
-
-				Optional<EntityAttribute> ea = item.findEntityAttribute("ATT_PRI_START_DATETIME");
-				if (ea.isPresent()) {
-					ea.get().setValue(true);
-				}
-			}
 
 			item.setFastAttributes(true);
 			defs.get(productCode).put(item.getCode(), item);
