@@ -57,12 +57,12 @@ public class PcmService {
         return out;
     }
 
-    public void sendApprovalOnePcm() {
+    public void sendApprovalOnePcm(String pcmCode, String loc) {
 
-        final String pcmCode = "PCM_APPROVAL_FORM_ONE";
+        final String approvalPcmCode = "PCM_APPROVAL_FORM_ONE";
 
         // Text PCM
-        BaseEntity textPcm = new BaseEntity(pcmCode + "_TEXT", "Text Pcm for header");
+        BaseEntity textPcm = new BaseEntity(approvalPcmCode + "_TEXT", "Text Pcm for header");
 
         Set<EntityAttribute> textAttributes = new HashSet<>();
 
@@ -74,12 +74,14 @@ public class PcmService {
         textAttributes.add(textQuestionCode);
         textAttributes.add(textPriLoc1);
 
+        textPcm.setBaseEntityAttributes(textAttributes);
+
         // Progress Bar PCM
-        BaseEntity progressPcm = new BaseEntity(pcmCode + "_PROGRESS", "Progress bar pcm for header");
+        BaseEntity progressPcm = new BaseEntity(approvalPcmCode + "_PROGRESS", "Progress bar pcm for header");
 
         Set<EntityAttribute> progressAttributes = new HashSet<>();
 
-        EntityAttribute progressTpl = makePcmAttribute(progressPcm, "PRI_TEMPLATE_CODE", "TPL_PROGRESS_CODE", 0);
+        EntityAttribute progressTpl = makePcmAttribute(progressPcm, "PRI_TEMPLATE_CODE", "TPL_PROGRESS_BAR", 0);
         EntityAttribute progressQuestionCode = makePcmAttribute(progressPcm, "PRI_QUESTION_CODE",
                 "QUE_FORM_HEADER_GRP", 1);
         EntityAttribute progressPriLoc1 = makePcmAttribute(progressPcm, "PRI_LOC1", "PRI_COMPLETION", 2);
@@ -91,13 +93,13 @@ public class PcmService {
         progressPcm.setBaseEntityAttributes(progressAttributes);
 
         // Header PCM
-        BaseEntity headerPcm = new BaseEntity(pcmCode + "_HEADER", "HEADER_PCM");
+        BaseEntity headerPcm = new BaseEntity(approvalPcmCode + "_HEADER", "HEADER_PCM");
 
         Set<EntityAttribute> headerAttributes = new HashSet<>();
 
         EntityAttribute headerTpl = makePcmAttribute(headerPcm, "PRI_TEMPLATE_CODE", "TPL_VERT", 0);
-        EntityAttribute headerPriLoc1 = makePcmAttribute(headerPcm, "PRI_LOC1", pcmCode + "_TEXT", 1);
-        EntityAttribute headerPriLoc2 = makePcmAttribute(headerPcm, "PRI_LOC2", pcmCode + "_PROGRESS", 2);
+        EntityAttribute headerPriLoc1 = makePcmAttribute(headerPcm, "PRI_LOC1", approvalPcmCode + "_TEXT", 1);
+        EntityAttribute headerPriLoc2 = makePcmAttribute(headerPcm, "PRI_LOC2", approvalPcmCode + "_PROGRESS", 2);
 
         headerAttributes.add(headerTpl);
         headerAttributes.add(headerPriLoc1);
@@ -105,37 +107,62 @@ public class PcmService {
 
         headerPcm.setBaseEntityAttributes(headerAttributes);
 
+        // Form PCM
+        BaseEntity formPcm = new BaseEntity(approvalPcmCode + "_FORM", "Form PCM ");
+
+        Set<EntityAttribute> formAttributes = new HashSet<>();
+
+        EntityAttribute formTpl = makePcmAttribute(formPcm, "PRI_TEMPLATE_CODE", "TPL_FORM", 0);
+        EntityAttribute formQuestionCode = makePcmAttribute(formPcm, "PRI_QUESTION_CODE",
+                "QUE_TENANT_APPROVAL_START_GRP", 1);
+
+        formAttributes.add(formTpl);
+        formAttributes.add(formQuestionCode);
+
+        formPcm.setBaseEntityAttributes(formAttributes);
+
         // Main PCM
-        BaseEntity mainPcm = new BaseEntity(pcmCode, pcmCode);
+        BaseEntity mainPcm = new BaseEntity(approvalPcmCode, approvalPcmCode);
 
         EntityAttribute tpl = makePcmAttribute(mainPcm, "PRI_TEMPLATE_CODE", "TPL_VERT", 0);
-        EntityAttribute loc1 = makePcmAttribute(mainPcm, "PRI_LOC1", pcmCode + "_HEADER", 1);
+        EntityAttribute loc1 = makePcmAttribute(mainPcm, "PRI_LOC1", headerPcm.getCode(), 1);
+        EntityAttribute loc2 = makePcmAttribute(mainPcm, "PRI_LOC2", formPcm.getCode(), 2);
 
         Set<EntityAttribute> mainAttributes = new HashSet<>();
         mainAttributes.add(tpl);
         mainAttributes.add(loc1);
+        mainAttributes.add(loc2);
 
         mainPcm.setBaseEntityAttributes(mainAttributes);
 
-        BaseEntity[] pcms = new BaseEntity[] { textPcm,
+        BaseEntity[] pcms = new BaseEntity[] {
                 progressPcm,
                 headerPcm,
                 textPcm,
+                formPcm,
                 mainPcm
         };
 
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
+        msg.setTotal((long) pcms.length);
 
         List<Ask> asks = new ArrayList<>();
+
+        BaseEntity user = beUtils.getBaseEntityByCode(userToken.getUserCode());
+
+        log.info(userToken.getUserCode());
 
         for (BaseEntity pcm : pcms) {
 
             Optional<EntityAttribute> questionAttribute = pcm.findEntityAttribute("PRI_QUESTION_CODE");
             if (questionAttribute.isPresent()) {
-                asks.add(qwandaUtils.generateAskFromQuestionCode(questionAttribute.get().getValueString(), pcm, pcm));
+                asks.add(qwandaUtils.generateAskFromQuestionCode(questionAttribute.get().getValueString(),
+                        user, user));
             }
 
         }
+
+        log.info(asks.get(0).getTargetCode());
 
         QDataAskMessage askMsg = new QDataAskMessage(asks.toArray(new Ask[0]));
 
@@ -148,6 +175,8 @@ public class PcmService {
         KafkaUtils.writeMsg("webdata", askMsg);
 
         KafkaUtils.writeMsg("webdata", msg);
+
+        updatePcm(pcmCode, loc, approvalPcmCode);
     }
 
     public void updatePcm(String pcmCode, String loc, String newValue) {
