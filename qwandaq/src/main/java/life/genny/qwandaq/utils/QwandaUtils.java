@@ -226,6 +226,15 @@ public class QwandaUtils {
 		ask.setTargetCode(target.getCode());
 		ask.setRealm(productCode);
 
+		Attribute attribute = question.getAttribute();
+
+		// override with Attribute icon if question icon is null
+		if (attribute != null && attribute.getIcon() != null) {
+			if (question.getIcon() == null) {
+				question.setIcon(attribute.getIcon());
+			}
+		}
+
 		// check if it is a question group
 		if (question.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
 
@@ -245,6 +254,11 @@ public class QwandaUtils {
 				child.setHidden(questionQuestion.getHidden());
 				child.setDisabled(questionQuestion.getDisabled());
 				child.setReadonly(questionQuestion.getReadonly());
+
+				// override with QuestionQuestion icon if exists
+				if (questionQuestion.getIcon() != null) {
+					child.getQuestion().setIcon(questionQuestion.getIcon());
+				}
 
 				ask.addChildAsk(child);
 			}

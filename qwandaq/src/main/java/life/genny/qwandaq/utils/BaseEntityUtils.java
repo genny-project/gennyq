@@ -567,13 +567,13 @@ public class BaseEntityUtils {
 			}
 		}
 
-		// force the type of baseentity
+		// force the type of baseentity and role
 		String defSuffix = StringUtils.removeStart(defBE.getCode(), "DEF_");
 		Attribute attributeDEF = qwandaUtils.getAttribute("PRI_IS_" + defSuffix);
-		qwandaUtils.saveAnswer(new Answer(item, item, attributeDEF, "TRUE"));
-		EntityAttribute isAttribute = new EntityAttribute(item, attributeDEF, 1.0, true);
-		item.addAttribute(isAttribute);
-		// item = qwandaUtils.saveAnswer(new Answer(item, item, "LNK_ROLE", "[\"ROL_" + defSuffix + "\"]"));
+		Attribute attributeRole = qwandaUtils.getAttribute("LNK_ROLE");
+
+		item.addAttribute(new EntityAttribute(item, attributeDEF, 1.0, true));
+		item.addAttribute(new EntityAttribute(item, attributeRole, 1.0, "[\"ROL_" + defSuffix + "\"]"));
 
 		try {
 			updateBaseEntity(item);
