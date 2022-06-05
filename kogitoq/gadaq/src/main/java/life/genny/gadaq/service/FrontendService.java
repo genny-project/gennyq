@@ -1,6 +1,7 @@
 package life.genny.gadaq.service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -192,7 +193,7 @@ public class FrontendService {
 	/**
 	 * Send an ask message to the frontend through the webdata topic.
 	 *
-	 * @param askMsg The ask message to send
+	 * @param askMsgJson The ask message to send
 	 */
 	public void sendQDataAskMessage(String askMessageJson, String processBEJson) {
 
@@ -231,6 +232,60 @@ public class FrontendService {
 		// recursively check child asks for submit
 		for (Ask child : ask.getChildAsks()) {
 			recursivelyFindAndUpdateSubmitDisabled(child, disabled);
+		}
+	}
+
+
+	/**
+	 * Send dropdown items for the asks.
+	 *
+	 * @param askMsgJson The ask message to send
+	 */
+	public void sendDropdownItems(String askMessageJson) {
+
+		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+
+		// NOTE: We only ever check the first ask in the message
+		Ask ask = askMessage.getItems()[0];
+
+		BaseEntity target = beUtils.getBaseEntityByCode(ask.getTargetCode());
+
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+		recursivelyHandleDropdownAttributes(ask, target, msg);
+
+		KafkaUtils.writeMsg("webdata", msg);
+	}
+
+	/**
+	 * Recursively traverse the asks and add any entity selections to the msg.
+	 *
+	 * @param ask The ask to traverse
+	 * @param target The target entity used in finding values
+	 * @param ask The msg to add entities to
+	 */
+	public void recursivelyHandleDropdownAttributes(Ask ask, BaseEntity target, QDataBaseEntityMessage msg) {
+
+		// recursively handle any child asks
+		if (ask.getChildAsks() != null) {
+			for (Ask child : ask.getChildAsks()) {
+				recursivelyHandleDropdownAttributes(child, target, msg);
+			}
+		}
+
+		// check for dropdown attribute
+		if (ask.getAttributeCode().startsWith("LNK_")) {
+
+			// get list of value codes
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLNKAttr(target, ask.getAttributeCode());
+
+			// fetch entity for each and add to msg
+			for (String code : codes) {
+				BaseEntity be = beUtils.getBaseEntityByCode(code);
+
+				if (be != null) {
+					msg.add(be);
+				}
+			}
 		}
 	}
 
