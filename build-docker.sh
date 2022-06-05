@@ -19,7 +19,7 @@ do
 
 	# remove target dir
 	rm -rf $project/target
-	rm -rf kogito/$project/target
+	rm -rf kogitoq/$project/target
 
 	# perform clean install
 	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$dependency
@@ -32,7 +32,7 @@ do
 
 	# remove target dir
 	rm -rf $project/target
-	rm -rf kogito/$project/target
+	rm -rf kogitoq/$project/target
 
 	# copy each project with the latest docker
 	cp -f docker/* $project/src/main/docker/ 
