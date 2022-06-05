@@ -140,11 +140,12 @@ public class QwandaUtils {
 		log.info("About to load all attributes for productCode " + productCode);
 		log.info("Found " + attributeCount + " attributes");
 
-		QDataAttributeMessage msg = new QDataAttributeMessage();
+		CacheUtils.putObject(productCode, "ATTRIBUTE_PAGES", TOTAL_PAGES);
 
 		try {
 			for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
+				QDataAttributeMessage msg = new QDataAttributeMessage();
 
 				int attributesLoaded = currentPage * CHUNK_LOAD_SIZE;
 
@@ -171,9 +172,9 @@ public class QwandaUtils {
 							+ attributeList.get(0).getId() + ", End AttributeID:" 
 							+ attributeList.get(attributeList.size() - 1).getId());
 				}
-			}
 
-			CacheUtils.putObject(productCode, "ALL_ATTRIBUTES", msg);
+				CacheUtils.putObject(productCode, "ATTRIBUTES_P"+currentPage, msg);
+			}
 
 			log.info("Cached " + totalAttribsCached + " attributes");
 		} catch (Exception e) {

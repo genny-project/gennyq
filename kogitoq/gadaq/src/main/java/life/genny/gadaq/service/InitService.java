@@ -93,17 +93,17 @@ public class InitService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		// fetch bulk attribute msg from cache
-		QDataAttributeMessage msg = CacheUtils.getObject(productCode, "ALL_ATTRIBUTES", QDataAttributeMessage.class);
+		Integer TOTAL_PAGES = CacheUtils.getObject(productCode, "ATTRIBUTE_PAGES", Integer.class);
 
-		if (msg == null) {
-			log.error("No attribute msg cached for " + productCode);
-			return;
+		for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
+
+			QDataAttributeMessage msg = CacheUtils.getObject(productCode, 
+					"ATTRIBUTES_P"+currentPage, QDataAttributeMessage.class);
+
+			// set token and send
+			msg.setToken(userToken.getToken());
+			KafkaUtils.writeMsg("webdata", msg);
 		}
-
-		// set token and send
-		msg.setToken(userToken.getToken());
-		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	/**
