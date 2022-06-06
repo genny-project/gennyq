@@ -29,10 +29,6 @@ import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
 import org.jboss.logging.Logger;
 
-
-
-
-
 @RegisterForReflection
 public class GennyToken implements Serializable {
 
@@ -84,6 +80,11 @@ public class GennyToken implements Serializable {
 		init(token);
 	}
 
+	/**
+	 * Initialise the current token object.
+	 *
+	 * @param token The token string to init with
+	 */
 	public void init(String token) {
 
 		if (token == null || token.isEmpty()) {

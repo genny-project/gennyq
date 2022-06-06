@@ -53,7 +53,6 @@ public class KogitoUtils {
                 + "}";
 
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
-
         HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
 
         return response.body();
@@ -61,43 +60,33 @@ public class KogitoUtils {
 
     public String fetchProcessId(final String graphTable, final String likeField, final String likeValue) throws Exception {
 
-        String data = " query {"
-                + "  " + graphTable + " (where: {"
-                + "      " + likeField + ": {"
-                + " like: \"" + likeValue + "\" }}) {";
-        data += "   id";
-        data += "  }"
-                + "}";
+        String data = "query { " + graphTable + " (where: { " + likeField + ": { like: \"" + likeValue + "\" }}) { id }}";
 
         String graphQlUrl = System.getenv("GENNY_KOGITO_DATAINDEX_HTTP_URL") + "/graphql";
         HttpResponse<String> response = HttpUtils.post(graphQlUrl, data, "application/GraphQL", userToken.getToken());
 
-        if (response != null) {
-
-            String responseBody = response.body();
-
-            if (!responseBody.contains("Error id")) {
-
-                // isolate the id
-                JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
-                log.info(responseJson);
-                JsonObject json = responseJson.getJsonObject("data");
-                JsonArray jsonArray = json.getJsonArray(graphTable);
-
-                if (jsonArray != null && (!jsonArray.isEmpty())) {
-
-                    JsonObject firstItem = jsonArray.getJsonObject(0);
-                    return firstItem.getString("id");
-
-                } else {
-                    throw new Exception("No processId found");
-                }
-            } else {
-                throw new Exception("No processId found");
-            }
-        } else {
+        if (response == null) {
             throw new Exception("No processId found");
-        }
+		}
+
+		String responseBody = response.body();
+
+		if (responseBody.contains("Error id")) {
+			throw new Exception("No processId found");
+		}
+
+		// isolate the id
+		JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
+		log.info(responseJson);
+		JsonObject json = responseJson.getJsonObject("data");
+		JsonArray jsonArray = json.getJsonArray(graphTable);
+
+		if (jsonArray == null || jsonArray.isEmpty()) {
+			throw new Exception("No processId found");
+		}
+
+		JsonObject firstItem = jsonArray.getJsonObject(0);
+		return firstItem.getString("id");
     }
 
     public String fetchProcessId(final String graphTable, final String graphQL) {
@@ -142,23 +131,24 @@ public class KogitoUtils {
 
     public String sendSignal(final String workflow, final String processId, final String signalCode, final String entity) {
 
-        String kogitoUrl = GennySettings.kogitoServiceUrl() + "/" + workflow.toLowerCase() + "/" + processId + "/" + signalCode;
+        String uri = GennySettings.kogitoServiceUrl() + "/" + workflow.toLowerCase() + "/" + processId + "/" + signalCode;
 
-		log.info("Sending Signal to uri: " + kogitoUrl);
+		log.info("Sending Signal to uri: " + uri);
 
-        HttpResponse<String> response = HttpUtils.post(kogitoUrl, entity, "application/json", userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(uri, entity, "application/json", userToken.getToken());
 
         return response.body();
     }
 
     public String triggerWorkflow(final String process, final QEventMessage message) {
 
-        String url = kogitoServiceUrl + "/" + process.toLowerCase();
         String jsonStr = jsonb.toJson(message);
-
         String workflowJsonStr = "{\"eventMessage\":" + jsonStr + ", \"token\":\"" + userToken.getToken() + "\"}";
 
-        HttpResponse<String> response = HttpUtils.post(url, workflowJsonStr, userToken.getToken());
+        String uri = kogitoServiceUrl + "/" + process.toLowerCase();
+		log.info("Triggering workflow with uri: " + uri);
+
+        HttpResponse<String> response = HttpUtils.post(uri, workflowJsonStr, userToken.getToken());
 
         if (response != null && response.statusCode() == 201) {
 
