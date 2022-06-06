@@ -1,6 +1,8 @@
 package life.genny.qwandaq.utils;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,7 @@ public class DefUtils {
 
 	static final Logger log = Logger.getLogger(DefUtils.class);
 
-	static Map<String, Map<String, BaseEntity>> defs = new ConcurrentHashMap<>();
+	static Map<String, Map<String, String>> defPrefixMap = new ConcurrentHashMap<>();
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -59,77 +61,43 @@ public class DefUtils {
 	 *
 	 * @param productCode The product of DEFs to initialize
 	 */
-	public void initializeDefs(String productCode) {
+	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
 				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
 				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "DEF_%")
-				.addColumn("*", "All Columns")
+				.addColumn("PRI_PREFIX", "Prefix")
 				.setPageStart(0)
-				.setPageSize(1000);
+				.setPageSize(10000);
 
 		searchBE.setRealm(productCode);
 
-		List<BaseEntity> items = beUtils.getBaseEntitys(searchBE);
+		List<String> codes = beUtils.getBaseEntityCodes(searchBE);
 
-		if (items == null) {
-			log.error("Could not fetch DEFS!");
+		if (codes == null) {
+			log.error("Could not fetch DEF codes!");
 			return;
 		}
 
-		log.info("DEF search returned " + items.size() + " results for product " + productCode);
+		log.info("DEF code search returned " + codes.size() + " results for product " + productCode);
+		defPrefixMap.put(productCode, new ConcurrentHashMap<String, String>());
 
-		defs.put(productCode, new ConcurrentHashMap<String, BaseEntity>());
+		for (String code : codes) {
 
-		for (BaseEntity item : items) {
-
-			// if the item is a def appointment, then add a default datetime for the start
-			// (Mandatory)
-			if (item.getCode().equals("DEF_APPOINTMENT")) {
-
-				Attribute attribute = new AttributeText("DFT_PRI_START_DATETIME", "Default Start Time");
-				attribute.setRealm(productCode);
-				EntityAttribute newEA = new EntityAttribute(item, attribute, 1.0, "2021-07-28 00:00:00");
-
-				try {
-					item.addAttribute(newEA);
-				} catch (BadDataException e) {
-					e.printStackTrace();
-				}
-
-				Optional<EntityAttribute> ea = item.findEntityAttribute("ATT_PRI_START_DATETIME");
-				if (ea.isPresent()) {
-					ea.get().setValue(true);
-				}
+			BaseEntity def = beUtils.getBaseEntityByCode(productCode, code);
+			if (def == null) {
+				log.error("Def is null!");
+				continue;
 			}
 
-			item.setFastAttributes(true);
-			defs.get(productCode).put(item.getCode(), item);
-			log.info("Saving Def (" + productCode + ") " + item.getCode());
-		}
-	}
+			String prefix = def.getValue("PRI_PREFIX", null);
+			if (prefix == null) {
+				continue;
+			}
 
-	/**
-	 * Find the map of DEFs for using the productCode of the userToken.
-	 *
-	 * @return a Map of DEF BaseEntitys
-	 */
-	public Map<String, BaseEntity> getDefMap() {
-		return getDefMap(userToken.getRealm());
-	}
-
-	/**
-	 * Find the map of DEFs for using a productCode.
-	 *
-	 * @param productCode the productCode to get defs from
-	 * @return a Map of DEF BaseEntitys
-	 */
-	public Map<String, BaseEntity> getDefMap(final String productCode) {
-		if ((defs == null) || (defs.isEmpty())) {
-			initializeDefs(productCode);
-			return defs.get(productCode);
+			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
+			defPrefixMap.get(productCode).put(prefix, code);
 		}
-		return defs.get(productCode);
 	}
 
 	/**
@@ -140,24 +108,19 @@ public class DefUtils {
 	 */
 	public BaseEntity getDEF(final BaseEntity be) {
 
-		String productCode = userToken.getProductCode();
-
 		if (be == null) {
-			log.error("be param is NULL");
-			try {
-				throw new DebugException("DefUtils.getDEF: The passed BaseEntity is NULL, supplying trace");
-			} catch (DebugException e) {
-				e.printStackTrace();
-			}
+			log.error("The passed BaseEntity is NULL, supplying trace");
 			return null;
 		}
 
 		if (be.getCode().startsWith("DEF_")) {
 			return be;
 		}
-		// some quick ones
+
+		String productCode = userToken.getProductCode();
+
 		if (be.getCode().startsWith("PRJ_")) {
-			BaseEntity defBe = getDefMap(productCode).get("DEF_PROJECT");
+			BaseEntity defBe = CacheUtils.getObject(productCode, "DEF_PROJECT", BaseEntity.class);
 			return defBe;
 		}
 
@@ -166,128 +129,95 @@ public class DefUtils {
 		// remove the non DEF ones
 		Iterator<EntityAttribute> i = isAs.iterator();
 		while (i.hasNext()) {
+
 			EntityAttribute ea = i.next();
 
 			if (ea.getAttributeCode().startsWith("PRI_IS_APPLIED_")) {
-
 				i.remove();
-			} else {
-				switch (ea.getAttributeCode()) {
-					case "PRI_IS_DELETED":
-					case "PRI_IS_EXPANDABLE":
-					case "PRI_IS_FULL":
-					case "PRI_IS_INHERITABLE":
-					case "PRI_IS_PHONE":
-					case "PRI_IS_AGENT_PROFILE_GRP":
-					case "PRI_IS_BUYER_PROFILE_GRP":
-					case "PRI_IS_EDU_PROVIDER_STAFF_PROFILE_GRP":
-					case "PRI_IS_REFERRER_PROFILE_GRP":
-					case "PRI_IS_SELLER_PROFILE_GRP":
-					case "PRI_IS SKILLS":
-						log.warn("getDEF -> detected non DEFy attributeCode " + ea.getAttributeCode());
-						i.remove();
-						break;
-					case "PRI_IS_DISABLED":
-						log.warn("getDEF -> detected non DEFy attributeCode " + ea.getAttributeCode());
-						// don't remove until we work it out...
-						try {
-							throw new DebugException("Bad DEF " + ea.getAttributeCode());
-						} catch (DebugException e) {
-							e.printStackTrace();
-						}
-						break;
-					case "PRI_IS_LOGBOOK":
-						log.debug("getDEF -> detected non DEFy attributeCode " + ea.getAttributeCode());
-						i.remove();
+				continue;
+			}
 
-					default:
-
-				}
+			// filter out bad is as attributes
+			switch (ea.getAttributeCode()) {
+				case "PRI_IS_DELETED":
+				case "PRI_IS_EXPANDABLE":
+				case "PRI_IS_FULL":
+				case "PRI_IS_INHERITABLE":
+				case "PRI_IS_PHONE":
+				case "PRI_IS_AGENT_PROFILE_GRP":
+				case "PRI_IS_BUYER_PROFILE_GRP":
+				case "PRI_IS_EDU_PROVIDER_STAFF_PROFILE_GRP":
+				case "PRI_IS_REFERRER_PROFILE_GRP":
+				case "PRI_IS_SELLER_PROFILE_GRP":
+				case "PRI_IS SKILLS":
+				case "PRI_IS_DISABLED":
+				case "PRI_IS_LOGBOOK":
+					log.warn("getDEF -> detected non DEFy attributeCode " + ea.getAttributeCode());
+					i.remove();
+					break;
+				default:
 			}
 		}
 
-		if (isAs.size() == 1) {
-			// Easy
-			Map<String, BaseEntity> beMapping = getDefMap(productCode);
-			String attrCode = isAs.get(0).getAttributeCode();
-			String trimedAttrCode = attrCode.substring("PRI_IS_".length());
-			BaseEntity defBe = beMapping.get("DEF_" + trimedAttrCode);
+		if (!isAs.isEmpty()) {
 
-			if (defBe == null) {
-				log.error(
-						"No such DEF called " + "DEF_" + isAs.get(0).getAttributeCode().substring("PRI_IS_".length()));
-			}
-			return defBe;
+			// create sorted merge code
+			List<String> codes = isAs.stream()
+					.sorted(Comparator.comparingDouble(EntityAttribute::getWeight))
+					.map(EntityAttribute::getAttributeCode)
+					.collect(Collectors.toList());
 
-		} else if (isAs.isEmpty()) {
-			// THIS HANDLES CURRENT BAD BEs
-			// loop through the defs looking for matching prefix
-			for (BaseEntity defBe : getDefMap(productCode).values()) {
-				String prefix = defBe.getValue("PRI_PREFIX", null);
-				if (prefix == null) {
-					continue;
-				}
-				// LITTLE HACK FOR OHS DOCS, SORRY!
-				if (prefix.equals("DOC") && be.getCode().startsWith("DOC_OHS_")) {
-					continue;
-				}
-				if (be.getCode().startsWith(prefix + "_")) {
-					return defBe;
-				}
+			log.info(codes.toString());
+
+			// check for single PRI_IS
+			if (codes.size() == 1) {
+				BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+codes.get(0).substring("PRI_IS_".length()));
+				return def;
 			}
 
-			log.error("NO DEF ASSOCIATED WITH be " + be.getCode());
-			return new BaseEntity("ERR_DEF", "No DEF");
-		} else {
-			// Create sorted merge code
-			String mergedCode = "DEF_" + isAs.stream().sorted(Comparator.comparing(EntityAttribute::getAttributeCode))
-					.map(ea -> ea.getAttributeCode()).collect(Collectors.joining("_"));
+			String mergedCode = "DEF_" + String.join("_", codes);
+			BaseEntity mergedDef = new BaseEntity(mergedCode, mergedCode);
+			log.info("Detected NEW Combination DEF - " + mergedCode);
 
-			mergedCode = mergedCode.replaceAll("_PRI_IS_DELETED", "");
-			BaseEntity mergedBe = getDefMap(productCode).get(mergedCode);
+			// reverse order and begin filling new def
+			Collections.reverse(codes);
+			for (String code : codes) {
 
-			if (mergedBe == null) {
+				// get def for PRI_IS
+				BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+code.substring("PRI_IS_".length()));
+				if (def == null) {
+					continue;
+				}
 
-				log.info("Detected NEW Combination DEF - " + mergedCode);
-				// get primary PRI_IS
-				Optional<EntityAttribute> topDog = be.getHighestEA("PRI_IS_");
-				if (topDog.isPresent()) {
-
-					// so this combination DEF inherits top dogs name
-					String topCode = topDog.get().getAttributeCode().substring("PRI_IS_".length());
-					BaseEntity defTopDog = getDefMap(productCode).get("DEF_" + topCode);
-					mergedBe = new BaseEntity(mergedCode, mergedCode);
-
-					// now copy all the combined DEF eas.
-					for (EntityAttribute isea : isAs) {
-						BaseEntity defEa = getDefMap(productCode)
-								.get("DEF_" + isea.getAttributeCode().substring("PRI_IS_".length()));
-						if (defEa != null) {
-							for (EntityAttribute ea : defEa.getBaseEntityAttributes()) {
-								try {
-									mergedBe.addAttribute(ea);
-								} catch (BadDataException e) {
-									log.error("Bad data in getDEF ea merge " + mergedCode);
-								}
-							}
-						} else {
-							log.info(
-									"No DEF code -> " + "DEF_" + isea.getAttributeCode().substring("PRI_IS_".length()));
-							return null;
-						}
+				// merge into new def
+				for (EntityAttribute ea : def.getBaseEntityAttributes()) {
+					try {
+						mergedDef.addAttribute(ea);
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-					getDefMap(productCode).put(mergedCode, mergedBe);
-					return mergedBe;
-
-				} else {
-					log.error("NO DEF EXISTS FOR " + be.getCode());
-					return null;
 				}
-			} else {
-				// return 'merged' composite
-				return mergedBe;
 			}
+
+			return mergedDef;
 		}
+
+		// search for a def with same prefix
+		String prefix = be.getCode().substring(0, 3);
+		log.info("Prefix = " + prefix);
+
+		Map<String, String> map = defPrefixMap.get(productCode);
+		String defCode = map.get(prefix);
+
+		BaseEntity def = beUtils.getBaseEntityByCode(defCode);
+
+		if (def != null) {
+			return def;
+		}
+
+		// default to error def
+		log.error("No DEF associated with entity " + be.getCode());
+		return new BaseEntity("ERR_DEF", "No DEF");
 	}
 
 	/**
@@ -298,6 +228,7 @@ public class DefUtils {
 	 * @return Boolean
 	 */
 	public Boolean answerValidForDEF(Answer answer) {
+
 		BaseEntity target = beUtils.getBaseEntityByCode(answer.getTargetCode());
 		if (target == null) {
 			log.error("TargetCode " + answer.getTargetCode() + " does not exist");
@@ -317,6 +248,7 @@ public class DefUtils {
 	 * @return Boolean
 	 */
 	public Boolean answerValidForDEF(BaseEntity defBE, Answer answer) {
+
 		String targetCode = answer.getTargetCode();
 		String attributeCode = answer.getAttributeCode();
 

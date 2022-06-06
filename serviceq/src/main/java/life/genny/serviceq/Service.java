@@ -182,7 +182,7 @@ public class Service {
 		}
 
 		for (String productCode : allowedProducts) {
-			defUtils.initializeDefs(productCode);
+			defUtils.initializeDefPrefixs(productCode);
 		}
 	}
 

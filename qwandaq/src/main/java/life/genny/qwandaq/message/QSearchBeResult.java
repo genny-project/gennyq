@@ -47,8 +47,8 @@ public class QSearchBeResult implements Serializable {
 	/**
 	 * @return the codes
 	 */
-	public List<String> getCodes() {
-		return Arrays.asList(codes);
+	public String[] getCodes() {
+		return codes;
 	}
 	/**
 	 * @param codes the codes to set

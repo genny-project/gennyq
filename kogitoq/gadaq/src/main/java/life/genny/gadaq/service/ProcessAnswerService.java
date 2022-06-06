@@ -60,10 +60,16 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processBEJson) {
+	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
+
+		// ensure targetCode is correct
+		if (!answer.getTargetCode().equals(targetCode)) {
+			log.warn("Bad targetCode in answer!");
+			return processBEJson;
+		}
 
 		// find the attribute
 		String attributeCode = answer.getAttributeCode();

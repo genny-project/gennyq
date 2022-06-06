@@ -85,18 +85,29 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
+		return getBaseEntityByCode(userToken.getProductCode(), code);
+	}
 
-		log.info("Using ProductCode " + userToken.getProductCode());
+	/**
+	 * Fetch A {@link BaseEntity} from the cache using a code.
+	 *
+	 * @param productCode The productCode to use
+	 * @param code The code of the BaseEntity to fetch
+	 * @return The corresponding BaseEntity, or null if not found.
+	 */
+	public BaseEntity getBaseEntityByCode(String productCode, String code) {
+
+		log.info("Getting entity: " + code);
 
 		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(userToken.getProductCode(), code);
+		// BaseEntityKey key = new BaseEntityKey(productCode, code);
 		// BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 		BaseEntity entity = null;
 
 		// check in database if not in cache
 		if (entity == null) {
 			log.debug("BaseEntity " + code + " not in cache, checking in database...");
-			entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
+			entity = databaseUtils.findBaseEntityByCode(productCode, code);
 		}
 
 		return entity;
@@ -131,6 +142,43 @@ public class BaseEntityUtils {
 			// deserialise and grab entities
 			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
 			return Arrays.asList(results.getEntities());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	/**
+	 * Call the Fyodor API to fetch a list of codes 
+	 * associated with result entities.
+	 *
+	 * @param searchBE A {@link SearchEntity} object used to determine the results
+	 * @return A list of code strings
+	 */
+	public List<String> getBaseEntityCodes(SearchEntity searchBE) {
+
+		// build uri, serialize payload and fetch data from fyodor
+		String uri = GennySettings.fyodorServiceUrl() + "/api/search";
+		String json = jsonb.toJson(searchBE);
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
+
+		if (response == null) {
+			log.error("Null response from " + uri);
+			return null;
+		}
+
+		Integer status = response.statusCode();
+
+		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
+			log.error("Bad response status " + status + " from " + uri);
+		}
+
+		try {
+			// deserialise and grab entities
+			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+			return Arrays.asList(results.getCodes());
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
