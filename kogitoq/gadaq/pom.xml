@@ -12,7 +12,7 @@
   <artifactId>gadaq</artifactId>
 
   <name>Gada Kogito Service</name>
-  <description>Gada Kogito Service thingy ma bobby</description>
+  <description>Gada Kogito Service used to handle generic business logic</description>
 
   <dependencyManagement>
     <dependencies>

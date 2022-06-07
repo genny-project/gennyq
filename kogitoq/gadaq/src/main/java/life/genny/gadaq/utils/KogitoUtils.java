@@ -1,6 +1,5 @@
 package life.genny.gadaq.utils;
 
-import java.io.Serializable;
 import java.net.http.HttpResponse;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -27,7 +26,6 @@ import life.genny.qwandaq.utils.HttpUtils;
 @ApplicationScoped
 public class KogitoUtils {
 
-    private static final long serialVersionUID = 1L;
     private static final Logger log = Logger.getLogger(KogitoUtils.class);
     private static Jsonb jsonb = JsonbBuilder.create();
 

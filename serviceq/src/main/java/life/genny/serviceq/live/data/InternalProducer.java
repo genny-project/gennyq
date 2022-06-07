@@ -18,6 +18,21 @@ public class InternalProducer {
     return events;
   }
 
+  @Inject @Channel("search_eventsout") Emitter<String> searchEvents;
+  public Emitter<String> getToSearchEvents() {
+	  return searchEvents;
+  }
+
+  @Inject @Channel("valid_eventsout") Emitter<String> validEvents;
+  public Emitter<String> getToValidEvents() {
+	  return validEvents;
+  }
+
+  @Inject @Channel("forwarded_eventsout") Emitter<String> forwardedEvents;
+  public Emitter<String> getToForwardedEvents() {
+	  return forwardedEvents;
+  }
+
   @Inject @Channel("dataout") Emitter<String> data;
   public Emitter<String> getToData() {
     return data;
@@ -28,24 +43,19 @@ public class InternalProducer {
     return valid_data;
   }
 
+  @Inject @Channel("search_dataout") Emitter<String> searchData;
+  public Emitter<String> getToSearchData() {
+	  return searchData;
+  }
+
   @Inject @Channel("webcmdsout") Emitter<String> webCmds;
   public Emitter<String> getToWebCmds() {
-    return webCmds;
+	  return webCmds;
   }
 
   @Inject @Channel("webdataout") Emitter<String> webData;
   public Emitter<String> getToWebData() {
-    return webData;
-  }
-
-  @Inject @Channel("search_eventsout") Emitter<String> searchEvents;
-  public Emitter<String> getToSearchEvents() {
-    return searchEvents;
-  }
-
-  @Inject @Channel("search_dataout") Emitter<String> searchData;
-  public Emitter<String> getToSearchData() {
-    return searchData;
+	  return webData;
   }
 
   @Inject @Channel("messagesout") Emitter<String> messages;

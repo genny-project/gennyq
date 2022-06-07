@@ -3,6 +3,7 @@ package life.genny.gadaq;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.gadaq.utils.KogitoUtils;
 
 rule RouteAuthInit 
@@ -37,16 +38,19 @@ then
 	retract(msg);
 end
 
+/**
+ * If no route exists within gadaq, the message should be 
+ * sent to the project specific service.
+ */
 rule RouteEventDefault 
 salience 0
 when
 	msg: QEventMessage()
-	userToken : UserToken()
 	kogitoUtils : KogitoUtils()
 then
-	System.out.println("Routing Default Event!");
+	System.out.println("Forwarding Message...");
 
-	kogitoUtils.triggerWorkflow(msg.getData().getCode(), msg);
+	KafkaUtils.writeMsg("forwarded_events", msg);
 	retract(msg);
 end
 
