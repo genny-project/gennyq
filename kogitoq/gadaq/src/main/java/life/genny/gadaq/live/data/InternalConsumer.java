@@ -16,7 +16,7 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import org.jboss.logging.Logger;
 import org.kie.api.runtime.KieSession;
-import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
+import org.kie.api.runtime.KieRuntimeBuilder;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
