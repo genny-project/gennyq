@@ -29,9 +29,6 @@ public class KogitoUtils {
     private static final Logger log = Logger.getLogger(KogitoUtils.class);
     private static Jsonb jsonb = JsonbBuilder.create();
 
-    @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
-    String kogitoServiceUrl;
-
 	@Inject
 	UserToken userToken;
 
@@ -143,7 +140,7 @@ public class KogitoUtils {
         String jsonStr = jsonb.toJson(message);
         String workflowJsonStr = "{\"eventMessage\":" + jsonStr + ", \"token\":\"" + userToken.getToken() + "\"}";
 
-        String uri = kogitoServiceUrl + "/" + process.toLowerCase();
+        String uri = GennySettings.kogitoServiceUrl() + "/" + process.toLowerCase();
 		log.info("Triggering workflow with uri: " + uri);
 
         HttpResponse<String> response = HttpUtils.post(uri, workflowJsonStr, userToken.getToken());

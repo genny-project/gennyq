@@ -1,0 +1,21 @@
+[
+    [
+        "name" : "SendMessage",
+        "displayName" : "Send Message",
+        "category" : "Genny Global Function",
+        "documentation" : "Send a message through the messages service.",
+        "parameters" : [
+            "TemplateCode" : new StringDataType(),
+			"TargetCode" : new StringDataType()
+        ]
+    ],
+    [
+        "name" : "AskQuestions",
+        "displayName" : "Ask Questions",
+        "category" : "Genny Global Function",
+        "documentation" : "Ask a set of Questions and wait for all mandatory questions to be completed..",
+        "parameters" : [
+            "questionCode" : new StringDataType()
+        ]
+    ]
+]

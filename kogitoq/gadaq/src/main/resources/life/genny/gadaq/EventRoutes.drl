@@ -42,13 +42,13 @@ end
  * If no route exists within gadaq, the message should be 
  * sent to the project specific service.
  */
-rule RouteEventDefault 
+rule ForwardEvent
 salience 0
 when
 	msg: QEventMessage()
 	kogitoUtils : KogitoUtils()
 then
-	System.out.println("Forwarding Message...");
+	System.out.println("Forwarding Event Message...");
 
 	KafkaUtils.writeMsg("forwarded_events", msg);
 	retract(msg);

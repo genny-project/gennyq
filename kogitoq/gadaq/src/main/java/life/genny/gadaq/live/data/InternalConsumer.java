@@ -186,7 +186,7 @@ public class InternalConsumer {
 		for (Answer answer : msg.getItems()) {
 
 			// skip if no processId is present
-			if (answer.getProcessId() == null) {
+			if (answer.getProcessId() == null || answer.getProcessId().equals("no-id")) {
 				continue;
 			}
 
