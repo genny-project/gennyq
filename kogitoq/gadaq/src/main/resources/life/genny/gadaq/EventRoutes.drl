@@ -2,9 +2,12 @@ package life.genny.gadaq;
 
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.gadaq.utils.KogitoUtils;
+import org.apache.commons.lang3.StringUtils;
 
 rule RouteAuthInit 
 when
@@ -12,45 +15,68 @@ when
 	userToken : UserToken()
 	kogitoUtils : KogitoUtils()
 then
-	System.out.println("Routing AUTH_INIT!");
+	kogitoUtils.triggerWorkflow("authInit", "eventMessage", msg);
+	retract(msg);
+end
 
-	// TODO: move this to bridge
-	if (userToken.hasRole("test")) {
-		System.out.println("Saving token for " + userToken.getUsername());
-		System.out.println("Key: TOKEN:" + userToken.getUserCode() + ", Value: " + userToken.getToken());
-		CacheUtils.writeCache(userToken.getProductCode(), "TOKEN:"+userToken.getUserCode(), userToken.getToken());
+rule RouteAddItem 
+when
+	msg: QEventMessage( data.code matches "QUE_ADD_.*" )
+	beUtils : BaseEntityUtils()
+	kogitoUtils : KogitoUtils()
+then
+	String code = StringUtils.removeStart(msg.getData().getCode(), "QUE_ADD_");
+	BaseEntity def = beUtils.getBaseEntityByCode(code);
+
+	String prefix = def.getValue("PRI_PREFIX", null);
+
+	if ("PER".equals(prefix)) {
+		kogitoUtils.triggerWorkflow("personLifecycle", "defBE", def);
 	}
-
-	kogitoUtils.triggerWorkflow("authinit", msg);
+	if ("CPY".equals(prefix)) {
+		kogitoUtils.triggerWorkflow("companyLifecycle", "defBE", def);
+	}
 	retract(msg);
 end
 
 rule RouteSubmit 
 when
 	msg: QEventMessage( data.code == "QUE_SUBMIT" )
-	userToken : UserToken()
 	kogitoUtils : KogitoUtils()
 then
-	System.out.println("Routing SUBMIT!");
-
 	String processId = msg.getData().getProcessId();
-	kogitoUtils.sendSignal("processquestions", processId, "submit", "");
+	kogitoUtils.sendSignal("processQuestions", processId, "submit", "");
+	retract(msg);
+end
+
+rule RouteCancel 
+when
+	msg: QEventMessage( data.code == "QUE_CANCEL" )
+	kogitoUtils : KogitoUtils()
+then
+	String processId = msg.getData().getProcessId();
+	kogitoUtils.sendSignal("processQuestions", processId, "cancel", "");
+	retract(msg);
+end
+
+rule RouteReset 
+when
+	msg: QEventMessage( data.code == "QUE_RESET" )
+	kogitoUtils : KogitoUtils()
+then
+	String processId = msg.getData().getProcessId();
+	kogitoUtils.sendSignal("processQuestions", processId, "reset", "");
 	retract(msg);
 end
 
 /**
- * If no route exists within gadaq, the message should be 
- * sent to the project specific service.
+ * Message should be retracted if it has not already been.
  */
-rule ForwardEvent
+rule RetractEvent
 salience 0
 when
 	msg: QEventMessage()
-	kogitoUtils : KogitoUtils()
 then
-	System.out.println("Forwarding Event Message...");
-
-	KafkaUtils.writeMsg("forwarded_events", msg);
 	retract(msg);
 end
 

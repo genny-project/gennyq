@@ -45,7 +45,9 @@ public class BaseEntityService {
 	@Inject
 	BaseEntityUtils beUtils;
 
-	public void commission(String defCode) {
+	public void commission() {
+
+		String defCode = null;
 
 		if (defCode == null || !defCode.startsWith("DEF_")) {
 			log.error("Invalid defCode: " + defCode);
@@ -54,7 +56,7 @@ public class BaseEntityService {
 
 		// fetch the def baseentity
 		BaseEntity def = beUtils.getBaseEntityByCode(defCode);
-		if(def == null) {
+		if (def == null) {
 			log.error("Could not find DEF BaseEntity with code: " + defCode);
 		}
 
@@ -68,7 +70,9 @@ public class BaseEntityService {
 		}
 	}
 
-	public void decommission(BaseEntity baseEntity) {
+	public void decommission() {
+
+		BaseEntity baseEntity = null;
 
 		if (baseEntity == null) {
 			log.error("BaseEntity passed is null!");

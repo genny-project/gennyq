@@ -14,14 +14,13 @@ import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-
-
-
 
 /**
  * ExternalConsumer --- External clients can connect to the endpoint configured in {@link
@@ -134,6 +133,11 @@ public class ExternalConsumer {
 		// put bridgeId into users cached info
 		BridgeSwitch.put(gennyToken, bridgeId);
 		BridgeSwitch.addActiveBridgeId(gennyToken, bridgeId);
+
+		if (gennyToken.hasRole("test")) {
+			log.info("Saving token -> Key: TOKEN:" + gennyToken.getUserCode() + ", Value: " + gennyToken.getToken());
+			CacheUtils.writeCache(gennyToken.getProductCode(), "TOKEN:"+gennyToken.getUserCode(), gennyToken.getToken());
+		}
 
 		routeDataByMessageType(rawMessageBody.getJsonObject("data"), gennyToken);
 		bridgeEvent.complete(true);

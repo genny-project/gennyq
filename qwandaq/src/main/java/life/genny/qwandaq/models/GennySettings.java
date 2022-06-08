@@ -62,7 +62,7 @@ public class GennySettings {
 	/*
 	 * NOTE: Static variables using getEnv seem to be defaulting all the time.
 	 * This is likely due to an issue with the environment variables not being present at initialisation.
-	 * If it cannot be fixed, we may have to opt for doing it as seen below.
+	 * Because of this, we are have to opt for doing it as seen below.
 	 */
 
 	/* ############ URL Methods ############## */

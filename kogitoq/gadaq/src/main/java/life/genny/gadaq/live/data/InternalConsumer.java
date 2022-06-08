@@ -111,17 +111,17 @@ public class InternalConsumer {
 	}
 
 	/**
-	 * Consume from the events topic.
+	 * Consume from the forwarded_events topic.
 	 *
 	 * @param event The incoming event
 	 */
-	@Incoming("events")
+	@Incoming("forwarded_events")
 	@Blocking
 	public void getEvent(String event) {
 
 		scope.init(event);
 
-		log.info("Incoming Event : " + event);
+		log.info("Received Forwarded Event : " + event);
 		log.info("userToken = " + userToken);
 		log.info("productCode = " + userToken.getProductCode());
 		Instant start = Instant.now();
