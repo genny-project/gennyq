@@ -1,6 +1,7 @@
 package life.genny.qwandaq.entity;
 
-import java.lang.invoke.MethodHandles;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -13,7 +14,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
@@ -29,21 +29,20 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.time.DateUtils;
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import org.hibernate.annotations.Type;
-import org.javamoney.moneta.Money;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.converter.MoneyConverter;
+import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.time.DateUtils;
+import org.hibernate.annotations.Type;
+import org.javamoney.moneta.Money;
+import org.jboss.logging.Logger;
+
+
+
+
+
+
 
 
 @Entity
@@ -237,6 +236,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @return EntityEntityId
 	 */
 	@JsonIgnore
+	@JsonbTransient
 	public EntityEntityId getPk() {
 		return pk;
 	}
@@ -427,6 +427,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @return Date
 	 */
 	@Transient
+	@JsonbTransient
 	public Date getCreatedDate() {
 		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
 		return out;
@@ -436,6 +437,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @return Date
 	 */
 	@Transient
+	@JsonbTransient
 	public Date getUpdatedDate() {
 		if (updated!=null) {
 			final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
@@ -449,6 +451,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @param o the object to compare to
 	 * @return int
 	 */
+ @Override
 	public int compareTo(Object o) {
 		EntityEntity myClass = (EntityEntity) o;
 		return new CompareToBuilder()
@@ -497,6 +500,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 */
 	@SuppressWarnings("unchecked")
 	@JsonIgnore
+	@JsonbTransient
 	@Transient
 	@XmlTransient
 	public <T> T getValue() {
@@ -565,6 +569,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @param value the value to set
 	 */
 	@JsonIgnore
+	@JsonbTransient
 	@Transient
 	@XmlTransient
 	public <T> void setValue(final Object value) {
@@ -691,6 +696,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @return String
 	 */
 	@JsonIgnore
+	@JsonbTransient
 	@Transient
 	@XmlTransient
 	public String getAsString() {
@@ -736,6 +742,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @return String
 	 */
 	@JsonIgnore
+	@JsonbTransient
 	@Transient
 	@XmlTransient
 	public String getObjectAsString(Object value) {

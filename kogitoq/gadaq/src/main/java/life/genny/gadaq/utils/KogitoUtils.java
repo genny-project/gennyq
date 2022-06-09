@@ -13,7 +13,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
+import org.kie.api.runtime.KieRuntimeBuilder;
 
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennySettings;
