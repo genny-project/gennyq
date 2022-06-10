@@ -14,7 +14,9 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -49,6 +51,11 @@ public class PcmService {
 
     private EntityAttribute makePcmAttribute(BaseEntity be, String attrCode, String value, double weight) {
         EntityAttribute out = new EntityAttribute();
+
+        Attribute att = databaseUtils.findAttributeByCode(userToken.getProductCode(), attrCode);
+        if (att != null) {
+            out.setAttribute(att);
+        }
         out.setBaseEntity(be);
         out.setAttributeCode(attrCode);
         out.setValueString(value);
