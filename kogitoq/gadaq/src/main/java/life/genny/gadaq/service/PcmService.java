@@ -53,8 +53,11 @@ public class PcmService {
         EntityAttribute out = new EntityAttribute();
 
         Attribute att = databaseUtils.findAttributeByCode(userToken.getProductCode(), attrCode);
+        log.info("Found attribute " + att);
         if (att != null) {
             out.setAttribute(att);
+        } else {
+            log.error("Couldn't find attribute!");
         }
         out.setBaseEntity(be);
         out.setAttributeCode(attrCode);
