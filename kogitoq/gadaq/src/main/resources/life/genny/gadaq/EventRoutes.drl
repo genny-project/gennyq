@@ -26,16 +26,7 @@ when
 	kogitoUtils : KogitoUtils()
 then
 	String code = StringUtils.removeStart(msg.getData().getCode(), "QUE_ADD_");
-	BaseEntity def = beUtils.getBaseEntityByCode(code);
-
-	String prefix = def.getValue("PRI_PREFIX", null);
-
-	if ("PER".equals(prefix)) {
-		kogitoUtils.triggerWorkflow("personLifecycle", "defBE", def);
-	}
-	if ("CPY".equals(prefix)) {
-		kogitoUtils.triggerWorkflow("companyLifecycle", "defBE", def);
-	}
+	kogitoUtils.triggerWorkflow("addItem", "definitionCode", "DEF_"+code);
 	retract(msg);
 end
 
@@ -77,6 +68,7 @@ salience 0
 when
 	msg: QEventMessage()
 then
+	System.out.println("Retracting message");
 	retract(msg);
 end
 

@@ -254,14 +254,6 @@
     <dependencies>
 
       <dependency>
-         <groupId>org.drools</groupId>
-         <artifactId>drools-bom</artifactId>
-         <version>8.18.0.Beta</version>
-         <type>pom</type>
-         <scope>import</scope>
-      </dependency>
-
-      <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-spring-boot-starter-remote</artifactId>
         <version>${version.org.infinispan}</version>

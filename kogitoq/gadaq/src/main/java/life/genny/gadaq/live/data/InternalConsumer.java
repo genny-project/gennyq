@@ -127,6 +127,7 @@ public class InternalConsumer {
 		Instant start = Instant.now();
 
 		// check if event is a valid event
+		log.info("Parsing msg");
 		QEventMessage msg = null;
 		try {
 			msg = jsonb.fromJson(event, QEventMessage.class);
@@ -135,17 +136,23 @@ public class InternalConsumer {
 			e.printStackTrace();
 			return;
 		}
+		log.info("Getting session");
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
 
+		log.info("Inserting facts");
 		session.insert(kogitoUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
 		session.insert(msg);
 
-		session.fireAllRules();
-		session.dispose();
+		log.info("Firing Rules");
+		try {
+			session.fireAllRules();
+		} finally {
+			session.dispose();
+		}
 
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");

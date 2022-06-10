@@ -33,6 +33,14 @@
       </dependency>
 
       <dependency>
+         <groupId>org.drools</groupId>
+         <artifactId>drools-bom</artifactId>
+         <version>8.22.1.Beta</version>
+         <type>pom</type>
+         <scope>import</scope>
+      </dependency>
+
+      <dependency>
         <groupId>org.kie.kogito</groupId>
         <artifactId>kogito-quarkus-bom</artifactId>
         <version>${kogito.version}</version>

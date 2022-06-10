@@ -85,4 +85,23 @@ public class BaseEntityService {
 		baseEntity.setStatus(EEntityStatus.ARCHIVED);
 		beUtils.updateBaseEntity(baseEntity);
 	}
+
+	public String getDEFPrefix(String definitionCode) {
+
+		BaseEntity definition = beUtils.getBaseEntityByCode(definitionCode);
+
+		if (definition == null) {
+			log.error("No definition exists with code " + definitionCode);
+			return null;
+		}
+
+		String prefix = definition.getValue("PRI_PREFIX", null);
+
+		if (prefix == null) {
+			log.error("definition " + definition.getCode() + " has no prefix attribute!");
+		}
+
+		return prefix;
+	}
+
 }

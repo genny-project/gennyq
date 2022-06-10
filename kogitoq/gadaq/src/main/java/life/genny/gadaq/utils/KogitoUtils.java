@@ -161,11 +161,26 @@ public class KogitoUtils {
 	 */
 	public String triggerWorkflow(final String id, final String key, final Object obj) {
 
-		JsonObject json = Json.createObjectBuilder()
-				.add(key, jsonb.fromJson(jsonb.toJson(obj), JsonObject.class))
-				.build();
+		JsonObjectBuilder builder = Json.createObjectBuilder();
 
-		return triggerWorkflow(id, json);
+		try {
+			builder.add(key, jsonb.fromJson(jsonb.toJson(obj), JsonObject.class));
+		} catch (Exception e) {
+			// catch standard type objects (String, Integer, etc.)
+			if (obj instanceof String) {
+				builder.add(key, (String) obj);
+			} else if (obj instanceof Integer) {
+				builder.add(key, (Integer) obj);
+			} else if (obj instanceof Long) {
+				builder.add(key, (Long) obj);
+			} else if (obj instanceof Double) {
+				builder.add(key, (Double) obj);
+			} else {
+				log.warn("Unknown type available for " + obj);
+			}
+		}
+
+		return triggerWorkflow(id, builder.build());
 	}
 
 	/**
