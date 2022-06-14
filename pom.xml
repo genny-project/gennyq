@@ -72,7 +72,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- kogito -->
-    <kogito.version>1.20.0.Final</kogito.version>
+    <kogito.version>1.22.1.Final</kogito.version>
     <version.org.optaplanner>8.22.0.Final</version.org.optaplanner>
 
     <!-- override default to fast-jar packaging for forward-compatibility -->

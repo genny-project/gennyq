@@ -1,28 +1,23 @@
 package life.genny.qwandaq.utils;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.infinispan.client.hotrod.RemoteCache;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
-
-import org.apache.commons.lang3.StringUtils;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.commons.util.CloseableIteratorSet;
-import org.jboss.logging.Logger;
-
-
-
 
 /*
  * A static utility class used for standard read and write 

@@ -1,12 +1,11 @@
 package life.genny.qwandaq;
 
 
+/*
+ * This enum is designed for simplicity and speed. 
+ * The database will be expected to default to ACTIVE initially and we'll slowly bring in theother statuses
+ */
 public enum EEntityStatus {
-
-	// This enum is designed for simplicity and speed. 
-	// The database will be expected to default to ACTIVE initially and we'll slowly bring in theother statuses
-
-
 
 	ACTIVE(0),          // 0 - This status means that the entity should be picked up in all database fetches
 	TEST(1),            // 1 - This means that the entity is a well crafted test entity for use by devs

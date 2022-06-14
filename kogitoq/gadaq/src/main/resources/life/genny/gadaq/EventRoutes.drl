@@ -17,7 +17,7 @@ then
 	if (userToken.hasRole("test")) {
 		System.out.println("Saving token for " + userToken.getUsername());
 		System.out.println("Key: TOKEN:" + userToken.getUserCode() + ", Value: " + userToken.getToken());
-		CacheUtils.writeCache(userToken.getRealm(), "TOKEN:"+userToken.getUserCode(), userToken.getToken());
+		CacheUtils.writeCache(userToken.getProductCode(), "TOKEN:"+userToken.getUserCode(), userToken.getToken());
 	}
 
 	kogitoUtils.triggerWorkflow("authinit", msg);

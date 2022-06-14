@@ -2,11 +2,9 @@ package life.genny.qwandaq.utils;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -19,13 +17,10 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.exception.DebugException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 
@@ -66,7 +61,6 @@ public class DefUtils {
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
 				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
 				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "DEF_%")
-				.addColumn("PRI_PREFIX", "Prefix")
 				.setPageStart(0)
 				.setPageSize(10000);
 

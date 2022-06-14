@@ -97,8 +97,6 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
 
-		log.info("Getting entity: " + code);
-
 		// check for entity in the cache
 		// BaseEntityKey key = new BaseEntityKey(productCode, code);
 		// BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
