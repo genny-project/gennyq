@@ -180,7 +180,7 @@ public class ExternalConsumer {
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
 
-		log.info("Incoming Payload = " + body.toString());
+		
 
 		if (body.getString("msg_type").equals("DATA_MSG")) {
 			if ("Answer".equals(body.getString("data_type"))) {
@@ -188,7 +188,11 @@ public class ExternalConsumer {
 				if (items.isEmpty()) {
 					return;
 				}
+				if (body.toString().contains("\"items\":[{}]")) {
+					return;
+				}
 			}
+			log.info("Incoming DATA Payload = " + body.toString());
 
 			KafkaUtils.writeMsg("data", body.toString());
 			body.remove("token");
@@ -198,11 +202,12 @@ public class ExternalConsumer {
 
 			
 			KafkaUtils.writeMsg("events", body.toString());
+			log.info("Incoming EVENT Payload = " + body.toString());
 			log.info("Sent payload from user " + gennyToken.getUserCode() + " to events");
 
 		} else if ((body.getJsonObject("data").getString("code") != null)
 				&& (body.getJsonObject("data").getString("code").equals("QUE_SUBMIT"))) {
-
+			log.error("Incoming Payload has Errored = " + body.toString());
 			log.error("A deadend message was sent with the code QUE_SUBMIT");
 		}
 	}
