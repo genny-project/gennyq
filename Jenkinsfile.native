@@ -22,9 +22,6 @@ pipeline {
                     "Build GadaQ" : {
                         sh "./build-docker-native.sh gadaq"
                     },
-                    "Build Adi" : {
-                        sh "./build-docker-native.sh adi"
-                    },
                     "Build Bridge" : {
                         sh "./build-docker-native.sh bridge"
                     },
