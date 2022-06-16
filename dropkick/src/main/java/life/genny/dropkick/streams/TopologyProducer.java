@@ -183,7 +183,7 @@ public class TopologyProducer {
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
 
 		if (!searchAttribute.isPresent()) {
-			log.info("No attribute exists in " + defBE.getCode() + " for SER_" + attributeCode);
+			log.info("Target: " + target.getCode() ", Definition: " + defBE.getCode() + ", No attribute found for SER_" + attributeCode);
 			return false;
 		}
 
