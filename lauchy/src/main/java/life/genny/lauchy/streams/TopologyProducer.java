@@ -1,9 +1,9 @@
 package life.genny.lauchy.streams;
 
+import io.quarkus.runtime.StartupEvent;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
@@ -12,10 +12,21 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.apache.kafka.common.serialization.Serde;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.validation.Validation;
+import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -23,24 +34,9 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.StartupEvent;
 
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.validation.Validation;
-import life.genny.serviceq.Service;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.serviceq.intf.GennyScopeInit;
+
+
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -89,7 +85,7 @@ public class TopologyProducer {
 		builder
 				.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
 				.peek((k, v) -> scope.init(v))
-				.peek((k, v) -> log.info("Reveived message: " + v))
+				.peek((k, v) -> log.info("Received message: " + v))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
 				.filter((k, v) -> validate(v))
