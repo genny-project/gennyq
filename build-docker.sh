@@ -7,7 +7,7 @@ if [ "$#" -ge 1 ]; then
 	projects=( $@ )
 else
 	dependencies=( qwandaq serviceq )
-	projects=( gadaq bridge fyodor dropkick lauchy messages shleemy )
+	projects=( gadaq adi bridge fyodor dropkick lauchy messages shleemy )
 fi
 
 # iterate dependencies

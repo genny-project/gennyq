@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+    options {
+        ansiColor('xterm')
+    }
+    stages {
+        stage("Clone") {
+            steps {
+                git branch: "${BRANCH_TO_BUILD}",
+                    url: 'https://github.com/genny-project/gennyq'
+            }
+        }
+        stage("Build Dependencies") {
+            steps {
+                sh "./build.sh qwandaq"
+                sh "./build.sh serviceq"
+            }
+        }
+        stage("Build Services [1/2]") {
+            steps {
+                parallel (
+                    "Build GadaQ" : {
+                        sh "./build-docker-native.sh gadaq"
+                    },
+                    "Build Adi" : {
+                        sh "./build-docker-native.sh adi"
+                    },
+                    "Build Bridge" : {
+                        sh "./build-docker-native.sh bridge"
+                    },
+                    "Build Fyodor" : {
+                        sh "./build-docker-native.sh fyodor"
+                    }
+                )
+            }
+        }
+        stage("Build Services [2/2]") {
+            steps {
+                parallel (
+                    "Build Dropkick" : {
+                        sh "./build-docker-native.sh dropkick"
+                    },
+                    "Build Lauchy" : {
+                        sh "./build-docker-native.sh lauchy"
+                    },
+                    "Build Messages" : {
+                        sh "./build-docker-native.sh messages"
+                    },
+                    "Build Shleemy" : {
+                        sh "./build-docker-native.sh shleemy"
+                    }
+                )
+            }
+        }
+        stage("Push Docker Images") {
+            steps {
+                sh "./push-docker-native.sh"
+            }
+        }
+    }
+}
