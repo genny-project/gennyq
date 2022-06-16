@@ -1,15 +1,21 @@
 package life.genny.bridge.live.data;
 
-import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import java.util.UUID;
+
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.StartupEvent;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
@@ -17,8 +23,6 @@ import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 
 
 
@@ -59,21 +63,14 @@ public class ExternalConsumer {
 	 *     ExternalConsumerConfig} method - init(@Observes Router router)
 	 */
 	void handleConnectionTypes(final BridgeEvent bridgeEvent) {
-
-		switch (bridgeEvent.type()) {
-			case PUBLISH:
-			case SEND:
-				{
-					handleIfRolesAllowed(bridgeEvent, "user");
-				}
-			case SOCKET_CLOSED:
-			case SOCKET_CREATED:
-			default:
-				{
-					bridgeEvent.complete(true);
-					return;
-				}
+		BridgeEventType type = bridgeEvent.type();
+		if (type.equals(BridgeEventType.PUBLISH) || type.equals(BridgeEventType.SEND)) {
+			log.info("Handling BridgeEventType: " + type.name());
+			handleIfRolesAllowed(bridgeEvent, "user");
+		} else {
+			log.info("Nothing to do. Marking the event as complete since the BridgeEventType is: " + type.name());
 		}
+		bridgeEvent.complete(true);
 	}
 
 	/**

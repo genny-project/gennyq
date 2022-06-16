@@ -1,15 +1,13 @@
 #!/bin/bash
-VERSION=$( ./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 echo "Project Version: $VERSION"
-
-# Usage: ./build-docker.sh [project] 
 
 if [ "$#" -ge 1 ]; then
 	dependencies=( )
 	projects=( $@ )
 else
 	dependencies=( qwandaq serviceq )
-	projects=( gadaq bridge fyodor dropkick lauchy messages shleemy )
+	projects=( gadaq adi bridge fyodor dropkick lauchy messages shleemy )
 fi
 
 # iterate dependencies
