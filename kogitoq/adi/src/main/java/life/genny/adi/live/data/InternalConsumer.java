@@ -1,24 +1,17 @@
 package life.genny.adi.live.data;
 
+import java.time.Duration;
+import java.time.Instant;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import java.io.StringReader;
-import java.time.Duration;
-import java.time.Instant;
 
 import org.drools.core.common.InternalAgenda;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
-import org.kie.api.KieBase;
-import org.kie.api.KieServices;
-import org.kie.api.builder.KieBuilder;
-import org.kie.api.builder.KieFileSystem;
-import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.kie.kogito.legacy.rules.KieRuntimeBuilder;
 
@@ -27,14 +20,14 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -42,6 +35,9 @@ public class InternalConsumer {
 	static final Logger log = Logger.getLogger(InternalConsumer.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	@Inject
 	GennyScopeInit scope;
@@ -96,19 +92,6 @@ public class InternalConsumer {
 
 		// deserialise to msg
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
-
-		// check the token
-		String token = msg.getToken();
-		try {
-			userToken = new GennyToken(token);
-		} catch (Exception e) {
-			log.error("Invalid Token!");
-			return;
-		}
-
-		// update the token of our utility
-		beUtils.setGennyToken(userToken);
-		service.setBeUtils(beUtils);
 
 		Answer answer = msg.getItems()[0];
 		Answers answersToSave = new Answers();
