@@ -165,7 +165,7 @@ public class QwandaUtils {
 				}
 
 				// NOTE: Warning, this may cause OOM errors.
-				msg.add(attributeList);
+				// msg.add(attributeList);
 
 				if (attributeList.size() > 0) {
 					log.debug("Start AttributeID:" 
