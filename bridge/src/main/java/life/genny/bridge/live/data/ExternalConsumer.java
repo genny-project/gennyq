@@ -68,7 +68,7 @@ public class ExternalConsumer {
 			log.info("Handling BridgeEventType: " + type.name());
 			handleIfRolesAllowed(bridgeEvent, "user");
 		} else {
-			log.info("Nothing to do. Marking the event as complete since the BridgeEventType is: " + type.name());
+			log.debug("Nothing to do. Marking the event as complete since the BridgeEventType is: " + type.name());
 		}
 		bridgeEvent.complete(true);
 	}
