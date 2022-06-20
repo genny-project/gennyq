@@ -34,7 +34,7 @@ do
 
 	# copy each project with the latest docker
 	cp -f docker/* $project/src/main/docker/ 
-	cp -f docker/* kogito/$project/src/main/docker/ 
+	cp -f docker/* kogitoq/$project/src/main/docker/ 
 	# perform clean install with docker build
 	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
 
