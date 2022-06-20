@@ -14,7 +14,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-// import javax.persistence.EntityManager;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -65,7 +64,6 @@ public class BaseEntityUtils {
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-		log.info("Trying to retrieve " + userToken.getProductCode().toUpperCase());
 		return this.getBaseEntityByCode("PRJ_" + userToken.getProductCode().toUpperCase());
 	}
 

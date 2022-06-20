@@ -34,14 +34,13 @@ public class KogitoUtils {
     @ConfigProperty(name = "kogito.service.url", defaultValue = "http://alyson.genny.life:8250")
     String kogitoServiceUrl;
 
-    @Inject
-    UserToken userToken;
+	@Inject
+	UserToken userToken;
 
     @Inject
     KieRuntimeBuilder kieRuntimeBuilder;
 
-    public String fetchGraphQL(final String graphTable, final String likeField, final String likeValue,
-            String... fields) {
+    public String fetchGraphQL(final String graphTable, final String likeField, final String likeValue, String... fields) {
 
         String data = " query {"
                 + "  " + graphTable + " (where: {"
@@ -59,8 +58,7 @@ public class KogitoUtils {
         return response.body();
     }
 
-    public String fetchProcessId(final String graphTable, final String likeField, final String likeValue)
-            throws Exception {
+    public String fetchProcessId(final String graphTable, final String likeField, final String likeValue) throws Exception {
 
         String data = "query { " + graphTable + " (where: { " + likeField + ": { like: \"" + likeValue + "\" }}) { id }}";
 
@@ -97,34 +95,33 @@ public class KogitoUtils {
 
         if (userToken == null) {
             log.error("userToken supplied is null");
-            return null;
-        }
+			return null;
+		}
 
-        HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL",
-                userToken.getToken());
+        HttpResponse<String> response = HttpUtils.post(graphQlUrl, graphQL, "application/GraphQL", userToken.getToken());
 
-        if (response == null) {
-            log.error("Response was null!");
-            return null;
-        }
+		if (response == null) {
+			log.error("Response was null!");
+			return null;
+		}
 
-        String responseBody = response.body();
-        if (responseBody.contains("Error id")) {
-            log.error("Error fetching ProcessId");
-            return null;
-        }
+		String responseBody = response.body();
+		if (responseBody.contains("Error id")) {
+			log.error("Error fetching ProcessId");
+			return null;
+		}
 
-        // isolate the id
-        JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
-        JsonObject json = responseJson.getJsonObject("data");
-        JsonArray jsonArray = json.getJsonArray(graphTable);
+		// isolate the id
+		JsonObject responseJson = jsonb.fromJson(responseBody, JsonObject.class);
+		JsonObject json = responseJson.getJsonObject("data");
+		JsonArray jsonArray = json.getJsonArray(graphTable);
 
-        if (jsonArray == null || jsonArray.isEmpty()) {
-            log.error("No processId found");
-        }
+		if (jsonArray == null || jsonArray.isEmpty()) {
+			log.error("No processId found");
+		}
 
-        JsonObject firstItem = jsonArray.getJsonObject(0);
-        return firstItem.getString("id");
+		JsonObject firstItem = jsonArray.getJsonObject(0);
+		return firstItem.getString("id");
     }
 
     public String sendSignal(final String graphTable, final String processId, final String signalCode) {
@@ -132,8 +129,7 @@ public class KogitoUtils {
         return sendSignal(graphTable, processId, signalCode, "");
     }
 
-    public String sendSignal(final String workflow, final String processId, final String signalCode,
-            final String entity) {
+    public String sendSignal(final String workflow, final String processId, final String signalCode, final String entity) {
 
         String uri = GennySettings.kogitoServiceUrl() + "/" + workflow.toLowerCase() + "/" + processId + "/" + signalCode;
 
@@ -158,12 +154,11 @@ public class KogitoUtils {
 
             JsonObject json = jsonb.fromJson(response.body(), JsonObject.class);
 
-            // return the processId
-            return json.getString("id");
+			// return the processId
+			return json.getString("id");
 
         } else {
-            log.error("TriggerWorkflow Response Status:  "
-                    + (response != null ? response.statusCode() : "NULL RESPONSE"));
+            log.error("TriggerWorkflow Response Status:  " + (response != null ? response.statusCode() : "NULL RESPONSE"));
         }
 
         return null;
