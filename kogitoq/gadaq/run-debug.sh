@@ -1,7 +1,7 @@
 #!/bin/bash
 host="${1:-http://alyson2.genny.life}"
 gennyhost="${2:-http://alyson.genny.life}"
-port="${3:-7580}"
+port="${3:-9580}"
 parser=`echo "$gennyhost" | awk -F/ '{print $3}' `
 echo "Parser = ${parser}"
 rawhost=${parser}
@@ -9,7 +9,7 @@ echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 
-source ~/.genny/.env
+#source ~/.genny/.env
 
 export PRODUCT_CODES=internmatch:mentormatch
 export GENNY_SHOW_VALUES="TRUE"
