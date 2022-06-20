@@ -1,15 +1,16 @@
 package life.genny.bridge.endpoints;
 
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
-import javax.json.Json;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.DELETE;
@@ -24,23 +25,19 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
-
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonObject;
 import life.genny.bridge.blacklisting.BlackListInfo;
-import life.genny.bridge.exception.BridgeException;
+import life.genny.bridge.model.InitProperties;
+import life.genny.qwandaq.message.QDataB2BMessage;
 import life.genny.qwandaq.models.AttributeCodeValueString;
 import life.genny.qwandaq.models.GennyItem;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.bridge.model.InitProperties;
-import life.genny.qwandaq.message.QDataB2BMessage;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import java.net.URLDecoder;
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+
 
 /**
  * Bridge ---Endpoints consisting in providing model data from the model
@@ -94,8 +91,9 @@ public class Bridge {
 		try {
 			InitProperties props = new InitProperties(uriInfo.getBaseUri().toString());
 			log.info("Client ID: " + props.getClientId());
+			log.info("props=["+props+"]");
 			String json = jsonb.toJson(props);
-
+			log.info("json=["+json+"]");
 			return Response.ok(json).build();
 
 		} catch (Exception e) {

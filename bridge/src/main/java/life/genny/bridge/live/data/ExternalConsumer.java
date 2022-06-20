@@ -1,21 +1,16 @@
 package life.genny.bridge.live.data;
 
-import java.util.UUID;
-
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.web.handler.sockjs.BridgeEvent;
+import java.util.UUID;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
@@ -23,6 +18,11 @@ import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+
+
 
 
 
@@ -177,7 +177,7 @@ public class ExternalConsumer {
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
 
-		
+		log.info("Got to here in routeDataByMessageType");
 
 		if (body.getString("msg_type").equals("DATA_MSG")) {
 			if ("Answer".equals(body.getString("data_type"))) {
