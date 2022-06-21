@@ -3,7 +3,8 @@
 if [ "$#" -ge 1 ]; then
 	projects=( gennyq $@ )
 else
-	projects=( gennyq qwandaq serviceq gadaq bridge fyodor dropkick lauchy messages shleemy )
+	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always
+	exit 0;
 fi
 
 # iterate projects
@@ -24,4 +25,5 @@ do
 		exit $rc
 	fi
 done
+
 
