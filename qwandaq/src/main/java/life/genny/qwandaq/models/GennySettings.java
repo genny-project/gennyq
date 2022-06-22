@@ -1,10 +1,8 @@
 package life.genny.qwandaq.models;
 
-import life.genny.qwandaq.utils.CommonUtils;
-
-import org.jboss.logging.Logger;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.utils.CommonUtils;
+import org.jboss.logging.Logger;
 
 /**
  * Various Settings to be used in the Genny System
@@ -73,7 +71,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String projectUrl() {
-		return getConfig("PROJECT_URL", "http://alyson7.genny.life", true);
+		return getConfig("PROJECT_URL", "http://alyson.genny.life", true);
 	}
 	
 	/** 

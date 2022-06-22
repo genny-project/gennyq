@@ -4,15 +4,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.net.http.HttpRequest.Builder;
-
+import java.net.http.HttpResponse;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
 import org.jboss.logging.Logger;
+
+
 
 /**
  * A Static utility class for standard HTTP requests.
@@ -81,10 +81,16 @@ public class HttpUtils {
 
 		HttpClient client = HttpClient.newHttpClient();
 
-		Builder requestBuilder = HttpRequest.newBuilder()
+		Builder requestBuilder = null;
+		
+		try {
+		requestBuilder = HttpRequest.newBuilder()
 				.uri(URI.create(uri))
 				.setHeader("Content-Type", contentType);
-
+	} catch (IllegalArgumentException e) {
+		log.error("bad URI ->["+uri+"]");
+		log.error(e);
+		}
 		if (token != null) {
 			requestBuilder.setHeader("Authorization", "Bearer " + token);
 		}

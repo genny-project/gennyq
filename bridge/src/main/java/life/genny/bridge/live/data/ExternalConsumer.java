@@ -1,15 +1,21 @@
 package life.genny.bridge.live.data;
 
-import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import java.util.UUID;
+
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.StartupEvent;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
@@ -60,21 +66,14 @@ public class ExternalConsumer {
 	 *     ExternalConsumerConfig} method - init(@Observes Router router)
 	 */
 	void handleConnectionTypes(final BridgeEvent bridgeEvent) {
-
-		switch (bridgeEvent.type()) {
-			case PUBLISH:
-			case SEND:
-				{
-					handleIfRolesAllowed(bridgeEvent, "user");
-				}
-			case SOCKET_CLOSED:
-			case SOCKET_CREATED:
-			default:
-				{
-					bridgeEvent.complete(true);
-					return;
-				}
+		BridgeEventType type = bridgeEvent.type();
+		if (type.equals(BridgeEventType.PUBLISH) || type.equals(BridgeEventType.SEND)) {
+			log.info("Handling BridgeEventType: " + type.name());
+			handleIfRolesAllowed(bridgeEvent, "user");
+		} else {
+			log.info("Nothing to do. Marking the event as complete since the BridgeEventType is: " + type.name());
 		}
+		bridgeEvent.complete(true);
 	}
 
 	/**
@@ -176,42 +175,6 @@ public class ExternalConsumer {
 			return false;
 		}
 	}
-
-	/**
-	 * Depending of the message type the corresponding internal producer channel is used to route that
-	 * request on the backends such as rules, api, sheelemy notes, messages etc.
-	 *
-	 * @param body The body extracted from the raw json object sent from BridgeEvent
-	 * @param gennyToken the users GennyToken
-	 */
-	// void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
-
-	// 	log.info("Incoming Payload = " + body.toString());
-
-	// 	if (body.getString("msg_type").equals("DATA_MSG")) {
-	// 		if ("Answer".equals(body.getString("data_type"))) {
-	// 			JsonArray items = body.getJsonArray("items");
-	// 			if (items.isEmpty()) {
-	// 				return;
-	// 			}
-	// 		}
-
-	// 		KafkaUtils.writeMsg("data", body.toString());
-	// 		body.remove("token");
-	// 		log.info("Sent payload "+body.getString("msg_type")+" from user " + gennyToken.getUserCode() + " to data "+body.toString());
-
-	// 	} else if (body.getString("msg_type").equals("EVT_MSG")) {
-
-			
-	// 		KafkaUtils.writeMsg("events", body.toString());
-	// 		log.info("Sent payload from user " + gennyToken.getUserCode() + " to events");
-
-	// 	} else if ((body.getJsonObject("data").getString("code") != null)
-	// 			&& (body.getJsonObject("data").getString("code").equals("QUE_SUBMIT"))) {
-
-	// 		log.error("A deadend message was sent with the code QUE_SUBMIT");
-	// 	}
-	// }
 
 	/**
 	 * Depending of the message type the corresponding internal producer channel is used to route that
