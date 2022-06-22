@@ -48,6 +48,7 @@ public class Service2Service {
     public void triggerProcessQuestions(String questionCode, String sourceCode, String targetCode, String pcmCode) {
 
 		JsonObject payload = Json.createObjectBuilder()
+			.add("workflowId", "processQuestions")
 			.add("questionCode", questionCode)
 			.add("sourceCode", sourceCode)
 			.add("targetCode", targetCode)
@@ -55,6 +56,6 @@ public class Service2Service {
 			.add("token", userToken.getToken())
 			.build();
 
-		KafkaUtils.writeMsg("process_questions", jsonb.toJson(payload));
+		KafkaUtils.writeMsg("service2Service", jsonb.toJson(payload));
 	}
 }

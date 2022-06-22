@@ -33,7 +33,7 @@ public class HttpUtils {
 	 * @param token The token to use in authorization.
 	 * @return The returned response object.
 	 */
-	public static java.net.http.HttpResponse<String> put(String uri, String body, String token) {
+	public static HttpResponse<String> put(String uri, String body, String token) {
 
 		HttpClient client = HttpClient.newHttpClient();
 
