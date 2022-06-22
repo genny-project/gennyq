@@ -24,10 +24,15 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.gadaq.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -120,6 +125,47 @@ public class InternalConsumer {
 			log.debug("================= END ANSWER ==================");
 		}
 
+		// Retrieve Base Entity from cache
+
+		BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, targetCode);
+		log.info("Fetching BaseEntity from '" + GennyConstants.CACHE_NAME_BASEENTITY + "': " + targetCode);
+		log.info("	- Key: " + baseEntityKey);
+
+		BaseEntity targetBaseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+				baseEntityKey);
+
+		if (targetBaseEntity == null) {
+			log.error("Error retrieving base entity: [" + targetCode + "] for product code: " + productCode);
+
+			scope.destroy();
+			return;
+		}
+
+		// Update the EntityAttribute
+		Optional<EntityAttribute> optEA = targetBaseEntity.findEntityAttribute(attributeCode);
+
+		if (optEA.isPresent()) {
+			EntityAttribute entityAttribute = optEA.get();
+			entityAttribute.setValue(ansValue);
+		} else {
+			log.error("Could not find attribute " + attributeCode + " in BaseEntity: " + targetBaseEntity.getCode());
+
+			scope.destroy();
+			return;
+		}
+
+		// Send the baseentity back into the cache
+		BaseEntity cachedBaseEntity = (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+				baseEntityKey, targetBaseEntity);
+
+		if (cachedBaseEntity == null) {
+			log.error("Error Saving BaseEntity: " + targetBaseEntity.getCode());
+			log.error("Cache: " + GennyConstants.CACHE_NAME_BASEENTITY);
+			log.error("BaseEntityKey: " + baseEntityKey);
+
+			scope.destroy();
+			return;
+		}
 		qwandaUtils.saveAnswer(answer);
 
 		scope.destroy();

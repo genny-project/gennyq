@@ -43,7 +43,7 @@
       <dependency>
         <groupId>org.drools</groupId>
         <artifactId>drools-bom</artifactId>
-        <version>8.18.0-SNAPSHOT</version>
+        <version>8.18.0.Beta</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -103,7 +103,7 @@
     <dependency>
       <groupId>org.drools</groupId>
       <artifactId>drools-decisiontables</artifactId>
-      <version>8.18.0-SNAPSHOT</version>
+      <version>8.18.0.Beta</version>
     </dependency>
   </dependencies>
   <build>

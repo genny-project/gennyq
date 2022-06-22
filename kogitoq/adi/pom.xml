@@ -29,7 +29,7 @@
   <dependencies>
     <dependency>
       <groupId>life.genny</groupId>
-      <artifactId>serviceq</artifactId>
+      <artifactId>gadaq</artifactId>
       <version>${genny.version}</version>
     </dependency>
     <dependency>
