@@ -8,6 +8,8 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -71,6 +73,21 @@ public class InternalConsumer {
 	 */
 	void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
+	}
+
+	@Blocking
+	@Incoming("process_questions")
+	public void fromProcessQuestions(String payload) {
+
+		Instant start = Instant.now();
+		scope.init(payload);
+
+		JsonObject json = jsonb.fromJson(payload, JsonObject.class);
+		kogitoUtils.triggerWorkflow("processQuestions", json);
+
+		scope.destroy();
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	/**

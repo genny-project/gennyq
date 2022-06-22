@@ -115,6 +115,9 @@ public class KafkaBean implements KafkaInterface {
 			case "blacklist":
 				producer.getToBlacklist().send(payload);
 				break;
+			case "process_questions":
+				producer.getToProcessQuestions().send(payload);
+				break;
 			case "webcmds":
 				producer.getToWebCmds().send(Message.of(payload).addMetadata(metadata));
 				break;

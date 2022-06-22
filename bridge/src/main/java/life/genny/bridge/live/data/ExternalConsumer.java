@@ -15,10 +15,12 @@ import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -182,33 +184,77 @@ public class ExternalConsumer {
 	 * @param body The body extracted from the raw json object sent from BridgeEvent
 	 * @param gennyToken the users GennyToken
 	 */
+	// void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
+
+	// 	log.info("Incoming Payload = " + body.toString());
+
+	// 	if (body.getString("msg_type").equals("DATA_MSG")) {
+	// 		if ("Answer".equals(body.getString("data_type"))) {
+	// 			JsonArray items = body.getJsonArray("items");
+	// 			if (items.isEmpty()) {
+	// 				return;
+	// 			}
+	// 		}
+
+	// 		KafkaUtils.writeMsg("data", body.toString());
+	// 		body.remove("token");
+	// 		log.info("Sent payload "+body.getString("msg_type")+" from user " + gennyToken.getUserCode() + " to data "+body.toString());
+
+	// 	} else if (body.getString("msg_type").equals("EVT_MSG")) {
+
+			
+	// 		KafkaUtils.writeMsg("events", body.toString());
+	// 		log.info("Sent payload from user " + gennyToken.getUserCode() + " to events");
+
+	// 	} else if ((body.getJsonObject("data").getString("code") != null)
+	// 			&& (body.getJsonObject("data").getString("code").equals("QUE_SUBMIT"))) {
+
+	// 		log.error("A deadend message was sent with the code QUE_SUBMIT");
+	// 	}
+	// }
+
+	/**
+	 * Depending of the message type the corresponding internal producer channel is used to route that
+	 * request on the backends such as rules, api, sheelemy notes, messages etc.
+	 *
+	 * @param body The body extracted from the raw json object sent from BridgeEvent
+	 * @param gennyToken the users GennyToken
+	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
 
 		log.info("Incoming Payload = " + body.toString());
 
-		if (body.getString("msg_type").equals("DATA_MSG")) {
-			if ("Answer".equals(body.getString("data_type"))) {
-				JsonArray items = body.getJsonArray("items");
-				if (items.isEmpty()) {
-					return;
-				}
-			}
-
-			KafkaUtils.writeMsg("data", body.toString());
-			body.remove("token");
-			log.info("Sent payload "+body.getString("msg_type")+" from user " + gennyToken.getUserCode() + " to data "+body.toString());
-
-		} else if (body.getString("msg_type").equals("EVT_MSG")) {
-
-			
-			KafkaUtils.writeMsg("events", body.toString());
-			log.info("Sent payload from user " + gennyToken.getUserCode() + " to events");
-
-		} else if ((body.getJsonObject("data").getString("code") != null)
-				&& (body.getJsonObject("data").getString("code").equals("QUE_SUBMIT"))) {
-
-			log.error("A deadend message was sent with the code QUE_SUBMIT");
+		if (body == null || body.getString("msg_type") == null) {
+			log.error("Bad body JsonObject passed");
+			return;
 		}
+
+		String msgType = body.getString("msg_type");
+		String productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES");
+		String topicName = "";
+
+		if (msgType.equals("DATA_MSG")) {
+			if (!StringUtils.isEmpty(productCodes)) {
+				topicName = "data";
+			} else {
+				topicName = "genny_data";
+			}
+		} else if (msgType.equals("EVT_MSG")) {
+			if (!StringUtils.isEmpty(productCodes)) {
+				topicName = "events";
+			} else {
+				topicName = "genny_events";
+			}
+		}
+
+		// publish message
+		String payload = body.toString();
+		KafkaUtils.writeMsg(topicName, payload);
+
+		// remove token from log for security purposes
+		body.remove("token");
+		payload = body.toString();
+		log.info("Sent payload "+payload+" from user " + gennyToken.getUserCode() + " to topic "+topicName);
 	}
 
 }

@@ -73,4 +73,9 @@ public class InternalProducer {
     return blacklist;
   }
 
+  @Inject @Channel("process_questionsout") Emitter<String> processQuestions;
+  public Emitter<String> getToProcessQuestions() {
+    return processQuestions;
+  }
+
 }
