@@ -88,14 +88,20 @@ public class KafkaBean implements KafkaInterface {
 			case "events":
 				producer.getToEvents().send(payload);
 				break;
+			case "valid_events":
+				producer.getToValidEvents().send(payload);
+				break;
+			case "genny_events":
+				producer.getToGennyEvents().send(payload);
+				break;
+			case "search_events":
+				producer.getToSearchEvents().send(payload);
+				break;
 			case "data":
 				producer.getToData().send(payload);
 				break;
 			case "valid_data":
 				producer.getToValidData().send(payload);
-				break;
-			case "search_events":
-				producer.getToSearchEvents().send(payload);
 				break;
 			case "search_data":
 				producer.getToSearchData().send(payload);
@@ -108,6 +114,9 @@ public class KafkaBean implements KafkaInterface {
 				break;
 			case "blacklist":
 				producer.getToBlacklist().send(payload);
+				break;
+			case "service2service":
+				producer.getToService2Service().send(payload);
 				break;
 			case "webcmds":
 				producer.getToWebCmds().send(Message.of(payload).addMetadata(metadata));

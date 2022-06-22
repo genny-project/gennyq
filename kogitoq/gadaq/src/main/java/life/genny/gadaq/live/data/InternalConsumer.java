@@ -8,6 +8,8 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -76,6 +78,21 @@ public class InternalConsumer {
 	 */
 	void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
+	}
+
+	@Blocking
+	@Incoming("service2service")
+	public void fromProcessQuestions(String payload) {
+
+		Instant start = Instant.now();
+		scope.init(payload);
+
+		JsonObject json = jsonb.fromJson(payload, JsonObject.class);
+		kogitoUtils.triggerWorkflow("processQuestions", json);
+
+		scope.destroy();
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	/**
@@ -157,22 +174,23 @@ public class InternalConsumer {
 	}
 
 	/**
-	 * Consume from the events topic.
+	 * Consume from the genny_events topic.
 	 *
 	 * @param event The incoming event
 	 */
-	@Incoming("events")
+	@Incoming("genny_events")
 	@Blocking
 	public void getEvent(String event) {
 
 		scope.init(event);
 
-		log.info("Incoming Event : " + event);
+		log.info("Received Forwarded Event : " + event);
 		log.info("userToken = " + userToken);
 		log.info("productCode = " + userToken.getProductCode());
 		Instant start = Instant.now();
 
 		// check if event is a valid event
+		log.info("Parsing msg");
 		QEventMessage msg = null;
 		try {
 			msg = jsonb.fromJson(event, QEventMessage.class);
@@ -181,16 +199,23 @@ public class InternalConsumer {
 			e.printStackTrace();
 			return;
 		}
+		log.info("Getting session");
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
 
+		log.info("Inserting facts");
 		session.insert(kogitoUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
 		session.insert(msg);
-		session.fireAllRules();
-		session.dispose();
+
+		log.info("Firing Rules");
+		try {
+			session.fireAllRules();
+		} finally {
+			session.dispose();
+		}
 
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
@@ -231,7 +256,7 @@ public class InternalConsumer {
 		for (Answer answer : msg.getItems()) {
 
 			// skip if no processId is present
-			if (answer.getProcessId() == null) {
+			if (answer.getProcessId() == null || answer.getProcessId().equals("no-id")) {
 				continue;
 			}
 

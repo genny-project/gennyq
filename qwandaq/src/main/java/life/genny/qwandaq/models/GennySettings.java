@@ -4,58 +4,12 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
-
-
 /**
  * Various Settings to be used in the Genny System
  **/
 @RegisterForReflection
 public class GennySettings {
 	private static final Logger log = Logger.getLogger(GennySettings.class);
-
-	// URLs
-	// public static final String projectUrl = CommonUtils.getSystemEnv("PROJECT_URL") != null ? CommonUtils.getSystemEnv("PROJECT_URL")
-	// 		: "http://alyson7.genny.life";
-	// public static final String qwandaServiceUrl = CommonUtils.getSystemEnv("GENNY_API_URL") != null
-	// 		? CommonUtils.getSystemEnv("GENNY_API_URL")
-	// 		: projectUrl + ":8280";
-	// public static final String bridgeServiceUrl = CommonUtils.getSystemEnv("BRIDGE_SERVICE_API") != null
-	// 		? CommonUtils.getSystemEnv("BRIDGE_SERVICE_API")
-	// 		: projectUrl + "/api/service/commands";
-	// public static final String fyodorServiceUrl = CommonUtils.getSystemEnv("FYODOR_SERVICE_API") != null 
-	// 		? CommonUtils.getSystemEnv("FYODOR_SERVICE_API") 
-	// 		: "http://erstwhile-wolf-genny-fyodor-svc:4242";
-	// public static final String shleemyServiceUrl = CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null
-	// 		? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
-	// 		: (projectUrl + ":4242");
-	// public static final String infinispanHost = CommonUtils.getSystemEnv("INFINISPAN_URL") != null
-	// 		? CommonUtils.getSystemEnv("INFINISPAN_URL")
-	// 		: (projectUrl + ":11222");
-
-	// RULES
-	// public static final String realmDir = CommonUtils.getSystemEnv("REALM_DIR") != null ? CommonUtils.getSystemEnv("REALM_DIR") : "./realm";
-	// public static final String rulesDir = CommonUtils.getSystemEnv("RULES_DIR") != null ? CommonUtils.getSystemEnv("RULES_DIR") : "/rules";
-	// public static final String keycloakUrl = CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL")
-	// 		: "http://keycloak.genny.life";
-
-	// UI Defaults
-	// public static final Integer defaultPageSize = CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE") == null ? 10
-	// 		: (Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE")));
-	// public static final Integer defaultDropDownPageSize = CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE") == null ? 25
-	// 		: (Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE")));
-	// public static final Integer defaultBucketSize = CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE") == null ? 8
-	// 		: (Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE")));
-
-	// TWILIO
-	public static final String twilioAccountSid = CommonUtils.getSystemEnv("TWILIO_ACCOUNT_SID") != null
-			? CommonUtils.getSystemEnv("TWILIO_ACCOUNT_SID")
-			: "TWILIO_ACCOUNT_SID";
-	public static final String twilioAuthToken = CommonUtils.getSystemEnv("TWILIO_AUTH_TOKEN") != null
-			? CommonUtils.getSystemEnv("TWILIO_AUTH_TOKEN")
-			: "TWILIO_AUTH_TOKEN";
-	public static final String twilioSenderMobile = CommonUtils.getSystemEnv("TWILIO_SENDER_MOBILE") != null
-			? CommonUtils.getSystemEnv("TWILIO_SENDER_MOBILE")
-			: "TWILIO_SENDER_MOBILE";
 
 	/**
 	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException} if
@@ -104,9 +58,9 @@ public class GennySettings {
 	}
 	
 	/*
-	 * NOTE: The variables above seem to be defaulting all the time.
-	 * likely due to an issue with the environment variables not being present at initialisation.
-	 * If it cannot be fixed, we may have to opt for doing it as seen below.
+	 * NOTE: Static variables using getEnv seem to be defaulting all the time.
+	 * This is likely due to an issue with the environment variables not being present at initialisation.
+	 * Because of this, we are have to opt for doing it as seen below.
 	 */
 
 	/* ############ URL Methods ############## */
@@ -118,8 +72,6 @@ public class GennySettings {
 	 */
 	public static String projectUrl() {
 		return getConfig("PROJECT_URL", "http://alyson.genny.life", true);
-		// return CommonUtils.getSystemEnv("PROJECT_URL") != null ? CommonUtils.getSystemEnv("PROJECT_URL")
-		// 	: "http://alyson7.genny.life";
 	}
 	
 	/** 
@@ -134,8 +86,13 @@ public class GennySettings {
 	 */
 	public static String fyodorServiceUrl() {
 		return getConfig("FYODOR_SERVICE_API", projectUrl() + ":4242", true);
-		// return CommonUtils.getSystemEnv("FYODOR_SERVICE_API") != null ? CommonUtils.getSystemEnv("FYODOR_SERVICE_API") 
-		// 	: (projectUrl() + ":4242");
+	}
+
+	/**
+	* @return String
+	 */
+	public static String gadaqServiceUrl() {
+		return getConfig("GENNY_GADAQ_SERVICE_URL", projectUrl() + ":6590", true);
 	}
 
 	/**
@@ -143,8 +100,6 @@ public class GennySettings {
 	 */
 	public static String kogitoServiceUrl() {
 		return getConfig("GENNY_KOGITO_SERVICE_URL", projectUrl() + ":6590", true);
-		// return CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") != null ? CommonUtils.getSystemEnv("GENNY_KOGITO_SERVICE_URL") 
-		// 	: (projectUrl() + ":4242");
 	}
 
 	/** 
@@ -152,8 +107,6 @@ public class GennySettings {
 	 */
 	public static String shleemyServiceUrl() {
 		return getConfig("SHLEEMY_SERVICE_API", projectUrl() + ":6969", true);
-		// return CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API") != null ? CommonUtils.getSystemEnv("SHLEEMY_SERVICE_API")
-		// 	: (projectUrl() + ":4242");
 	}
 	
 	/** 
@@ -163,8 +116,6 @@ public class GennySettings {
 	 */
 	public static String infinispanHost() {
 		return getConfig("INFINISPAN_URL", projectUrl() + ":11222", true);
-		// return CommonUtils.getSystemEnv("INFINISPAN_URL") != null ? CommonUtils.getSystemEnv("INFINISPAN_URL")
-		// 	: (projectUrl() + ":11222");
 	}
 
 	/** 
@@ -174,8 +125,6 @@ public class GennySettings {
 	 */
 	public static String keycloakUrl() {
 		return getConfig("GENNY_KEYCLOAK_URL", "http://keycloak.genny.life");
-		// return CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL") != null ? CommonUtils.getSystemEnv("GENNY_KEYCLOAK_URL")
-		// 	: "http://keycloak.genny.life";
 	}
 
 	/* ############ UI Defaults ############## */
@@ -187,8 +136,6 @@ public class GennySettings {
 	 */
 	public static Integer defaultPageSize() {
 		return Integer.parseInt(getConfig("DEFAULT_PAGE_SIZE", "10"));
-		// return CommonUtils.getSystemEnv("DEFAULT_PAGE_SIZE") != null
-		// 	? Integer.parseInt(CommonUtils.gsetSystemEnv("DEFAULT_PAGE_SIZE")) : 10;
 	}
 
 	/**
@@ -198,8 +145,6 @@ public class GennySettings {
 	 */
 	public static Integer defaultDropDownPageSize() {
 		return Integer.parseInt(getConfig("DEFAULT_DROPDOWN_PAGE_SIZE", "25"));
-		// return CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE") != null
-		// 	? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_DROPDOWN_PAGE_SIZE")) : 25;
 	}
 
 	/**
@@ -209,8 +154,6 @@ public class GennySettings {
 	 */
 	public static Integer defaultBucketSize() {
 		return Integer.parseInt(getConfig("DEFAULT_BUCKET_SIZE", "8"));
-		// return CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE") != null
-		// 	? Integer.parseInt(CommonUtils.getSystemEnv("DEFAULT_BUCKET_SIZE")) : 8;
 	}
 
 	/**
@@ -220,5 +163,4 @@ public class GennySettings {
 	public static Integer executorThreadCount() {
 		return Integer.parseInt(getConfig("EXECUTOR_THREAD_COUNT", "200"));
 	}
-
 }
