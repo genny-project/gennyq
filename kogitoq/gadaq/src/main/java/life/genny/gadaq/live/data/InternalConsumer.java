@@ -82,13 +82,14 @@ public class InternalConsumer {
 
 	@Blocking
 	@Incoming("service2service")
-	public void fromProcessQuestions(String payload) {
+	public void fromService2Service(String payload) {
 
 		Instant start = Instant.now();
 		scope.init(payload);
 
 		JsonObject json = jsonb.fromJson(payload, JsonObject.class);
-		kogitoUtils.triggerWorkflow("processQuestions", json);
+		String workflowId = json.getString("workflowId");
+		kogitoUtils.triggerWorkflow(workflowId, json);
 
 		scope.destroy();
 		Instant end = Instant.now();
