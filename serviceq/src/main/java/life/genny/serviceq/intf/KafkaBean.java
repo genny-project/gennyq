@@ -91,8 +91,8 @@ public class KafkaBean implements KafkaInterface {
 			case "valid_events":
 				producer.getToValidEvents().send(payload);
 				break;
-			case "forwarded_events":
-				producer.getToForwardedEvents().send(payload);
+			case "genny_events":
+				producer.getToGennyEvents().send(payload);
 				break;
 			case "search_events":
 				producer.getToSearchEvents().send(payload);

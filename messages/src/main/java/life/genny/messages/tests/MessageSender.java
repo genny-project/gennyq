@@ -32,7 +32,7 @@ public class MessageSender {
 
         BaseEntity be = jsonb.fromJson(searchJson, BaseEntity.class);
 
-        qMessageFactory.getMessageProvider(qBaseMSGMessageType.)
+        // qMessageFactory.getMessageProvider(qBaseMSGMessageType.)
 
         System.out.println("Simple test " + be);
     }

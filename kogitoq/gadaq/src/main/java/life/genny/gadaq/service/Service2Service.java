@@ -56,6 +56,6 @@ public class Service2Service {
 			.add("token", userToken.getToken())
 			.build();
 
-		KafkaUtils.writeMsg("service2Service", jsonb.toJson(payload));
+		KafkaUtils.writeMsg("service2service", jsonb.toJson(payload));
 	}
 }

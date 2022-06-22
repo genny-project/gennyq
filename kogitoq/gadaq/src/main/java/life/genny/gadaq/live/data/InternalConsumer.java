@@ -76,7 +76,7 @@ public class InternalConsumer {
 	}
 
 	@Blocking
-	@Incoming("process_questions")
+	@Incoming("service2service")
 	public void fromProcessQuestions(String payload) {
 
 		Instant start = Instant.now();
@@ -128,11 +128,11 @@ public class InternalConsumer {
 	}
 
 	/**
-	 * Consume from the forwarded_events topic.
+	 * Consume from the genny_events topic.
 	 *
 	 * @param event The incoming event
 	 */
-	@Incoming("forwarded_events")
+	@Incoming("genny_events")
 	@Blocking
 	public void getEvent(String event) {
 

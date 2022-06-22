@@ -28,9 +28,9 @@ public class InternalProducer {
 	  return validEvents;
   }
 
-  @Inject @Channel("forwarded_eventsout") Emitter<String> forwardedEvents;
-  public Emitter<String> getToForwardedEvents() {
-	  return forwardedEvents;
+  @Inject @Channel("genny_eventsout") Emitter<String> gennyEvents;
+  public Emitter<String> getToGennyEvents() {
+	  return gennyEvents;
   }
 
   @Inject @Channel("dataout") Emitter<String> data;
