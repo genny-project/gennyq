@@ -4,6 +4,7 @@ import javax.inject.Inject;
 import java.util.Map;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.utils.HttpUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.mailer.Mail;
@@ -73,10 +74,18 @@ public class QEmailMessageManager implements QMessageProvider {
 		// Mail Merging Data
 		body = MergeUtils.merge(body, contextMap);
 
-		try {
+		String randStr = "dweedede";
 
-			mailer.send(Mail.withText(targetEmail, subject, body));
-			log.info(ANSIColour.GREEN + "Email to " + targetEmail +" is sent" + ANSIColour.RESET);
+		String uri = "https://api.sendgrid.com/v3/mail/send";
+		String emailBody = "{\"personalizations\":[{\"to\":[{\"email\":\"mrrahulmaxcontact@gmail.com\",\"name\":\"Rahul Sam\"}],\"subject\":\"Hello, World "+ randStr +"!\"}],\"content\": [{\"type\": \"text/plain\", \"value\": \""+ randStr +"!\"}],\"from\":{\"email\":\"rahul.samaranayake@outcomelife.com.au\",\"name\":\"Rahul samaranayake\"},\"reply_to\":{\"email\":\"rahul.samaranayake@outcomelife.com.au\",\"name\":\"Rahul samaranayake\"}}";
+		String contentType = "application/json";
+		String token = "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";
+
+		try {
+//			mailer.send(Mail.withText(targetEmail, subject, body));
+//			log.info(ANSIColour.GREEN + "Email to " + targetEmail +" is sent" + ANSIColour.RESET);
+
+			HttpUtils.post(uri, emailBody, contentType, token);
 
 		} catch (Exception e) {
 			log.error("ERROR", e);
