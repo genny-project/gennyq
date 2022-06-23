@@ -3,22 +3,18 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>life.genny</groupId>
   <artifactId>gennyq</artifactId>
   <version>10.1.0</version>
   <packaging>pom</packaging>
-
   <name>GennyQ</name>
   <description>Genny Quarkus Services Repository</description>
   <url>http://www.gada.io</url>
   <inceptionYear>2022</inceptionYear>
-
   <organization>
     <name>GADA Technology</name>
     <url>http://www.gada.io/</url>
   </organization>
-
   <licenses>
     <license>
       <name>Apache Software License, Version 2.0</name>
@@ -26,13 +22,12 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
   <properties>
-
     <!-- Quarkus Properties -->
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus.platform.version>2.9.2.Final</quarkus.platform.version>
+    <quarkus-plugin.version>2.9.2.Final</quarkus-plugin.version>
 
     <!-- Maven Properties -->
     <maven.version>3.8.1</maven.version>
@@ -73,8 +68,13 @@
 
     <!-- kogito -->
     <kogito.version>1.22.1.Final</kogito.version>
+    <kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
+    <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
+    <kogito.bom.version>1.22.1.Final</kogito.bom.version>
     <version.org.optaplanner>8.22.0.Final</version.org.optaplanner>
 
+    <!-- drools -->
+    <version.org.drools>8.22.1.Beta</version.org.drools>
     <!-- override default to fast-jar packaging for forward-compatibility -->
     <quarkus.package.type>fast-jar</quarkus.package.type>
     <!-- dependencies version -->
@@ -83,7 +83,6 @@
     <version.org.eclipse.jkube>1.4.0</version.org.eclipse.jkube>
     <version.docker.plugin>0.37.0</version.docker.plugin>
   </properties>
-
   <!-- distributionManagement section -->
   <distributionManagement>
     <repository>
@@ -97,7 +96,6 @@
       <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
-
   <pluginRepositories>
     <pluginRepository>
       <id>jboss-public-repository-group</id>
@@ -114,22 +112,18 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
-
   <scm>
     <connection>scm:git:https://github.com/genny-project/gennyq.git</connection>
     <developerConnection>scm:git:git@github.com:genny-project/gennyq.git</developerConnection>
     <url>https://github.com/genny-project/gennyq</url>
   </scm>
-
   <developers>
     <developer>
       <name>All developers are listed in the GADA Technology organization</name>
       <url>https://github.com/genny-project/people</url>
     </developer>
   </developers>
-
   <profiles>
-
     <!-- Default Profile -->
     <profile>
       <id>default</id>
@@ -148,7 +142,6 @@
         <module>shleemy</module>
       </modules>
     </profile>
-
     <!-- Native Profile -->
     <profile>
       <id>native</id>
@@ -176,7 +169,6 @@
         <module>shleemy</module>
       </modules>
     </profile>
-
     <profile>
       <id>persistence</id>
       <activation>
@@ -188,7 +180,6 @@
         <tests.category>persistence</tests.category>
       </properties>
     </profile>
-
     <profile>
       <id>jdbc-persistence</id>
       <activation>
@@ -197,7 +188,6 @@
         </property>
       </activation>
     </profile>
-
     <profile>
       <id>events</id>
       <activation>
@@ -206,7 +196,6 @@
         </property>
       </activation>
     </profile>
-
     <profile>
       <id>productized</id>
       <activation>
@@ -215,7 +204,6 @@
         </property>
       </activation>
     </profile>
-   
     <profile>
       <id>optaplanner-downstream</id>
       <activation>
@@ -228,7 +216,6 @@
         <module>process-optaplanner-springboot</module>
       </modules>
     </profile>
-
     <profile>
       <id>optaplanner-downstream-native</id>
       <activation>
@@ -247,52 +234,35 @@
         <module>process-optaplanner-quarkus</module>
       </modules>
     </profile>
-
   </profiles>
-
   <dependencyManagement>
     <dependencies>
-
-      <dependency>
-         <groupId>org.drools</groupId>
-         <artifactId>drools-bom</artifactId>
-         <version>8.22.1.Beta</version>
-         <type>pom</type>
-         <scope>import</scope>
-      </dependency>
-
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-spring-boot-starter-remote</artifactId>
         <version>${version.org.infinispan}</version>
       </dependency>
-
       <dependency>
         <groupId>org.skyscreamer</groupId>
         <artifactId>jsonassert</artifactId>
         <version>${version.org.skyscreamer}</version>
         <scope>test</scope>
       </dependency>
-
     </dependencies>
   </dependencyManagement>
-
   <build>
     <pluginManagement>
       <plugins>
-
         <plugin>
           <groupId>io.quarkus</groupId>
           <artifactId>quarkus-maven-plugin</artifactId>
           <version>${version.io.quarkus}</version>
         </plugin>
-
         <plugin>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-maven-plugin</artifactId>
           <version>${version.org.springframework.boot}</version>
         </plugin>
-
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
@@ -315,7 +285,6 @@
             </execution>
           </executions>
         </plugin>
-
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-failsafe-plugin</artifactId>
@@ -353,7 +322,6 @@
             </execution>
           </executions>
         </plugin>
-
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -377,7 +345,6 @@
             </execution>
           </executions>
         </plugin>
-
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
           <version>${deploy-plugin.version}</version>
@@ -385,7 +352,6 @@
             <retryFailedDeploymentCount>10</retryFailedDeploymentCount>
           </configuration>
         </plugin>
-
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>${maven.compiler.version}</version>
@@ -393,7 +359,6 @@
             <release>${maven.compiler.release}</release>
           </configuration>
         </plugin>
-
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
@@ -413,7 +378,6 @@
           <artifactId>kogito-maven-plugin</artifactId>
           <version>${kogito.version}</version>
         </plugin>
-
         <!-- Packaging -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -462,7 +426,6 @@
             </archive>
           </configuration>
         </plugin>
-
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
@@ -506,59 +469,48 @@
             </execution>
           </executions>
         </plugin>
-
         <!-- Image build / Kubernetes deployment -->
         <plugin>
           <groupId>org.eclipse.jkube</groupId>
           <artifactId>kubernetes-maven-plugin</artifactId>
           <version>${version.org.eclipse.jkube}</version>
         </plugin>
-
         <plugin>
           <groupId>org.eclipse.jkube</groupId>
           <artifactId>openshift-maven-plugin</artifactId>
           <version>${version.org.eclipse.jkube}</version>
         </plugin>
-
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
           <version>${version.docker.plugin}</version>
         </plugin>
-
       </plugins>
     </pluginManagement>
     <plugins>
-
       <!-- need at least maven 3.6.2, fail fast with actionable error rather than obscure errors like [ Error injecting: private org.eclipse.aether.spi.log.Logger org.apache.maven.repository.internal.DefaultVersionRangeResolver.logger ] -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
       </plugin>
-
       <plugin>
         <!-- Entry needed to create test-jars even for packaging types war, bundle, ... -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
       </plugin>
-
       <plugin>
         <!-- Entry needed to create, install and deploy sources jars -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
       </plugin>
-
     </plugins>
   </build>
-
 </project>

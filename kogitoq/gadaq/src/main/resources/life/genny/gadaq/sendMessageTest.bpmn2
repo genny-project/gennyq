@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_bmUx8NQ8EDqnscYrsOWKqg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+  <bpmn2:itemDefinition id="_eventMessageItem" structureRef="life.genny.qwandaq.message.QEventMessage"/>
+  <bpmn2:itemDefinition id="_tokenItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_templateCodeInputXItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_recipientBEJsonInputXItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ctxMapInputXItem" structureRef="java.util.Map"/>
+  <bpmn2:interface id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceInterface" name="life.genny.gadaq.service.SendMessageService" implementationRef="life.genny.gadaq.service.SendMessageService">
+    <bpmn2:operation id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceOperation" name="sendMessage" implementationRef="sendMessage"/>
+  </bpmn2:interface>
+  <bpmn2:collaboration id="_1C002046-43B5-4430-9F89-F6B44C2D273D" name="Default Collaboration">
+    <bpmn2:participant id="_18D9DC60-2ECA-4CAD-8DA6-323CACA2BAFF" name="Pool Participant" processRef="sendMessageTest"/>
+  </bpmn2:collaboration>
+  <bpmn2:process id="sendMessageTest" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Send Message Service Test" isExecutable="true" processType="Public">
+    <bpmn2:documentation><![CDATA[Send Message Service Test]]></bpmn2:documentation>
+    <bpmn2:extensionElements>
+      <drools:import name="life.genny.qwandaq.message.QEventMessage"/>
+    </bpmn2:extensionElements>
+    <bpmn2:property id="eventMessage" itemSubjectRef="_eventMessageItem" name="eventMessage">
+      <bpmn2:extensionElements>
+        <drools:metaData name="customTags">
+          <drools:metaValue><![CDATA[input,readonly]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+    </bpmn2:property>
+    <bpmn2:property id="token" itemSubjectRef="_tokenItem" name="token">
+      <bpmn2:extensionElements>
+        <drools:metaData name="customTags">
+          <drools:metaValue><![CDATA[input,readonly]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+    </bpmn2:property>
+    <bpmn2:sequenceFlow id="_C0DEFE87-A1D7-416F-8DA4-6F3261C04B02" sourceRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3" targetRef="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A"/>
+    <bpmn2:sequenceFlow id="_B15C97A9-1762-4BB8-A97C-12D61448D9B9" sourceRef="_321CE5F6-80DE-48BD-93F4-41E832A810FF" targetRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3"/>
+    <bpmn2:serviceTask id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.gadaq.service.SendMessageService" drools:serviceoperation="sendMessage" name="Send Message" implementation="Java" operationRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceOperation">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Send Message]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>_B15C97A9-1762-4BB8-A97C-12D61448D9B9</bpmn2:incoming>
+      <bpmn2:outgoing>_C0DEFE87-A1D7-416F-8DA4-6F3261C04B02</bpmn2:outgoing>
+      <bpmn2:ioSpecification>
+        <bpmn2:dataInput id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_templateCodeInputX" drools:dtype="String" itemSubjectRef="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_templateCodeInputXItem" name="templateCode"/>
+        <bpmn2:dataInput id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_recipientBEJsonInputX" drools:dtype="String" itemSubjectRef="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_recipientBEJsonInputXItem" name="recipientBEJson"/>
+        <bpmn2:dataInput id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ctxMapInputX" drools:dtype="java.util.Map" itemSubjectRef="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ctxMapInputXItem" name="ctxMap"/>
+        <bpmn2:inputSet>
+          <bpmn2:dataInputRefs>_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_templateCodeInputX</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_recipientBEJsonInputX</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ctxMapInputX</bpmn2:dataInputRefs>
+        </bpmn2:inputSet>
+      </bpmn2:ioSpecification>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_templateCodeInputX</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[templateCode]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_templateCodeInputX]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_recipientBEJsonInputX</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[recipientBEJson]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_recipientBEJsonInputX]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ctxMapInputX</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[ctxMap]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ctxMapInputX]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+    </bpmn2:serviceTask>
+    <bpmn2:endEvent id="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A">
+      <bpmn2:incoming>_C0DEFE87-A1D7-416F-8DA4-6F3261C04B02</bpmn2:incoming>
+    </bpmn2:endEvent>
+    <bpmn2:startEvent id="_321CE5F6-80DE-48BD-93F4-41E832A810FF">
+      <bpmn2:outgoing>_B15C97A9-1762-4BB8-A97C-12D61448D9B9</bpmn2:outgoing>
+    </bpmn2:startEvent>
+  </bpmn2:process>
+  <bpmndi:BPMNDiagram>
+    <bpmndi:BPMNPlane bpmnElement="sendMessageTest">
+      <bpmndi:BPMNShape id="shape__321CE5F6-80DE-48BD-93F4-41E832A810FF" bpmnElement="_321CE5F6-80DE-48BD-93F4-41E832A810FF">
+        <dc:Bounds height="56" width="56" x="223" y="240"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A" bpmnElement="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A">
+        <dc:Bounds height="56" width="56" x="1460" y="240"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3" bpmnElement="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3">
+        <dc:Bounds height="102" width="154" x="647" y="217"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_shape__321CE5F6-80DE-48BD-93F4-41E832A810FF_to_shape__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3" bpmnElement="_B15C97A9-1762-4BB8-A97C-12D61448D9B9">
+        <di:waypoint x="251" y="268"/>
+        <di:waypoint x="647" y="268"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_shape__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_to_shape__1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A" bpmnElement="_C0DEFE87-A1D7-416F-8DA4-6F3261C04B02">
+        <di:waypoint x="724" y="268"/>
+        <di:waypoint x="1488" y="268"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmn2:relationship type="BPSimData">
+    <bpmn2:extensionElements>
+      <bpsim:BPSimData>
+        <bpsim:Scenario id="default" name="Simulationscenario">
+          <bpsim:ScenarioParameters/>
+          <bpsim:ElementParameters elementRef="_321CE5F6-80DE-48BD-93F4-41E832A810FF">
+            <bpsim:TimeParameters>
+              <bpsim:ProcessingTime>
+                <bpsim:NormalDistribution mean="0" standardDeviation="0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+          </bpsim:ElementParameters>
+          <bpsim:ElementParameters elementRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3">
+            <bpsim:TimeParameters>
+              <bpsim:ProcessingTime>
+                <bpsim:NormalDistribution mean="0" standardDeviation="0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+            <bpsim:ResourceParameters>
+              <bpsim:Availability>
+                <bpsim:FloatingParameter value="0"/>
+              </bpsim:Availability>
+              <bpsim:Quantity>
+                <bpsim:FloatingParameter value="0"/>
+              </bpsim:Quantity>
+            </bpsim:ResourceParameters>
+            <bpsim:CostParameters>
+              <bpsim:UnitCost>
+                <bpsim:FloatingParameter value="0"/>
+              </bpsim:UnitCost>
+            </bpsim:CostParameters>
+          </bpsim:ElementParameters>
+        </bpsim:Scenario>
+      </bpsim:BPSimData>
+    </bpmn2:extensionElements>
+    <bpmn2:source>_bmUx8NQ8EDqnscYrsOWKqg</bpmn2:source>
+    <bpmn2:target>_bmUx8NQ8EDqnscYrsOWKqg</bpmn2:target>
+  </bpmn2:relationship>
+</bpmn2:definitions>

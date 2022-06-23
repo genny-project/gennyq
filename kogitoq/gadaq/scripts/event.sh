@@ -1,9 +1,10 @@
 #!/bin/bash
 TOKEN=${1}
-processId=${2}
-questionCode=QUE_SUBMIT
+sourceCode=${2}
+targetCode=${3}
+questionCode=${4}
 
-payload="{\"data\":{\"code\":\"${questionCode}\",\"processId\":\"${processId}\"},\"token\":\"${TOKEN}\",\"msg_type\":\"EVT_MSG\"}"
+payload="{\"data\":{\"sourceCode\":\"${sourceCode}\",\"targetCode\":\"${targetCode}\",\"code\":\"${questionCode}\"},\"token\":\"${TOKEN}\",\"msg_type\":\"EVT_MSG\"}"
 #echo $payload
 echo  $payload > answer.json
 
@@ -12,4 +13,3 @@ printf '%s\n%s\n' 'security.protocol=PLAINTEXT' 'sasl.mechanism=PLAIN' > prop &&
 kafka-console-producer --producer.config=prop  --bootstrap-server localhost:9092 --topic events" < answer.json
 
 echo "Submit sent"
-

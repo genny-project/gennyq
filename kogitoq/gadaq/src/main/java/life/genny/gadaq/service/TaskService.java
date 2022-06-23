@@ -59,5 +59,4 @@ public class TaskService {
         askMsg.setReplace(true);
         KafkaUtils.writeMsg("webcmds", askMsg);
     }
-
 }

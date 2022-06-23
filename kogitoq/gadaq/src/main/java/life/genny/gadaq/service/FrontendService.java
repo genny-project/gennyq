@@ -201,7 +201,7 @@ public class FrontendService {
 		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems()[0];
+		Ask ask = askMessage.getItems().get(0);
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 		recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
@@ -246,7 +246,7 @@ public class FrontendService {
 		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems()[0];
+		Ask ask = askMessage.getItems().get(0);
 
 		BaseEntity target = beUtils.getBaseEntityByCode(ask.getTargetCode());
 

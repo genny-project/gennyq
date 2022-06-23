@@ -49,7 +49,8 @@ import org.jboss.logging.Logger;
 @Table(name = "baseentity_baseentity")
 
 @AssociationOverrides({
-    @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))})
+    @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))
+})
 
 @RegisterForReflection
 public class EntityEntity implements java.io.Serializable, Comparable<Object> {

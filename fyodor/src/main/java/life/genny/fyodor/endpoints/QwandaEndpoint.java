@@ -369,7 +369,7 @@ public class QwandaEndpoint {
 		asks = createAsksByQuestionCode(questionCode, sourceCode, targetCode);
 		log.debug("Number of asks=" + asks.size());
 		log.debug("Number of asks=" + asks);
-		final QDataAskMessage askMsgs = new QDataAskMessage(asks.toArray(new Ask[0]));
+		final QDataAskMessage askMsgs = new QDataAskMessage(asks);
 
 		return askMsgs;
 	}

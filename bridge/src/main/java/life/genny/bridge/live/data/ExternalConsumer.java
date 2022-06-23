@@ -15,17 +15,17 @@ import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-
-
-
-
-
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
 
 /**
  * ExternalConsumer --- External clients can connect to the endpoint configured in {@link
@@ -132,6 +132,11 @@ public class ExternalConsumer {
 		BridgeSwitch.put(gennyToken, bridgeId);
 		BridgeSwitch.addActiveBridgeId(gennyToken, bridgeId);
 
+		if (gennyToken.hasRole("test")) {
+			log.info("Saving token -> Key: TOKEN:" + gennyToken.getUserCode() + ", Value: " + gennyToken.getToken());
+			CacheUtils.writeCache(gennyToken.getProductCode(), "TOKEN:"+gennyToken.getUserCode(), gennyToken.getToken());
+		}
+
 		routeDataByMessageType(rawMessageBody.getJsonObject("data"), gennyToken);
 		bridgeEvent.complete(true);
 	}
@@ -177,36 +182,39 @@ public class ExternalConsumer {
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
 
-		log.info("Got to here in routeDataByMessageType");
+		log.info("Incoming Payload = " + body.toString());
 
-		if (body.getString("msg_type").equals("DATA_MSG")) {
-			if ("Answer".equals(body.getString("data_type"))) {
-				JsonArray items = body.getJsonArray("items");
-				if (items.isEmpty()) {
-					return;
-				}
-				if (body.toString().contains("\"items\":[{}]")) {
-					return;
-				}
-			}
-			log.info("Incoming DATA Payload = " + body.toString());
-
-			KafkaUtils.writeMsg("data", body.toString());
-			body.remove("token");
-			log.info("Sent payload "+body.getString("msg_type")+" from user " + gennyToken.getUserCode() + " to data "+body.toString());
-
-		} else if (body.getString("msg_type").equals("EVT_MSG")) {
-
-			
-			KafkaUtils.writeMsg("events", body.toString());
-			log.info("Incoming EVENT Payload = " + body.toString());
-			log.info("Sent payload from user " + gennyToken.getUserCode() + " to events");
-
-		} else if ((body.getJsonObject("data").getString("code") != null)
-				&& (body.getJsonObject("data").getString("code").equals("QUE_SUBMIT"))) {
-			log.error("Incoming Payload has Errored = " + body.toString());
-			log.error("A deadend message was sent with the code QUE_SUBMIT");
+		if (body == null || body.getString("msg_type") == null) {
+			log.error("Bad body JsonObject passed");
+			return;
 		}
+
+		String msgType = body.getString("msg_type");
+		String productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES");
+		String topicName = "";
+
+		if (msgType.equals("DATA_MSG")) {
+			if (!StringUtils.isEmpty(productCodes)) {
+				topicName = "data";
+			} else {
+				topicName = "genny_data";
+			}
+		} else if (msgType.equals("EVT_MSG")) {
+			if (!StringUtils.isEmpty(productCodes)) {
+				topicName = "events";
+			} else {
+				topicName = "genny_events";
+			}
+		}
+
+		// publish message
+		String payload = body.toString();
+		KafkaUtils.writeMsg(topicName, payload);
+
+		// remove token from log for security purposes
+		body.remove("token");
+		payload = body.toString();
+		log.info("Sent payload "+payload+" from user " + gennyToken.getUserCode() + " to topic "+topicName);
 	}
 
 }

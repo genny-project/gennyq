@@ -27,14 +27,15 @@ public class SendMessageService {
 	@Inject
 	BaseEntityUtils beUtils;
 
+
 	/**
 	* Send a genny message.
 	*
 	* @param templateCode The template to use
 	* @param recipientBEJson The recipient BaseEntity json
 	 */
-	public void sendMessage(String templateCode, String recipientBEJson) {
-		sendMessage(templateCode, recipientBEJson, null);
+	public void sendMessage(String templateCode, String recipientBECode) {
+		sendMessage(templateCode, recipientBECode, null);
 	}
 
 	/**
@@ -44,17 +45,30 @@ public class SendMessageService {
 	* @param recipientBEJson The recipient BaseEntity json
 	* @param ctxMap The map of contexts to use
 	 */
-	public void sendMessage(String templateCode, String recipientBEJson, Map<String, String> ctxMap) {
+	public void sendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
+		log.info("recipientBECode : " + recipientBECode);
+		BaseEntity recipientBe = beUtils.getBaseEntityByCode(recipientBECode);
+		sendMessage(templateCode, recipientBe, ctxMap);
+	}
+
+
+	/**
+	* Send a genny message.
+	*
+	* @param templateCode The template to use
+	* @param recipientBEJson The recipient BaseEntity json
+	* @param ctxMap The map of contexts to use
+	 */
+	public void sendMessage(String templateCode, BaseEntity recipientBE, Map<String, String> ctxMap) {
 
 		log.info("templateCode : " + templateCode);
-		log.info("recipientBEJson : " + recipientBEJson);
-		log.info("ctxMap : " + jsonb.toJson(ctxMap));
+		log.info("recipientBE (found BaseEntity): " + recipientBE.getCode());
+		log.info("ctxMap : " + (ctxMap != null ? jsonb.toJson(ctxMap) : "null"));
 
-		BaseEntity recipient = jsonb.fromJson(recipientBEJson, BaseEntity.class);
-
-		new QMessageGennyMSG.Builder(templateCode)
-			.setMessageContextMap(ctxMap)
-			.addRecipient(recipient)
+		QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(templateCode);
+		if(ctxMap != null)
+			msgBuilder.setMessageContextMap(ctxMap);
+		msgBuilder.addRecipient(recipientBE)
 			.setUtils(beUtils)
 			.send();
 	}
