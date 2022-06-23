@@ -26,9 +26,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-// import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.serviceq.Service;
-// import life.genny.fyodor.endpoints;
 
 /**
  * A Service class used for Auth Init operations.
@@ -57,27 +55,18 @@ public class InitService {
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	// @Inject
-	// QuestionUtils questionUtils;
 	/**
 	 * Send the Project BaseEntity.
 	 */
 	public void sendProject() {
-		log.info("Running send project...");
-		log.info("Attempting to find token " + userToken.getToken());
-		log.info("Sending Project PRJ_" + userToken.getProductCode().toUpperCase());
 
-		// grab baseentity for the project
-		BaseEntity projectBE = databaseUtils.findBaseEntityByCode(userToken.getProductCode(),
-				"PRJ_" + userToken.getProductCode().toUpperCase());
-		// BaseEntity projectBE = beUtils.getProjectBaseEntity();
+		BaseEntity project = beUtils.getProjectBaseEntity();
+		log.info("Sending Project " + project.getCode());
 
 		// configure msg and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(projectBE);
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(project);
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("PROJECT");
-		log.info("Project BE base " + projectBE);
-		log.info("Sending PRJ Message " + msg.getItems());
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
@@ -86,13 +75,12 @@ public class InitService {
 	 */
 	public void sendUser() {
 
-		log.info("Sending User " + userToken.getUserCode());
-
 		// fetch the users baseentity
-		BaseEntity userBE = beUtils.getBaseEntityByCode(userToken.getUserCode());
+		BaseEntity user = beUtils.getUserBaseEntity();
+		log.info("Sending User " + user.getCode());
 
 		// configure msg and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(userBE);
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(user);
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("USER");
 
@@ -124,7 +112,7 @@ public class InitService {
 	 * Send PCM BaseEntities.
 	 */
 	public void sendPCMs() {
-		// sendProject();
+
 		log.info("Sending PCMs for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
@@ -136,14 +124,34 @@ public class InitService {
 
 		searchBE.setRealm(productCode);
 		List<BaseEntity> pcms = beUtils.getBaseEntitys(searchBE);
-		// sendASKs(pcms.get(1));
-		sendBulkASKs(pcms);
+
 		// configure msg and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg("webdata", msg);
+
+		// configure ask msg
+		QDataAskMessage askMsg = new QDataAskMessage();
+		askMsg.setToken(userToken.getToken());
+		askMsg.setReplace(true);
+
+		BaseEntity user = beUtils.getUserBaseEntity();
+
+		for (BaseEntity pcm : pcms) {
+			String questionCode = pcm.getValue("PRI_QUESTION_CODE", null);
+			if (questionCode == null) {
+				continue;
+			}
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, pcm);
+			if (ask == null) {
+				continue;
+			}
+			askMsg.add(ask);
+		}
+
+		KafkaUtils.writeMsg("webdata", askMsg);
 	}
 
 	/**
@@ -178,101 +186,5 @@ public class InitService {
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg("webdata", msg);
-	}
-
-	/**
-	 * Send asks [rudimentary and terrible]
-	 */
-	public void sendBulkASKs(List<BaseEntity> entities) {
-		entities.forEach(entity -> {
-			log.info("Sending entity " + entity);
-			sendASKs(entity);
-		});
-		// sendASKs(entity);
-	}
-
-	public void getASKs(EntityAttribute attribute, BaseEntity entity) {
-		// log.info("Got attribute " + attribute);
-		// log.info("questionCode :" + attribute.getValueString());
-		// log.info("sourceCode :" + attribute.getBaseEntityCode());
-		// log.info("targetCode :" + entity.getCode());
-		// log.info("processId :" + entity.getId());
-		// String questionCode = userToken.getUserCode();
-		// BaseEntity source =
-		// beUtils.getBaseEntityByCode(attribute.getBaseEntityCode());
-		// BaseEntity target =
-		// beUtils.getBaseEntityByCode(attribute.getBaseEntityCode());
-
-		// log.info("Fetching asks -> " + questionCode + ":" + entity.getCode() + ":" +
-		// entity.getCode());
-		// if(attribute.getValueString() == null){
-		// log.info("Value is null");
-		// attribute.setValueString("");
-		// }
-		// log.info("Attribute " + attribute);
-		// if(!attribute.getValueString().startsWith("QUE_") ||
-		// attribute.getValue().getClass() != String.class){
-		// log.info("Break! " + attribute.getValueString());
-		// } else {
-
-		// log.info("Getting question with code " + attribute.getValueString());
-		// Question rootQuestion = qwandaUtils.getQuestion(attribute.getValueString());
-		// List<Ask> asks =
-		// qwandaUtils.generateAskFromQuestionCode(attribute.getValueString(), entity,
-		// entity);
-		// log.info("Got question " + rootQuestion);
-		// log.info("Got asks " + asks);
-		// create ask msg from asks11
-		// QDataAskMessage msg = new QDataAskMessage(asks.toArray(new
-		// Ask[asks.size()]));
-		// msg.setToken(userToken.getToken());
-		// msg.setReplace(true);
-
-		// // TODO: make this recursive
-		// // update the processId
-		// for (Ask ask : msg.getItems()) {
-		// ask.setProcessId(entity.getId().toString());
-		// }
-
-		// KafkaUtils.writeMsg("webdata", msg);}
-	}
-
-	public void sendASKs(BaseEntity entity) {
-		log.info("Sending asks for " + userToken.getProductCode());
-		log.info("Entity is " + entity.getBaseEntityAttributes());
-
-		List<Ask> asks = new ArrayList<>();
-		entity.getBaseEntityAttributes().forEach(attribute -> {
-			System.out.println("Attribute Value " + attribute.getValueString());
-			if (attribute.getValue().getClass() == String.class && attribute.getValueString().startsWith("QUE_")) {
-				try {
-					Ask ask = qwandaUtils.generateAskFromQuestionCode(attribute.getValueString(), entity, entity);
-					asks.add(ask);
-				} catch (Exception e) {
-					log.info("Could not find ASK " + attribute.getValueString() + e);
-				}
-
-			}
-		});
-		log.info("Asks " + asks);
-
-		if (asks.size() == 0) {
-			log.info("Empty asks for be " + entity.getCode() + "!");
-			return;
-		}
-
-		QDataAskMessage msg = new QDataAskMessage(asks.toArray(new Ask[asks.size()]));
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		for (Ask ask : msg.getItems()) {
-			ask.setProcessId(entity.getId().toString());
-		}
-		List<EntityAttribute> attributeList = new ArrayList<>(entity.getBaseEntityAttributes());
-		// EntityAttribute attribute = attributeList.get(1);
-		// attributeList.forEach(attribute -> {
-		// getASKs(attribute, entity);
-		// });
-		KafkaUtils.writeMsg("webdata", msg);
-		// return msg;
 	}
 }

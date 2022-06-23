@@ -264,7 +264,7 @@ public class InternalConsumer {
 			String processId = answer.getProcessId();
 			String answerJson = jsonb.toJson(answer);
 
-			kogitoUtils.sendSignal("processquestions", processId, "answer", answerJson);
+			kogitoUtils.sendSignal("processQuestions", processId, "answer", answerJson);
 		}
 
 		Instant end = Instant.now();

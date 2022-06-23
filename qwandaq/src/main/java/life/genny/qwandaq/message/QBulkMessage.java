@@ -11,9 +11,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class QBulkMessage implements Serializable {
 
-	/**
-	* 
-	*/
 	private static final long serialVersionUID = 1L;
 
 	private String token;
@@ -143,7 +140,7 @@ public class QBulkMessage implements Serializable {
 	 * @param qMessage the ask message to add
 	 */
 	public void add(QDataAskMessage qMessage) {
-		if (qMessage.getItems().length > 0) {
+		if (qMessage.getItems().size() > 0) {
 			Set<QDataAskMessage> set = new HashSet<QDataAskMessage>(Arrays.asList(this.asks));
 			set.add(qMessage);
 			this.asks = new QDataAskMessage[set.size()];

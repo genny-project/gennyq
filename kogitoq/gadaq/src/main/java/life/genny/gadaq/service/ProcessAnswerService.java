@@ -107,7 +107,7 @@ public class ProcessAnswerService {
 		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems()[0];
+		Ask ask = askMessage.getItems().get(0);
 
 		// find the submit ask
 		Ask submit = recursivelyCheckForSubmit(ask);

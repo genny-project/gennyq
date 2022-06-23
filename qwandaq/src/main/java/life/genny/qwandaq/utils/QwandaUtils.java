@@ -47,8 +47,8 @@ import life.genny.qwandaq.models.UserToken;
 @ApplicationScoped
 public class QwandaUtils {
 
-	// TODO: POPULATE THIS
-	public static final String[] ACCEPTED_PREFIXES = {};
+	public static final String[] ACCEPTED_PREFIXES = { "PRI_", "LNK_" };
+	public static final String[] EXCLUDED_ATTRIBUTES = { "PRI_SUBMIT" };
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
 
@@ -294,21 +294,20 @@ public class QwandaUtils {
 	 */
 	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
 
-		String[] excludes = new String[]{ 
-			Question.QUESTION_GROUP_ATTRIBUTE_CODE, 
-			"PRI_SUBMIT"
-		};
+		String code = ask.getAttributeCode();
 
 		// grab attribute code of current ask
-		if (!Arrays.asList(excludes).contains(ask.getAttributeCode())) {
-			codes.add(ask.getAttributeCode());
+		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
+			log.debug("Prefix not in accepted list");
+		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
+			log.debug("Attribute code in exclude list");
+		} else {
+			codes.add(code);
 		}
 
+		// grab all child ask attribute codes
 		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
-
-			// grab all child ask attribute codes
 			for (Ask childAsk : ask.getChildAsks()) {
-
 				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
 			}
 		}
