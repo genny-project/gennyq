@@ -9,6 +9,7 @@ import javax.json.bind.annotation.JsonbTransient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.models.GennyToken;
 
 @RegisterForReflection
 public abstract class QMessage implements Serializable, QMessageIntf {
@@ -53,9 +54,18 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 		return token;
 	}
 
+
 	/**
 	 * @param token the token to set
 	 */
+	public void setToken(GennyToken token) {
+		this.token = token.getToken();
+	}
+
+	/**
+	 * @param token the token to set
+	 */
+	@Deprecated
 	public void setToken(String token) {
 		this.token = token;
 	}

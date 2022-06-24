@@ -7,6 +7,7 @@ clientid=$1
 if [ -z $clientid ]; then
 	echo "No clientid specified"
 	echo "Usage: $0 <clientId>"
+	exit 1
 fi
 
 #echo "password = $password"

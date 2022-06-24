@@ -1,6 +1,5 @@
 package life.genny.qwandaq.message;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -14,7 +13,9 @@ public class QDataAskMessage extends QDataMessage {
 	private List<Ask> items;
 	private static final String DATATYPE_ASK = Ask.class.getSimpleName();
 
-	public QDataAskMessage() { }
+	public QDataAskMessage() {
+		super(DATATYPE_ASK);
+	}
 
 	public QDataAskMessage(List<Ask> items) {
 

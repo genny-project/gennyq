@@ -42,4 +42,4 @@ do
     echo "Tagging $project"
 	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:latest
 done
-
+spd-say "finished building"

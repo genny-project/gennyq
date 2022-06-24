@@ -375,7 +375,6 @@ public class DatabaseUtils {
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 
 		checkEntityManager();
-
 		try {
 
 			return entityManager
@@ -385,7 +384,7 @@ public class DatabaseUtils {
 					.getSingleResult();
 
 		} catch (NoResultException e) {
-			log.debug("No BaseEntity found in DB for " + code + " in realm " + realm);
+			log.info("No BaseEntity found in DB for " + code + " in realm " + realm);
 		}
 
 		return null;
