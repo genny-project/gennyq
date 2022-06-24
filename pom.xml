@@ -26,8 +26,8 @@
     <!-- Quarkus Properties -->
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.9.2.Final</quarkus.platform.version>
-    <quarkus-plugin.version>2.9.2.Final</quarkus-plugin.version>
+    <quarkus.platform.version>2.10.0.Final</quarkus.platform.version>
+    <quarkus-plugin.version>2.10.0.Final</quarkus-plugin.version>
 
     <!-- Maven Properties -->
     <maven.version>3.8.1</maven.version>
@@ -67,10 +67,10 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- kogito -->
-    <kogito.version>1.22.1.Final</kogito.version>
+    <kogito.version>1.23.0.Final</kogito.version>
     <kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
     <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
-    <kogito.bom.version>1.22.1.Final</kogito.bom.version>
+    <kogito.bom.version>1.23.0.Final</kogito.bom.version>
     <version.org.optaplanner>8.22.0.Final</version.org.optaplanner>
 
     <!-- drools -->
