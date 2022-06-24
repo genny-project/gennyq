@@ -83,6 +83,7 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
+		log.info("TOKEN PRODUCT CODEE: " + userToken.getProductCode());
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
 
@@ -105,7 +106,7 @@ public class BaseEntityUtils {
 			log.debug("BaseEntity " + code + " not in cache, checking in database...");
 			entity = databaseUtils.findBaseEntityByCode(productCode, code);
 		}
-
+		
 		return entity;
 	}
 

@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 
@@ -228,6 +229,12 @@ public class QMessageGennyMSG extends QMessage {
 			return this;
 		}
 
+		public Builder setToken(GennyToken token) {
+			this.msg.setToken(token.getToken());
+			return this;
+		}
+		
+		@Deprecated
 		public Builder setToken(String token) {
 			this.msg.setToken(token);
 			return this;

@@ -1,8 +1,9 @@
 #!/bin/bash
 questionCode="${1:-QUE_INTERN_GRP}"
 port="${2:-9580}"
+realm="${3:-alyson}"
 #TOKEN=`./gettoken-prod.sh`
-TOKEN=`./gettoken-cache.sh alyson`
+TOKEN=`./gettoken-cache.sh $realm`
 echo ''
 echo $TOKEN
 echo "QuestionCode passed is $questionCode"

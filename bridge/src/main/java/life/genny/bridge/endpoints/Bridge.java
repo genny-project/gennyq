@@ -90,10 +90,8 @@ public class Bridge {
 
 		try {
 			InitProperties props = new InitProperties(uriInfo.getBaseUri().toString());
-			log.info("Client ID: " + props.getClientId());
 			log.info("props=["+props+"]");
 			String json = jsonb.toJson(props);
-			log.info("json=["+json+"]");
 			return Response.ok(json).build();
 
 		} catch (Exception e) {

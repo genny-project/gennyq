@@ -62,7 +62,7 @@ public class SendMessageService {
 	public void sendMessage(String templateCode, BaseEntity recipientBE, Map<String, String> ctxMap) {
 
 		log.info("templateCode : " + templateCode);
-		log.info("recipientBE (found BaseEntity): " + recipientBE.getCode());
+		log.info("recipientBE (found BaseEntity): " + (recipientBE != null ? recipientBE.getCode() : "null"));
 		log.info("ctxMap : " + (ctxMap != null ? jsonb.toJson(ctxMap) : "null"));
 
 		QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(templateCode);
@@ -70,6 +70,7 @@ public class SendMessageService {
 			msgBuilder.setMessageContextMap(ctxMap);
 		msgBuilder.addRecipient(recipientBE)
 			.setUtils(beUtils)
+			.setToken(userToken)
 			.send();
 	}
 }
