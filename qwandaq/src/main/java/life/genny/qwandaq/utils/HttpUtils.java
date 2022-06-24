@@ -323,6 +323,7 @@ public class HttpUtils {
 		return new GennyToken(extractTokenFromHeaders(authorization));
 	}
 
+	// TODO: Need to work on this more
 	private static URI getUri(String uri) throws IllegalArgumentException {
 		try {
 			log.info("Creating uri: " + uri);
