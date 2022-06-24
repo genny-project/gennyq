@@ -99,8 +99,8 @@ public class InitService {
 
 		for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
-			QDataAttributeMessage msg = CacheUtils.getObject(productCode, 
-					"ATTRIBUTES_P"+currentPage, QDataAttributeMessage.class);
+			QDataAttributeMessage msg = CacheUtils.getObject(productCode,
+					"ATTRIBUTES_P" + currentPage, QDataAttributeMessage.class);
 
 			// set token and send
 			msg.setToken(userToken.getToken());
@@ -142,10 +142,13 @@ public class InitService {
 		for (BaseEntity pcm : pcms) {
 			String questionCode = pcm.getValue("PRI_QUESTION_CODE", null);
 			if (questionCode == null) {
+				log.warn("PCM (" + pcm.getName() + ", " + pcm.getCode() + ") got null PRI_QUESTION_CODE");
 				continue;
 			}
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, pcm);
 			if (ask == null) {
+				log.warn("PCM (" + pcm.getName() + ", " + pcm.getCode() + ") got null ask from PRI_QUESTION_CODE: "
+						+ questionCode);
 				continue;
 			}
 			askMsg.add(ask);
