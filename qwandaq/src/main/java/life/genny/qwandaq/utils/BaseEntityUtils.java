@@ -106,7 +106,7 @@ public class BaseEntityUtils {
 			log.debug("BaseEntity " + code + " not in cache, checking in database...");
 			entity = databaseUtils.findBaseEntityByCode(productCode, code);
 		}
-		
+
 		return entity;
 	}
 
@@ -159,7 +159,7 @@ public class BaseEntityUtils {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		if (response == null) {
 			log.error("Null response from " + uri);
