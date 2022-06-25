@@ -28,6 +28,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -101,6 +102,7 @@ public class InternalConsumer {
 	 * Add/Replace EntityAttribute value from answer
 	 * Push back the baseentity into 'baseentity' cache
 	 */
+	// TODO: Potentially removing this
 	@Blocking
 	@Incoming("answer")
 	public void fromAnswers(String payload) {
@@ -174,6 +176,66 @@ public class InternalConsumer {
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
+	@Incoming("genny_data")
+	@Blocking
+	public void getData(String data) {
+		scope.init(data);
+
+		log.info("Received Forwarded Data : " + data);
+		log.info("userToken = " + userToken);
+		log.info("productCode = " + userToken.getProductCode());
+
+		Instant start = Instant.now();
+
+		// check if event is a valid event
+		log.info("Parsing msg");
+		QDataAnswerMessage msg = null;
+		try {
+			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+		} catch (Exception e) {
+			log.error("Cannot parse this data!");
+			e.printStackTrace();
+			return;
+		}
+
+		log.info("Getting session");
+
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+
+		log.info("Inserting facts");
+		session.insert(kogitoUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+		session.insert(msg);
+
+		// Infer data
+		log.info("Firing Rules");
+		try {
+			session.fireAllRules();
+		} finally {
+			session.dispose();
+		}
+
+		// check for event based answers
+		for (Answer answer : msg.getItems()) {
+
+			// skip if no processId is present
+			if ("no-id".equals(answer.getProcessId())) {
+				continue;
+			}
+
+			String processId = answer.getProcessId();
+			String answerJson = jsonb.toJson(answer);
+
+			kogitoUtils.sendSignal("processQuestions", processId, "answer", answerJson);
+		}
+
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+		scope.destroy();
+	}
+
 	/**
 	 * Consume from the genny_events topic.
 	 *
@@ -216,55 +278,6 @@ public class InternalConsumer {
 			session.fireAllRules();
 		} finally {
 			session.dispose();
-		}
-
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-
-		scope.destroy();
-	}
-
-	/**
-	 * Consume from the valid_data topic.
-	 *
-	 * @param data The incoming data
-	 */
-	@Incoming("valid_data")
-	@Blocking
-	public void getData(String data) {
-
-		scope.init(data);
-
-		log.info("Incoming Data : " + data);
-		Instant start = Instant.now();
-
-		// check if data is a valid answer msg
-		QDataAnswerMessage msg = null;
-		try {
-			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
-		} catch (Exception e) {
-			log.warn("Cannot parse this data!");
-			return;
-		}
-
-		// check for null or empty answer array
-		if (msg.getItems() == null || msg.getItems().length == 0) {
-			log.error("null or empty items in answer msg!");
-			return;
-		}
-
-		// check for event based answers
-		for (Answer answer : msg.getItems()) {
-
-			// skip if no processId is present
-			if (answer.getProcessId() == null || answer.getProcessId().equals("no-id")) {
-				continue;
-			}
-
-			String processId = answer.getProcessId();
-			String answerJson = jsonb.toJson(answer);
-
-			kogitoUtils.sendSignal("processQuestions", processId, "answer", answerJson);
 		}
 
 		Instant end = Instant.now();

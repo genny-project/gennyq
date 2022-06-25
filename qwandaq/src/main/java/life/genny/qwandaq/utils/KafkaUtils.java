@@ -53,6 +53,9 @@ public class KafkaUtils implements Serializable {
 	 */
 	public static void writeMsg(String channel, String payload) {
 
+		if(!checkInterface())
+			return;
+
 		if (channel.isBlank()) {
 			log.error("Channel is blank, cannot send payload!");
 			return;
@@ -60,6 +63,15 @@ public class KafkaUtils implements Serializable {
 
 		// write to kafka channel through interface
 		kafkaInterface.write(channel, payload);
+	}
+
+	private static Boolean checkInterface() {
+		if(kafkaInterface == null) {
+			log.error("KafkaUtils not initialised! Initialise with: KafkaUtils.init(KafkaInterface)");
+			return false;
+		}
+
+		return true;
 	}
 
 }

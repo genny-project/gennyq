@@ -58,8 +58,9 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 	/**
 	 * @param token the token to set
 	 */
+	@JsonbTransient
 	public void setToken(GennyToken token) {
-		this.token = token.getToken();
+		setToken(token.getToken());
 	}
 
 	/**

@@ -33,6 +33,11 @@ public class InternalProducer {
 	  return gennyEvents;
   }
 
+  @Inject @Channel("genny_dataout") Emitter<String> gennyData;
+  public Emitter<String> getToGennyData() {
+	  return gennyData;
+  }
+
   @Inject @Channel("dataout") Emitter<String> data;
   public Emitter<String> getToData() {
     return data;
