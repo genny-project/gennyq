@@ -67,11 +67,11 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- kogito -->
-    <kogito.version>1.22.1.Final</kogito.version>
+    <kogito.version>1.23.0.Final</kogito.version>
     <kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
     <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
-    <kogito.bom.version>1.22.1.Final</kogito.bom.version>
-    <version.org.optaplanner>8.22.0.Final</version.org.optaplanner>
+    <kogito.bom.version>1.23.0.Final</kogito.bom.version>
+    <version.org.optaplanner>8.23.0.Final</version.org.optaplanner>
 
     <!-- drools -->
     <version.org.drools>8.22.1.Beta</version.org.drools>
