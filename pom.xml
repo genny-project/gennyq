@@ -71,7 +71,7 @@
     <kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
     <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
     <kogito.bom.version>1.23.0.Final</kogito.bom.version>
-    <version.org.optaplanner>8.22.0.Final</version.org.optaplanner>
+    <version.org.optaplanner>8.23.0.Final</version.org.optaplanner>
 
     <!-- drools -->
     <version.org.drools>8.22.1.Beta</version.org.drools>
