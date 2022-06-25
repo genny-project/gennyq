@@ -1,4 +1,4 @@
-package life.genny.gadaq.models;
+package life.genny.kogito.common.models;
 
 import org.jboss.logging.Logger;
 import org.kie.api.runtime.rule.RuleContext;

@@ -6,7 +6,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.gadaq.utils.KogitoUtils;
+import life.genny.kogito.common.utils.KogitoUtils;
 import org.apache.commons.lang3.StringUtils;
 
 rule RouteAuthInit 

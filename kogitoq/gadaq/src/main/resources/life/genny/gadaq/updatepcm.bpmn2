@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="xsi" id="_xwkjUNKLEDqEj93qH69eJA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="xsi" id="_uL9tcdZXEDqgp5zK4HJkZA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_pcmCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_locItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_newValueItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__49E11C02-CA5E-449B-A526-79071EF3110D_pcmCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__49E11C02-CA5E-449B-A526-79071EF3110D_locInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__49E11C02-CA5E-449B-A526-79071EF3110D_newValueInputXItem" structureRef="String"/>
-  <bpmn2:interface id="_49E11C02-CA5E-449B-A526-79071EF3110D_ServiceInterface" name="life.genny.gadaq.service.PcmService" implementationRef="life.genny.gadaq.service.PcmService">
+  <bpmn2:interface id="_49E11C02-CA5E-449B-A526-79071EF3110D_ServiceInterface" name="life.genny.kogito.common.service.PcmService" implementationRef="life.genny.kogito.common.service.PcmService">
     <bpmn2:operation id="_49E11C02-CA5E-449B-A526-79071EF3110D_ServiceOperation" name="updatePcm" implementationRef="updatePcm"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_1DAD6CAD-032A-48A4-AA61-806B62C13B5C" name="Default Collaboration">
-    <bpmn2:participant id="_93E058D8-20EF-48E3-99F9-C3E02143D402" name="Pool Participant" processRef="updatepcm"/>
+  <bpmn2:collaboration id="_8A97FDA5-6EDB-483D-8681-4F1051626588" name="Default Collaboration">
+    <bpmn2:participant id="_9823B6A7-7A38-4BDC-BC1E-95E7BBF9B20C" name="Pool Participant" processRef="updatepcm"/>
   </bpmn2:collaboration>
   <bpmn2:process id="updatepcm" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="updatepcm" isExecutable="true" processType="Public">
     <bpmn2:property id="pcmCode" itemSubjectRef="_pcmCodeItem" name="pcmCode">
@@ -37,7 +37,7 @@
     <bpmn2:sequenceFlow id="_86DBE80F-6096-4A15-9905-73C3E64E9459" sourceRef="_49E11C02-CA5E-449B-A526-79071EF3110D" targetRef="_30D72185-2582-4032-B2C8-F45097C3655E"/>
     <bpmn2:sequenceFlow id="_4BE7D2E5-F0BB-497E-8C33-A4E141920CF6" sourceRef="_C732F229-1060-4988-84E4-703FFE5B218D" targetRef="_49E11C02-CA5E-449B-A526-79071EF3110D"/>
     <bpmn2:sequenceFlow id="_7FE4FE06-8F79-4D1D-97CA-2670858DD2E4" sourceRef="_ACAB97F6-560E-47AD-869B-63F85D2C9F8A" targetRef="_C732F229-1060-4988-84E4-703FFE5B218D"/>
-    <bpmn2:serviceTask id="_49E11C02-CA5E-449B-A526-79071EF3110D" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.gadaq.service.PcmService" drools:serviceoperation="updatePcm" name="Update and send&#10;the PCM" implementation="Java" operationRef="_49E11C02-CA5E-449B-A526-79071EF3110D_ServiceOperation">
+    <bpmn2:serviceTask id="_49E11C02-CA5E-449B-A526-79071EF3110D" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.PcmService" drools:serviceoperation="updatePcm" name="Update and send&#10;the PCM" implementation="Java" operationRef="_49E11C02-CA5E-449B-A526-79071EF3110D_ServiceOperation">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
           <drools:metaValue><![CDATA[Update and send
@@ -175,7 +175,7 @@ System.out.println("Updating "+pcmCode+"!");</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_xwkjUNKLEDqEj93qH69eJA</bpmn2:source>
-    <bpmn2:target>_xwkjUNKLEDqEj93qH69eJA</bpmn2:target>
+    <bpmn2:source>_uL9tcdZXEDqgp5zK4HJkZA</bpmn2:source>
+    <bpmn2:target>_uL9tcdZXEDqgp5zK4HJkZA</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

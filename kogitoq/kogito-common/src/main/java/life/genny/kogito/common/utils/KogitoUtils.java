@@ -1,4 +1,4 @@
-package life.genny.gadaq.utils;
+package life.genny.kogito.common.utils;
 
 import java.net.http.HttpResponse;
 
