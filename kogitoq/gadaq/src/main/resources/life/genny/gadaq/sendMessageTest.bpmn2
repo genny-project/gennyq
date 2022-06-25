@@ -5,7 +5,7 @@
   <bpmn2:itemDefinition id="_ctxMapItem" structureRef="java.util.Map"/>
   <bpmn2:itemDefinition id="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_templateCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_recipientBECodeInputXItem" structureRef="String"/>
-  <bpmn2:interface id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceInterface" name="life.genny.gadaq.service.SendMessageService" implementationRef="life.genny.gadaq.service.SendMessageService">
+  <bpmn2:interface id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceInterface" name="life.genny.kogito.common.service.SendMessageService" implementationRef="life.genny.kogito.common.service.SendMessageService">
     <bpmn2:operation id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceOperation" name="sendMessage" implementationRef="sendMessage"/>
   </bpmn2:interface>
   <bpmn2:collaboration id="_C782D286-BCD1-4232-9056-74D0E24C27B5" name="Default Collaboration">
@@ -40,7 +40,7 @@
     </bpmn2:property>
     <bpmn2:sequenceFlow id="_C0DEFE87-A1D7-416F-8DA4-6F3261C04B02" sourceRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3" targetRef="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A"/>
     <bpmn2:sequenceFlow id="_B15C97A9-1762-4BB8-A97C-12D61448D9B9" sourceRef="_321CE5F6-80DE-48BD-93F4-41E832A810FF" targetRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3"/>
-    <bpmn2:serviceTask id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.gadaq.service.SendMessageService" drools:serviceoperation="sendMessage" name="Send Message" implementation="Java" operationRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceOperation">
+    <bpmn2:serviceTask id="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.SendMessageService" drools:serviceoperation="sendMessage" name="Send Message" implementation="Java" operationRef="_B936EB34-AE60-45F7-ABA6-5ABE9473F0F3_ServiceOperation">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
           <drools:metaValue><![CDATA[Send Message]]></drools:metaValue>
@@ -128,7 +128,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_-ERQ0NaBEDqKpIpu9d9Bbw</bpmn2:source>
-    <bpmn2:target>_-ERQ0NaBEDqKpIpu9d9Bbw</bpmn2:target>
+    <bpmn2:source>_nngUgNTvEDqO0LATY5CMCg</bpmn2:source>
+    <bpmn2:target>_nngUgNTvEDqO0LATY5CMCg</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

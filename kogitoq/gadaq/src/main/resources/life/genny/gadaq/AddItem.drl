@@ -1,6 +1,6 @@
 package life.genny.gadaq;
 
-import life.genny.gadaq.utils.KogitoUtils;
+import life.genny.kogito.common.utils.KogitoUtils;
 
 ruleflow-group "AddItem"
 

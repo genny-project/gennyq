@@ -1,4 +1,4 @@
-package life.genny.gadaq.service;
+package life.genny.kogito.common.service;
 
 import java.util.ArrayList;
 import java.util.List;

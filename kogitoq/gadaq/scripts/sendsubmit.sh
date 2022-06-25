@@ -1,10 +1,12 @@
 #!/bin/bash
-TOKEN=${1}
+productCode=${1}
 processId=${2}
-questionCode=QUE_SUBMIT
+targetCode=${3}
 
-payload="{\"data\":{\"code\":\"${questionCode}\",\"processId\":\"${processId}\"},\"token\":\"${TOKEN}\",\"msg_type\":\"EVT_MSG\"}"
-#echo $payload
+TOKEN=`./gettoken-cache.sh ${productCode}`
+
+payload="{\"data\":{\"code\":\"QUE_SUBMIT\",\"processId\":\"${processId}\",\"targetCode\":\"${targetCode}\"},\"token\":\"${TOKEN}\",\"msg_type\":\"EVT_MSG\"}"
+
 echo  $payload > answer.json
 
 docker exec -i kafka bash -c " \

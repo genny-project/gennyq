@@ -1,4 +1,4 @@
-package life.genny.gadaq.service;
+package life.genny.kogito.common.service;
 
 import java.util.List;
 
@@ -26,6 +26,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
+import life.genny.kogito.common.models.KogitoData;
 
 /**
  * A Service class used for communication with other kogito services.
@@ -57,5 +58,17 @@ public class Service2Service {
 			.build();
 
 		KafkaUtils.writeMsg("service2service", jsonb.toJson(payload));
+	}
+
+	/**
+	 * Add a token to a KogitoData message for sending.
+	 *
+	 * @param data The KogitoData object
+	 * @return The  updated data object
+	 */
+	public KogitoData addToken(KogitoData data) {
+
+		data.setToken(userToken.getToken());
+		return data;
 	}
 }

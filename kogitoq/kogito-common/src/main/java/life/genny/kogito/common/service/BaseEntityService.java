@@ -1,4 +1,4 @@
-package life.genny.gadaq.service;
+package life.genny.kogito.common.service;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

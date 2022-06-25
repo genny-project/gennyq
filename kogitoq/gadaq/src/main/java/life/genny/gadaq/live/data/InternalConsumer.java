@@ -22,7 +22,7 @@ import org.kie.api.runtime.KieRuntimeBuilder;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
-import life.genny.gadaq.utils.KogitoUtils;
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="__cQC4Mq5EDqNv9rAbMYvKg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
-  <bpmn2:interface id="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2_ServiceInterface" name="life.genny.gadaq.service.BaseEntityService" implementationRef="life.genny.gadaq.service.BaseEntityService">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_fmSdgNZXEDqOjfC1XTJ5lQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+  <bpmn2:interface id="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2_ServiceInterface" name="life.genny.kogito.common.service.BaseEntityService" implementationRef="life.genny.kogito.common.service.BaseEntityService">
     <bpmn2:operation id="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2_ServiceOperation" name="commission" implementationRef="commission"/>
   </bpmn2:interface>
   <bpmn2:signal id="_-61826004" name="decommission"/>
-  <bpmn2:interface id="_A7A6CC94-3DAC-4246-8E5F-5380FEAA3B30_ServiceInterface" name="life.genny.gadaq.service.BaseEntityService" implementationRef="life.genny.gadaq.service.BaseEntityService">
+  <bpmn2:interface id="_A7A6CC94-3DAC-4246-8E5F-5380FEAA3B30_ServiceInterface" name="life.genny.kogito.common.service.BaseEntityService" implementationRef="life.genny.kogito.common.service.BaseEntityService">
     <bpmn2:operation id="_A7A6CC94-3DAC-4246-8E5F-5380FEAA3B30_ServiceOperation" name="decommission" implementationRef="decommission"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_E753B2F8-C050-424E-A844-0BFB8B510E30" name="Default Collaboration">
-    <bpmn2:participant id="_066021D3-509B-49B7-A6C6-8A69C7F1FF00" name="Pool Participant" processRef="personLifecycle"/>
+  <bpmn2:collaboration id="_C92D6F24-6024-46B6-B23C-1966881DA865" name="Default Collaboration">
+    <bpmn2:participant id="_4EA0DFC8-0E69-45CC-88F4-4E1CBEA4939E" name="Pool Participant" processRef="personLifecycle"/>
   </bpmn2:collaboration>
   <bpmn2:process id="personLifecycle" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="PersonLifecycle" isExecutable="true" processType="Public">
     <bpmn2:sequenceFlow id="_19F44CB2-57C9-4DE4-9E51-1039092F6CEE" sourceRef="_E114B7BF-66BF-46CF-BC3A-BBC2C6FC5CEF" targetRef="_C588B685-1207-491E-B822-9C4103D0B6A7"/>
@@ -46,7 +46,7 @@
     <bpmn2:endEvent id="_51E4AC78-F249-4D64-8BF9-9F113EF3EAC8">
       <bpmn2:incoming>_20202698-92D8-4217-9DF7-9840982966D9</bpmn2:incoming>
     </bpmn2:endEvent>
-    <bpmn2:serviceTask id="_A7A6CC94-3DAC-4246-8E5F-5380FEAA3B30" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.gadaq.service.BaseEntityService" drools:serviceoperation="decommission" name="Decommission" implementation="Java" operationRef="_A7A6CC94-3DAC-4246-8E5F-5380FEAA3B30_ServiceOperation">
+    <bpmn2:serviceTask id="_A7A6CC94-3DAC-4246-8E5F-5380FEAA3B30" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.BaseEntityService" drools:serviceoperation="decommission" name="Decommission" implementation="Java" operationRef="_A7A6CC94-3DAC-4246-8E5F-5380FEAA3B30_ServiceOperation">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
           <drools:metaValue><![CDATA[Decommission]]></drools:metaValue>
@@ -60,7 +60,7 @@
       <bpmn2:outgoing>_7082B4B5-2A8D-4AA6-9DB5-10B48A6720F6</bpmn2:outgoing>
       <bpmn2:signalEventDefinition signalRef="_-61826004"/>
     </bpmn2:intermediateCatchEvent>
-    <bpmn2:serviceTask id="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.gadaq.service.BaseEntityService" drools:serviceoperation="commission" name="Commission" implementation="Java" operationRef="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2_ServiceOperation">
+    <bpmn2:serviceTask id="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.BaseEntityService" drools:serviceoperation="commission" name="Commission" implementation="Java" operationRef="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2_ServiceOperation">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
           <drools:metaValue><![CDATA[Commission]]></drools:metaValue>
@@ -204,7 +204,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>__cQC4Mq5EDqNv9rAbMYvKg</bpmn2:source>
-    <bpmn2:target>__cQC4Mq5EDqNv9rAbMYvKg</bpmn2:target>
+    <bpmn2:source>_fmSdgNZXEDqOjfC1XTJ5lQ</bpmn2:source>
+    <bpmn2:target>_fmSdgNZXEDqOjfC1XTJ5lQ</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

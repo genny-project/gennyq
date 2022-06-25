@@ -1,21 +1,15 @@
 #!/bin/bash
-questionCode="${1:-QUE_INTERN_GRP}"
-port="${2:-9580}"
-realm="${3:-alyson}"
-#TOKEN=`./gettoken-prod.sh`
-TOKEN=`./gettoken-cache.sh $realm`
-echo ''
-echo $TOKEN
-echo "QuestionCode passed is $questionCode"
-echo ''
-curl -s   -H "Content-Type: application/json"  -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -X POST http://alyson2.genny.life:${port}/processQuestions -d @- << EOF
+productCode=${1}
+questionCode=${2}
+targetCode=${3}
+port="${4:-6590}"
+TOKEN=`./gettoken-cache.sh ${productCode}`
+
+curl -X POST "http://alyson2.genny.life:${port}/processQuestions"  -H "Content-Type: application/json"  -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -d @- << EOF
 {
 	"questionCode" : "${questionCode}",
-	"sourceCode"   : "PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943",
-	"targetCode"   : "APP_FFFEE841-0FD3-4C38-83E6-F3C26784C32C",
-	"pcmCode"      : "PCM_INTERN",
-	"userTokenStr" : "${TOKEN}"
+	"sourceCode"   : "PER_0F6169E1-FDD5-4DAF-BEC3-4126C6626752",
+	"targetCode"   : "${targetCode}",
+	"pcmCode"      : "PCM_FORM"
 }
 EOF
-
-echo ""

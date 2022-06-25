@@ -11,6 +11,7 @@
   <packaging>pom</packaging>
   <name>Kogitoq</name>
   <modules>
+    <module>kogito-common</module>
     <module>gadaq</module>
   </modules>
 </project>
