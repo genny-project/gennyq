@@ -13,6 +13,7 @@ import javax.transaction.Transactional;
 
 import org.jboss.logging.Logger;
 
+import io.smallrye.common.annotation.NonBlocking;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
@@ -371,7 +372,6 @@ public class DatabaseUtils {
 	 * @param code  The code of the {@link BaseEntity} to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
-
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 
 		checkEntityManager();
