@@ -94,6 +94,8 @@ public class KafkaBean implements KafkaInterface {
 			case "genny_events":
 				producer.getToGennyEvents().send(payload);
 				break;
+			case "genny_data":
+				producer.getToGennyData().send(payload);
 			case "search_events":
 				producer.getToSearchEvents().send(payload);
 				break;

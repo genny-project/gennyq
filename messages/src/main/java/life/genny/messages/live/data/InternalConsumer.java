@@ -74,6 +74,7 @@ public class InternalConsumer {
 
 		// Try Catch to stop consumer from dying upon error
 		try {
+			log.info("Deserialising Message");
 			message = jsonb.fromJson(data, QMessageGennyMSG.class);
 		} catch (Exception e) {
 			log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
@@ -82,6 +83,7 @@ public class InternalConsumer {
 
 		// Try Catch to stop consumer from dying upon error
 		try {
+			log.info("Processing Message");
 			mp.processGenericMessage(message);
 		} catch (Exception e) {
 			log.error(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);

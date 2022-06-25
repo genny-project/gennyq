@@ -2,6 +2,8 @@ package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.utils.CommonUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 /**
@@ -45,9 +47,11 @@ public class GennySettings {
 	private static final String getConfig(String env, String fallback, boolean alert) 
 		throws IllegalStateException {
 		String value = CommonUtils.getSystemEnv(env, alert);
-		if(value == null) {
-			if(fallback != null)
+		if(StringUtils.isBlank(value)) {
+			if(fallback != null) {
+				log.warn("Using fallback for " + env + ": " + fallback);
 				return fallback;
+			}
 			else {
 				log.error("Missing required ENV: " + env);
 				log.error("Please define this in your genny.env or System environment variables");

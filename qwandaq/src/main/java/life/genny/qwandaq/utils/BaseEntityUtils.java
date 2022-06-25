@@ -83,6 +83,7 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
+		log.info("TOKEN PRODUCT CODEE: " + userToken.getProductCode());
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
 
@@ -158,7 +159,7 @@ public class BaseEntityUtils {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		if (response == null) {
 			log.error("Null response from " + uri);

@@ -1,0 +1,20 @@
+package life.genny.gadaq.inference;
+
+import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.gadaq.utils.KogitoUtils;
+
+ruleflow-group 'Inference'
+
+rule InferName 
+when
+	msg: QDataAnswerMessage()
+	userToken: UserToken()
+	kogitoUtils : KogitoUtils()
+then
+	System.out.println("Inferring GENNYQ!");
+	retract(msg);
+	/* do some inference idk */
+	/* insert("personLifecycle") */
+end
