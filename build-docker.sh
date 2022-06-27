@@ -6,7 +6,7 @@ if [ "$#" -ge 1 ]; then
 	dependencies=( )
 	projects=( $@ )
 else
-	dependencies=( qwandaq serviceq )
+	dependencies=( qwandaq serviceq kogito-common )
 	projects=( gadaq bridge fyodor dropkick lauchy messages shleemy )
 fi
 

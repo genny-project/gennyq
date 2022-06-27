@@ -15,9 +15,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
 
-import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
@@ -25,22 +23,20 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.utils.MergeUtils;
+import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
@@ -131,21 +127,6 @@ public class TopologyProducer {
 		if (!eventType.equals("DD")) {
 			return false;
 		}
-
-		// // Check if it has a token
-		// if (!json.containsKey("token")) {
-		// 	return false;
-		// }
-
-		// String token = json.getString("token");
-
-		// // Check if token is valid
-		// try {
-		// 	GennyToken userToken = new GennyToken(token);
-		// } catch (Exception e) {
-		// 	log.error("Bad Token sent in dropdown message!");
-		// 	return false;
-		// }
 
 		JsonObject dataJson = json.getJsonObject("data");
 

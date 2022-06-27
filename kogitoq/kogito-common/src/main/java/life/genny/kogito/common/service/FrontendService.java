@@ -1,5 +1,6 @@
 package life.genny.kogito.common.service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +11,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -151,18 +153,61 @@ public class FrontendService {
 	}
 
 	/**
+	 * Update the ask target to match the process entity code.
+	 *
+	 * @param processBEJson The json of the process entity
+	 * @param askMessageJson The ask message to use in setup
+	 * @return The updated ask message
+	 */
+	public String updateAskTarget(String processBEJson, String askMessageJson) {
+
+		if (processBEJson == null) {
+			log.error("Process Entity json must not be null!");
+			return null;
+		}
+
+		if (askMessageJson == null) {
+			log.error("Ask Message json must not be null!");
+			return null;
+		}
+
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+
+		recursivelyUpdateAskTarget(askMsg.getItems().get(0), processBE);
+
+		return jsonb.toJson(askMsg);
+	}
+
+	/**
+	 * Recursively update the ask target.
+	 *
+	 * @param ask The ask to traverse
+	 * @param target The target entity to set
+	 */
+	public void recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
+
+		ask.setTargetCode(target.getCode());
+
+		// recursively update children
+		if (ask.getChildAsks() != null) {
+			for (Ask child : ask.getChildAsks()) {
+				recursivelyUpdateAskTarget(child, target);
+			}
+		}
+	}
+
+	/**
 	 * Send a baseentity after filtering the entity attributes 
 	 * based on the questions in the ask message.
 	 *
 	 * @param code The code of the baseentity to send
 	 * @param askMsg The ask message used to filter attributes
 	 */
-	public void sendBaseEntity(final String code, final String askMessageJson) {
+	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
 
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
-
-		// only send the attribute values that are in the questions
-		BaseEntity entity = beUtils.getBaseEntityByCode(code);
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
@@ -171,23 +216,38 @@ public class FrontendService {
 		}
 
 		// grab all entityAttributes from the entity
-		Set<EntityAttribute> entityAttributes = ConcurrentHashMap.newKeySet(entity.getBaseEntityAttributes().size());
-		for (EntityAttribute ea : entity.getBaseEntityAttributes()) {
+		Set<EntityAttribute> entityAttributes = ConcurrentHashMap.newKeySet(processBE.getBaseEntityAttributes().size());
+		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
 			entityAttributes.add(ea);
 		}
 
 		// delete any attribute that is not in the allowed Set
 		for (EntityAttribute ea : entityAttributes) {
 			if (!attributeCodes.contains(ea.getAttributeCode())) {
-				entity.removeAttribute(ea.getAttributeCode());
+				processBE.removeAttribute(ea.getAttributeCode());
 			}
 		}
 
 		// send entity front end
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(entity);
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(processBE);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg("webdata", msg);
+
+		List<BaseEntity> selections = new ArrayList<>();
+
+		// find non-empty selections
+		processBE.findPrefixEntityAttributes("LNK_").stream()
+			.filter(ea -> !StringUtils.isEmpty(ea.getValueString()))
+			.forEach(ea -> {
+				BaseEntity sel = beUtils.getBaseEntityFromLinkAttribute(processBE, ea.getAttributeCode());
+				selections.add(sel);
+			});
+
+		QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage(selections);
+		selectionMsg.setToken(userToken.getToken());
+		selectionMsg.setReplace(true);
+		KafkaUtils.writeMsg("webdata", selectionMsg);
 	}
 
 	/**
@@ -234,7 +294,6 @@ public class FrontendService {
 			recursivelyFindAndUpdateSubmitDisabled(child, disabled);
 		}
 	}
-
 
 	/**
 	 * Send dropdown items for the asks.
