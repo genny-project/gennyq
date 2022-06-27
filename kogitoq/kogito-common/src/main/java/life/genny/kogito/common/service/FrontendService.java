@@ -241,7 +241,9 @@ public class FrontendService {
 			.filter(ea -> !StringUtils.isEmpty(ea.getValueString()))
 			.forEach(ea -> {
 				BaseEntity sel = beUtils.getBaseEntityFromLinkAttribute(processBE, ea.getAttributeCode());
-				selections.add(sel);
+				if (sel != null) {
+					selections.add(sel);
+				}
 			});
 
 		QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage(selections);
@@ -355,18 +357,19 @@ public class FrontendService {
 	 */
 	public void sendPCM(final String code) {
 
-		// default command
-		QCmdMessage msg = new QCmdMessage("DISPLAY", "FORM");
+		BaseEntity root = beUtils.getBaseEntityByCode("PCM_ROOT");
 
-		// only change the command if code is not for a PCM
-		if (!code.startsWith("PCM")) {
-			String[] displayParms = code.split(":");
-			msg = new QCmdMessage(displayParms[0], displayParms[1]);
-		}
+		try {
+            root.setValue("PRI_LOC3", code);
+        } catch (BadDataException e) {
+            e.printStackTrace();
+        }
 
-		// send to frontend
-		msg.setToken(userToken.getToken());
-		KafkaUtils.writeMsg("webcmds", msg);
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(root);
+        msg.setToken(userToken.getToken());
+        msg.setReplace(true);
+
+        KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	public void createBaseEntity(String defCode) {
