@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -156,14 +155,23 @@ public class QwandaUtils {
 				}
 
 				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
+				long lastMemory = CommonUtils.getMemoryUsage("MEGABYTES");
+
 				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
+				log.info("Current memory usage: " + lastMemory + "MB");
 
 				for (Attribute attribute : attributeList) {
 					String key = attribute.getCode();
 					CacheUtils.putObject(productCode, key, attribute);
 					totalAttribsCached++;
 				}
+				long currentMemory = CommonUtils.getMemoryUsage(CommonUtils.MemoryMeasurement.MEGABYTES);
+				long memoryUsed = currentMemory - lastMemory;
 
+				log.info("Post load memory usage: " + currentMemory + "MB");
+				log.info("Used up: " + memoryUsed + "MB");
+				log.info("Percentage: " + CommonUtils.getPercentMemoryUsed() * 100f);
+				log.info("============================");
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);
 
