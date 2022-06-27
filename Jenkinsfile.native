@@ -12,11 +12,14 @@ pipeline {
         }
         stage("Build Dependencies") {
             steps {
+                sh "./build.sh gennyq"
                 sh "./build.sh qwandaq"
                 sh "./build.sh serviceq"
+                sh "./build.sh kogitoq"
+                sh "./build.sh kogito-common"
             }
         }
-        stage("Build Services [1/2]") {
+        stage("Build Services") {
             steps {
                 parallel (
                     "Build GadaQ" : {
@@ -27,13 +30,7 @@ pipeline {
                     },
                     "Build Fyodor" : {
                         sh "./build-docker-native.sh fyodor"
-                    }
-                )
-            }
-        }
-        stage("Build Services [2/2]") {
-            steps {
-                parallel (
+                    },
                     "Build Dropkick" : {
                         sh "./build-docker-native.sh dropkick"
                     },

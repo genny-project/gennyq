@@ -1,17 +1,22 @@
 package life.genny.kogito.common.utils;
 
 import java.net.http.HttpResponse;
+
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieRuntimeBuilder;
+
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.HttpUtils;
-
-
-
 
 /*
  * A static utility class used for standard Kogito interactions
@@ -173,7 +178,6 @@ public class KogitoUtils {
 			}
 		}
 
-		builder.add("userToken",userToken);
 		return triggerWorkflow(id, builder.build());
 	}
 
@@ -189,6 +193,7 @@ public class KogitoUtils {
 		JsonObjectBuilder builder = Json.createObjectBuilder();
 		json.forEach(builder::add);
 		builder.add("token", userToken.getToken());
+		builder.add("userToken", jsonb.toJson(userToken));
 		json = builder.build();
 
         String uri = GennySettings.kogitoServiceUrl() + "/" + id;

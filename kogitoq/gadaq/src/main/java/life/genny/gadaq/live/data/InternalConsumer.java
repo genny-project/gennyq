@@ -2,23 +2,20 @@ package life.genny.gadaq.live.data;
 
 import java.time.Duration;
 import java.time.Instant;
-
 import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-
 import org.jboss.logging.Logger;
-import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.KieRuntimeBuilder;
+import org.kie.api.runtime.KieSession;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
@@ -28,16 +25,14 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
-
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -79,22 +74,6 @@ public class InternalConsumer {
 	 */
 	void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
-	}
-
-	@Blocking
-	@Incoming("service2service")
-	public void fromService2Service(String payload) {
-
-		Instant start = Instant.now();
-		scope.init(payload);
-
-		JsonObject json = jsonb.fromJson(payload, JsonObject.class);
-		String workflowId = json.getString("workflowId");
-		kogitoUtils.triggerWorkflow(workflowId, json);
-
-		scope.destroy();
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	/**

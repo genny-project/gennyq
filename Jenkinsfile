@@ -12,8 +12,11 @@ pipeline {
         }
         stage("Build Dependencies") {
             steps {
+                sh "./build.sh gennyq"
                 sh "./build.sh qwandaq"
                 sh "./build.sh serviceq"
+                sh "./build.sh kogitoq"
+                sh "./build.sh kogito-common"
             }
         }
         stage("Build Services") {
