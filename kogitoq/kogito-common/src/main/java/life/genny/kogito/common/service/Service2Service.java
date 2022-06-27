@@ -26,6 +26,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.kogito.common.models.KogitoData;
 
 /**
@@ -43,22 +44,8 @@ public class Service2Service {
 	@Inject
 	UserToken userToken;
 
-	/**
-	 * Trigger the processQuestions workflow
-	 */
-    public void triggerProcessQuestions(String questionCode, String sourceCode, String targetCode, String pcmCode) {
-
-		JsonObject payload = Json.createObjectBuilder()
-			.add("workflowId", "processQuestions")
-			.add("questionCode", questionCode)
-			.add("sourceCode", sourceCode)
-			.add("targetCode", targetCode)
-			.add("pcmCode", pcmCode)
-			.add("token", userToken.getToken())
-			.build();
-
-		KafkaUtils.writeMsg("service2service", jsonb.toJson(payload));
-	}
+	@Inject
+	GennyScopeInit scope;
 
 	/**
 	 * Add a token to a KogitoData message for sending.
@@ -70,5 +57,15 @@ public class Service2Service {
 
 		data.setToken(userToken.getToken());
 		return data;
+	}
+
+	/**
+	 * Initialise the RequestScope.
+	 *
+	 * @param data The KogitoData object
+	 */
+	public void initialiseScope(KogitoData data) {
+
+		scope.init(jsonb.toJson(data));
 	}
 }

@@ -78,9 +78,4 @@ public class InternalProducer {
     return blacklist;
   }
 
-  @Inject @Channel("service2serviceout") Emitter<String> service2Service;
-  public Emitter<String> getToService2Service() {
-    return service2Service;
-  }
-
 }

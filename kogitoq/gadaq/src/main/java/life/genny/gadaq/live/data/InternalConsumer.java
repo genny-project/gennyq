@@ -76,22 +76,6 @@ public class InternalConsumer {
 		service.fullServiceInit();
 	}
 
-	@Blocking
-	@Incoming("service2service")
-	public void fromService2Service(String payload) {
-
-		Instant start = Instant.now();
-		scope.init(payload);
-
-		JsonObject json = jsonb.fromJson(payload, JsonObject.class);
-		String workflowId = json.getString("workflowId");
-		kogitoUtils.triggerWorkflow(workflowId, json);
-
-		scope.destroy();
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
-
 	/**
 	 * Fetch target baseentity from cache 'baseentity'
 	 * Add/Replace EntityAttribute value from answer

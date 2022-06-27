@@ -2,7 +2,6 @@ package life.genny.qwandaq.utils;
 
 import java.io.Serializable;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -53,8 +52,9 @@ public class KafkaUtils implements Serializable {
 	 */
 	public static void writeMsg(String channel, String payload) {
 
-		if(!checkInterface())
+		if (!checkInterface()) {
 			return;
+		}
 
 		if (channel.isBlank()) {
 			log.error("Channel is blank, cannot send payload!");
@@ -66,7 +66,8 @@ public class KafkaUtils implements Serializable {
 	}
 
 	private static Boolean checkInterface() {
-		if(kafkaInterface == null) {
+
+		if (kafkaInterface == null) {
 			log.error("KafkaUtils not initialised! Initialise with: KafkaUtils.init(KafkaInterface)");
 			return false;
 		}

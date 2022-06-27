@@ -1,8 +1,10 @@
 #!/bin/bash
-TOKEN=${1}
+productCode=${1}
 sourceCode=${2}
 targetCode=${3}
 questionCode=${4}
+
+TOKEN=`./gettoken-cache.sh ${productCode}`
 
 payload="{\"data\":{\"sourceCode\":\"${sourceCode}\",\"targetCode\":\"${targetCode}\",\"code\":\"${questionCode}\"},\"token\":\"${TOKEN}\",\"msg_type\":\"EVT_MSG\"}"
 #echo $payload
