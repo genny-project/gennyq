@@ -9,16 +9,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -30,6 +25,11 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+
+
 
 /**
  * A non-static utility class used for standard
@@ -83,6 +83,9 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
+		if ("backend".equals(userToken.getProductCode())) {
+			userToken.setProductCode("internmatch");
+		}
 		log.info("TOKEN PRODUCT CODEE: " + userToken.getProductCode());
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}

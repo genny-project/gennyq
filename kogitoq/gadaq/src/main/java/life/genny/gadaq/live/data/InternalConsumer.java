@@ -1,24 +1,15 @@
 package life.genny.gadaq.live.data;
 
+import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.jboss.logging.Logger;
-import org.kie.api.runtime.KieRuntimeBuilder;
-import org.kie.api.runtime.KieSession;
-
-import io.quarkus.runtime.StartupEvent;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -30,9 +21,15 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieRuntimeBuilder;
+import org.kie.api.runtime.KieSession;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -61,6 +58,9 @@ public class InternalConsumer {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
+	@Inject
+	DatabaseUtils databaseUtils;
 
 	@Inject
 	KieRuntimeBuilder kieRuntimeBuilder;
@@ -107,14 +107,21 @@ public class InternalConsumer {
 			log.debug("================= END ANSWER ==================");
 		}
 
+		if ("backend".equals(productCode)) {
+			productCode = "internmatch";
+		}
+
 		// Retrieve Base Entity from cache
 
 		BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, targetCode);
 		log.info("Fetching BaseEntity from '" + GennyConstants.CACHE_NAME_BASEENTITY + "': " + targetCode);
 		log.info("	- Key: " + baseEntityKey);
 
-		BaseEntity targetBaseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
-				baseEntityKey);
+		// BaseEntity targetBaseEntity = (BaseEntity)
+		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+		// baseEntityKey);
+
+		BaseEntity targetBaseEntity = (BaseEntity) databaseUtils.findBaseEntityByCode(productCode, targetCode);
 
 		if (targetBaseEntity == null) {
 			log.error("Error retrieving base entity: [" + targetCode + "] for product code: " + productCode);
@@ -148,8 +155,12 @@ public class InternalConsumer {
 			scope.destroy();
 			return;
 		}
-		qwandaUtils.saveAnswer(answer);
-
+		try {
+			qwandaUtils.saveAnswer(answer);
+		} catch (NullPointerException npe) {
+			log.error("Error saving answer: " + answer.getTargetCode() + ":" + answer.getAttributeCode() + "="
+					+ answer.getValue());
+		}
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
