@@ -376,7 +376,7 @@ public class MergeUtils {
 						String attributeCode = sourceCode.split("\\.")[i];
 
 						// Grab Parent from map so we can fetch associated entity
-						assocBE = beUtils.getBaseEntityFromLNKAttr(parentBE, attributeCode);
+						assocBE = beUtils.getBaseEntityFromLinkAttribute(parentBE, attributeCode);
 						if (assocBE != null) {
 							parentBE = assocBE;
 						} else {

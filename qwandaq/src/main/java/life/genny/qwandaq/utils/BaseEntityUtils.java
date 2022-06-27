@@ -256,10 +256,10 @@ public class BaseEntityUtils {
 	 * @param attributeCode  The attribute storing the data
 	 * @return The BaseEntity with code stored in the attribute
 	 */
-	public BaseEntity getBaseEntityFromLNKAttr(String baseEntityCode, String attributeCode) {
+	public BaseEntity getBaseEntityFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
 		BaseEntity be = getBaseEntityByCode(baseEntityCode);
-		return getBaseEntityFromLNKAttr(be, attributeCode);
+		return getBaseEntityFromLinkAttribute(be, attributeCode);
 	}
 
 	/**
@@ -269,9 +269,9 @@ public class BaseEntityUtils {
 	 * @param attributeCode The attribute storing the data
 	 * @return The BaseEntity with code stored in the attribute
 	 */
-	public BaseEntity getBaseEntityFromLNKAttr(BaseEntity baseEntity, String attributeCode) {
+	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
 
-		String newBaseEntityCode = getBaseEntityCodeFromLNKAttr(baseEntity, attributeCode);
+		String newBaseEntityCode = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		// return null if attributeCode valueString is null or empty
 		if (StringUtils.isEmpty(newBaseEntityCode)) {
 			return null;
@@ -287,10 +287,10 @@ public class BaseEntityUtils {
 	 * @param attributeCode  The attribute storing the data
 	 * @return The BaseEntity code stored in the attribute
 	 */
-	public String getBaseEntityCodeFromLNKAttr(String baseEntityCode, String attributeCode) {
+	public String getBaseEntityCodeFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
 		BaseEntity be = getBaseEntityByCode(baseEntityCode);
-		return getBaseEntityCodeFromLNKAttr(be, attributeCode);
+		return getBaseEntityCodeFromLinkAttribute(be, attributeCode);
 	}
 
 	/**
@@ -300,7 +300,7 @@ public class BaseEntityUtils {
 	 * @param attributeCode The attribute storing the data
 	 * @return The BaseEntity code stored in the attribute
 	 */
-	public String getBaseEntityCodeFromLNKAttr(BaseEntity baseEntity, String attributeCode) {
+	public String getBaseEntityCodeFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
 
 		String attributeValue = baseEntity.getValue(attributeCode, null);
 		if (attributeValue == null) {
@@ -318,10 +318,10 @@ public class BaseEntityUtils {
 	 * @param attributeCode  The attribute storing the data
 	 * @return An ArrayList of codes stored in the attribute
 	 */
-	public List<String> getBaseEntityCodeArrayFromLNKAttr(String baseEntityCode, String attributeCode) {
+	public List<String> getBaseEntityCodeArrayFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
 		BaseEntity be = getBaseEntityByCode(baseEntityCode);
-		return getBaseEntityCodeArrayFromLNKAttr(be, attributeCode);
+		return getBaseEntityCodeArrayFromLinkAttribute(be, attributeCode);
 	}
 
 	/**
@@ -332,9 +332,9 @@ public class BaseEntityUtils {
 	 * @param attributeCode The attribute storing the data
 	 * @return An ArrayList of codes stored in the attribute
 	 */
-	public List<String> getBaseEntityCodeArrayFromLNKAttr(BaseEntity baseEntity, String attributeCode) {
+	public List<String> getBaseEntityCodeArrayFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
 
-		String attributeValue = getBaseEntityCodeFromLNKAttr(baseEntity, attributeCode);
+		String attributeValue = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		if (attributeValue == null) {
 			return null;
 		}

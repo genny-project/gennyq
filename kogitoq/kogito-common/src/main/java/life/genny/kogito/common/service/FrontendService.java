@@ -276,7 +276,7 @@ public class FrontendService {
 		if (ask.getAttributeCode().startsWith("LNK_")) {
 
 			// get list of value codes
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLNKAttr(target, ask.getAttributeCode());
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ask.getAttributeCode());
 
 			// fetch entity for each and add to msg
 			for (String code : codes) {
