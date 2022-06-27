@@ -30,7 +30,7 @@ pipeline {
                     },
                     "Build Fyodor" : {
                         sh "./build-docker-native.sh fyodor"
-                    }
+                    },
                     "Build Dropkick" : {
                         sh "./build-docker-native.sh dropkick"
                     },
