@@ -24,6 +24,7 @@ do
 done
 
 # iterate projects
+
 for project in "${projects[@]}"
 do
     echo "Building $project"
@@ -42,4 +43,4 @@ do
     echo "Tagging $project"
 	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:latest
 done
-spd-say "finished building"
+./say.sh "finished building"
