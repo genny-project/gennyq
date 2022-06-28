@@ -66,7 +66,7 @@ public class ProcessAnswerService {
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
 
 		// ensure targetCode is correct
-		if (!answer.getTargetCode().equals(targetCode)) {
+		if (!answer.getTargetCode().equals(processBE.getCode())) {
 			log.warn("Bad targetCode in answer!");
 			return processBEJson;
 		}
