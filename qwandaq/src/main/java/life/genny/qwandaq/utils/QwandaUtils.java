@@ -384,6 +384,27 @@ public class QwandaUtils {
 		return map;
 	}
 
+	/**
+	 * Find the submit ask using recursion.
+	 *
+	 * @param ask The ask to traverse
+	 * @param disabled Should the submit ask be disabled
+	 */
+	public void recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
+
+		// return ask if submit is found
+		if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
+			ask.setDisabled(disabled);
+		}
+
+		// recursively check child asks for submit
+		if (ask.getChildAsks() == null) {
+			for (Ask child : ask.getChildAsks()) {
+				recursivelyFindAndUpdateSubmitDisabled(child, disabled);
+			}
+		}
+	}
+
 
 	/**
 	 * Save an {@link Answer} object.

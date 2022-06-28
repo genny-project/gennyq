@@ -104,6 +104,7 @@ public class InitService {
 
 			// set token and send
 			msg.setToken(userToken.getToken());
+			msg.setAliasCode("ATTRIBUTE_MESSAGE_" + (currentPage + 1) + "_OF_" + (TOTAL_PAGES + 1));
 			KafkaUtils.writeMsg("webdata", msg);
 		}
 	}
@@ -129,6 +130,7 @@ public class InitService {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
+		msg.setAliasCode("PCM_INIT_MESSAGE");
 
 		KafkaUtils.writeMsg("webdata", msg);
 
@@ -136,6 +138,7 @@ public class InitService {
 		QDataAskMessage askMsg = new QDataAskMessage();
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
+		askMsg.setAliasCode("PCM_INIT_ASK_MESSAGE");
 
 		BaseEntity user = beUtils.getUserBaseEntity();
 

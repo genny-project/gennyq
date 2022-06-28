@@ -86,6 +86,7 @@ public class CommonUtils {
 
     /**
      * Safe-compare two Objects (null-safe)
+     * @param <T> type
      * @param objA Object1 to compare
      * @param objB Object2 to compare
      * @return true if both strings are the same or false if not
@@ -131,6 +132,7 @@ public class CommonUtils {
 
     /**
      * Get a JSON style array of objects. Pass a callback for custom values. Will default to {@link Object#toString()} otherwise
+     * @param <T> type
      * @param list - list to get array of
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
@@ -145,6 +147,7 @@ public class CommonUtils {
 
     /**
      * Get a JSON style array of objects. Pass a callback for custom values. Will default to {@link Object#toString()} otherwise
+     * @param <T> type
      * @param array - list to get array of
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback

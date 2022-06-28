@@ -72,7 +72,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	}
 
 	public QDataBaseEntityMessage() {
-		// super(DATATYPE_BASEENTITY); // removed for native execution
+		super(DATATYPE_BASEENTITY); // removed for native execution
 		// this.setItems(new BaseEntity[0]);
 	}
 

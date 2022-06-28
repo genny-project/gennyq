@@ -58,7 +58,7 @@ public class DatabaseUtils {
 	 * Get all attributes with a specific Prefix
 	 * @param productCode - Product Code to load from
 	 * @param prefix - Prefix to check for
-	 * @return
+	 * @return A list of attributes
 	 */
 	// TODO: Lint this against accepted prefixes
 	public List<Attribute> findAttributesWithPrefix(String productCode, String prefix) {
@@ -562,14 +562,15 @@ public class DatabaseUtils {
 	 * Save an {@link Attribute} to the database.
 	 *
 	 * @param attribute An {@link Attribute} object to save
+	 * @return was the save successful
 	 */
 	@Transactional
 	public boolean saveAttribute(Attribute attribute) {
-		if(attribute == null) {
+
+		if (attribute == null) {
 			log.error("Attempting to save null attribute!");
 			return false;
 		}
-
 		log.info("Saving Attribute " + attribute.getCode());
 
 		checkEntityManager();
