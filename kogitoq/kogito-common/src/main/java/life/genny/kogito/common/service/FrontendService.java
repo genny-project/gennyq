@@ -354,8 +354,9 @@ public class FrontendService {
 	 * Send a command message based on a PCM code.
 	 *
 	 * @param code The code of the PCM baseentity
+	 * @param questionCode The code of the question
 	 */
-	public void sendPCM(final String code) {
+	public void sendPCM(final String code, final String questionCode) {
 
 		BaseEntity root = beUtils.getBaseEntityByCode("PCM_ROOT");
 
@@ -365,7 +366,20 @@ public class FrontendService {
             e.printStackTrace();
         }
 
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(root);
+		BaseEntity pcm = beUtils.getBaseEntityByCode(code);
+		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
+		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
+
+		try {
+            pcm.addAttribute(ea);
+        } catch (BadDataException e) {
+            e.printStackTrace();
+        }
+
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+		msg.add(root);
+		msg.add(pcm);
+
         msg.setToken(userToken.getToken());
         msg.setReplace(true);
 
