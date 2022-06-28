@@ -53,7 +53,7 @@ public class PcmService {
 
         if (pcm == null) {
             log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
-            pcm = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), pcmCode);
+            pcm = beUtils.getBaseEntityByCode(userToken.getProductCode(), pcmCode);
         }
 
        
