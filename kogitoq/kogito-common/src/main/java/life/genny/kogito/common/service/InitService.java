@@ -129,6 +129,7 @@ public class InitService {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
+		msg.setAliasCode("PCM_INIT_MESSAGE");
 
 		KafkaUtils.writeMsg("webdata", msg);
 
