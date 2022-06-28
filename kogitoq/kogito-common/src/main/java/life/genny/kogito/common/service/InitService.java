@@ -104,7 +104,7 @@ public class InitService {
 
 			// set token and send
 			msg.setToken(userToken.getToken());
-			msg.setAliasCode("ATTRIBUTE_MESSAGE_" + (currentPage + 1) + "_OF_" + (TOTAL_PAGES));
+			msg.setAliasCode("ATTRIBUTE_MESSAGE_" + (currentPage + 1) + "_OF_" + (TOTAL_PAGES + 1));
 			KafkaUtils.writeMsg("webdata", msg);
 		}
 	}
