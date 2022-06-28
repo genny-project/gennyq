@@ -266,35 +266,9 @@ public class FrontendService {
 		Ask ask = askMessage.getItems().get(0);
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
-		recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		KafkaUtils.writeMsg("webdata", askMessageJson);
-	}
-
-	/**
-	 * Find the submit ask and update its disabled value.
-	 *
-	 * @param ask The ask to traverse
-	 * @param disabled The value to set
-	 * @return The submit ask
-	 */
-	public void recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
-
-		// return ask if submit is found
-		if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
-			ask.setDisabled(disabled);
-			return;
-		}
-
-		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
-			return;
-		}
-
-		// recursively check child asks for submit
-		for (Ask child : ask.getChildAsks()) {
-			recursivelyFindAndUpdateSubmitDisabled(child, disabled);
-		}
 	}
 
 	/**

@@ -19,9 +19,11 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
@@ -110,46 +112,15 @@ public class ProcessAnswerService {
 		Ask ask = askMessage.getItems().get(0);
 
 		// find the submit ask
-		Ask submit = recursivelyCheckForSubmit(ask);
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
+		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
-		// enable/disable the submit according to answered var
-		if (submit != null) {
-			taskService.enableTaskQuestion(submit, answered);
-		}
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg("webdata", msg);
 
 		return answered;
-	}
-
-	/**
-	 * Find the submit ask using recursion.
-	 *
-	 * @param ask The ask to traverse
-	 * @return The submit ask
-	 */
-	public Ask recursivelyCheckForSubmit(Ask ask) {
-
-		// return ask if submit is found
-		if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
-			return ask;
-		}
-
-		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
-			return null;
-		}
-
-		// recursively check child asks for submit
-		for (Ask child : ask.getChildAsks()) {
-
-			Ask childSubmit = recursivelyCheckForSubmit(child);
-
-			if (childSubmit != null) {
-				return childSubmit;
-			}
-		}
-
-		return null;
 	}
 
 	/**
@@ -192,6 +163,12 @@ public class ProcessAnswerService {
 		// save these answrs to db and cache
 		beUtils.updateBaseEntity(target);
 		log.info("Saved answers for target " + targetCode);
+
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(target);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+
+		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 }
