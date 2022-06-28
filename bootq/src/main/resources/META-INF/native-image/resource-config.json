@@ -1,0 +1,7 @@
+{
+    "resources": [],
+    "bundles": [
+        {"name":"com.sun.org.apache.xerces.internal.impl.msg.XMLMessages"}
+    ]
+}
+
