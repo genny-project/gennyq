@@ -15,6 +15,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -46,8 +47,16 @@ public class PcmService {
         log.info("Got update PCM command for " + pcmCode);
         log.info("Replacing " + loc + " with " + newValue);
 
-        BaseEntity pcm = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), pcmCode);
+        String cachedCode = userToken.getJTI() + ":" + pcmCode;
 
+        BaseEntity pcm = CacheUtils.getObject(userToken.getProductCode(), cachedCode, BaseEntity.class);
+
+        if (pcm == null) {
+            log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
+            pcm = beUtils.getBaseEntityByCode(userToken.getProductCode(), pcmCode);
+        }
+
+       
         if (pcm == null) {
             log.error("Couldn't find PCM with code " + pcmCode);
             throw new NullPointerException("Couldn't find PCM with code " + pcmCode);
@@ -83,6 +92,8 @@ public class PcmService {
         msg.setReplace(true);
 
         KafkaUtils.writeMsg("webdata", msg);
+
+        CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
     }
 
 }
