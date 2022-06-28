@@ -4,12 +4,20 @@
         xmlns="http://maven.apache.org/POM/4.0.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>life.genny</groupId>
+
+    <parent>
+        <groupId>life.genny</groupId>
+        <artifactId>gennyq</artifactId>
+        <version>10.1.0</version>
+    </parent>
+
     <artifactId>bootq</artifactId>
-    <version>10.1.0</version>
-    <properties>
+
+    <name>Bootq</name>
+    <description>Tool for loading google sheets</description>
+
+    <!--properties>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
-        <genny.version>${project.version}</genny.version>
         <jandex.version>1.0.7</jandex.version>
         <maven.compiler.parameters>true</maven.compiler.parameters>
         <maven.compiler.source>11</maven.compiler.source>
@@ -22,7 +30,8 @@
         <quarkus.platform.version>2.9.1.Final</quarkus.platform.version>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
         <testcontainers.version>1.17.0</testcontainers.version>
-    </properties>
+    </properties-->
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -34,6 +43,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.fusesource.jansi</groupId>
@@ -80,6 +90,11 @@
         </dependency>
         <dependency>
             <groupId>life.genny</groupId>
+            <artifactId>serviceq</artifactId>
+            <version>${genny.version}</version>
+        </dependency>
+        <!--dependency>
+            <groupId>life.genny</groupId>
             <artifactId>bootxport</artifactId>
             <version>${genny.version}</version>
             <exclusions>
@@ -88,7 +103,7 @@
                     <groupId>xml-apis</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency-->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm</artifactId>
@@ -162,9 +177,9 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>io.quarkus</groupId>
+                <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
-                <version>${quarkus-plugin.version}</version>
+                <version>${quarkus.platform.version}</version>
                 <extensions>true</extensions>
                 <executions>
                     <execution>
@@ -178,7 +193,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler-plugin.version}</version>
+                <version>${maven.compiler.version}</version>
                 <configuration>
                     <parameters>${maven.compiler.parameters}</parameters>
                 </configuration>
@@ -277,8 +292,7 @@
                                 </goals>
                                 <configuration>
                                     <systemPropertyVariables>
-                                        <native.image.path>
-                                            ${project.build.directory}/${project.build.finalName}-runner
+                                        <native.image.path>${project.build.directory}/${project.build.finalName}-runner
                                         </native.image.path>
                                         <java.util.logging.manager>org.jboss.logmanager.LogManager
                                         </java.util.logging.manager>
