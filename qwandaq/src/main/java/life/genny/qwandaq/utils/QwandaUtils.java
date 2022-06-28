@@ -288,7 +288,7 @@ public class QwandaUtils {
 
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-				child.setProcessId(processId);
+				recursivelySetProcessId(child, processId);
 			}
 		}
 	}
