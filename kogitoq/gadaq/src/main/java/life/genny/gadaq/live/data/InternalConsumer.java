@@ -130,6 +130,16 @@ public class InternalConsumer {
 			return;
 		}
 
+		// // Look for the test String and return a test error
+		// if ((ansValue != null) && (ansValue.startsWith("test:"))) {
+		// 	QCmdMessage cmdMsg = new QCmdMessage("FLDMSG", parentCode);
+		// 	cmdMsg.setAttributeCode(attributeCode));
+		// 	String messageValue = "{\"color\":\"red\",\"message\":\"Test Error\"}";
+		// 	cmdMsg.setValue();
+
+		// }
+
+
 		// Update the EntityAttribute
 		Optional<EntityAttribute> optEA = targetBaseEntity.findEntityAttribute(attributeCode);
 
@@ -231,7 +241,7 @@ public class InternalConsumer {
 	 *
 	 * @param event The incoming event
 	 */
-	@Incoming("genny_events")
+	@Incoming("events")
 	@Blocking
 	public void getEvent(String event) {
 
