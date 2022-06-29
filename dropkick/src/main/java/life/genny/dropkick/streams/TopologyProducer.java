@@ -35,6 +35,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -69,6 +70,9 @@ public class TopologyProducer {
 
 	@Inject
 	CapabilityUtils capabilityUtils;
+
+	@Inject
+	GraphQLUtils gqlUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -151,8 +155,15 @@ public class TopologyProducer {
 		// Grab info required to find the DEF
 		String attributeCode = json.getString("attributeCode");
 		String targetCode = dataJson.getString("targetCode");
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		String processId = dataJson.getString("processId");
 
+		if (targetCode.startsWith("QBE_")) {
+			// String body = gqlUtils.queryTable("processQuestions", "id", processId, "targetCode");
+			String body = gqlUtils.queryTable("processQuestions", "id", processId, "targetCode");
+			log.info(body);
+		}
+
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 		if (target == null) {
 			return false;
 		}
@@ -225,8 +236,6 @@ public class TopologyProducer {
 
 		log.info("Target DEF is " + defBE.getCode() + " : " + defBE.getName());
 		log.info("Attribute is " + attrCode);
-
-		// CapabilityUtils capabilityUtils = new CapabilityUtils(beUtils);
 
 		// Because it is a drop down event we will search the DEF for the search
 		// attribute

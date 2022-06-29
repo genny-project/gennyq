@@ -112,6 +112,13 @@ public class GennySettings {
 	public static String shleemyServiceUrl() {
 		return getConfig("SHLEEMY_SERVICE_API", projectUrl() + ":6969", true);
 	}
+
+	/** 
+	 * @return String
+	 */
+	public static String dataIndexUrl() {
+		return getConfig("GENNY_KOGITO_DATAINDEX_HTTP_URL", projectUrl() + ":8582", true);
+	}
 	
 	/** 
 	 * Get the Infinispan host

@@ -9,6 +9,8 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
 import org.apache.commons.lang3.StringUtils;
 
+ruleflow-group 'EventRoutes'
+
 rule RouteAuthInit 
 when
 	msg: QEventMessage( data.code == "AUTH_INIT" )
@@ -61,14 +63,16 @@ then
 end
 
 /**
- * Message should be retracted if it has not already been.
+ * If no route exists within gadaq, the message should be
+ * sent to the project specific service.
  */
-rule RetractEvent
+rule ForwardEvent
 salience 0
 when
 	msg: QEventMessage()
 then
-	System.out.println("Retracting message");
+	System.out.println("Forwarding Event Message...");
+	KafkaUtils.writeMsg("genny_events", msg);
 	retract(msg);
 end
 
