@@ -35,6 +35,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
@@ -158,15 +159,15 @@ public class TopologyProducer {
 		String processId = dataJson.getString("processId");
 
 		if (targetCode.startsWith("QBE_")) {
-			// String body = gqlUtils.queryTable("processQuestions", "id", processId, "targetCode");
-			String body = gqlUtils.queryTable("processQuestions", "id", processId, "targetCode");
-			log.info(body);
+			targetCode = fetchProcessInstanceTarget(processId);
 		}
 
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 		if (target == null) {
 			return false;
 		}
+
+		log.info(jsonb.toJson(target));
 
 		// Find the DEF
 		BaseEntity defBE = defUtils.getDEF(target);
@@ -196,6 +197,41 @@ public class TopologyProducer {
 	}
 
 	/**
+	 * Fetch the targetCode stored in the processInstance 
+	 * for the given processId.
+	 */
+	public String fetchProcessInstanceTarget(String processId) {
+
+		// check in cache first
+		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
+		if (targetCode != null) {
+			return targetCode;
+		}
+
+		String body = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+
+		// unpack json
+		JsonObject bodyObj = jsonb.fromJson(body, JsonObject.class);
+		JsonObject dataObj = bodyObj.getJsonObject("data");
+		if (dataObj == null) {
+			log.error("No data field found");
+			return null;
+		}
+		JsonArray processInstances = dataObj.getJsonArray("ProcessInstances");
+		if (processInstances == null || processInstances.isEmpty()) {
+			log.error("No ProcessInstance field found");
+			return null;
+		}
+		JsonObject variables = jsonb.fromJson(processInstances.getJsonObject(0).getString("variables"), JsonObject.class);
+
+		// grab the targetCode from process questions variables
+		targetCode = variables.getString("targetCode");
+		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
+
+		return targetCode;
+	}
+
+	/**
 	 * Fetch and return the results for this dropdown. Will return null
 	 * if items can not be fetched for this message. This null must
 	 * be filtered by streams builder.
@@ -215,6 +251,7 @@ public class TopologyProducer {
 		String searchText = dataJson.getString("value");
 		String parentCode = dataJson.getString("parentCode");
 		String questionCode = dataJson.getString("questionCode");
+		String processId = dataJson.getString("processId");
 
 		log.info(attrCode + ":" + parentCode + ":[" + searchText + "]");
 
@@ -223,6 +260,10 @@ public class TopologyProducer {
 		if (source == null) {
 			log.error("Source Entity is NULL!");
 			return null;
+		}
+
+		if (targetCode.startsWith("QBE_")) {
+			targetCode = fetchProcessInstanceTarget(processId);
 		}
 
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);

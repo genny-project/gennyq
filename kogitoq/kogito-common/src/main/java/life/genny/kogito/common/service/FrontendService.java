@@ -246,6 +246,18 @@ public class FrontendService {
 				}
 			});
 
+		// send first dropdown set
+		processBE.findPrefixEntityAttributes("LNK_").stream()
+			.forEach(ea -> {
+				// JsonObject json = Json.createObjectBuilder()
+				// 	.add("attributeCode", ea.getAttributeCode())
+				// 	.add("targetCode", targetCode)
+				// 	.add("token", userToken.getToken())
+				// 	.build();
+
+				KafkaUtils.writeMsg("events", null);
+			});
+
 		QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage(selections);
 		selectionMsg.setToken(userToken.getToken());
 		selectionMsg.setReplace(true);
@@ -358,28 +370,5 @@ public class FrontendService {
         msg.setReplace(true);
 
         KafkaUtils.writeMsg("webdata", msg);
-	}
-
-	public void createBaseEntity(String defCode) {
-
-		if (defCode == null || !defCode.startsWith("DEF_")) {
-			log.error("Invalid defCode: " + defCode);
-			return;
-		}
-
-		// fetch the def baseentity
-		BaseEntity def = beUtils.getBaseEntityByCode(defCode);
-		if(def == null) {
-			log.error("Could not find DEF BaseEntity with code: " + defCode);
-		}
-
-		// use entity create function and save to db
-		try {
-			BaseEntity entity = beUtils.create(def);
-			log.info("BaseEntity Created: " + entity.getCode());
-		} catch (Exception e) {
-			log.error("Error creating BaseEntity! DEF Code: " + defCode);
-			e.printStackTrace();
-		}
 	}
 }
