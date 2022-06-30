@@ -167,8 +167,6 @@ public class TopologyProducer {
 			return false;
 		}
 
-		log.info(jsonb.toJson(target));
-
 		// Find the DEF
 		BaseEntity defBE = defUtils.getDEF(target);
 

@@ -8,6 +8,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -15,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -93,6 +96,10 @@ public class FrontendService {
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
+
+		// put targetCode in cache
+		// NOTE: This is mainly only necessary for initial dropdown items
+		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
 
 		return jsonb.toJson(msg);
 	}
@@ -234,34 +241,70 @@ public class FrontendService {
 		msg.setReplace(true);
 		KafkaUtils.writeMsg("webdata", msg);
 
-		List<BaseEntity> selections = new ArrayList<>();
+		// NOTE: only using first ask item
+		Ask ask = askMsg.getItems().get(0);
 
-		// find non-empty selections
-		processBE.findPrefixEntityAttributes("LNK_").stream()
-			.filter(ea -> !StringUtils.isEmpty(ea.getValueString()))
-			.forEach(ea -> {
-				BaseEntity sel = beUtils.getBaseEntityFromLinkAttribute(processBE, ea.getAttributeCode());
-				if (sel != null) {
-					selections.add(sel);
+		// handle initial dropdown selections
+		recuresivelyFindAndSendDropdownItems(ask, processBE, ask.getQuestion().getCode());
+	}
+
+	/**
+	 * Recursively traverse the ask to find any already selected dropdown
+	 * items to send, and trigger dropdown searches.
+	 *
+	 * @param ask The Ask to traverse
+	 * @param target The target entity used in processing
+	 * @param rootCode The code of the root question used in sending DD messages
+	 */
+	public void recuresivelyFindAndSendDropdownItems(Ask ask, BaseEntity target, String rootCode) {
+
+		Question question = ask.getQuestion();
+		Attribute attribute = question.getAttribute();
+
+		if (attribute.getCode().startsWith("LNK_")) {
+
+			// check for already selected items
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
+			if (codes != null && !codes.isEmpty()) {
+
+				// grab selection baseentitys
+				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
+				for (String code : codes) {
+					BaseEntity selection = beUtils.getBaseEntityByCode(code);
+					if (selection != null) {
+						selectionMsg.add(selection);
+					}
 				}
-			});
 
-		// send first dropdown set
-		processBE.findPrefixEntityAttributes("LNK_").stream()
-			.forEach(ea -> {
-				// JsonObject json = Json.createObjectBuilder()
-				// 	.add("attributeCode", ea.getAttributeCode())
-				// 	.add("targetCode", targetCode)
-				// 	.add("token", userToken.getToken())
-				// 	.build();
+				// send selections
+				selectionMsg.setToken(userToken.getToken());
+				selectionMsg.setReplace(true);
+				KafkaUtils.writeMsg("webdata", selectionMsg);
+			}
 
-				KafkaUtils.writeMsg("events", null);
-			});
+			// trigger dropdown search in dropkick
+			JsonObject json = Json.createObjectBuilder()
+				.add("event_type", "DD")
+				.add("data", Json.createObjectBuilder()
+					.add("parentCode", rootCode)
+					.add("questionCode", question.getCode())
+					.add("sourceCode", ask.getSourceCode())
+					.add("targetCode", ask.getTargetCode())
+					.add("value", "")
+					.add("processId", ask.getProcessId()))
+				.add("attributeCode", attribute.getCode())
+				.add("token", userToken.getToken())
+				.build();
 
-		QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage(selections);
-		selectionMsg.setToken(userToken.getToken());
-		selectionMsg.setReplace(true);
-		KafkaUtils.writeMsg("webdata", selectionMsg);
+			KafkaUtils.writeMsg("events", json.toString());
+		}
+
+		// recursively run on children
+		if (ask.getChildAsks() != null) {
+			for (Ask child : ask.getChildAsks()) {
+				recuresivelyFindAndSendDropdownItems(child, target, rootCode);
+			}
+		}
 	}
 
 	/**
