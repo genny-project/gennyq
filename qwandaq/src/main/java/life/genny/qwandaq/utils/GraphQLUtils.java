@@ -59,7 +59,7 @@ public class GraphQLUtils {
 
 		// setup fields to query on
 		String queryFields = queryMap.entrySet().stream()
-			.map(e -> String.format("%s : { like: \"%s\" }", e.getKey(), e.getValue()))
+			.map(e -> String.format("%s : { equal: \"%s\" }", e.getKey(), e.getValue()))
 			.collect(Collectors.joining(", "));
 
 		// create full query string

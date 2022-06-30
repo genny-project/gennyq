@@ -28,9 +28,6 @@ import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-
-
-
 /**
  * A non-static utility class used for standard
  * operations involving BaseEntitys.

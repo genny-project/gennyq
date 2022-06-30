@@ -21,17 +21,6 @@ then
 	retract(msg);
 end
 
-rule RouteAddItem 
-when
-	msg: QEventMessage( data.code matches "QUE_ADD_.*" )
-	beUtils : BaseEntityUtils()
-	kogitoUtils : KogitoUtils()
-then
-	String code = StringUtils.removeStart(msg.getData().getCode(), "QUE_ADD_");
-	kogitoUtils.triggerWorkflow("addItem", "definitionCode", "DEF_"+code);
-	retract(msg);
-end
-
 rule RouteSubmit 
 when
 	msg: QEventMessage( data.code == "QUE_SUBMIT" )
@@ -59,6 +48,16 @@ when
 then
 	String processId = msg.getData().getProcessId();
 	kogitoUtils.sendSignal("processQuestions", processId, "reset", "");
+	retract(msg);
+end
+
+rule RouteAddItem 
+when
+	msg: QEventMessage( data.code matches "QUE_ADD_.*" )
+	kogitoUtils : KogitoUtils()
+then
+	String code = StringUtils.removeStart(msg.getData().getCode(), "QUE_ADD_");
+	kogitoUtils.triggerWorkflow("createBaseEntity", "definitionCode", "DEF_"+code);
 	retract(msg);
 end
 

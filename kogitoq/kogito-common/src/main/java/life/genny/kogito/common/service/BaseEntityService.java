@@ -44,6 +44,29 @@ public class BaseEntityService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+	
+	public void createBaseEntity(String definitionCode) {
+
+		if (definitionCode == null || !definitionCode.startsWith("DEF_")) {
+			log.error("Invalid definitionCode: " + definitionCode);
+			return;
+		}
+
+		// fetch the def baseentity
+		BaseEntity def = beUtils.getBaseEntityByCode(definitionCode);
+		if(def == null) {
+			log.error("Could not find DEF BaseEntity with code: " + definitionCode);
+		}
+
+		// use entity create function and save to db
+		try {
+			BaseEntity entity = beUtils.create(def);
+			log.info("BaseEntity Created: " + entity.getCode());
+		} catch (Exception e) {
+			log.error("Error creating BaseEntity! DEF Code: " + definitionCode);
+			e.printStackTrace();
+		}
+	}
 
 	public void commission() {
 
