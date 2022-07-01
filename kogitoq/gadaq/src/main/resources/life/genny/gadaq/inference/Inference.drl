@@ -14,7 +14,4 @@ when
 	kogitoUtils : KogitoUtils()
 then
 	System.out.println("Inferring GENNYQ!");
-	retract(msg);
-	/* do some inference idk */
-	/* insert("personLifecycle") */
 end

@@ -390,19 +390,22 @@ public class QwandaUtils {
 	 * @param ask The ask to traverse
 	 * @param disabled Should the submit ask be disabled
 	 */
-	public void recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
+	public Ask recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
 
 		// return ask if submit is found
-		if (ask.getAttributeCode().equals("PRI_SUBMIT")) {
+		if (ask.getQuestion().getAttribute().getCode().equals("PRI_SUBMIT")) {
+			log.info("[@] Setting PRI_SUBMIT disabled = " + disabled);
 			ask.setDisabled(disabled);
 		}
 
 		// recursively check child asks for submit
-		if (ask.getChildAsks() == null) {
+		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-				recursivelyFindAndUpdateSubmitDisabled(child, disabled);
+				child = recursivelyFindAndUpdateSubmitDisabled(child, disabled);
 			}
 		}
+
+		return ask;
 	}
 
 

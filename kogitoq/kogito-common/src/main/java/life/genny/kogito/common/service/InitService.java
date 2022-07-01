@@ -165,29 +165,11 @@ public class InitService {
 	 */
 	public void sendAddItems() {
 
-		// send basic add items
-		String sourceCode = userToken.getUserCode();
-		String targetCode = userToken.getUserCode();
-
-		Attribute questionAttribute = new Attribute("QQQ_QUESTION_GROUP", "link", new DataType(String.class));
-		Attribute eventAttribute = new Attribute("PRI_EVENT", "link", new DataType(String.class));
-
-		/* ADD ITEMS group */
-		Question addItemsQues = new Question("QUE_ADD_ITEMS_GRP", "Add Items", questionAttribute, true);
-		Ask addItemsAsk = new Ask(addItemsQues, sourceCode, targetCode);
-
-		Question customerQues = new Question("QUE_CUSTOMER_MENU", "Add Customer", eventAttribute, true);
-		Ask customerAsk = new Ask(customerQues, sourceCode, targetCode);
-
-		Question internQues = new Question("QUE_QA_INTERN_MENU", "Intern", eventAttribute, true);
-		Ask internAsk = new Ask(internQues, sourceCode, targetCode);
-
-		Ask[] children = { customerAsk, internAsk };
-
-		addItemsAsk.setChildAsks(children);
+		BaseEntity user = beUtils.getUserBaseEntity();
+		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
 
 		// configure msg and send
-		QDataAskMessage msg = new QDataAskMessage(addItemsAsk);
+		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 
