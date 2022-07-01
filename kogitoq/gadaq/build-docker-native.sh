@@ -1,9 +1,7 @@
 #!/bin/bash
-PROJECT_VERSION=$(cd ../ && mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-
-echo "Project version: ${PROJECT_VERSION}"
+cp -rp ../../docker/* src/main/docker/
+PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
-project=kogitoq-travels
 file="src/main/resources/${project}-git.properties"
 org=gennyproject
 function prop() {
@@ -34,3 +32,4 @@ USER=`whoami`
 #docker build -f src/main/docker/Dockerfile.native -t ${USER}/${project}:${version} .
 docker tag ${org}/${project}:${version} ${org}/${project}:${version}-native
 docker tag ${org}/${project}:${version} ${org}/${project}:native
+docker tag ${org}/${project}:${version} ${org}/${project}:latest

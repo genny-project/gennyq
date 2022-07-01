@@ -1,6 +1,7 @@
 #!/bin/bash
+cp -rp ../docker/* src/main/docker/
+PROJECT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
-project=lauchy
 file="src/main/resources/${project}-git.properties"
 org=gennyproject
 function prop() {
@@ -10,6 +11,7 @@ function prop() {
 
 if [ -z "${1}" ]; then
   version=$(cat src/main/resources/${project}-git.properties | grep 'git.build.version' | cut -d'=' -f2)
+  version=$PROJECT_VERSION
 else
   version="${1}"
 fi
@@ -30,3 +32,4 @@ USER=`whoami`
 #docker build -f src/main/docker/Dockerfile.native -t ${USER}/${project}:${version} .
 docker tag ${org}/${project}:${version} ${org}/${project}:${version}-native
 docker tag ${org}/${project}:${version} ${org}/${project}:native
+docker tag ${org}/${project}:${version} ${org}/${project}:latest

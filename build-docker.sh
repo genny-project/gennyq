@@ -15,12 +15,14 @@ for dependency in "${dependencies[@]}"
 do
     echo "Building $dependency"
 
-	# remove target dir
-	rm -rf $project/target
-	rm -rf kogitoq/$project/target
-
 	# perform clean install
 	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$dependency
+
+	# exit if build failed
+        if [[ "$?" -ne 0 ]] ; then
+                echo "Build failed"
+                exit $rc
+        fi
 done
 
 # iterate projects
@@ -29,15 +31,17 @@ for project in "${projects[@]}"
 do
     echo "Building $project"
 
-	# remove target dir
-	rm -rf $project/target
-	rm -rf kogitoq/$project/target
-
 	# copy each project with the latest docker
 	cp -f docker/* $project/src/main/docker/ 
 	cp -f docker/* kogitoq/$project/src/main/docker/ 
 	# perform clean install with docker build
 	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
+
+	# exit if build failed
+        if [[ "$?" -ne 0 ]] ; then
+                echo "Build failed"
+                exit $rc
+        fi
 
 	# tag the docker container
     echo "Tagging $project"
