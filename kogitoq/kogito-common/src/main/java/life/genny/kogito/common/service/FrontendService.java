@@ -386,7 +386,7 @@ public class FrontendService {
 	 */
 	public void sendPCM(final String code, final String questionCode) {
 
-		BaseEntity root = beUtils.getBaseEntityByCode("PCM_ROOT");
+		BaseEntity root = beUtils.getBaseEntityByCode("PCM_CONTENT");
 
 		try {
             root.setValue("PRI_LOC3", code);
