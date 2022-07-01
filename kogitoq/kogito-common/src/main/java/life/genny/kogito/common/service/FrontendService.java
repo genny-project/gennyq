@@ -1,6 +1,5 @@
 package life.genny.kogito.common.service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +12,6 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -22,11 +20,11 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -99,6 +97,7 @@ public class FrontendService {
 
 		// put targetCode in cache
 		// NOTE: This is mainly only necessary for initial dropdown items
+		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
 		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
 
 		return jsonb.toJson(msg);
@@ -321,7 +320,7 @@ public class FrontendService {
 		Ask ask = askMessage.getItems().get(0);
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
-		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		KafkaUtils.writeMsg("webdata", askMessageJson);
 	}

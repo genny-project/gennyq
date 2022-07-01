@@ -200,6 +200,8 @@ public class TopologyProducer {
 	 */
 	public String fetchProcessInstanceTarget(String processId) {
 
+		log.info("Fetching targetCode for processId : " + processId);
+
 		// check in cache first
 		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
 		if (targetCode != null) {

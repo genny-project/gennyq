@@ -97,28 +97,86 @@ public class DefUtils {
 	/**
 	 * Find the corresponding definition for a given {@link BaseEntity}.
 	 *
-	 * @param be The {@link BaseEntity} to check
+	 * @param entity The {@link BaseEntity} to check
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
-	public BaseEntity getDEF(final BaseEntity be) {
+	public BaseEntity getDEF(final BaseEntity entity) {
 
-		if (be == null) {
+		if (entity == null) {
 			log.error("The passed BaseEntity is NULL, supplying trace");
 			return null;
 		}
 
-		if (be.getCode().startsWith("DEF_")) {
-			return be;
+		// save processing time on particular entities
+		if (entity.getCode().startsWith("DEF_")) {
+			return entity;
 		}
+		if (entity.getCode().startsWith("PRJ_")) {
+			return beUtils.getBaseEntityByCode("DEF_PROJECT");
+		}
+
+		// NOTE: temporary special check for internmatch
+		String productCode = userToken.getProductCode();
+		if (productCode.equals("alyson") || productCode.equals("internmatch")) {
+			return getInternmatchDEF(entity);
+		}
+
+		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, "LNK_ROLE");
+
+		// null/empty check the role attribute
+		if (roles == null) {
+			log.error("Entity " + entity.getCode() + " does not contain LNK_ROLE attribute");
+			return null;
+		}
+		if (roles.isEmpty()) {
+			log.error("LNK_ROLE is empty for " + entity.getCode());
+			return null;
+		}
+
+		// fetch DEF if no merging is needed
+		if (roles.size() == 1) {
+			return beUtils.getBaseEntityByCode("DEF_"+roles.get(0).substring("ROL_".length()));
+		}
+
+		String mergedCode = "DEF_" + String.join("_", roles);
+		BaseEntity mergedDef = new BaseEntity(mergedCode, mergedCode);
+		log.info("Detected combination DEF - " + mergedCode);
+
+		// reverse order and begin filling new def
+		Collections.reverse(roles);
+		for (String role : roles) {
+
+			BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+role.substring("ROL_".length()));
+			if (def == null) {
+				log.warn("No DEF for " + role);
+				continue;
+			}
+
+			// merge into new def
+			for (EntityAttribute ea : def.getBaseEntityAttributes()) {
+				try {
+					mergedDef.addAttribute(ea);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return mergedDef;
+	}
+
+	/**
+	 * Find the corresponding definition for a given {@link BaseEntity}. 
+	 * NOTE: Temporary special method for Internmatch only.
+	 *
+	 * @param entity The {@link BaseEntity} to check
+	 * @return BaseEntity The corresponding definition {@link BaseEntity}
+	 */
+	public BaseEntity getInternmatchDEF(final BaseEntity entity) {
 
 		String productCode = userToken.getProductCode();
 
-		if (be.getCode().startsWith("PRJ_")) {
-			BaseEntity defBe = CacheUtils.getObject(productCode, "DEF_PROJECT", BaseEntity.class);
-			return defBe;
-		}
-
-		List<EntityAttribute> isAs = be.findPrefixEntityAttributes("PRI_IS_");
+		List<EntityAttribute> isAs = entity.findPrefixEntityAttributes("PRI_IS_");
 
 		// remove the non DEF ones
 		Iterator<EntityAttribute> i = isAs.iterator();
@@ -197,7 +255,7 @@ public class DefUtils {
 		}
 
 		// search for a def with same prefix
-		String prefix = be.getCode().substring(0, 3);
+		String prefix = entity.getCode().substring(0, 3);
 		log.info("Prefix = " + prefix);
 
 		Map<String, String> map = defPrefixMap.get(productCode);
@@ -210,7 +268,7 @@ public class DefUtils {
 		}
 
 		// default to error def
-		log.error("No DEF associated with entity " + be.getCode());
+		log.error("No DEF associated with entity " + entity.getCode());
 		return new BaseEntity("ERR_DEF", "No DEF");
 	}
 
