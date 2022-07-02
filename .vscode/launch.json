@@ -9,7 +9,7 @@
             "name": "Remote Debug (Dropkick)",
             "request": "attach",
             "hostName": "localhost",
-            "port": 5557,
+            "port": 5580,
             "sourcePaths": ["../../../../qwandaq/target/qwandaq-10.0.0-sources.jar"],
             "java.project.referencedLibraries": {
     "           include": [

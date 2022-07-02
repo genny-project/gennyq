@@ -1,13 +1,13 @@
 package life.genny.qwandaq.utils;
 
 import java.io.Serializable;
-
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
+import life.genny.qwandaq.intf.KafkaInterface;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.intf.KafkaInterface;
+
+
 
 /*
  * A static utility class used for standard 
@@ -51,16 +51,18 @@ public class KafkaUtils implements Serializable {
 	* @param payload the payload to send
 	 */
 	public static void writeMsg(String channel, String payload) {
-
+		log.info("WritingMsg1: " + channel + " " + payload.substring(0,10));
 		if (!checkInterface()) {
 			return;
 		}
-
+	log.info("WritingMsg2: " + channel + " " + payload.substring(0,10));
+	
 		if (channel.isBlank()) {
 			log.error("Channel is blank, cannot send payload!");
 			return;
 		}
-
+	log.info("WritingMsg3: " + channel + " " + payload.substring(0,10));
+	
 		// write to kafka channel through interface
 		kafkaInterface.write(channel, payload);
 	}

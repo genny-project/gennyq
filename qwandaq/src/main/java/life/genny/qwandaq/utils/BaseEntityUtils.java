@@ -83,7 +83,7 @@ public class BaseEntityUtils {
 		if ("backend".equals(userToken.getProductCode())) {
 			userToken.setProductCode("internmatch");
 		}
-		log.info("TOKEN PRODUCT CODEE: " + userToken.getProductCode());
+		log.info("TOKEN PRODUCT CODE: " + userToken.getProductCode());
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
 
@@ -95,16 +95,19 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
-
+		log.info("fetch "+productCode+":"+code);
 		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(productCode, code);
-		// BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-		BaseEntity entity = null;
+		BaseEntityKey key = new BaseEntityKey(productCode, code);
+		BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		
 
 		// check in database if not in cache
 		if (entity == null) {
-			log.debug("BaseEntity " + code + " not in cache, checking in database...");
+			log.info("BaseEntity " + code + " not in cache, checking in database...");
 			entity = databaseUtils.findBaseEntityByCode(productCode, code);
+		}
+		if (entity == null) {
+			log.info("BaseEntity " + code + " not found .");
 		}
 
 		return entity;

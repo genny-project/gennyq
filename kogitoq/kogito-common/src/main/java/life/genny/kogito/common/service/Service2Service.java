@@ -65,7 +65,7 @@ public class Service2Service {
 	 * @param data The KogitoData object
 	 */
 	public void initialiseScope(KogitoData data) {
-
+		log.info(data.toString());
 		scope.init(jsonb.toJson(data));
 	}
 }
