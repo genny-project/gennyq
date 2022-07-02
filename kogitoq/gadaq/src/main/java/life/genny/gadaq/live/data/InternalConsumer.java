@@ -1,23 +1,15 @@
 package life.genny.gadaq.live.data;
 
+import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.jboss.logging.Logger;
-import org.kie.api.runtime.KieRuntimeBuilder;
-import org.kie.api.runtime.KieSession;
-
-import io.quarkus.runtime.StartupEvent;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
@@ -28,6 +20,14 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieRuntimeBuilder;
+import org.kie.api.runtime.KieSession;
+
+
+
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -92,12 +92,9 @@ public class InternalConsumer {
 	@Incoming("valid_data")
 	@Blocking
 	public void getData(String data) {
-		scope.init(data);
-
-		log.info("Received Data : " + data);
-		log.info("userToken :: " + userToken);
-
 		Instant start = Instant.now();
+
+		scope.init(data);
 
 		// check if event is a valid event
 		QDataAnswerMessage msg = null;
@@ -106,10 +103,11 @@ public class InternalConsumer {
 		} catch (Exception e) {
 			log.error("Cannot parse this data!");
 			e.printStackTrace();
+			scope.destroy();
 			return;
 		}
 
-		log.info("Getting session");
+		log.info("Received Data : " + msg+", userToken="+userToken);
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
@@ -157,8 +155,7 @@ public class InternalConsumer {
 
 		scope.init(event);
 
-		log.info("Received Event : " + event);
-		log.info("userToken :: " + userToken);
+	
 		Instant start = Instant.now();
 
 		// check if event is a valid event
@@ -168,8 +165,19 @@ public class InternalConsumer {
 		} catch (Exception e) {
 			log.error("Cannot parse this event!");
 			e.printStackTrace();
+			scope.destroy();
 			return;
 		}
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type())) {
+			log.info("Leaving event to DropKick");
+			kogitoUtils.sendSignal("dropkick", "dropkick", "dropkick", event);
+			scope.destroy();
+			return;
+		}
+
+		log.info("Received Event : " + msg.getEvent_type()+" "+msg.getData().getCode()+", userCode:"+userToken.getUsername());
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();

@@ -9,9 +9,14 @@ ruleflow-group 'Inference'
 
 rule InferName 
 when
-	msg: QDataAnswerMessage()
+	answer: Answer()
 	userToken: UserToken()
 	kogitoUtils : KogitoUtils()
 then
-	System.out.println("Inferring GENNYQ!");
+	String sourceCode = answer.getSourceCode();
+	String targetCode = answer.getTargetCode();
+	String attributeCode = answer.getAttributeCode();
+	String value = answer.getValue();
+
+	System.out.println("Inferring GENNYQ! Source Code: " + sourceCode + " Target Code: " + targetCode + " Attribute Code: " + attributeCode + " Value: " + value);
 end

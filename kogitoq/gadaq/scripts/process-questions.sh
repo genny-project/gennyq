@@ -8,7 +8,7 @@ questionCode=${2}
 targetCode=${3}
 port="${4:-6590}"
 TOKEN=`./gettoken-cache.sh ${productCode}`
-
+echo $TOKEN
 payload="\
 {\
 	\"type\":\"start_process_questions\",\
