@@ -4,16 +4,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -28,6 +24,10 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import org.jboss.logging.Logger;
+
+
+
 
 @ApplicationScoped
 public class FrontendService {
@@ -322,7 +322,7 @@ public class FrontendService {
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
-		KafkaUtils.writeMsg("webdata", askMessageJson);
+		KafkaUtils.writeMsg("webcmds", askMessageJson);
 	}
 
 	/**
@@ -411,6 +411,6 @@ public class FrontendService {
         msg.setToken(userToken.getToken());
         msg.setReplace(true);
 
-        KafkaUtils.writeMsg("webdata", msg);
+        KafkaUtils.writeMsg("webcmds", msg);
 	}
 }

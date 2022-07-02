@@ -98,7 +98,7 @@ public class BaseEntityUtils {
 		log.info("fetch "+productCode+":"+code);
 		// check for entity in the cache
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		BaseEntity entity = null; //(BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 		
 
 		// check in database if not in cache

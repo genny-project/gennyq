@@ -51,7 +51,7 @@ public class KafkaUtils implements Serializable {
 	* @param payload the payload to send
 	 */
 	public static void writeMsg(String channel, String payload) {
-		log.info("WritingMsg1: " + channel + " " + payload.substring(0,10));
+		log.info("WritingMsg1: " + channel + " " + payload.substring(0,100));
 		if (!checkInterface()) {
 			return;
 		}

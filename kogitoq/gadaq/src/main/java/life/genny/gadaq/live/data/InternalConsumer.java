@@ -172,7 +172,7 @@ public class InternalConsumer {
 		// If the event is a Dropdown then leave it for DropKick
 		if ("DD".equals(msg.getEvent_type())) {
 			log.info("Leaving event to DropKick");
-			kogitoUtils.sendSignal("dropkick", "dropkick", "dropkick", event);
+			//kogitoUtils.sendSignal("dropkick", "dropkick", "dropkick", event);
 			scope.destroy();
 			return;
 		}
