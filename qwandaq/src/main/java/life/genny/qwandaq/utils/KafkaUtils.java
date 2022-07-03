@@ -55,13 +55,13 @@ public class KafkaUtils implements Serializable {
 		if (!checkInterface()) {
 			return;
 		}
-	log.info("WritingMsg2: " + channel + " " + payload.substring(0,10));
+	log.info("WritingMsg2: " + channel + " " + payload.substring(0,100));
 	
 		if (channel.isBlank()) {
 			log.error("Channel is blank, cannot send payload!");
 			return;
 		}
-	log.info("WritingMsg3: " + channel + " " + payload.substring(0,10));
+	log.info("WritingMsg3: " + channel + " " + payload.substring(0,100));
 	
 		// write to kafka channel through interface
 		kafkaInterface.write(channel, payload);
