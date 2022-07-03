@@ -9,12 +9,10 @@ import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 import life.genny.qwandaq.security.keycloak.TokenVerification;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+import life.genny.serviceq.intf.GennyScopeInit;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.serviceq.intf.GennyScopeInit;
+
 
 /**
  * InternalConsumer --- The class where all messages from the backends such as lauchy,
@@ -115,6 +113,12 @@ public class InternalConsumer {
 			GennyToken gennyToken = new GennyToken(json.getString("token"));
 			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
 			KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
+
+			if (json.containsKey("data_type")) {
+				log.info("QBEM ebing sent outside:"+json);
+			} else {
+				
+			}
 
 			if (!incoming.contains("<body>Unauthorized</body>")) {
 				String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");

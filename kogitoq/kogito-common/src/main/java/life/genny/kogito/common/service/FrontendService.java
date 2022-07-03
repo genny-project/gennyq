@@ -235,9 +235,11 @@ public class FrontendService {
 		}
 
 		// send entity front end
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(processBE);
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+		msg.add(processBE);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
+		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		KafkaUtils.writeMsg("webdata", msg);
 
 		// NOTE: only using first ask item
@@ -322,7 +324,7 @@ public class FrontendService {
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
-		KafkaUtils.writeMsg("webcmds", askMessageJson);
+		KafkaUtils.writeMsg("webdata", askMessageJson);
 	}
 
 	/**
@@ -385,15 +387,16 @@ public class FrontendService {
 	 * @param questionCode The code of the question
 	 */
 	public void sendPCM(final String code, final String questionCode) {
-
+		log.info("Sending PCM1 "+code+" with questionCode="+questionCode);
 		BaseEntity root = beUtils.getBaseEntityByCode("PCM_CONTENT");
+		log.info("Sending PCM1.5 "+code+" with questionCode="+questionCode);
 
 		try {
-            root.setValue("PRI_LOC3", code);
+            root.setValue("PRI_LOC1", code);
         } catch (BadDataException e) {
             e.printStackTrace();
         }
-
+	log.info("Sending PCM2 "+code+" with questionCode="+questionCode);
 		BaseEntity pcm = beUtils.getBaseEntityByCode(code);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
 		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
@@ -404,6 +407,7 @@ public class FrontendService {
             e.printStackTrace();
         }
 
+			log.info("Sending PCM3 "+code+" with questionCode="+questionCode);
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 		msg.add(root);
 		msg.add(pcm);
@@ -411,6 +415,12 @@ public class FrontendService {
         msg.setToken(userToken.getToken());
         msg.setReplace(true);
 
-        KafkaUtils.writeMsg("webcmds", msg);
+		String pcmJson = jsonb.toJson(pcm);
+		log.info("***********************");
+		log.info("Sending BE "+pcmJson	);
+		log.info("^^^^^^^^^^^^^^^^^^^^^^^^");
+
+        KafkaUtils.writeMsg("webdata", msg);
+			log.info("Sent PCM "+msg);
 	}
 }
