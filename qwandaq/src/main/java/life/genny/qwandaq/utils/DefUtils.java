@@ -77,6 +77,10 @@ public class DefUtils {
 		defPrefixMap.put(productCode, new ConcurrentHashMap<String, String>());
 
 		for (String code : codes) {
+			if (code == null) {
+				log.error("Code is null, skipping DEF prefix");
+				continue;
+			}
 
 			BaseEntity def = beUtils.getBaseEntityByCode(productCode, code);
 			if (def == null) {

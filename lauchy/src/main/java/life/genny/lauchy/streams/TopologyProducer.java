@@ -123,6 +123,11 @@ public class TopologyProducer {
 
 		JsonArray items = json.getJsonArray("items");
 
+		if (items.size() == 0) {
+			log.info("Detected a payload with empty items.. ignoring & proceding..");
+			return false;
+		}
+
 		for (int i = 0; i < items.size(); i++) {
 
 			Answer answer = jsonb.fromJson(items.get(i).toString(), Answer.class);

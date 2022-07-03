@@ -51,11 +51,16 @@ public class KafkaUtils implements Serializable {
 	* @param payload the payload to send
 	 */
 	public static void writeMsg(String channel, String payload) {
+		if (payload == null) {
+			log.error("Payload is null");
+			return;
+		}
+		
 		log.info("WritingMsg1: " + channel + " " + payload.substring(0,100));
 		if (!checkInterface()) {
 			return;
 		}
-	log.info("WritingMsg2: " + channel + " " + payload.substring(0,100));
+		log.info("WritingMsg2: " + channel + " " + payload.substring(0,100));
 	
 		if (channel.isBlank()) {
 			log.error("Channel is blank, cannot send payload!");

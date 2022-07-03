@@ -11,7 +11,7 @@ echo "raw host (target system) = ${rawhost}"
 
 #source ~/.genny/.env
 
-export PRODUCT_CODES=internmatch:mentormatch
+#export PRODUCT_CODES=${PRODUCT_CODES}
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
 export GENNY_KEYCLOAK_URL=https://keycloak.gada.io

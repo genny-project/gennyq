@@ -94,6 +94,11 @@ public class InternalConsumer {
 	public void getData(String data) {
 		Instant start = Instant.now();
 
+		if (data.contains("\"items\":[{}]")) {
+			log.info("Empty answer received");
+			return;
+		}
+
 		scope.init(data);
 
 		// check if event is a valid event
@@ -107,7 +112,20 @@ public class InternalConsumer {
 			return;
 		}
 
-		log.info("Received Data : " + msg+", userToken="+userToken);
+		if (msg.getItems().length == 0) {
+			log.info("No data to process!");
+			scope.destroy();
+			return;
+		}
+
+		Answer ans = msg.getItems()[0];
+		if (ans == null) {
+			log.info("No answer to process!");
+			scope.destroy();
+			return;
+		}
+
+		log.info("Received Data : " + data+", userToken="+userToken);
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
@@ -135,8 +153,15 @@ public class InternalConsumer {
 
 			String processId = answer.getProcessId();
 			String answerJson = jsonb.toJson(answer);
-
-			kogitoUtils.sendSignal("processQuestions", processId, "answer", answerJson);
+			try  {
+				kogitoUtils.sendSignal("processQuestions", processId, "answer", answerJson);
+			} catch (Exception e) {
+				log.error("Cannot send event!");
+				e.printStackTrace();
+				scope.destroy();
+				return;
+			}
+			
 		}
 
 		Instant end = Instant.now();
