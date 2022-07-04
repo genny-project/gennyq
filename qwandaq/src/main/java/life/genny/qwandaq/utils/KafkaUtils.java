@@ -8,6 +8,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import org.jboss.logging.Logger;
 
 
+
 /*
  * A static utility class used for standard 
  * message routing throgh Kafka.
@@ -42,7 +43,8 @@ public class KafkaUtils implements Serializable {
 
 		if (payload instanceof QDataBaseEntityMessage) {
 			QDataBaseEntityMessage msg = (QDataBaseEntityMessage) payload;
-			msg.setTag(getCallerMethodName());
+			String callerName = getCallerMethodName();
+			msg.setTag(callerName);
 			// jsonify the payload and write
 			json = jsonb.toJson(msg);
 		} else {
@@ -65,17 +67,15 @@ public class KafkaUtils implements Serializable {
 			return;
 		}
 
-		log.info("WritingMsg1: " + channel + " " + payload.substring(0, 100));
 		if (!checkInterface()) {
 			return;
 		}
-		log.info("WritingMsg2: " + channel + " " + payload.substring(0, 100));
 
 		if (channel.isBlank()) {
 			log.error("Channel is blank, cannot send payload!");
 			return;
 		}
-		log.info("WritingMsg3: " + channel + " " + payload.substring(0, 100));
+		log.debug("WritingMsg: " + channel + " " + payload.substring(0, 100));
 
 		// write to kafka channel through interface
 		kafkaInterface.write(channel, payload);
