@@ -24,6 +24,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 
@@ -271,6 +272,10 @@ public class FrontendService {
 				// grab selection baseentitys
 				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
 				for (String code : codes) {
+					if (StringUtils.isBlank(code)) {
+						log.error("One of the LNKs for target are null");
+						continue;
+					}
 					BaseEntity selection = beUtils.getBaseEntityByCode(code);
 					if (selection != null) {
 						selectionMsg.add(selection);

@@ -20,6 +20,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.DebugException;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
@@ -80,10 +81,19 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
+		if (StringUtils.isBlank(code)) {
+			log.error("Code supplied is null");
+			try {
+				throw new DebugException(
+						"BaseEntityUtils: BaseEntityByCode: The passed code is empty, supplying trace");
+			} catch (DebugException e) {
+				e.printStackTrace();
+			}
+			return null;
+		}
 		if ("backend".equals(userToken.getProductCode())) {
 			userToken.setProductCode("internmatch");
 		}
-		log.info("TOKEN PRODUCT CODE: " + userToken.getProductCode());
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
   
@@ -103,7 +113,7 @@ public class BaseEntityUtils {
 		// check in database if not in cache
 		if (entity == null) {			
 			entity = databaseUtils.findBaseEntityByCode(productCode, code);
-			log.info("Fetched BaseEntity " + code + " not in cache, checking in database..."+(entity==null?"not found":"found"));
+			log.info("Fetched BaseEntity "+productCode+":" + code + " not in cache, checking in database..."+(entity==null?"not found":"found"));
 		}
 		if (entity == null) {
 			log.info("BaseEntity " + code + " not found .");
