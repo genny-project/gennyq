@@ -1,7 +1,7 @@
 package life.genny.kogito.common.utils;
 
 import java.net.http.HttpResponse;
-
+import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -9,13 +9,14 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.jboss.logging.Logger;
-// import org.kie.api.runtime.KieRuntimeBuilder;
-
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.HttpUtils;
+import org.jboss.logging.Logger;
+
+
+// import org.kie.api.runtime.KieRuntimeBuilder;
+
 
 /*
  * A static utility class used for standard Kogito interactions
@@ -61,6 +62,39 @@ public class KogitoUtils {
         return response.body();
     }
 
+	/**
+	 * Trigger a workflow.
+	 *
+	 * @param id The workflow id
+	 * @param key The key to set in the json object
+	 * @param obj The object to set as the value in the json object
+	 */
+	public String triggerWorkflow(final String id, final Map<String,Object> parameters) {
+
+		JsonObjectBuilder builder = Json.createObjectBuilder();
+
+		for (String key : parameters.keySet()) {
+			Object obj = parameters.get(key);
+			try {
+			builder.add(key, jsonb.fromJson(jsonb.toJson(obj), JsonObject.class));
+		} catch (Exception e) {
+			// catch standard type objects (String, Integer, etc.)
+			if (obj instanceof String) {
+				builder.add(key, (String) obj);
+			} else if (obj instanceof Integer) {
+				builder.add(key, (Integer) obj);
+			} else if (obj instanceof Long) {
+				builder.add(key, (Long) obj);
+			} else if (obj instanceof Double) {
+				builder.add(key, (Double) obj);
+			} else {
+				log.warn("Unknown type available for " + obj);
+			}
+		}
+		}
+
+		return triggerWorkflow(id, builder.build());
+	}
 	/**
 	 * Trigger a workflow.
 	 *
