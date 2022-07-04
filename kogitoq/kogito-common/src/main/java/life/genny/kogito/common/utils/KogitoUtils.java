@@ -123,4 +123,6 @@ public class KogitoUtils {
 
         return null;
     }
+
+	
 }

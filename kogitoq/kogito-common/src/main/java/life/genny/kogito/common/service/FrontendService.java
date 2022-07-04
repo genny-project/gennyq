@@ -241,6 +241,8 @@ public class FrontendService {
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
+		msg.setTag("SendBaseEntities");
+
 		KafkaUtils.writeMsg("webdata", msg);
 
 		// NOTE: only using first ask item
@@ -348,6 +350,8 @@ public class FrontendService {
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 		recursivelyHandleDropdownAttributes(ask, target, msg);
+		msg.setTag("SendDropDownItems");
+
 
 		KafkaUtils.writeMsg("webdata", msg);
 	}
@@ -419,6 +423,7 @@ public class FrontendService {
 
         msg.setToken(userToken.getToken());
         msg.setReplace(true);
+		msg.setTag("SendPCMs");
 
 		String pcmJson = jsonb.toJson(pcm);
 		log.info("***********************");
@@ -428,4 +433,5 @@ public class FrontendService {
         KafkaUtils.writeMsg("webdata", msg);
 			log.info("Sent PCM "+msg);
 	}
+	
 }
