@@ -134,7 +134,8 @@ public class InternalConsumer {
 		session.insert(kogitoUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
-		session.insert(msg);
+
+		insertAnswersFromMessage(session, msg);
 
 		// Infer data
 		try {
@@ -167,6 +168,18 @@ public class InternalConsumer {
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 		scope.destroy();
+	}
+
+	private int insertAnswersFromMessage(KieSession session, QDataAnswerMessage message) {
+		int counter = 0; // deliberately counter instead of array.length
+		for(Answer answer : message.getItems()) {
+			log.debug("Inserting answer: " + answer.getAttributeCode() + "=" + answer.getValue() + " into session");
+			session.insert(answer);
+			counter++;
+		}
+
+		log.debug("Inserted " + counter + " answers into session");
+		return counter;
 	}
 
 	/**
