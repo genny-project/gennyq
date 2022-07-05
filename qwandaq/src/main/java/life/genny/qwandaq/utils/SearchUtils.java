@@ -1,5 +1,9 @@
 package life.genny.qwandaq.utils;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,14 +17,8 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
@@ -30,13 +28,13 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.handlers.RuleFlowGroupWorkItemHandler;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
+import life.genny.qwandaq.message.QSearchMessage;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
 
 /**
  * A utility class used for performing table

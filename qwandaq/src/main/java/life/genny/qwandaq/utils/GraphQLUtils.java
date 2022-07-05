@@ -76,6 +76,19 @@ public class GraphQLUtils {
 	 * Fetch the Process Id of from a GraphQL table using a query.
 	 *
 	 * @param table The Table to query
+	 * @param field The field to query on
+	 * @param value The value the field must equal
+	 * @return The process id
+	 */
+    public String fetchProcessId(String table, String field, String value) {
+
+		return fetchProcessId(table, Map.of(field, value));
+	}
+
+	/**
+	 * Fetch the Process Id of from a GraphQL table using a query.
+	 *
+	 * @param table The Table to query
 	 * @param queryMap A map of key-value pairs used in the query
 	 * @return The process id
 	 */

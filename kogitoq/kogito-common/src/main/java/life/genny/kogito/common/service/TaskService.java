@@ -4,17 +4,13 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class TaskService {
@@ -23,20 +19,8 @@ public class TaskService {
 
     Jsonb jsonb = JsonbBuilder.create();
 
-    @Inject
-    DatabaseUtils databaseUtils;
-
-    @Inject
-    QwandaUtils qwandaUtils;
-
 	@Inject
 	UserToken userToken;
-
-    @Inject
-    EntityManager entityManager;
-
-    @Inject
-    Service service;
 
     public void enableTaskQuestion(Ask ask, Boolean enabled) {
 

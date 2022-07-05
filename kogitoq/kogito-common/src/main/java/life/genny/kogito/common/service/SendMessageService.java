@@ -27,7 +27,6 @@ public class SendMessageService {
 	@Inject
 	BaseEntityUtils beUtils;
 
-
 	/**
 	* Send a genny message.
 	*

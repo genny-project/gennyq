@@ -27,13 +27,10 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-
-
-
 @ApplicationScoped
 public class FrontendService {
 
-	private static final Logger log = Logger.getLogger(FrontendService.class);
+	private static final Logger log = Logger.getLogger(NavigationService.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -396,46 +393,4 @@ public class FrontendService {
 			}
 		}
 	}
-
-	/**
-	 * Send a command message based on a PCM code.
-	 *
-	 * @param code The code of the PCM baseentity
-	 * @param questionCode The code of the question
-	 */
-	public void sendPCM(final String code, final String questionCode) {
-		log.info("Sending PCM "+code+" with questionCode="+questionCode);
-		BaseEntity root = beUtils.getBaseEntityByCode("PCM_CONTENT");
-
-
-		try {
-            root.setValue("PRI_LOC1", code);
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
-	
-		BaseEntity pcm = beUtils.getBaseEntityByCode(code);
-		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
-
-		try {
-            pcm.addAttribute(ea);
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
-
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
-		msg.add(root);
-		msg.add(pcm);
-
-        msg.setToken(userToken.getToken());
-        msg.setReplace(true);
-		msg.setTag("SendPCMs");
-
-		String pcmJson = jsonb.toJson(pcm);
-
-        KafkaUtils.writeMsg("webcmds", msg);
-			log.info("Sent PCM "+msg);
-	}
-	
 }

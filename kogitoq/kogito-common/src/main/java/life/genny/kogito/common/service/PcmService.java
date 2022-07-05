@@ -16,10 +16,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class PcmService {
@@ -27,19 +24,10 @@ public class PcmService {
     Jsonb jsonb = JsonbBuilder.create();
 
     @Inject
-    Service service;
-
-    @Inject
-    DatabaseUtils databaseUtils;
-
-    @Inject
     BaseEntityUtils beUtils;
 
     @Inject
     UserToken userToken;
-
-    @Inject
-    QwandaUtils qwandaUtils;
 
     private static final Logger log = Logger.getLogger(PcmService.class);
 

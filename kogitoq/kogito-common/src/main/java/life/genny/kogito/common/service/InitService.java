@@ -20,9 +20,6 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import org.jboss.logging.Logger;
 
-
-
-
 /**
  * A Service class used for Auth Init operations.
  *
@@ -110,7 +107,9 @@ public class InitService {
 	public void sendPCMs() {
 
 		log.info("Sending PCMs for " + userToken.getProductCode());
+
 		String productCode = userToken.getProductCode();
+		BaseEntity user = beUtils.getUserBaseEntity();
 
 		// get pcms using search
 		SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
@@ -126,21 +125,11 @@ public class InitService {
 		}
 		log.info("Sending "+pcms.size()+" PCMs");
 
-		// configure msg and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		msg.setAliasCode("PCM_INIT_MESSAGE");
-
-		KafkaUtils.writeMsg("webdata", msg);
-
 		// configure ask msg
 		QDataAskMessage askMsg = new QDataAskMessage();
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		askMsg.setAliasCode("PCM_INIT_ASK_MESSAGE");
-
-		BaseEntity user = beUtils.getUserBaseEntity();
 
 		for (BaseEntity pcm : pcms) {
 			String questionCode = pcm.getValue("PRI_QUESTION_CODE", null);
@@ -148,7 +137,7 @@ public class InitService {
 				log.warn("PCM (" + pcm.getName() + ", " + pcm.getCode() + ") got null PRI_QUESTION_CODE");
 				continue;
 			}
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, pcm);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, user);
 			if (ask == null) {
 				log.warn("PCM (" + pcm.getName() + ", " + pcm.getCode() + ") got null ask from PRI_QUESTION_CODE: "
 						+ questionCode);
@@ -158,6 +147,28 @@ public class InitService {
 		}
 
 		KafkaUtils.writeMsg("webdata", askMsg);
+
+		// configure msg and send
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		msg.setAliasCode("PCM_INIT_MESSAGE");
+
+		KafkaUtils.writeMsg("webdata", msg);
+	}
+
+	/**
+	 * Send Dashboard Entity
+	 */
+	public void sendDashboard() {
+
+		log.info("Sending Dashboard");
+		BaseEntity dashboard = beUtils.getBaseEntityByCode("DSH_DASHBOARD");
+
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(dashboard);
+		msg.setToken(userToken.getToken());
+		msg.setAliasCode("DASHBOARD");
+		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	/**

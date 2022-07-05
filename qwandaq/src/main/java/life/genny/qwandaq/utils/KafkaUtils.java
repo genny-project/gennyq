@@ -7,8 +7,6 @@ import life.genny.qwandaq.intf.KafkaInterface;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import org.jboss.logging.Logger;
 
-
-
 /*
  * A static utility class used for standard 
  * message routing throgh Kafka.
@@ -62,21 +60,18 @@ public class KafkaUtils implements Serializable {
 	 * @param payload the payload to send
 	 */
 	public static void writeMsg(String channel, String payload) {
+
 		if (payload == null) {
 			log.error("Payload is null");
 			return;
 		}
-
 		if (!checkInterface()) {
 			return;
 		}
-
 		if (channel.isBlank()) {
 			log.error("Channel is blank, cannot send payload!");
 			return;
 		}
-		log.debug("WritingMsg: " + channel + " " + payload.substring(0, 100));
-
 		// write to kafka channel through interface
 		kafkaInterface.write(channel, payload);
 	}
