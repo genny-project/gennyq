@@ -33,7 +33,7 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class FrontendService {
 
-	private static final Logger log = Logger.getLogger(FrontendService.class);
+	private static final Logger log = Logger.getLogger(NavigationService.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -383,49 +383,5 @@ public class FrontendService {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Send a command message based on a PCM code.
-	 *
-	 * @param code The code of the PCM baseentity
-	 * @param questionCode The code of the question
-	 */
-	public void sendPCM(final String code, final String questionCode) {
-		log.info("Sending PCM1 "+code+" with questionCode="+questionCode);
-		BaseEntity root = beUtils.getBaseEntityByCode("PCM_CONTENT");
-		log.info("Sending PCM1.5 "+code+" with questionCode="+questionCode);
-
-		try {
-            root.setValue("PRI_LOC1", code);
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
-	log.info("Sending PCM2 "+code+" with questionCode="+questionCode);
-		BaseEntity pcm = beUtils.getBaseEntityByCode(code);
-		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
-
-		try {
-            pcm.addAttribute(ea);
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
-
-			log.info("Sending PCM3 "+code+" with questionCode="+questionCode);
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
-		msg.add(root);
-		msg.add(pcm);
-
-        msg.setToken(userToken.getToken());
-        msg.setReplace(true);
-
-		String pcmJson = jsonb.toJson(pcm);
-		log.info("***********************");
-		log.info("Sending BE "+pcmJson	);
-		log.info("^^^^^^^^^^^^^^^^^^^^^^^^");
-
-        KafkaUtils.writeMsg("webdata", msg);
-			log.info("Sent PCM "+msg);
 	}
 }

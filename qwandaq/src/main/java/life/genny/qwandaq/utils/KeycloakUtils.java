@@ -445,10 +445,11 @@ public class KeycloakUtils {
 	 */
 	public static int updateUserField(GennyToken userToken, BaseEntity user, String field, String value) {
 
-		String realm = userToken.getRealm();
+		String realm = userToken.getKeycloakRealm();
 		String token = userToken.getToken();
 
 		String uuid = user.getValue("PRI_UUID", null);
+		uuid = uuid.toLowerCase();
 
 		String json = "{\""  + field  + "\":\"" + value + "\"}";
         String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users/" + uuid;
@@ -467,10 +468,11 @@ public class KeycloakUtils {
 	 */
 	public static int updateUserEmail(GennyToken userToken, BaseEntity user, String email) {
 
-		String realm = userToken.getRealm();
+		String realm = userToken.getKeycloakRealm();
 		String token = userToken.getToken();
 
 		String uuid = user.getValue("PRI_UUID", null);
+		uuid = uuid.toLowerCase();
 
 		String json = "{ \"email\" : \"" + email + "\" , \"enabled\" : true, \"emailVerified\" : true}";
         String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users/" + uuid;

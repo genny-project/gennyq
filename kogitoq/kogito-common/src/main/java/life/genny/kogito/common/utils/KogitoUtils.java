@@ -49,6 +49,45 @@ public class KogitoUtils {
 	 * @param workflowId The workflow Id
 	 * @param processId The process Id
 	 * @param signal the signal code
+	 * @param key The key of of the item to send in the payload
+	 * @param value The value of of the item to send in the payload
+	 */
+    public String sendSignal(final String workflowId, final String processId, final String signal, String key, String value) {
+
+		// build json with key and value
+		JsonObject payload = Json.createObjectBuilder()
+			.add(key, value)
+			.build();
+
+		return sendSignal(workflowId, processId, signal, payload);
+	}
+
+	/**
+	 * Send a workflow signal
+	 *
+	 * @param workflowId The workflow Id
+	 * @param processId The process Id
+	 * @param signal the signal code
+	 * @param payload the payload to send as a json object
+	 */
+    public String sendSignal(final String workflowId, final String processId, final String signal, JsonObject payload) {
+
+		// add token to JsonObject
+		JsonObjectBuilder builder = Json.createObjectBuilder();
+		payload.forEach(builder::add);
+		builder.add("token", userToken.getToken());
+		builder.add("userToken", jsonb.toJson(userToken));
+		payload = builder.build();
+
+		return sendSignal(workflowId, processId, signal, payload.toString());
+	}
+
+	/**
+	 * Send a workflow signal
+	 *
+	 * @param workflowId The workflow Id
+	 * @param processId The process Id
+	 * @param signal the signal code
 	 * @param payload Th payload to send
 	 */
     public String sendSignal(final String workflowId, final String processId, final String signal, final String payload) {

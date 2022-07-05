@@ -9,6 +9,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -24,6 +25,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
@@ -37,6 +39,9 @@ public class BaseEntityService {
 	UserToken userToken;
 
 	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
 	QwandaUtils qwandaUtils;
 
 	@Inject
@@ -45,11 +50,11 @@ public class BaseEntityService {
 	@Inject
 	BaseEntityUtils beUtils;
 	
-	public void createBaseEntity(String definitionCode) {
+	public String commission(String definitionCode) {
 
 		if (definitionCode == null || !definitionCode.startsWith("DEF_")) {
 			log.error("Invalid definitionCode: " + definitionCode);
-			return;
+			return null;
 		}
 
 		// fetch the def baseentity
@@ -62,43 +67,23 @@ public class BaseEntityService {
 		try {
 			BaseEntity entity = beUtils.create(def);
 			log.info("BaseEntity Created: " + entity.getCode());
+
+			return entity.getCode();
+
 		} catch (Exception e) {
 			log.error("Error creating BaseEntity! DEF Code: " + definitionCode);
 			e.printStackTrace();
 		}
+
+		return null;
 	}
 
-	public void commission() {
+	public void decommission(String code) {
 
-		String defCode = null;
-
-		if (defCode == null || !defCode.startsWith("DEF_")) {
-			log.error("Invalid defCode: " + defCode);
-			return;
-		}
-
-		// fetch the def baseentity
-		BaseEntity def = beUtils.getBaseEntityByCode(defCode);
-		if (def == null) {
-			log.error("Could not find DEF BaseEntity with code: " + defCode);
-		}
-
-		// use entity create function and save to db
-		try {
-			BaseEntity entity = beUtils.create(def);
-			log.info("BaseEntity Created: " + entity.getCode());
-		} catch (Exception e) {
-			log.error("Error creating BaseEntity! DEF Code: " + defCode);
-			e.printStackTrace();
-		}
-	}
-
-	public void decommission() {
-
-		BaseEntity baseEntity = null;
+		BaseEntity baseEntity = beUtils.getBaseEntityByCode(code);
 
 		if (baseEntity == null) {
-			log.error("BaseEntity passed is null!");
+			log.error("BaseEntity " + code + " is null!");
 			return;
 		}
 
@@ -127,4 +112,18 @@ public class BaseEntityService {
 		return prefix;
 	}
 
+	public void updateKeycloak(String userCode) {
+
+		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
+		String email = user.getValue("PRI_EMAIL", null);
+		String firstName = user.getValue("PRI_FIRSTNAME", null);
+		String lastName = user.getValue("PRI_LASTNAME", null);
+
+		// update user fields
+		// NOTE: this could be turned into a single http request
+		KeycloakUtils.updateUserEmail(serviceToken, user, email);
+		KeycloakUtils.updateUserField(serviceToken, user, "username", email);
+		KeycloakUtils.updateUserField(serviceToken, user, "firstName", firstName);
+		KeycloakUtils.updateUserField(serviceToken, user, "lastName", lastName);
+	}
 }

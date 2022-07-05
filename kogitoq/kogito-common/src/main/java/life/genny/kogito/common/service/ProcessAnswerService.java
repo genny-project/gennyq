@@ -25,6 +25,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
@@ -50,6 +51,9 @@ public class ProcessAnswerService {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	DefUtils defUtils;
+
+	@Inject
 	Service service;
 
 	@Inject
@@ -70,6 +74,14 @@ public class ProcessAnswerService {
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processBE.getCode())) {
 			log.warn("Bad targetCode in answer!");
+			return processBEJson;
+		}
+
+		// check if the answer is valid for the target
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity definition = defUtils.getDEF(target);
+		if (!defUtils.answerValidForDEF(definition, answer)) {
+			log.error("Bad incoming answer... Not saving!");
 			return processBEJson;
 		}
 
