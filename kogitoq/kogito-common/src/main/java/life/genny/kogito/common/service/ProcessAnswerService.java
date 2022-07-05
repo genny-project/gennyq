@@ -1,15 +1,11 @@
 package life.genny.kogito.common.service;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -22,11 +18,9 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class ProcessAnswerService {
@@ -39,22 +33,13 @@ public class ProcessAnswerService {
 	UserToken userToken;
 
 	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
 	QwandaUtils qwandaUtils;
-
-	@Inject
-	TaskService taskService;
 
 	@Inject
 	BaseEntityUtils beUtils;
 
 	@Inject
 	DefUtils defUtils;
-
-	@Inject
-	Service service;
 
 	@Inject
 	EntityManager entityManager;

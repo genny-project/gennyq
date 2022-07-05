@@ -1,31 +1,21 @@
 package life.genny.kogito.common.service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
+
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class NavigationService {
@@ -39,9 +29,6 @@ public class NavigationService {
 
 	@Inject
 	QwandaUtils qwandaUtils;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;

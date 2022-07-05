@@ -10,23 +10,8 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class BaseEntityService {
@@ -36,16 +21,7 @@ public class BaseEntityService {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	UserToken userToken;
-
-	@Inject
 	ServiceToken serviceToken;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;

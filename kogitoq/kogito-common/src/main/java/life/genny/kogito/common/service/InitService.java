@@ -20,9 +20,6 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import org.jboss.logging.Logger;
 
-
-
-
 /**
  * A Service class used for Auth Init operations.
  *
