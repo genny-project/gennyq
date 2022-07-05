@@ -1,15 +1,14 @@
 package life.genny.qwandaq.message;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
 import javax.json.bind.annotation.JsonbTransient;
 import javax.xml.bind.annotation.XmlTransient;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.models.GennyToken;
+
 
 @RegisterForReflection
 public abstract class QMessage implements Serializable, QMessageIntf {
@@ -26,6 +25,7 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 	private String questionCode;
 	private String message;
 	private List<String> recipientCodeArray = new ArrayList<>();
+	private String tag; // Used for debugging and development testing.
 
 	public QMessage() { }
 
@@ -196,11 +196,21 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 		this.attributeCode = attributeCode;
 	}
 
+	
+
 	/**
 	 * @return String
 	 */
 	@Override
 	public String toString() {
 		return "QMessage [msg_type=" + msg_type + "],";
+	}
+
+	public String getTag() {
+		return tag;
+	}
+
+	public void setTag(String tag) {
+		this.tag = tag;
 	}
 }

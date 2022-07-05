@@ -27,6 +27,8 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 @RegisterForReflection
@@ -583,6 +585,10 @@ public class GennyToken implements Serializable {
 	public JsonObject getDecodedToken(final String bearerToken) {
 
 		final String[] chunks = bearerToken.split("\\.");
+		if(chunks.length < 2 || StringUtils.isBlank(bearerToken)) {
+			log.error("Invalid Bearer Token!");
+			log.error("Bearer: [" + bearerToken + "]");
+		}
 		Base64.Decoder decoder = Base64.getDecoder();
 		String payload = new String(decoder.decode(chunks[1]));
 		JsonObject json = jsonb.fromJson(payload, JsonObject.class);

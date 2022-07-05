@@ -8,11 +8,11 @@ recipientBeCode="${2:-PER_0F6169E1-FDD5-4DAF-BEC3-4126C6626752}"
 port="${3:-6590}"
 realm="${4:-lojing}"
 echo  "Getting token for realm.... ${realm}"
-TOKEN=`./gettoken-prod.sh ${realm}`
+TOKEN=`./gettoken-cache.sh ${realm}`
 echo ''
 echo $TOKEN
 echo ''
-curl -v -H "Content-Type: application/json"  -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -X POST http://alyson2.genny.life:${port}/sendMessageTest -d @- << EOF
+curl -v -H "Content-Type: application/json"  -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -X POST http://alyson2.genny.life:${port}/sendmessage -d @- << EOF
 {
         "templateCode" : "${messageTemplateCode}",
         "recipientBECode"     : "${recipientBeCode}"

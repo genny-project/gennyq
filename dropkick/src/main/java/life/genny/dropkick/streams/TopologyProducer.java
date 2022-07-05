@@ -1,10 +1,10 @@
 package life.genny.dropkick.streams;
 
+import io.quarkus.runtime.StartupEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
@@ -14,15 +14,6 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
-
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
@@ -33,15 +24,24 @@ import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+
+
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -172,6 +172,10 @@ public class TopologyProducer {
 
 		// Check if attribute code exists as a SER for the DEF
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
+
+		for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
+			log.info(ea.getBaseEntityCode()+"   EA="+ea.getAttributeCode());
+		}
 
 		if (!searchAttribute.isPresent()) {
 			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode() + ", No attribute found for SER_" + attributeCode);
