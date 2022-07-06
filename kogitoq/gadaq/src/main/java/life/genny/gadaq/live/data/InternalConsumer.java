@@ -230,6 +230,7 @@ public class InternalConsumer {
 		session.insert(beUtils);
 		session.insert(userToken);
 		session.insert(searchUtils);
+		session.insert(beUtils);
 		session.insert(msg);
 
 		try {
