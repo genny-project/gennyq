@@ -10,7 +10,6 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.KogitoData;
-import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.intf.GennyScopeInit;

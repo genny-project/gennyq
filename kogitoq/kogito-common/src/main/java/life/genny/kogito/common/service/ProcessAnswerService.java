@@ -4,7 +4,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 
 import org.jboss.logging.Logger;
 
@@ -40,9 +39,6 @@ public class ProcessAnswerService {
 
 	@Inject
 	DefUtils defUtils;
-
-	@Inject
-	EntityManager entityManager;
 
 	/**
 	 * Save incoming answer to the process baseentity.
