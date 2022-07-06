@@ -68,7 +68,7 @@ end
 
 rule QUE_TREE_ITEM_EDU_PROVIDERS 
 when
-	msg: QEventMessage( data.code == "QUE_TREE_ITEM_EDU_PROVIDERS" )
+	msg: QEventMessage( data.code == "BTN_CLICK QUE_TREE_ITEM_EDU_PROVIDERS" )
 	userToken: UserToken()
 	kogitoUtils : KogitoUtils()
 	searchUtils: SearchUtils();
