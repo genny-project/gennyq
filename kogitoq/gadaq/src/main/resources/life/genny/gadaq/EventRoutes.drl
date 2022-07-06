@@ -85,56 +85,6 @@ then
 	retract(msg);
 end
 
-rule QUE_TREE_ITEM_EDU_PROVIDERS 
-when
-	msg: QEventMessage( data.code == "QUE_TREE_ITEM_EDU_PROVIDERS" )
-	userToken: UserToken()
-	kogitoUtils : KogitoUtils()
-	searchUtils: SearchUtils();
-	beUtils: BaseEntityUtils();
-then
- 	String searchCode = "SBE_"+msg.getData().getCode().substring("QUE_TREE_ITEM_".length());
-	System.out.println("Triggering "+searchCode+" Table");
-
-
-	System.out.println(drools.getRule().getName() + " triggered");
-		String targetCode = msg.getData().getTargetCode();
-       
-
-		/* create SearchEntity if the cached version is null */
-
-		SearchEntity searchBE = null;
-		searchBE = new SearchEntity("SBE_INTERNS", "Intern Search")
-				.addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%").addFilter("PRI_IS_INTERN", true)
-				.addColumn("PRI_CODE", "Code")
-				.addColumn("PRI_NAME", "Name");
-		
-		searchBE.setRealm(userToken.getProductCode());
-
-		searchBE.setPageStart(0);
-		Integer pageSize = 10;
-		searchBE.setPageSize(pageSize);
-		System.out.println(searchBE);
-
-		BaseEntity pcmCode = beUtils.getBaseEntityByCode("PCM_TABLE"); 
-
-	QDataBaseEntityMessage pcmMsg = new QDataBaseEntityMessage(pcmCode);
-	pcmMsg.setToken(userToken.getToken());
-	pcmMsg.setReplace(true);
-
-		KafkaUtils.writeMsg("webcmds", pcmMsg);
-		System.out.println("PCM CODE2: "+pcmCode);
-		
-		searchUtils.searchTable(searchBE);
-
-
-
-
-		retract(msg);
-end
-
-
 /**
  * If no route exists within gadaq, the message should be
  * sent to the project specific service.
