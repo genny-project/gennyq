@@ -624,6 +624,9 @@ public class BaseEntityUtils {
 			}
 		}
 
+		Attribute linkDef = qwandaUtils.getAttribute("LNK_DEF");
+		item.addAnswer(new Answer(item, item, linkDef, "[\""+defBE.getCode()+"\"]"));
+
 		try {
 			updateBaseEntity(item);
 			CacheUtils.putObject(userToken.getProductCode(), item.getCode(), item);

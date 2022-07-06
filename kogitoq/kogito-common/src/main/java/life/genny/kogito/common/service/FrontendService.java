@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class FrontendService {
 
-	private static final Logger log = Logger.getLogger(NavigationService.class);
+	private static final Logger log = Logger.getLogger(FrontendService.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -45,6 +45,10 @@ public class FrontendService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	public String getCurrentUserCode() {
+		return userToken.getUserCode();
+	}
 
 	/**
 	 * Get asks using a question code, for a given source and target.
@@ -63,7 +67,13 @@ public class FrontendService {
 		log.info("processId :" + processId);
 
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+
+		BaseEntity target = null;
+		if ("NON_EXISTENT".equals(targetCode)) {
+			target = new BaseEntity(targetCode, targetCode);
+		} else {
+			target = beUtils.getBaseEntityByCode(targetCode);
+		}
 
 		if (source == null) {
 			log.error("No Source entity found!");
@@ -123,7 +133,12 @@ public class FrontendService {
 		processBE.setRealm(userToken.getProductCode());
 
 		// only copy the entityAttributes used in the Asks
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity target = null;
+		if ("NON_EXISTENT".equals(targetCode)) {
+			target = new BaseEntity(targetCode, targetCode);
+		} else {
+			target = beUtils.getBaseEntityByCode(targetCode);
+		}
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
@@ -319,16 +334,24 @@ public class FrontendService {
 	 */
 	public void sendQDataAskMessage(String askMessageJson, String processBEJson) {
 
+		log.info("Sending Asks");
+
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
+		log.info("parsed");
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+		askMessage.getItems().set(0, ask);
+		log.info("checked");
 
-		KafkaUtils.writeMsg("webcmds", askMessageJson);
+		askMessage.setToken(userToken.getToken());
+		KafkaUtils.writeMsg("webcmds", askMessage);
+
+		log.info("sent");
 	}
 
 	/**

@@ -62,12 +62,18 @@ public class ProcessAnswerService {
 			return processBEJson;
 		}
 
-		// check if the answer is valid for the target
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-		BaseEntity definition = defUtils.getDEF(target);
-		if (!defUtils.answerValidForDEF(definition, answer)) {
-			log.error("Bad incoming answer... Not saving!");
-			return processBEJson;
+		// only copy the entityAttributes used in the Asks
+		BaseEntity target = null;
+		if ("NON_EXISTENT".equals(targetCode)) {
+			log.info("Not Checking validity of answer");
+		} else {
+			target = beUtils.getBaseEntityByCode(targetCode);
+			// check if the answer is valid for the target
+			BaseEntity definition = defUtils.getDEF(target);
+			if (!defUtils.answerValidForDEF(definition, answer)) {
+				log.error("Bad incoming answer... Not saving!");
+				return processBEJson;
+			}
 		}
 
 		// find the attribute
@@ -132,6 +138,12 @@ public class ProcessAnswerService {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+
+		// only copy the entityAttributes used in the Asks
+		if ("NON_EXISTENT".equals(targetCode)) {
+			log.info("Not saving to NON_EXISTENT");
+			return;
+		}
 
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {

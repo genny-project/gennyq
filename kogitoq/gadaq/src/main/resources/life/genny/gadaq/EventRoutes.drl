@@ -8,16 +8,20 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
 import org.apache.commons.lang3.StringUtils;
+import javax.json.bind.Jsonb;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 
 ruleflow-group 'EventRoutes'
 
 rule RouteAuthInit 
 when
 	msg: QEventMessage( data.code == "AUTH_INIT" )
-	userToken : UserToken()
 	kogitoUtils : KogitoUtils()
 then
 	kogitoUtils.triggerWorkflow("authInit", "eventMessage", msg);
+	retract(msg);
 end
 
 rule RouteSubmit 
@@ -54,9 +58,25 @@ rule RouteAddItem
 when
 	msg: QEventMessage( data.code matches "QUE_ADD_.*" )
 	kogitoUtils : KogitoUtils()
+	userToken : UserToken()
 then
 	String code = StringUtils.removeStart(msg.getData().getCode(), "QUE_ADD_");
-	kogitoUtils.triggerWorkflow("createBaseEntity", "definitionCode", "DEF_"+code);
+
+	JsonObject json = Json.createObjectBuilder()
+		.add("definitionCode", "DEF_"+code)
+		.add("sourceCode", userToken.getUserCode())
+		.build();
+
+	kogitoUtils.triggerWorkflow("personLifecycle", json);
+	retract(msg);
+end
+
+rule RouteView 
+when
+	msg: QEventMessage( data.code matches "QUE_.*_VIEW" )
+	kogitoUtils : KogitoUtils()
+then
+	kogitoUtils.triggerWorkflow("view", "eventMessage", msg);
 	retract(msg);
 end
 

@@ -160,16 +160,16 @@ public class SearchUtils {
 		// update code to session search code
 		searchEntity = getSessionSearch(searchEntity);
 
-		// Add any necessary extra filters
-		List<EntityAttribute> filters = getUserFilters(searchEntity);
+		// // Add any necessary extra filters
+		// List<EntityAttribute> filters = getUserFilters(searchEntity);
 
-		if (!filters.isEmpty()) {
-			log.info("Found " + filters.size() + " additional filters for " + searchEntity.getCode());
+		// if (!filters.isEmpty()) {
+		// 	log.info("Found " + filters.size() + " additional filters for " + searchEntity.getCode());
 
-			for (EntityAttribute filter : filters) {
-				searchEntity.getBaseEntityAttributes().add(filter);
-			}
-		}
+		// 	for (EntityAttribute filter : filters) {
+		// 		searchEntity.getBaseEntityAttributes().add(filter);
+		// 	}
+		// }
 
 		CacheUtils.putObject(userToken.getProductCode(),
 				"LAST-SEARCH:" + searchEntity.getCode(),
@@ -493,18 +493,18 @@ public class SearchUtils {
 					continue;
 				}
 
-				// Attach any extra filters from SearchFilters rulegroup
-				List<EntityAttribute> filters = getUserFilters(searchBE);
+				// // Attach any extra filters from SearchFilters rulegroup
+				// List<EntityAttribute> filters = getUserFilters(searchBE);
 
-				if (!filters.isEmpty()) {
-					log.info("User Filters are NOT empty");
-					log.info("Adding User Filters to searchBe  ::  " + searchBE.getCode());
-					for (EntityAttribute filter : filters) {
-						searchBE.getBaseEntityAttributes().add(filter);
-					}
-				} else {
-					log.info("User Filters are empty");
-				}
+				// if (!filters.isEmpty()) {
+				// 	log.info("User Filters are NOT empty");
+				// 	log.info("Adding User Filters to searchBe  ::  " + searchBE.getCode());
+				// 	for (EntityAttribute filter : filters) {
+				// 		searchBE.getBaseEntityAttributes().add(filter);
+				// 	}
+				// } else {
+				// 	log.info("User Filters are empty");
+				// }
 
 				// process the associated columns
 				List<EntityAttribute> cals = searchBE.findPrefixEntityAttributes("COL__");
