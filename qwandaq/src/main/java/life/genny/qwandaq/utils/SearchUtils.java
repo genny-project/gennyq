@@ -210,25 +210,31 @@ public class SearchUtils {
 						"SearchFilters",
 						"SearchUtils:getUserFilters");
 
-		Object obj = results.get("payload");
+		if (results != null) {
 
-		if (obj instanceof QBulkMessage) {
-			QBulkMessage bulkMsg = (QBulkMessage) results.get("payload");
+			Object obj = results.get("payload");
 
-			// Check if bulkMsg not empty
-			if (bulkMsg.getMessages().length > 0) {
+			if (obj instanceof QBulkMessage) {
+				QBulkMessage bulkMsg = (QBulkMessage) results.get("payload");
 
-				// Get the first QDataBaseEntityMessage from bulkMsg
-				QDataBaseEntityMessage msg = bulkMsg.getMessages()[0];
+				// Check if bulkMsg not empty
+				if (bulkMsg.getMessages().length > 0) {
 
-				// Check if msg is not empty
-				if (!msg.getItems().isEmpty()) {
+					// Get the first QDataBaseEntityMessage from bulkMsg
+					QDataBaseEntityMessage msg = bulkMsg.getMessages()[0];
 
-					// Extract the baseEntityAttributes from the first BaseEntity
-					Set<EntityAttribute> filtersSet = msg.getItems().get(0).getBaseEntityAttributes();
-					filters.addAll(filtersSet);
+					// Check if msg is not empty
+					if (!msg.getItems().isEmpty()) {
+
+						// Extract the baseEntityAttributes from the first BaseEntity
+						Set<EntityAttribute> filtersSet = msg.getItems().get(0).getBaseEntityAttributes();
+						filters.addAll(filtersSet);
+					}
 				}
 			}
+		} else {
+			log.error("results are null");
+			filters = new ArrayList<EntityAttribute>();
 		}
 		return filters;
 	}

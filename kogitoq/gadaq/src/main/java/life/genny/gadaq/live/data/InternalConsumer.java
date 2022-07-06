@@ -220,7 +220,7 @@ public class InternalConsumer {
 			return;
 		}
 
-		log.info("Received Event : " + msg.getEvent_type()+" "+msg.getData().getCode()+", userCode:"+userToken.getUsername());
+		log.info("Received Event : " + msg.getEvent_type()+"-->"+msg.getData().getCode()+", userCode:"+userToken.getUsername());
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
@@ -234,6 +234,7 @@ public class InternalConsumer {
 		session.insert(msg);
 
 		try {
+			log.info("firing rules");
 			session.fireAllRules();
 		} finally {
 			session.dispose();

@@ -66,13 +66,13 @@ end
 
 rule QUE_TREE_ITEM_EDU_PROVIDERS 
 when
-	msg: QEventMessage( data.code == "BTN_CLICK QUE_TREE_ITEM_EDU_PROVIDERS" )
+	msg: QEventMessage( data.code == "QUE_TREE_ITEM_EDU_PROVIDERS" )
 	userToken: UserToken()
 	kogitoUtils : KogitoUtils()
 	searchUtils: SearchUtils();
 	beUtils: BaseEntityUtils();
 then
- 	String searchCode = "SBE_"+msg.getData().getCode().substring("BTN_CLICK QUE_TREE_ITEM_".length());
+ 	String searchCode = "SBE_"+msg.getData().getCode().substring("QUE_TREE_ITEM_".length());
 	System.out.println("Triggering "+searchCode+" Table");
 
 
@@ -94,13 +94,16 @@ then
 		searchBE.setPageStart(0);
 		Integer pageSize = 10;
 		searchBE.setPageSize(pageSize);
+		System.out.println(searchBE);
 
-		/* send PCM for PCM_TABLE to frontend */
 		BaseEntity pcmCode = beUtils.getBaseEntityByCode("PCM_TABLE"); 
 
 
-		/* Now call the fyodor tableSearch! */
+
+		System.out.println("PCM CODE2: "+pcmCode);
+		
 		searchUtils.searchTable(searchBE);
+
 
 
 
