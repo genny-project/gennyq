@@ -1,6 +1,7 @@
 package life.genny.gadaq;
 
 import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 
 import org.apache.commons.lang3.StringUtils;
@@ -98,8 +99,11 @@ then
 
 		BaseEntity pcmCode = beUtils.getBaseEntityByCode("PCM_TABLE"); 
 
+	QDataBaseEntityMessage pcmMsg = new QDataBaseEntityMessage(pcmCode);
+	pcmMsg.setToken(userToken.getToken());
+	pcmMsg.setReplace(true);
 
-
+		KafkaUtils.writeMsg("webcmds", pcmMsg);
 		System.out.println("PCM CODE2: "+pcmCode);
 		
 		searchUtils.searchTable(searchBE);
