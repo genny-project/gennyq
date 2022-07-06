@@ -1,4 +1,4 @@
-package life.genny.qwandaq.serialization.baseentity;
+package life.genny.qwandaq.serialization.key.baseentity;
 
 import java.io.IOException;
 
@@ -26,7 +26,7 @@ public class BaseEntityKeyMessageMarshaller implements MessageMarshaller<BaseEnt
 
 	@Override
 	public void writeTo(ProtoStreamWriter writer, BaseEntityKey bek) throws IOException {
-		writer.writeString("realm", bek.getRealm());
+		writer.writeString("realm", bek.getProductCode());
 		writer.writeString("code", bek.getCode());
 	}
 

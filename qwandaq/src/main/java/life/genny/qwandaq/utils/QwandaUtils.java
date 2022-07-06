@@ -29,6 +29,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -36,6 +37,7 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.key.attribute.AttributeKey;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -75,7 +77,8 @@ public class QwandaUtils {
 	// Deliberately package private!
 	Attribute saveAttribute(final Attribute attribute) {
 		String productCode = userToken.getProductCode();
-		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
+		AttributeKey attributeKey = new AttributeKey(productCode, attribute.getCode());
+		Attribute existingAttrib = CacheUtils.getObject(CacheName.ATTRIBUTE, attributeKey, attribute.getCode(), Attribute.class);
 		
 		if(existingAttrib != null) {
 			if(CommonUtils.compare(attribute, existingAttrib)) {

@@ -14,10 +14,11 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.serialization.common.CoreEntityKeyIntf;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 
 /*
  * A static utility class used for standard read and write 
@@ -46,9 +47,9 @@ public class CacheUtils {
 	*
 	* @param realm The realm of the cache to clear
 	 */
-	public static void clear(String realm) {
+	public static void clear(CacheName cacheName) {
 
-		cache.getRemoteCache(realm).clear();
+		cache.getRemoteCache(cacheName).clear();
 	}
 
 	/**
@@ -58,9 +59,9 @@ public class CacheUtils {
 	 * @param key the key to read
 	 * @return Object
 	 */
-	public static Object readCache(String realm, String key) {
+	public static Object readCache(CacheName cacheName, CoreEntityKeyIntf key) {
 
-		Object ret = cache.getRemoteCache(realm).get(key);
+		Object ret = cache.getRemoteCache(cacheName).get(key);
 		return ret;
 	}
 
@@ -73,13 +74,12 @@ public class CacheUtils {
 	 * 
 	 * @return returns the newly written value
 	 */
-	public static String writeCache(String realm, String key, String value) {
-		log.info("realm is " + realm);
-		log.info("key is " + key);
-		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
-		log.info("remoteCache was returned");
+	public static String writeCache(CacheName cacheName, CoreEntityKeyIntf key, String value) {
+		log.info("[!] Caching: [" + key.getKeyString() + "=" + value + "] into cache: " + cacheName.cacheName);
+
+		RemoteCache<CoreEntityKeyIntf, String> remoteCache = cache.getRemoteCache(cacheName);
+		log.debug("remoteCache was returned");
 		remoteCache.put(key, value);
-		log.info("cache finished writing for "+realm+" "+key);
 
 		return remoteCache.get(key);
 	}
@@ -90,9 +90,9 @@ public class CacheUtils {
 	* @param realm The realm cache to remove from.
 	* @param key The key of the entry to remove.
 	 */
-	public static void removeEntry(String realm, String key) {
+	public static void removeEntry(CacheName cacheName, CoreEntityKeyIntf key) {
 		
-		cache.getRemoteCache(realm).remove(key);
+		cache.getRemoteCache(cacheName).remove(key);
 	}
 
 	/**
@@ -104,11 +104,11 @@ public class CacheUtils {
 	 * @param c the Class to get as
 	 * @return T
 	 */
-	public static <T> T getObject(String realm, String key, Class<T> c) {
+	public static <T> T getObject(CacheName cacheName, CoreEntityKeyIntf key, Class<T> c) {
 
-		log.debug("Cache Realm is " + realm);
+		log.debug("Cache Realm is " + cacheName.cacheName);
 
-		String data = (String) readCache(realm, key);
+		String data = (String) readCache(cacheName, key);
 		if (StringUtils.isEmpty(data)) {
 			log.debug("key: " + key + ", data: " + data);
 			return null;
@@ -127,9 +127,9 @@ public class CacheUtils {
 	 * @param t the Type to get as
 	 * @return T
 	 */
-	public static <T> T getObject(String realm, String key, Type t) {
+	public static <T> T getObject(CacheName cacheName, CoreEntityKeyIntf key, Type t) {
 
-		String data = (String) readCache(realm, key);
+		String data = (String) readCache(cacheName, key);
 		if (data == null) {
 			return null;
 		}
@@ -141,13 +141,13 @@ public class CacheUtils {
 	 * Put an object into the cache.
 	 *
 	 * @param realm the realm to put object into
-	 * @param key the key to put object under
+	 * @param key the {@link CoreEntityKeyIntf} to put object under
 	 * @param obj the obj to put
 	 */
-	public static void putObject(String realm, String key, Object obj) {
+	public static void putObject(CacheName cacheName, CoreEntityKeyIntf key, Object obj) {
 
 		String json = jsonb.toJson(obj);
-		cache.getRemoteCache(realm).put(key, json);
+		cache.getRemoteCache(cacheName).put(key, json);
 	}
 
 	/**
@@ -157,8 +157,19 @@ public class CacheUtils {
 	* @param key The key they item is saved against
 	* @return The CoreEntity returned
 	 */
-	public static CoreEntity getEntity(String cacheName, CoreEntityKey key) {
+	public static CoreEntity getEntity(CacheName cacheName, CoreEntityKeyIntf key) {
 		return cache.getEntityFromCache(cacheName, key);
+	}
+
+	/**
+	* Get a CoreEntity object from the cache using a CoreEntityKey.
+	* 
+	* @param cacheName The cache to read from
+	* @param key The key they item is saved against
+	* @return The CoreEntity returned
+	 */
+	public static BaseEntity getBaseEntity(BaseEntityKey key) {
+		return (BaseEntity) getEntity(CacheName.BASEENTITY, key);
 	}
 
 	/**
@@ -169,24 +180,31 @@ public class CacheUtils {
 	* @param entity The CoreEntity to save
 	* @return The CoreEntity being saved
 	 */
-	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
+	public static CoreEntity saveEntity(CacheName cacheName, CoreEntityKeyIntf key, CoreEntity entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 
 	/**
-	 * Get a list of {@link CoreEntity}s to from cache by prefix.
+	 * Get a list of {@link CoreEntity}s for a specific product code (if present) from cache by prefix.
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
-	 * @param callback - Callback to construct a {@link CoreEntityKey} for cache retrieval
+	 * @param productCode - the productCode to fetch the entities for. Will fetch all entities with prefix if this is null 
+	 * @param callback - Callback to construct a {@link CoreEntityKeyIntf} for cache retrieval
 	 * @return a list of core entities with matching prefixes
 	 * 
-	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
+	 * See Also: {@link CoreEntityKeyIntf}, {@link FICacheKeyCallback}
 	 */
-	static List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
+	static List<CoreEntity> getEntitiesByPrefix(CacheName cacheName, String productCode, String prefix) {
 		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
-		.entrySet().stream().map((Map.Entry<String, String> entry) -> {
-			String key = entry.getKey();
-			CoreEntityKey currentKey = keyStruct.fromKey(key);
+		.entrySet().stream()
+		.map((Map.Entry<CoreEntityKeyIntf, String> entry) -> {
+			CoreEntityKeyIntf currentKey = entry.getKey();
+			
+			// If a realm check is in place, filter by realm
+			if(productCode != null) {
+				if(!productCode.equals(currentKey.getProductCode()))
+					return null;
+			}
 
 			return currentKey.getEntityCode().startsWith(prefix) ? jsonb.fromJson(entry.getValue(), CoreEntity.class) : null;
 		})
@@ -197,16 +215,25 @@ public class CacheUtils {
 		return entities;
 	}
 
+	static List<CoreEntity> getEntitiesByPrefix(CacheName cacheName, String prefix) {
+		return getEntitiesByPrefix(cacheName, null, prefix);
+	}
+
 	/**
-	 * Get a list of {@link BaseEntity}s to from cache by prefix.
+	 * Get a list of {@link BaseEntity}s from cache for ALL product codes by prefix.
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
 	 * 
-	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
+	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKeyIntf#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
-	public static List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
-		return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
-		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
+	public static List<BaseEntity> getBaseEntitiesByPrefix(String prefix) {
+		return getEntitiesByPrefix(CacheName.BASEENTITY, prefix).stream()
+		.map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
+	}
+
+	public static List<BaseEntity> getBaseEntitiesByPrefix(String productCode, String prefix) {
+		return getEntitiesByPrefix(CacheName.BASEENTITY, productCode, prefix).stream()
+		.map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
 	}
 }

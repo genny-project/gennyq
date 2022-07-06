@@ -1,4 +1,6 @@
 #!/bin/bash
+
+echo "Starting build-docker.sh"
 VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 echo "Project Version: $VERSION"
 

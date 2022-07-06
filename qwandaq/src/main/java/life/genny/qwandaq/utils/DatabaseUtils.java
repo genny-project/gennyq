@@ -13,6 +13,7 @@ import javax.transaction.Transactional;
 
 import org.jboss.logging.Logger;
 
+import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.NonBlocking;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Link;
@@ -20,7 +21,9 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.validation.Validation;
 
 /*
@@ -375,17 +378,27 @@ public class DatabaseUtils {
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 
 		checkEntityManager();
+		BaseEntityKey key = new BaseEntityKey(realm, code);
+		BaseEntity entity = CacheUtils.getBaseEntity(key);
+		
+		if(entity != null) {
+			return entity;
+		}
+		
+		// Check database and cache if missing from cache
 		try {
 
-			return entityManager
+			entity = entityManager
 					.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
 					.setParameter("realmStr", realm)
 					.setParameter("code", code)
 					.getSingleResult();
 
+			CacheUtils.putObject(CacheName.BASEENTITY, key, entity);
 		} catch (NoResultException e) {
 			log.info("No BaseEntity found in DB for " + code + " in realm " + realm);
 		}
+		
 
 		return null;
 	}

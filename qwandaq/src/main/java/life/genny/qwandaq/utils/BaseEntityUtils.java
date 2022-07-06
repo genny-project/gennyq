@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -25,7 +26,8 @@ import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -257,7 +259,7 @@ public class BaseEntityUtils {
 		databaseUtils.saveBaseEntity(baseEntity);
 
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		return (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		return (BaseEntity) CacheUtils.saveEntity(CacheName.BASEENTITY, key, baseEntity);
 	}
 
 	/**
@@ -626,7 +628,8 @@ public class BaseEntityUtils {
 
 		try {
 			updateBaseEntity(item);
-			CacheUtils.putObject(userToken.getProductCode(), item.getCode(), item);
+			BaseEntityKey beKey = new BaseEntityKey(userToken.getProductCode(), item.getCode());
+			CacheUtils.putObject(CacheName.BASEENTITY, beKey, item);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -691,8 +694,6 @@ public class BaseEntityUtils {
 					// NOTE: Maybe should be moved to run for all BEs
 					Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
 					item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\""+userToken.getUserCode()+"\"]"));
-				} else {
-					log.error("create BE returned NULL for " + code);
 				}
 
 			} else {

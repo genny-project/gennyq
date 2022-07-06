@@ -1,18 +1,25 @@
 package life.genny.qwandaq.serialization.common;
 
-import java.io.Serializable;
+public abstract class CoreEntityKey implements CoreEntityKeyIntf {
 
-// Interface for infinispan cache keys
-public interface CoreEntityKey extends Serializable {
-    public String getKeyString();
-    
-    public CoreEntityKey fromKey(String key);
+	protected String productCode;
 
-    public String getDelimiter();
+    // no-arg constructor
+    @Deprecated
+    public CoreEntityKey() { }
 
-    public default String[] getComponents() {
-        return getKeyString().split(getDelimiter());
+    public CoreEntityKey(String productCode) {
+        this.productCode = productCode;
     }
 
-    public String getEntityCode();
+    @Override
+    public String getProductCode() {
+        return productCode;
+    }
+	
+	@Override
+	public String toString() {
+		return getKeyString();
+	}
+    
 }

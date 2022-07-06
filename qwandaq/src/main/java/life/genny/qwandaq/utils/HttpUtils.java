@@ -49,6 +49,7 @@ public class HttpUtils {
 	 * @param body  The json string to use as the body.
 	 * @param token The token to use in authorization.
 	 * @return The returned response object.
+	 * @deprecated since 10.1.0 because it is not token-safe, use {@link HttpUtils#put(String, String, GennyToken)} instead
 	 */
 	@Deprecated
 	public static HttpResponse<String> put(String uri, String body, String token) {
@@ -93,6 +94,8 @@ public class HttpUtils {
 	 * @param body  The json string to use as the body.
 	 * @param token The token to use in authorization.
 	 * @return The returned response object.
+	 * 
+	 * @deprecated since 10.1.0 because it is not token-safe, use {@link HttpUtils#post(String, String, GennyToken)} instead
 	 */
 	@Deprecated
 	public static HttpResponse<String> post(String uri, String body, String token) {
@@ -125,6 +128,8 @@ public class HttpUtils {
 	 *                    "application/json"
 	 * @param token       The token to use in authorization.
 	 * @return The returned response object.
+	 * 
+	 * @deprecated since 10.1.0 because it is not token-safe, use {@link HttpUtils#post(String, String, String, GennyToken)} instead
 	 */
 	@Deprecated
 	public static java.net.http.HttpResponse<String> post(String uri, String body, String contentType, String token) {
@@ -178,6 +183,7 @@ public class HttpUtils {
 	 * @param uri   The target URI of the request.
 	 * @param token The token to use in authorization.
 	 * @return The returned response object.
+	 * @deprecated since 10.1.0 because it is not token-safe, use {@link HttpUtils#post(String, GennyToken)} instead
 	 */
 	@Deprecated
 	public static HttpResponse<String> get(String uri, String token) {
@@ -218,6 +224,7 @@ public class HttpUtils {
 	 * @param uri   The target URI of the request.
 	 * @param token The token to use in authorization.
 	 * @return The returned response object.
+	 * @deprecated since 10.1.0 because it is not token-safe, use {@link HttpUtils#delete(String, GennyToken)} instead
 	 */
 	@Deprecated
 	public static HttpResponse<String> delete(String uri, String token) {

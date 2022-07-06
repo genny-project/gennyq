@@ -20,13 +20,14 @@ import io.vertx.core.json.DecodeException;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.key.BaseEntityAttributeKey;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -115,8 +116,8 @@ public class CapabilityUtils {
 
 	private CapabilityMode[] getCapabilitiesFromCache(final String roleCode, final String cleanCapabilityCode) {
 		String productCode = userToken.getProductCode();
-		String key = getCacheKey(roleCode, cleanCapabilityCode);
-		String cachedObject = (String) CacheUtils.readCache(productCode, key);
+		BaseEntityAttributeKey key = getCacheKey(productCode, roleCode, cleanCapabilityCode);
+		String cachedObject = (String) CacheUtils.readCache(CacheName.CAPABILITIES, key);
 
 		JsonObject object = jsonb.fromJson(cachedObject, JsonObject.class);
 
@@ -137,12 +138,12 @@ public class CapabilityUtils {
 	private String updateCachedRoleSet(final String roleCode, final String cleanCapabilityCode,
 			final CapabilityMode... modes) {
 		String productCode = userToken.getProductCode();
-		String key = getCacheKey(roleCode, cleanCapabilityCode);
+		BaseEntityAttributeKey key = getCacheKey(productCode, roleCode, cleanCapabilityCode);
 		String modesString = getModeString(modes);
 
 		log.info("updateCachedRoleSet test:: " + key);
 		// if no cache then create
-		return CacheUtils.writeCache(productCode, key, modesString);
+		return CacheUtils.writeCache(CacheName.CAPABILITIES, key, modesString);
 	}
 
 	/**
@@ -326,11 +327,11 @@ public class CapabilityUtils {
 			if(cachedRoles.size() > 0) {
 				for (BaseEntity role : cachedRoles) {
 					String roleCode = role.getCode();
-					CacheUtils.removeEntry(productCode, getCacheKey(roleCode, attributeCode));
+					CacheUtils.removeEntry(CacheName.CAPABILITIES, getCacheKey(productCode, roleCode, attributeCode));
 					role.removeAttribute(toBeRemovedCapability.getCode());
 					/* Now update the db role to only have the attributes we want left */
 					BaseEntityKey beKey = new BaseEntityKey(productCode, role.getCode());
-					CacheUtils.saveEntity(productCode, beKey, role);
+					CacheUtils.saveEntity(CacheName.BASEENTITY, beKey, role);
 				}
 			}
 		}
@@ -429,7 +430,7 @@ public class CapabilityUtils {
 			String roleBECode = roleCodesArray.getString(i);
 
 			BaseEntityKey beKey = new BaseEntityKey(productCode, roleBECode);
-			BaseEntity roleBE = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
+			BaseEntity roleBE = CacheUtils.getBaseEntity(beKey);
 			if (roleBE == null) {
 				log.info("facts: could not find roleBe: " + roleBECode + " in cache: " + userToken.getProductCode());
 				continue;
@@ -519,7 +520,7 @@ public class CapabilityUtils {
 	 * @param capCode
 	 * @return
 	 */
-	private static String getCacheKey(String roleCode, String capCode) {
-		return roleCode + ":" + capCode;
+	private static BaseEntityAttributeKey getCacheKey(String productCode, String roleCode, String capCode) {
+		return new BaseEntityAttributeKey(productCode, roleCode, capCode);
 	}
 }

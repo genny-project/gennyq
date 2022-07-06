@@ -1,4 +1,4 @@
-package life.genny.qwandaq.serialization.baseentity;
+package life.genny.qwandaq.serialization.key.baseentity;
 
 import java.io.UncheckedIOException;
 
