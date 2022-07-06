@@ -4,7 +4,7 @@ import java.io.Serializable;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import life.genny.qwandaq.intf.KafkaInterface;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.tityMessage;
 import org.jboss.logging.Logger;
 
 /*
