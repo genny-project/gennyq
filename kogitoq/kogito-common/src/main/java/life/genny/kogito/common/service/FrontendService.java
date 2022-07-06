@@ -225,7 +225,15 @@ public class FrontendService {
 	 */
 	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
 
-		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		BaseEntity processBE = null;
+		
+		try {
+			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		} catch (java.lang.NullPointerException e) {
+			log.error("Process Entity json must not be null or have null entry! ->"+processBEJson);
+			return;
+
+		}
 		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
 		// find all allowed attribute codes

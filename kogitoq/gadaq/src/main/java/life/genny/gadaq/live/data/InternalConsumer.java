@@ -16,6 +16,7 @@ import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
@@ -53,6 +54,9 @@ public class InternalConsumer {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
+	@Inject
+	SearchUtils searchUtils;
 
 	@Inject
 	DatabaseUtils databaseUtils;
@@ -130,6 +134,7 @@ public class InternalConsumer {
 
 		session.insert(kogitoUtils);
 		session.insert(beUtils);
+
 		session.insert(userToken);
 
 		insertAnswersFromMessage(session, msg);
@@ -212,7 +217,7 @@ public class InternalConsumer {
 			return;
 		}
 
-		log.info("Received Event : " + msg.getEvent_type()+" "+msg.getData().getCode()+", userCode:"+userToken.getUsername());
+		log.info("Received Event : " + msg.getEvent_type()+"-->"+msg.getData().getCode()+", userCode:"+userToken.getUsername());
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
@@ -222,9 +227,12 @@ public class InternalConsumer {
 		session.insert(beUtils);
 		session.insert(jsonb);
 		session.insert(userToken);
+		session.insert(searchUtils);
+		session.insert(beUtils);
 		session.insert(msg);
 
 		try {
+			log.info("firing rules");
 			session.fireAllRules();
 		} finally {
 			session.dispose();
