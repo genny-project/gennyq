@@ -27,9 +27,6 @@ import org.jboss.logging.Logger;
 import org.kie.api.runtime.KieRuntimeBuilder;
 import org.kie.api.runtime.KieSession;
 
-
-
-
 @ApplicationScoped
 public class InternalConsumer {
 
@@ -228,6 +225,7 @@ public class InternalConsumer {
 
 		session.insert(kogitoUtils);
 		session.insert(beUtils);
+		session.insert(jsonb);
 		session.insert(userToken);
 		session.insert(searchUtils);
 		session.insert(beUtils);

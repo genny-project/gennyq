@@ -9,6 +9,8 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
+
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.HttpUtils;
@@ -179,19 +181,23 @@ public class KogitoUtils {
         String uri = GennySettings.kogitoServiceUrl() + "/" + id;
 		log.info("Triggering workflow with uri: " + uri);
 
+		// make post request
         HttpResponse<String> response = HttpUtils.post(uri, json.toString(), userToken);
+		if (response == null) {
+            log.error("NULL RESPONSE from workflow endpoint");
+			return null;
+		}
 
-        if (response != null && response.statusCode() == 201) {
-            JsonObject result = jsonb.fromJson(response.body(), JsonObject.class);
+		// ensure request was a success
+		if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
+            log.error("Error, Response Status: " + response.statusCode());
+			return null;
+		}
 
-			// return the processId
-			return result.getString("id");
-        } else {
-            log.error("TriggerWorkflow Response Status:  " + (response != null ? response.statusCode() : "NULL RESPONSE"));
-        }
+		JsonObject result = jsonb.fromJson(response.body(), JsonObject.class);
 
-        return null;
+		// return the processId
+		return result.getString("id");
     }
-
 	
 }

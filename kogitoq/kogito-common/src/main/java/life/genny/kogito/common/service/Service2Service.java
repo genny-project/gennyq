@@ -2,6 +2,8 @@ package life.genny.kogito.common.service;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -9,6 +11,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.KogitoData;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.intf.GennyScopeInit;
 
 /**
@@ -49,5 +52,20 @@ public class Service2Service {
 	public void initialiseScope(KogitoData data) {
 		log.info(data.toString());
 		scope.init(jsonb.toJson(data));
+	}
+
+	public void sendItemComplete(String definitionCode, String entityCode) {
+
+		JsonObject json = Json.createObjectBuilder()
+			.add("event_type", "LIFECYCLE")
+			.add("msg_type", "EVT_MSG")
+			.add("token", userToken.getToken())
+			.add("data", Json.createObjectBuilder()
+				.add("code", "ITEM_COMPLETE")
+				.add("parentCode", definitionCode)
+				.add("targetCode", entityCode))
+			.build();
+
+		KafkaUtils.writeMsg("genny_events", json.toString());
 	}
 }

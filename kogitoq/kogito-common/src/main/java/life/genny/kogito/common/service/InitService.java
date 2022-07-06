@@ -1,10 +1,17 @@
 package life.genny.kogito.common.service;
 
 import java.util.List;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.jboss.logging.Logger;
+
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -15,10 +22,10 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
-import org.jboss.logging.Logger;
 
 /**
  * A Service class used for Auth Init operations.
@@ -46,6 +53,12 @@ public class InitService {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Inject
+	KogitoUtils kogitoUtils;
+
+	@Inject
+	GraphQLUtils gqlUtils;
 
 	/**
 	 * Send the Project BaseEntity.
@@ -158,20 +171,6 @@ public class InitService {
 	}
 
 	/**
-	 * Send Dashboard Entity
-	 */
-	public void sendDashboard() {
-
-		log.info("Sending Dashboard");
-		BaseEntity dashboard = beUtils.getBaseEntityByCode("DSH_DASHBOARD");
-
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(dashboard);
-		msg.setToken(userToken.getToken());
-		msg.setAliasCode("DASHBOARD");
-		KafkaUtils.writeMsg("webdata", msg);
-	}
-
-	/**
 	 * Send Add Items Menu
 	 */
 	public void sendAddItems() {
@@ -186,4 +185,50 @@ public class InitService {
 
 		KafkaUtils.writeMsg("webdata", msg);
 	}
+
+	/**
+	 * Send Outstanding Tasks
+	 */
+	public void sendOutstandingTasks() {
+
+		// we store the summary code in the persons lifecycle
+		String process = "ReceiveQuestionRequest";
+		String body = gqlUtils.queryTable(process, "sourceCode", userToken.getUserCode(), "id");
+
+		// unpack json
+		JsonObject bodyObj = jsonb.fromJson(body, JsonObject.class);
+		JsonObject dataObj = bodyObj.getJsonObject("data");
+		if (dataObj == null) {
+			log.error("No data field found");
+			return;
+		}
+		JsonArray arr = dataObj.getJsonArray(process);
+		if (arr == null || arr.isEmpty()) {
+			log.error("No " + process + " field found");
+			return;
+		}
+
+		String callProcessId = arr.getJsonObject(0).getString("id");
+
+		process = "ProcessInstances";
+		body = gqlUtils.queryTable(process, "parentProcessInstanceId", callProcessId, "id");
+
+		// unpack json
+		bodyObj = jsonb.fromJson(body, JsonObject.class);
+		dataObj = bodyObj.getJsonObject("data");
+		if (dataObj == null) {
+			log.error("No data field found");
+			return;
+		}
+		arr = dataObj.getJsonArray(process);
+		if (arr == null || arr.isEmpty()) {
+			log.error("No " + process + " field found");
+			return;
+		}
+
+		String processId = arr.getJsonObject(0).getString("id");
+
+		kogitoUtils.sendSignal("processQuestions", processId, "requestion", "");
+	}
+
 }

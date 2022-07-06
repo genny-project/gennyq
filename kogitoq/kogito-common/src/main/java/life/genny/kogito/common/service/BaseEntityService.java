@@ -8,10 +8,14 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class BaseEntityService {
@@ -25,7 +29,10 @@ public class BaseEntityService {
 
 	@Inject
 	BaseEntityUtils beUtils;
-	
+
+	@Inject
+	QwandaUtils qwandaUtils;
+
 	public String commission(String definitionCode) {
 
 		if (definitionCode == null || !definitionCode.startsWith("DEF_")) {
@@ -88,6 +95,9 @@ public class BaseEntityService {
 		return prefix;
 	}
 
+	/**
+	 * Update the email, firstname and lastname in keycloak
+	 */
 	public void updateKeycloak(String userCode) {
 
 		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
@@ -101,5 +111,52 @@ public class BaseEntityService {
 		KeycloakUtils.updateUserField(serviceToken, user, "username", email);
 		KeycloakUtils.updateUserField(serviceToken, user, "firstName", firstName);
 		KeycloakUtils.updateUserField(serviceToken, user, "lastName", lastName);
+	}
+
+	/**
+	 * Mere a process entity into another entity
+	 */
+	public void mergeFromProcessEntity(String entityCode, String processBEJson) {
+
+		if (entityCode == null) {
+			log.error("entityCode is null");
+			return;
+		}
+
+		if (processBEJson == null) {
+			log.error("processBEJson is null");
+			return;
+		}
+		
+		BaseEntity entity = beUtils.getBaseEntityByCode(entityCode);
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+
+		// iterate our stored process updates and create an answer
+		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
+
+			if (ea.getAttribute() == null) {
+				log.warn("Attribute is null, fetching " + ea.getAttributeCode());
+
+				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
+				ea.setAttribute(attribute);
+			}
+			if (ea.getPk().getBaseEntity() == null) {
+				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
+			}
+
+			ea.setBaseEntity(entity);
+			if (ea.getPk().getBaseEntity() == null) {
+				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is STILLLLLLL NULL");
+			}
+			try {
+				entity.addAttribute(ea);
+			} catch (BadDataException e) {
+				e.printStackTrace();
+			}
+		}
+
+		// save these answrs to db and cache
+		beUtils.updateBaseEntity(entity);
+		log.info("Saved answers for entity " + entityCode);
 	}
 }
