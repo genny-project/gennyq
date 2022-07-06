@@ -204,6 +204,7 @@ public class ExternalConsumer {
 				topicName = "events";
 			} else {
 				topicName = "genny_events";
+				topicName = "events";
 			}
 		}
 
