@@ -24,7 +24,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.constants.CacheName;
-import life.genny.qwandaq.serialization.common.CacheEntityKeyIntf;
+import life.genny.qwandaq.serialization.common.CacheKeyIntf;
 import life.genny.qwandaq.serialization.key.baseentity.BaseEntityInitializerImpl;
 import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKeyInitializerImpl;
 
@@ -39,7 +39,7 @@ public class GennyCache {
 
 	static final Logger log = Logger.getLogger(GennyCache.class);
 
-	private Map<CacheName, RemoteCache<CacheEntityKeyIntf, String>> caches = new HashMap<>();
+	private Map<CacheName, RemoteCache<CacheKeyIntf, String>> caches = new HashMap<>();
 
 	private RemoteCacheManager remoteCacheManager;
 
@@ -122,13 +122,13 @@ public class GennyCache {
 	 * @return RemoteCache&lt;String, String&gt; 
 	 * 		the remote cache associatd with the realm
 	 */
-	public RemoteCache<CacheEntityKeyIntf, String> getRemoteCache(final CacheName cacheName) {
+	public RemoteCache<CacheKeyIntf, String> getRemoteCache(final CacheName cacheName) {
 
 		if (caches.keySet().contains(cacheName)) {
 			return caches.get(cacheName); 
 		}
 
-		RemoteCache<CacheEntityKeyIntf, String> cache = remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(cacheName.cacheName, DefaultTemplate.DIST_SYNC);
+		RemoteCache<CacheKeyIntf, String> cache = remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(cacheName.cacheName, DefaultTemplate.DIST_SYNC);
 		
 		// Ensure last value of put is always null, otherwise this means we have overwritten a cache
 		if(caches.put(cacheName, cache) != null) {
@@ -145,13 +145,13 @@ public class GennyCache {
 	* @param key The key to the entity to fetch
 	* @return The entity
 	 */
-	public CoreEntity getEntityFromCache(CacheName cacheName, CacheEntityKeyIntf key) {
+	public CoreEntity getEntityFromCache(CacheName cacheName, CacheKeyIntf key) {
 
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
 
-		RemoteCache<CacheEntityKeyIntf, CoreEntity> cache = remoteCacheManager.getCache(cacheName.cacheName);
+		RemoteCache<CacheKeyIntf, CoreEntity> cache = remoteCacheManager.getCache(cacheName.cacheName);
 		if (cache == null) {
 			log.error("Could not find a cache called " + cacheName.cacheName);
 		}
@@ -167,7 +167,7 @@ public class GennyCache {
 	* @param value The entity
 	* @return The Entity
 	 */
-	public CoreEntity putEntityIntoCache(CacheName cacheName, CacheEntityKeyIntf key, CoreEntity value) {
+	public CoreEntity putEntityIntoCache(CacheName cacheName, CacheKeyIntf key, CoreEntity value) {
 		if(value == null) {
 			log.warn("[" + cacheName.cacheName + "]: Value for " + key.getFullKeyString() + " is null");
 		}
@@ -176,7 +176,7 @@ public class GennyCache {
 			initRemoteCacheManager();
 		}
 
-		RemoteCache<CacheEntityKeyIntf, CoreEntity> cache = remoteCacheManager.getCache(cacheName.cacheName);
+		RemoteCache<CacheKeyIntf, CoreEntity> cache = remoteCacheManager.getCache(cacheName.cacheName);
 		if (cache == null) {
 			log.error("Could not find a cache called " + cacheName);
 		}

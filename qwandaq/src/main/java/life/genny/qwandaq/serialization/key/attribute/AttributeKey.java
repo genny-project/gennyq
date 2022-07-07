@@ -1,6 +1,6 @@
 package life.genny.qwandaq.serialization.key.attribute;
 
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.serialization.common.key.core.CoreEntityKey;
 
 public class AttributeKey extends CoreEntityKey {
 
