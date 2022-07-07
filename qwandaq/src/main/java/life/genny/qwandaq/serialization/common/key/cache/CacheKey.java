@@ -1,29 +1,29 @@
 package life.genny.qwandaq.serialization.common.key.cache;
 
-import life.genny.qwandaq.serialization.common.CacheEntityKeyIntf;
+import life.genny.qwandaq.serialization.common.CacheKeyIntf;
 
-public class CacheEntityKey implements CacheEntityKeyIntf {
+public class CacheKey implements CacheKeyIntf {
 
 	private String productCode;
     protected String key;
 
     // no-arg constructor
     @Deprecated
-    public CacheEntityKey() { }
+    public CacheKey() { }
 
-    public CacheEntityKey(String productCode) {
+    public CacheKey(String productCode) {
         this.productCode = productCode;
     }
 
-    public CacheEntityKey(String productCode, String key) {
+    public CacheKey(String productCode, String key) {
         this.productCode = productCode;
         this.key = key;
     }
 
     @Override
-    public CacheEntityKeyIntf fromKey(String key) {
+    public CacheKeyIntf fromKey(String key) {
         String[] components = getComponents();
-        return new CacheEntityKey(components[0], components[1]);
+        return new CacheKey(components[0], components[1]);
     }
 
     @Override

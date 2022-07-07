@@ -28,6 +28,10 @@ public class BaseEntityAttributeKey extends CoreEntityKey {
         return this.attributeCode;
     }
 
+    public String getBaseEntityCode() {
+        return this.baseEntityCode;
+    }
+
     @Override
     //TODO: Think about this some more
     public String getEntityCode() {
