@@ -117,14 +117,6 @@ then
 		searchBE.setPageSize(pageSize);
 		System.out.println(searchBE);
 
-		BaseEntity pcmCode = beUtils.getBaseEntityByCode("PCM_TABLE"); 
-
-	QDataBaseEntityMessage pcmMsg = new QDataBaseEntityMessage(pcmCode);
-	pcmMsg.setToken(userToken.getToken());
-	pcmMsg.setReplace(true);
-
-		KafkaUtils.writeMsg("webcmds", pcmMsg);
-		System.out.println("PCM CODE2: "+pcmCode);
 		
 		searchUtils.searchTable(searchBE);
 
