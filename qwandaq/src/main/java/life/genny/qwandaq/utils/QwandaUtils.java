@@ -37,7 +37,9 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.serialization.key.attribute.AttributeKey;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -78,7 +80,7 @@ public class QwandaUtils {
 	Attribute saveAttribute(final Attribute attribute) {
 		String productCode = userToken.getProductCode();
 		AttributeKey attributeKey = new AttributeKey(productCode, attribute.getCode());
-		Attribute existingAttrib = CacheUtils.getObject(CacheName.ATTRIBUTE, attributeKey, attribute.getCode(), Attribute.class);
+		Attribute existingAttrib = CacheUtils.getObject(CacheName.ATTRIBUTE, attributeKey, Attribute.class);
 		
 		if(existingAttrib != null) {
 			if(CommonUtils.compare(attribute, existingAttrib)) {
@@ -89,10 +91,10 @@ public class QwandaUtils {
 			log.info("Updating existing attribute!: "  + existingAttrib.getCode());
 		}
 
-		CacheUtils.putObject(productCode, attribute.getCode(), attribute);
+		CacheUtils.putObject(CacheName.ATTRIBUTE, attributeKey, attribute);
 		databaseUtils.saveAttribute(attribute);
 
-		return CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
+		return CacheUtils.getObject(CacheName.ATTRIBUTE, attributeKey, Attribute.class);
 	}
 
 	/**
@@ -105,14 +107,15 @@ public class QwandaUtils {
 	public Attribute getAttribute(final String attributeCode) {
 
 		String productCode = userToken.getProductCode();
-		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
+		AttributeKey attributeKey = new AttributeKey(productCode, attributeCode);
+		Attribute attribute = CacheUtils.getObject(CacheName.ATTRIBUTE, attributeKey, Attribute.class);
 
 		if (attribute == null) {
 			log.error("Could not find attribute " + attributeCode + " in cache: " + productCode);
 			loadAllAttributesIntoCache(productCode);
 		}
 
-		attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
+		attribute = CacheUtils.getObject(CacheName.ATTRIBUTE, attributeKey, Attribute.class);
 
 		if (attribute == null) {
 			log.error("Bad Attribute in Cache for productCode " + productCode + " and code " + attributeCode);
@@ -142,12 +145,11 @@ public class QwandaUtils {
 		log.info("About to load all attributes for productCode " + productCode);
 		log.info("Found " + attributeCount + " attributes");
 
-		CacheUtils.putObject(productCode, "ATTRIBUTE_PAGES", TOTAL_PAGES);
+		CacheKey attributePagesKey = new CacheKey(productCode, "ATTRIBUTE_PAGES");
+		CacheUtils.putObject(CacheName.ATTRIBUTE, attributePagesKey, TOTAL_PAGES);
 
 		try {
 			for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
-
-				QDataAttributeMessage msg = new QDataAttributeMessage();
 
 				int attributesLoaded = currentPage * CHUNK_LOAD_SIZE;
 
@@ -163,9 +165,12 @@ public class QwandaUtils {
 				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 				log.info("Current memory usage: " + lastMemory + "MB");
 
+				QDataAttributeMessage msg = new QDataAttributeMessage();
+
 				for (Attribute attribute : attributeList) {
 					String key = attribute.getCode();
-					CacheUtils.putObject(productCode, key, attribute);
+					AttributeKey attribKey = new AttributeKey(productCode, key);
+					CacheUtils.putObject(CacheName.ATTRIBUTE, attribKey, attribute);
 					totalAttribsCached++;
 				}
 				long currentMemory = CommonUtils.getMemoryUsage(CommonUtils.MemoryMeasurement.MEGABYTES);
@@ -184,7 +189,8 @@ public class QwandaUtils {
 							+ attributeList.get(attributeList.size() - 1).getId());
 				}
 
-				CacheUtils.putObject(productCode, "ATTRIBUTES_P"+currentPage, msg);
+				CacheKey cacheKey = new CacheKey(productCode, "ATTRIBUTES_P" + currentPage);
+				CacheUtils.putObject(CacheName.ATTRIBUTE, cacheKey, msg);
 			}
 
 			log.info("Cached " + totalAttribsCached + " attributes");
@@ -498,7 +504,7 @@ public class QwandaUtils {
 	public void deleteSchedule(String code) {
 
 		String uri = GennySettings.shleemyServiceUrl() + "/api/schedule/code/" + code;
-		HttpUtils.delete(uri, userToken.getToken());
+		HttpUtils.delete(uri, userToken);
 	}
 
 	/**
@@ -604,7 +610,8 @@ public class QwandaUtils {
 		for (String targetCode : answersPerTargetCodeMap.keySet()) {
 
 			// find the baseentity
-			BaseEntity target = CacheUtils.getObject(productCode, targetCode, BaseEntity.class);
+			BaseEntityKey beKey = new BaseEntityKey(productCode, targetCode);
+			BaseEntity target = CacheUtils.getObject(CacheName.BASEENTITY, beKey, BaseEntity.class);
 			if (target != null) {
 
 				BaseEntity be = new BaseEntity(target.getCode(), target.getName());
@@ -638,7 +645,8 @@ public class QwandaUtils {
 	public void sendFeedback(Answer answer, String prefix, String message) {
 
 		// find the baseentity
-		BaseEntity target = CacheUtils.getObject(userToken.getProductCode(), answer.getTargetCode(), BaseEntity.class);
+		BaseEntityKey beKey = new BaseEntityKey(userToken.getProductCode(), answer.getTargetCode());
+		BaseEntity target = CacheUtils.getObject(CacheName.BASEENTITY, beKey, BaseEntity.class);
 
 		BaseEntity be = new BaseEntity(target.getCode(), target.getName());
 		be.setRealm(userToken.getProductCode());

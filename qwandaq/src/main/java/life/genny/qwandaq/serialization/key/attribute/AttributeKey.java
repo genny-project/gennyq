@@ -14,11 +14,6 @@ public class AttributeKey extends CoreEntityKey {
         super(productCode);
         this.attributeCode = attributeCode;
     }
-    
-    @Override
-    public String getKeyString() {
-        return productCode + getDelimiter() + getEntityCode();
-    }
 
     @Override
     public AttributeKey fromKey(String key) {

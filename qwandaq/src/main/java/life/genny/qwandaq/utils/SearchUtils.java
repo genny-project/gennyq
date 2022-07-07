@@ -23,6 +23,7 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -35,6 +36,8 @@ import life.genny.qwandaq.message.QEventDropdownMessage;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 
 /**
  * A utility class used for performing table
@@ -130,8 +133,8 @@ public class SearchUtils {
 
 		log.info("SBE CODE   ::   " + searchCode);
 
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
-				searchCode, SearchEntity.class);
+		BaseEntityKey beKey = new BaseEntityKey(userToken.getProductCode(), searchCode);
+		SearchEntity searchEntity = CacheUtils.getObject(CacheName.BASEENTITY, beKey, SearchEntity.class);
 
 		if (searchEntity == null) {
 			log.error("Could not fetch " + searchCode + " from cache!!!");
@@ -171,9 +174,9 @@ public class SearchUtils {
 			}
 		}
 
-		CacheUtils.putObject(userToken.getProductCode(),
-				"LAST-SEARCH:" + searchEntity.getCode(),
-				searchEntity);
+		CacheKey cacheKey = new CacheKey(userToken.getProductCode(), "LAST-SEARCH:" + searchEntity.getCode());
+		// TODO: Decide where to cache LAST-SEARCH
+		CacheUtils.putObject(CacheName.BASEENTITY, cacheKey, searchEntity);
 
 		// ensure column and action indexes are accurate
 		searchEntity.updateColumnIndex();
@@ -343,7 +346,8 @@ public class SearchUtils {
 				});
 
 		// put/update in the cache
-		CacheUtils.putObject(userToken.getProductCode(), searchEntity.getCode(), searchEntity);
+		BaseEntityKey searchEntityKey = new BaseEntityKey(userToken.getProductCode(), searchEntity.getCode());
+		CacheUtils.putObject(CacheName.BASEENTITY, searchEntityKey, searchEntity);
 
 		return searchEntity;
 	}
@@ -360,7 +364,7 @@ public class SearchUtils {
 
 		// convert to entity list
 		log.info("dropdownValue = " + dropdownValue);
-		String cleanCode = beUtils.cleanUpAttributeValue(dropdownValue);
+		String cleanCode = BaseEntityUtils.cleanUpAttributeValue(dropdownValue);
 		BaseEntity target = beUtils.getBaseEntityByCode(cleanCode);
 
 		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_" + productCode.toUpperCase());
@@ -390,7 +394,8 @@ public class SearchUtils {
 
 			String bucketMapCode = bucketMap.getString("code");
 
-			SearchEntity baseSearch = CacheUtils.getObject(productCode, bucketMapCode, SearchEntity.class);
+			BaseEntityKey beKey = new BaseEntityKey(userToken.getProductCode(), bucketMapCode);
+			SearchEntity baseSearch = CacheUtils.getObject(CacheName.BASEENTITY, beKey, SearchEntity.class);
 
 			if (baseSearch == null) {
 				log.error("SearchEntity " + bucketMapCode + " is NULL in cache!");
@@ -485,7 +490,8 @@ public class SearchUtils {
 				}
 
 				// fetch each search from cache
-				SearchEntity searchBE = CacheUtils.getObject(productCode, targetedBucketCode + "_" + sessionCode,
+				beKey = new BaseEntityKey(productCode, targetedBucketCode + "_" + sessionCode);
+				SearchEntity searchBE = CacheUtils.getObject(CacheName.BASEENTITY, beKey,
 						SearchEntity.class);
 
 				if (searchBE == null) {
@@ -544,13 +550,14 @@ public class SearchUtils {
 				} catch (BadDataException e) {
 					log.error("Could not update total results");
 				}
-				CacheUtils.putObject(productCode, searchBE.getCode(), searchBE);
+
+				beKey = new BaseEntityKey(productCode, searchBE.getCode());
+				CacheUtils.putObject(CacheName.BASEENTITY, beKey, searchBE);
 
 				if (searchBE != null) {
 					log.info("Sending Search Entity : " + searchBE.getCode());
-				} else {
-					log.error("SearchEntity is NULLLLL!!!!");
 				}
+				
 				QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
 				searchMsg.setToken(userToken.getToken());
 				searchMsg.setReplace(true);

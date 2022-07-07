@@ -3,15 +3,25 @@ package life.genny.qwandaq.serialization.common;
 import java.io.Serializable;
 
 // Interface for infinispan cache keys
-public interface CoreEntityKeyIntf extends Serializable {
+public interface CacheKeyIntf extends Serializable {
     public static final String DEFAULT_DELIMITER = ":";
 
-    public String getKeyString();
+    public String getFullKeyString();
     
-    public CoreEntityKeyIntf fromKey(String key);
+    public CacheKeyIntf fromKey(String key);
+
+    public String getProductCode();
 
     public default String getDelimiter() {
         return DEFAULT_DELIMITER;
+    }
+
+    public default String getBaseKeyString() {
+        return getProductCode() + getDelimiter();
+    }
+    
+    public default String[] getComponents() {
+        return getComponents(getFullKeyString());
     }
 
     public default String[] getComponents(String key) {
@@ -23,12 +33,4 @@ public interface CoreEntityKeyIntf extends Serializable {
             return returnString;
         }
     }
-
-    public default String[] getComponents() {
-        return getComponents(getKeyString());
-    }
-
-    public String getEntityCode();
-
-    public String getProductCode();
 }

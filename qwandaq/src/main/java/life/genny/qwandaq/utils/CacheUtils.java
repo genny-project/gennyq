@@ -17,7 +17,8 @@ import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.serialization.common.CoreEntityKeyIntf;
+import life.genny.qwandaq.serialization.common.CacheKeyIntf;
+import life.genny.qwandaq.serialization.common.key.core.CoreEntityKey;
 import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 
 /*
@@ -59,7 +60,7 @@ public class CacheUtils {
 	 * @param key the key to read
 	 * @return Object
 	 */
-	public static Object readCache(CacheName cacheName, CoreEntityKeyIntf key) {
+	public static Object readCache(CacheName cacheName, CacheKeyIntf key) {
 
 		Object ret = cache.getRemoteCache(cacheName).get(key);
 		return ret;
@@ -74,10 +75,10 @@ public class CacheUtils {
 	 * 
 	 * @return returns the newly written value
 	 */
-	public static String writeCache(CacheName cacheName, CoreEntityKeyIntf key, String value) {
-		log.info("[!] Caching: [" + key.getKeyString() + "=" + value + "] into cache: " + cacheName.cacheName);
+	public static String writeCache(CacheName cacheName, CacheKeyIntf key, String value) {
+		log.info("[!] Caching: [" + key.getFullKeyString() + "=" + value + "] into cache: " + cacheName.cacheName);
 
-		RemoteCache<CoreEntityKeyIntf, String> remoteCache = cache.getRemoteCache(cacheName);
+		RemoteCache<CacheKeyIntf, String> remoteCache = cache.getRemoteCache(cacheName);
 		log.debug("remoteCache was returned");
 		remoteCache.put(key, value);
 
@@ -90,7 +91,7 @@ public class CacheUtils {
 	* @param realm The realm cache to remove from.
 	* @param key The key of the entry to remove.
 	 */
-	public static void removeEntry(CacheName cacheName, CoreEntityKeyIntf key) {
+	public static void removeEntry(CacheName cacheName, CacheKeyIntf key) {
 		
 		cache.getRemoteCache(cacheName).remove(key);
 	}
@@ -104,7 +105,7 @@ public class CacheUtils {
 	 * @param c the Class to get as
 	 * @return T
 	 */
-	public static <T> T getObject(CacheName cacheName, CoreEntityKeyIntf key, Class<T> c) {
+	public static <T> T getObject(CacheName cacheName, CacheKeyIntf key, Class<T> c) {
 
 		log.debug("Cache Realm is " + cacheName.cacheName);
 
@@ -127,7 +128,7 @@ public class CacheUtils {
 	 * @param t the Type to get as
 	 * @return T
 	 */
-	public static <T> T getObject(CacheName cacheName, CoreEntityKeyIntf key, Type t) {
+	public static <T> T getObject(CacheName cacheName, CacheKeyIntf key, Type t) {
 
 		String data = (String) readCache(cacheName, key);
 		if (data == null) {
@@ -141,10 +142,10 @@ public class CacheUtils {
 	 * Put an object into the cache.
 	 *
 	 * @param realm the realm to put object into
-	 * @param key the {@link CoreEntityKeyIntf} to put object under
+	 * @param key the {@link CacheKeyIntf} to put object under
 	 * @param obj the obj to put
 	 */
-	public static void putObject(CacheName cacheName, CoreEntityKeyIntf key, Object obj) {
+	public static void putObject(CacheName cacheName, CacheKeyIntf key, Object obj) {
 
 		String json = jsonb.toJson(obj);
 		cache.getRemoteCache(cacheName).put(key, json);
@@ -157,7 +158,7 @@ public class CacheUtils {
 	* @param key The key they item is saved against
 	* @return The CoreEntity returned
 	 */
-	public static CoreEntity getEntity(CacheName cacheName, CoreEntityKeyIntf key) {
+	public static CoreEntity getEntity(CacheName cacheName, CacheKeyIntf key) {
 		return cache.getEntityFromCache(cacheName, key);
 	}
 
@@ -180,7 +181,7 @@ public class CacheUtils {
 	* @param entity The CoreEntity to save
 	* @return The CoreEntity being saved
 	 */
-	public static CoreEntity saveEntity(CacheName cacheName, CoreEntityKeyIntf key, CoreEntity entity) {
+	public static CoreEntity saveEntity(CacheName cacheName, CacheKeyIntf key, CoreEntity entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 
@@ -189,16 +190,17 @@ public class CacheUtils {
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @param productCode - the productCode to fetch the entities for. Will fetch all entities with prefix if this is null 
-	 * @param callback - Callback to construct a {@link CoreEntityKeyIntf} for cache retrieval
+	 * @param callback - Callback to construct a {@link CacheKeyIntf} for cache retrieval
 	 * @return a list of core entities with matching prefixes
 	 * 
-	 * See Also: {@link CoreEntityKeyIntf}, {@link FICacheKeyCallback}
+	 * See Also: {@link CacheKeyIntf}, {@link FICacheKeyCallback}
 	 */
 	static List<CoreEntity> getEntitiesByPrefix(CacheName cacheName, String productCode, String prefix) {
 		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
 		.entrySet().stream()
-		.map((Map.Entry<CoreEntityKeyIntf, String> entry) -> {
-			CoreEntityKeyIntf currentKey = entry.getKey();
+		.filter((Map.Entry<CacheKeyIntf, String> entry) -> entry instanceof CoreEntityKey)
+		.map((Map.Entry<CacheKeyIntf, String> entry) -> {
+			CoreEntityKey currentKey = (CoreEntityKey)entry.getKey();
 			
 			// If a realm check is in place, filter by realm
 			if(productCode != null) {
@@ -225,7 +227,7 @@ public class CacheUtils {
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
 	 * 
-	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKeyIntf#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
+	 * See Also: {@link BaseEntityKey}, {@link CacheKeyIntf#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
 	public static List<BaseEntity> getBaseEntitiesByPrefix(String prefix) {
 		return getEntitiesByPrefix(CacheName.BASEENTITY, prefix).stream()

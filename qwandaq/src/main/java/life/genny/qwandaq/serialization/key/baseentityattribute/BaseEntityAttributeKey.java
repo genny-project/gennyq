@@ -1,6 +1,6 @@
 package life.genny.qwandaq.serialization.key.baseentityattribute;
 
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.serialization.common.key.core.CoreEntityKey;
 
 public class BaseEntityAttributeKey extends CoreEntityKey {
 
@@ -18,30 +18,19 @@ public class BaseEntityAttributeKey extends CoreEntityKey {
     }
 
     @Override
-    public String getKeyString() {
-        return productCode + getDelimiter() + getBaseEntityCode() + getDelimiter() + getAttributeCode();
-    }
-
-    @Override
     public BaseEntityAttributeKey fromKey(String key) {
         String[] components = key.split(getDelimiter());
         return new BaseEntityAttributeKey(components[0], components[1], components[2]);
     }
-
-    public String getEntityCode() {
-        return baseEntityCode;
+    
+    // Getters and Setters
+    public String getAttributeCode() {
+        return this.attributeCode;
     }
 
     @Override
-    public String toString() {
-        return getKeyString();
-    }
-    
-    // Getters and Setters
-    public String getBaseEntityCode() {
-        return this.baseEntityCode;
-    }
-    public String getAttributeCode() {
-        return this.attributeCode;
+    //TODO: Think about this some more
+    public String getEntityCode() {
+        return baseEntityCode + getDelimiter() + attributeCode;
     }
 }
