@@ -129,10 +129,7 @@ public class Cache {
 		JsonObjectBuilder responseJsonBuilder = Json.createObjectBuilder();
 
 		if(cacheName == null) {
-			JsonObject responseJson = responseJsonBuilder
-				.add("details", "Could not find cache " + cacheNameStr.toUpperCase())
-				.build();
-			return Response.status(Status.NOT_FOUND).entity(responseJson).build();
+			return Response.status(Status.NOT_FOUND).entity( "Could not find cache " + cacheNameStr.toUpperCase()).build();
 		}
 
 		CacheKey cacheKey = new CacheKey(productCode, key);
