@@ -14,11 +14,13 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -50,9 +52,9 @@ public class FrontendService {
 	 * Get asks using a question code, for a given source and target.
 	 *
 	 * @param questionCode The question code used to fetch asks
-	 * @param sourceCode The code of the source entity
-	 * @param targetCode The code of the target entity
-	 * @param processId The processId to set in the asks
+	 * @param sourceCode   The code of the source entity
+	 * @param targetCode   The code of the target entity
+	 * @param processId    The processId to set in the asks
 	 * @return The ask message
 	 */
 	public String getAsks(String questionCode, String sourceCode, String targetCode, String processId) {
@@ -96,8 +98,9 @@ public class FrontendService {
 		// put targetCode in cache
 		// NOTE: This is mainly only necessary for initial dropdown items
 		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
-		
-		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
+
+		CacheKey key = new CacheKey(userToken.getProductCode(), processId + ":TARGET_CODE");
+		CacheUtils.putObject(CacheName.METADATA, key, targetCode);
 
 		return jsonb.toJson(msg);
 	}
@@ -105,7 +108,7 @@ public class FrontendService {
 	/**
 	 * Setup the process entity used to store task data.
 	 *
-	 * @param targetCode The code of the target entity
+	 * @param targetCode     The code of the target entity
 	 * @param askMessageJson The ask message to use in setup
 	 * @return The updated process entity
 	 */
@@ -120,7 +123,7 @@ public class FrontendService {
 
 		// init entity and force the realm
 		log.info("Creating Process Entity...");
-		BaseEntity processBE = new BaseEntity("QBE_"+targetCode.substring(4), "QuestionBE");
+		BaseEntity processBE = new BaseEntity("QBE_" + targetCode.substring(4), "QuestionBE");
 		processBE.setRealm(userToken.getProductCode());
 
 		// only copy the entityAttributes used in the Asks
@@ -160,7 +163,7 @@ public class FrontendService {
 	/**
 	 * Update the ask target to match the process entity code.
 	 *
-	 * @param processBEJson The json of the process entity
+	 * @param processBEJson  The json of the process entity
 	 * @param askMessageJson The ask message to use in setup
 	 * @return The updated ask message
 	 */
@@ -187,7 +190,7 @@ public class FrontendService {
 	/**
 	 * Recursively update the ask target.
 	 *
-	 * @param ask The ask to traverse
+	 * @param ask    The ask to traverse
 	 * @param target The target entity to set
 	 */
 	public void recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
@@ -203,20 +206,20 @@ public class FrontendService {
 	}
 
 	/**
-	 * Send a baseentity after filtering the entity attributes 
+	 * Send a baseentity after filtering the entity attributes
 	 * based on the questions in the ask message.
 	 *
-	 * @param code The code of the baseentity to send
+	 * @param code   The code of the baseentity to send
 	 * @param askMsg The ask message used to filter attributes
 	 */
 	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
 
 		BaseEntity processBE = null;
-		
+
 		try {
 			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		} catch (java.lang.NullPointerException e) {
-			log.error("Process Entity json must not be null or have null entry! ->"+processBEJson);
+			log.error("Process Entity json must not be null or have null entry! ->" + processBEJson);
 			return;
 
 		}
@@ -262,8 +265,8 @@ public class FrontendService {
 	 * Recursively traverse the ask to find any already selected dropdown
 	 * items to send, and trigger dropdown searches.
 	 *
-	 * @param ask The Ask to traverse
-	 * @param target The target entity used in processing
+	 * @param ask      The Ask to traverse
+	 * @param target   The target entity used in processing
 	 * @param rootCode The code of the root question used in sending DD messages
 	 */
 	public void recuresivelyFindAndSendDropdownItems(Ask ask, BaseEntity target, String rootCode) {
@@ -298,17 +301,17 @@ public class FrontendService {
 
 			// trigger dropdown search in dropkick
 			JsonObject json = Json.createObjectBuilder()
-				.add("event_type", "DD")
-				.add("data", Json.createObjectBuilder()
-					.add("parentCode", rootCode)
-					.add("questionCode", question.getCode())
-					.add("sourceCode", ask.getSourceCode())
-					.add("targetCode", ask.getTargetCode())
-					.add("value", "")
-					.add("processId", ask.getProcessId()))
-				.add("attributeCode", attribute.getCode())
-				.add("token", userToken.getToken())
-				.build();
+					.add("event_type", "DD")
+					.add("data", Json.createObjectBuilder()
+							.add("parentCode", rootCode)
+							.add("questionCode", question.getCode())
+							.add("sourceCode", ask.getSourceCode())
+							.add("targetCode", ask.getTargetCode())
+							.add("value", "")
+							.add("processId", ask.getProcessId()))
+					.add("attributeCode", attribute.getCode())
+					.add("token", userToken.getToken())
+					.build();
 
 			KafkaUtils.writeMsg("events", json.toString());
 		}
@@ -358,16 +361,15 @@ public class FrontendService {
 		recursivelyHandleDropdownAttributes(ask, target, msg);
 		msg.setTag("SendDropDownItems");
 
-
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	/**
 	 * Recursively traverse the asks and add any entity selections to the msg.
 	 *
-	 * @param ask The ask to traverse
+	 * @param ask    The ask to traverse
 	 * @param target The target entity used in finding values
-	 * @param ask The msg to add entities to
+	 * @param ask    The msg to add entities to
 	 */
 	public void recursivelyHandleDropdownAttributes(Ask ask, BaseEntity target, QDataBaseEntityMessage msg) {
 

@@ -11,9 +11,11 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -36,15 +38,15 @@ public class PcmService {
         log.info("Replacing " + loc + " with " + newValue);
 
         String cachedCode = userToken.getJTI() + ":" + pcmCode;
+        BaseEntityKey beKey = new BaseEntityKey(userToken.getProductCode(), cachedCode);
 
-        BaseEntity pcm = CacheUtils.getObject(userToken.getProductCode(), cachedCode, BaseEntity.class);
+        BaseEntity pcm = CacheUtils.getObject(CacheName.BASEENTITY, beKey, BaseEntity.class);
 
         if (pcm == null) {
             log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
             pcm = beUtils.getBaseEntityByCode(userToken.getProductCode(), pcmCode);
         }
 
-       
         if (pcm == null) {
             log.error("Couldn't find PCM with code " + pcmCode);
             throw new NullPointerException("Couldn't find PCM with code " + pcmCode);
@@ -81,7 +83,7 @@ public class PcmService {
 
         KafkaUtils.writeMsg("webdata", msg);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
+        CacheUtils.putObject(CacheName.BASEENTITY, beKey, pcm);
     }
 
 }

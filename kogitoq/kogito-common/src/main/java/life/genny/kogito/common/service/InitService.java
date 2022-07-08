@@ -6,12 +6,14 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -87,12 +89,14 @@ public class InitService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		Integer TOTAL_PAGES = CacheUtils.getObject(productCode, "ATTRIBUTE_PAGES", Integer.class);
+		CacheKey attributePagesKey = new CacheKey(productCode, "ATTRIBUTE_PAGES");
+		Integer TOTAL_PAGES = CacheUtils.getObject(CacheName.ATTRIBUTE, attributePagesKey, Integer.class);
 
 		for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
-			QDataAttributeMessage msg = CacheUtils.getObject(productCode,
-					"ATTRIBUTES_P" + currentPage, QDataAttributeMessage.class);
+			CacheKey attributePageKey = new CacheKey(productCode, "ATTRIBUTES_P" + currentPage);
+			QDataAttributeMessage msg = CacheUtils.getObject(CacheName.ATTRIBUTE, attributePageKey,
+					QDataAttributeMessage.class);
 
 			// set token and send
 			msg.setToken(userToken.getToken());
@@ -123,7 +127,7 @@ public class InitService {
 			log.info("No PCMs found for " + productCode);
 			return;
 		}
-		log.info("Sending "+pcms.size()+" PCMs");
+		log.info("Sending " + pcms.size() + " PCMs");
 
 		// configure ask msg
 		QDataAskMessage askMsg = new QDataAskMessage();

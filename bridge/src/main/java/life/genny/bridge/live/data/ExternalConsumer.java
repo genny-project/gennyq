@@ -17,6 +17,8 @@ import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.constants.CacheName;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
@@ -134,7 +136,8 @@ public class ExternalConsumer {
 
 		if (gennyToken.hasRole("test")) {
 			log.info("Saving token -> Key: TOKEN:" + gennyToken.getUserCode() + ", Value: " + gennyToken.getToken());
-			CacheUtils.writeCache(gennyToken.getProductCode(), "TOKEN:"+gennyToken.getUserCode(), gennyToken.getToken());
+			CacheKey key = new CacheKey(gennyToken.getProductCode(), "TOKEN:"+gennyToken.getUserCode());
+			CacheUtils.writeCache(CacheName.METADATA, key, gennyToken.getToken());
 		}
 
 		routeDataByMessageType(rawMessageBody.getJsonObject("data"), gennyToken);

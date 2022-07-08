@@ -17,6 +17,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -24,10 +25,12 @@ import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.Question;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -61,6 +64,44 @@ public class Cache {
 	@Inject
 	DatabaseUtils databaseUtils;
 
+	// New endpoints:
+	// Update (notify on update)
+	// Read
+	// Delete
+
+	@GET
+	@Path("/{cacheName}/{productCode}/{key}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response readKey(@PathParam("cacheName") String cacheNameStr, @PathParam("productCode") String productCode, @PathParam("key") String key) {
+		CacheName cacheName = CacheName.getCacheName(cacheNameStr);
+
+		JsonObject responseJson;
+
+		if(cacheName == null) {
+			responseJson = Json.createObjectBuilder()
+				.add("status", "error")
+				.add("details", "Could not find cache " + cacheNameStr.toUpperCase())
+				.build();
+			return Response.status(Status.NOT_FOUND).entity(responseJson).build();
+		}
+		CacheKey cacheKey = new CacheKey(productCode, key);
+		String cachedItem = CacheUtils.getObject(cacheName, cacheKey, String.class);
+
+		if(cachedItem == null) {
+			responseJson = Json.createObjectBuilder()
+				.add("status", "error")
+				.add("details", Json.createObjectBuilder()
+						.add("message", "could not find item in cache")
+						.add("cache", cacheNameStr.toUpperCase())
+						.add("key", cacheKey.getFullKeyString())
+						.build()
+				)
+				.build();
+			return Response.status(Status.NOT_FOUND).entity(responseJson).build();
+		}
+		return Response.status(Status.OK).entity(cachedItem).build();
+	}
+
 	/**
 	 * Read an item from the cache and return in json status format.
 	 *
@@ -70,7 +111,7 @@ public class Cache {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{productCode}/{key}/json")
+	@Path("old/{productCode}/{key}/json")
 	public Response readProductCodeKeyJson(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 
 		Response res = readProductCodeKey(productCode, key);
@@ -122,7 +163,7 @@ public class Cache {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{productCode}/{key}")
+	@Path("old/{productCode}/{key}")
 	public Response readProductCodeKey(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 
 		//log.info("[!] read(" + productCode + ":" + key + ")");
@@ -244,7 +285,7 @@ public class Cache {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{productCode}/{key}")
+	@Path("old/{productCode}/{key}")
 	public Response write(@PathParam("productCode") String productCode, @PathParam("key") String key, String value) {
 
 		if (value != null) {
@@ -269,10 +310,11 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+			CacheUtils.saveEntity(CacheName.BASEENTITY,
 					baseEntityKey, entity);
 		} else {
-			CacheUtils.writeCache(productCode, key, value);
+			CacheKey cacheKey = new CacheKey(productCode, key);
+			CacheUtils.writeCache(CacheName.GENERIC, cacheKey, value);
 		}
 		log.info("Wrote json of length " + value.length() + " for " + key);
 
@@ -282,7 +324,7 @@ public class Cache {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{productCode}/{key}/savenull")
+	@Path("old/{productCode}/{key}/savenull")
 	public Response writeNull(@PathParam("productCode") String productCode, @PathParam("key") String key) {
 
 	
@@ -311,8 +353,8 @@ public class Cache {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{key}")
-	public Response read(@PathParam("key") String key) {
+	@Path("old/{cacheName}/{key}")
+	public Response read(@PathParam("cacheName") String cacheName, @PathParam("key") String key) {
 
 		log.info("[!] read(" + key + ")");
 
@@ -340,7 +382,7 @@ public class Cache {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{key}")
+	@Path("old/{key}")
 	public Response write(@PathParam("key") String key, String value) {
 
 		log.info("Writing to cache " + userToken.getProductCode() + ": [" + key + ":" + value + "]");
@@ -356,7 +398,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+			CacheUtils.saveEntity(CacheName.BASEENTITY,
 					baseEntityKey, entity);
 		} else {
 			CacheUtils.writeCache(productCode, key, value);
@@ -370,33 +412,34 @@ public class Cache {
 	
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{key}")
-	public Response remove(@PathParam("key") String key) {
+	@Path("old/{cacheName}/{key}")
+	public Response deleteUsingTokenProdctCode(@PathParam("cacheName") String cacheName, @PathParam("key") String key) {
 
-		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
-		}
+		// if (userToken == null) {
+		// 	return Response.status(Response.Status.BAD_REQUEST)
+		// 			.entity(HttpUtils.error("Not authorized to make this request")).build();
+		// }
+
+		// CacheUtils.removeEntry(productCode, key);
+
+		// log.info("Removed Item for " + key);
 
 		String productCode = userToken.getProductCode();
-		CacheUtils.removeEntry(productCode, key);
-
-		log.info("Removed Item for " + key);
-
-		return Response.ok().build();
+		return delete(cacheName, productCode, key);
 	}
 
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{productCode}/{key}")
-	public Response delete(@PathParam("productCode") String productCode, @PathParam("key") String key) {
+	@Path("old/{cacheName}/{productCode}/{key}")
+	public Response delete(@PathParam("cacheName") String cacheNameStr, @PathParam("productCode") String productCode, @PathParam("key") String key) {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
-
-		CacheUtils.removeEntry(productCode, key);
+		CacheName cacheName = CacheName.getCacheName(cacheNameStr);
+		CacheKey cacheKey = new CacheKey(productCode, key);
+		CacheUtils.removeEntry(cacheName, cacheKey);
 
 		log.info("Removed Item for " + key);
 

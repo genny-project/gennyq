@@ -36,6 +36,7 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.QEntityAttribute;
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
@@ -46,6 +47,7 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -153,7 +155,8 @@ public class SearchUtility {
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				SearchEntity combinedSearch = CacheUtils.getObject(userToken.getProductCode(), combinedSearchCode,
+				CacheKey cacheKey = new CacheKey(userToken.getProductCode(), combinedSearchCode);
+				SearchEntity combinedSearch = CacheUtils.getObject(CacheName.METADATA, cacheKey,
 						SearchEntity.class);
 
 				Long subTotal = performCount(combinedSearch);
@@ -205,7 +208,8 @@ public class SearchUtility {
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				SearchEntity combinedSearch = CacheUtils.getObject(userToken.getProductCode(), combinedSearchCode,
+				CacheKey cacheKey = new CacheKey(userToken.getProductCode(), combinedSearchCode);
+				SearchEntity combinedSearch = CacheUtils.getObject(CacheName.METADATA, cacheKey,
 						SearchEntity.class);
 				Long subTotal = performCount(combinedSearch);
 				if (subTotal != null) {
