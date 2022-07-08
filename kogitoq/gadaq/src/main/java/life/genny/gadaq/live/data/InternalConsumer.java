@@ -197,6 +197,7 @@ public class InternalConsumer {
 		session.insert(jsonb);
 		session.insert(userToken);
 		session.insert(beUtils);
+		session.insert(defUtils);
 		session.insert(msg);
 
 		try {
