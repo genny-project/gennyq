@@ -28,7 +28,7 @@ export GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD=password
 export GENNY_INFINISPAN_CLIENT_AUTH_USERNAME=genny
 export GENNY_INFINISPAN_CLIENT_SERVER_LIST=${gennyhost}:11222
 export GENNY_INFINISPAN_CLIENT_USE_AUTH="true"
-export KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
+export KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:${DATAINDEX_PORT}
 export KOGITO_DATAINDEX_WS_URL=ws://${rawhost}:8582
 export GENNY_KOGITO_JOBSERVICE_URL=${gennyhost}:8581
 export QUARKUS_INFINISPAN_CLIENT_AUTH_PASSWORD=password
@@ -43,7 +43,7 @@ export QUARKUS_OIDC_CLIENT_ID=${GENNY_CLIENT_ID}
 export QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE=BASIC
 export INFINISPAN_CLIENT_HOTROD_SERVER_LIST=alyson.genny.life:11222
 export INFINISPAN_CLIENT_HOTROD_CLIENT_INTELLIGENCE=BASIC
-export FYODOR_SERVICE_API=http://alyson.genny.life:4242
+export FYODOR_SERVICE_API=http://alyson.genny.life:${FYODOR_PORT}
 #export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 #export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 export FULL_MYSQL_URL=jdbc:mysql://alyson.genny.life:3310/gennydb?allowPublicKeyRetrieval=true&syscharacterEncoding=utf8mb4&useSSL=FALSE&serverTimezone=UTC&rewriteBatchedStatements=true
