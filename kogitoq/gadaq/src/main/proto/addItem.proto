@@ -1,0 +1,24 @@
+syntax = "proto2"; 
+package life.genny.gadaq.addItem; 
+import "kogito-index.proto";
+import "kogito-types.proto";
+option kogito_model = "AddItem";
+option kogito_id = "addItem";
+
+/* @Indexed */ 
+message AddItem { 
+	option java_package = "life.genny.gadaq";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input,required") */ 
+	optional string definitionCode = 1; 
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
+	optional string id = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string prefix = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string workflow = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 5; 
+}

@@ -9,7 +9,7 @@ echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 
-#source ~/.genny/.env
+source ../../../genny-main/services_ports.env 
 
 #export PRODUCT_CODES=${PRODUCT_CODES}
 export GENNY_SHOW_VALUES="TRUE"
@@ -63,5 +63,10 @@ echo "genny data-index http $GENNY_KOGITO_DATAINDEX_HTTP_URL"
 echo "genny data-index ws $GENNY_KOGITO_DATAINDEX_WS_URL"
 echo "jobservice $GENNY_KOGITO_JOBSERVICE_URL"
 echo "kogito service $GENNY_KOGITO_SERVICE_URL"
+
+mkdir -p ../kogito-common/src/main/proto
+cp ../kogito-common/target/classes/META-INF/resources/persistence/protobuf/* ../kogito-common/src/main/proto/
+cp target/classes/META-INF/resources/persistence/protobuf/* src/main/proto/
+
 ./mvnw clean  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 
