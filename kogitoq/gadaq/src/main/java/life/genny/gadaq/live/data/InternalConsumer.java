@@ -25,7 +25,6 @@ import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -53,9 +52,6 @@ public class InternalConsumer {
 
 	@Inject
 	KogitoUtils kogitoUtils;
-
-	@Inject
-	SearchUtils searchUtils;
 
 	@Inject
 	DefUtils defUtils;
@@ -200,7 +196,6 @@ public class InternalConsumer {
 		session.insert(kogitoUtils);
 		session.insert(jsonb);
 		session.insert(userToken);
-		session.insert(searchUtils);
 		session.insert(beUtils);
 		session.insert(msg);
 

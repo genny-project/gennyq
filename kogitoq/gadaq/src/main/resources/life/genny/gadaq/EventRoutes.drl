@@ -2,14 +2,11 @@ package life.genny.gadaq;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
@@ -100,6 +97,15 @@ then
 	String processId = gqlUtils.fetchProcessId("personLifecycle", "entityCode", msg.getData().getTargetCode());
 	System.out.println("PID = " + processId);
 	kogitoUtils.sendSignal("personLifecycle", processId, "update_summary", "summary", msg.getData().getParentCode());
+	retract(msg);
+end
+
+rule RouteTreeItems 
+when
+	msg: QEventMessage( data.code matches "QUE_TREE_ITEM_.*" )
+	kogitoUtils : KogitoUtils()
+then
+	kogitoUtils.triggerWorkflow("view", "eventMessage", msg);
 	retract(msg);
 end
 
