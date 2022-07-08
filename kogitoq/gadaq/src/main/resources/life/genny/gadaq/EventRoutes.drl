@@ -75,10 +75,10 @@ then
 
 	System.out.println("Prefix = " + prefix);
 
-	/* NOTE: This is very very temporary */
-	if (!"DEF_TENANT".equals(code) && !"DEF_ADMIN".equals(code) && !"PER".equals(prefix)) {
-		return;
-	}
+	/* /1* NOTE: This is very very temporary *1/ */
+	/* if (!"DEF_TENANT".equals(code) && !"DEF_ADMIN".equals(code) && !"PER".equals(prefix)) { */
+	/* 	return; */
+	/* } */
 
 	JsonObject json = Json.createObjectBuilder()
 		.add("definitionCode", "DEF_"+code)
