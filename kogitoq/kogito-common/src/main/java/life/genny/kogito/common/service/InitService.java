@@ -125,7 +125,6 @@ public class InitService {
 
 		// get pcms using search
 		SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
-				.addSort("PRI_CREATED", "Created", SearchEntity.Sort.ASC)
 				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PCM_%")
 				.addColumn("*", "All Columns");
 
@@ -144,15 +143,15 @@ public class InitService {
 		askMsg.setAliasCode("PCM_INIT_ASK_MESSAGE");
 
 		for (BaseEntity pcm : pcms) {
+			log.info("Processing " + pcm.getCode());
 			String questionCode = pcm.getValue("PRI_QUESTION_CODE", null);
 			if (questionCode == null) {
-				log.warn("PCM (" + pcm.getName() + ", " + pcm.getCode() + ") got null PRI_QUESTION_CODE");
+				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") null PRI_QUESTION_CODE");
 				continue;
 			}
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, user);
 			if (ask == null) {
-				log.warn("PCM (" + pcm.getName() + ", " + pcm.getCode() + ") got null ask from PRI_QUESTION_CODE: "
-						+ questionCode);
+				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + questionCode);
 				continue;
 			}
 			askMsg.add(ask);
