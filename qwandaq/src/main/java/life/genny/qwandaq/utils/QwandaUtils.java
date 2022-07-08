@@ -398,6 +398,7 @@ public class QwandaUtils {
 	 *
 	 * @param ask The ask to traverse
 	 * @param disabled Should the submit ask be disabled
+	 * @return The supplied ask to traverse
 	 */
 	public Ask recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
 

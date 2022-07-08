@@ -26,8 +26,8 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.key.BaseEntityAttributeKey;
 import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.key.baseentityattribute.BaseEntityAttributeKey;
 
 /*
  * A non-static utility class for managing roles and capabilities.

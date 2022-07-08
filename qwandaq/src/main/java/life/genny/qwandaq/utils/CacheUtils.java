@@ -44,9 +44,9 @@ public class CacheUtils {
 	}
 
 	/**
-	* Clear a remote realm cache
+	* Clear a remote cache
 	*
-	* @param realm The realm of the cache to clear
+	* @param cacheName The {@link CacheName} of the cache to clear
 	 */
 	public static void clear(CacheName cacheName) {
 
@@ -54,9 +54,9 @@ public class CacheUtils {
 	}
 
 	/**
-	 * Read a stringified item from a realm cache.
+	 * Read a stringified item from a remote cache.
 	 *
-	 * @param realm the realm to read from
+	 * @param cacheName the {@link CacheName} of the cache to read from
 	 * @param key the key to read
 	 * @return Object
 	 */
@@ -69,7 +69,7 @@ public class CacheUtils {
 	/**
 	 * Write a stringified item to a realm cache.
 	 *
-	 * @param realm The realm cache to use.
+	 * @param cacheName The {@link CacheName} of the cache to use.
 	 * @param key   The key to save under.
 	 * @param value The value to save.
 	 * 
@@ -86,9 +86,9 @@ public class CacheUtils {
 	}
 
 	/**
-	* Remove an entry from a realm cache.
+	* Remove an entry from a cache.
 	*
-	* @param realm The realm cache to remove from.
+	* @param cacheName The {@link CacheName} of the cache to remove from.
 	* @param key The key of the entry to remove.
 	 */
 	public static void removeEntry(CacheName cacheName, CacheKeyIntf key) {
@@ -97,10 +97,10 @@ public class CacheUtils {
 	}
 
 	/**
-	 * Get an object from a realm cache using a {@link Class}.
+	 * Get an object from a cache using a {@link Class}.
 	 *
 	 * @param <T> the Type to cast as
-	 * @param realm the realm to get from
+	 * @param cacheName the {@link CacheName} to get from
 	 * @param key the key to get
 	 * @param c the Class to get as
 	 * @return T
@@ -120,10 +120,10 @@ public class CacheUtils {
 	}
 
 	/**
-	 * Get an object from a realm cache using a {@link Type}.
+	 * Get an object from a cache using a {@link Type}.
 	 *
 	 * @param <T> the Type to cast as
-	 * @param realm the realm to get from
+	 * @param cacheName the {@link CacheName} cache to get from
 	 * @param key the key to get
 	 * @param t the Type to get as
 	 * @return T
@@ -141,7 +141,7 @@ public class CacheUtils {
 	/**
 	 * Put an object into the cache.
 	 *
-	 * @param realm the realm to put object into
+	 * @param cacheName the {@link CacheName} to put object into
 	 * @param key the {@link CacheKeyIntf} to put object under
 	 * @param obj the obj to put
 	 */
@@ -164,8 +164,6 @@ public class CacheUtils {
 
 	/**
 	* Get a CoreEntity object from the cache using a CoreEntityKey.
-	* 
-	* @param cacheName The cache to read from
 	* @param key The key they item is saved against
 	* @return The CoreEntity returned
 	 */
@@ -223,7 +221,6 @@ public class CacheUtils {
 
 	/**
 	 * Get a list of {@link BaseEntity}s from cache for ALL product codes by prefix.
-	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
 	 * 

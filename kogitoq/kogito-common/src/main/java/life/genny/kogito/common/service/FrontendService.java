@@ -96,6 +96,7 @@ public class FrontendService {
 		// put targetCode in cache
 		// NOTE: This is mainly only necessary for initial dropdown items
 		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
+		
 		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
 
 		return jsonb.toJson(msg);

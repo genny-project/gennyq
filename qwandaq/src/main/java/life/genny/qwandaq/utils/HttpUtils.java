@@ -183,7 +183,7 @@ public class HttpUtils {
 	 * @param uri   The target URI of the request.
 	 * @param token The token to use in authorization.
 	 * @return The returned response object.
-	 * @deprecated since 10.1.0 because it is not token-safe, use {@link HttpUtils#post(String, GennyToken)} instead
+	 * @deprecated since 10.1.0 because it is not token-safe, use {@link HttpUtils#get(String, GennyToken)} instead
 	 */
 	@Deprecated
 	public static HttpResponse<String> get(String uri, String token) {
