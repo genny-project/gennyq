@@ -52,9 +52,9 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
 @ApplicationScoped
-public class SearchUtility {
+public class FyodorSearch {
 
-	private static final Logger log = Logger.getLogger(SearchUtility.class);
+	private static final Logger log = Logger.getLogger(FyodorSearch.class);
 
 	@Inject
 	EntityManager entityManager;
@@ -1054,6 +1054,12 @@ public class SearchUtility {
 				EntityAttribute code = new EntityAttribute(be, codeAttr, 1.0);
 				code.setValueString(be.getCode());
 				be.addAttribute(code);
+			}
+			if (allowed.contains("PRI_NAME")) {
+				Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
+				EntityAttribute name = new EntityAttribute(be, nameAttr, 1.0);
+				name.setValueString(be.getName());
+				be.addAttribute(name);
 			}
 		} catch (BadDataException e) {
 			log.error("could not add special attributes to entity");

@@ -14,7 +14,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
-import life.genny.fyodor.utils.SearchUtility;
+import life.genny.fyodor.utils.FyodorSearch;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.message.QBulkMessage;
@@ -40,7 +40,7 @@ public class InternalConsumer {
 	UserToken userToken;
 
 	@Inject
-	SearchUtility search;
+	FyodorSearch search;
 
     void onStart(@Observes StartupEvent ev) {
 

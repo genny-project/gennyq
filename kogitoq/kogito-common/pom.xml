@@ -236,6 +236,25 @@
         </executions>
       </plugin>
 
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven.compiler.version}</version>
+				<configuration>
+					<annotationProcessorPaths>
+						<!-- <annotationProcessorPath> -->
+						<!-- 	<groupId>org.hibernate</groupId> -->
+						<!-- 	<artifactId>hibernate-jpamodelgen</artifactId> -->
+						<!-- 	<version>${hibernate.version}</version> -->
+						<!-- </annotationProcessorPath> -->
+						<annotationProcessorPath>
+							<groupId>io.quarkus</groupId>
+							<artifactId>quarkus-panache-common</artifactId>
+							<version>${quarkus.platform.version}</version>
+						</annotationProcessorPath>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+
     </plugins>
   </build>
 </project>

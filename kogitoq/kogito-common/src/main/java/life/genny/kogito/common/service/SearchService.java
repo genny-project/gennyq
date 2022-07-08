@@ -10,12 +10,18 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
@@ -34,33 +40,87 @@ public class SearchService {
 	@Inject
 	BaseEntityUtils beUtils;
 
-	public void sendSearch(String eventCode) {
+	@Inject
+	DefUtils defUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
+
+	/**
+	 * Perform a Detail View search.
+	 *
+	 * @param targetCode The code of the target to display
+	 */
+	public void sendTable(String eventCode) {
 
 		String searchCode = "SBE_"+StringUtils.removeStart(eventCode, "QUE_");
+		log.info("Sending Table :: " + searchCode);
+
 		searchUtils.searchTable(searchCode);
+		sendSearchPCM("PCM_TABLE", searchCode);
+	}
+
+	/**
+	 * Perform a Detail View search.
+	 *
+	 * @param targetCode The code of the target to display
+	 */
+	public void sendDetailView(String targetCode) {
+
+		// fetch target and find it's definition
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity definition = defUtils.getDEF(target);
+
+		// grab the corresponding detail view SBE
+		String searchCode = "SBE_" + StringUtils.removeStart(definition.getCode(), "DEF_");
+		log.info("Sending Detail View :: " + searchCode);
+
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), searchCode, SearchEntity.class);
+		searchEntity.addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, targetCode);
+
+		// perform the search
+		searchUtils.searchTable(searchEntity);
+		sendSearchPCM("PCM_DETAIL_VIEW", searchEntity.getCode());
+	}
+
+	/**
+	 * Perform a Bucket search.
+	 */
+	public void sendBuckets() {
+	}
+
+	/**
+	 * Send a search PCM with the correct search code.
+	 *
+	 * @param pcmCode The code of pcm to send
+	 * @param searchCode The code of the searhc to send
+	 */
+	public void sendSearchPCM(String pcmCode, String searchCode) {
 
 		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
-		try {
-            content.setValue("PRI_LOC1", "PCM_TABLE");
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
+		Attribute attribute = qwandaUtils.getAttribute("PRI_LOC1");
+		EntityAttribute ea = new EntityAttribute(content, attribute, 1.0, pcmCode);
 
-		BaseEntity table = beUtils.getBaseEntityByCode("PCM_TABLE");
 		try {
-            table.setValue("PRI_LOC1", searchCode);
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
+			content.addAttribute(ea);
+		} catch (BadDataException e) {
+			e.printStackTrace();
+		}
+
+		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
+		ea = new EntityAttribute(pcm, attribute, 1.0, searchCode);
+
+		try {
+			pcm.addAttribute(ea);
+		} catch (BadDataException e) {
+			e.printStackTrace();
+		}
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(content);
-		msg.add(table);
+		msg.add(pcm);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		KafkaUtils.writeMsg("webcmds", msg);
-	}
-
-	public void sendBuckets() {
 	}
 
 }

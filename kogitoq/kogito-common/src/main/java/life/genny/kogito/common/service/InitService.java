@@ -5,7 +5,6 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonArray;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -192,42 +191,22 @@ public class InitService {
 	public void sendOutstandingTasks() {
 
 		// we store the summary code in the persons lifecycle
-		String process = "ReceiveQuestionRequest";
-		String body = gqlUtils.queryTable(process, "sourceCode", userToken.getUserCode(), "id");
-
-		// unpack json
-		JsonObject bodyObj = jsonb.fromJson(body, JsonObject.class);
-		JsonObject dataObj = bodyObj.getJsonObject("data");
-		if (dataObj == null) {
-			log.error("No data field found");
-			return;
-		}
-		JsonArray arr = dataObj.getJsonArray(process);
-		if (arr == null || arr.isEmpty()) {
-			log.error("No " + process + " field found");
+		JsonArray array = gqlUtils.queryTable("ReceiveQuestionRequest", "sourceCode", userToken.getUserCode(), "id");
+		if (array == null || array.isEmpty()) {
+			log.error("No ReceiveQuestionRequest items found");
 			return;
 		}
 
-		String callProcessId = arr.getJsonObject(0).getString("id");
-
-		process = "ProcessInstances";
-		body = gqlUtils.queryTable(process, "parentProcessInstanceId", callProcessId, "id");
-
-		// unpack json
-		bodyObj = jsonb.fromJson(body, JsonObject.class);
-		dataObj = bodyObj.getJsonObject("data");
-		if (dataObj == null) {
-			log.error("No data field found");
-			return;
-		}
-		arr = dataObj.getJsonArray(process);
-		if (arr == null || arr.isEmpty()) {
-			log.error("No " + process + " field found");
+		// grab ProcessInstances with the parentId equal to this calling id
+		String callProcessId = array.getJsonObject(0).getString("id");
+		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id");
+		if (array == null || array.isEmpty()) {
+			log.error("No ProcessInstances items found");
 			return;
 		}
 
-		String processId = arr.getJsonObject(0).getString("id");
-
+		// force this workflow to re-ask the questions
+		String processId = array.getJsonObject(0).getString("id");
 		kogitoUtils.sendSignal("processQuestions", processId, "requestion", "");
 	}
 

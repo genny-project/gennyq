@@ -54,6 +54,9 @@ public class Service2Service {
 		scope.init(jsonb.toJson(data));
 	}
 
+	/**
+	 * Send a message to signify that an item's creation is complete
+	 */
 	public void sendItemComplete(String definitionCode, String entityCode) {
 
 		JsonObject json = Json.createObjectBuilder()
@@ -64,6 +67,24 @@ public class Service2Service {
 				.add("code", "ITEM_COMPLETE")
 				.add("parentCode", definitionCode)
 				.add("targetCode", entityCode))
+			.build();
+
+		KafkaUtils.writeMsg("genny_events", json.toString());
+	}
+
+	/**
+	 * Send a message to perform an update of a persons summary
+	 */
+	public void updateSummary(String personCode, String summaryCode) {
+
+		JsonObject json = Json.createObjectBuilder()
+			.add("event_type", "LIFECYCLE")
+			.add("msg_type", "EVT_MSG")
+			.add("token", userToken.getToken())
+			.add("data", Json.createObjectBuilder()
+				.add("code", "UPDATE_SUMMARY")
+				.add("parentCode", summaryCode)
+				.add("targetCode", personCode))
 			.build();
 
 		KafkaUtils.writeMsg("genny_events", json.toString());

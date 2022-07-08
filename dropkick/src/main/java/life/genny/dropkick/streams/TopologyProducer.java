@@ -212,21 +212,8 @@ public class TopologyProducer {
 			return targetCode;
 		}
 
-		String body = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
-
-		// unpack json
-		JsonObject bodyObj = jsonb.fromJson(body, JsonObject.class);
-		JsonObject dataObj = bodyObj.getJsonObject("data");
-		if (dataObj == null) {
-			log.error("No data field found");
-			return null;
-		}
-		JsonArray processInstances = dataObj.getJsonArray("ProcessInstances");
-		if (processInstances == null || processInstances.isEmpty()) {
-			log.error("No ProcessInstance field found");
-			return null;
-		}
-		JsonObject variables = jsonb.fromJson(processInstances.getJsonObject(0).getString("variables"), JsonObject.class);
+		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
 
 		// grab the targetCode from process questions variables
 		targetCode = variables.getString("targetCode");

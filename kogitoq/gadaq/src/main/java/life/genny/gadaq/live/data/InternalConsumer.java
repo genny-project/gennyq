@@ -1,31 +1,33 @@
 package life.genny.gadaq.live.data;
 
-import io.quarkus.runtime.StartupEvent;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieRuntimeBuilder;
+import org.kie.api.runtime.KieSession;
+
+import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.jboss.logging.Logger;
-import org.kie.api.runtime.KieRuntimeBuilder;
-import org.kie.api.runtime.KieSession;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -44,9 +46,6 @@ public class InternalConsumer {
 	GennyScopeInit scope;
 
 	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
 	UserToken userToken;
 
 	@Inject
@@ -59,7 +58,7 @@ public class InternalConsumer {
 	SearchUtils searchUtils;
 
 	@Inject
-	DatabaseUtils databaseUtils;
+	DefUtils defUtils;
 
 	@Inject
 	KieRuntimeBuilder kieRuntimeBuilder;
@@ -76,30 +75,13 @@ public class InternalConsumer {
 	}
 
 	/**
-	 * Fetch target baseentity from cache 'baseentity'
-	 * Add/Replace EntityAttribute value from answer
-	 * Push back the baseentity into 'baseentity' cache
-	 */
-	// TODO: Potentially removing this
-	@Blocking
-	@Incoming("answer")
-	public void fromAnswers(String payload) {
-		log.info("RECEIVED ANSWER :: " + payload);
-	}
-
-	/**
 	 * Consume incoming answers for inference
 	 */
 	@Incoming("valid_data")
 	@Blocking
 	public void getData(String data) {
+
 		Instant start = Instant.now();
-
-		if (data.contains("\"items\":[{}]")) {
-			log.info("Empty answer received");
-			return;
-		}
-
 		scope.init(data);
 
 		// check if event is a valid event
@@ -114,29 +96,22 @@ public class InternalConsumer {
 		}
 
 		if (msg.getItems().length == 0) {
-			log.info("No data to process!");
+			log.debug("Received empty answer message: " + data);
 			scope.destroy();
 			return;
 		}
 
-		Answer ans = msg.getItems()[0];
-		if (ans == null) {
-			log.info("No answer to process!");
-			scope.destroy();
-			return;
-		}
-
-		log.info("Received Data : " + data+", userToken="+userToken);
+		log.info("Received Data : " + data);
+		log.info("UserToken : " + userToken);
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
 		session.getAgenda().getAgendaGroup("Inference").setFocus();
 
 		session.insert(kogitoUtils);
+		session.insert(defUtils);
 		session.insert(beUtils);
-
 		session.insert(userToken);
-
 		insertAnswersFromMessage(session, msg);
 
 		// Infer data
@@ -172,6 +147,9 @@ public class InternalConsumer {
 		scope.destroy();
 	}
 
+	/**
+	 * Insert answers int the kie session from an answer message.
+	 */
 	private int insertAnswersFromMessage(KieSession session, QDataAnswerMessage message) {
 		int counter = 0; // deliberately counter instead of array.length
 		for(Answer answer : message.getItems()) {
@@ -193,10 +171,8 @@ public class InternalConsumer {
 	@Blocking
 	public void getEvent(String event) {
 
-		scope.init(event);
-
-	
 		Instant start = Instant.now();
+		scope.init(event);
 
 		// check if event is a valid event
 		QEventMessage msg = null;
@@ -211,8 +187,6 @@ public class InternalConsumer {
 
 		// If the event is a Dropdown then leave it for DropKick
 		if ("DD".equals(msg.getEvent_type())) {
-			log.info("Leaving event to DropKick");
-			//kogitoUtils.sendSignal("dropkick", "dropkick", "dropkick", event);
 			scope.destroy();
 			return;
 		}
@@ -224,7 +198,6 @@ public class InternalConsumer {
 		session.getAgenda().getAgendaGroup("EventRoutes").setFocus();
 
 		session.insert(kogitoUtils);
-		session.insert(beUtils);
 		session.insert(jsonb);
 		session.insert(userToken);
 		session.insert(searchUtils);

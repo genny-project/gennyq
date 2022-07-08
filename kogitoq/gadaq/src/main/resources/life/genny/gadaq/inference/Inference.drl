@@ -3,20 +3,36 @@ package life.genny.gadaq.inference;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.Answer;
+import org.apache.commons.lang3.text.WordUtils;
 
 ruleflow-group 'Inference'
 
-rule InferName 
+rule InferenceLog 
 when
 	answer: Answer()
-	userToken: UserToken()
-	kogitoUtils : KogitoUtils()
 then
 	String sourceCode = answer.getSourceCode();
 	String targetCode = answer.getTargetCode();
 	String attributeCode = answer.getAttributeCode();
 	String value = answer.getValue();
-
 	System.out.println("Inferring GENNYQ! Source Code: " + sourceCode + " Target Code: " + targetCode + " Attribute Code: " + attributeCode + " Value: " + value);
+end
+
+rule InferFirstName 
+when
+	answer: Answer( attributeCode == "PRI_FIRSTNAME" )
+	beUtils : BaseEntityUtils()
+then
+	/*
+	String firstName = answer.getValue().toLowerCase().trim();
+	firstName = WordUtils.capitalize(firstName);
+
+	String lastName = (String) beUtils.getBaseEntityValue(targetCode, "PRI_LASTNAME");
+	lastName = WordUtils.capitalize(lastName);
+	String name = firstName + " " + lastName;
+
+	Answer answer = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name)
+	insert(answer); */
 end

@@ -45,26 +45,19 @@ public class SummaryService {
 	@Inject
 	GraphQLUtils gqlUtils;
 
+	/**
+	 * Send the user's summary based on their lifecycle state.
+	 */
 	public void sendSummary() {
 
 		// we store the summary code in the persons lifecycle
-		String lifecycle = "PersonLifecycle";
-		String body = gqlUtils.queryTable(lifecycle, "entityCode", userToken.getUserCode(), "summary");
-
-		// unpack json
-		JsonObject bodyObj = jsonb.fromJson(body, JsonObject.class);
-		JsonObject dataObj = bodyObj.getJsonObject("data");
-		if (dataObj == null) {
-			log.error("No data field found");
-			return;
-		}
-		JsonArray tenantLifecycle = dataObj.getJsonArray(lifecycle);
-		if (tenantLifecycle == null || tenantLifecycle.isEmpty()) {
-			log.error("No " + lifecycle + " field found");
+		JsonArray array = gqlUtils.queryTable("PersonLifecycle", "entityCode", userToken.getUserCode(), "summary");
+		if (array == null || array.isEmpty()) {
+			log.error("No PersonLifecycle items found");
 			return;
 		}
 
-		String summaryCode = tenantLifecycle.getJsonObject(0).getString("summary");
+		String summaryCode = array.getJsonObject(0).getString("summary");
 
 		// fetch pcm and summary entities
 		BaseEntity summary = beUtils.getBaseEntityByCode("SUM_"+summaryCode);
@@ -84,7 +77,7 @@ public class SummaryService {
 		msg.setReplace(true);
 		KafkaUtils.writeMsg("webcmds", msg);
 
-		// fetch the asks for the summary
+		// fetch and send the asks for the summary
 		BaseEntity user = beUtils.getUserBaseEntity();
 		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_SUMMARY_"+summaryCode, user, summary);
 

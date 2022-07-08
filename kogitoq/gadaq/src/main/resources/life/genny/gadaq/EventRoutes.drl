@@ -1,22 +1,19 @@
 package life.genny.gadaq;
 
-import life.genny.qwandaq.message.QEventMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.UserToken;
-
-import org.apache.commons.lang3.StringUtils;
-import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.kogito.common.utils.KogitoUtils;
-
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
-import javax.json.bind.Jsonb;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+
+import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.GraphQLUtils;
+import life.genny.kogito.common.utils.KogitoUtils;
 
 ruleflow-group 'EventRoutes'
 
@@ -59,13 +56,31 @@ then
 	retract(msg);
 end
 
+rule RouteView 
+when
+	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" )
+	kogitoUtils : KogitoUtils()
+then
+	kogitoUtils.triggerWorkflow("view", "eventMessage", msg);
+	retract(msg);
+end
+
 rule RouteAddItem 
 when
 	msg: QEventMessage( data.code matches "QUE_ADD_.*" )
 	kogitoUtils : KogitoUtils()
 	userToken : UserToken()
+	defUtils : DefUtils()
 then
+	System.out.println("Routing Add Item!");
 	String code = StringUtils.removeStart(msg.getData().getCode(), "QUE_ADD_");
+	String prefix = defUtils.getDefPrefix(userToken.getProductCode(), "DEF_"+code);
+
+	System.out.println("Prefix = " + prefix);
+
+	if (!"PER".equals(prefix)) {
+		return;
+	}
 
 	JsonObject json = Json.createObjectBuilder()
 		.add("definitionCode", "DEF_"+code)
@@ -76,64 +91,17 @@ then
 	retract(msg);
 end
 
-rule RouteView 
+rule RouteUpdateSummary 
 when
-	msg: QEventMessage( data.code matches "QUE_.*_VIEW" )
+	msg: QEventMessage( data.code == "UPDATE_SUMMARY" )
 	kogitoUtils : KogitoUtils()
+	gqlUtils : GraphQLUtils()
 then
-	kogitoUtils.triggerWorkflow("view", "eventMessage", msg);
+	String processId = gqlUtils.fetchProcessId("personLifecycle", "entityCode", msg.getData().getTargetCode());
+	System.out.println("PID = " + processId);
+	kogitoUtils.sendSignal("personLifecycle", processId, "update_summary", "summary", msg.getData().getParentCode());
 	retract(msg);
 end
-
-rule QUE_TREE_ITEM_EDU_PROVIDERS 
-when
-	msg: QEventMessage( data.code == "QUE_TREE_ITEM_EDU_PROVIDERS" )
-	userToken: UserToken()
-	kogitoUtils : KogitoUtils()
-	searchUtils: SearchUtils();
-	beUtils: BaseEntityUtils();
-then
- 	String searchCode = "SBE_"+msg.getData().getCode().substring("QUE_TREE_ITEM_".length());
-	System.out.println("Triggering "+searchCode+" Table");
-
-
-	System.out.println(drools.getRule().getName() + " triggered");
-		String targetCode = msg.getData().getTargetCode();
-       
-
-		/* create SearchEntity if the cached version is null */
-
-		SearchEntity searchBE = null;
-		searchBE = new SearchEntity("SBE_INTERNS", "Intern Search")
-				.addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PER_%").addFilter("PRI_IS_INTERN", true)
-				.addColumn("PRI_CODE", "Code")
-				.addColumn("PRI_NAME", "Name");
-		
-		searchBE.setRealm(userToken.getProductCode());
-
-		searchBE.setPageStart(0);
-		Integer pageSize = 10;
-		searchBE.setPageSize(pageSize);
-		System.out.println(searchBE);
-
-		BaseEntity pcmCode = beUtils.getBaseEntityByCode("PCM_TABLE"); 
-
-	QDataBaseEntityMessage pcmMsg = new QDataBaseEntityMessage(pcmCode);
-	pcmMsg.setToken(userToken.getToken());
-	pcmMsg.setReplace(true);
-
-		KafkaUtils.writeMsg("webcmds", pcmMsg);
-		System.out.println("PCM CODE2: "+pcmCode);
-		
-		searchUtils.searchTable(searchBE);
-
-
-
-
-		retract(msg);
-end
-
 
 /**
  * If no route exists within gadaq, the message should be

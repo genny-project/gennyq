@@ -51,6 +51,10 @@ public class DefUtils {
 
 	public DefUtils() { }
 
+	public String getDefPrefix(String productCode, String definitionCode) {
+		return defPrefixMap.get(productCode).get(definitionCode);
+	}
+
 	/**
 	 * Initialize the in memory DEF store
 	 *
