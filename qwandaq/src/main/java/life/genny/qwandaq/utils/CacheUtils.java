@@ -103,7 +103,7 @@ public class CacheUtils {
 	 * @param cacheName the {@link CacheName} to get from
 	 * @param key the key to get
 	 * @param c the Class to get as
-	 * @return T
+	 * @return Object of type T or null if not found
 	 */
 	public static <T> T getObject(CacheName cacheName, CacheKeyIntf key, Class<T> c) {
 
