@@ -50,6 +50,16 @@ public class TopologyProducer {
 
 	private static final Logger log = Logger.getLogger(TopologyProducer.class);
 
+	class ProcessBeAndDef {
+		ProcessBeAndDef(BaseEntity be, String defCode) {
+			this.processBE = be;
+			this.defCode = defCode;
+		}
+
+		public BaseEntity processBE;
+		public String defCode;
+	}
+
 	@ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
 	Integer defaultDropDownSize;
 
@@ -161,10 +171,13 @@ public class TopologyProducer {
 		String processId = dataJson.getString("processId");
 
 		BaseEntity target = null;
+		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
 			// This means that the target should come from the graphql
-			target = fetchProcessInstanceProcessBE(processId);
+			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
+			target = processBeAndDef.processBE;
+			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
 		} else {
 
 			if (targetCode.startsWith("QBE_")) {
@@ -178,7 +191,9 @@ public class TopologyProducer {
 		}
 
 		// Find the DEF
-		BaseEntity defBE = defUtils.getDEF(target);
+		if (defBE != null) {
+			defBE = defUtils.getDEF(target);
+		}
 
 		// Check if attribute code exists as a SER for the DEF
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
@@ -236,8 +251,9 @@ public class TopologyProducer {
 	 * Fetch the targetCode stored in the processInstance 
 	 * for the given processId.
 	 */
-	public BaseEntity fetchProcessInstanceProcessBE(String processId) {
+	public ProcessBeAndDef fetchProcessInstanceProcessBE(String processId) {
 		BaseEntity processBe = null;
+		String defCode = null;
 		String processBeStr = null;
 
 		log.info("Fetching processBE for processId : " + processId);
@@ -256,7 +272,8 @@ public class TopologyProducer {
 		processBeStr = variables.getString("processBEJson");
 		
 		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
-		return processBe;
+		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBe, defCode);
+		return processBeAndDef;
 	}
 
 	/**

@@ -111,6 +111,31 @@ public class FrontendService {
 		return jsonb.toJson(msg);
 	}
 
+/**
+	 * Work out the DEF for the baseentity .
+	 *
+	 * @param targetCode The code of the target entity
+	 * @return The DEF
+	 */
+	public String getDEF(String targetCode) {
+
+		if (targetCode == null) {
+			log.error("TargetCode must not be null!");
+			return null;
+		}
+
+
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+
+		// Find the DEF
+		BaseEntity defBE = defUtils.getDEF(target);
+	
+
+		log.info("ProcessBE identified as a "+defBE);
+
+		return defBE.getCode();
+	}
+
 	/**
 	 * Setup the process entity used to store task data.
 	 *

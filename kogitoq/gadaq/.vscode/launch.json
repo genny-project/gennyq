@@ -12,21 +12,21 @@
             "port": 5580,
             "sourcePaths": ["../../../../qwandaq/target/qwandaq-10.1.0-sources.jar"],
             "java.project.referencedLibraries": {
-    "           include": [
+            "include": [
                     "library/**/*.jar",
                     "/home/username/lib/foo.jar"
                 ],
-    "           exclude": [
+            "exclude": [
                     "library/sources/**"
                 ],
-    "       sources": {
-        "   library/bar.jar": "library/sources/bar-src.jar",
-        "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "../../../../qwandaq/target/qwandaq-10.1.0-sources.jar"
-    ]
-    }
-}
+            "sources": {
+        	"library/bar.jar": "library/sources/bar-src.jar",
+        	"java.project.referencedLibraries": [
+        	"lib/**/*.jar",
+        	"../../../../qwandaq/target/qwandaq-10.1.0-sources.jar"
+                ]
+          }
+        }
 
              
         },
