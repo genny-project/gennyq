@@ -288,6 +288,10 @@ public class TopologyProducer {
 			e1.printStackTrace();
 		}
 
+
+		log.info("SearchValueJson="+searchValueJson);
+			
+		
 		Integer pageStart = 0;
 		Integer pageSize = searchValueJson.containsKey("dropdownSize") ? searchValueJson.getInt("dropdownSize")
 				: GennySettings.defaultDropDownPageSize();
@@ -306,6 +310,16 @@ public class TopologyProducer {
 			ctxMap.put("TARGET", target);
 		}
 
+		if (source ==null) {
+			log.error("Source is NULL!");
+			return null;
+		}
+
+		if (target == null) {
+			log.error("Target is NULL!");
+			return null;
+		}
+		
 		JsonArray jsonParms = searchValueJson.getJsonArray("parms");
 		int size = jsonParms.size();
 
