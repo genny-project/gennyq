@@ -129,6 +129,7 @@ public class InitService {
 				.addColumn("*", "All Columns");
 
 		searchBE.setRealm(productCode);
+		searchBE.setPageSize(1000);
 		List<BaseEntity> pcms = beUtils.getBaseEntitys(searchBE);
 		if (pcms == null) {
 			log.info("No PCMs found for " + productCode);
