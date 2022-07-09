@@ -106,6 +106,7 @@ when
 	msg: QEventMessage( data.code matches "QUE_TREE_ITEM_.*" )
 	kogitoUtils : KogitoUtils()
 then
+    System.out.println("DEBUG LOG");
 	kogitoUtils.triggerWorkflow("view", "eventMessage", msg);
 	retract(msg);
 end
