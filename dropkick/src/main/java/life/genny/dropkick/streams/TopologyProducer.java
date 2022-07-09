@@ -33,6 +33,8 @@ import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -158,13 +160,21 @@ public class TopologyProducer {
 		String targetCode = dataJson.getString("targetCode");
 		String processId = dataJson.getString("processId");
 
-		if (targetCode.startsWith("QBE_")) {
-			targetCode = fetchProcessInstanceTarget(processId);
-		}
+		BaseEntity target = null;
 
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-		if (target == null) {
-			return false;
+		if (!StringUtils.isBlank(processId)) {
+			// This means that the target should come from the graphql
+			target = fetchProcessInstanceProcessBE(processId);
+		} else {
+
+			if (targetCode.startsWith("QBE_")) {
+				targetCode = fetchProcessInstanceTarget(processId);
+			}
+
+			target = beUtils.getBaseEntityByCode(targetCode);
+			if (target == null) {
+				return false;
+			}
 		}
 
 		// Find the DEF
@@ -220,6 +230,33 @@ public class TopologyProducer {
 		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
 
 		return targetCode;
+	}
+
+	/**
+	 * Fetch the targetCode stored in the processInstance 
+	 * for the given processId.
+	 */
+	public BaseEntity fetchProcessInstanceProcessBE(String processId) {
+		BaseEntity processBe = null;
+		String processBeStr = null;
+
+		log.info("Fetching processBE for processId : " + processId);
+
+		// check in cache first (But not ready yet, processQuestions would need to save the processBe into cache every answer received)
+	/* 	String processBeStr = CacheUtils.getObject(userToken.getProductCode(), processId+":PROCESS_BE", String.class);
+		if (processBeStr != null) {
+			processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
+			return processBe;
+		} */
+
+		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
+
+		// grab the targetCode from process questions variables
+		processBeStr = variables.getString("processBEJson");
+		
+		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
+		return processBe;
 	}
 
 	/**
