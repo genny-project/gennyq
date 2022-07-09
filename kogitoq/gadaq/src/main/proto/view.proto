@@ -69,8 +69,11 @@ message View {
 	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
 	optional string id = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string targetCode = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input,readonly") */ 
-	optional string token = 4; 
+	optional string token = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 5; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 6; 
 }

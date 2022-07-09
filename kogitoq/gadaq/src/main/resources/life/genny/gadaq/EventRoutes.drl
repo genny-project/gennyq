@@ -103,7 +103,7 @@ end
 
 rule RouteTreeItems 
 when
-	msg: QEventMessage( data.code matches "QUE_TREE_ITEM_.*" )
+	msg: QEventMessage( data.code matches "QUE_TREE_ITEM_.*"  && data.code != "QUE_TREE_ITEM_HOST_COMPANIES" )
 	kogitoUtils : KogitoUtils()
 then
     System.out.println("DEBUG LOG");
