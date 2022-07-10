@@ -33,6 +33,8 @@ import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -44,6 +46,16 @@ import org.jboss.logging.Logger;
 public class TopologyProducer {
 
 	private static final Logger log = Logger.getLogger(TopologyProducer.class);
+
+	class ProcessBeAndDef {
+		ProcessBeAndDef(BaseEntity be, String defCode) {
+			this.processBE = be;
+			this.defCode = defCode;
+		}
+
+		public BaseEntity processBE;
+		public String defCode;
+	}
 
 	@ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
 	Integer defaultDropDownSize;
@@ -103,7 +115,7 @@ public class TopologyProducer {
 				.peek((k, v) -> log.debug("Sending results: " + v))
 
 				// write using KafkaUtils for bridge switching
-				.foreach((k, v) -> KafkaUtils.writeMsg("webcmds", v));
+				.foreach((k, v) -> KafkaUtils.writeMsg("webdata", v));
 
 		return builder.build();
 	}
@@ -155,17 +167,34 @@ public class TopologyProducer {
 		String targetCode = dataJson.getString("targetCode");
 		String processId = dataJson.getString("processId");
 
-		if (targetCode.startsWith("QBE_")) {
-			targetCode = gqlUtils.fetchProcessInstanceTargetCode(processId);
-		}
+		BaseEntity target = null;
+		BaseEntity defBE = null;
 
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-		if (target == null) {
-			return false;
+		if (!StringUtils.isBlank(processId)) {
+			// This means that the target should come from the graphql
+			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
+			if (processBeAndDef == null) {
+				log.error("Could not find process instance for processId [" + processId + "]");
+				return false;
+			}
+			target = processBeAndDef.processBE;
+			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
+		} else {
+
+			target = beUtils.getBaseEntityByCode(targetCode);
+			if (target == null) {
+				return false;
+			}
 		}
 
 		// Find the DEF
-		BaseEntity defBE = defUtils.getDEF(target);
+		if (defBE == null) {
+			defBE = defUtils.getDEF(target);
+		}
+		if (defBE == null) {
+			log.error("No DEF found for target " + targetCode);
+			return false;
+		}
 
 		// Check if attribute code exists as a SER for the DEF
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
@@ -195,7 +224,51 @@ public class TopologyProducer {
 		return true;
 	}
 
+	
 	/**
+<<<<<<< HEAD
+=======
+	 * Fetch the targetCode stored in the processInstance 
+	 * for the given processId.
+	 */
+	public ProcessBeAndDef fetchProcessInstanceProcessBE(String processId) {
+		BaseEntity processBe = null;
+		String defCode = null;
+		String processBeStr = null;
+
+		log.info("Fetching processBE for processId : " + processId);
+
+		// check in cache first (But not ready yet, processQuestions would need to save the processBe into cache every answer received)
+	/* 	String processBeStr = CacheUtils.getObject(userToken.getProductCode(), processId+":PROCESS_BE", String.class);
+		if (processBeStr != null) {
+			processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
+			return processBe;
+		} */
+
+	JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+	if (array.isEmpty()) {
+			log.error("Nothing found for processId: " + processId);
+			return null;
+		}
+		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
+
+		// grab the targetCode from process questions variables
+		processBeStr = variables.getString("processBEJson");
+		defCode = variables.containsKey("defCode")?variables.getString("defCode"):null;
+		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
+		
+		if (defCode == null) {
+			BaseEntity defBE = defUtils.getDEF(processBe);
+			defCode = defBE.getCode();
+		}
+		
+		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBe, defCode);
+		
+		return processBeAndDef;
+	}
+
+	/**
+>>>>>>> a9a9d5c9bf43563f75a38c9dc784ac560110e0b0
 	 * Fetch and return the results for this dropdown. Will return null
 	 * if items can not be fetched for this message. This null must
 	 * be filtered by streams builder.
@@ -226,18 +299,25 @@ public class TopologyProducer {
 			return null;
 		}
 
-		if (targetCode.startsWith("QBE_")) {
-			targetCode = gqlUtils.fetchProcessInstanceTargetCode(processId);
-		}
+		BaseEntity target = null;
+		BaseEntity defBE = null;
 
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		if (!StringUtils.isBlank(processId)) {
+			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
+			target = processBeAndDef.processBE;
+			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
+		} else {
+			target = beUtils.getBaseEntityByCode(targetCode);
+		}
 
 		if (target == null) {
 			log.error("Target Entity is NULL!");
 			return null;
 		}
 
-		BaseEntity defBE = defUtils.getDEF(target);
+		if (defBE == null) {
+			defBE = defUtils.getDEF(target);
+		}
 
 		log.info("Target DEF is " + defBE.getCode() + " : " + defBE.getName());
 		log.info("Attribute is " + attrCode);
@@ -261,6 +341,10 @@ public class TopologyProducer {
 			e1.printStackTrace();
 		}
 
+
+		log.info("SearchValueJson="+searchValueJson);
+			
+		
 		Integer pageStart = 0;
 		Integer pageSize = searchValueJson.containsKey("dropdownSize") ? searchValueJson.getInt("dropdownSize")
 				: GennySettings.defaultDropDownPageSize();
@@ -279,6 +363,16 @@ public class TopologyProducer {
 			ctxMap.put("TARGET", target);
 		}
 
+		if (source ==null) {
+			log.error("Source is NULL!");
+			return null;
+		}
+
+		if (target == null) {
+			log.error("Target is NULL!");
+			return null;
+		}
+		
 		JsonArray jsonParms = searchValueJson.getJsonArray("parms");
 		int size = jsonParms.size();
 
@@ -503,7 +597,7 @@ public class TopologyProducer {
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);
 		msg.setShouldDeleteLinkedBaseEntities(false);
-
+		
 		return jsonb.toJson(msg);
 	}
 

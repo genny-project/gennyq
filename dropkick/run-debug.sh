@@ -9,6 +9,8 @@ echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 
+source ../../genny-main/services_ports.env
+
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
 export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
@@ -41,7 +43,7 @@ export QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE=BASIC
 export QUARKUS_INFINISPAN_CLIENT_INTELLIGENCE=BASIC
 export INFINISPAN_CLIENT_HOTROD_SERVER_LIST=alyson.genny.life:11222
 export INFINISPAN_CLIENT_HOTROD_CLIENT_INTELLIGENCE=BASIC
-export FYODOR_SERVICE_API=http://alyson.genny.life:4242
+export FYODOR_SERVICE_API=http://alyson.genny.life:${FYODOR_PORT}
 #export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 #export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 export FULL_MYSQL_URL=jdbc:mysql://alyson.genny.life:3310/gennydb?allowPublicKeyRetrieval=true&syscharacterEncoding=utf8mb4&useSSL=FALSE&serverTimezone=UTC&rewriteBatchedStatements=true

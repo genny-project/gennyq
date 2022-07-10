@@ -9,25 +9,7 @@
             "name": "Remote Debug (Dropkick)",
             "request": "attach",
             "hostName": "localhost",
-            "port": 5580,
-            "sourcePaths": ["../../../../qwandaq/target/qwandaq-10.0.0-sources.jar"],
-            "java.project.referencedLibraries": {
-    "           include": [
-                    "library/**/*.jar",
-                    "/home/username/lib/foo.jar"
-                ],
-    "           exclude": [
-                    "library/sources/**"
-                ],
-    "       sources": {
-        "   library/bar.jar": "library/sources/bar-src.jar",
-        "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "../../../../qwandaq/target/qwandaq-10.0.0-sources.jar"
-    ]
-    }
-}
-
+            "port": 5557
              
         },
         {
@@ -42,6 +24,32 @@
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "Remote Debug (Kogito)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5557,
+            "sourcePaths": ["target/dropkick-10.1.0-sources.jar"],
+            "java.project.referencedLibraries": {
+            "include": [
+                    "library/**/*.jar",
+                    "/home/username/lib/foo.jar"
+                ],
+            "exclude": [
+                    "library/sources/**"
+                ],
+            "sources": {
+                "library/bar.jar": "library/sources/bar-src.jar",
+                "java.project.referencedLibraries": [
+                "lib/**/*.jar",
+                "../qwandaq/target/qwandaq-10.1.0-sources.jar"
+                ]
+          }
+        }
+
+
         },
     ]
 }

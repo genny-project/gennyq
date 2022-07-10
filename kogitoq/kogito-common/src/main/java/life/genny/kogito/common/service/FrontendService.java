@@ -25,6 +25,7 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import org.apache.commons.lang3.StringUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
@@ -45,6 +46,9 @@ public class FrontendService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	DefUtils defUtils;
 
 	public String getCurrentUserCode() {
 		return userToken.getUserCode();
@@ -109,6 +113,31 @@ public class FrontendService {
 		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
 
 		return jsonb.toJson(msg);
+	}
+
+/**
+	 * Work out the DEF for the baseentity .
+	 *
+	 * @param targetCode The code of the target entity
+	 * @return The DEF
+	 */
+	public String getDEF(String targetCode) {
+
+		if (targetCode == null) {
+			log.error("TargetCode must not be null!");
+			return null;
+		}
+
+
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+
+		// Find the DEF
+		BaseEntity defBE = defUtils.getDEF(target);
+	
+
+		log.info("ProcessBE identified as a "+defBE);
+
+		return defBE.getCode();
 	}
 
 	/**
