@@ -11,6 +11,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.kogito.common.models.RLog;
 
 ruleflow-group 'EventRoutes'
 
@@ -19,6 +20,7 @@ when
 	msg: QEventMessage( data.code == "AUTH_INIT" )
 	kogitoUtils : KogitoUtils()
 then
+	/* RLog.info(drools, "Auth Init!"); */
 	kogitoUtils.triggerWorkflow("authInit", "eventMessage", msg);
 	retract(msg);
 end
@@ -75,10 +77,14 @@ then
 
 	System.out.println("Prefix = " + prefix);
 
-	/* /1* NOTE: This is very very temporary *1/ */
-	/* if (!"DEF_TENANT".equals(code) && !"DEF_ADMIN".equals(code) && !"PER".equals(prefix)) { */
+	/* if (!"PER".equals(prefix)) { */
 	/* 	return; */
 	/* } */
+
+	/* NOTE: This is very very temporary */
+	if ("PROPERTY".equals(code)) {
+		return;
+	}
 
 	JsonObject json = Json.createObjectBuilder()
 		.add("definitionCode", "DEF_"+code)

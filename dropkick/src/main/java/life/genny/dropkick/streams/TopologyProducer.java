@@ -40,9 +40,6 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-
-
-
 @ApplicationScoped
 public class TopologyProducer {
 
@@ -159,7 +156,7 @@ public class TopologyProducer {
 		String processId = dataJson.getString("processId");
 
 		if (targetCode.startsWith("QBE_")) {
-			targetCode = fetchProcessInstanceTarget(processId);
+			targetCode = gqlUtils.fetchProcessInstanceTargetCode(processId);
 		}
 
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
@@ -199,30 +196,6 @@ public class TopologyProducer {
 	}
 
 	/**
-	 * Fetch the targetCode stored in the processInstance 
-	 * for the given processId.
-	 */
-	public String fetchProcessInstanceTarget(String processId) {
-
-		log.info("Fetching targetCode for processId : " + processId);
-
-		// check in cache first
-		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
-		if (targetCode != null) {
-			return targetCode;
-		}
-
-		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
-		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
-
-		// grab the targetCode from process questions variables
-		targetCode = variables.getString("targetCode");
-		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
-
-		return targetCode;
-	}
-
-	/**
 	 * Fetch and return the results for this dropdown. Will return null
 	 * if items can not be fetched for this message. This null must
 	 * be filtered by streams builder.
@@ -254,7 +227,7 @@ public class TopologyProducer {
 		}
 
 		if (targetCode.startsWith("QBE_")) {
-			targetCode = fetchProcessInstanceTarget(processId);
+			targetCode = gqlUtils.fetchProcessInstanceTargetCode(processId);
 		}
 
 		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);

@@ -12,7 +12,6 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennySettings;
@@ -129,5 +128,32 @@ public class GraphQLUtils {
 
         return response.body();
     }
+
+	/**
+	 * Fetch the targetCode stored in the processInstance 
+	 * for the given processId.
+	 *
+	 * @param processId The processId to check
+	 * @return The associated TargetCode
+	 */
+	public String fetchProcessInstanceTargetCode(String processId) {
+
+		log.info("Fetching targetCode for processId : " + processId);
+
+		// check in cache first
+		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
+		if (targetCode != null) {
+			return targetCode;
+		}
+
+		JsonArray array = queryTable("ProcessInstances", "id", processId, "variables");
+		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
+
+		// grab the targetCode from process questions variables
+		targetCode = variables.getString("targetCode");
+		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
+
+		return targetCode;
+	}
 
 }
