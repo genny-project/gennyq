@@ -298,7 +298,7 @@ public class TopologyProducer {
 		BaseEntity target = null;
 		BaseEntity defBE = null;
 
-		if (targetCode.startsWith("QBE_")) {
+		if (!StringUtils.isBlank(processId)) {
 			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
 			target = processBeAndDef.processBE;
 			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
