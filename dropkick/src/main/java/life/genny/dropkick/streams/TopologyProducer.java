@@ -597,7 +597,7 @@ public class TopologyProducer {
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);
 		msg.setShouldDeleteLinkedBaseEntities(false);
-		msg.setTotal(Long.getLong(""+msg.getItems().size()));
+		
 		return jsonb.toJson(msg);
 	}
 
