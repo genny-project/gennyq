@@ -180,10 +180,6 @@ public class TopologyProducer {
 			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
 		} else {
 
-			if (targetCode.startsWith("QBE_")) {
-				targetCode = fetchProcessInstanceTarget(processId);
-			}
-
 			target = beUtils.getBaseEntityByCode(targetCode);
 			if (target == null) {
 				return false;
@@ -191,8 +187,12 @@ public class TopologyProducer {
 		}
 
 		// Find the DEF
-		if (defBE != null) {
+		if (defBE == null) {
 			defBE = defUtils.getDEF(target);
+		}
+		if (defBE == null) {
+			log.error("No DEF found for target " + targetCode);
+			return false;
 		}
 
 		// Check if attribute code exists as a SER for the DEF
@@ -223,30 +223,7 @@ public class TopologyProducer {
 		return true;
 	}
 
-	/**
-	 * Fetch the targetCode stored in the processInstance 
-	 * for the given processId.
-	 */
-	public String fetchProcessInstanceTarget(String processId) {
-
-		log.info("Fetching targetCode for processId : " + processId);
-
-		// check in cache first
-		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
-		if (targetCode != null) {
-			return targetCode;
-		}
-
-		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
-		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
-
-		// grab the targetCode from process questions variables
-		targetCode = variables.getString("targetCode");
-		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
-
-		return targetCode;
-	}
-
+	
 	/**
 	 * Fetch the targetCode stored in the processInstance 
 	 * for the given processId.
@@ -265,14 +242,25 @@ public class TopologyProducer {
 			return processBe;
 		} */
 
-		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+	JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+	if (array.isEmpty()) {
+			log.error("Nothing found for processId: " + processId);
+			return null;
+		}
 		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
 
 		// grab the targetCode from process questions variables
 		processBeStr = variables.getString("processBEJson");
-		
+		defCode = variables.containsKey("defCode")?variables.getString("defCode"):null;
 		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
+		
+		if (defCode == null) {
+			BaseEntity defBE = defUtils.getDEF(processBe);
+			defCode = defBE.getCode();
+		}
+		
 		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBe, defCode);
+		
 		return processBeAndDef;
 	}
 
@@ -307,18 +295,25 @@ public class TopologyProducer {
 			return null;
 		}
 
-		if (targetCode.startsWith("QBE_")) {
-			targetCode = fetchProcessInstanceTarget(processId);
-		}
+		BaseEntity target = null;
+		BaseEntity defBE = null;
 
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		if (targetCode.startsWith("QBE_")) {
+			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
+			target = processBeAndDef.processBE;
+			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
+		} else {
+			target = beUtils.getBaseEntityByCode(targetCode);
+		}
 
 		if (target == null) {
 			log.error("Target Entity is NULL!");
 			return null;
 		}
 
-		BaseEntity defBE = defUtils.getDEF(target);
+		if (defBE == null) {
+			defBE = defUtils.getDEF(target);
+		}
 
 		log.info("Target DEF is " + defBE.getCode() + " : " + defBE.getName());
 		log.info("Attribute is " + attrCode);
@@ -598,7 +593,7 @@ public class TopologyProducer {
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);
 		msg.setShouldDeleteLinkedBaseEntities(false);
-
+		msg.setTotal(Long.getLong(""+msg.getItems().size()));
 		return jsonb.toJson(msg);
 	}
 
