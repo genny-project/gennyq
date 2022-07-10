@@ -176,6 +176,10 @@ public class TopologyProducer {
 		if (!StringUtils.isBlank(processId)) {
 			// This means that the target should come from the graphql
 			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
+			if (processBeAndDef == null) {
+				log.error("Could not find process instance for processId [" + processId + "]");
+				return false;
+			}
 			target = processBeAndDef.processBE;
 			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
 		} else {

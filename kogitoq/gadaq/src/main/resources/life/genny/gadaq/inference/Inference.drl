@@ -25,8 +25,8 @@ when
 	answer: Answer( attributeCode == "PRI_FIRSTNAME" )
 	beUtils : BaseEntityUtils()
 then
-	/*
-	String firstName = answer.getValue().toLowerCase().trim();
+	
+	/*String firstName = answer.getValue().toLowerCase().trim();
 	firstName = WordUtils.capitalize(firstName);
 
 	String lastName = (String) beUtils.getBaseEntityValue(targetCode, "PRI_LASTNAME");

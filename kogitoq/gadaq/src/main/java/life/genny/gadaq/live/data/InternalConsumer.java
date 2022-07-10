@@ -76,8 +76,12 @@ public class InternalConsumer {
 	@Incoming("valid_data")
 	@Blocking
 	public void getData(String data) {
-
+		if (data.contains("[{}]")) {
+			log.info("Empty data received");
+			return;
+		}
 		Instant start = Instant.now();
+
 		scope.init(data);
 
 		// check if event is a valid event

@@ -152,7 +152,9 @@ public class ExternalConsumer {
 	Boolean validateMessage(BridgeEvent bridgeEvent) {
 
 		JsonObject rawMessage = bridgeEvent.getRawMessage().getJsonObject("body");
-
+		if (rawMessage.toString().contains("[{}]")) { // Dummy heartbeat answer
+			return false;
+		}
 		if (rawMessage.toBuffer().length() > 100000) {
 			log.error("message of size "
 					+ rawMessage.toBuffer().length()

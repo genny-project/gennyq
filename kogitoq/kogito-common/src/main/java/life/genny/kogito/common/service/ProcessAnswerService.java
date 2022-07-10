@@ -117,7 +117,7 @@ public class ProcessAnswerService {
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg("webcmds", msg);
 
 		return answered;
 	}

@@ -6,29 +6,10 @@
     "configurations": [     
         {
             "type": "java",
-            "name": "Remote Debug (Kogito)",
+            "name": "Remote Debug (Attach Quarkus)",
             "request": "attach",
             "hostName": "localhost",
-            "port": 5580,
-            "sourcePaths": ["../../../../qwandaq/target/qwandaq-10.1.0-sources.jar"],
-            "java.project.referencedLibraries": {
-            "include": [
-                    "library/**/*.jar",
-                    "/home/username/lib/foo.jar"
-                ],
-            "exclude": [
-                    "library/sources/**"
-                ],
-            "sources": {
-        	"library/bar.jar": "library/sources/bar-src.jar",
-        	"java.project.referencedLibraries": [
-        	"lib/**/*.jar",
-        	"../../../../qwandaq/target/qwandaq-10.1.0-sources.jar"
-                ]
-          }
-        }
-
-             
+            "port":5580
         },
         {
             "type": "java",
