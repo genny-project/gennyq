@@ -115,7 +115,7 @@ public class FrontendService {
 		return jsonb.toJson(msg);
 	}
 
-/**
+	/**
 	 * Work out the DEF for the baseentity .
 	 *
 	 * @param targetCode The code of the target entity
@@ -128,14 +128,14 @@ public class FrontendService {
 			return null;
 		}
 
-
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		if ("NON_EXISTENT".equals(targetCode)) {
+			return null;
+		}
 
 		// Find the DEF
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 		BaseEntity defBE = defUtils.getDEF(target);
-	
-
-		log.info("ProcessBE identified as a "+defBE);
+		log.info("ProcessBE identified as a " + defBE);
 
 		return defBE.getCode();
 	}
@@ -255,15 +255,20 @@ public class FrontendService {
 	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
 
 		BaseEntity processBE = null;
+		QDataAskMessage askMsg = null;
 		
 		try {
 			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		} catch (java.lang.NullPointerException e) {
-			log.error("Process Entity json must not be null or have null entry! ->"+processBEJson);
+			log.error("Process Entity json must not be null or have null entry! -> " + processBEJson);
 			return;
-
 		}
-		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		try {
+			askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		} catch (java.lang.NullPointerException e) {
+			log.error("Ask json must not be null or have null entry! -> " + askMessageJson);
+			return;
+		}
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
@@ -371,24 +376,18 @@ public class FrontendService {
 	 */
 	public void sendQDataAskMessage(String askMessageJson, String processBEJson) {
 
-		log.info("Sending Asks");
-
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
-		log.info("parsed");
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 		askMessage.getItems().set(0, ask);
-		log.info("checked");
 
 		askMessage.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("webcmds", askMessage);
-
-		log.info("sent");
 	}
 
 	/**
@@ -402,13 +401,11 @@ public class FrontendService {
 
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
-
 		BaseEntity target = beUtils.getBaseEntityByCode(ask.getTargetCode());
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 		recursivelyHandleDropdownAttributes(ask, target, msg);
 		msg.setTag("SendDropDownItems");
-
 
 		KafkaUtils.writeMsg("webdata", msg);
 	}

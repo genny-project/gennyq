@@ -25,14 +25,16 @@ when
 	answer: Answer( attributeCode == "PRI_FIRSTNAME" )
 	beUtils : BaseEntityUtils()
 then
-	
-	/*String firstName = answer.getValue().toLowerCase().trim();
+	System.out.println("InferFirstName fired!");
+	String firstName = answer.getValue().toLowerCase().trim();
 	firstName = WordUtils.capitalize(firstName);
 
-	String lastName = (String) beUtils.getBaseEntityValue(targetCode, "PRI_LASTNAME");
+	String lastName = (String) beUtils.getBaseEntityValue(answer.getTargetCode(), "PRI_LASTNAME");
+	if (lastName == null) {
+		return;
+	}
 	lastName = WordUtils.capitalize(lastName);
 	String name = firstName + " " + lastName;
 
-	Answer answer = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name)
-	insert(answer); */
+	insert(new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name));
 end

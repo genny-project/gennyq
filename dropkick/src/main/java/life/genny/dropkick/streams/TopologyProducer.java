@@ -42,9 +42,6 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-
-
-
 @ApplicationScoped
 public class TopologyProducer {
 
@@ -229,6 +226,8 @@ public class TopologyProducer {
 
 	
 	/**
+<<<<<<< HEAD
+=======
 	 * Fetch the targetCode stored in the processInstance 
 	 * for the given processId.
 	 */
@@ -269,6 +268,7 @@ public class TopologyProducer {
 	}
 
 	/**
+>>>>>>> a9a9d5c9bf43563f75a38c9dc784ac560110e0b0
 	 * Fetch and return the results for this dropdown. Will return null
 	 * if items can not be fetched for this message. This null must
 	 * be filtered by streams builder.
