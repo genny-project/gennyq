@@ -115,7 +115,7 @@ public class TopologyProducer {
 				.mapValues(v -> fetchDropdownResults(v))
 
 				.filter((k, v) -> v != null)
-				.peek((k, v) -> log.debug("Sending results: " + v))
+				.peek((k, v) -> log.info("Sending results: " + v))
 
 				// write using KafkaUtils for bridge switching
 				.foreach((k, v) -> KafkaUtils.writeMsg("webdata", v));
