@@ -18,7 +18,7 @@ public enum CacheName {
     /**
      * Case-insensitive fetching of an {@link CacheName}
      * @param name
-     * @return
+     * @return the CacheName pertaining to the supplied name
      */
     public static CacheName getCacheName(String name) {
         try {

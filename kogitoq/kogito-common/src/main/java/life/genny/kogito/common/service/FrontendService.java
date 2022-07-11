@@ -259,13 +259,6 @@ public class FrontendService {
 	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
 
 		BaseEntity processBE = null;
-<<<<<<< HEAD
-
-		try {
-			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		} catch (java.lang.NullPointerException e) {
-			log.error("Process Entity json must not be null or have null entry! ->" + processBEJson);
-=======
 		QDataAskMessage askMsg = null;
 		
 		try {
@@ -278,7 +271,6 @@ public class FrontendService {
 			askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 		} catch (java.lang.NullPointerException e) {
 			log.error("Ask json must not be null or have null entry! -> " + askMessageJson);
->>>>>>> 10.1.0
 			return;
 		}
 

@@ -14,6 +14,8 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.constants.CacheName;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -75,7 +77,8 @@ public class SearchService {
 		String searchCode = "SBE_" + StringUtils.removeStart(definition.getCode(), "DEF_");
 		log.info("Sending Detail View :: " + searchCode);
 
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), searchCode, SearchEntity.class);
+		BaseEntityKey cacheKey = new BaseEntityKey(userToken.getProductCode(), searchCode);
+		SearchEntity searchEntity = CacheUtils.getObject(CacheName.BASEENTITY, cacheKey, SearchEntity.class);
 		searchEntity.addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, targetCode);
 
 		// perform the search

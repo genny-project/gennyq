@@ -15,6 +15,8 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.constants.CacheName;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -78,7 +80,8 @@ public class NavigationService {
         log.info("Replacing " + pcmCode + ":" + loc + " with " + newValue);
 
         String cachedCode = userToken.getJTI() + ":" + pcmCode;
-        BaseEntity pcm = CacheUtils.getObject(userToken.getProductCode(), cachedCode, BaseEntity.class);
+		BaseEntityKey pcmKey = new BaseEntityKey(userToken.getProductCode(), cachedCode);
+        BaseEntity pcm = CacheUtils.getObject(CacheName.BASEENTITY, pcmKey, BaseEntity.class);
 
         if (pcm == null) {
             log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
@@ -112,6 +115,6 @@ public class NavigationService {
         msg.setReplace(true);
         KafkaUtils.writeMsg("webdata", msg);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
+        CacheUtils.putObject(CacheName.BASEENTITY, pcmKey, pcm);
     }
 }

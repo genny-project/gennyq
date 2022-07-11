@@ -14,8 +14,10 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 
 /*
  * A non-static utility class used for operations regarding the GraphQL data-index.
@@ -139,9 +141,10 @@ public class GraphQLUtils {
 	public String fetchProcessInstanceTargetCode(String processId) {
 
 		log.info("Fetching targetCode for processId : " + processId);
+		CacheKey targetCodeKey = new CacheKey(userToken.getProductCode(), processId+":TARGET_CODE");
 
 		// check in cache first
-		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
+		String targetCode = CacheUtils.getObject(CacheName.METADATA, targetCodeKey, String.class);
 		if (targetCode != null) {
 			return targetCode;
 		}
@@ -151,7 +154,7 @@ public class GraphQLUtils {
 
 		// grab the targetCode from process questions variables
 		targetCode = variables.getString("targetCode");
-		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
+		CacheUtils.putObject(CacheName.METADATA, targetCodeKey, targetCode);
 
 		return targetCode;
 	}
