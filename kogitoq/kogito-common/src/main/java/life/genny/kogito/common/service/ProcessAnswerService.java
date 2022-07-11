@@ -12,11 +12,13 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.ProcessBeAndDef;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -40,6 +42,7 @@ public class ProcessAnswerService {
 	@Inject
 	DefUtils defUtils;
 
+
 	/**
 	 * Save incoming answer to the process baseentity.
 	 *
@@ -47,7 +50,7 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode) {
+	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode,String processId, String defCode) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
@@ -92,6 +95,10 @@ public class ProcessAnswerService {
 		String savedValue = processBE.getValueAsString(answer.getAttributeCode());
 		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue);
 
+		// Now update the cached version of the processBE with an expiry (used in dropkick and lauchy)	
+		// cache the current ProcessBE so that it can be used quickly by lauchy etc
+		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBE,defCode);
+		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDef);
 		return jsonb.toJson(processBE);
 	}
 

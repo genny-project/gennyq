@@ -41,21 +41,13 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+import life.genny.qwandaq.entity.ProcessBeAndDef;
 
 @ApplicationScoped
 public class TopologyProducer {
 
 	private static final Logger log = Logger.getLogger(TopologyProducer.class);
 
-	class ProcessBeAndDef {
-		ProcessBeAndDef(BaseEntity be, String defCode) {
-			this.processBE = be;
-			this.defCode = defCode;
-		}
-
-		public BaseEntity processBE;
-		public String defCode;
-	}
 
 	@ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
 	Integer defaultDropDownSize;
@@ -225,12 +217,7 @@ public class TopologyProducer {
 	}
 
 	
-	/**
-<<<<<<< HEAD
-=======
-	 * Fetch the targetCode stored in the processInstance 
-	 * for the given processId.
-	 */
+
 	public ProcessBeAndDef fetchProcessInstanceProcessBE(String processId) {
 		BaseEntity processBe = null;
 		String defCode = null;
@@ -239,11 +226,12 @@ public class TopologyProducer {
 		log.info("Fetching processBE for processId : " + processId);
 
 		// check in cache first (But not ready yet, processQuestions would need to save the processBe into cache every answer received)
-	/* 	String processBeStr = CacheUtils.getObject(userToken.getProductCode(), processId+":PROCESS_BE", String.class);
-		if (processBeStr != null) {
-			processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
-			return processBe;
-		} */
+		
+	 	String processBeAndDefCodeStr = CacheUtils.getObject(userToken.getProductCode(), processId+":PROCESS_BE", String.class);
+		if (processBeAndDefCodeStr != null) {
+			ProcessBeAndDef processBeAndDef = jsonb.fromJson(processBeStr, ProcessBeAndDef.class);
+			return processBeAndDef;
+		} 
 
 	JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
 	if (array.isEmpty()) {
@@ -261,14 +249,16 @@ public class TopologyProducer {
 			BaseEntity defBE = defUtils.getDEF(processBe);
 			defCode = defBE.getCode();
 		}
-		
 		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBe, defCode);
 		
+		// cache
+		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDef);
+
 		return processBeAndDef;
 	}
 
+	
 	/**
->>>>>>> a9a9d5c9bf43563f75a38c9dc784ac560110e0b0
 	 * Fetch and return the results for this dropdown. Will return null
 	 * if items can not be fetched for this message. This null must
 	 * be filtered by streams builder.
