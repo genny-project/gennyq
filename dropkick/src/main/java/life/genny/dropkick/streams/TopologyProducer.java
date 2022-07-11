@@ -207,7 +207,8 @@ public class TopologyProducer {
 		log.info("Fetching targetCode for processId : " + processId);
 
 		// check in cache first
-		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
+		CacheKey key = new CacheKey(userToken.getProductCode, processId+":TARGET_CODE");
+		String targetCode = CacheUtils.getObject(CacheName.METADATA, key, String.class);
 		if (targetCode != null) {
 			return targetCode;
 		}
@@ -230,7 +231,7 @@ public class TopologyProducer {
 
 		// grab the targetCode from process questions variables
 		targetCode = variables.getString("targetCode");
-		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
+		CacheUtils.putObject(CacheName.METADATA, key, targetCode);
 
 		return targetCode;
 	}
