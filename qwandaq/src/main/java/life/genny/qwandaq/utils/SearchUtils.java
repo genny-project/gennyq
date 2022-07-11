@@ -163,16 +163,16 @@ public class SearchUtils {
 		// update code to session search code
 		searchEntity = getSessionSearch(searchEntity);
 
-		// Add any necessary extra filters
-		List<EntityAttribute> filters = getUserFilters(searchEntity);
+		// // Add any necessary extra filters
+		// List<EntityAttribute> filters = getUserFilters(searchEntity);
 
-		if (!filters.isEmpty()) {
-			log.info("Found " + filters.size() + " additional filters for " + searchEntity.getCode());
+		// if (!filters.isEmpty()) {
+		// 	log.info("Found " + filters.size() + " additional filters for " + searchEntity.getCode());
 
-			for (EntityAttribute filter : filters) {
-				searchEntity.getBaseEntityAttributes().add(filter);
-			}
-		}
+		// 	for (EntityAttribute filter : filters) {
+		// 		searchEntity.getBaseEntityAttributes().add(filter);
+		// 	}
+		// }
 
 		CacheKey cacheKey = new CacheKey(userToken.getProductCode(), "LAST-SEARCH:" + searchEntity.getCode());
 		// TODO: Decide where to cache LAST-SEARCH
@@ -213,25 +213,31 @@ public class SearchUtils {
 						"SearchFilters",
 						"SearchUtils:getUserFilters");
 
-		Object obj = results.get("payload");
+		if (results != null) {
 
-		if (obj instanceof QBulkMessage) {
-			QBulkMessage bulkMsg = (QBulkMessage) results.get("payload");
+			Object obj = results.get("payload");
 
-			// Check if bulkMsg not empty
-			if (bulkMsg.getMessages().length > 0) {
+			if (obj instanceof QBulkMessage) {
+				QBulkMessage bulkMsg = (QBulkMessage) results.get("payload");
 
-				// Get the first QDataBaseEntityMessage from bulkMsg
-				QDataBaseEntityMessage msg = bulkMsg.getMessages()[0];
+				// Check if bulkMsg not empty
+				if (bulkMsg.getMessages().length > 0) {
 
-				// Check if msg is not empty
-				if (!msg.getItems().isEmpty()) {
+					// Get the first QDataBaseEntityMessage from bulkMsg
+					QDataBaseEntityMessage msg = bulkMsg.getMessages()[0];
 
-					// Extract the baseEntityAttributes from the first BaseEntity
-					Set<EntityAttribute> filtersSet = msg.getItems().get(0).getBaseEntityAttributes();
-					filters.addAll(filtersSet);
+					// Check if msg is not empty
+					if (!msg.getItems().isEmpty()) {
+
+						// Extract the baseEntityAttributes from the first BaseEntity
+						Set<EntityAttribute> filtersSet = msg.getItems().get(0).getBaseEntityAttributes();
+						filters.addAll(filtersSet);
+					}
 				}
 			}
+		} else {
+			log.error("results are null");
+			filters = new ArrayList<EntityAttribute>();
 		}
 		return filters;
 	}
@@ -499,18 +505,18 @@ public class SearchUtils {
 					continue;
 				}
 
-				// Attach any extra filters from SearchFilters rulegroup
-				List<EntityAttribute> filters = getUserFilters(searchBE);
+				// // Attach any extra filters from SearchFilters rulegroup
+				// List<EntityAttribute> filters = getUserFilters(searchBE);
 
-				if (!filters.isEmpty()) {
-					log.info("User Filters are NOT empty");
-					log.info("Adding User Filters to searchBe  ::  " + searchBE.getCode());
-					for (EntityAttribute filter : filters) {
-						searchBE.getBaseEntityAttributes().add(filter);
-					}
-				} else {
-					log.info("User Filters are empty");
-				}
+				// if (!filters.isEmpty()) {
+				// 	log.info("User Filters are NOT empty");
+				// 	log.info("Adding User Filters to searchBe  ::  " + searchBE.getCode());
+				// 	for (EntityAttribute filter : filters) {
+				// 		searchBE.getBaseEntityAttributes().add(filter);
+				// 	}
+				// } else {
+				// 	log.info("User Filters are empty");
+				// }
 
 				// process the associated columns
 				List<EntityAttribute> cals = searchBE.findPrefixEntityAttributes("COL__");

@@ -51,6 +51,10 @@ public class DefUtils {
 
 	public DefUtils() { }
 
+	public String getDefPrefix(String productCode, String definitionCode) {
+		return defPrefixMap.get(productCode).get(definitionCode);
+	}
+
 	/**
 	 * Initialize the in memory DEF store
 	 *
@@ -125,34 +129,34 @@ public class DefUtils {
 			return getInternmatchDEF(entity);
 		}
 
-		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, "LNK_ROLE");
+		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, "LNK_DEF");
 
 		// null/empty check the role attribute
-		if (roles == null) {
-			log.error("Entity " + entity.getCode() + " does not contain LNK_ROLE attribute");
+		if (codes == null) {
+			log.error("Entity " + entity.getCode() + " does not contain LNK_DEF attribute");
 			return null;
 		}
-		if (roles.isEmpty()) {
-			log.error("LNK_ROLE is empty for " + entity.getCode());
+		if (codes.isEmpty()) {
+			log.error("LNK_DEF is empty for " + entity.getCode());
 			return null;
 		}
 
 		// fetch DEF if no merging is needed
-		if (roles.size() == 1) {
-			return beUtils.getBaseEntityByCode("DEF_"+roles.get(0).substring("ROL_".length()));
+		if (codes.size() == 1) {
+			return beUtils.getBaseEntityByCode(codes.get(0));
 		}
 
-		String mergedCode = "DEF_" + String.join("_", roles);
+		String mergedCode = "DEF_" + String.join("_", codes);
 		BaseEntity mergedDef = new BaseEntity(mergedCode, mergedCode);
 		log.info("Detected combination DEF - " + mergedCode);
 
 		// reverse order and begin filling new def
-		Collections.reverse(roles);
-		for (String role : roles) {
+		Collections.reverse(codes);
+		for (String code : codes) {
 
-			BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+role.substring("ROL_".length()));
+			BaseEntity def = beUtils.getBaseEntityByCode(code);
 			if (def == null) {
-				log.warn("No DEF for " + role);
+				log.warn("No DEF for " + code);
 				continue;
 			}
 

@@ -2,6 +2,9 @@ package life.genny.kogito.common.utils;
 
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -9,10 +12,20 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
+
+import org.jboss.logging.Logger;
+import org.kie.api.runtime.KieRuntimeBuilder;
+import org.kie.api.runtime.KieSession;
+
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.HttpUtils;
-import org.jboss.logging.Logger;
 
 /*
  * A static utility class used for standard Kogito interactions
@@ -27,6 +40,18 @@ public class KogitoUtils {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	KogitoUtils kogitoUtils;
+
+	@Inject
+	DefUtils defUtils;
+
+	@Inject
+	KieRuntimeBuilder kieRuntimeBuilder;
 
 	/**
 	 * Send a workflow signal
@@ -179,19 +204,114 @@ public class KogitoUtils {
         String uri = GennySettings.kogitoServiceUrl() + "/" + id;
 		log.info("Triggering workflow with uri: " + uri);
 
+		// make post request
         HttpResponse<String> response = HttpUtils.post(uri, json.toString(), userToken);
+		if (response == null) {
+            log.error("NULL RESPONSE from workflow endpoint");
+			return null;
+		}
 
-        if (response != null && response.statusCode() == 201) {
-            JsonObject result = jsonb.fromJson(response.body(), JsonObject.class);
+		// ensure request was a success
+		if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
+            log.error("Error, Response Status: " + response.statusCode());
+			return null;
+		}
 
-			// return the processId
-			return result.getString("id");
-        } else {
-            log.error("TriggerWorkflow Response Status:  " + (response != null ? response.statusCode() : "NULL RESPONSE"));
-        }
+		JsonObject result = jsonb.fromJson(response.body(), JsonObject.class);
 
-        return null;
+		// return the processId
+		return result.getString("id");
     }
 
-	
+	/**
+	 * Process an event message using EventRoutes
+	 *
+	 * @param event The stringified event message
+	 */
+	public void routeEvent(String event) {
+
+		// check if event is a valid event
+		QEventMessage msg = null;
+		try {
+			msg = jsonb.fromJson(event, QEventMessage.class);
+		} catch (Exception e) {
+			log.error("Cannot parse this event!");
+			e.printStackTrace();
+			return;
+		}
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type())) {
+			return;
+		}
+
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+		session.getAgenda().getAgendaGroup("EventRoutes").setFocus();
+
+		session.insert(kogitoUtils);
+		session.insert(jsonb);
+		session.insert(userToken);
+		session.insert(beUtils);
+		session.insert(defUtils);
+		session.insert(msg);
+
+		// trigger EventRoutes rules
+		session.fireAllRules();
+		session.dispose();
+	}
+
+	/**
+	 * Process an Answer msg using inference rules.
+	 *
+	 * @param data The stringified data message
+	 * @return A list of answers output from the inference rules
+	 */
+	public List<Answer> runDataInference(String data) {
+
+		// check if event is a valid event
+		QDataAnswerMessage msg = null;
+		try {
+			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+		} catch (Exception e) {
+			log.error("Cannot parse this data!");
+			e.printStackTrace();
+			return null;
+		}
+
+		if (msg.getItems().length == 0) {
+			log.debug("Received empty answer message: " + data);
+			return null;
+		}
+
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+		session.getAgenda().getAgendaGroup("Inference").setFocus();
+
+		// insert utils and other beans
+		session.insert(kogitoUtils);
+		session.insert(defUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+
+		// insert answers from message
+		for(Answer answer : msg.getItems()) {
+			log.debug("Inserting answer: " + answer.getAttributeCode() + "=" + answer.getValue() + " into session");
+			session.insert(answer);
+		}
+		log.debug("Inserted " + msg.getItems().length + " answers into session");
+
+		// Infer data
+		session.fireAllRules();
+
+		// feed all answers from facts into ProcessQuestions
+		List<Answer> answers = session.getObjects().stream()
+			.filter(o -> (o instanceof Answer))
+			.map(o -> (Answer) o)
+			.collect(Collectors.toList());
+
+		session.dispose();
+		return answers;
+	}
+
 }

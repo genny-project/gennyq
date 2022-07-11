@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="xsi" id="_uVfJINt2EDqheP12HW8T5g" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="xsi" id="_c1038N_iEDq_W9kA88M8NQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_eventMessageItem" structureRef="life.genny.qwandaq.message.QEventMessage"/>
   <bpmn2:itemDefinition id="_tokenItem" structureRef="String"/>
   <bpmn2:interface id="_1CA3B0C7-F31D-4699-B8B2-5F186C587F2C_ServiceInterface" name="life.genny.kogito.common.service.InitService" implementationRef="life.genny.kogito.common.service.InitService">
@@ -15,10 +15,13 @@
     <bpmn2:operation id="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A_ServiceOperation" name="sendPCMs" implementationRef="sendPCMs"/>
   </bpmn2:interface>
   <bpmn2:interface id="_AC61C195-DDF1-445C-90AF-519DDABDA796_ServiceInterface" name="life.genny.kogito.common.service.InitService" implementationRef="life.genny.kogito.common.service.InitService">
-    <bpmn2:operation id="_AC61C195-DDF1-445C-90AF-519DDABDA796_ServiceOperation" name="sendDashboard" implementationRef="sendDashboard"/>
+    <bpmn2:operation id="_AC61C195-DDF1-445C-90AF-519DDABDA796_ServiceOperation" name="sendOutstandingTasks" implementationRef="sendOutstandingTasks"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_41883E00-0D20-4A23-8A1D-544BA2F8F429" name="Default Collaboration">
-    <bpmn2:participant id="_5DAC6D84-8E7A-4403-A3CF-28CACCF6CDD7" name="Pool Participant" processRef="authInit"/>
+  <bpmn2:interface id="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C_ServiceInterface" name="life.genny.kogito.common.service.InitService" implementationRef="life.genny.kogito.common.service.InitService">
+    <bpmn2:operation id="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C_ServiceOperation" name="sendAddItems" implementationRef="sendAddItems"/>
+  </bpmn2:interface>
+  <bpmn2:collaboration id="_4A6DBF3E-4E12-47C8-B71C-63C30D1B2485" name="Default Collaboration">
+    <bpmn2:participant id="_586C6A29-0755-46E8-8C37-1C10F4D65D0E" name="Pool Participant" processRef="authInit"/>
   </bpmn2:collaboration>
   <bpmn2:process id="authInit" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Auth Init" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[The initialisation workflow. This is called whenever a user logs in or refreshes a page.]]></bpmn2:documentation>
@@ -39,33 +42,43 @@
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:property>
-    <bpmn2:sequenceFlow id="_9038B643-7815-4A21-98B1-27A5CE5DA1FF" sourceRef="_AC61C195-DDF1-445C-90AF-519DDABDA796" targetRef="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A">
+    <bpmn2:sequenceFlow id="_0AA6D2CE-BA59-4364-A9B1-86C5FC8BA12B" sourceRef="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C" targetRef="_AC61C195-DDF1-445C-90AF-519DDABDA796">
       <bpmn2:extensionElements>
-        <drools:metaData name="isAutoConnection.source">
+        <drools:metaData name="isAutoConnection.target">
           <drools:metaValue><![CDATA[true]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:sequenceFlow>
-    <bpmn2:sequenceFlow id="_EA22F2E9-F37F-408F-B335-62AEE700B114" sourceRef="_34659FC5-AC5A-410F-9A63-1B1406E7DBC3" targetRef="_AC61C195-DDF1-445C-90AF-519DDABDA796">
+    <bpmn2:sequenceFlow id="_FA6A0212-0854-4FB5-BF76-311E6BCA5937" sourceRef="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A" targetRef="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C"/>
+    <bpmn2:sequenceFlow id="_30D58104-F258-450C-AE6E-5BD6AC9213CD" sourceRef="_34659FC5-AC5A-410F-9A63-1B1406E7DBC3" targetRef="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A">
       <bpmn2:extensionElements>
-        <drools:metaData name="isAutoConnection.source">
+        <drools:metaData name="isAutoConnection.target">
           <drools:metaValue><![CDATA[true]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_7DD319EC-E0C1-40B6-A5A4-557DCBDE907F" sourceRef="_C96836A1-E29F-42DF-A617-1E060B913B2F" targetRef="_34659FC5-AC5A-410F-9A63-1B1406E7DBC3"/>
     <bpmn2:sequenceFlow id="_CA087554-EA8E-4B60-B194-DF63CE843CEB" sourceRef="_1CA3B0C7-F31D-4699-B8B2-5F186C587F2C" targetRef="_C96836A1-E29F-42DF-A617-1E060B913B2F"/>
-    <bpmn2:sequenceFlow id="_A2E32710-27E7-46F5-9FB8-7180283A4B06" sourceRef="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A" targetRef="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A"/>
+    <bpmn2:sequenceFlow id="_8B28B688-0E4C-446A-8492-7844A25029B8" sourceRef="_AC61C195-DDF1-445C-90AF-519DDABDA796" targetRef="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A"/>
     <bpmn2:sequenceFlow id="_E1E6860C-248D-480B-9500-7AC2B2B698D8" sourceRef="_C26E7E06-BC61-4F28-836A-5AC72A0AFFC2" targetRef="_1CA3B0C7-F31D-4699-B8B2-5F186C587F2C"/>
     <bpmn2:sequenceFlow id="_9EAFFC1E-9D1F-449C-90C5-1E1E545291F2" sourceRef="_321CE5F6-80DE-48BD-93F4-41E832A810FF" targetRef="_C26E7E06-BC61-4F28-836A-5AC72A0AFFC2"/>
-    <bpmn2:serviceTask id="_AC61C195-DDF1-445C-90AF-519DDABDA796" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.InitService" drools:serviceoperation="sendDashboard" name="Send Dashboard" implementation="Java" operationRef="_AC61C195-DDF1-445C-90AF-519DDABDA796_ServiceOperation">
+    <bpmn2:serviceTask id="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.InitService" drools:serviceoperation="sendAddItems" name="Send Add Items" implementation="Java" operationRef="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C_ServiceOperation">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
-          <drools:metaValue><![CDATA[Send Dashboard]]></drools:metaValue>
+          <drools:metaValue><![CDATA[Send Add Items]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>_EA22F2E9-F37F-408F-B335-62AEE700B114</bpmn2:incoming>
-      <bpmn2:outgoing>_9038B643-7815-4A21-98B1-27A5CE5DA1FF</bpmn2:outgoing>
+      <bpmn2:incoming>_FA6A0212-0854-4FB5-BF76-311E6BCA5937</bpmn2:incoming>
+      <bpmn2:outgoing>_0AA6D2CE-BA59-4364-A9B1-86C5FC8BA12B</bpmn2:outgoing>
+    </bpmn2:serviceTask>
+    <bpmn2:serviceTask id="_AC61C195-DDF1-445C-90AF-519DDABDA796" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.InitService" drools:serviceoperation="sendOutstandingTasks" name="Send Outstanding Tasks" implementation="Java" operationRef="_AC61C195-DDF1-445C-90AF-519DDABDA796_ServiceOperation">
+      <bpmn2:extensionElements>
+        <drools:metaData name="elementname">
+          <drools:metaValue><![CDATA[Send Outstanding Tasks]]></drools:metaValue>
+        </drools:metaData>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>_0AA6D2CE-BA59-4364-A9B1-86C5FC8BA12B</bpmn2:incoming>
+      <bpmn2:outgoing>_8B28B688-0E4C-446A-8492-7844A25029B8</bpmn2:outgoing>
     </bpmn2:serviceTask>
     <bpmn2:serviceTask id="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.InitService" drools:serviceoperation="sendPCMs" name="Send PCMs" implementation="Java" operationRef="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A_ServiceOperation">
       <bpmn2:extensionElements>
@@ -73,8 +86,8 @@
           <drools:metaValue><![CDATA[Send PCMs]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>_9038B643-7815-4A21-98B1-27A5CE5DA1FF</bpmn2:incoming>
-      <bpmn2:outgoing>_A2E32710-27E7-46F5-9FB8-7180283A4B06</bpmn2:outgoing>
+      <bpmn2:incoming>_30D58104-F258-450C-AE6E-5BD6AC9213CD</bpmn2:incoming>
+      <bpmn2:outgoing>_FA6A0212-0854-4FB5-BF76-311E6BCA5937</bpmn2:outgoing>
     </bpmn2:serviceTask>
     <bpmn2:serviceTask id="_34659FC5-AC5A-410F-9A63-1B1406E7DBC3" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.InitService" drools:serviceoperation="sendAllAttributes" name="Send All Attributes" implementation="Java" operationRef="_34659FC5-AC5A-410F-9A63-1B1406E7DBC3_ServiceOperation">
       <bpmn2:extensionElements>
@@ -83,7 +96,7 @@
         </drools:metaData>
       </bpmn2:extensionElements>
       <bpmn2:incoming>_7DD319EC-E0C1-40B6-A5A4-557DCBDE907F</bpmn2:incoming>
-      <bpmn2:outgoing>_EA22F2E9-F37F-408F-B335-62AEE700B114</bpmn2:outgoing>
+      <bpmn2:outgoing>_30D58104-F258-450C-AE6E-5BD6AC9213CD</bpmn2:outgoing>
     </bpmn2:serviceTask>
     <bpmn2:serviceTask id="_C96836A1-E29F-42DF-A617-1E060B913B2F" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.InitService" drools:serviceoperation="sendUser" name="Send User BE" implementation="Java" operationRef="_C96836A1-E29F-42DF-A617-1E060B913B2F_ServiceOperation">
       <bpmn2:extensionElements>
@@ -104,7 +117,7 @@
       <bpmn2:outgoing>_CA087554-EA8E-4B60-B194-DF63CE843CEB</bpmn2:outgoing>
     </bpmn2:serviceTask>
     <bpmn2:endEvent id="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A">
-      <bpmn2:incoming>_A2E32710-27E7-46F5-9FB8-7180283A4B06</bpmn2:incoming>
+      <bpmn2:incoming>_8B28B688-0E4C-446A-8492-7844A25029B8</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:scriptTask id="_C26E7E06-BC61-4F28-836A-5AC72A0AFFC2" name="Auth Init Setup" scriptFormat="http://www.java.com/java">
       <bpmn2:extensionElements>
@@ -129,7 +142,7 @@
         <dc:Bounds height="102" width="154" x="277" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A" bpmnElement="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A">
-        <dc:Bounds height="56" width="56" x="1679" y="239"/>
+        <dc:Bounds height="56" width="56" x="1852" y="239"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__1CA3B0C7-F31D-4699-B8B2-5F186C587F2C" bpmnElement="_1CA3B0C7-F31D-4699-B8B2-5F186C587F2C">
         <dc:Bounds height="102" width="154" x="502" y="216"/>
@@ -141,10 +154,13 @@
         <dc:Bounds height="102" width="154" x="952" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__9AC022FD-ACC7-4E1A-99F8-948E7C4F793A" bpmnElement="_9AC022FD-ACC7-4E1A-99F8-948E7C4F793A">
-        <dc:Bounds height="102" width="154" x="1428" y="216"/>
+        <dc:Bounds height="102" width="154" x="1177" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__AC61C195-DDF1-445C-90AF-519DDABDA796" bpmnElement="_AC61C195-DDF1-445C-90AF-519DDABDA796">
-        <dc:Bounds height="102" width="154" x="1177" y="216"/>
+        <dc:Bounds height="102" width="154" x="1627" y="216"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__091FAD8A-66B3-4FD3-9CEB-046E944E9C8C" bpmnElement="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C">
+        <dc:Bounds height="102" width="154" x="1402" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="edge_shape__321CE5F6-80DE-48BD-93F4-41E832A810FF_to_shape__C26E7E06-BC61-4F28-836A-5AC72A0AFFC2" bpmnElement="_9EAFFC1E-9D1F-449C-90C5-1E1E545291F2">
         <di:waypoint x="193" y="267"/>
@@ -154,9 +170,9 @@
         <di:waypoint x="354" y="267"/>
         <di:waypoint x="579" y="267"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__9AC022FD-ACC7-4E1A-99F8-948E7C4F793A_to_shape__1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A" bpmnElement="_A2E32710-27E7-46F5-9FB8-7180283A4B06">
-        <di:waypoint x="1582" y="267"/>
-        <di:waypoint x="1679" y="267"/>
+      <bpmndi:BPMNEdge id="edge_shape__AC61C195-DDF1-445C-90AF-519DDABDA796_to_shape__1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A" bpmnElement="_8B28B688-0E4C-446A-8492-7844A25029B8">
+        <di:waypoint x="1704" y="267"/>
+        <di:waypoint x="1880" y="267"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__1CA3B0C7-F31D-4699-B8B2-5F186C587F2C_to_shape__C96836A1-E29F-42DF-A617-1E060B913B2F" bpmnElement="_CA087554-EA8E-4B60-B194-DF63CE843CEB">
         <di:waypoint x="579" y="267"/>
@@ -166,13 +182,17 @@
         <di:waypoint x="804" y="267"/>
         <di:waypoint x="952" y="267"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__34659FC5-AC5A-410F-9A63-1B1406E7DBC3_to_shape__AC61C195-DDF1-445C-90AF-519DDABDA796" bpmnElement="_EA22F2E9-F37F-408F-B335-62AEE700B114">
-        <di:waypoint x="1029" y="216"/>
+      <bpmndi:BPMNEdge id="edge_shape__34659FC5-AC5A-410F-9A63-1B1406E7DBC3_to_shape__9AC022FD-ACC7-4E1A-99F8-948E7C4F793A" bpmnElement="_30D58104-F258-450C-AE6E-5BD6AC9213CD">
+        <di:waypoint x="1029" y="267"/>
         <di:waypoint x="1177" y="267"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__AC61C195-DDF1-445C-90AF-519DDABDA796_to_shape__9AC022FD-ACC7-4E1A-99F8-948E7C4F793A" bpmnElement="_9038B643-7815-4A21-98B1-27A5CE5DA1FF">
-        <di:waypoint x="1254" y="318"/>
-        <di:waypoint x="1428" y="267"/>
+      <bpmndi:BPMNEdge id="edge_shape__9AC022FD-ACC7-4E1A-99F8-948E7C4F793A_to_shape__091FAD8A-66B3-4FD3-9CEB-046E944E9C8C" bpmnElement="_FA6A0212-0854-4FB5-BF76-311E6BCA5937">
+        <di:waypoint x="1254" y="267"/>
+        <di:waypoint x="1479" y="267"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_shape__091FAD8A-66B3-4FD3-9CEB-046E944E9C8C_to_shape__AC61C195-DDF1-445C-90AF-519DDABDA796" bpmnElement="_0AA6D2CE-BA59-4364-A9B1-86C5FC8BA12B">
+        <di:waypoint x="1479" y="267"/>
+        <di:waypoint x="1627" y="267"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
@@ -308,10 +328,30 @@
               </bpsim:UnitCost>
             </bpsim:CostParameters>
           </bpsim:ElementParameters>
+          <bpsim:ElementParameters elementRef="_091FAD8A-66B3-4FD3-9CEB-046E944E9C8C">
+            <bpsim:TimeParameters>
+              <bpsim:ProcessingTime>
+                <bpsim:NormalDistribution mean="0" standardDeviation="0"/>
+              </bpsim:ProcessingTime>
+            </bpsim:TimeParameters>
+            <bpsim:ResourceParameters>
+              <bpsim:Availability>
+                <bpsim:FloatingParameter value="0"/>
+              </bpsim:Availability>
+              <bpsim:Quantity>
+                <bpsim:FloatingParameter value="0"/>
+              </bpsim:Quantity>
+            </bpsim:ResourceParameters>
+            <bpsim:CostParameters>
+              <bpsim:UnitCost>
+                <bpsim:FloatingParameter value="0"/>
+              </bpsim:UnitCost>
+            </bpsim:CostParameters>
+          </bpsim:ElementParameters>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_uVfJINt2EDqheP12HW8T5g</bpmn2:source>
-    <bpmn2:target>_uVfJINt2EDqheP12HW8T5g</bpmn2:target>
+    <bpmn2:source>_c1038N_iEDq_W9kA88M8NQ</bpmn2:source>
+    <bpmn2:target>_c1038N_iEDq_W9kA88M8NQ</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

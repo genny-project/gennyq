@@ -18,7 +18,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import io.vertx.core.http.HttpServerRequest;
-import life.genny.fyodor.utils.SearchUtility;
+import life.genny.fyodor.utils.FyodorSearch;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchBeResult;
@@ -47,7 +47,7 @@ public class Search {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	SearchUtility search;
+	FyodorSearch search;
 
 	@Inject
 	UserToken userToken;

@@ -65,8 +65,9 @@ public class SendMessageService {
 		log.info("ctxMap : " + (ctxMap != null ? jsonb.toJson(ctxMap) : "null"));
 
 		QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(templateCode);
-		if(ctxMap != null)
+		if (ctxMap != null) {
 			msgBuilder.setMessageContextMap(ctxMap);
+		}
 		msgBuilder.addRecipient(recipientBE)
 			.setUtils(beUtils)
 			.setToken(userToken)

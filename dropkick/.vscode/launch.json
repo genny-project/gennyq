@@ -9,7 +9,7 @@
             "name": "Remote Debug (Attach Quarkus)",
             "request": "attach",
             "hostName": "localhost",
-            "port":5580
+            "port":5557
         },
         {
             "type": "java",

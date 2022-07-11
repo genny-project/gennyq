@@ -382,13 +382,15 @@ public class BaseEntityUtils {
 	 * @return The value as an Object
 	 */
 	public Object getBaseEntityValue(final String baseEntityCode, final String attributeCode) {
+
 		BaseEntity be = getBaseEntityByCode(baseEntityCode);
-		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
-		if (ea.isPresent()) {
-			return ea.get().getObject();
-		} else {
-			return null;
+		if (be != null) {
+			Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
+			if (ea.isPresent()) {
+				return ea.get().getObject();
+			}
 		}
+		return null;
 	}
 
 	/**
@@ -400,17 +402,16 @@ public class BaseEntityUtils {
 	 */
 	public static String getBaseEntityAttrValueAsString(BaseEntity be, String attributeCode) {
 
-		String attributeVal = null;
-		for (EntityAttribute ea : be.getBaseEntityAttributes()) {
-			try {
-				if (ea.getAttributeCode().equals(attributeCode)) {
-					attributeVal = ea.getObjectAsString();
-				}
-			} catch (Exception e) {
-			}
+		if (be == null) {
+			return null;
 		}
 
-		return attributeVal;
+		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
+		if (ea.isPresent()) {
+			return ea.get().getObjectAsString();
+		}
+
+		return null;
 	}
 
 	/**
@@ -422,15 +423,8 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityValueAsString(final String baseEntityCode, final String attributeCode) {
 
-		String attrValue = null;
-
-		if (baseEntityCode != null) {
-
-			BaseEntity be = getBaseEntityByCode(baseEntityCode);
-			attrValue = getBaseEntityAttrValueAsString(be, attributeCode);
-		}
-
-		return attrValue;
+		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		return getBaseEntityAttrValueAsString(be, attributeCode);
 	}
 
 	/**
@@ -441,13 +435,13 @@ public class BaseEntityUtils {
 	 * @return The value as a LocalDateTime
 	 */
 	public LocalDateTime getBaseEntityValueAsLocalDateTime(final String baseEntityCode, final String attributeCode) {
+
 		BaseEntity be = getBaseEntityByCode(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDateTime();
-		} else {
-			return null;
 		}
+		return null;
 	}
 
 	/**
@@ -462,9 +456,8 @@ public class BaseEntityUtils {
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDate();
-		} else {
-			return null;
 		}
+		return null;
 	}
 
 	/**
@@ -480,9 +473,8 @@ public class BaseEntityUtils {
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueTime();
-		} else {
-			return null;
 		}
+		return null;
 	}
 
 	/**
@@ -625,6 +617,9 @@ public class BaseEntityUtils {
 				}
 			}
 		}
+
+		Attribute linkDef = qwandaUtils.getAttribute("LNK_DEF");
+		item.addAnswer(new Answer(item, item, linkDef, "[\""+defBE.getCode()+"\"]"));
 
 		try {
 			updateBaseEntity(item);

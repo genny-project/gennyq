@@ -1,0 +1,70 @@
+syntax = "proto2"; 
+package life.genny.gadaq.processQuestions; 
+import "kogito-index.proto";
+import "kogito-types.proto";
+option kogito_model = "ProcessQuestions";
+option kogito_id = "processQuestions";
+
+/* @Indexed */ 
+message KogitoData { 
+	option java_package = "life.genny.kogito.common.models";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string code = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 id = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string parentCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string processId = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string rootCode = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string sourceCode = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string targetCode = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string value = 9; 
+}
+/* @Indexed */ 
+message ProcessQuestions { 
+	option java_package = "life.genny.gadaq";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string answerJson = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string askMessageJson = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional KogitoData data = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string defCode = 4; 
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
+	optional string id = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional bool mandatoryFieldsCompleted = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string pcmCode = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string processBEJson = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string questionCode = 9; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string sourceCode = 10; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string targetCode = 11; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string userCode = 12; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 13; 
+}

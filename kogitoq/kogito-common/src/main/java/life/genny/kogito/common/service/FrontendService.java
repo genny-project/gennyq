@@ -27,12 +27,13 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import org.apache.commons.lang3.StringUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class FrontendService {
 
-	private static final Logger log = Logger.getLogger(NavigationService.class);
+	private static final Logger log = Logger.getLogger(FrontendService.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -47,6 +48,13 @@ public class FrontendService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	DefUtils defUtils;
+
+	public String getCurrentUserCode() {
+		return userToken.getUserCode();
+	}
 
 	/**
 	 * Get asks using a question code, for a given source and target.
@@ -65,7 +73,13 @@ public class FrontendService {
 		log.info("processId :" + processId);
 
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+
+		BaseEntity target = null;
+		if ("NON_EXISTENT".equals(targetCode)) {
+			target = new BaseEntity(targetCode, targetCode);
+		} else {
+			target = beUtils.getBaseEntityByCode(targetCode);
+		}
 
 		if (source == null) {
 			log.error("No Source entity found!");
@@ -106,6 +120,31 @@ public class FrontendService {
 	}
 
 	/**
+	 * Work out the DEF for the baseentity .
+	 *
+	 * @param targetCode The code of the target entity
+	 * @return The DEF
+	 */
+	public String getDEF(String targetCode) {
+
+		if (targetCode == null) {
+			log.error("TargetCode must not be null!");
+			return null;
+		}
+
+		if ("NON_EXISTENT".equals(targetCode)) {
+			return null;
+		}
+
+		// Find the DEF
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity defBE = defUtils.getDEF(target);
+		log.info("ProcessBE identified as a " + defBE);
+
+		return defBE.getCode();
+	}
+
+	/**
 	 * Setup the process entity used to store task data.
 	 *
 	 * @param targetCode     The code of the target entity
@@ -127,7 +166,12 @@ public class FrontendService {
 		processBE.setRealm(userToken.getProductCode());
 
 		// only copy the entityAttributes used in the Asks
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity target = null;
+		if ("NON_EXISTENT".equals(targetCode)) {
+			target = new BaseEntity(targetCode, targetCode);
+		} else {
+			target = beUtils.getBaseEntityByCode(targetCode);
+		}
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
@@ -215,15 +259,28 @@ public class FrontendService {
 	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
 
 		BaseEntity processBE = null;
+<<<<<<< HEAD
 
 		try {
 			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		} catch (java.lang.NullPointerException e) {
 			log.error("Process Entity json must not be null or have null entry! ->" + processBEJson);
+=======
+		QDataAskMessage askMsg = null;
+		
+		try {
+			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		} catch (java.lang.NullPointerException e) {
+			log.error("Process Entity json must not be null or have null entry! -> " + processBEJson);
 			return;
-
 		}
-		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		try {
+			askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		} catch (java.lang.NullPointerException e) {
+			log.error("Ask json must not be null or have null entry! -> " + askMessageJson);
+>>>>>>> 10.1.0
+			return;
+		}
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
@@ -339,8 +396,10 @@ public class FrontendService {
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+		askMessage.getItems().set(0, ask);
 
-		KafkaUtils.writeMsg("webcmds", askMessageJson);
+		askMessage.setToken(userToken.getToken());
+		KafkaUtils.writeMsg("webcmds", askMessage);
 	}
 
 	/**
@@ -354,7 +413,6 @@ public class FrontendService {
 
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
-
 		BaseEntity target = beUtils.getBaseEntityByCode(ask.getTargetCode());
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();

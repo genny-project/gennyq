@@ -56,7 +56,7 @@
     <jackson-datatype-money.version>1.0.0</jackson-datatype-money.version>
     <version.moneta>1.1</version.moneta>
     <jwt.version>0.10.7</jwt.version>
-    <testcontainers.version>1.16.0</testcontainers.version>
+    <testcontainers.version>1.17.0</testcontainers.version>
   </properties>
 
   <distributionManagement>
