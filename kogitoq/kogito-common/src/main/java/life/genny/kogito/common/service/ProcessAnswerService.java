@@ -93,12 +93,15 @@ public class ProcessAnswerService {
 
 		// log the new value
 		String savedValue = processBE.getValueAsString(answer.getAttributeCode());
-		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue);
+		
 
 		// Now update the cached version of the processBE with an expiry (used in dropkick and lauchy)	
 		// cache the current ProcessBE so that it can be used quickly by lauchy etc
-		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBE,defCode);
-		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDef);
+		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBE, defCode);
+		String processBeAndDefJson = jsonb.toJson(processBeAndDef);
+		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+
+		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue+"  and processBE cached to "+processId+":PROCESS_BE");
 		return jsonb.toJson(processBE);
 	}
 
