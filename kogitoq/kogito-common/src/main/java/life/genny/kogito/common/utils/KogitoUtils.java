@@ -2,6 +2,7 @@ package life.genny.kogito.common.utils;
 
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -276,12 +277,12 @@ public class KogitoUtils {
 		} catch (Exception e) {
 			log.error("Cannot parse this data!");
 			e.printStackTrace();
-			return null;
+			return new ArrayList<>();
 		}
 
 		if (msg.getItems().length == 0) {
 			log.debug("Received empty answer message: " + data);
-			return null;
+			return new ArrayList<>();
 		}
 
 		// start new session
