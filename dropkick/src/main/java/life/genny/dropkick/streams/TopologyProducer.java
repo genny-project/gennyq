@@ -201,9 +201,9 @@ public class TopologyProducer {
 		// Check if attribute code exists as a SER for the DEF
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
 
-		for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
-			log.info(ea.getBaseEntityCode() + "   EA=" + ea.getAttributeCode());
-		}
+		// for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
+		// 	log.info(ea.getBaseEntityCode() + "   EA=" + ea.getAttributeCode());
+		// }
 
 		if (!searchAttribute.isPresent()) {
 			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
