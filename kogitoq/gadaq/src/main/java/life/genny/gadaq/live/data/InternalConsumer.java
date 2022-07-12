@@ -10,6 +10,8 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
@@ -92,7 +94,9 @@ public class InternalConsumer {
 	public void getEvent(String event) {
 
 		Instant start = Instant.now();
-		log.info("Received Event : " + event);
+		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
+		//eventJson.remove("token");
+		log.info("Received Event : " + eventJson.toString());
 
 		// init scope and process msg
 		scope.init(event);
