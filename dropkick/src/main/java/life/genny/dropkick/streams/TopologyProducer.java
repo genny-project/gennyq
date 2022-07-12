@@ -156,7 +156,18 @@ public class TopologyProducer {
 		// Grab info required to find the DEF
 		String attributeCode = json.getString("attributeCode");
 		String targetCode = dataJson.getString("targetCode");
-		String processId = dataJson.getString("processId");
+		String processId = null;
+		if (dataJson.containsKey("processId")) {
+			processId = dataJson.getString("processId");
+		} else {
+			JsonObject nonTokenJson = json;
+			if (nonTokenJson.containsKey("token")) {
+				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();
+			}
+			
+			log.error("No processId in DD Event "+nonTokenJson);
+		}
+	
 
 		BaseEntity target = null;
 		BaseEntity defBE = null;
