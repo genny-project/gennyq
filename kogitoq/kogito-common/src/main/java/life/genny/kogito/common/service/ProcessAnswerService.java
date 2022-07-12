@@ -160,9 +160,9 @@ public class ProcessAnswerService {
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
-			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
-			}
+			// if (ea.getPk().getBaseEntity() == null) {
+			// 	log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
+			// }
 
 			ea.setBaseEntity(target);
 			if (ea.getPk().getBaseEntity() == null) {
@@ -173,6 +173,12 @@ public class ProcessAnswerService {
 			} catch (BadDataException e) {
 				e.printStackTrace();
 			}
+			if ("PRI_NAME".equals(ea.getAttributeCode())) {
+				// Save this to the target baseentity Name..
+				target.setName(ea.getValue());
+			}
+
+
 		}
 
 		// save these answrs to db and cache

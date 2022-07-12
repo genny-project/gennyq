@@ -15,6 +15,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.ProcessBeAndDef;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -251,8 +252,10 @@ public class FrontendService {
 	 *
 	 * @param code The code of the baseentity to send
 	 * @param askMsg The ask message used to filter attributes
+	 * @param processId The process id to use for the baseentity cache
+	 * @param defCode . The type of processBE (to save calculating it again)
 	 */
-	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
+	public void sendBaseEntitys(String processBEJson, String askMessageJson, String processId, String defCode) {
 
 		BaseEntity processBE = null;
 		QDataAskMessage askMsg = null;
@@ -296,14 +299,27 @@ public class FrontendService {
 		msg.setReplace(true);
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
+		// Sending the BE here has issues with dropdown items...
+		
 
-		KafkaUtils.writeMsg("webdata", msg);
+		// Now save the processBE into cache so that the lauchy and dropkick can recognise it as valid
+		// Now update the cached version of the processBE with an expiry (used in dropkick and lauchy)	
+		// cache the current ProcessBE so that it can be used quickly by lauchy etc
+		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBE, defCode);
+		String processBeAndDefJson = jsonb.toJson(processBeAndDef);
+		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+
+		log.info("processBE cached to "+processId+":PROCESS_BE");
+
 
 		// NOTE: only using first ask item
 		Ask ask = askMsg.getItems().get(0);
 
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processBE, ask.getQuestion().getCode());
+
+		// Now send the baseentity to the Frontend so that the 'menu' are already there waiting
+		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 	/**
