@@ -5,6 +5,8 @@ import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -73,6 +75,31 @@ public class NavigationService {
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
+	/**
+	 * Send a view event.
+	 *
+	 * @param code The code of the view event.
+	 * @param targetCode The targetCode of the view event.
+	 */
+	public void sendViewEvent(final String code, final String targetCode) {
+
+		JsonObject json = Json.createObjectBuilder()
+			.add("event_type", "VIEW")
+			.add("msg_type", "EVT_MSG")
+			.add("token", userToken.getToken())
+			.add("data", Json.createObjectBuilder()
+				.add("code", code)
+				.add("targetCode", targetCode))
+			.build();
+
+		log.info("Sending View Event -> " + code + " : " + targetCode);
+
+		KafkaUtils.writeMsg("events", json.toString());
+	}
+
+	/**
+	 * Function to update a pcm location
+	 */
     public void updatePcm(String pcmCode, String loc, String newValue) {
 
         log.info("Replacing " + pcmCode + ":" + loc + " with " + newValue);

@@ -247,13 +247,15 @@ public class QwandaUtils {
 		// check if it is a question group
 		if (question.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
 
+			log.info("[*] Parent Question: " + question.getCode());
+
 			// fetch questionQuestions from the DB
 			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode, question.getCode());
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info(" [*] Found Child Question in database: " + questionQuestion.getTargetCode());
+				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"+ questionQuestion.getTargetCode());
 
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 				
@@ -306,9 +308,9 @@ public class QwandaUtils {
 
 		// grab attribute code of current ask
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
-			log.debug("Prefix not in accepted list");
+			log.debugv("Prefix %s not in accepted list", code.substring(0, 4));
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
-			log.debug("Attribute code in exclude list");
+			log.debugv("Attribute %s in exclude list", code);
 		} else {
 			codes.add(code);
 		}

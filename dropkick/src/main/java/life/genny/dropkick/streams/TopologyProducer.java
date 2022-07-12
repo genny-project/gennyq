@@ -199,10 +199,6 @@ public class TopologyProducer {
 		// Check if attribute code exists as a SER for the DEF
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
 
-		for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
-			log.info(ea.getBaseEntityCode()+"   EA="+ea.getAttributeCode());
-		}
-
 		if (!searchAttribute.isPresent()) {
 			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode() + ", No attribute found for SER_" + attributeCode);
 			return false;
@@ -224,10 +220,7 @@ public class TopologyProducer {
 		return true;
 	}
 
-	
 	/**
-<<<<<<< HEAD
-=======
 	 * Fetch the targetCode stored in the processInstance 
 	 * for the given processId.
 	 */
@@ -239,14 +232,14 @@ public class TopologyProducer {
 		log.info("Fetching processBE for processId : " + processId);
 
 		// check in cache first (But not ready yet, processQuestions would need to save the processBe into cache every answer received)
-	/* 	String processBeStr = CacheUtils.getObject(userToken.getProductCode(), processId+":PROCESS_BE", String.class);
-		if (processBeStr != null) {
+		/* 	String processBeStr = CacheUtils.getObject(userToken.getProductCode(), processId+":PROCESS_BE", String.class);
+			if (processBeStr != null) {
 			processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
 			return processBe;
-		} */
+			} */
 
-	JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
-	if (array.isEmpty()) {
+		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+		if (array.isEmpty()) {
 			log.error("Nothing found for processId: " + processId);
 			return null;
 		}
@@ -256,19 +249,18 @@ public class TopologyProducer {
 		processBeStr = variables.getString("processBEJson");
 		defCode = variables.containsKey("defCode")?variables.getString("defCode"):null;
 		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
-		
+
 		if (defCode == null) {
 			BaseEntity defBE = defUtils.getDEF(processBe);
 			defCode = defBE.getCode();
 		}
-		
+
 		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBe, defCode);
-		
+
 		return processBeAndDef;
 	}
 
 	/**
->>>>>>> a9a9d5c9bf43563f75a38c9dc784ac560110e0b0
 	 * Fetch and return the results for this dropdown. Will return null
 	 * if items can not be fetched for this message. This null must
 	 * be filtered by streams builder.

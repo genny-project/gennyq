@@ -25,6 +25,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 
 /*
@@ -46,6 +47,9 @@ public class KogitoUtils {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
+	@Inject
+	GraphQLUtils gqlUtils;
 
 	@Inject
 	DefUtils defUtils;
@@ -254,6 +258,7 @@ public class KogitoUtils {
 		session.insert(userToken);
 		session.insert(beUtils);
 		session.insert(defUtils);
+		session.insert(gqlUtils);
 		session.insert(msg);
 
 		// trigger EventRoutes rules
@@ -290,12 +295,13 @@ public class KogitoUtils {
 
 		// insert utils and other beans
 		session.insert(kogitoUtils);
+		session.insert(jsonb);
 		session.insert(defUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
 
 		// insert answers from message
-		for(Answer answer : msg.getItems()) {
+		for (Answer answer : msg.getItems()) {
 			log.debug("Inserting answer: " + answer.getAttributeCode() + "=" + answer.getValue() + " into session");
 			session.insert(answer);
 		}

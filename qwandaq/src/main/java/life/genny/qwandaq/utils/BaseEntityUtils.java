@@ -105,18 +105,17 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
-		// check for entity in the cache
 
-		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		BaseEntity entity = null;//(BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		// check for entity in the cache
+		// BaseEntityKey key = new BaseEntityKey(productCode, code);
+		// BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		BaseEntity entity = null;
 		
 		// check in database if not in cache
 		if (entity == null) {			
 			entity = databaseUtils.findBaseEntityByCode(productCode, code);
-			log.info("Fetched BaseEntity "+productCode+":" + code + " not in cache, checking in database..."+(entity==null?"not found":"found"));
-		}
-		if (entity == null) {
-			log.info("BaseEntity " + code + " not found .");
+			log.debug("BaseEntity " + productCode + ":" + code + " not in cache... "
+					+ ( entity == null ? "Not in DB either!" : "Found in DB." ));
 		}
 
 		return entity;
@@ -134,7 +133,7 @@ public class BaseEntityUtils {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		if (response == null) {
 			log.error("Null response from " + uri);
@@ -208,7 +207,7 @@ public class BaseEntityUtils {
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/count";
 		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken.getToken());
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		if (response == null) {
 			log.error("Null response from " + uri);

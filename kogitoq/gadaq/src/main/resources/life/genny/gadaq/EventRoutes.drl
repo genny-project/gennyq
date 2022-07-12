@@ -2,6 +2,7 @@ package life.genny.gadaq;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -100,10 +101,12 @@ when
 	msg: QEventMessage( data.code == "UPDATE_SUMMARY" )
 	kogitoUtils : KogitoUtils()
 	gqlUtils : GraphQLUtils()
+	jsonb : Jsonb()
 then
-	String processId = gqlUtils.fetchProcessId("personLifecycle", "entityCode", msg.getData().getTargetCode());
+	System.out.println("Updating Summary");
+	String processId = gqlUtils.fetchProcessId("PersonLifecycle", "entityCode", msg.getData().getTargetCode());
 	System.out.println("PID = " + processId);
-	kogitoUtils.sendSignal("personLifecycle", processId, "update_summary", "summary", msg.getData().getParentCode());
+	kogitoUtils.sendSignal("personLifecycle", processId, "update_summary", jsonb.toJson(msg));
 	retract(msg);
 end
 
