@@ -41,21 +41,12 @@ import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+import life.genny.qwandaq.entity.ProcessBeAndDef;
 
 @ApplicationScoped
 public class TopologyProducer {
 
 	private static final Logger log = Logger.getLogger(TopologyProducer.class);
-
-	class ProcessBeAndDef {
-		ProcessBeAndDef(BaseEntity be, String defCode) {
-			this.processBE = be;
-			this.defCode = defCode;
-		}
-
-		public BaseEntity processBE;
-		public String defCode;
-	}
 
 	@ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
 	Integer defaultDropDownSize;
@@ -165,8 +156,18 @@ public class TopologyProducer {
 		// Grab info required to find the DEF
 		String attributeCode = json.getString("attributeCode");
 		String targetCode = dataJson.getString("targetCode");
-		String processId = dataJson.getString("processId");
-
+		String processId = null;
+		if (dataJson.containsKey("processId")) {
+			processId = dataJson.getString("processId");
+		} else {
+			JsonObject nonTokenJson = json;
+			if (nonTokenJson.containsKey("token")) {
+				 nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
+			}
+			
+			log.error("No processId in DD Event "+nonTokenJson);
+		}
+	
 		BaseEntity target = null;
 		BaseEntity defBE = null;
 
@@ -200,7 +201,8 @@ public class TopologyProducer {
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
 
 		if (!searchAttribute.isPresent()) {
-			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode() + ", No attribute found for SER_" + attributeCode);
+			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
+					+ ", No attribute found for SER_" + attributeCode);
 			return false;
 		}
 
@@ -231,12 +233,23 @@ public class TopologyProducer {
 
 		log.info("Fetching processBE for processId : " + processId);
 
-		// check in cache first (But not ready yet, processQuestions would need to save the processBe into cache every answer received)
-		/* 	String processBeStr = CacheUtils.getObject(userToken.getProductCode(), processId+":PROCESS_BE", String.class);
-			if (processBeStr != null) {
-			processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
-			return processBe;
-			} */
+		// check in cache first (But not ready yet, processQuestions would need to save
+		// the processBe into cache every answer received)
+
+		String processBeAndDefCodeStr = CacheUtils.getObject(userToken.getProductCode(), processId + ":PROCESS_BE",
+				String.class);
+		if (!StringUtils.isBlank(processBeAndDefCodeStr)) {
+			log.info("ProcessBeAndDef fetched from cache");
+			ProcessBeAndDef processBeAndDef = null;
+			try {
+				processBeAndDef = jsonb.fromJson(processBeAndDefCodeStr, ProcessBeAndDef.class);
+			} catch (Exception e) {
+				log.error("Error parsing processBeAndDef from cache: " + processBeAndDefCodeStr);
+			}
+			return processBeAndDef;
+		} else {
+			log.info("ProcessBeAndDef for " + processId + ":PROCESS_BE not found in cache");
+		}
 
 		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
 		if (array.isEmpty()) {
@@ -247,15 +260,17 @@ public class TopologyProducer {
 
 		// grab the targetCode from process questions variables
 		processBeStr = variables.getString("processBEJson");
-		defCode = variables.containsKey("defCode")?variables.getString("defCode"):null;
+		defCode = variables.containsKey("defCode") ? variables.getString("defCode") : null;
 		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
 
 		if (defCode == null) {
 			BaseEntity defBE = defUtils.getDEF(processBe);
 			defCode = defBE.getCode();
 		}
-
 		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBe, defCode);
+
+		// cache
+		CacheUtils.putObject(userToken.getProductCode(), processId + ":PROCESS_BE", processBeAndDef);
 
 		return processBeAndDef;
 	}
@@ -333,10 +348,8 @@ public class TopologyProducer {
 			e1.printStackTrace();
 		}
 
+		log.info("SearchValueJson=" + searchValueJson);
 
-		log.info("SearchValueJson="+searchValueJson);
-			
-		
 		Integer pageStart = 0;
 		Integer pageSize = searchValueJson.containsKey("dropdownSize") ? searchValueJson.getInt("dropdownSize")
 				: GennySettings.defaultDropDownPageSize();
@@ -355,7 +368,7 @@ public class TopologyProducer {
 			ctxMap.put("TARGET", target);
 		}
 
-		if (source ==null) {
+		if (source == null) {
 			log.error("Source is NULL!");
 			return null;
 		}
@@ -364,7 +377,7 @@ public class TopologyProducer {
 			log.error("Target is NULL!");
 			return null;
 		}
-		
+
 		JsonArray jsonParms = searchValueJson.getJsonArray("parms");
 		int size = jsonParms.size();
 
@@ -589,7 +602,7 @@ public class TopologyProducer {
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);
 		msg.setShouldDeleteLinkedBaseEntities(false);
-		
+
 		return jsonb.toJson(msg);
 	}
 

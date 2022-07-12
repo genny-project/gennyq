@@ -12,11 +12,13 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.ProcessBeAndDef;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -40,6 +42,7 @@ public class ProcessAnswerService {
 	@Inject
 	DefUtils defUtils;
 
+
 	/**
 	 * Save incoming answer to the process baseentity.
 	 *
@@ -47,7 +50,7 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode) {
+	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode,String processId, String defCode) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
@@ -90,8 +93,15 @@ public class ProcessAnswerService {
 
 		// log the new value
 		String savedValue = processBE.getValueAsString(answer.getAttributeCode());
-		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue);
+		
 
+		// Now update the cached version of the processBE with an expiry (used in dropkick and lauchy)	
+		// cache the current ProcessBE so that it can be used quickly by lauchy etc
+		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBE, defCode);
+		String processBeAndDefJson = jsonb.toJson(processBeAndDef);
+		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+
+		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue+"  and processBE cached to "+processId+":PROCESS_BE");
 		return jsonb.toJson(processBE);
 	}
 
@@ -150,9 +160,9 @@ public class ProcessAnswerService {
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
-			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
-			}
+			// if (ea.getPk().getBaseEntity() == null) {
+			// 	log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
+			// }
 
 			ea.setBaseEntity(target);
 			if (ea.getPk().getBaseEntity() == null) {
@@ -163,6 +173,12 @@ public class ProcessAnswerService {
 			} catch (BadDataException e) {
 				e.printStackTrace();
 			}
+			if ("PRI_NAME".equals(ea.getAttributeCode())) {
+				// Save this to the target baseentity Name..
+				target.setName(ea.getValue());
+			}
+
+
 		}
 
 		// save these answrs to db and cache

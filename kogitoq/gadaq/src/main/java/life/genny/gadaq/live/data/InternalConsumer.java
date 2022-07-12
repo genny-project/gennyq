@@ -10,6 +10,8 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
@@ -59,7 +61,9 @@ public class InternalConsumer {
 		// init scope and process msg
 		scope.init(data);
 		List<Answer> answers = kogitoUtils.runDataInference(data);
-
+		if(answers.size() == 0) {
+			log.warn("[!] Received no answers!!!");
+		}
 		// feed all answers from facts into ProcessQuestions
 		answers.stream()
 			.filter(answer -> answer.getProcessId() != null)
@@ -92,7 +96,13 @@ public class InternalConsumer {
 	public void getEvent(String event) {
 
 		Instant start = Instant.now();
-		log.info("Received Event : " + event);
+		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
+		//eventJson.remove("token");
+		JsonObject nonTokenJson = eventJson;
+		if (nonTokenJson.containsKey("token")) {
+				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();
+		}
+		log.info("Received Event : " +nonTokenJson.toString());
 
 		// init scope and process msg
 		scope.init(event);

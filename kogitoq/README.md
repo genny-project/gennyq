@@ -1,4 +1,4 @@
-# Kogito Travel Agency - tutorial
+# Genny Project Core Quarkus Projects 
 
 ## Description
 

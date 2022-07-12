@@ -56,6 +56,7 @@ public class GennyScopeInit {
 			log.debug("Token Initialized: " + userToken);
 
 		} catch (Exception e) {
+			log.error("Error initializing token from data: " + data);
 			e.printStackTrace();
 		}
     }
