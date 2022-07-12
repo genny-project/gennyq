@@ -1,4 +1,5 @@
 package life.genny.messages.managers;
+
 import life.genny.messages.managers.SMTP.SendGrid.SendEmailWithSendGridAPI;
 import life.genny.messages.util.MsgUtils;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -6,7 +7,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.TimeUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jboss.logging.Logger;
