@@ -61,7 +61,9 @@ public class InternalConsumer {
 		// init scope and process msg
 		scope.init(data);
 		List<Answer> answers = kogitoUtils.runDataInference(data);
-
+		if(answers.size() == 0) {
+			log.warn("[!] Received no answers!!!");
+		}
 		// feed all answers from facts into ProcessQuestions
 		answers.stream()
 			.filter(answer -> answer.getProcessId() != null)

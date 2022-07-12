@@ -276,12 +276,12 @@ public class KogitoUtils {
 		} catch (Exception e) {
 			log.error("Cannot parse this data!");
 			e.printStackTrace();
-			return null;
+			return new ArrayList<>();
 		}
 
 		if (msg.getItems().length == 0) {
 			log.debug("Received empty answer message: " + data);
-			return null;
+			return new ArrayList<>();
 		}
 
 		// start new session
