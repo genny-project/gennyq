@@ -2,6 +2,7 @@ package life.genny.kogito.common.utils;
 
 import java.net.http.HttpResponse;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
