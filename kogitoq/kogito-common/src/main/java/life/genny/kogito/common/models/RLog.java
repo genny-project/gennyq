@@ -7,7 +7,7 @@ public final class RLog {
 
 	private RLog() { }
 
-	protected static Logger getLogger(final RuleContext drools) {
+	private static Logger getLogger(final RuleContext drools) {
 
 		final String pkg = drools.getRule().getPackageName() + "." + drools.getRule().getName();
 		final Logger logger = Logger.getLogger(pkg);

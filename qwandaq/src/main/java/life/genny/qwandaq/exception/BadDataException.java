@@ -1,8 +1,7 @@
 package life.genny.qwandaq.exception;
 
 
-@SuppressWarnings("serial")
-public class BadDataException extends Exception {
+public class BadDataException extends GennyException {
 
 	public BadDataException() {
 		super();

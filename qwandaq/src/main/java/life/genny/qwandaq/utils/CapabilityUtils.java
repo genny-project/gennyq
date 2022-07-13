@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -33,7 +34,7 @@ import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
  * 
  * @author Adam Crow
  * @author Jasper Robison
- * @author Bryn Mecheam
+ * @author Bryn Meachem
  */
 @ApplicationScoped
 public class CapabilityUtils {
@@ -51,6 +52,7 @@ public class CapabilityUtils {
 	public static final String[] ACCEPTED_CAP_PREFIXES = { ROLE_BE_PREFIX, "PER_", "DEF_" };
 
 	public static final String LNK_ROLE_CODE = "LNK_ROLE";
+	public static final String LNK_DEF_CODE = "LNK_DEF";
 
 	List<Attribute> capabilityManifest = new ArrayList<Attribute>();
 
@@ -199,11 +201,11 @@ public class CapabilityUtils {
 		}
 
 		// TODO: Implement user checking
-		// Set<EntityAttribute> entityAttributes = user.getBaseEntityAttributes();
-		// for(EntityAttribute eAttribute : entityAttributes) {
-		// if(!eAttribute.getAttributeCode().startsWith(CAP_CODE_PREFIX))
-		// continue;
-		// }
+		Set<EntityAttribute> entityAttributes = user.getBaseEntityAttributes();
+		for(EntityAttribute eAttribute : entityAttributes) {
+			if(!eAttribute.getAttributeCode().startsWith(CAP_CODE_PREFIX))
+				continue;
+		}
 
 		// Since we are iterating through an array of modes to check, the above impl
 		// will have returned false if any of them were missing
@@ -222,7 +224,8 @@ public class CapabilityUtils {
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		BaseEntity user = beUtils.getUserBaseEntity();
 		if(user == null) {
-			log.error("Null user detected for token: " + userToken.getToken());
+			log.error("Null user detected for token with uuid: " + userToken.getUuid());
+			log.error("Token: " + userToken.getToken());
 			return false;
 		}
 		JsonArray roles = jsonb.fromJson(user.getValueAsString(LNK_ROLE_CODE), JsonArray.class);

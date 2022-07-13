@@ -64,8 +64,8 @@ public class InternalConsumer {
 		if(answers.size() == 0) {
 			log.warn("[!] Received no answers!!!");
 		}
-		
-		kogitoUtils.funnelAnswers(answers);
+		else
+			kogitoUtils.funnelAnswers(answers);
 
 		scope.destroy();
 
