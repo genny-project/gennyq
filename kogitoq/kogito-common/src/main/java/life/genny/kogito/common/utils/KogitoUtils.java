@@ -336,6 +336,8 @@ public class KogitoUtils {
 					return;
 				}
 			});
+
+		return true;
 	}
 
 }
