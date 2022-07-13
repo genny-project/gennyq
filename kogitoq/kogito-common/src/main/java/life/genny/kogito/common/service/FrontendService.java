@@ -14,12 +14,14 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -59,9 +61,9 @@ public class FrontendService {
 	 * Get asks using a question code, for a given source and target.
 	 *
 	 * @param questionCode The question code used to fetch asks
-	 * @param sourceCode The code of the source entity
-	 * @param targetCode The code of the target entity
-	 * @param processId The processId to set in the asks
+	 * @param sourceCode   The code of the source entity
+	 * @param targetCode   The code of the target entity
+	 * @param processId    The processId to set in the asks
 	 * @return The ask message
 	 */
 	public String getAsks(String questionCode, String sourceCode, String targetCode, String processId) {
@@ -111,7 +113,7 @@ public class FrontendService {
 		// put targetCode in cache
 		// NOTE: This is mainly only necessary for initial dropdown items
 		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
-		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
+		CacheUtils.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
 
 		return jsonb.toJson(msg);
 	}
@@ -144,7 +146,7 @@ public class FrontendService {
 	/**
 	 * Setup the process entity used to store task data.
 	 *
-	 * @param targetCode The code of the target entity
+	 * @param targetCode     The code of the target entity
 	 * @param askMessageJson The ask message to use in setup
 	 * @return The updated process entity
 	 */
@@ -159,7 +161,7 @@ public class FrontendService {
 
 		// init entity and force the realm
 		log.info("Creating Process Entity...");
-		BaseEntity processBE = new BaseEntity("QBE_"+targetCode.substring(4), "QuestionBE");
+		BaseEntity processBE = new BaseEntity("QBE_" + targetCode.substring(4), "QuestionBE");
 		processBE.setRealm(userToken.getProductCode());
 
 		// only copy the entityAttributes used in the Asks
@@ -204,7 +206,7 @@ public class FrontendService {
 	/**
 	 * Update the ask target to match the process entity code.
 	 *
-	 * @param processBEJson The json of the process entity
+	 * @param processBEJson  The json of the process entity
 	 * @param askMessageJson The ask message to use in setup
 	 * @return The updated ask message
 	 */
@@ -231,7 +233,7 @@ public class FrontendService {
 	/**
 	 * Recursively update the ask target.
 	 *
-	 * @param ask The ask to traverse
+	 * @param ask    The ask to traverse
 	 * @param target The target entity to set
 	 */
 	public void recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
@@ -247,19 +249,19 @@ public class FrontendService {
 	}
 
 	/**
-	 * Send a baseentity after filtering the entity attributes 
+	 * Send a baseentity after filtering the entity attributes
 	 * based on the questions in the ask message.
 	 *
-	 * @param code The code of the baseentity to send
-	 * @param askMsg The ask message used to filter attributes
+	 * @param code      The code of the baseentity to send
+	 * @param askMsg    The ask message used to filter attributes
 	 * @param processId The process id to use for the baseentity cache
-	 * @param defCode . The type of processBE (to save calculating it again)
+	 * @param defCode   . The type of processBE (to save calculating it again)
 	 */
 	public void sendBaseEntitys(String processBEJson, String askMessageJson, String processId, String defCode) {
 
 		BaseEntity processBE = null;
 		QDataAskMessage askMsg = null;
-		
+
 		try {
 			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		} catch (java.lang.NullPointerException e) {
@@ -300,10 +302,11 @@ public class FrontendService {
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
 		// Sending the BE here has issues with dropdown items...
-		
 
-		// Now save the processBE into cache so that the lauchy and dropkick can recognise it as valid
-		// Now update the cached version of the processBE with an expiry (used in dropkick and lauchy)	
+		// Now save the processBE into cache so that the lauchy and dropkick can
+		// recognise it as valid
+		// Now update the cached version of the processBE with an expiry (used in
+		// dropkick and lauchy)
 		// cache the current ProcessBE so that it can be used quickly by lauchy etc
 		ProcessVariables processVariables = new ProcessVariables();
 		processVariables.setProcessEntity(processBE);
@@ -313,6 +316,7 @@ public class FrontendService {
 
 		log.info("processBE cached to "+processId+":PROCESS_BE");
 
+		log.info("processBE cached to " + processId + ":PROCESS_BE");
 
 		// NOTE: only using first ask item
 		Ask ask = askMsg.getItems().get(0);
@@ -320,7 +324,8 @@ public class FrontendService {
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processBE, ask.getQuestion().getCode());
 
-		// Now send the baseentity to the Frontend so that the 'menu' are already there waiting
+		// Now send the baseentity to the Frontend so that the 'menu' are already there
+		// waiting
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
@@ -328,8 +333,8 @@ public class FrontendService {
 	 * Recursively traverse the ask to find any already selected dropdown
 	 * items to send, and trigger dropdown searches.
 	 *
-	 * @param ask The Ask to traverse
-	 * @param target The target entity used in processing
+	 * @param ask      The Ask to traverse
+	 * @param target   The target entity used in processing
 	 * @param rootCode The code of the root question used in sending DD messages
 	 */
 	public void recuresivelyFindAndSendDropdownItems(Ask ask, BaseEntity target, String rootCode) {
@@ -350,8 +355,19 @@ public class FrontendService {
 						log.error("One of the LNKs for target are null");
 						continue;
 					}
-					BaseEntity selection = beUtils.getBaseEntityByCode(code);
+					 BaseEntity selection = beUtils.getBaseEntityByCode(code);
+					BaseEntityKey key = new BaseEntityKey(userToken.getProductCode(), code);
+					//BaseEntity selection = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 					if (selection != null) {
+						selection.setBaseEntityAttributes(new HashSet<EntityAttribute>());
+						// log.info("Selected attribute and value:" + code + ":" + selection.getValue(code) + " with "
+						// 		+ selection.getBaseEntityAttributes().size() + " attributes");
+						// if (selection.getBaseEntityAttributes().size() > 1) {
+						// 			for (EntityAttribute ea : selection.getBaseEntityAttributes()) {
+						// 				log.info("MULTIPLE ATTRIBUTES:"+selection.getCode()+" "+ea.getAttributeCode()+"="+ea.getValue());
+						// 			}
+						// 		}
+						log.info("Sending the selected BaseEntity "+selection.getCode()+":"+selection.getName());
 						selectionMsg.add(selection);
 					}
 				}
@@ -359,22 +375,23 @@ public class FrontendService {
 				// send selections
 				selectionMsg.setToken(userToken.getToken());
 				selectionMsg.setReplace(true);
+				log.info("SENDING BASEENTITYS FOR SELECTIONS!");
 				KafkaUtils.writeMsg("webdata", selectionMsg);
 			}
 
 			// trigger dropdown search in dropkick
 			JsonObject json = Json.createObjectBuilder()
-				.add("event_type", "DD")
-				.add("data", Json.createObjectBuilder()
-					.add("parentCode", rootCode)
-					.add("questionCode", question.getCode())
-					.add("sourceCode", ask.getSourceCode())
-					.add("targetCode", ask.getTargetCode())
-					.add("value", "")
-					.add("processId", ask.getProcessId()))
-				.add("attributeCode", attribute.getCode())
-				.add("token", userToken.getToken())
-				.build();
+					.add("event_type", "DD")
+					.add("data", Json.createObjectBuilder()
+							.add("parentCode", rootCode)
+							.add("questionCode", question.getCode())
+							.add("sourceCode", ask.getSourceCode())
+							.add("targetCode", ask.getTargetCode())
+							.add("value", "")
+							.add("processId", ask.getProcessId()))
+					.add("attributeCode", attribute.getCode())
+					.add("token", userToken.getToken())
+					.build();
 
 			KafkaUtils.writeMsg("events", json.toString());
 		}
@@ -431,9 +448,9 @@ public class FrontendService {
 	/**
 	 * Recursively traverse the asks and add any entity selections to the msg.
 	 *
-	 * @param ask The ask to traverse
+	 * @param ask    The ask to traverse
 	 * @param target The target entity used in finding values
-	 * @param ask The msg to add entities to
+	 * @param ask    The msg to add entities to
 	 */
 	public void recursivelyHandleDropdownAttributes(Ask ask, BaseEntity target, QDataBaseEntityMessage msg) {
 

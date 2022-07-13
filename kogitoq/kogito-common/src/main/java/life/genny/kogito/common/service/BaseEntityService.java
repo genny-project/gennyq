@@ -111,6 +111,7 @@ public class BaseEntityService {
 
 		// update user fields
 		// NOTE: this could be turned into a single http request
+		// Could make it a builder pattern to make it a single http request?
 		KeycloakUtils.updateUserEmail(serviceToken, user, email);
 		KeycloakUtils.updateUserField(serviceToken, user, "username", email);
 		KeycloakUtils.updateUserField(serviceToken, user, "firstName", firstName);

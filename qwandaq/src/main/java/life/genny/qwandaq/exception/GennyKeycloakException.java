@@ -6,7 +6,7 @@ package life.genny.qwandaq.exception;
  * can be documented 
  *
  */
-public class GennyKeycloakException extends Exception {
+public class GennyKeycloakException extends GennyException {
 
     private String code;
 

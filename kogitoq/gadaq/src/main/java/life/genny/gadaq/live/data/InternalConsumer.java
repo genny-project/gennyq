@@ -64,20 +64,8 @@ public class InternalConsumer {
 		if(answers.size() == 0) {
 			log.warn("[!] Received no answers!!!");
 		}
-		// feed all answers from facts into ProcessQuestions
-		answers.stream()
-			.filter(answer -> answer.getProcessId() != null)
-			.filter(answer -> !"no-id".equals(answer.getProcessId()))
-			.forEach(answer -> {
-				try  {
-					kogitoUtils.sendSignal("processQuestions", answer.getProcessId(),
-							"answer", jsonb.toJson(answer));
-				} catch (Exception e) {
-					log.error("Cannot send event!");
-					e.printStackTrace();
-					return;
-				}
-			});
+		else
+			kogitoUtils.funnelAnswers(answers);
 
 		scope.destroy();
 
