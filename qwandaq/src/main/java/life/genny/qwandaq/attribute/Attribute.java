@@ -39,9 +39,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
-import life.genny.qwandaq.Question;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /**

@@ -1,11 +1,12 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonArray;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -21,6 +22,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
@@ -68,6 +70,22 @@ public class SummaryService {
         } catch (BadDataException e) {
             e.printStackTrace();
         }
+
+		// build context map for merging
+		Map<String, Object> ctxMap = new HashMap<>();
+		ctxMap.put("USER", beUtils.getUserBaseEntity());
+
+		// perform merge for any String PRI attributes
+		summary.getBaseEntityAttributes().stream()
+			.filter(ea -> ea.getAttribute() != null && ea.getAttribute().getCode() != null)
+			.filter(ea -> ea.getAttribute().getCode().startsWith("PRI_"))
+			.filter(ea -> ea.getAttribute().getDataType().getClassName().contains("String"))
+			.forEach(ea -> {
+				log.info("Merging EntityAttribute " + ea.getAttribute().getCode());
+				String value = ea.getValueString();
+				String merge = MergeUtils.merge(value, ctxMap);
+				ea.setValueString(merge);
+			});
 
 		// package the pcms and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(summary);

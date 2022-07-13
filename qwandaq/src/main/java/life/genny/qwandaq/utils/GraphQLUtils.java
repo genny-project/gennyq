@@ -93,6 +93,7 @@ public class GraphQLUtils {
     public JsonArray queryTable(String table, Map<String, String> queryMap, String... returns) {
 
 		String body = performGraphQLQuery(table, queryMap, returns);
+		log.debug("GraphQL Response Body: " + body);
 
 		JsonObject bodyObj = jsonb.fromJson(body, JsonObject.class);
 		JsonObject dataObj = bodyObj.getJsonObject("data");
@@ -122,6 +123,8 @@ public class GraphQLUtils {
 		// create full query string
         String query = String.format("query { %s ( where: { %s }){ %s }}", 
 				table, queryFields, String.join(" ", returns));
+
+		log.debug("GraphQL Query: " + query);
 
         String uri = GennySettings.dataIndexUrl() + "/graphql";
         HttpResponse<String> response = HttpUtils.post(uri, query, "application/GraphQL", userToken);

@@ -20,14 +20,10 @@
 package life.genny.qwandaq.datatype;
 
 import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.money.Monetary;
-import javax.money.MonetaryAmount;
-import javax.money.CurrencyUnit;
-
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Embeddable;
@@ -36,16 +32,15 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import life.genny.qwandaq.converter.ValidationListConverter;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.qwandaq.validation.ValidationList;
-
-import org.javamoney.moneta.Money;
 
 /**
  * DataType represents a distinct abstract Data Representation in the Qwanda
