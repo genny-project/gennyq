@@ -335,7 +335,8 @@ public class KogitoUtils {
 					e.printStackTrace();
 					return;
 				}
-			});
+				});
+		return true;
 	}
 
 }
