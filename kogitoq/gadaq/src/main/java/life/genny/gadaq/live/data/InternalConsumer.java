@@ -86,7 +86,11 @@ public class InternalConsumer {
 		Instant start = Instant.now();
 		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
 		//eventJson.remove("token");
-		log.info("Received Event : " + eventJson.toString());
+		JsonObject nonTokenJson = eventJson;
+		if (nonTokenJson.containsKey("token")) {
+				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();
+		}
+		log.info("Received Event : " +nonTokenJson.toString());
 
 		// init scope and process msg
 		scope.init(event);

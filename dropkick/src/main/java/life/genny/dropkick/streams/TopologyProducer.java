@@ -156,7 +156,18 @@ public class TopologyProducer {
 		// Grab info required to find the DEF
 		String attributeCode = json.getString("attributeCode");
 		String targetCode = dataJson.getString("targetCode");
-		String processId = dataJson.getString("processId");
+		String processId = null;
+		if (dataJson.containsKey("processId")) {
+			processId = dataJson.getString("processId");
+		} else {
+			JsonObject nonTokenJson = json;
+			if (nonTokenJson.containsKey("token")) {
+				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();
+			}
+			
+			log.error("No processId in DD Event "+nonTokenJson);
+		}
+	
 
 		BaseEntity target = null;
 		BaseEntity defBE = null;
@@ -190,9 +201,9 @@ public class TopologyProducer {
 		// Check if attribute code exists as a SER for the DEF
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
 
-		for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
-			log.info(ea.getBaseEntityCode() + "   EA=" + ea.getAttributeCode());
-		}
+		// for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
+		// 	log.info(ea.getBaseEntityCode() + "   EA=" + ea.getAttributeCode());
+		// }
 
 		if (!searchAttribute.isPresent()) {
 			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
