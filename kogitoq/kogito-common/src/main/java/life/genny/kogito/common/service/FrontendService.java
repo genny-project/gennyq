@@ -15,7 +15,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.ProcessBeAndDef;
+import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -305,8 +305,10 @@ public class FrontendService {
 		// Now save the processBE into cache so that the lauchy and dropkick can recognise it as valid
 		// Now update the cached version of the processBE with an expiry (used in dropkick and lauchy)	
 		// cache the current ProcessBE so that it can be used quickly by lauchy etc
-		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBE, defCode);
-		String processBeAndDefJson = jsonb.toJson(processBeAndDef);
+		ProcessVariables processVariables = new ProcessVariables();
+		processVariables.setProcessEntity(processBE);
+		processVariables.setDefinitionCode(defCode);
+		String processBeAndDefJson = jsonb.toJson(processVariables);
 		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
 
 		log.info("processBE cached to "+processId+":PROCESS_BE");
