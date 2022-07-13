@@ -315,4 +315,21 @@ public class KogitoUtils {
 		return answers;
 	}
 
+	public Boolean funnelAnswers(List<Answer> answers) {
+		// feed all answers from facts into ProcessQuestions
+		answers.stream()
+			.filter(answer -> answer.getProcessId() != null)
+			.filter(answer -> !"no-id".equals(answer.getProcessId()))
+			.forEach(answer -> {
+				try  {
+					sendSignal("processQuestions", answer.getProcessId(),
+							"answer", jsonb.toJson(answer));
+				} catch (Exception e) {
+					log.error("Cannot send answer!");
+					e.printStackTrace();
+					return;
+				}
+			});
+	}
+
 }

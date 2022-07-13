@@ -30,7 +30,7 @@ public class MsgUtils {
 	 * @param targetCode		the targetCode to encode
 	 * @param token			The token to attach that should not be encoded
 	 *
-	 * @return				The comlpete URL
+	 * @return				The complete URL
 	 */
 	public static String encodeUrl(String base, String parentCode, String code, String targetCode, String token) {
 		/**
