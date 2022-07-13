@@ -308,9 +308,9 @@ public class QwandaUtils {
 
 		// grab attribute code of current ask
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
-			log.debugv("Prefix %s not in accepted list", code.substring(0, 4));
+			log.debugv("Prefix {} not in accepted list", code.substring(0, 4));
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
-			log.debugv("Attribute %s in exclude list", code);
+			log.debugv("Attribute {} in exclude list", code);
 		} else {
 			codes.add(code);
 		}
