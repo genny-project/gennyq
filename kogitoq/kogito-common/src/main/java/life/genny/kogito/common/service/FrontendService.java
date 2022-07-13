@@ -301,6 +301,8 @@ public class FrontendService {
 		msg.setReplace(true);
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
+
+		log.info("Sending processBE "+processBE.getBaseEntityAttributes().size()+" attributes");
 		// Sending the BE here has issues with dropdown items...
 
 		// Now save the processBE into cache so that the lauchy and dropkick can
@@ -316,7 +318,6 @@ public class FrontendService {
 
 		log.info("processBE cached to "+processId+":PROCESS_BE");
 
-		log.info("processBE cached to " + processId + ":PROCESS_BE");
 
 		// NOTE: only using first ask item
 		Ask ask = askMsg.getItems().get(0);
@@ -326,7 +327,7 @@ public class FrontendService {
 
 		// Now send the baseentity to the Frontend so that the 'menu' are already there
 		// waiting
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg("webdata", jsonb.toJson(msg));
 	}
 
 	/**
@@ -341,6 +342,7 @@ public class FrontendService {
 
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
+		Attribute nameAttribute = qwandaUtils.getAttribute("PRI_NAME");
 
 		if (attribute.getCode().startsWith("LNK_")) {
 
@@ -360,6 +362,14 @@ public class FrontendService {
 					//BaseEntity selection = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 					if (selection != null) {
 						selection.setBaseEntityAttributes(new HashSet<EntityAttribute>());
+						EntityAttribute nameEA = new EntityAttribute(selection, nameAttribute, 1.0,
+								selection.getName());
+						try {
+							selection.addAttribute(nameEA);
+						} catch (Exception e) {
+							log.error("Error adding name attribute to selection");
+						}
+					
 						// log.info("Selected attribute and value:" + code + ":" + selection.getValue(code) + " with "
 						// 		+ selection.getBaseEntityAttributes().size() + " attributes");
 						// if (selection.getBaseEntityAttributes().size() > 1) {
