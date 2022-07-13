@@ -155,7 +155,7 @@ public class QwandaUtils {
 				}
 
 				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
-				long lastMemory = CommonUtils.getMemoryUsage("MEGABYTES");
+				long lastMemory = PerformanceUtils.getMemoryUsage("MEGABYTES");
 
 				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 				log.info("Current memory usage: " + lastMemory + "MB");
@@ -165,12 +165,12 @@ public class QwandaUtils {
 					CacheUtils.putObject(productCode, key, attribute);
 					totalAttribsCached++;
 				}
-				long currentMemory = CommonUtils.getMemoryUsage(CommonUtils.MemoryMeasurement.MEGABYTES);
+				long currentMemory = PerformanceUtils.getMemoryUsage(PerformanceUtils.MemoryMeasurement.MEGABYTES);
 				long memoryUsed = currentMemory - lastMemory;
 
 				log.info("Post load memory usage: " + currentMemory + "MB");
 				log.info("Used up: " + memoryUsed + "MB");
-				log.info("Percentage: " + CommonUtils.getPercentMemoryUsed() * 100f);
+				log.info("Percentage: " + PerformanceUtils.getPercentMemoryUsed() * 100f);
 				log.info("============================");
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);

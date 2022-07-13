@@ -14,7 +14,7 @@ import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
  */
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
-    
+
     /**
      * Safe-compare two Objects (null-safe)
      * @param <T> type
@@ -89,18 +89,5 @@ public class CommonUtils {
             result += "\"" + stringCallback.getString(object) + "\",";
         }
         return "[" + result.substring(0, result.length() - 1) + "]";
-    }
-
-    public static enum MemoryMeasurement {
-        BYTES(1),
-        KILOBYTES(1000),
-        MEGABYTES(1000000),
-        GIGABYTES(1000000000);
-
-        final int divisor;
-
-        private MemoryMeasurement(int divisor) {
-            this.divisor = divisor;
-        }
     }
 }

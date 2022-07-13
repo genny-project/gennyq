@@ -4,8 +4,6 @@ import java.lang.invoke.MethodHandles;
 
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.utils.CommonUtils.MemoryMeasurement;
-
 public class PerformanceUtils {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
 
@@ -76,6 +74,19 @@ public class PerformanceUtils {
      */
     public static Long getTotalMemory(MemoryMeasurement measurement) {
         return Runtime.getRuntime().totalMemory() / measurement.divisor;
+    }
+
+    public static enum MemoryMeasurement {
+        BYTES(1),
+        KILOBYTES(1000),
+        MEGABYTES(1000000),
+        GIGABYTES(1000000000);
+
+        final int divisor;
+
+        private MemoryMeasurement(int divisor) {
+            this.divisor = divisor;
+        }
     }
 
 }
