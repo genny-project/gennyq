@@ -1,19 +1,30 @@
 package life.genny.dropkick.streams;
 
-import io.quarkus.runtime.StartupEvent;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
@@ -23,6 +34,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
@@ -33,15 +45,6 @@ import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-import life.genny.qwandaq.entity.ProcessBeAndDef;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -162,25 +165,24 @@ public class TopologyProducer {
 		} else {
 			JsonObject nonTokenJson = json;
 			if (nonTokenJson.containsKey("token")) {
-				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();
+				 nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
 			}
 			
 			log.error("No processId in DD Event "+nonTokenJson);
 		}
 	
-
 		BaseEntity target = null;
 		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
 			// This means that the target should come from the graphql
-			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
-			if (processBeAndDef == null) {
+			ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
+			if (processVariables == null) {
 				log.error("Could not find process instance for processId [" + processId + "]");
 				return false;
 			}
-			target = processBeAndDef.processBE;
-			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
+			target = processVariables.getProcessEntity();
+			defBE = beUtils.getBaseEntityByCode(processVariables.getDefinitionCode());
 		} else {
 
 			target = beUtils.getBaseEntityByCode(targetCode);
@@ -200,10 +202,6 @@ public class TopologyProducer {
 
 		// Check if attribute code exists as a SER for the DEF
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
-
-		// for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
-		// 	log.info(ea.getBaseEntityCode() + "   EA=" + ea.getAttributeCode());
-		// }
 
 		if (!searchAttribute.isPresent()) {
 			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
@@ -227,7 +225,11 @@ public class TopologyProducer {
 		return true;
 	}
 
-	public ProcessBeAndDef fetchProcessInstanceProcessBE(String processId) {
+	/**
+	 * Fetch the targetCode stored in the processInstance 
+	 * for the given processId.
+	 */
+	public ProcessVariables fetchProcessInstanceProcessBE(String processId) {
 		BaseEntity processBe = null;
 		String defCode = null;
 		String processBeStr = null;
@@ -236,20 +238,19 @@ public class TopologyProducer {
 
 		// check in cache first (But not ready yet, processQuestions would need to save
 		// the processBe into cache every answer received)
-
-		String processBeAndDefCodeStr = CacheUtils.getObject(userToken.getProductCode(), processId + ":PROCESS_BE",
+		String processVariablesStr = CacheUtils.getObject(userToken.getProductCode(), processId + ":PROCESS_BE",
 				String.class);
-		if (!StringUtils.isBlank(processBeAndDefCodeStr)) {
-			log.info("ProcessBeAndDef fetched from cache");
-			ProcessBeAndDef processBeAndDef = null;
+		if (!StringUtils.isBlank(processVariablesStr)) {
+			log.info("ProcessVariables fetched from cache");
+			ProcessVariables processVariables = null;
 			try {
-				processBeAndDef = jsonb.fromJson(processBeAndDefCodeStr, ProcessBeAndDef.class);
+				processVariables = jsonb.fromJson(processVariablesStr, ProcessVariables.class);
 			} catch (Exception e) {
-				log.error("Error parsing processBeAndDef from cache: " + processBeAndDefCodeStr);
+				log.error("Error parsing processVariables from cache: " + processVariablesStr);
 			}
-			return processBeAndDef;
+			return processVariables;
 		} else {
-			log.info("ProcessBeAndDef for " + processId + ":PROCESS_BE not found in cache");
+			log.info("ProcessVariables for " + processId + ":PROCESS_BE not found in cache");
 		}
 
 		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
@@ -268,12 +269,14 @@ public class TopologyProducer {
 			BaseEntity defBE = defUtils.getDEF(processBe);
 			defCode = defBE.getCode();
 		}
-		ProcessBeAndDef processBeAndDef = new ProcessBeAndDef(processBe, defCode);
+		ProcessVariables processVariables = new ProcessVariables();
+		processVariables.setProcessEntity(processBe);
+		processVariables.setDefinitionCode(defCode);
 
 		// cache
-		CacheUtils.putObject(userToken.getProductCode(), processId + ":PROCESS_BE", processBeAndDef);
+		CacheUtils.putObject(userToken.getProductCode(), processId + ":PROCESS_BE", processVariables);
 
-		return processBeAndDef;
+		return processVariables;
 	}
 
 	/**
@@ -311,9 +314,9 @@ public class TopologyProducer {
 		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
-			ProcessBeAndDef processBeAndDef = fetchProcessInstanceProcessBE(processId);
-			target = processBeAndDef.processBE;
-			defBE = beUtils.getBaseEntityByCode(processBeAndDef.defCode);
+			ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
+			target = processVariables.getProcessEntity();
+			defBE = beUtils.getBaseEntityByCode(processVariables.getDefinitionCode());
 		} else {
 			target = beUtils.getBaseEntityByCode(targetCode);
 		}

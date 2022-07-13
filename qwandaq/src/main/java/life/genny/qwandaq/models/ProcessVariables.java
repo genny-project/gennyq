@@ -14,38 +14,35 @@
  * Contributors: Adam Crow , Jasper Robison
  */
 
-package life.genny.qwandaq.entity;
+package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.BaseEntity;
 
 @RegisterForReflection
-public class ProcessBeAndDef  implements java.io.Serializable {
+public class ProcessVariables  implements java.io.Serializable {
 
-    public ProcessBeAndDef() {
+    private BaseEntity processEntity;
+	private String definitionCode;
+
+	public ProcessVariables() { }
+
+	public String getDefinitionCode() {
+        return definitionCode;
     }
 
-   public  ProcessBeAndDef(final BaseEntity processBE, final String defCode) {
-        this.processBE = processBE;
-        this.defCode = defCode;
+    public void setDefinitionCode(String definitionCode) {
+        this.definitionCode = definitionCode;
     }
 
-    public BaseEntity processBE;
-    public String defCode;
-
-    public BaseEntity getProcessBE() {
-        return processBE;
+    public BaseEntity getProcessEntity() {
+        return processEntity;
     }
 
-    public void setProcessBE(BaseEntity processBE) {
-        this.processBE = processBE;
-    }
-
-    public String getDefCode() {
-        return defCode;
-    }
-
-    public void setDefCode(String defCode) {
-        this.defCode = defCode;
+    public void setProcessEntity(BaseEntity processEntity) {
+        this.processEntity = processEntity;
     }
 
 }
