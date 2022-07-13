@@ -14,76 +14,7 @@ import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
  */
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
-
-    /**
-     * Get the current memory usage in bytes
-     * @return memory in bytes
-     */
-    public static Long getMemoryUsage() {
-        return getMemoryUsage(MemoryMeasurement.BYTES);
-    }
-
-    /**
-     * Get the current memory usage in terms of the {@link MemoryMeasurement} supplied
-     * @param measurement - any of
-     * <ul>
-     * <li>BYTES</li>
-     * <li>KILOBYTES</li>
-     * <li>MEGABYTES</li>
-     * <li>GIGABYTES</li>
-     * </ul>
-     * @return memory usage
-     */
-    public static Long getMemoryUsage(MemoryMeasurement measurement) {
-        return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / measurement.divisor;
-    }
-
-    /**
-     * Get the current memory usage in terms of the {@link MemoryMeasurement} supplied
-     * @param measurement - any of
-     * <ul>
-     * <li>BYTES</li>
-     * <li>KILOBYTES</li>
-     * <li>MEGABYTES</li>
-     * <li>GIGABYTES</li>
-     * </ul>
-     * @return memory usage
-     */
-    public static Long getMemoryUsage(String measurement) {
-        return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / MemoryMeasurement.valueOf(measurement).divisor;
-    }
-
-    /**
-     * Get percent memory used
-     * @return percent of total memory used
-     */
-    public static float getPercentMemoryUsed() {
-        return (float)getMemoryUsage() / (float)getTotalMemory();
-    }
-
-    /**
-     * Get the total memory used
-     * @return total memory used (bytes)
-     */
-    public static Long getTotalMemory() {
-        return getTotalMemory(MemoryMeasurement.BYTES);
-    }
-
-    /**
-     * 
-     * @param measurement - any of
-     * <ul>
-     * <li>BYTES</li>
-     * <li>KILOBYTES</li>
-     * <li>MEGABYTES</li>
-     * <li>GIGABYTES</li>
-     * </ul>
-     * @return total memory used in the measurement specified
-     */
-    public static Long getTotalMemory(MemoryMeasurement measurement) {
-        return Runtime.getRuntime().totalMemory() / measurement.divisor;
-    }
-
+    
     /**
      * Safe-compare two Objects (null-safe)
      * @param <T> type

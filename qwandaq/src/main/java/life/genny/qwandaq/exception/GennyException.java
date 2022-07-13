@@ -1,10 +1,14 @@
 package life.genny.qwandaq.exception;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.jboss.logging.Logger;
 
 public class GennyException extends Exception {
+	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
+    public static final String PACKAGE_PREFIX = "life.genny";
     
     public GennyException() {
         super();
@@ -28,7 +32,7 @@ public class GennyException extends Exception {
      * @param verbose
      */
     public void printStackTrace(Boolean verbose) {
-        System.err.println("[!] " + this.getMessage());
+        log.error("[!] " + this.getMessage());
 		
         if(verbose) {
             super.printStackTrace();
@@ -36,19 +40,22 @@ public class GennyException extends Exception {
         }
 
         StackTraceElement[] stack = this.getStackTrace();
-        List<StackTraceElement> nonVerboseStack = Arrays.asList(stack).stream()
-        .filter(element -> element.getClassName().startsWith("life.genny"))
-        .collect(Collectors.toList());
+        
+        Stream<StackTraceElement> elementStream = Arrays.asList(stack).stream();
+        
+        Boolean hasNonVerboseElements = elementStream.anyMatch(element -> element.getClassName().startsWith(PACKAGE_PREFIX));
         
         // If there is nothing to print, print verbose
-        if(nonVerboseStack.size() == 0) {
+        if(!hasNonVerboseElements) {
             this.printStackTrace(true);
             return;
         }
         
-        nonVerboseStack.stream().forEach(element -> {
+        elementStream.forEach(element -> {
             String line = element.getModuleName() + ":" + element.getClassName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
-            System.err.println(line);
+            if(element.getClassName().startsWith(PACKAGE_PREFIX))
+                log.error(line);
+            else log.debug(line);
         });
 	}
 }
