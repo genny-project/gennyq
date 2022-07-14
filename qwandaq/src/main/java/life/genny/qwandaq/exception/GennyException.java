@@ -56,7 +56,7 @@ public class GennyException extends RuntimeException {
         }
         
         elementStream.forEach(element -> {
-            String line = element.getModuleName() + ":" + element.getClassName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
+            String line = "on " + element.getModuleName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
             if(element.getClassName().startsWith(PACKAGE_PREFIX))
                 log.error(line);
             else log.debug(line);

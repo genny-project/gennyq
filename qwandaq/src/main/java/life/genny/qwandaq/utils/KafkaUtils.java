@@ -1,11 +1,14 @@
 package life.genny.qwandaq.utils;
 
 import java.io.Serializable;
+
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import life.genny.qwandaq.intf.KafkaInterface;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 /*
@@ -40,7 +43,19 @@ public class KafkaUtils implements Serializable {
 
 		String json = null;
 
-		if (payload instanceof QDataBaseEntityMessage) {
+		if (payload instanceof JsonObject) {
+			JsonObject jsonObject = (JsonObject) payload;
+			if (jsonObject.containsKey("tag")) {
+				if (StringUtils.isBlank(jsonObject.getString("tag"))) {
+					String callerName = getCallerMethodName();
+					json = javax.json.Json.createObjectBuilder(jsonObject).add("tag", callerName).build().toString();
+				} else {
+					json = jsonb.toJson(payload);
+				}
+			} else {
+				json = jsonb.toJson(payload);
+			}
+		} else if (payload instanceof QDataBaseEntityMessage) {
 			QDataBaseEntityMessage msg = (QDataBaseEntityMessage) payload;
 			String callerName = getCallerMethodName();
 			msg.setTag(callerName);
