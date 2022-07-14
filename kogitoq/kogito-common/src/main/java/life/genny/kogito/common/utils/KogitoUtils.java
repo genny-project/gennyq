@@ -271,6 +271,11 @@ public class KogitoUtils {
 			return;
 		}
 
+		if (msg.getData().getSourceCode() == null) {
+			log.warn("Event message has no sourceCode, setting sourceCode using userToken...");
+			msg.getData().setSourceCode(userToken.getUserCode());
+		}
+
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
 		session.getAgenda().getAgendaGroup("EventRoutes").setFocus();
