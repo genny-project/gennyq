@@ -85,7 +85,11 @@ public class InternalConsumer {
 
 		Instant start = Instant.now();
 		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
-		//eventJson.remove("token");
+		if (eventJson.containsKey("event_type")) {
+			if ("DD".equals(eventJson.getString("event_type"))) {
+				return; // Don't process Dropdowns
+			}
+		}
 		JsonObject nonTokenJson = eventJson;
 		if (nonTokenJson.containsKey("token")) {
 				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();

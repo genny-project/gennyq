@@ -194,6 +194,8 @@ public class QwandaUtils {
 		}
 	}
 
+
+
 	/**
 	* Generate an ask for a question using the question code, the 
 	* source and the target. This operation is recursive if the 
@@ -212,6 +214,12 @@ public class QwandaUtils {
 			throw new NullParameterException("source");
 		if (target == null)
 			throw new NullParameterException("target");
+
+		// if the code is QUE_BASEENTITY_GRP then display all the attributes
+		if ("QUE_BASEENTITY_GRP".equals(code)) {
+			return generateAskGroupUsingBaseEntity(target);
+	
+		}
 
 		String productCode = userToken.getProductCode();
 

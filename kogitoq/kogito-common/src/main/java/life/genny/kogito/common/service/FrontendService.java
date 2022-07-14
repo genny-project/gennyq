@@ -347,7 +347,10 @@ public class FrontendService {
 				// grab selection baseentitys
 				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
 				for (String code : codes) {
-
+					if ((code.startsWith("{startDate")) ||(code.startsWith("endDate"))) {
+						log.error("BE:"+target.getCode()+":attribute :"+attribute.getCode()+":BAD code "+code);
+						continue;
+					}
 					BaseEntity selection = beUtils.getBaseEntityByCode(code);
 					if (selection == null) {
 						throw new GennyException("Selection item " + code + " could not be found");
@@ -360,10 +363,14 @@ public class FrontendService {
 				}
 
 				// send selections
+				if (selectionMsg.getItems() != null) {
 				selectionMsg.setToken(userToken.getToken());
 				selectionMsg.setReplace(true);
 				log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
 				KafkaUtils.writeMsg("webdata", selectionMsg);
+				}	else {
+					log.info("No selection items found for " + attribute.getCode());
+				}
 			}
 
 			// trigger dropdown search in dropkick
@@ -384,7 +391,7 @@ public class FrontendService {
 		}
 
 		// recursively run on children
-		if (ask.getChildAsks() != null) {
+		if ((ask.getChildAsks() != null)&&(ask.getChildAsks().length > 0)) {
 			for (Ask child : ask.getChildAsks()) {
 				recuresivelyFindAndSendDropdownItems(child, target, rootCode);
 			}
@@ -397,18 +404,22 @@ public class FrontendService {
 	 * @param askMsgJson The ask message to send
 	 */
 	public void sendQDataAskMessage(String askMessageJson, String processBEJson) {
-
+		log.info("sendQDataAskMessage: "+askMessageJson);
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
-
+		log.info("sendQDataAskMessage: got to here");
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
+	
+		log.info("Mandatory fields are "+(answered ? "answered" : "not answered"));
+		
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 		askMessage.getItems().set(0, ask);
-
+		log.info("sendQDataAskMessage: got to here too");
 		askMessage.setToken(userToken.getToken());
+		askMessage.setTag("sendQDataAskMessage");
 		KafkaUtils.writeMsg("webcmds", askMessage);
 	}
 
