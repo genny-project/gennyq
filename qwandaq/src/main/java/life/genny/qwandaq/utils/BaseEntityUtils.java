@@ -82,14 +82,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
 		if (StringUtils.isBlank(code)) {
-			log.error("Code supplied is null");
-			try {
-				throw new DebugException(
-						"BaseEntityUtils: BaseEntityByCode: The passed code is empty, supplying trace");
-			} catch (DebugException e) {
-				e.printStackTrace();
-			}
-			return null;
+			throw new DebugException("The passed code is empty.");
 		}
 		if ("backend".equals(userToken.getProductCode())) {
 			userToken.setProductCode("internmatch");

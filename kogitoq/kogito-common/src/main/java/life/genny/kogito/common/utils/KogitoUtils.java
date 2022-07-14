@@ -58,6 +58,11 @@ public class KogitoUtils {
 	@Inject
 	KieRuntimeBuilder kieRuntimeBuilder;
 
+	public static enum UseService {
+		SELF,
+		GADAQ,
+	}
+
 	/**
 	 * Send a workflow signal
 	 *
@@ -65,9 +70,9 @@ public class KogitoUtils {
 	 * @param processId The process Id
 	 * @param signal the signal code
 	 */
-    public String sendSignal(final String workflowId, final String processId, final String signal) {
+    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal) {
 
-        return sendSignal(workflowId, processId, signal, "");
+        return sendSignal(useService, workflowId, processId, signal, "");
     }
 
 	/**
@@ -79,14 +84,14 @@ public class KogitoUtils {
 	 * @param key The key of of the item to send in the payload
 	 * @param value The value of of the item to send in the payload
 	 */
-    public String sendSignal(final String workflowId, final String processId, final String signal, String key, String value) {
+    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal, String key, String value) {
 
 		// build json with key and value
 		JsonObject payload = Json.createObjectBuilder()
 			.add(key, value)
 			.build();
 
-		return sendSignal(workflowId, processId, signal, payload);
+		return sendSignal(useService, workflowId, processId, signal, payload);
 	}
 
 	/**
@@ -97,7 +102,7 @@ public class KogitoUtils {
 	 * @param signal the signal code
 	 * @param payload the payload to send as a json object
 	 */
-    public String sendSignal(final String workflowId, final String processId, final String signal, JsonObject payload) {
+    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal, JsonObject payload) {
 
 		// add token to JsonObject
 		JsonObjectBuilder builder = Json.createObjectBuilder();
@@ -106,7 +111,7 @@ public class KogitoUtils {
 		builder.add("userToken", jsonb.toJson(userToken));
 		payload = builder.build();
 
-		return sendSignal(workflowId, processId, signal, payload.toString());
+		return sendSignal(useService, workflowId, processId, signal, payload.toString());
 	}
 
 	/**
@@ -117,9 +122,9 @@ public class KogitoUtils {
 	 * @param signal the signal code
 	 * @param payload Th payload to send
 	 */
-    public String sendSignal(final String workflowId, final String processId, final String signal, final String payload) {
+    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal, final String payload) {
 
-        String uri = GennySettings.kogitoServiceUrl() + "/" + workflowId + "/" + processId + "/" + signal;
+        String uri = selectServiceURI(useService) + "/" + workflowId + "/" + processId + "/" + signal;
 		log.info("Sending Signal to uri: " + uri);
 
         HttpResponse<String> response = HttpUtils.post(uri, payload, "application/json", userToken);
@@ -134,7 +139,7 @@ public class KogitoUtils {
 	 * @param key The key to set in the json object
 	 * @param obj The object to set as the value in the json object
 	 */
-	public String triggerWorkflow(final String id, final Map<String,Object> parameters) {
+	public String triggerWorkflow(final UseService useService, final String id, final Map<String,Object> parameters) {
 
 		JsonObjectBuilder builder = Json.createObjectBuilder();
 
@@ -158,7 +163,7 @@ public class KogitoUtils {
 		}
 		}
 
-		return triggerWorkflow(id, builder.build());
+		return triggerWorkflow(useService, id, builder.build());
 	}
 	/**
 	 * Trigger a workflow.
@@ -167,7 +172,7 @@ public class KogitoUtils {
 	 * @param key The key to set in the json object
 	 * @param obj The object to set as the value in the json object
 	 */
-	public String triggerWorkflow(final String id, final String key, final Object obj) {
+	public String triggerWorkflow(final UseService useService, final String id, final String key, final Object obj) {
 
 		JsonObjectBuilder builder = Json.createObjectBuilder();
 
@@ -188,7 +193,7 @@ public class KogitoUtils {
 			}
 		}
 
-		return triggerWorkflow(id, builder.build());
+		return triggerWorkflow(useService, id, builder.build());
 	}
 
 	/**
@@ -197,7 +202,7 @@ public class KogitoUtils {
 	 * @param id The workflow id
 	 * @param json The json object to send
 	 */
-	public String triggerWorkflow(final String id, JsonObject json) {
+	public String triggerWorkflow(final UseService useService, final String id, JsonObject json) {
 
 		// add token to JsonObject
 		JsonObjectBuilder builder = Json.createObjectBuilder();
@@ -206,7 +211,8 @@ public class KogitoUtils {
 		builder.add("userToken", jsonb.toJson(userToken));
 		json = builder.build();
 
-        String uri = GennySettings.kogitoServiceUrl() + "/" + id;
+		// select uri
+		String uri = selectServiceURI(useService) + "/" + id;
 		log.info("Triggering workflow with uri: " + uri);
 
 		// make post request
@@ -227,6 +233,21 @@ public class KogitoUtils {
 		// return the processId
 		return result.getString("id");
     }
+
+	/**
+	 * Helper function for selecting a uri
+	 * @param useService The Service enum
+	 */ 
+	public String selectServiceURI(final UseService useService) {
+
+		switch (useService) {
+			case GADAQ:
+				return GennySettings.gadaqServiceUrl();
+			case SELF:
+			default:
+				return GennySettings.kogitoServiceUrl();
+		}
+	}
 
 	/**
 	 * Process an event message using EventRoutes
@@ -328,7 +349,7 @@ public class KogitoUtils {
 			.filter(answer -> !"no-id".equals(answer.getProcessId()))
 			.forEach(answer -> {
 				try  {
-					sendSignal("processQuestions", answer.getProcessId(),
+					sendSignal(UseService.GADAQ, "processQuestions", answer.getProcessId(),
 							"answer", jsonb.toJson(answer));
 				} catch (Exception e) {
 					log.error("Cannot send answer!");

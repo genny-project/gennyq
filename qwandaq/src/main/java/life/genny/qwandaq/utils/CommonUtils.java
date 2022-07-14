@@ -2,6 +2,7 @@ package life.genny.qwandaq.utils;
 
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
@@ -90,4 +91,18 @@ public class CommonUtils {
         }
         return "[" + result.substring(0, result.length() - 1) + "]";
     }
+
+	/**
+	 * Replace the three character prefix of a string with another prefix.
+	 * @param str The string on which to perform replacement.
+	 * @param prefix The prefix to replace with.
+	 * @return The updated string
+	 */
+	public static String replacePrefix(String str, String prefix) {
+
+		if (str.charAt(3) != '_') {
+			return str;
+		}
+		return prefix + str.substring(3);
+	}
 }

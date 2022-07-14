@@ -6,7 +6,11 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
-public class GennyException extends Exception {
+/**
+ * Custom Genny System exception to identify 
+ * common issues within the logic.
+ */
+public class GennyException extends RuntimeException {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     public static final String PACKAGE_PREFIX = "life.genny";
     

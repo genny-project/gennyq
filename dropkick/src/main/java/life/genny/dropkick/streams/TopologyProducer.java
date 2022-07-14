@@ -86,7 +86,7 @@ public class TopologyProducer {
 			log.info("Default dropdown size  : " + defaultDropDownSize);
 		}
 
-		service.fullServiceInit();
+		service.fullServiceInit(true);
 		log.info("[*] Finished Startup!");
 	}
 

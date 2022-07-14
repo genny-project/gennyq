@@ -1,5 +1,7 @@
 package life.genny.kogito.common.service;
 
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
+
 import java.util.Optional;
 import java.util.Set;
 
@@ -12,6 +14,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -20,7 +23,6 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
@@ -41,18 +43,20 @@ public class NavigationService {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CapabilityUtils capabilityUtils;
-
-	@Inject
 	SummaryService summaryService;
 
 	@Inject
 	SearchService searchService;
 
+	@Inject
+	KogitoUtils kogitoUtils;
+
+	/**
+	 * Trigger the default redirection for the user.
+	 */
 	public void defaultRedirect() {
 
-		// TODO: This could alternatively fire the view workflow.
-
+		// grab default redirect from user be
 		BaseEntity user = beUtils.getUserBaseEntity();
 		String defaultRedirectCode = user.getValueAsString("PRI_DEFAULT_REDIRECT");
 		log.info("Actioning redirect for user " + user.getCode() + " : " + defaultRedirectCode);
@@ -62,12 +66,15 @@ public class NavigationService {
 			return;
 		}
 
-		if ("QUE_DASHBOARD_VIEW".equals(defaultRedirectCode)) {
-			summaryService.sendSummary();
-		} else {
-			// default to table if not dashboard
-			searchService.sendTable(defaultRedirectCode);
-		}
+		// build json and trigger view workflow
+		JsonObject json = Json.createObjectBuilder()
+			.add("eventMessage", Json.createObjectBuilder()
+				.add("data", Json.createObjectBuilder()
+					.add("code", defaultRedirectCode)
+					.add("targetCode", userToken.getUserCode())))
+			.build();
+
+		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
 	}
 
 	/**
