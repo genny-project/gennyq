@@ -20,7 +20,6 @@
 
 package life.genny.qwandaq.validation;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.PatternSyntaxException;
@@ -39,6 +38,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.Type;
+import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.converter.StringListConverter;
@@ -69,7 +69,8 @@ uniqueConstraints = @UniqueConstraint(columnNames = {"code", "realm"}))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 
-public class Validation extends CodedEntity implements Serializable {
+public class Validation extends CodedEntity {
+	private static final Logger log = Logger.getLogger(Validation.class);
 
 	/** 
 	 * @return String
@@ -288,8 +289,15 @@ public class Validation extends CodedEntity implements Serializable {
 	/**
 	 * @param regex the regex to validate
 	 */
-	static public void validateRegex(String regex) {
-		java.util.regex.Pattern p = java.util.regex.Pattern.compile(regex);
+	static public boolean validateRegex(String regex) {
+		try {
+			java.util.regex.Pattern.compile(regex);
+		} catch(PatternSyntaxException e) {
+			log.error("Regex: " + regex + " is invalid!");
+			return false;
+		}
+
+		return true;
 	}
 
 	/**

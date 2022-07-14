@@ -20,7 +20,7 @@ public enum EPageType {
 			this.category = pageTypeCategory;
 		}
 		
-		public String EPageType() {
+		public String getType() {
 			return type;
 		}	
 		

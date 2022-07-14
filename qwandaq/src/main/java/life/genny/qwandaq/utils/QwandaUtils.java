@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -54,8 +52,6 @@ public class QwandaUtils {
 	public static final String[] EXCLUDED_ATTRIBUTES = { "PRI_SUBMIT" };
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
-
-	private final ExecutorService executorService = Executors.newFixedThreadPool(GennySettings.executorThreadCount());
 
 	static Jsonb jsonb = JsonbBuilder.create();
 

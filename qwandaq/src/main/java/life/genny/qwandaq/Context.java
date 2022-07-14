@@ -20,8 +20,6 @@
 
 package life.genny.qwandaq;
 
-import java.io.Serializable;
-
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
@@ -84,7 +82,7 @@ uniqueConstraints = @UniqueConstraint(columnNames = {"id", "realm"}))
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
 
-public class Context extends CoreEntity implements Serializable {
+public class Context extends CoreEntity {
 	/**
 	 *
 	 */

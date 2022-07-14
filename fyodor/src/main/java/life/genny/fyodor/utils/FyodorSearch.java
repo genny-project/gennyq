@@ -510,7 +510,7 @@ public class FyodorSearch {
 								.and(eaOrderJoin.attributeCode.eq(attributeCode)));
 			}
 
-			ComparableExpressionBase orderColumn = null;
+			ComparableExpressionBase<?> orderColumn = null;
 			if (attributeCode.startsWith("SRT_PRI_CREATED")) {
 				// Use ID because there is no index on created, and this gives same result
 				orderColumn = baseEntity.id;
@@ -803,7 +803,7 @@ public class FyodorSearch {
 	 * @param entityAttribute
 	 * @return
 	 */
-	public static ComparableExpressionBase getPathFromDatatype(String dtt, QEntityAttribute entityAttribute) {
+	public static ComparableExpressionBase<?> getPathFromDatatype(String dtt, QEntityAttribute entityAttribute) {
 
 		if (dtt.equals("Text")) {
 			return entityAttribute.valueString;
@@ -869,7 +869,7 @@ public class FyodorSearch {
 	 * @param ea The EntityAttribute filter from SBE
 	 * @return the subquery object
 	 */
-	public static JPQLQuery generateSubQuery(List<EntityAttribute> eaList) {
+	public static JPQLQuery<?> generateSubQuery(List<EntityAttribute> eaList) {
 
 		// Find first attribute that is not AND/OR. There should be only one
 		EntityAttribute ea = eaList.stream()
@@ -938,7 +938,7 @@ public class FyodorSearch {
 	 * @param blacklist
 	 * @return
 	 */
-	public static JPQLQuery generateWildcardSubQuery(String value, Integer recursion, String[] whitelist,
+	public static JPQLQuery<?> generateWildcardSubQuery(String value, Integer recursion, String[] whitelist,
 			String[] blacklist) {
 
 		// Random uuid to for uniqueness in the query string
@@ -948,7 +948,7 @@ public class FyodorSearch {
 		QBaseEntity baseEntity = new QBaseEntity("baseEntity_" + uuid);
 		QEntityAttribute entityAttribute = new QEntityAttribute("entityAttribute_" + uuid);
 
-		JPQLQuery exp = JPAExpressions.selectDistinct(baseEntity.code)
+		JPQLQuery<?> exp = JPAExpressions.selectDistinct(baseEntity.code)
 				.from(baseEntity)
 				.leftJoin(entityAttribute);
 

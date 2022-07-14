@@ -12,7 +12,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import javax.json.bind.annotation.JsonbTransient;
 
 import com.querydsl.core.annotations.QueryExclude;
 

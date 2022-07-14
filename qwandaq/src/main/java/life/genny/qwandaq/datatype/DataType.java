@@ -119,7 +119,7 @@ public class DataType implements Serializable {
 		// dummy for hibernate
 	}
 
-	public DataType(final Class clazz) {
+	public DataType(final Class<?> clazz) {
 		this(clazz, new ValidationList());
 	}
 
@@ -173,7 +173,7 @@ public class DataType implements Serializable {
 		this(className, aValidationList, className);
 	}
 
-	public DataType(final Class clazz, final ValidationList aValidationList) {
+	public DataType(final Class<?> clazz, final ValidationList aValidationList) {
 		this(clazz.getCanonicalName(), aValidationList);
 	}
 
@@ -258,7 +258,7 @@ public class DataType implements Serializable {
 	@JsonIgnore
 	@Transient
 	@XmlTransient
-	public void setClass(final Class c) {
+	public void setClass(final Class<?> c) {
 		final String simpleClassName = c.getCanonicalName();
 		setClassName(simpleClassName);
 	}
@@ -321,13 +321,13 @@ public class DataType implements Serializable {
 		switch (dtype.getClassName()) {
 			case "java.lang.Integer":
 			case "Integer":
-				return new Integer(0);
+				return 0;
 			case "java.lang.Long":
 			case "Long":
-				return new Long(0);
+				return 0L;
 			case "java.lang.Double":
 			case "Double":
-				return new Double(0.0);
+				return 0.0;
 			case "javax.money.CurrencyUnit":
 			case "org.javamoney.moneta.Money":
 			case "Money":

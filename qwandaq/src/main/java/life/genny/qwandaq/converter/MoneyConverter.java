@@ -1,6 +1,5 @@
 package life.genny.qwandaq.converter;
 
-import java.lang.invoke.MethodHandles;
 import java.io.StringReader;
 
 import javax.persistence.AttributeConverter;

@@ -12,7 +12,6 @@ import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.constants.CacheName;
-import life.genny.qwandaq.data.BridgeInfo;
 
 /**
  * A Bridge ID management class for data message route selection.

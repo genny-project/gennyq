@@ -30,10 +30,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.io.Serializable;
-import java.lang.invoke.MethodHandles;
 import java.security.InvalidParameterException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jboss.logging.Logger;
@@ -81,7 +84,7 @@ import com.querydsl.core.annotations.QueryExclude;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 
 @RegisterForReflection
-public class Question extends CodedEntity implements Serializable {
+public class Question extends CodedEntity {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 
@@ -501,14 +504,14 @@ public class Question extends CodedEntity implements Serializable {
 
 	/**
 	 * removeChildQuestion This removes a child Question from the question group.
-	 * For efficiency we assume the child question exists
 	 *
 	 * @param childQuestionCode the code of the child Question used to remove the
 	 *                          child Question
 	 */
 	public void removeChildQuestion(final String childQuestionCode) {
 		final Optional<QuestionQuestion> optQuestionQuestion = findQuestionLink(childQuestionCode);
-		getChildQuestions().remove(optQuestionQuestion);
+		if(optQuestionQuestion.isPresent())
+			getChildQuestions().remove(optQuestionQuestion.get());
 	}
 
 	/**

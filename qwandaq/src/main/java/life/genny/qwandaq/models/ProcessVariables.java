@@ -18,13 +18,12 @@ package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.BaseEntity;
 
 @RegisterForReflection
 public class ProcessVariables  implements java.io.Serializable {
 
     private BaseEntity processEntity;
+    private String targetBECode;
 	private String definitionCode;
 
 	public ProcessVariables() { }
@@ -43,6 +42,14 @@ public class ProcessVariables  implements java.io.Serializable {
 
     public void setProcessEntity(BaseEntity processEntity) {
         this.processEntity = processEntity;
+    }
+
+    public void setTargetBECode(String targetCode) {
+        this.targetBECode = targetCode;
+    }
+
+    public String getTargetBECode() {
+        return this.targetBECode;
     }
 
 }

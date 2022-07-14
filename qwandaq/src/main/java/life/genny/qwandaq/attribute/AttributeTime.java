@@ -21,7 +21,6 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
 import java.time.LocalTime;
 
 import javax.persistence.DiscriminatorValue;
@@ -62,7 +61,7 @@ import com.querydsl.core.annotations.QueryExclude;
 
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("time")
-public class AttributeTime extends Attribute implements Serializable {
+public class AttributeTime extends Attribute {
 
 	private static final long serialVersionUID = 1L;
 	

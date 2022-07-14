@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 
 public class WeightedItem implements Serializable, Comparable<Object> {

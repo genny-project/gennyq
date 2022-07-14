@@ -21,8 +21,6 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
@@ -61,7 +59,7 @@ import com.querydsl.core.annotations.QueryExclude;
 
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("integer")
-public class AttributeInteger extends Attribute implements Serializable {
+public class AttributeInteger extends Attribute {
 
 	private static final long serialVersionUID = 1L;
 	

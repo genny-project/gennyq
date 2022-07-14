@@ -217,7 +217,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	 */
 	public void setItems(final BaseEntity[] items) {
 		this.items = Arrays.asList(items);
-		setReturnCount(new Long(items.length));
+		setReturnCount((long)items.length);
 	}
 
 	/**
@@ -225,7 +225,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	 */
 	public void setItems(final List<BaseEntity> items) {
 		this.items = items;
-		setReturnCount(new Long(items.size()));
+		setReturnCount((long)items.size());
 	}
 
 	/**

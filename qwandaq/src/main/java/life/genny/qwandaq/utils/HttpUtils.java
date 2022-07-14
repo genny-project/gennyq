@@ -291,7 +291,6 @@ public class HttpUtils {
 	 *
 	 * @return token Token extracted or the same token if nothing found to extract
 	 */
-	@Deprecated
 	public static String extractTokenFromHeaders(String authorization) {
 
 		String[] authValues = authorization.split(" ");

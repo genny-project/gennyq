@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
-import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
 
 import io.jsonwebtoken.JwtBuilder;

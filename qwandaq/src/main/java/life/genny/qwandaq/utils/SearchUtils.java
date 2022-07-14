@@ -422,7 +422,7 @@ public class SearchUtils {
 					log.info("Pre Conditions met for : " + conditions.toString());
 
 					String attributeCode = mutation.getString("attributeCode");
-					String operator = mutation.getString("operator");
+					// String operator = mutation.getString("operator");
 					String value = mutation.getString("value");
 
 					// TODO: allow for regular filters too
@@ -618,7 +618,7 @@ public class SearchUtils {
 			// log.info("Single Condition = " + condition.toString());
 
 			String attributeCode = condition.getString("attributeCode");
-			String operator = condition.getString("operator");
+			// String operator = condition.getString("operator");
 			String value = condition.getString("value");
 
 			EntityAttribute ea = target.findEntityAttribute(attributeCode).orElse(null);
