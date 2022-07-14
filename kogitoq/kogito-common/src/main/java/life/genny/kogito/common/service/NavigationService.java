@@ -109,7 +109,7 @@ public class NavigationService {
 		msg.add(pcm);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-
+		log.info("Sending PCMs for "+questionCode);
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
