@@ -7,6 +7,9 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.constants.CacheName;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
@@ -101,7 +104,8 @@ public class ProcessAnswerService {
 		processVariables.setProcessEntity(processBE);
 		processVariables.setDefinitionCode(defCode);
 		String processBeAndDefJson = jsonb.toJson(processVariables);
-		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+		CacheKey cacheKey = new CacheKey(userToken.getProductCode(), processId+":PROCESS_BE");
+		CacheUtils.putObject(CacheName.METADATA, cacheKey, processBeAndDefJson);
 
 		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue+"  and processBE cached to "+processId+":PROCESS_BE");
 		return jsonb.toJson(processBE);

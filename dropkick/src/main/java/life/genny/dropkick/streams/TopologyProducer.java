@@ -24,6 +24,9 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
+import life.genny.qwandaq.constants.CacheName;
+
 import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -229,12 +232,7 @@ public class TopologyProducer {
 	 * Fetch the targetCode stored in the processInstance 
 	 * for the given processId.
 	 */
-<<<<<<< HEAD
-
-	public ProcessBeAndDef fetchProcessInstanceProcessBE(String processId) {
-=======
 	public ProcessVariables fetchProcessInstanceProcessBE(String processId) {
->>>>>>> 10.1.0
 		BaseEntity processBe = null;
 		String defCode = null;
 		String processBeStr = null;
@@ -243,8 +241,8 @@ public class TopologyProducer {
 
 		// check in cache first (But not ready yet, processQuestions would need to save
 		// the processBe into cache every answer received)
-		String processVariablesStr = CacheUtils.getObject(userToken.getProductCode(), processId + ":PROCESS_BE",
-				String.class);
+		CacheKey cacheKey = new CacheKey(userToken.getProductCode(), processId + ":PROCESS_BE");
+		String processVariablesStr = CacheUtils.getObject(CacheName.METADATA, cacheKey, String.class);
 		if (!StringUtils.isBlank(processVariablesStr)) {
 			log.info("ProcessVariables fetched from cache");
 			ProcessVariables processVariables = null;
@@ -279,7 +277,7 @@ public class TopologyProducer {
 		processVariables.setDefinitionCode(defCode);
 
 		// cache
-		CacheUtils.putObject(userToken.getProductCode(), processId + ":PROCESS_BE", processVariables);
+		CacheUtils.putObject(CacheName.METADATA, cacheKey, processVariables);
 
 		return processVariables;
 	}

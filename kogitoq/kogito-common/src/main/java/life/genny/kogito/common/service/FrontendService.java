@@ -22,6 +22,7 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -316,7 +317,8 @@ public class FrontendService {
 		processVariables.setProcessEntity(processBE);
 		processVariables.setDefinitionCode(defCode);
 		String processBeAndDefJson = jsonb.toJson(processVariables);
-		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+		CacheKey cacheKey = new CacheKey(userToken.getProductCode(), processId+":PROCESS_BE");
+		CacheUtils.putObject(CacheName.METADATA, cacheKey, processBeAndDefJson);
 
 		log.info("processBE cached to "+processId+":PROCESS_BE");
 
