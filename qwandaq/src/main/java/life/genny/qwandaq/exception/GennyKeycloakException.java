@@ -1,12 +1,9 @@
 package life.genny.qwandaq.exception;
 
 /**
- * GennyKeycloakException --- Custom exception to identified in-house commun 
- * issues which were faced before, known issues or expected problems that 
- * can be documented 
- *
+ * Custom exception to identify issues with keycloak requests.
  */
-public class GennyKeycloakException extends Exception {
+public class GennyKeycloakException extends GennyException {
 
     private String code;
 

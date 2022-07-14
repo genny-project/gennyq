@@ -2,6 +2,7 @@ package life.genny.gadaq;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -11,6 +12,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.kogito.common.models.RLog;
 
 ruleflow-group 'EventRoutes'
@@ -21,7 +23,7 @@ when
 	kogitoUtils : KogitoUtils()
 then
 	/* RLog.info(drools, "Auth Init!"); */
-	kogitoUtils.triggerWorkflow("authInit", "eventMessage", msg);
+	kogitoUtils.triggerWorkflow(SELF, "authInit", "eventMessage", msg);
 	retract(msg);
 end
 
@@ -31,7 +33,7 @@ when
 	kogitoUtils : KogitoUtils()
 then
 	String processId = msg.getData().getProcessId();
-	kogitoUtils.sendSignal("processQuestions", processId, "submit", "");
+	kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
 	retract(msg);
 end
 
@@ -41,7 +43,7 @@ when
 	kogitoUtils : KogitoUtils()
 then
 	String processId = msg.getData().getProcessId();
-	kogitoUtils.sendSignal("processQuestions", processId, "cancel", "");
+	kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
 	retract(msg);
 end
 
@@ -51,16 +53,16 @@ when
 	kogitoUtils : KogitoUtils()
 then
 	String processId = msg.getData().getProcessId();
-	kogitoUtils.sendSignal("processQuestions", processId, "reset", "");
+	kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
 	retract(msg);
 end
 
 rule RouteView 
 when
-	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" )
+	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code == "QUE_TREE_ITEM_HOST_COMPANIES" )
 	kogitoUtils : KogitoUtils()
 then
-	kogitoUtils.triggerWorkflow("view", "eventMessage", msg);
+	kogitoUtils.triggerWorkflow(SELF, "view", "eventMessage", msg);
 	retract(msg);
 end
 
@@ -91,7 +93,16 @@ then
 		.add("sourceCode", userToken.getUserCode())
 		.build();
 
-	kogitoUtils.triggerWorkflow("personLifecycle", json);
+	kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
+	retract(msg);
+end
+
+rule RouteEditItem 
+when
+	msg: QEventMessage( data.code == "ACT_EDIT" )
+	kogitoUtils : KogitoUtils()
+then
+	kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
 	retract(msg);
 end
 
@@ -100,10 +111,12 @@ when
 	msg: QEventMessage( data.code == "UPDATE_SUMMARY" )
 	kogitoUtils : KogitoUtils()
 	gqlUtils : GraphQLUtils()
+	jsonb : Jsonb()
 then
-	String processId = gqlUtils.fetchProcessId("personLifecycle", "entityCode", msg.getData().getTargetCode());
+	System.out.println("Updating Summary");
+	String processId = gqlUtils.fetchProcessId("PersonLifecycle", "entityCode", msg.getData().getTargetCode());
 	System.out.println("PID = " + processId);
-	kogitoUtils.sendSignal("personLifecycle", processId, "update_summary", "summary", msg.getData().getParentCode());
+	kogitoUtils.sendSignal(SELF, "personLifecycle", processId, "update_summary", jsonb.toJson(msg));
 	retract(msg);
 end
 
@@ -113,7 +126,7 @@ when
 	kogitoUtils : KogitoUtils()
 then
     System.out.println("DEBUG LOG");
-	kogitoUtils.triggerWorkflow("view", "eventMessage", msg);
+	kogitoUtils.triggerWorkflow(SELF, "view", "eventMessage", msg);
 	retract(msg);
 end
 

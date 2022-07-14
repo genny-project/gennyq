@@ -13,8 +13,11 @@ import javax.transaction.Transactional;
 
 import org.jboss.logging.Logger;
 
+<<<<<<< HEAD
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.common.annotation.NonBlocking;
+=======
+>>>>>>> 10.1.0
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;

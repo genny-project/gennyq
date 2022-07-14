@@ -34,10 +34,6 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-
-
-
-
 @ApplicationScoped
 public class TopologyProducer {
 
@@ -73,7 +69,7 @@ public class TopologyProducer {
 		}
 
 		log.info("Initializing ServiceQ Services");
-		service.fullServiceInit();
+		service.fullServiceInit(true);
 		log.info("[*] Finished Topology Startup!");
 	}
 

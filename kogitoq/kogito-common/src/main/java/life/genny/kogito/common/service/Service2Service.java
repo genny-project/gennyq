@@ -87,6 +87,8 @@ public class Service2Service {
 				.add("targetCode", personCode))
 			.build();
 
-		KafkaUtils.writeMsg("genny_events", json.toString());
+		log.info("Sending summary update -> " + personCode + " : " + summaryCode);
+
+		KafkaUtils.writeMsg("events", json.toString());
 	}
 }

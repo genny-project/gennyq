@@ -160,7 +160,7 @@ public class QwandaUtils {
 				}
 
 				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
-				long lastMemory = CommonUtils.getMemoryUsage("MEGABYTES");
+				long lastMemory = PerformanceUtils.getMemoryUsage("MEGABYTES");
 
 				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
 				log.info("Current memory usage: " + lastMemory + "MB");
@@ -173,12 +173,12 @@ public class QwandaUtils {
 					CacheUtils.putObject(CacheName.ATTRIBUTE, attribKey, attribute);
 					totalAttribsCached++;
 				}
-				long currentMemory = CommonUtils.getMemoryUsage(CommonUtils.MemoryMeasurement.MEGABYTES);
+				long currentMemory = PerformanceUtils.getMemoryUsage(PerformanceUtils.MemoryMeasurement.MEGABYTES);
 				long memoryUsed = currentMemory - lastMemory;
 
 				log.info("Post load memory usage: " + currentMemory + "MB");
 				log.info("Used up: " + memoryUsed + "MB");
-				log.info("Percentage: " + CommonUtils.getPercentMemoryUsed() * 100f);
+				log.info("Percentage: " + PerformanceUtils.getPercentMemoryUsed() * 100f);
 				log.info("============================");
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);
@@ -256,13 +256,15 @@ public class QwandaUtils {
 		// check if it is a question group
 		if (question.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
 
+			log.info("[*] Parent Question: " + question.getCode());
+
 			// fetch questionQuestions from the DB
 			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode, question.getCode());
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info(" [*] Found Child Question in database: " + questionQuestion.getTargetCode());
+				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"+ questionQuestion.getTargetCode());
 
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 				
@@ -315,9 +317,9 @@ public class QwandaUtils {
 
 		// grab attribute code of current ask
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
-			log.debug("Prefix not in accepted list");
+			log.debug("Prefix {"+code.substring(0, 4)+"} not in accepted list");
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
-			log.debug("Attribute code in exclude list");
+			log.debugv("Attribute {} in exclude list", code);
 		} else {
 			codes.add(code);
 		}

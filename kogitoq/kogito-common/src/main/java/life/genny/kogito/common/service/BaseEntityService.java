@@ -1,5 +1,7 @@
 package life.genny.kogito.common.service;
 
+import java.util.Optional;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -12,9 +14,12 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.GennyException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
@@ -36,6 +41,9 @@ public class BaseEntityService {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Inject
+	DefUtils defUtils;
 
 	public String commission(String definitionCode) {
 
@@ -90,13 +98,24 @@ public class BaseEntityService {
 			return null;
 		}
 
-		String prefix = definition.getValue("PRI_PREFIX", null);
-
-		if (prefix == null) {
-			log.error("definition " + definition.getCode() + " has no prefix attribute!");
+		Optional<String> prefix = definition.getValue("PRI_PREFIX");
+		if (prefix.isEmpty()) {
+			throw new GennyException("definition " + definition.getCode() + " has no prefix attribute!");
 		}
 
-		return prefix;
+		return prefix.get();
+	}
+
+	public String getBaseEntityQuestionGroup(String targetCode) {
+
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity definition = defUtils.getDEF(target);
+
+		if (definition == null) {
+			throw new GennyException("No definition for target " + target);
+		}
+
+		return CommonUtils.replacePrefix(definition.getCode(), "QUE");
 	}
 
 	/**
@@ -111,6 +130,7 @@ public class BaseEntityService {
 
 		// update user fields
 		// NOTE: this could be turned into a single http request
+		// Could make it a builder pattern to make it a single http request?
 		KeycloakUtils.updateUserEmail(serviceToken, user, email);
 		KeycloakUtils.updateUserField(serviceToken, user, "username", email);
 		KeycloakUtils.updateUserField(serviceToken, user, "firstName", firstName);
@@ -122,16 +142,6 @@ public class BaseEntityService {
 	 */
 	public void mergeFromProcessEntity(String entityCode, String processBEJson) {
 
-		if (entityCode == null) {
-			log.error("entityCode is null");
-			return;
-		}
-
-		if (processBEJson == null) {
-			log.error("processBEJson is null");
-			return;
-		}
-		
 		BaseEntity entity = beUtils.getBaseEntityByCode(entityCode);
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 

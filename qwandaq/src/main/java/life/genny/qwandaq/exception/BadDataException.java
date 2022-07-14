@@ -1,8 +1,9 @@
 package life.genny.qwandaq.exception;
 
-
-@SuppressWarnings("serial")
-public class BadDataException extends Exception {
+/**
+ * An Exception to signify malformed of incorrect data.
+ */
+public class BadDataException extends GennyException {
 
 	public BadDataException() {
 		super();

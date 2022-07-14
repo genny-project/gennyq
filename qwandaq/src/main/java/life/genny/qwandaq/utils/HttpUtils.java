@@ -14,8 +14,6 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennyToken;
 
-
-
 /**
  * A Static utility class for standard HTTP requests.
  * 
@@ -57,7 +55,7 @@ public class HttpUtils {
 		HttpClient client = HttpClient.newHttpClient();
 
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(getUri(uri))
+				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
 				.PUT(HttpRequest.BodyPublishers.ofString(body))
@@ -139,7 +137,7 @@ public class HttpUtils {
 		Builder requestBuilder = null;
 
 		requestBuilder = HttpRequest.newBuilder()
-				.uri(getUri(uri))
+				.uri(createURI(uri))
 				.setHeader("Content-Type", contentType);
 
 		if (token != null) {
@@ -191,7 +189,7 @@ public class HttpUtils {
 		HttpClient client = HttpClient.newHttpClient();
 
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(getUri(uri))
+				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
 				.GET().build();
@@ -232,7 +230,7 @@ public class HttpUtils {
 		HttpClient client = HttpClient.newHttpClient();
 
 		HttpRequest request = HttpRequest.newBuilder()
-				.uri(getUri(uri))
+				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
 				.DELETE().build();
@@ -330,8 +328,14 @@ public class HttpUtils {
 		return new GennyToken(extractTokenFromHeaders(authorization));
 	}
 
-	// TODO: Need to work on this more
-	private static URI getUri(String uri) throws IllegalArgumentException {
+	/**
+	 * Create a URI object from a uri string.
+	 * TODO: Need to work on this more.
+	 *
+	 * @param uri The uri string
+	 * @return A URI object
+	 */
+	private static URI createURI(String uri) throws IllegalArgumentException {
 		try {
 			log.info("Creating uri: " + uri);
 			return URI.create(uri);

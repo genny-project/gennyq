@@ -16,6 +16,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -253,14 +254,16 @@ public class FrontendService {
 	 * Send a baseentity after filtering the entity attributes
 	 * based on the questions in the ask message.
 	 *
-	 * @param code   The code of the baseentity to send
-	 * @param askMsg The ask message used to filter attributes
+	 * @param code      The code of the baseentity to send
+	 * @param askMsg    The ask message used to filter attributes
+	 * @param processId The process id to use for the baseentity cache
+	 * @param defCode   . The type of processBE (to save calculating it again)
 	 */
-	public void sendBaseEntitys(String processBEJson, String askMessageJson) {
+	public void sendBaseEntitys(String processBEJson, String askMessageJson, String processId, String defCode) {
 
 		BaseEntity processBE = null;
 		QDataAskMessage askMsg = null;
-		
+
 		try {
 			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		} catch (java.lang.NullPointerException e) {
@@ -301,13 +304,32 @@ public class FrontendService {
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
 
-		KafkaUtils.writeMsg("webdata", msg);
+		log.info("Sending processBE "+processBE.getBaseEntityAttributes().size()+" attributes");
+		// Sending the BE here has issues with dropdown items...
+
+		// Now save the processBE into cache so that the lauchy and dropkick can
+		// recognise it as valid
+		// Now update the cached version of the processBE with an expiry (used in
+		// dropkick and lauchy)
+		// cache the current ProcessBE so that it can be used quickly by lauchy etc
+		ProcessVariables processVariables = new ProcessVariables();
+		processVariables.setProcessEntity(processBE);
+		processVariables.setDefinitionCode(defCode);
+		String processBeAndDefJson = jsonb.toJson(processVariables);
+		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+
+		log.info("processBE cached to "+processId+":PROCESS_BE");
+
 
 		// NOTE: only using first ask item
 		Ask ask = askMsg.getItems().get(0);
 
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processBE, ask.getQuestion().getCode());
+
+		// Now send the baseentity to the Frontend so that the 'menu' are already there
+		// waiting
+		KafkaUtils.writeMsg("webdata", jsonb.toJson(msg));
 	}
 
 	/**
@@ -322,6 +344,7 @@ public class FrontendService {
 
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
+		Attribute nameAttribute = qwandaUtils.getAttribute("PRI_NAME");
 
 		if (attribute.getCode().startsWith("LNK_")) {
 
@@ -336,8 +359,27 @@ public class FrontendService {
 						log.error("One of the LNKs for target are null");
 						continue;
 					}
-					BaseEntity selection = beUtils.getBaseEntityByCode(code);
+					 BaseEntity selection = beUtils.getBaseEntityByCode(code);
+					BaseEntityKey key = new BaseEntityKey(userToken.getProductCode(), code);
+					//BaseEntity selection = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 					if (selection != null) {
+						selection.setBaseEntityAttributes(new HashSet<EntityAttribute>());
+						EntityAttribute nameEA = new EntityAttribute(selection, nameAttribute, 1.0,
+								selection.getName());
+						try {
+							selection.addAttribute(nameEA);
+						} catch (Exception e) {
+							log.error("Error adding name attribute to selection");
+						}
+					
+						// log.info("Selected attribute and value:" + code + ":" + selection.getValue(code) + " with "
+						// 		+ selection.getBaseEntityAttributes().size() + " attributes");
+						// if (selection.getBaseEntityAttributes().size() > 1) {
+						// 			for (EntityAttribute ea : selection.getBaseEntityAttributes()) {
+						// 				log.info("MULTIPLE ATTRIBUTES:"+selection.getCode()+" "+ea.getAttributeCode()+"="+ea.getValue());
+						// 			}
+						// 		}
+						log.info("Sending the selected BaseEntity "+selection.getCode()+":"+selection.getName());
 						selectionMsg.add(selection);
 					}
 				}
@@ -345,6 +387,7 @@ public class FrontendService {
 				// send selections
 				selectionMsg.setToken(userToken.getToken());
 				selectionMsg.setReplace(true);
+				log.info("SENDING BASEENTITYS FOR SELECTIONS!");
 				KafkaUtils.writeMsg("webdata", selectionMsg);
 			}
 

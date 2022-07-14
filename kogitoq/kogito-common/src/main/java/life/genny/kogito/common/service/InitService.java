@@ -11,6 +11,7 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -211,7 +212,7 @@ public class InitService {
 
 		// force this workflow to re-ask the questions
 		String processId = array.getJsonObject(0).getString("id");
-		kogitoUtils.sendSignal("processQuestions", processId, "requestion", "");
+		kogitoUtils.sendSignal(GADAQ, "processQuestions", processId, "requestion", "");
 	}
 
 }
