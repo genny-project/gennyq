@@ -363,10 +363,14 @@ public class FrontendService {
 				}
 
 				// send selections
+				if (selectionMsg.getItems() != null) {
 				selectionMsg.setToken(userToken.getToken());
 				selectionMsg.setReplace(true);
 				log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
 				KafkaUtils.writeMsg("webdata", selectionMsg);
+				}	else {
+					log.info("No selection items found for " + attribute.getCode());
+				}
 			}
 
 			// trigger dropdown search in dropkick
@@ -387,7 +391,7 @@ public class FrontendService {
 		}
 
 		// recursively run on children
-		if (ask.getChildAsks() != null) {
+		if ((ask.getChildAsks() != null)&&(ask.getChildAsks().length > 0)) {
 			for (Ask child : ask.getChildAsks()) {
 				recuresivelyFindAndSendDropdownItems(child, target, rootCode);
 			}
