@@ -223,12 +223,12 @@ public class Service {
 
 		// init all
 		initToken();
+		initCache();
+		initKafka();
 		// attempt to stop topology producers from failing on startup
 		if (!hasTopology) {
-			initCache();
+			initAttributes();
 		}
-		initKafka();
-		initAttributes();
 		initDefinitions();
 
 		initialised = true;
