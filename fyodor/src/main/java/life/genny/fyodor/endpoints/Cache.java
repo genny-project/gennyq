@@ -8,6 +8,7 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -33,6 +34,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
+import life.genny.qwandaq.exception.ItemNotFoundException;
 
 /**
  * Cache --- Endpoints providing cache access
@@ -233,7 +235,13 @@ public class Cache {
 			log.info("reading " + key + " from raw cache");
 			String json = (String) CacheUtils.readCache(productCode, key);
 			if ((json == null) && (key.startsWith("QUE_"))) {
-				Question q = databaseUtils.findQuestionByCode(productCode, key);
+				Question q;
+				try {
+					q = databaseUtils.findQuestionByCode(productCode, key);
+				} catch (NoResultException e) {
+					throw new ItemNotFoundException(key, e);
+				}
+
 				json = jsonb.toJson(q);
 			}
 

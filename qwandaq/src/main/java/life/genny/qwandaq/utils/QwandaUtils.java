@@ -17,6 +17,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -31,6 +32,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -223,10 +225,11 @@ public class QwandaUtils {
 		log.debug("Fetching Question: " + code);
 
 		// find the question in the database
-		Question question = databaseUtils.findQuestionByCode(productCode, code);
-
-		if (question == null) {
-			log.error("Error fetching Question from database: " + code);
+		Question question;
+		try {
+			question = databaseUtils.findQuestionByCode(productCode, code);
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException(code, e);
 		}
 
 		// init new parent ask
@@ -308,9 +311,9 @@ public class QwandaUtils {
 
 		// grab attribute code of current ask
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
-			log.debug("Prefix {"+code.substring(0, 4)+"} not in accepted list");
+			log.debugf("Prefix {} not in accepted list", code.substring(0, 4));
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
-			log.debugv("Attribute {} in exclude list", code);
+			log.debugf("Attribute {} in exclude list", code);
 		} else {
 			codes.add(code);
 		}

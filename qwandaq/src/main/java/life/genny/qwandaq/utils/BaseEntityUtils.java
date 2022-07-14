@@ -9,15 +9,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.DebugException;
@@ -26,8 +32,6 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
 /**
  * A non-static utility class used for standard
@@ -306,12 +310,11 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
 
-		String attributeValue = baseEntity.getValue(attributeCode, null);
-		if (attributeValue == null) {
-			return null;
+		Optional<String> attributeValue = baseEntity.getValue(attributeCode);
+		if (attributeValue.isPresent()) {
+			return cleanUpAttributeValue(attributeValue.get());
 		}
-		String newBaseEntityCode = cleanUpAttributeValue(attributeValue);
-		return newBaseEntityCode;
+		return null;
 	}
 
 	/**
@@ -342,6 +345,7 @@ public class BaseEntityUtils {
 		if (attributeValue == null) {
 			return null;
 		}
+		log.info("ATTR VAL = " + attributeValue);
 
 		String[] baseEntityCodeArray = attributeValue.split(",");
 		List<String> beCodeList = Arrays.asList(baseEntityCodeArray);
@@ -483,6 +487,65 @@ public class BaseEntityUtils {
 				.collect(Collectors.toList());
 
 		return entityList;
+	}
+
+	/**
+	 * Apply the privacy filter to a BaseEntity.
+	 * @param entity The be to apply the filter to
+	 * @param allowed The list of allowed attribute codes
+	 * @return The filtered BaseEntity
+	 */
+	public BaseEntity privacyFilter(BaseEntity entity, List<String> allowed) {
+
+		// Filter out unwanted attributes
+		entity.setBaseEntityAttributes(
+				entity.getBaseEntityAttributes()
+						.stream()
+						.filter(x -> allowed.contains(x.getAttributeCode()))
+						.collect(Collectors.toSet()));
+
+		return entity;
+	}
+
+	/**
+	 * Add all non literal attributes to the baseentity.
+	 * @param entity The entity to update
+	 * @return The updated BaseEntity
+	 */
+	public static BaseEntity addNonLiteralAttributes(BaseEntity entity) {
+
+		// Handle Created and Updated attributes
+		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
+		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
+		created.setValueDateTime(entity.getCreated());
+		entity.addAttribute(created);
+
+		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
+		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
+		createdDate.setValueDate(entity.getCreated().toLocalDate());
+		entity.addAttribute(createdDate);
+
+		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
+		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
+		updated.setValueDateTime(entity.getUpdated());
+		entity.addAttribute(updated);
+
+		Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
+		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
+		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
+		entity.addAttribute(updatedDate);
+
+		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
+		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
+		code.setValueString(entity.getCode());
+		entity.addAttribute(code);
+
+		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
+		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
+		name.setValueString(entity.getName());
+		entity.addAttribute(name);
+
+		return entity;
 	}
 
 	/**

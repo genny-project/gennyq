@@ -2,9 +2,9 @@ package life.genny.qwandaq.utils;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.exception.GennyException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 
 /**
@@ -101,7 +101,7 @@ public class CommonUtils {
 	public static String replacePrefix(String str, String prefix) {
 
 		if (str.charAt(3) != '_') {
-			return str;
+			throw new GennyException(str + " is does not have a valid three character prefix");
 		}
 		return prefix + str.substring(3);
 	}
