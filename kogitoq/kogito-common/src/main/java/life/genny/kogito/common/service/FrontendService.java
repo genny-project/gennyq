@@ -4,33 +4,37 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.GennyException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
 import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import org.apache.commons.lang3.StringUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class FrontendService {
@@ -129,13 +133,8 @@ public class FrontendService {
 	 */
 	public String getDEF(String targetCode) {
 
-		if (targetCode == null) {
-			log.error("TargetCode must not be null!");
-			return null;
-		}
-
 		if ("NON_EXISTENT".equals(targetCode)) {
-			return null;
+			return "DEF_NON_EXISTANT";
 		}
 
 		// Find the DEF
@@ -154,11 +153,6 @@ public class FrontendService {
 	 * @return The updated process entity
 	 */
 	public String setupProcessBE(String targetCode, String askMessageJson) {
-
-		if (askMessageJson == null) {
-			log.error("Ask message Json must not be null!");
-			return null;
-		}
 
 		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
 
@@ -361,7 +355,7 @@ public class FrontendService {
 						log.error("One of the LNKs for target are null");
 						continue;
 					}
-					 BaseEntity selection = beUtils.getBaseEntityByCode(code);
+					BaseEntity selection = beUtils.getBaseEntityByCode(code);
 					BaseEntityKey key = new BaseEntityKey(userToken.getProductCode(), code);
 					//BaseEntity selection = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 					if (selection != null) {
@@ -373,14 +367,7 @@ public class FrontendService {
 						} catch (Exception e) {
 							log.error("Error adding name attribute to selection");
 						}
-					
-						// log.info("Selected attribute and value:" + code + ":" + selection.getValue(code) + " with "
-						// 		+ selection.getBaseEntityAttributes().size() + " attributes");
-						// if (selection.getBaseEntityAttributes().size() > 1) {
-						// 			for (EntityAttribute ea : selection.getBaseEntityAttributes()) {
-						// 				log.info("MULTIPLE ATTRIBUTES:"+selection.getCode()+" "+ea.getAttributeCode()+"="+ea.getValue());
-						// 			}
-						// 		}
+
 						log.info("Sending the selected BaseEntity "+selection.getCode()+":"+selection.getName());
 						selectionMsg.add(selection);
 					}

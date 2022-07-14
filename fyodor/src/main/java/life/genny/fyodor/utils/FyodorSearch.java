@@ -47,7 +47,7 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
+import life.genny.qwandaq.serialization.key.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -155,9 +155,8 @@ public class FyodorSearch {
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				CacheKey cacheKey = new CacheKey(userToken.getProductCode(), combinedSearchCode);
-				SearchEntity combinedSearch = CacheUtils.getObject(CacheName.METADATA, cacheKey,
-						SearchEntity.class);
+				BaseEntityKey beKey = new BaseEntityKey(userToken.getProductCode(), combinedSearchCode);
+				SearchEntity combinedSearch = CacheUtils.getObject(CacheName.BASEENTITY, beKey, SearchEntity.class);
 
 				Long subTotal = performCount(combinedSearch);
 				if (subTotal != null) {
@@ -208,8 +207,8 @@ public class FyodorSearch {
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
 			if (ea.getAttributeCode().startsWith("CMB_")) {
 				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				CacheKey cacheKey = new CacheKey(userToken.getProductCode(), combinedSearchCode);
-				SearchEntity combinedSearch = CacheUtils.getObject(CacheName.METADATA, cacheKey,
+				BaseEntityKey beKey = new BaseEntityKey(userToken.getProductCode(), combinedSearchCode);
+				SearchEntity combinedSearch = CacheUtils.getObject(CacheName.BASEENTITY, beKey,
 						SearchEntity.class);
 				Long subTotal = performCount(combinedSearch);
 				if (subTotal != null) {
@@ -510,7 +509,7 @@ public class FyodorSearch {
 								.and(eaOrderJoin.attributeCode.eq(attributeCode)));
 			}
 
-			ComparableExpressionBase<?> orderColumn = null;
+			ComparableExpressionBase orderColumn = null;
 			if (attributeCode.startsWith("SRT_PRI_CREATED")) {
 				// Use ID because there is no index on created, and this gives same result
 				orderColumn = baseEntity.id;
@@ -803,7 +802,7 @@ public class FyodorSearch {
 	 * @param entityAttribute
 	 * @return
 	 */
-	public static ComparableExpressionBase<?> getPathFromDatatype(String dtt, QEntityAttribute entityAttribute) {
+	public static ComparableExpressionBase getPathFromDatatype(String dtt, QEntityAttribute entityAttribute) {
 
 		if (dtt.equals("Text")) {
 			return entityAttribute.valueString;
@@ -869,7 +868,7 @@ public class FyodorSearch {
 	 * @param ea The EntityAttribute filter from SBE
 	 * @return the subquery object
 	 */
-	public static JPQLQuery<?> generateSubQuery(List<EntityAttribute> eaList) {
+	public static JPQLQuery generateSubQuery(List<EntityAttribute> eaList) {
 
 		// Find first attribute that is not AND/OR. There should be only one
 		EntityAttribute ea = eaList.stream()
@@ -938,7 +937,7 @@ public class FyodorSearch {
 	 * @param blacklist
 	 * @return
 	 */
-	public static JPQLQuery<?> generateWildcardSubQuery(String value, Integer recursion, String[] whitelist,
+	public static JPQLQuery generateWildcardSubQuery(String value, Integer recursion, String[] whitelist,
 			String[] blacklist) {
 
 		// Random uuid to for uniqueness in the query string
@@ -948,7 +947,7 @@ public class FyodorSearch {
 		QBaseEntity baseEntity = new QBaseEntity("baseEntity_" + uuid);
 		QEntityAttribute entityAttribute = new QEntityAttribute("entityAttribute_" + uuid);
 
-		JPQLQuery<?> exp = JPAExpressions.selectDistinct(baseEntity.code)
+		JPQLQuery exp = JPAExpressions.selectDistinct(baseEntity.code)
 				.from(baseEntity)
 				.leftJoin(entityAttribute);
 

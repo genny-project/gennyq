@@ -35,11 +35,12 @@ import life.genny.serviceq.Service;
  * Cache --- Endpoints providing cache access
  *
  * @author jasper.robison@gada.io
+ * @auther Bryn Meachem
  */
 @Path("/cache")
-public class Cache {
+public class CacheEndpoint {
 
-	private static final Logger log = Logger.getLogger(Cache.class);
+	private static final Logger log = Logger.getLogger(CacheEndpoint.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -57,11 +58,6 @@ public class Cache {
 
 	@Inject
 	DatabaseUtils databaseUtils;
-
-	// New endpoints:
-	// Update (notify on update)
-	// Read
-	// Delete
 
 	// Add to this as necessary
 	private boolean isAuthorized() {
