@@ -14,6 +14,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,16 +23,15 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.DebugException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 
 /**
  * A non-static utility class used for standard
@@ -110,9 +110,12 @@ public class BaseEntityUtils {
 		
 		// check in database if not in cache
 		if (entity == null) {			
-			entity = databaseUtils.findBaseEntityByCode(productCode, code);
-			log.debug("BaseEntity " + productCode + ":" + code + " not in cache... "
-					+ ( entity == null ? "Not in DB either!" : "Found in DB." ));
+			log.debug(code + " not in cache for product " + productCode);
+			try {
+				entity = databaseUtils.findBaseEntityByCode(productCode, code);
+			} catch (NoResultException e) {
+				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
+			}
 		}
 
 		return entity;
@@ -252,8 +255,9 @@ public class BaseEntityUtils {
 
 		databaseUtils.saveBaseEntity(baseEntity);
 
-		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		return (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		// return (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		return baseEntity;
 	}
 
 	/**

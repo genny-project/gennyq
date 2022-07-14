@@ -33,6 +33,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -76,15 +77,15 @@ public class QwandaUtils {
 
 	// Deliberately package private!
 	Attribute saveAttribute(final Attribute attribute) {
+
 		String productCode = userToken.getProductCode();
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
-		
+
 		if(existingAttrib != null) {
 			if(CommonUtils.compare(attribute, existingAttrib)) {
-				log.error("Attribute already exists with same fields: " + existingAttrib.getCode());
+				log.warn("Attribute already exists with same fields: " + existingAttrib.getCode());
 				return existingAttrib;
 			}
-
 			log.info("Updating existing attribute!: "  + existingAttrib.getCode());
 		}
 
@@ -114,7 +115,7 @@ public class QwandaUtils {
 		attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
 
 		if (attribute == null) {
-			log.error("Bad Attribute in Cache for productCode " + productCode + " and code " + attributeCode);
+			throw new ItemNotFoundException(productCode, attributeCode);
 		}
 
 		return attribute;
@@ -205,20 +206,12 @@ public class QwandaUtils {
 	 */
 	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
 
-		if (code == null) {
-			log.error("Code must not be null");
-			return null;
-		}
-
-		if (source == null) {
-			log.error("Source must not be null");
-			return null;
-		}
-
-		if (target == null) {
-			log.error("Target must not be null");
-			return null;
-		}
+		if (code == null)
+			throw new NullParameterException("code");
+		if (source == null)
+			throw new NullParameterException("source");
+		if (target == null)
+			throw new NullParameterException("target");
 
 		String productCode = userToken.getProductCode();
 
@@ -462,8 +455,7 @@ public class QwandaUtils {
 			// check if target is valid
 			BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 			if (target == null) {
-				log.error(targetCode + " does not exist!");
-				continue;
+				throw new ItemNotFoundException(targetCode);
 			}
 
 			// fetch the DEF for this target
@@ -588,15 +580,8 @@ public class QwandaUtils {
 	 */
 	public void sendToFrontEnd(Answer... answers) {
 
-		if (answers == null) {
-			log.error("Answers is null!");
-			return;
-		}
-
-		if (answers.length == 0) {
-			log.error("Number of Answers is 0!");
-			return;
-		}
+		if (answers == null)
+			throw new NullParameterException("answers");
 
 		String productCode = userToken.getProductCode();
 
