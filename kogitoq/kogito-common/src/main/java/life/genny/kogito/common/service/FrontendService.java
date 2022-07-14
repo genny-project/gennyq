@@ -432,6 +432,7 @@ public class FrontendService {
 		askMessage.getItems().set(0, ask);
 
 		askMessage.setToken(userToken.getToken());
+		askMessage.setTag("sendQDataAskMessage");
 		KafkaUtils.writeMsg("webcmds", askMessage);
 	}
 

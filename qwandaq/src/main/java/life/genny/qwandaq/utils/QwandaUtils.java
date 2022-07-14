@@ -191,6 +191,8 @@ public class QwandaUtils {
 		}
 	}
 
+
+
 	/**
 	* Generate an ask for a question using the question code, the 
 	* source and the target. This operation is recursive if the 
@@ -216,6 +218,12 @@ public class QwandaUtils {
 		if (target == null) {
 			log.error("Target must not be null");
 			return null;
+		}
+
+		// if the code is QUE_BASEENTITY_GRP then display all the attributes
+		if ("QUE_BASEENTITY_GRP".equals(code)) {
+			return generateAskGroupUsingBaseEntity(target);
+	
 		}
 
 		String productCode = userToken.getProductCode();
@@ -308,7 +316,7 @@ public class QwandaUtils {
 
 		// grab attribute code of current ask
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
-			log.debug("Prefix {"+code.substring(0, 4)+"} not in accepted list");
+			log.error("Prefix {"+code.substring(0, 4)+"} not in accepted list");
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			log.debugv("Attribute {} in exclude list", code);
 		} else {

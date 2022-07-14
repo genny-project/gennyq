@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_vuucYOQbEDq5e-XSgXPI4A" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_CgwBMOU-EDq5e-XSgXPI4A" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -95,8 +95,8 @@
   <bpmn2:interface id="_D9299DD0-175D-4809-AAF6-7894CC081A4F_ServiceInterface" name="life.genny.kogito.common.service.FrontendService" implementationRef="life.genny.kogito.common.service.FrontendService">
     <bpmn2:operation id="_D9299DD0-175D-4809-AAF6-7894CC081A4F_ServiceOperation" name="getDEF" implementationRef="getDEF"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_9E593C24-1CBF-4CA1-BCF8-5A98D3A8A350" name="Default Collaboration">
-    <bpmn2:participant id="_E179A965-CA47-46CC-85DB-02B8E6827CAB" name="Pool Participant" processRef="processQuestions"/>
+  <bpmn2:collaboration id="_6E925FE6-007B-4EAA-BD2B-634EB25B8CDD" name="Default Collaboration">
+    <bpmn2:participant id="_40D406DD-3A6E-452B-96F4-7D30C82C21AB" name="Pool Participant" processRef="processQuestions"/>
   </bpmn2:collaboration>
   <bpmn2:process id="processQuestions" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Process Questions" isExecutable="true" processType="Public">
     <bpmn2:extensionElements>
@@ -1518,7 +1518,7 @@ kcontext.setVariable("mandatoryFieldsCompleted",mandatoryFieldsCompleted);</bpmn
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_vuucYOQbEDq5e-XSgXPI4A</bpmn2:source>
-    <bpmn2:target>_vuucYOQbEDq5e-XSgXPI4A</bpmn2:target>
+    <bpmn2:source>_CgwBMOU-EDq5e-XSgXPI4A</bpmn2:source>
+    <bpmn2:target>_CgwBMOU-EDq5e-XSgXPI4A</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
