@@ -1,15 +1,15 @@
 #!/bin/bash
+source ../../../genny-main/services_ports.env 
 host="${1:-http://alyson2.genny.life}"
 gennyhost="${2:-http://alyson.genny.life}"
-port="${3:-9580}"
+port="${3:-${GADAQ_PORT}}"
 parser=`echo "$gennyhost" | awk -F/ '{print $3}' `
 echo "Parser = ${parser}"
 rawhost=${parser}
 echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
-
-source ../../../genny-main/services_ports.env 
+echo "gadaq debug port ${GADAQ_DEBUG_PORT}"
 
 #export PRODUCT_CODES=${PRODUCT_CODES}
 export GENNY_SHOW_VALUES="TRUE"
@@ -68,5 +68,5 @@ mkdir -p ../kogito-common/src/main/proto
 cp ../kogito-common/target/classes/META-INF/resources/persistence/protobuf/* ../kogito-common/src/main/proto/
 cp target/classes/META-INF/resources/persistence/protobuf/* src/main/proto/
 
-./mvnw clean  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
+./mvnw clean  quarkus:dev -Ddebug=${GADAQ_DEBUG_PORT} -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 

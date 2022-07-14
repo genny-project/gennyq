@@ -28,6 +28,28 @@ message KogitoData {
 	optional string value = 9; 
 }
 /* @Indexed */ 
+message MessageData { 
+	option java_package = "life.genny.qwandaq.message";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string code = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string content = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 id = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string parentCode = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string processId = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string rootCode = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string sourceCode = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string targetCode = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string value = 9; 
+}
+/* @Indexed */ 
 message PersonLifecycle { 
 	option java_package = "life.genny.gadaq";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
@@ -49,34 +71,67 @@ message PersonLifecycle {
  @VariableInfo(tags="") */ 
 	optional string entityCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional QEventMessage eventMessage = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string existing_pid = 7; 
+	optional string existing_pid = 8; 
 	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
-	optional string id = 8; 
+	optional string id = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional bool mandatoryFieldsCompleted = 9; 
+	optional bool mandatoryFieldsCompleted = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string pcmCode = 10; 
+	optional string pcmCode = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string processBEJson = 11; 
+	optional string processBEJson = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string processId = 12; 
+	optional string processId = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string questionCode = 13; 
+	optional string questionCode = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string sourceCode = 14; 
+	optional string sourceCode = 15; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string summary = 15; 
+	optional string summary = 16; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string targetCode = 16; 
+	optional string targetCode = 17; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 17; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 18; 
+}
+/* @Indexed */ 
+message QEventMessage { 
+	option java_package = "life.genny.qwandaq.message";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional MessageData data = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string event_type = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string attributeCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string message = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string msg_type = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string questionCode = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	repeated string recipientCodeArray = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string sourceAddress = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string sourceCode = 9; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string tag = 10; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string targetCode = 11; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	repeated string targetCodes = 12; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 13; 
 }
