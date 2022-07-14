@@ -397,23 +397,14 @@ public class DatabaseUtils {
 	 * @return Question
 	 */
 
-	public Question findQuestionByCode(String realm, String code) {
+	public Question findQuestionByCode(String realm, String code) throws NoResultException {
 
 		checkEntityManager();
-
-		try {
-
-			return entityManager
-					.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
-					.setParameter("realmStr", realm)
-					.setParameter("code", code)
-					.getSingleResult();
-
-		} catch (NoResultException e) {
-			log.debug("No Question found in DB for " + code + " in realm " + realm);
-		}
-
-		return null;
+		return entityManager
+			.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
+			.setParameter("realmStr", realm)
+			.setParameter("code", code)
+			.getSingleResult();
 	}
 
 	/**
@@ -636,7 +627,13 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 
-		Question existingQuestion = findQuestionByCode(question.getRealm(), question.getCode());
+		// find the question in the database
+		Question existingQuestion = null;
+		try {
+			existingQuestion = findQuestionByCode(question.getRealm(), question.getCode());
+		} catch (NoResultException e) {
+			log.debugf("{} not found in database, creating new row...", question.getCode());
+		}
 
 		try {
 

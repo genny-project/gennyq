@@ -21,6 +21,8 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.GennyException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 
@@ -111,8 +113,7 @@ public class DefUtils {
 	public BaseEntity getDEF(final BaseEntity entity) {
 
 		if (entity == null) {
-			log.error("The passed BaseEntity is NULL, supplying trace");
-			return null;
+			throw new ItemNotFoundException("entity");
 		}
 
 		// save processing time on particular entities
@@ -133,17 +134,20 @@ public class DefUtils {
 
 		// null/empty check the role attribute
 		if (codes == null) {
-			log.error("Entity " + entity.getCode() + " does not contain LNK_DEF attribute");
-			return null;
+			throw new GennyException("Entity " + entity.getCode() + " does not contain LNK_DEF attribute");
 		}
 		if (codes.isEmpty()) {
-			log.error("LNK_DEF is empty for " + entity.getCode());
-			return null;
+			throw new GennyException("LNK_DEF is empty for " + entity.getCode());
 		}
 
 		// fetch DEF if no merging is needed
 		if (codes.size() == 1) {
-			return beUtils.getBaseEntityByCode(codes.get(0));
+			String definitionCode = codes.get(0);
+			BaseEntity definition = beUtils.getBaseEntityByCode(definitionCode);
+			if (definition == null) {
+				throw new GennyException("Could not find definition with code " + definitionCode);
+			}
+			return definition;
 		}
 
 		String mergedCode = "DEF_" + String.join("_", codes);
@@ -183,7 +187,6 @@ public class DefUtils {
 	public BaseEntity getInternmatchDEF(final BaseEntity entity) {
 
 		String productCode = userToken.getProductCode();
-
 		List<EntityAttribute> isAs = entity.findPrefixEntityAttributes("PRI_IS_");
 
 		// remove the non DEF ones
@@ -291,8 +294,7 @@ public class DefUtils {
 
 		BaseEntity target = beUtils.getBaseEntityByCode(answer.getTargetCode());
 		if (target == null) {
-			log.error("TargetCode " + answer.getTargetCode() + " does not exist");
-			return false;
+			throw new GennyException("Answer target " + answer.getTargetCode() + " does not exist");
 		}
 		BaseEntity defBE = getDEF(target);
 
@@ -318,11 +320,6 @@ public class DefUtils {
 		} else if (targetCode.startsWith("SBE_")
 				&& (attributeCode.startsWith("COL_") || attributeCode.startsWith("CAL_")
 						|| attributeCode.startsWith("SRT_") || attributeCode.startsWith("ACT_"))) {
-			return true;
-		}
-
-		if (defBE == null) {
-			log.error("Cannot work out DEF " + answer.getTargetCode());
 			return true;
 		}
 

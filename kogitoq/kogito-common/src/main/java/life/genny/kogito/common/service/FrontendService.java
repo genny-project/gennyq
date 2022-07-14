@@ -1,5 +1,6 @@
 package life.genny.kogito.common.service;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -346,32 +347,22 @@ public class FrontendService {
 				// grab selection baseentitys
 				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
 				for (String code : codes) {
-					if (StringUtils.isBlank(code)) {
-						log.error("One of the LNKs for target are null");
-						continue;
-					}
-					BaseEntity selection = beUtils.getBaseEntityByCode(code);
-					BaseEntityKey key = new BaseEntityKey(userToken.getProductCode(), code);
-					//BaseEntity selection = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-					if (selection != null) {
-						selection.setBaseEntityAttributes(new HashSet<EntityAttribute>());
-						EntityAttribute nameEA = new EntityAttribute(selection, nameAttribute, 1.0,
-								selection.getName());
-						try {
-							selection.addAttribute(nameEA);
-						} catch (Exception e) {
-							log.error("Error adding name attribute to selection");
-						}
 
-						log.info("Sending the selected BaseEntity "+selection.getCode()+":"+selection.getName());
-						selectionMsg.add(selection);
+					BaseEntity selection = beUtils.getBaseEntityByCode(code);
+					if (selection == null) {
+						throw new GennyException("Selection item " + code + " could not be found");
 					}
+
+					// Ensure only the PRI_NAME attribute exists in the selection
+					selection = beUtils.addNonLiteralAttributes(selection);
+					selection = beUtils.privacyFilter(selection, Collections.singletonList("PRI_NAME"));
+					selectionMsg.add(selection);
 				}
 
 				// send selections
 				selectionMsg.setToken(userToken.getToken());
 				selectionMsg.setReplace(true);
-				log.info("SENDING BASEENTITYS FOR SELECTIONS!");
+				log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
 				KafkaUtils.writeMsg("webdata", selectionMsg);
 			}
 
