@@ -6,7 +6,11 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
-public class GennyException extends Exception {
+/**
+ * Custom Genny System exception to identify 
+ * common issues within the logic.
+ */
+public class GennyException extends RuntimeException {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     public static final String PACKAGE_PREFIX = "life.genny";
     
@@ -52,7 +56,7 @@ public class GennyException extends Exception {
         }
         
         elementStream.forEach(element -> {
-            String line = element.getModuleName() + ":" + element.getClassName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
+            String line = "on " + element.getModuleName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
             if(element.getClassName().startsWith(PACKAGE_PREFIX))
                 log.error(line);
             else log.debug(line);

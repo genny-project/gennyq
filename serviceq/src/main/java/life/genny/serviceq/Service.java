@@ -205,6 +205,13 @@ public class Service {
 	 * Perform a full initialization of the service.
 	 */
 	public void fullServiceInit() {
+		fullServiceInit(false);
+	}
+
+	/**
+	 * Perform a full initialization of the service.
+	 */
+	public void fullServiceInit(Boolean hasTopology) {
 
 		if (initialised) {
 			log.warn("Attempted initialisation again. Are you calling this method in more than one place?");
@@ -218,7 +225,10 @@ public class Service {
 		initToken();
 		initCache();
 		initKafka();
-		initAttributes();
+		// attempt to stop topology producers from failing on startup
+		if (!hasTopology) {
+			initAttributes();
+		}
 		initDefinitions();
 
 		initialised = true;
