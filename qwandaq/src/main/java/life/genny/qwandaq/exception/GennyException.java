@@ -6,13 +6,14 @@ import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
+import static life.genny.qwandaq.constants.GennyConstants.PACKAGE_PREFIX;
+
 /**
  * Custom Genny System exception to identify 
  * common issues within the logic.
  */
 public class GennyException extends RuntimeException {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
-    public static final String PACKAGE_PREFIX = "life.genny";
     
     public GennyException() {
         super();
