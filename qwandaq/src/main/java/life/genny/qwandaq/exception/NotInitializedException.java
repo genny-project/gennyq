@@ -3,8 +3,10 @@ package life.genny.qwandaq.exception;
 /**
  * This exception is used to help notify when something 
  * has not been initialized before trying to access or use it.
+ *
+ * @author Jasper Robison
  */
-public class NotInitializedException extends GennyException {
+public class NotInitializedException extends GennyRuntimeException {
 
 	public NotInitializedException() {
 		super();

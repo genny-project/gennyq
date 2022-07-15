@@ -2,8 +2,10 @@ package life.genny.qwandaq.exception;
 
 /**
  * This exception is used to notify of a null parameter that must have a value.
+ *
+ * @author Jasper Robison
  */
-public class NullParameterException extends GennyException {
+public class NullParameterException extends GennyRuntimeException {
 
 	static String ERR_SUFFIX = " passed is null";
 

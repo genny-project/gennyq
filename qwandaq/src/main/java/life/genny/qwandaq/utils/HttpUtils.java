@@ -12,7 +12,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.exception.GennyException;
+import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.models.GennyToken;
 
 /**
@@ -62,7 +62,7 @@ public class HttpUtils {
 		try {
 			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			throw new GennyException("PUT request error", e);
+			throw new GennyRuntimeException("PUT request error", e);
 		}
 	}
 
@@ -138,7 +138,7 @@ public class HttpUtils {
 		try {
 			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			throw new GennyException("POST request error", e);
+			throw new GennyRuntimeException("POST request error", e);
 		}
 	}
 
@@ -174,7 +174,7 @@ public class HttpUtils {
 		try {
 			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			throw new GennyException("GET request error", e);
+			throw new GennyRuntimeException("GET request error", e);
 		}
 	}
 
@@ -210,7 +210,7 @@ public class HttpUtils {
 		try {
 			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			throw new GennyException("DELETE request error", e);
+			throw new GennyRuntimeException("DELETE request error", e);
 		}
 	}
 
@@ -305,7 +305,7 @@ public class HttpUtils {
 			log.info("Creating URI: " + uri);
 			return URI.create(uri);
 		} catch(IllegalArgumentException e) {
-			throw new GennyException("Bad Uri: [" + uri + "]", e);
+			throw new GennyRuntimeException("Bad Uri: [" + uri + "]", e);
 		}
 	}
 }
