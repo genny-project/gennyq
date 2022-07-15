@@ -4,7 +4,7 @@ package life.genny.qwandaq.exception;
  * This exception is used to help debug errors that pop up in the log to give us a trace
  */
 @SuppressWarnings("serial")
-public class DebugException extends GennyException {
+public class DebugException extends GennyRuntimeException {
 
 	public DebugException() {
 		super();

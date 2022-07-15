@@ -3,7 +3,7 @@ package life.genny.qwandaq.exception;
 /**
  * Custom exception to identify issues with keycloak requests.
  */
-public class GennyKeycloakException extends GennyException {
+public class GennyKeycloakException extends GennyRuntimeException {
 
     private String code;
 

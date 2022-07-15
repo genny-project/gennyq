@@ -5,25 +5,24 @@ import java.lang.invoke.MethodHandles;
 import org.jboss.logging.Logger;
 
 /**
- * Custom Genny System exception to identify 
- * common issues within the logic.
+ * Custom Genny System Runtime Exception to identify 
+ * common issues within the logic at runtime.
  *
- * @author Bryn Meacham
  * @author Jasper Robison
  */
-public class GennyException extends Exception implements GennyExceptionIntf {
+public class GennyRuntimeException extends RuntimeException implements GennyExceptionIntf {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     
-    public GennyException() {
+    public GennyRuntimeException() {
         super();
     }
 
-	public GennyException(String message) {
+	public GennyRuntimeException(String message) {
 		super(message);
 	}
 
-	public GennyException(String errorMessage, Throwable err) {
+	public GennyRuntimeException(String errorMessage, Throwable err) {
         super(errorMessage, err);
     }
 

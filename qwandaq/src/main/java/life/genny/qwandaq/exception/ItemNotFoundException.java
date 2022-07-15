@@ -2,8 +2,10 @@ package life.genny.qwandaq.exception;
 
 /**
  * This exception is used to notify that an item could not be found
+ *
+ * @author Jasper Robison
  */
-public class ItemNotFoundException extends GennyException {
+public class ItemNotFoundException extends GennyRuntimeException {
 
 	static String ERR_TEXT = " could not be found";
 

@@ -17,7 +17,7 @@ import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.DebugException;
 import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
-import life.genny.qwandaq.exception.GennyException;
+import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -92,7 +92,7 @@ public class BaseEntityService {
 
 		Optional<String> prefix = definition.getValue("PRI_PREFIX");
 		if (prefix.isEmpty()) {
-			throw new GennyException("definition " + definition.getCode() + " has no prefix attribute!");
+			throw new GennyRuntimeException("definition " + definition.getCode() + " has no prefix attribute!");
 		}
 
 		return prefix.get();
@@ -104,7 +104,7 @@ public class BaseEntityService {
 		BaseEntity definition = defUtils.getDEF(target);
 
 		if (definition == null) {
-			throw new GennyException("No definition for target " + target);
+			throw new GennyRuntimeException("No definition for target " + target);
 		}
 
 		return CommonUtils.replacePrefix(definition.getCode(), "QUE");

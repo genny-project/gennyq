@@ -3,7 +3,7 @@ package life.genny.qwandaq.exception;
 /**
  * An Exception to signify malformed of incorrect data.
  */
-public class BadDataException extends GennyException {
+public class BadDataException extends GennyRuntimeException {
 
 	public BadDataException() {
 		super();
