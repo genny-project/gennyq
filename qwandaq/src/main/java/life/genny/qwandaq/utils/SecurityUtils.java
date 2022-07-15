@@ -1,20 +1,20 @@
 package life.genny.qwandaq.utils;
 
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
-import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.InvalidKeyException;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.models.GennyToken;
 
 /**
@@ -36,26 +36,14 @@ public class SecurityUtils {
 	 */
 	public static Boolean isAuthorizedToken(String token) {
 
-		if (token == null) {
-			log.error("Token is null!");
-			return false;
-		}
+		if (token == null)
+			throw new NullParameterException("token");
 
 		if (token.startsWith("Bearer ")) {
 			token = token.substring("Bearer ".length());
 		}
 
-		GennyToken gennyToken = null;
-		try {
-			gennyToken = new GennyToken(token);
-		} catch (Exception e) {
-			log.errorv("Unable to create GennyToken from token: {}", token);
-			log.error(e);
-		}
-
-		if (gennyToken == null) {
-			return false;
-		}
+		GennyToken gennyToken = new GennyToken(token);
 
 		return isAuthorisedGennyToken(gennyToken);
 	}
@@ -86,23 +74,14 @@ public class SecurityUtils {
 	 */
 	public static GennyToken getAuthorizedToken(String token) {
 
-		if (token == null) {
-			log.error("Token is null!");
-			return null;
-		}
+		if (token == null)
+			throw new NullParameterException("token");
 
 		// clean bearer prefix and any whitespace
 		token = StringUtils.removeStart(token, "Bearer");
 		token = StringUtils.strip(token);
 
-		try {
-			return new GennyToken(token);
-		} catch (Exception e) {
-			log.errorv("Unable to create GennyToken from token: {}", token);
-			log.error(e);
-		}
-
-		return null;
+		return new GennyToken(token);
 	}
 
 	/**

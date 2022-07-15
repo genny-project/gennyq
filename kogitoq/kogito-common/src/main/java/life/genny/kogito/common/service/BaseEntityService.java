@@ -14,6 +14,9 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.DebugException;
+import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.exception.GennyException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
@@ -47,40 +50,31 @@ public class BaseEntityService {
 
 	public String commission(String definitionCode) {
 
-		if (definitionCode == null || !definitionCode.startsWith("DEF_")) {
-			log.error("Invalid definitionCode: " + definitionCode);
-			return null;
-		}
+		if (definitionCode == null)
+			throw new NullParameterException("definitionCode");
+		if (!definitionCode.startsWith("DEF_"))
+			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity
 		BaseEntity def = beUtils.getBaseEntityByCode(definitionCode);
-		if(def == null) {
-			log.error("Could not find DEF BaseEntity with code: " + definitionCode);
-		}
+		if (def == null)
+			throw new ItemNotFoundException(definitionCode);
 
 		// use entity create function and save to db
-		try {
-			BaseEntity entity = beUtils.create(def);
-			log.info("BaseEntity Created: " + entity.getCode());
+		BaseEntity entity = beUtils.create(def);
+		log.info("BaseEntity Created: " + entity.getCode());
 
-			return entity.getCode();
-
-		} catch (Exception e) {
-			log.error("Error creating BaseEntity! DEF Code: " + definitionCode);
-			e.printStackTrace();
-		}
-
-		return null;
+		return entity.getCode();
 	}
 
 	public void decommission(String code) {
 
-		BaseEntity baseEntity = beUtils.getBaseEntityByCode(code);
+		if (code == null)
+			throw new NullParameterException("code");
 
-		if (baseEntity == null) {
-			log.error("BaseEntity " + code + " is null!");
-			return;
-		}
+		BaseEntity baseEntity = beUtils.getBaseEntityByCode(code);
+		if (baseEntity == null)
+			throw new ItemNotFoundException(code);
 
 		log.info("Decommissioning entity " + baseEntity.getCode());
 
@@ -93,10 +87,8 @@ public class BaseEntityService {
 
 		BaseEntity definition = beUtils.getBaseEntityByCode(definitionCode);
 
-		if (definition == null) {
-			log.error("No definition exists with code " + definitionCode);
-			return null;
-		}
+		if (definition == null)
+			throw new ItemNotFoundException(definitionCode);
 
 		Optional<String> prefix = definition.getValue("PRI_PREFIX");
 		if (prefix.isEmpty()) {
@@ -138,7 +130,7 @@ public class BaseEntityService {
 	}
 
 	/**
-	 * Mere a process entity into another entity
+	 * Merge a process entity into another entity
 	 */
 	public void mergeFromProcessEntity(String entityCode, String processBEJson) {
 

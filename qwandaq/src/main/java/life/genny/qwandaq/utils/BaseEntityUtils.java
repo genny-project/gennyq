@@ -14,6 +14,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,16 +23,16 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.DebugException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 
 /**
  * A non-static utility class used for standard
@@ -85,12 +86,16 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity getBaseEntityByCode(String code) {
-		if (StringUtils.isBlank(code)) {
-			throw new DebugException("The passed code is empty.");
-		}
-		if ("backend".equals(userToken.getProductCode())) {
+
+		if (code == null) 
+			throw new NullParameterException("code");
+		if (StringUtils.isBlank(code))
+			throw new DebugException("code is empty");
+
+		// TODO: Fix this
+		if ("backend".equals(userToken.getProductCode()))
 			userToken.setProductCode("internmatch");
-		}
+
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
   
@@ -110,9 +115,12 @@ public class BaseEntityUtils {
 		
 		// check in database if not in cache
 		if (entity == null) {			
-			entity = databaseUtils.findBaseEntityByCode(productCode, code);
-			log.debug("BaseEntity " + productCode + ":" + code + " not in cache... "
-					+ ( entity == null ? "Not in DB either!" : "Found in DB." ));
+			log.debug(code + " not in cache for product " + productCode);
+			try {
+				entity = databaseUtils.findBaseEntityByCode(productCode, code);
+			} catch (NoResultException e) {
+				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
+			}
 		}
 
 		return entity;
@@ -251,9 +259,11 @@ public class BaseEntityUtils {
 		}
 
 		databaseUtils.saveBaseEntity(baseEntity);
+		CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
 
-		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		return (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		// return (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		return baseEntity;
 	}
 
 	/**
@@ -345,7 +355,6 @@ public class BaseEntityUtils {
 		if (attributeValue == null) {
 			return null;
 		}
-		log.info("ATTR VAL = " + attributeValue);
 
 		String[] baseEntityCodeArray = attributeValue.split(",");
 		List<String> beCodeList = Arrays.asList(baseEntityCodeArray);
@@ -553,9 +562,8 @@ public class BaseEntityUtils {
 	 *
 	 * @param defBE The def entity to use
 	 * @return The created BaseEntity
-	 * @throws Exception If the entity could not be created
 	 */
-	public BaseEntity create(final BaseEntity defBE) throws Exception {
+	public BaseEntity create(final BaseEntity defBE) {
 		return create(defBE, null, null);
 	}
 
@@ -565,9 +573,8 @@ public class BaseEntityUtils {
 	 * @param defBE The def entity to use
 	 * @param name  The name of the entity
 	 * @return The created BaseEntity
-	 * @throws Exception If the entity could not be created
 	 */
-	public BaseEntity create(final BaseEntity defBE, String name) throws Exception {
+	public BaseEntity create(final BaseEntity defBE, String name) {
 		return create(defBE, name, null);
 	}
 
@@ -578,21 +585,14 @@ public class BaseEntityUtils {
 	 * @param name  The name of the entity
 	 * @param code  The code of the entity
 	 * @return The created BaseEntity
-	 * @throws Exception If the entity could not be created
 	 */
-	public BaseEntity create(final BaseEntity defBE, String name, String code) throws Exception {
+	public BaseEntity create(final BaseEntity defBE, String name, String code) {
 
-		if (defBE == null) {
-			String errorMsg = "defBE is NULL";
-			log.error(errorMsg);
-			throw new Exception(errorMsg);
-		}
+		if (defBE == null)
+			throw new NullParameterException("defBE");
 
-		if (code != null && code.charAt(3) != '_') {
-			String errorMsg = "Code parameter " + code + " is not a valid BE code!";
-			log.error(errorMsg);
-			throw new Exception(errorMsg);
-		}
+		if (code != null && code.charAt(3) != '_')
+			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
 		BaseEntity item = null;
 		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
@@ -606,17 +606,15 @@ public class BaseEntityUtils {
 
 		if (item == null) {
 			String prefix = defBE.getValueAsString("PRI_PREFIX");
-			if (StringUtils.isBlank(prefix)) {
-				log.error("No prefix set for the def: " + defBE.getCode());
-				throw new Exception("No prefix set for the def: " + defBE.getCode());
-			}
-			if (StringUtils.isBlank(code)) {
-				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
-			}
 
-			if (StringUtils.isBlank(name)) {
+			if (StringUtils.isBlank(prefix))
+				throw new DebugException("No prefix set for the def: " + defBE.getCode());
+
+			if (StringUtils.isBlank(code))
+				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
+
+			if (StringUtils.isBlank(name))
 				name = defBE.getName();
-			}
 
 			// create entity and set realm
 			item = new BaseEntity(code.toUpperCase(), name);
@@ -624,62 +622,49 @@ public class BaseEntityUtils {
 		}
 
 		// save to DB and cache
-		databaseUtils.saveBaseEntity(item);
-		try {
-			updateBaseEntity(item);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		updateBaseEntity(item);
 
-		// Establish all mandatory base entity attributes
-		for (EntityAttribute ea : defBE.getBaseEntityAttributes()) {
-			if (ea.getAttributeCode().startsWith("ATT_")) {
+		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
+		for (EntityAttribute ea : atts) {
+			String attrCode = ea.getAttributeCode().substring("ATT_".length());
+			Attribute attribute = qwandaUtils.getAttribute(attrCode);
 
-				String attrCode = ea.getAttributeCode().substring("ATT_".length());
-				Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			if (attribute == null) {
+				log.warn("No Attribute found for def attr " + attrCode);
+				continue;
+			}
+			if (item.containsEntityAttribute(attribute.getCode())) {
+				log.info(item.getCode() + " already has value for " + attribute.getCode());
+				continue;
+			}
 
-				if (attribute != null) {
+			// Find any default val for this Attr
+			String defaultDefValueAttr = "DFT_" + attrCode;
+			Object defaultVal = defBE.getValue(defaultDefValueAttr, attribute.getDefaultValue());
 
-					// if not already filled in
-					if (!item.containsEntityAttribute(attribute.getCode())) {
-						// Find any default val for this Attr
-						String defaultDefValueAttr = "DFT_" + attrCode;
-						Object defaultVal = defBE.getValue(defaultDefValueAttr, attribute.getDefaultValue());
-
-						// Only process mandatory attributes, or defaults
-						Boolean mandatory = ea.getValueBoolean();
-						if (mandatory == null) {
-							mandatory = false;
-							log.warn("**** DEF attribute ATT_" + attrCode + " has no mandatory boolean set in "
-									+ defBE.getCode());
-						}
-						// Only process mandatory attributes, or defaults
-						if (mandatory || defaultVal != null) {
-							EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(),
-									defaultVal);
-
-							log.info("Adding mandatory/default -> " + attribute.getCode());
-							item.addAttribute(newEA);
-						}
-					} else {
-						log.info(item.getCode() + " already has value for " + attribute.getCode());
-					}
-
-				} else {
-					log.warn("No Attribute found for def attr " + attrCode);
-				}
+			// Only process mandatory attributes, or defaults
+			Boolean mandatory = ea.getValueBoolean();
+			if (mandatory == null) {
+				mandatory = false;
+				log.warn("**** DEF attribute ATT_" + attrCode + " has no mandatory boolean set in "
+						+ defBE.getCode());
+			}
+			// Only process mandatory attributes, or defaults
+			if (mandatory || defaultVal != null) {
+				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
+				log.info("Adding mandatory/default -> " + attribute.getCode());
+				item.addAttribute(newEA);
 			}
 		}
 
 		Attribute linkDef = qwandaUtils.getAttribute("LNK_DEF");
 		item.addAnswer(new Answer(item, item, linkDef, "[\""+defBE.getCode()+"\"]"));
 
-		try {
-			updateBaseEntity(item);
-			CacheUtils.putObject(userToken.getProductCode(), item.getCode(), item);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// author of the BE
+		Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
+		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\""+userToken.getUserCode()+"\"]"));
+
+		updateBaseEntity(item);
 
 		return item;
 	}
@@ -690,69 +675,51 @@ public class BaseEntityUtils {
 	 * @param defBE The def entity to use
 	 * @param email The email to use
 	 * @return The created BaseEntity
-	 * @throws Exception If the user could not be created
 	 */
-	public BaseEntity createUser(final BaseEntity defBE, final String email) throws Exception {
+	public BaseEntity createUser(final BaseEntity defBE, final String email) {
 
 		BaseEntity item = null;
 		String uuid = null;
 		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
 
-		if (uuidEA.isPresent()) {
-
-			if (!StringUtils.isBlank(email)) {
-				// TODO: run a regexp check to see if the email is valid
-
-				if (!email.startsWith("random+")) {
-					// TODO: check to see if the email exists in the database and keycloak
-				}
-			}
-			// this is a user, generate keycloak id
-			uuid = KeycloakUtils.createDummyUser(serviceToken.getToken(), userToken.getKeycloakRealm());
-			Optional<String> optCode = defBE.getValue("PRI_PREFIX");
-
-			if (optCode.isPresent()) {
-
-				String name = defBE.getName();
-				String code = optCode.get() + "_" + uuid.toUpperCase();
-				item = new BaseEntity(code, name);
-				item.setRealm(userToken.getProductCode());
-
-				if (item != null) {
-					// Add PRI_EMAIL
-					if (!email.startsWith("random+")) {
-						// Check to see if the email exists
-						// TODO: check to see if the email exists in the database and keycloak
-						Attribute emailAttribute = qwandaUtils.getAttribute("PRI_EMAIL");
-						item.addAnswer(new Answer(item, item, emailAttribute, email));
-						Attribute usernameAttribute = qwandaUtils.getAttribute("PRI_USERNAME");
-						item.addAnswer(new Answer(item, item, usernameAttribute, email));
-					}
-
-					// Add PRI_UUID
-					Attribute uuidAttribute = qwandaUtils.getAttribute("PRI_UUID");
-					item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
-
-					// Keycloak UUID
-					Attribute keycloakAttribute = qwandaUtils.getAttribute("PRI_KEYCLOAK_UUID");
-					item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
-
-					// Author of the BE
-					// NOTE: Maybe should be moved to run for all BEs
-					Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
-					item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\""+userToken.getUserCode()+"\"]"));
-				} else {
-					log.error("create BE returned NULL for " + code);
-				}
-
-			} else {
-				log.error("Prefix not provided");
-				throw new Exception("Prefix not provided" + defBE.getCode());
-			}
-		} else {
-			log.error("Passed defBE is not a user def!");
-			throw new Exception("Passed defBE is not a user def!" + defBE.getCode());
+		if (uuidEA.isEmpty()) {
+			throw new DebugException("Passed defBE is not a user def!" + defBE.getCode());
 		}
+
+		if (!StringUtils.isBlank(email)) {
+			// TODO: run a regexp check to see if the email is valid
+		}
+
+		// this is a user, generate keycloak id
+		uuid = KeycloakUtils.createDummyUser(serviceToken.getToken(), userToken.getKeycloakRealm());
+		Optional<String> optCode = defBE.getValue("PRI_PREFIX");
+
+		if (optCode.isEmpty()) {
+			throw new DebugException("Prefix not provided" + defBE.getCode());
+		}
+
+		String name = defBE.getName();
+		String code = optCode.get() + "_" + uuid.toUpperCase();
+		item = new BaseEntity(code, name);
+		item.setRealm(userToken.getProductCode());
+
+		// add email and username
+		if (!email.startsWith("random+")) {
+			// Check to see if the email exists
+			// TODO: check to see if the email exists in the database and keycloak
+			Attribute emailAttribute = qwandaUtils.getAttribute("PRI_EMAIL");
+			item.addAnswer(new Answer(item, item, emailAttribute, email));
+			Attribute usernameAttribute = qwandaUtils.getAttribute("PRI_USERNAME");
+			item.addAnswer(new Answer(item, item, usernameAttribute, email));
+		}
+
+		// add PRI_UUID
+		Attribute uuidAttribute = qwandaUtils.getAttribute("PRI_UUID");
+		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
+
+		// keycloak UUID
+		Attribute keycloakAttribute = qwandaUtils.getAttribute("PRI_KEYCLOAK_UUID");
+		item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
 
 		return item;
 	}
