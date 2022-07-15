@@ -387,7 +387,12 @@ public class DatabaseUtils {
 
 		log.info("Saving Validation " + validation.getCode());
 		checkEntityManager();
-		Validation existingValidation = findValidationByCode(validation.getRealm(), validation.getCode());
+		Validation existingValidation = null;
+		try {
+			existingValidation = findValidationByCode(validation.getRealm(), validation.getCode());
+		} catch (NoResultException e) {
+			log.debugf("{} not found in database, creating new row...", validation.getCode());
+		}
 
 		if (existingValidation == null) {
 			entityManager.persist(validation);
@@ -406,7 +411,12 @@ public class DatabaseUtils {
 
 		log.info("Saving Attribute " + attribute.getCode());
 		checkEntityManager();
-		Attribute existingAttribute = findAttributeByCode(attribute.getRealm(), attribute.getCode());
+		Attribute existingAttribute = null;
+		try {
+			existingAttribute = findAttributeByCode(attribute.getRealm(), attribute.getCode());
+		} catch (NoResultException e) {
+			log.debugf("{} not found in database, creating new row...", attribute.getCode());
+		}
 
 		if (existingAttribute == null) {
 			entityManager.persist(attribute);
@@ -425,7 +435,12 @@ public class DatabaseUtils {
 
 		log.info("Saving BaseEntity " + entity.getCode());
 		checkEntityManager();
-		BaseEntity existingEntity = findBaseEntityByCode(entity.getRealm(), entity.getCode());
+		BaseEntity existingEntity = null;
+		try {
+			existingEntity = findBaseEntityByCode(entity.getRealm(), entity.getCode());
+		} catch (NoResultException e) {
+			log.debugf("{} not found in database, creating new row...", entity.getCode());
+		}
 
 		if (existingEntity == null) {
 			entityManager.persist(entity);
@@ -470,10 +485,17 @@ public class DatabaseUtils {
 		QuestionQuestionId pk = questionQuestion.getPk();
 		log.info("Saving QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
 		checkEntityManager();
-		QuestionQuestion existingQuestionQuestion = findQuestionQuestionBySourceAndTarget(
-				questionQuestion.getRealm(),
-				pk.getSourceCode(),
-				pk.getTargetCode());
+
+		QuestionQuestion existingQuestionQuestion = null;
+		try {
+			existingQuestionQuestion = findQuestionQuestionBySourceAndTarget(
+					questionQuestion.getRealm(),
+					pk.getSourceCode(),
+					pk.getTargetCode());
+		} catch (NoResultException e) {
+			log.debugf("{}:{} not found in database, creating new row...", 
+					questionQuestion.getSourceCode(), questionQuestion.getTargetCode());
+		}
 
 		if (existingQuestionQuestion == null) {
 			entityManager.persist(questionQuestion);

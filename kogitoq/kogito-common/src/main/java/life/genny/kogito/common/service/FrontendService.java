@@ -23,6 +23,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.GennyException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.ProcessVariables;
@@ -352,9 +353,8 @@ public class FrontendService {
 						continue;
 					}
 					BaseEntity selection = beUtils.getBaseEntityByCode(code);
-					if (selection == null) {
-						throw new GennyException("Selection item " + code + " could not be found");
-					}
+					if (selection == null)
+						throw new ItemNotFoundException(code);
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
