@@ -47,6 +47,9 @@ public class DefUtils {
 
 	@Inject
 	BaseEntityUtils beUtils;
+	
+	@Inject
+	SearchUtils searchUtils;
 
 	@Inject
 	UserToken userToken;
@@ -72,7 +75,7 @@ public class DefUtils {
 
 		searchBE.setRealm(productCode);
 
-		List<String> codes = beUtils.getBaseEntityCodes(searchBE);
+		List<String> codes = searchUtils.searchBaseEntityCodes(searchBE);
 
 		if (codes == null) {
 			log.error("Could not fetch DEF codes!");
