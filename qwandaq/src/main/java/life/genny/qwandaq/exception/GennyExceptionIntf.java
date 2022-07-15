@@ -9,10 +9,10 @@ import org.jboss.logging.Logger;
 import static life.genny.qwandaq.constants.GennyConstants.PACKAGE_PREFIX;
 
 /**
- * A base exception class utility used as common logic 
- * for GennyException and GennyRuntimeException.
+ * A genny exception interface for GennyException and GennyRuntimeException.
  *
  * @author Jasper Robison
+ * @author Bryn Meachem
  */
 public interface GennyExceptionIntf {
 
