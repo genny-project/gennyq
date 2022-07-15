@@ -10,7 +10,7 @@ import org.jboss.logging.Logger;
  *
  * @author Jasper Robison
  */
-public class GennyRuntimeException extends RuntimeException {
+public class GennyRuntimeException extends RuntimeException implements GennyExceptionIntf {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     
@@ -28,6 +28,6 @@ public class GennyRuntimeException extends RuntimeException {
 
     @Override
     public void printStackTrace() {
-        GennyExceptionBase.printStackTrace(this, false);
+        this.printGennyStackTrace(this, false);
     }
 }

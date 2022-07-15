@@ -11,7 +11,7 @@ import org.jboss.logging.Logger;
  * @author Bryn Meacham
  * @author Jasper Robison
  */
-public class GennyException extends Exception {
+public class GennyException extends Exception implements GennyExceptionIntf {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     
@@ -29,6 +29,6 @@ public class GennyException extends Exception {
 
     @Override
     public void printStackTrace() {
-        GennyExceptionBase.printStackTrace(this, false);
+        this.printGennyStackTrace(this, false);
     }
 }

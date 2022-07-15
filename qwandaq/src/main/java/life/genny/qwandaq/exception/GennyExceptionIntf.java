@@ -14,7 +14,7 @@ import static life.genny.qwandaq.constants.GennyConstants.PACKAGE_PREFIX;
  *
  * @author Jasper Robison
  */
-public class GennyExceptionBase {
+public interface GennyExceptionIntf {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     
@@ -23,7 +23,7 @@ public class GennyExceptionBase {
      * @param throwable The throwable
      * @param verbose Use verbose output
      */
-    public static void printStackTrace(Throwable throwable, Boolean verbose) {
+    public default void printGennyStackTrace(Throwable throwable, Boolean verbose) {
 
         log.error("[!] " + throwable.getMessage());
         if (verbose) {
@@ -37,7 +37,7 @@ public class GennyExceptionBase {
         
         // If there is nothing to print, print verbose
         if (!hasNonVerboseElements) {
-            throwable.printStackTrace();
+            printGennyStackTrace(throwable, true);
             return;
         }
         
