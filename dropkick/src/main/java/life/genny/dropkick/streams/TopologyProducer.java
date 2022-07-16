@@ -43,6 +43,7 @@ import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -77,6 +78,9 @@ public class TopologyProducer {
 
 	@Inject
 	GraphQLUtils gqlUtils;
+
+	@Inject
+	SearchUtils searchUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -573,7 +577,7 @@ public class TopologyProducer {
 		}
 
 		// Perform search and evaluate columns
-		List<BaseEntity> results = beUtils.getBaseEntitys(searchBE);
+		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchBE);
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
 		if (results == null) {

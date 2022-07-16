@@ -1,8 +1,10 @@
 package life.genny.qwandaq.utils;
 
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
 
@@ -33,6 +36,8 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
 import life.genny.qwandaq.message.QSearchMessage;
+import life.genny.qwandaq.message.QSearchBeResult;
+import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
@@ -62,6 +67,80 @@ public class SearchUtils {
 
 	@Inject
 	UserToken userToken;
+
+	/**
+	 * Call the Fyodor API to fetch a list of {@link BaseEntity}
+	 * objects using a {@link SearchEntity} object.
+	 *
+	 * @param searchBE A {@link SearchEntity} object used to determine the results
+	 * @return A list of {@link BaseEntity} objects
+	 */
+	public List<BaseEntity> searchBaseEntitys(SearchEntity searchBE) {
+
+		// build uri, serialize payload and fetch data from fyodor
+		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
+		String json = jsonb.toJson(searchBE);
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
+
+		if (response == null) {
+			log.error("Null response from " + uri);
+			return null;
+		}
+
+		Integer status = response.statusCode();
+
+		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
+			log.error("Bad response status " + status + " from " + uri);
+		}
+
+		try {
+			// deserialise and grab entities
+			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+			return Arrays.asList(results.getEntities());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	/**
+	 * Call the Fyodor API to fetch a list of codes 
+	 * associated with result entities.
+	 *
+	 * @param searchBE A {@link SearchEntity} object used to determine the results
+	 * @return A list of code strings
+	 */
+	public List<String> searchBaseEntityCodes(SearchEntity searchBE) {
+
+		// build uri, serialize payload and fetch data from fyodor
+		String uri = GennySettings.fyodorServiceUrl() + "/api/search";
+		String json = jsonb.toJson(searchBE);
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
+
+		if (response == null) {
+			log.error("Null response from " + uri);
+			return null;
+		}
+
+		Integer status = response.statusCode();
+
+		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
+			log.error("Bad response status " + status + " from " + uri);
+		}
+
+		try {
+			// deserialise and grab entities
+			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+			return Arrays.asList(results.getCodes());
+		} catch (Exception e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
+		}
+
+		return null;
+	}
 
 	/**
 	 * Evaluate any conditional filters for a {@link SearchEntity}
@@ -434,7 +513,7 @@ public class SearchUtils {
 			// perform Search
 			baseSearch.setPageSize(100000);
 			log.info("Performing search for " + baseSearch.getCode());
-			List<BaseEntity> results = beUtils.getBaseEntitys(baseSearch);
+			List<BaseEntity> results = searchBaseEntitys(baseSearch);
 
 			JsonArray targetedBuckets = bucketMap.getJsonArray("targetedBuckets");
 
