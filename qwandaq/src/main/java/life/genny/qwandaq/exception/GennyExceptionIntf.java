@@ -2,6 +2,7 @@ package life.genny.qwandaq.exception;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
@@ -32,8 +33,8 @@ public interface GennyExceptionIntf {
         }
 
         StackTraceElement[] stack = throwable.getStackTrace();
-        Stream<StackTraceElement> elementStream = Arrays.asList(stack).stream();
-        Boolean hasNonVerboseElements = elementStream.anyMatch(element -> element.getClassName().startsWith(PACKAGE_PREFIX));
+        List<StackTraceElement> elements = Arrays.asList(stack);
+        Boolean hasNonVerboseElements = elements.stream().anyMatch(element -> element.getClassName().startsWith(PACKAGE_PREFIX));
         
         // If there is nothing to print, print verbose
         if (!hasNonVerboseElements) {
@@ -41,11 +42,11 @@ public interface GennyExceptionIntf {
             return;
         }
         
-        elementStream.forEach(element -> {
+        for(StackTraceElement element : elements) {
             String line = "on " + element.getModuleName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
             if (element.getClassName().startsWith(PACKAGE_PREFIX))
                 log.error(line);
             else log.debug(line);
-        });
+        }
 	}
 }
