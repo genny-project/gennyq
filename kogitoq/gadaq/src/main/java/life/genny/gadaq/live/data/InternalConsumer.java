@@ -68,6 +68,7 @@ public class InternalConsumer {
 			kogitoUtils.funnelAnswers(answers);
 
 		scope.destroy();
+		KafkaUtils.writeMsg("genny_data", msg);
 
 		// log duration
 		Instant end = Instant.now();

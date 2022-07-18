@@ -27,7 +27,6 @@ public class GennyException extends Exception implements GennyExceptionIntf {
         super(errorMessage, err);
     }
 
-    @Override
     public void printStackTrace() {
         this.printGennyStackTrace(this, false);
     }
