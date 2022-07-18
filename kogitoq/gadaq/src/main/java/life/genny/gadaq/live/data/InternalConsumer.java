@@ -66,9 +66,8 @@ public class InternalConsumer {
 		// init scope and process msg
 		scope.init(data);
 		List<Answer> answers = kogitoUtils.runDataInference(data);
-		if(answers.size() == 0) {
+		if (answers.isEmpty())
 			log.warn("[!] Received no answers!!!");
-		}
 		else
 			kogitoUtils.funnelAnswers(answers);
 

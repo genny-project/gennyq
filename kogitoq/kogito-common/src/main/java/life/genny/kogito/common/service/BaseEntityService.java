@@ -56,9 +56,7 @@ public class BaseEntityService {
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity
-		BaseEntity def = beUtils.getBaseEntityByCode(definitionCode);
-		if (def == null)
-			throw new ItemNotFoundException(definitionCode);
+		BaseEntity def = beUtils.getBaseEntity(definitionCode);
 
 		// use entity create function and save to db
 		BaseEntity entity = beUtils.create(def);
@@ -72,10 +70,7 @@ public class BaseEntityService {
 		if (code == null)
 			throw new NullParameterException("code");
 
-		BaseEntity baseEntity = beUtils.getBaseEntityByCode(code);
-		if (baseEntity == null)
-			throw new ItemNotFoundException(code);
-
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
 		log.info("Decommissioning entity " + baseEntity.getCode());
 
 		// archive the entity
@@ -85,10 +80,7 @@ public class BaseEntityService {
 
 	public String getDEFPrefix(String definitionCode) {
 
-		BaseEntity definition = beUtils.getBaseEntityByCode(definitionCode);
-
-		if (definition == null)
-			throw new ItemNotFoundException(definitionCode);
+		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
 
 		Optional<String> prefix = definition.getValue("PRI_PREFIX");
 		if (prefix.isEmpty()) {
@@ -100,7 +92,7 @@ public class BaseEntityService {
 
 	public String getBaseEntityQuestionGroup(String targetCode) {
 
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
 
 		if (definition == null) {
@@ -115,7 +107,7 @@ public class BaseEntityService {
 	 */
 	public void updateKeycloak(String userCode) {
 
-		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
+		BaseEntity user = beUtils.getBaseEntity(userCode);
 		String email = user.getValue("PRI_EMAIL", null);
 		String firstName = user.getValue("PRI_FIRSTNAME", null);
 		String lastName = user.getValue("PRI_LASTNAME", null);
@@ -134,31 +126,19 @@ public class BaseEntityService {
 	 */
 	public void mergeFromProcessEntity(String entityCode, String processBEJson) {
 
-		BaseEntity entity = beUtils.getBaseEntityByCode(entityCode);
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
 
 			if (ea.getAttribute() == null) {
-				log.warn("Attribute is null, fetching " + ea.getAttributeCode());
-
+				log.debug("Attribute is null, fetching " + ea.getAttributeCode());
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
-			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
-			}
-
 			ea.setBaseEntity(entity);
-			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is STILLLLLLL NULL");
-			}
-			try {
-				entity.addAttribute(ea);
-			} catch (BadDataException e) {
-				e.printStackTrace();
-			}
+			entity.addAttribute(ea);
 		}
 
 		// save these answrs to db and cache

@@ -349,6 +349,10 @@ public class QwandaUtils {
 			String attributeCode = ea.getAttributeCode();
 			Boolean mandatory = map.get(attributeCode);
 
+			if (mandatory == null) {
+				continue;
+			}
+
 			String value = ea.getAsString();
 
 			// if any are both blank and mandatory, then task is not complete
