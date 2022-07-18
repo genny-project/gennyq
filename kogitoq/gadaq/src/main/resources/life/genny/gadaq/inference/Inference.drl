@@ -45,7 +45,6 @@ then
 
 	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name);
 	a.setProcessId(answer.getProcessId());
-	System.out.println("Answer inserted");
 	insert(a);
 end
 
@@ -73,5 +72,4 @@ then
 	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name);
 	a.setProcessId(answer.getProcessId());
 	insert(a);
-	insert(answer);
 end
