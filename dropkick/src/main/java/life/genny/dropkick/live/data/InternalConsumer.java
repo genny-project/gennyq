@@ -90,7 +90,7 @@ public class InternalConsumer {
 			log.info("Default dropdown size  : " + defaultDropDownSize);
 		}
 
-		service.fullServiceInit();
+		service.fullServiceInit(true);
 		log.info("[*] Finished Startup!");
 	}
 
