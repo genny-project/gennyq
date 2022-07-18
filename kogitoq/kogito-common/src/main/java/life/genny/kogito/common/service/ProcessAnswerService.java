@@ -62,19 +62,17 @@ public class ProcessAnswerService {
 		}
 
 		// only copy the entityAttributes used in the Asks
-		BaseEntity definition = null;
+		BaseEntity target = null;
 		if ("NON_EXISTENT".equals(targetCode)) {
 			log.info("Not Checking validity of answer");
-			definition = beUtils.getBaseEntity(defCode);
 		} else {
+			target = beUtils.getBaseEntity(targetCode);
 			// check if the answer is valid for the target
-			BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-			definition = defUtils.getDEF(target);
-		}
-
-		if (!defUtils.answerValidForDEF(definition, answer)) {
-			log.error("Bad incoming answer... Not saving!");
-			return processBEJson;
+			BaseEntity definition = defUtils.getDEF(target);
+			if (!defUtils.answerValidForDEF(definition, answer)) {
+				log.error("Bad incoming answer... Not saving!");
+				return processBEJson;
+			}
 		}
 
 		// find the attribute
@@ -146,13 +144,14 @@ public class ProcessAnswerService {
 	public void saveAllAnswers(String sourceCode, String targetCode, String processBEJson) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
 		// only copy the entityAttributes used in the Asks
 		if ("NON_EXISTENT".equals(targetCode)) {
 			log.info("Not saving to NON_EXISTENT");
 			return;
 		}
+
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
@@ -163,25 +162,18 @@ public class ProcessAnswerService {
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
-			// if (ea.getPk().getBaseEntity() == null) {
-			// 	log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
-			// }
 
 			ea.setBaseEntity(target);
-			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is STILLLLLLL NULL");
-			}
+
 			try {
 				target.addAttribute(ea);
 			} catch (BadDataException e) {
 				e.printStackTrace();
 			}
+			// set name
 			if ("PRI_NAME".equals(ea.getAttributeCode())) {
-				// Save this to the target baseentity Name..
 				target.setName(ea.getValue());
 			}
-
-
 		}
 
 		// save these answrs to db and cache
