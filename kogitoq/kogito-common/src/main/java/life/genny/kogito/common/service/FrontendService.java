@@ -13,7 +13,6 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -22,13 +21,11 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -252,7 +249,7 @@ public class FrontendService {
 	 * @param processId The process id to use for the baseentity cache
 	 * @param defCode   . The type of processBE (to save calculating it again)
 	 */
-	public void sendBaseEntitys(String processBEJson, String askMessageJson, String processId, String defCode) {
+	public void sendBaseEntitys(String processBEJson, String askMessageJson, String processId, String defCode, String targetCode) {
 
 		BaseEntity processBE = null;
 		QDataAskMessage askMsg = null;
@@ -297,8 +294,7 @@ public class FrontendService {
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
 
-		log.info("Sending processBE "+processBE.getBaseEntityAttributes().size()+" attributes");
-		// Sending the BE here has issues with dropdown items...
+		log.info("Sending "+processBE.getBaseEntityAttributes().size()+" processBE attributes");
 
 		// Now save the processBE into cache so that the lauchy and dropkick can
 		// recognise it as valid
@@ -308,11 +304,10 @@ public class FrontendService {
 		ProcessVariables processVariables = new ProcessVariables();
 		processVariables.setProcessEntity(processBE);
 		processVariables.setDefinitionCode(defCode);
-		String processBeAndDefJson = jsonb.toJson(processVariables);
-		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+		processVariables.setTargetCode(targetCode);
+		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processVariables);
 
 		log.info("processBE cached to "+processId+":PROCESS_BE");
-
 
 		// NOTE: only using first ask item
 		Ask ask = askMsg.getItems().get(0);
@@ -320,8 +315,6 @@ public class FrontendService {
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processBE, ask.getQuestion().getCode());
 
-		// Now send the baseentity to the Frontend so that the 'menu' are already there
-		// waiting
 		KafkaUtils.writeMsg("webdata", jsonb.toJson(msg));
 	}
 

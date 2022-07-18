@@ -8,8 +8,6 @@ import java.util.List;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.xml.bind.annotation.XmlTransient;
 
-
-
 @RegisterForReflection
 public abstract class QMessage implements Serializable, QMessageIntf {
 
@@ -18,7 +16,6 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 	private String msg_type;
 	private String token;
 	private List<String> targetCodes;
-	private String sourceAddress;
 	private String sourceCode;
 	private String targetCode;
 	private String attributeCode;
@@ -82,20 +79,6 @@ public abstract class QMessage implements Serializable, QMessageIntf {
 	 */
 	public void setTargetCodes(List<String> targetCodes) {
 		this.targetCodes = targetCodes;
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getSourceAddress() {
-		return sourceAddress;
-	}
-
-	/**
-	 * @param sourceAddress the source address to set
-	 */
-	public void setSourceAddress(String sourceAddress) {
-		this.sourceAddress = sourceAddress;
 	}
 
 	/**

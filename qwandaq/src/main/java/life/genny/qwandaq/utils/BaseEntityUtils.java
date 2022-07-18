@@ -67,7 +67,8 @@ public class BaseEntityUtils {
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-		return this.getBaseEntityByCode("PRJ_" + userToken.getProductCode().toUpperCase());
+
+		return getBaseEntity("PRJ_" + userToken.getProductCode().toUpperCase());
 	}
 
 	/**
@@ -76,7 +77,8 @@ public class BaseEntityUtils {
 	 * @return the user's {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
-		return this.getBaseEntityByCode(userToken.getUserCode());
+
+		return getBaseEntity(userToken.getUserCode());
 	}
 
 	/**
@@ -87,11 +89,44 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntity(String code) {
 
-		BaseEntity baseEntity = getBaseEntityByCode(code);
+		return getBaseEntity(userToken.getProductCode(), code);
+	}
+
+	/**
+	 * Get a base entity using a code, but throw an 
+	 * ItemNotFoundException if the entitiy does not exist.
+	 * @param productCode The product to search in
+	 * @param code The code of the entity to fetch
+	 * @return The BaseEntity
+	 */
+	public BaseEntity getBaseEntity(String productCode, String code) {
+
+		BaseEntity baseEntity = getBaseEntityOrNull(productCode, code);
 		if (baseEntity == null)
 			throw new ItemNotFoundException(code);
 
 		return baseEntity;
+	}
+
+	/**
+	 * Get a base entity using the code, or return null if not found.
+	 * @param code The code of the entity to fetch
+	 * @return The BaseEntity, or null if not found
+	 */
+	public BaseEntity getBaseEntityOrNull(String code) {
+
+		return getBaseEntityOrNull(userToken.getProductCode(), code);
+	}
+
+	/**
+	 * Get a base entity using the code, or return null if not found.
+	 * @param productCode The product to search in
+	 * @param code The code of the entity to fetch
+	 * @return The BaseEntity, or null if not found
+	 */
+	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
+
+		return getBaseEntityByCode(productCode, code);
 	}
 
 	/**
@@ -100,16 +135,8 @@ public class BaseEntityUtils {
 	 * @param code The code of the BaseEntity to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
+	@Deprecated
 	public BaseEntity getBaseEntityByCode(String code) {
-
-		if (code == null) 
-			throw new NullParameterException("code");
-		if (StringUtils.isBlank(code))
-			throw new DebugException("code is empty");
-
-		// TODO: Fix this
-		if ("backend".equals(userToken.getProductCode()))
-			userToken.setProductCode("internmatch");
 
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
@@ -121,7 +148,17 @@ public class BaseEntityUtils {
 	 * @param code The code of the BaseEntity to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
+	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
+
+		if (productCode == null) 
+			throw new NullParameterException("productCode");
+		if (code == null) 
+			throw new NullParameterException("code");
+		if (StringUtils.isBlank(productCode))
+			throw new DebugException("productCode is empty");
+		if (StringUtils.isBlank(code))
+			throw new DebugException("code is empty");
 
 		// check for entity in the cache
 		// BaseEntityKey key = new BaseEntityKey(productCode, code);
@@ -217,7 +254,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		return getBaseEntityFromLinkAttribute(be, attributeCode);
 	}
 
@@ -235,7 +272,7 @@ public class BaseEntityUtils {
 		if (StringUtils.isEmpty(newBaseEntityCode)) {
 			return null;
 		}
-		BaseEntity newBe = getBaseEntityByCode(newBaseEntityCode);
+		BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
 		return newBe;
 	}
 
@@ -248,7 +285,7 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		return getBaseEntityCodeFromLinkAttribute(be, attributeCode);
 	}
 
@@ -278,7 +315,7 @@ public class BaseEntityUtils {
 	 */
 	public List<String> getBaseEntityCodeArrayFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		return getBaseEntityCodeArrayFromLinkAttribute(be, attributeCode);
 	}
 
@@ -327,7 +364,7 @@ public class BaseEntityUtils {
 	 */
 	public Object getBaseEntityValue(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		if (be != null) {
 			Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 			if (ea.isPresent()) {
@@ -367,7 +404,7 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityValueAsString(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		return getBaseEntityAttrValueAsString(be, attributeCode);
 	}
 
@@ -380,7 +417,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalDateTime getBaseEntityValueAsLocalDateTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDateTime();
@@ -396,7 +433,7 @@ public class BaseEntityUtils {
 	 * @return The value as a LocalDate
 	 */
 	public LocalDate getBaseEntityValueAsLocalDate(final String baseEntityCode, final String attributeCode) {
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDate();
@@ -413,7 +450,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalTime getBaseEntityValueAsLocalTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityByCode(baseEntityCode);
+		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueTime();
@@ -433,7 +470,7 @@ public class BaseEntityUtils {
 		String[] arr = strArr.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "").split(",");
 		List<BaseEntity> entityList = Arrays.stream(arr)
 				.filter(item -> !item.isEmpty())
-				.map(item -> (BaseEntity) getBaseEntityByCode(item))
+				.map(item -> (BaseEntity) getBaseEntityOrNull(item))
 				.collect(Collectors.toList());
 
 		return entityList;

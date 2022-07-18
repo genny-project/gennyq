@@ -18,16 +18,23 @@ package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.BaseEntity;
 
 @RegisterForReflection
 public class ProcessVariables  implements java.io.Serializable {
 
     private BaseEntity processEntity;
 	private String definitionCode;
+	private String targetCode;
 
-	public ProcessVariables() { }
+	public String getTargetCode() {
+        return targetCode;
+    }
+
+    public void setTargetCode(String targetCode) {
+        this.targetCode = targetCode;
+    }
+
+    public ProcessVariables() { }
 
 	public String getDefinitionCode() {
         return definitionCode;

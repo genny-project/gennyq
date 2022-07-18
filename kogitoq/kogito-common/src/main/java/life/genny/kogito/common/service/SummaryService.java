@@ -10,20 +10,25 @@ import javax.json.JsonArray;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class SummaryService {
@@ -47,6 +52,12 @@ public class SummaryService {
 	@Inject
 	GraphQLUtils gqlUtils;
 
+	@Inject
+	NavigationService navigationService;
+
+	@Inject
+	SearchUtils searchUtils;
+
 	/**
 	 * Send the user's summary based on their lifecycle state.
 	 */
@@ -60,6 +71,7 @@ public class SummaryService {
 		}
 
 		String summaryCode = array.getJsonObject(0).getString("summary");
+		// navigationService.navigateContent("PCM_SUMMARY_"+summaryCode, "QUE_SUMMARY_"+summaryCode);
 
 		// fetch pcm and summary entities
 		BaseEntity summary = beUtils.getBaseEntityByCode("SUM_"+summaryCode);
@@ -93,7 +105,7 @@ public class SummaryService {
 		msg.add(content);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg("webdata", msg);
 
 		// fetch and send the asks for the summary
 		BaseEntity user = beUtils.getUserBaseEntity();
@@ -103,6 +115,44 @@ public class SummaryService {
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		KafkaUtils.writeMsg("webcmds", askMsg);
+
+		recursivelySendSummaryData(pcm);
+	}
+
+	public void recursivelySendSummaryData(BaseEntity pcm) {
+
+		for (EntityAttribute ea : pcm.getBaseEntityAttributes()) {
+			String code = ea.getAttributeCode();
+			String value = ea.getValueString();
+
+			if (code.startsWith("PRI_LOC")) {
+
+				if (value.startsWith("PCM_")) {
+					BaseEntity childPcm = beUtils.getBaseEntity(value);
+					recursivelySendSummaryData(childPcm);
+
+				} else if (value.startsWith("SBE_")) {
+					SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), value, SearchEntity.class);
+					searchUtils.searchTable(searchEntity);
+				}
+
+			} else if (code.equals("PRI_QUESTION_CODE")) {
+
+				BaseEntity user = beUtils.getUserBaseEntity();
+
+				String summaryCode = StringUtils.removeStart(value, "QUE_SUMMARY_");
+				summaryCode = StringUtils.removeStart(summaryCode, "QUE_");
+
+				BaseEntity summary = beUtils.getBaseEntity("SUM_"+summaryCode);
+				Ask ask = qwandaUtils.generateAskFromQuestionCode(value, user, summary);
+
+				QDataAskMessage askMsg = new QDataAskMessage(ask);
+				askMsg.setToken(userToken.getToken());
+				askMsg.setReplace(true);
+				KafkaUtils.writeMsg("webcmds", askMsg);
+			}
+		}
 	}
 
 }
+

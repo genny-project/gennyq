@@ -45,17 +45,15 @@ message QEventMessage {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	repeated string recipientCodeArray = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceAddress = 8; 
+	optional string sourceCode = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 9; 
+	optional string tag = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string tag = 10; 
+	optional string targetCode = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 11; 
+	repeated string targetCodes = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated string targetCodes = 12; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 13; 
+	optional string token = 12; 
 }
 /* @Indexed */ 
 message View { 

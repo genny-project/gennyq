@@ -23,6 +23,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 
@@ -86,16 +87,12 @@ public class DefUtils {
 		defPrefixMap.put(productCode, new ConcurrentHashMap<String, String>());
 
 		for (String code : codes) {
+
 			if (code == null) {
 				log.error("Code is null, skipping DEF prefix");
 				continue;
 			}
-
-			BaseEntity def = beUtils.getBaseEntityByCode(productCode, code);
-			if (def == null) {
-				log.error("Def is null!");
-				continue;
-			}
+			BaseEntity def = beUtils.getBaseEntity(productCode, code);
 
 			String prefix = def.getValue("PRI_PREFIX", null);
 			if (prefix == null) {
@@ -124,7 +121,7 @@ public class DefUtils {
 			return entity;
 		}
 		if (entity.getCode().startsWith("PRJ_")) {
-			return beUtils.getBaseEntityByCode("DEF_PROJECT");
+			return beUtils.getBaseEntity("DEF_PROJECT");
 		}
 
 		// NOTE: temporary special check for internmatch
@@ -295,9 +292,12 @@ public class DefUtils {
 	 */
 	public Boolean answerValidForDEF(Answer answer) {
 
+		if (answer == null)
+			throw new NullParameterException("answer");
+
 		BaseEntity target = beUtils.getBaseEntityByCode(answer.getTargetCode());
 		if (target == null) {
-			throw new GennyRuntimeException("Answer target " + answer.getTargetCode() + " does not exist");
+			throw new ItemNotFoundException(answer.getTargetCode());
 		}
 		BaseEntity defBE = getDEF(target);
 
@@ -313,6 +313,11 @@ public class DefUtils {
 	 * @return Boolean
 	 */
 	public Boolean answerValidForDEF(BaseEntity defBE, Answer answer) {
+
+		if (defBE == null)
+			throw new NullParameterException("defBE");
+		if (answer == null)
+			throw new NullParameterException("answer");
 
 		String targetCode = answer.getTargetCode();
 		String attributeCode = answer.getAttributeCode();

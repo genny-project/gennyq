@@ -50,7 +50,7 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode,String processId, String defCode) {
+	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode, String processId, String defCode) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
@@ -91,19 +91,18 @@ public class ProcessAnswerService {
 			e.printStackTrace();
 		}
 
-		// log the new value
-		String savedValue = processBE.getValueAsString(answer.getAttributeCode());
-		
+		String productCode = userToken.getProductCode();
+		String key = processId+":PROCESS_BE";
 
-		// Now update the cached version of the processBE with an expiry (used in dropkick and lauchy)	
-		// cache the current ProcessBE so that it can be used quickly by lauchy etc
-		ProcessVariables processVariables = new ProcessVariables();
+		// update the cached ProcessVariables object
+		ProcessVariables processVariables = CacheUtils.getObject(productCode, key, ProcessVariables.class);
 		processVariables.setProcessEntity(processBE);
-		processVariables.setDefinitionCode(defCode);
-		String processBeAndDefJson = jsonb.toJson(processVariables);
-		CacheUtils.putObject(userToken.getProductCode(), processId+":PROCESS_BE", processBeAndDefJson);
+		CacheUtils.putObject(productCode, key, processVariables);
 
-		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + savedValue+"  and processBE cached to "+processId+":PROCESS_BE");
+		String value = processBE.getValueAsString(answer.getAttributeCode());
+		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
+		log.info("Process Entity cached to " + key);
+
 		return jsonb.toJson(processBE);
 	}
 

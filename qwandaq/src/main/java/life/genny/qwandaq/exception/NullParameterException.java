@@ -7,17 +7,17 @@ package life.genny.qwandaq.exception;
  */
 public class NullParameterException extends GennyRuntimeException {
 
-	static String ERR_SUFFIX = " passed is null";
+	static String ERR_TEXT = " is null";
 
 	public NullParameterException() {
 		super();
 	}
 
 	public NullParameterException(String parameter) {
-		super(parameter + ERR_SUFFIX);
+		super(parameter + ERR_TEXT);
 	}
 	
 	public NullParameterException(String parameter, Throwable err) {
-		super(parameter + ERR_SUFFIX, err);
+		super(parameter + ERR_TEXT, err);
 	}
 }

@@ -30,7 +30,6 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.handlers.RuleFlowGroupWorkItemHandler;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -282,12 +281,13 @@ public class SearchUtils {
 		facts.put("userToken", userToken);
 		facts.put("searchBE", searchBE);
 
-		Map<String, Object> results = new RuleFlowGroupWorkItemHandler()
-				.executeRules(
-						beUtils,
-						facts,
-						"SearchFilters",
-						"SearchUtils:getUserFilters");
+		Map<String, Object> results = null;
+		// Map<String, Object> results = new RuleFlowGroupWorkItemHandler()
+		// 		.executeRules(
+		// 				beUtils,
+		// 				facts,
+		// 				"SearchFilters",
+		// 				"SearchUtils:getUserFilters");
 
 		if (results != null) {
 
