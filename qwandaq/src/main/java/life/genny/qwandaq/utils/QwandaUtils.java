@@ -434,17 +434,6 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Save {@link Answers}.
-	 * 
-	 * @param answers The answers to save
-	 * @return The target BaseEntitys
-	 */
-	public List<BaseEntity> saveAnswers(Answers answers) {
-
-		return saveAnswers(answers.getAnswers());
-	}
-
-	/**
 	 * Save a List of {@link Answer} objects.
 	 *
 	 * @param answers The list of answers to save
@@ -460,13 +449,8 @@ public class QwandaUtils {
 
 		for (String targetCode : answersPerTargetCodeMap.keySet()) {
 
-			// check if target is valid
-			BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-			if (target == null) {
-				throw new ItemNotFoundException(targetCode);
-			}
-
-			// fetch the DEF for this target
+			// fetch target and target DEF
+			BaseEntity target = beUtils.getBaseEntity(targetCode);
 			BaseEntity defBE = defUtils.getDEF(target);
 
 			// filter Non-valid answers using def
@@ -477,6 +461,8 @@ public class QwandaUtils {
 
 			// update target using valid answers
 			for (Answer answer : validAnswers) {
+				Attribute attribute = getAttribute(answer.getAttributeCode());
+				answer.setAttribute(attribute);
 				try {
 					target.addAnswer(answer);
 				} catch (BadDataException e) {
