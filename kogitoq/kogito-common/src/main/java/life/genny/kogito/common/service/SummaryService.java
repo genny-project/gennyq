@@ -2,7 +2,9 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -71,17 +73,55 @@ public class SummaryService {
 		}
 
 		String summaryCode = array.getJsonObject(0).getString("summary");
-		// navigationService.navigateContent("PCM_SUMMARY_"+summaryCode, "QUE_SUMMARY_"+summaryCode);
 
 		// fetch pcm and summary entities
-		BaseEntity summary = beUtils.getBaseEntityByCode("SUM_"+summaryCode);
-		BaseEntity pcm = beUtils.getBaseEntityByCode("PCM_SUMMARY_"+summaryCode);
-		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
-		try {
-            content.setValue("PRI_LOC1", pcm.getCode());
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
+		BaseEntity pcm = beUtils.getBaseEntity("PCM_SUMMARY_"+summaryCode);
+		BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
+		content.setValue("PRI_LOC1", pcm.getCode());
+
+		// package the pcms and send
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(content);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg("webdata", msg);
+
+		recursivelySendSummaryData(pcm);
+	}
+
+	/**
+	 * recursively traverse to find and send searches and questions for a pcm.
+	 * @param pcm The PCM to traverse
+	 */
+	public void recursivelySendSummaryData(BaseEntity pcm) {
+
+		List<EntityAttribute> locs = pcm.findPrefixEntityAttributes("PRI_LOC");
+
+		for (EntityAttribute ea : locs) {
+			String value = ea.getValueString();
+
+			if (value.startsWith("PCM_")) {
+				BaseEntity childPcm = beUtils.getBaseEntity(value);
+				recursivelySendSummaryData(childPcm);
+
+			} else if (value.startsWith("SBE_")) {
+				SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), value, SearchEntity.class);
+				searchUtils.searchTable(searchEntity);
+			}
+		}
+
+		Optional<EntityAttribute> questionCodeAttribute = pcm.findEntityAttribute("PRI_QUESTION_CODE");
+		if (questionCodeAttribute.isEmpty()) {
+			return;
+		}
+
+		String questionCode = questionCodeAttribute.get().getValueString();
+		BaseEntity user = beUtils.getUserBaseEntity();
+
+		String summaryCode = StringUtils.removeStart(questionCode, "QUE_SUMMARY_");
+		summaryCode = StringUtils.removeStart(summaryCode, "QUE_");
+
+		BaseEntity summary = beUtils.getBaseEntity("SUM_"+summaryCode);
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, summary);
 
 		// build context map for merging
 		Map<String, Object> ctxMap = new HashMap<>();
@@ -99,59 +139,17 @@ public class SummaryService {
 				ea.setValueString(merge);
 			});
 
-		// package the pcms and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(summary);
-		msg.add(pcm);
-		msg.add(content);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		KafkaUtils.writeMsg("webdata", msg);
-
-		// fetch and send the asks for the summary
-		BaseEntity user = beUtils.getUserBaseEntity();
-		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_SUMMARY_"+summaryCode, user, summary);
-
 		QDataAskMessage askMsg = new QDataAskMessage(ask);
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		KafkaUtils.writeMsg("webcmds", askMsg);
 
-		recursivelySendSummaryData(pcm);
-	}
-
-	public void recursivelySendSummaryData(BaseEntity pcm) {
-
-		for (EntityAttribute ea : pcm.getBaseEntityAttributes()) {
-			String code = ea.getAttributeCode();
-			String value = ea.getValueString();
-
-			if (code.startsWith("PRI_LOC")) {
-
-				if (value.startsWith("PCM_")) {
-					BaseEntity childPcm = beUtils.getBaseEntity(value);
-					recursivelySendSummaryData(childPcm);
-
-				} else if (value.startsWith("SBE_")) {
-					SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), value, SearchEntity.class);
-					searchUtils.searchTable(searchEntity);
-				}
-
-			} else if (code.equals("PRI_QUESTION_CODE")) {
-
-				BaseEntity user = beUtils.getUserBaseEntity();
-
-				String summaryCode = StringUtils.removeStart(value, "QUE_SUMMARY_");
-				summaryCode = StringUtils.removeStart(summaryCode, "QUE_");
-
-				BaseEntity summary = beUtils.getBaseEntity("SUM_"+summaryCode);
-				Ask ask = qwandaUtils.generateAskFromQuestionCode(value, user, summary);
-
-				QDataAskMessage askMsg = new QDataAskMessage(ask);
-				askMsg.setToken(userToken.getToken());
-				askMsg.setReplace(true);
-				KafkaUtils.writeMsg("webcmds", askMsg);
-			}
-		}
+		// package the pcms and send
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(summary);
+		msg.add(pcm);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg("webdata", msg);
 	}
 
 }

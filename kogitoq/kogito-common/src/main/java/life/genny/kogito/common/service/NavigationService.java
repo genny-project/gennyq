@@ -92,22 +92,13 @@ public class NavigationService {
 	public void navigateContent(final String pcmCode, final String questionCode) {
 
 		// fetch and update content pcm
-		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
-		try {
-			content.setValue("PRI_LOC1", pcmCode);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
+		BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
+		content.setValue("PRI_LOC1", pcmCode);
 
 		// fetch and update desired pcm
-		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
+		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
-		try {
-			pcm.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
+		pcm.addAttribute(new EntityAttribute(pcm, attribute, 1.0, questionCode));
 
 		// package all and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
@@ -117,37 +108,6 @@ public class NavigationService {
 		msg.setReplace(true);
 		log.info("Sending PCMs for " + questionCode);
 		KafkaUtils.writeMsg("webdata", msg);
-
-		recursivelyPerformPcmSearches(pcm);
-	}
-
-	/**
-	 * Recuresively traverse a pcm tree and send out any nested searches.
-	 * @param pcm The pcm to begin raversing
-	 */
-	public void recursivelyPerformPcmSearches(BaseEntity pcm) {
-
-		log.info("(0) running recursive function for " + pcm.getCode());
-
-		// filter location attributes
-		Set<EntityAttribute> locs = pcm.getBaseEntityAttributes()
-			.stream()
-			.filter(ea -> ea.getAttributeCode().startsWith("PRI_LOC"))
-			.collect(Collectors.toSet());
-
-		// perform searches
-		locs.stream()
-			.filter(ea -> ea.getValueString().startsWith("SBE"))
-			.map(ea -> CacheUtils.getObject(userToken.getProductCode(), ea.getValueString(), SearchEntity.class))
-			.peek(sbe -> log.info("Sending Search " + sbe.getCode()))
-			.forEach(sbe -> searchUtils.searchBaseEntitys(sbe));
-
-		// run function for nested pcms
-		locs.stream()
-			.filter(ea -> ea.getValueString().startsWith("PCM"))
-			.map(ea -> beUtils.getBaseEntity(ea.getValueString()))
-			.peek(ent -> recursivelyPerformPcmSearches(ent));
-
 	}
 
 	/**

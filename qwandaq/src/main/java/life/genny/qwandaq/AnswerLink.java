@@ -1,6 +1,6 @@
 package life.genny.qwandaq;
 
-import java.lang.invoke.MethodHandles;
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -10,33 +10,29 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.io.StringReader;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
 import javax.persistence.Convert;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.annotations.Type;
+import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import org.hibernate.annotations.Type;
-
-import org.javamoney.moneta.Money;
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
-
-import javax.json.Json;
-import javax.json.JsonReader;
-import javax.json.JsonObject;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.converter.StringListConverter;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.IncompleteObjectException;
 
 /**
  * AnswerLink represents a link between BaseEntitys for Answer objects.
