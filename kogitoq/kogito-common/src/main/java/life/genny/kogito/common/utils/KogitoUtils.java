@@ -337,7 +337,7 @@ public class KogitoUtils {
 		// Infer data
 		session.fireAllRules();
 
-		// feed all answers from facts into ProcessQuestions
+		// Collect all new answers from the rules
 		List<Answer> answers = session.getObjects().stream()
 			.filter(o -> (o instanceof Answer))
 			.map(o -> (Answer) o)
@@ -347,7 +347,7 @@ public class KogitoUtils {
 		return answers;
 	}
 
-	public Boolean funnelAnswers(List<Answer> answers) {
+	public void funnelAnswers(List<Answer> answers) {
 		// feed all answers from facts into ProcessQuestions
 		answers.stream()
 			.filter(answer -> answer.getProcessId() != null)
@@ -362,7 +362,7 @@ public class KogitoUtils {
 					return;
 				}
 			});
-		return true;
+		return;
 	}
 
 }

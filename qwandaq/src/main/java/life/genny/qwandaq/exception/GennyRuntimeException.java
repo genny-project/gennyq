@@ -27,7 +27,6 @@ public class GennyRuntimeException extends RuntimeException implements GennyExce
         super(errorMessage, err);
     }
 
-    @Override
     public void printStackTrace() {
         this.printGennyStackTrace(this, false);
     }
