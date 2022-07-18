@@ -24,7 +24,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;

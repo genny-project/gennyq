@@ -205,12 +205,10 @@ public class AnswerLink implements java.io.Serializable {
 		
 		List<String> formatStrings = null;
 
-		String className = "";
-		try {
-			className = this.getAttribute().getDataType().getClassName();
-		} catch (NullPointerException e) {
-			e.printStackTrace();
+		if (getAttribute() == null) {
+			throw new IncompleteObjectException("attribute");
 		}
+		String className = this.getAttribute().getDataType().getClassName();
 
 		switch (className) {
 			case "life.genny.qwandaq.entity":
