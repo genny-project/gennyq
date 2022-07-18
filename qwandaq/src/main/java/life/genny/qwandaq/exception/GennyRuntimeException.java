@@ -9,6 +9,7 @@ import org.jboss.logging.Logger;
  * common issues within the logic at runtime.
  *
  * @author Jasper Robison
+ * @author Bryn Meachem
  */
 public class GennyRuntimeException extends RuntimeException implements GennyExceptionIntf {
 
