@@ -43,7 +43,9 @@ then
 	lastName = WordUtils.capitalize(lastName);
 	String name = firstName + " " + lastName;
 
-	insert(new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name));
+	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name);
+	a.setProcessId(answer.getProcessId());
+	insert(a);
 end
 
 rule InferLastName 
@@ -67,5 +69,7 @@ then
 	firstName = WordUtils.capitalize(firstName);
 	String name = firstName + " " + lastName;
 
-	insert(new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name));
+	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name);
+	a.setProcessId(answer.getProcessId());
+	insert(a);
 end

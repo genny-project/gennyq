@@ -62,17 +62,19 @@ public class ProcessAnswerService {
 		}
 
 		// only copy the entityAttributes used in the Asks
-		BaseEntity target = null;
+		BaseEntity definition = null;
 		if ("NON_EXISTENT".equals(targetCode)) {
 			log.info("Not Checking validity of answer");
+			definition = beUtils.getBaseEntity(defCode);
 		} else {
-			target = beUtils.getBaseEntityByCode(targetCode);
 			// check if the answer is valid for the target
-			BaseEntity definition = defUtils.getDEF(target);
-			if (!defUtils.answerValidForDEF(definition, answer)) {
-				log.error("Bad incoming answer... Not saving!");
-				return processBEJson;
-			}
+			BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+			definition = defUtils.getDEF(target);
+		}
+
+		if (!defUtils.answerValidForDEF(definition, answer)) {
+			log.error("Bad incoming answer... Not saving!");
+			return processBEJson;
 		}
 
 		// find the attribute
