@@ -1,5 +1,8 @@
-package life.genny.dropkick.streams;
+package life.genny.dropkick.live.data;
 
+import java.lang.invoke.MethodHandles;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -7,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -17,14 +19,12 @@ import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
@@ -33,8 +33,8 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.models.ProcessVariables;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
@@ -48,9 +48,9 @@ import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
-public class TopologyProducer {
+public class InternalConsumer {
 
-	private static final Logger log = Logger.getLogger(TopologyProducer.class);
+	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
 	Integer defaultDropDownSize;
@@ -90,32 +90,42 @@ public class TopologyProducer {
 			log.info("Default dropdown size  : " + defaultDropDownSize);
 		}
 
-		service.fullServiceInit(true);
+		service.fullServiceInit();
 		log.info("[*] Finished Startup!");
 	}
 
-	@Produces
-	public Topology buildTopology() {
+	/**
+	 * Consume incoming answers for inference
+	 */
+	@Incoming("events")
+	@Blocking
+	public void getData(String event) {
 
-		// Read the input Kafka topic into a KStream instance.
-		StreamsBuilder builder = new StreamsBuilder();
-		builder
-				.stream("events", Consumed.with(Serdes.String(), Serdes.String()))
-				.peek((k, v) -> scope.init(v))
-				.peek((k, v) -> log.debug("Consumed message: " + v))
+		// init scope and process msg
+		Instant start = Instant.now();
+		scope.init(event);
+		log.debug("Consumed message: " + event);
 
-				.filter((k, v) -> isValidDropdownMessage(v))
-				.peek((k, v) -> log.debug("Processing valid message: " + v))
+		if (!isValidDropdownMessage(event)) {
+			scope.destroy();
+			return;
+		}
+		log.debug("Processing valid message: " + event);
 
-				.mapValues(v -> fetchDropdownResults(v))
+		String output = fetchDropdownResults(event);
+		if (output == null) {
+			scope.destroy();
+			return;
+		}
 
-				.filter((k, v) -> v != null)
-				.peek((k, v) -> log.debug("Sending results: " + v))
+		// write using KafkaUtils for bridge switching
+		log.debug("Sending results: " + output);
+		KafkaUtils.writeMsg("webdata", output);
 
-				// write using KafkaUtils for bridge switching
-				.foreach((k, v) -> KafkaUtils.writeMsg("webdata", v));
-
-		return builder.build();
+		// log duration
+		scope.destroy();
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	/**
@@ -186,10 +196,10 @@ public class TopologyProducer {
 				return false;
 			}
 			target = processVariables.getProcessEntity();
-			defBE = beUtils.getBaseEntityByCode(processVariables.getDefinitionCode());
+			defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
 		} else {
 
-			target = beUtils.getBaseEntityByCode(targetCode);
+			target = beUtils.getBaseEntityOrNull(targetCode);
 			if (target == null) {
 				return false;
 			}
@@ -307,7 +317,7 @@ public class TopologyProducer {
 
 		log.info(attrCode + ":" + parentCode + ":[" + searchText + "]");
 
-		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
+		BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
 
 		if (source == null) {
 			log.error("Source Entity is NULL!");
@@ -320,9 +330,9 @@ public class TopologyProducer {
 		if (!StringUtils.isBlank(processId)) {
 			ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
 			target = processVariables.getProcessEntity();
-			defBE = beUtils.getBaseEntityByCode(processVariables.getDefinitionCode());
+			defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
 		} else {
-			target = beUtils.getBaseEntityByCode(targetCode);
+			target = beUtils.getBaseEntityOrNull(targetCode);
 		}
 
 		if (target == null) {

@@ -28,6 +28,6 @@ public class GennyException extends Exception implements GennyExceptionIntf {
     }
 
     public void printStackTrace() {
-        this.printGennyStackTrace(this, false);
+        this.printGennyStackTrace(this, true);
     }
 }

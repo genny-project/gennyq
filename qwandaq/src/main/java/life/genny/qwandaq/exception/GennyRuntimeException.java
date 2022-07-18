@@ -28,6 +28,6 @@ public class GennyRuntimeException extends RuntimeException implements GennyExce
     }
 
     public void printStackTrace() {
-        this.printGennyStackTrace(this, false);
+        this.printGennyStackTrace(this, true);
     }
 }
