@@ -11,8 +11,8 @@ import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
 
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QMessageGennyMSG;
-import life.genny.qwandaq.message.QCmdMessage;
+import life.genny.qwandaq.message.QCommsMessage;
+import life.genny.qwandaq.message.QCommandMessage;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;

@@ -36,14 +36,10 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.QEntityAttribute;
-import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -72,129 +68,6 @@ public class FyodorSearch {
 	BaseEntityUtils beUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
-
-	public QBulkMessage processSearchEntity(SearchEntity searchBE) {
-
-		QSearchBeResult results = null;
-		Boolean isCountEntity = false;
-
-		// check if it is a count SBE
-		if (searchBE.getCode().startsWith("CNS_")) {
-
-			log.info("Found Count Entity " + searchBE.getCode());
-			// Remove CNS_ prefix and set count var
-			searchBE.setCode(searchBE.getCode().substring(4));
-			isCountEntity = true;
-		}
-
-		// Check for a specific item search
-		for (EntityAttribute attr : searchBE.getBaseEntityAttributes()) {
-			if (attr.getAttributeCode().equals("PRI_CODE") && attr.getAttributeName().equals("_EQ_")) {
-				log.info("SINGLE BASE ENTITY SEARCH DETECTED");
-
-				BaseEntity be = beUtils.getBaseEntityByCode(attr.getValue());
-				be.setIndex(0);
-				BaseEntity[] arr = new BaseEntity[1];
-				arr[0] = be;
-				results = new QSearchBeResult(arr, Long.valueOf(1));
-				break;
-			}
-		}
-
-		// Perform search
-		if (results == null) {
-			results = findBySearch25(searchBE, isCountEntity, true);
-		}
-
-		List<EntityAttribute> cals = searchBE.findPrefixEntityAttributes("COL__");
-		if (cals != null) {
-			log.info("searchUsingSearch25 -> detected " + cals.size() + " CALS");
-
-			for (EntityAttribute calEA : cals) {
-				log.info("Found CAL with code: " + calEA.getAttributeCode());
-			}
-		}
-
-		// Find Allowed Columns
-		List<String> allowed = getSearchColumnFilterArray(searchBE);
-		// Used to disable the column privacy
-		EntityAttribute columnWildcard = searchBE.findEntityAttribute("COL_*").orElse(null);
-
-		// Otherwise handle cals
-		if (results != null && results.getEntities() != null && results.getEntities().length > 0) {
-
-			for (BaseEntity be : results.getEntities()) {
-
-				if (be != null) {
-
-					// Filter unwanted attributes
-					if (columnWildcard == null) {
-						be = beUtils.addNonLiteralAttributes(be);
-						be = beUtils.privacyFilter(be, allowed);
-					}
-
-					for (EntityAttribute calEA : cals) {
-
-						Answer ans = getAssociatedColumnValue(be, calEA.getAttributeCode());
-						if (ans != null) {
-							try {
-								be.addAnswer(ans);
-							} catch (BadDataException e) {
-								log.error(e.getStackTrace());
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// Perform count for any combined search attributes
-		Long totalResultCount = 0L;
-		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
-			if (ea.getAttributeCode().startsWith("CMB_")) {
-				String combinedSearchCode = ea.getAttributeCode().substring("CMB_".length());
-				SearchEntity combinedSearch = CacheUtils.getObject(userToken.getProductCode(), combinedSearchCode,
-						SearchEntity.class);
-
-				Long subTotal = performCount(combinedSearch);
-				if (subTotal != null) {
-					totalResultCount += subTotal;
-					results.setTotal(totalResultCount);
-				} else {
-					log.info("subTotal count for " + combinedSearchCode + " is NULL");
-				}
-			}
-		}
-
-		try {
-			Attribute attrTotalResults = qwandaUtils.getAttribute("PRI_TOTAL_RESULTS");
-			searchBE.addAnswer(new Answer(searchBE, searchBE, attrTotalResults, results.getTotal() + ""));
-		} catch (BadDataException e) {
-			log.error(e.getStackTrace());
-		}
-
-		log.info("Results = " + results.getTotal().toString());
-
-		QBulkMessage bulkMsg = new QBulkMessage();
-		bulkMsg.setToken(userToken.getToken());
-
-		QDataBaseEntityMessage searchBEMsg = new QDataBaseEntityMessage(searchBE);
-		searchBEMsg.setToken(userToken.getToken());
-		searchBEMsg.setReplace(true);
-		bulkMsg.add(searchBEMsg);
-
-		// don't add result entities if it is only a count
-		if (!isCountEntity) {
-			QDataBaseEntityMessage entityMsg = new QDataBaseEntityMessage(results.getEntities());
-			entityMsg.setTotal(results.getTotal());
-			entityMsg.setReplace(true);
-			entityMsg.setParentCode(searchBE.getCode());
-			entityMsg.setToken(userToken.getToken());
-			bulkMsg.add(entityMsg);
-		}
-
-		return bulkMsg;
-	}
 
 	public Long performCount(SearchEntity searchBE) {
 
@@ -236,7 +109,6 @@ public class FyodorSearch {
 		String realm = searchBE.getRealm();
 		Integer defaultPageSize = 20;
 		// Init necessary vars
-		QSearchBeResult result = null;
 		List<String> codes = new ArrayList<String>();
 		// Get page start and page size from SBE
 		Integer pageStart = searchBE.getPageStart(0);
@@ -588,10 +460,11 @@ public class FyodorSearch {
 		log.info("Finished BUILDING query with duration: " + Duration.between(start, middle).toMillis()
 				+ " millSeconds.");
 
+		QSearchBeResult result = new QSearchBeResult();
 		if (countOnly) {
 			// Fetch only the count
 			long count = query.select(baseEntity.code).distinct().fetchCount();
-			result = new QSearchBeResult(count);
+			result.setTotal(count);
 		} else {
 			// Fetch data and count
 			if (fetchEntities != null && fetchEntities) {
@@ -616,13 +489,15 @@ public class FyodorSearch {
 					be.setIndex(i);
 					beArray[i] = be;
 				}
-				result = new QSearchBeResult(beArray, count);
+				result.setEntities(Arrays.asList(beArray));
+				result.setTotal(count);
 
 			} else {
 
 				codes = query.select(baseEntity.code).distinct().fetch();
 				long count = query.fetchCount();
-				result = new QSearchBeResult(codes, count);
+				result.setCodes(codes);
+				result.setTotal(count);
 
 			}
 		}

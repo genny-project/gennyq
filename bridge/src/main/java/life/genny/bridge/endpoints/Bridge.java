@@ -272,7 +272,7 @@ public class Bridge {
 
 		gennyItems.add(gennyItem);
 
-		QDataB2BMessage dataMsg = new QDataB2BMessage(gennyItems.toArray(new GennyItem[0]));
+		QDataB2BMessage dataMsg = new QDataB2BMessage(gennyItems);
 		dataMsg.setToken(userToken.getToken());
 		dataMsg.setAliasCode("STATELESS");
 

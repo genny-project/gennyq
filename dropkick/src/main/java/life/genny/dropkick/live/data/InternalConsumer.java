@@ -30,7 +30,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ProcessVariables;
@@ -588,7 +588,7 @@ public class InternalConsumer {
 
 		// Perform search and evaluate columns
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchBE);
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+		QDataMessage<BaseEntity> msg = new QDataMessage<>();
 
 		if (results == null) {
 
@@ -597,7 +597,7 @@ public class InternalConsumer {
 
 		} else if (results.size() > 0) {
 
-			msg = new QDataBaseEntityMessage(results);
+			msg = new QDataMessage<BaseEntity>(results);
 			log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
 			for (BaseEntity item : msg.getItems()) {
@@ -616,10 +616,7 @@ public class InternalConsumer {
 		msg.setParentCode(parentCode);
 		msg.setQuestionCode(questionCode);
 		msg.setToken(userToken.getToken());
-		msg.setLinkCode("LNK_CORE");
-		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);
-		msg.setShouldDeleteLinkedBaseEntities(false);
 
 		return jsonb.toJson(msg);
 	}

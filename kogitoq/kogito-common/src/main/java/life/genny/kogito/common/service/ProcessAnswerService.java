@@ -12,10 +12,9 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
+import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -116,7 +115,7 @@ public class ProcessAnswerService {
 	public Boolean checkMandatory(String askMessageJson, String processBEJson) {
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		QDataMessage<Ask> askMessage = jsonb.fromJson(askMessageJson, QDataMessage.class);
 
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
@@ -125,7 +124,7 @@ public class ProcessAnswerService {
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
 		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
-		QDataAskMessage msg = new QDataAskMessage(ask);
+		QDataMessage<Ask> msg = new QDataMessage<Ask>(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		KafkaUtils.writeMsg("webcmds", msg);
@@ -180,7 +179,7 @@ public class ProcessAnswerService {
 		beUtils.updateBaseEntity(target);
 		log.info("Saved answers for target " + targetCode);
 
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(target);
+		QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>(target);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 

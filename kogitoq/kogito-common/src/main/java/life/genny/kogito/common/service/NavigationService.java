@@ -21,7 +21,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -110,7 +110,7 @@ public class NavigationService {
 		}
 
 		// package all and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+		QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>();
 		msg.add(content);
 		msg.add(pcm);
 		msg.setToken(userToken.getToken());
@@ -209,7 +209,7 @@ public class NavigationService {
         attributes.add(locAttribute);
         pcm.setBaseEntityAttributes(attributes);
 
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcm);
+        QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>(pcm);
         msg.setToken(userToken.getToken());
         msg.setReplace(true);
         KafkaUtils.writeMsg("webdata", msg);

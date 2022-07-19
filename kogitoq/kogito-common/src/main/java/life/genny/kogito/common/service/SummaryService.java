@@ -18,8 +18,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -100,7 +99,7 @@ public class SummaryService {
 			});
 
 		// package the pcms and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(summary);
+		QDataMessage<BaseEntity> msg = new QDataMessage<>(summary);
 		msg.add(pcm);
 		msg.add(content);
 		msg.setToken(userToken.getToken());
@@ -111,7 +110,7 @@ public class SummaryService {
 		BaseEntity user = beUtils.getUserBaseEntity();
 		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_SUMMARY_"+summaryCode, user, summary);
 
-		QDataAskMessage askMsg = new QDataAskMessage(ask);
+		QDataMessage<Ask> askMsg = new QDataMessage<>(ask);
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		KafkaUtils.writeMsg("webcmds", askMsg);
@@ -146,7 +145,7 @@ public class SummaryService {
 				BaseEntity summary = beUtils.getBaseEntity("SUM_"+summaryCode);
 				Ask ask = qwandaUtils.generateAskFromQuestionCode(value, user, summary);
 
-				QDataAskMessage askMsg = new QDataAskMessage(ask);
+				QDataMessage<Ask> askMsg = new QDataMessage<Ask>(ask);
 				askMsg.setToken(userToken.getToken());
 				askMsg.setReplace(true);
 				KafkaUtils.writeMsg("webcmds", askMsg);

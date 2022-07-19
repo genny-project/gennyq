@@ -10,7 +10,7 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QMessageGennyMSG;
+import life.genny.qwandaq.message.QCommsMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 
@@ -46,7 +46,7 @@ public class SendMessageService {
 	 */
 	public void sendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
 		log.info("recipientBECode : " + recipientBECode);
-		BaseEntity recipientBe = beUtils.getBaseEntityByCode(recipientBECode);
+		BaseEntity recipientBe = beUtils.getBaseEntity(recipientBECode);
 		sendMessage(templateCode, recipientBe, ctxMap);
 	}
 
@@ -64,12 +64,11 @@ public class SendMessageService {
 		log.info("recipientBE (found BaseEntity): " + (recipientBE != null ? recipientBE.getCode() : "null"));
 		log.info("ctxMap : " + (ctxMap != null ? jsonb.toJson(ctxMap) : "null"));
 
-		QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(templateCode);
+		QCommsMessage.Builder msgBuilder = new QCommsMessage.Builder(templateCode);
 		if (ctxMap != null) {
 			msgBuilder.setMessageContextMap(ctxMap);
 		}
 		msgBuilder.addRecipient(recipientBE)
-			.setUtils(beUtils)
 			.setToken(userToken)
 			.send();
 	}

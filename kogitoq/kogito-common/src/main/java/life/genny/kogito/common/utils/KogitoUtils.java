@@ -1,9 +1,9 @@
 package life.genny.kogito.common.utils;
 
 import java.net.http.HttpResponse;
-import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -20,7 +20,7 @@ import org.kie.api.runtime.KieRuntimeBuilder;
 import org.kie.api.runtime.KieSession;
 
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
@@ -267,13 +267,13 @@ public class KogitoUtils {
 		}
 
 		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
+		if ("DD".equals(msg.getEventType())) {
 			return;
 		}
 
-		if (msg.getData().getSourceCode() == null) {
+		if (msg.getSourceCode() == null) {
 			log.warn("Event message has no sourceCode, setting sourceCode using userToken...");
-			msg.getData().setSourceCode(userToken.getUserCode());
+			msg.setSourceCode(userToken.getUserCode());
 		}
 
 		// start new session
@@ -302,16 +302,16 @@ public class KogitoUtils {
 	public List<Answer> runDataInference(String data) {
 
 		// check if event is a valid event
-		QDataAnswerMessage msg = null;
+		QDataMessage<Answer> msg = null;
 		try {
-			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+			msg = jsonb.fromJson(data, QDataMessage.class);
 		} catch (Exception e) {
 			log.error("Cannot parse this data!");
 			e.printStackTrace();
 			return new ArrayList<>();
 		}
 
-		if (msg.getItems().length == 0) {
+		if (msg.getItems().isEmpty()) {
 			log.debug("Received empty answer message: " + data);
 			return new ArrayList<>();
 		}
@@ -332,7 +332,7 @@ public class KogitoUtils {
 			log.debug("Inserting answer: " + answer.getAttributeCode() + "=" + answer.getValue() + " into session");
 			session.insert(answer);
 		}
-		log.debug("Inserted " + msg.getItems().length + " answers into session");
+		log.debug("Inserted " + msg.getItems().size() + " answers into session");
 
 		// Infer data
 		session.fireAllRules();

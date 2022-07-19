@@ -15,8 +15,8 @@ import life.genny.messages.util.MsgUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QBaseMSGMessageType;
-import life.genny.qwandaq.message.QMessageGennyMSG;
+import life.genny.qwandaq.message.CommunicationType;
+import life.genny.qwandaq.message.QCommsMessage;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
@@ -52,7 +52,7 @@ public class MessageProcessor {
      * @param serviceToken
      * @param userToken
      */
-    public void processGenericMessage(QMessageGennyMSG message) {
+    public void processGenericMessage(QCommsMessage message) {
 
         // Begin recording duration
         long start = System.currentTimeMillis();
@@ -75,9 +75,8 @@ public class MessageProcessor {
         // } /* TODO: horrible hack by ACC to give the be time to save - should use Shleemy , hopefully updated cache will help */
 
 
-        List<QBaseMSGMessageType> messageTypeList = Arrays.asList(message.getMessageTypeArr());
-
-		String[] recipientArr = message.getRecipientArr();
+        List<CommunicationType> messageTypeList = message.getMessageTypes();
+		List<String> recipientArr = message.getRecipients();
         List<BaseEntity> recipientBeList = new ArrayList<BaseEntity>();
 
         BaseEntity templateBe = null;
@@ -92,12 +91,12 @@ public class MessageProcessor {
             if (cc != null) {
                 log.debug("Using CC from template BaseEntity");
                 cc = beUtils.cleanUpAttributeValue(cc);
-                message.getMessageContextMap().put("CC", cc);
+                message.getContextMap().put("CC", cc);
             }
             if (bcc != null) {
                 log.debug("Using BCC from template BaseEntity");
                 bcc = beUtils.cleanUpAttributeValue(bcc);
-                message.getMessageContextMap().put("BCC", bcc);
+                message.getContextMap().put("BCC", bcc);
             }
         }
 
@@ -118,11 +117,11 @@ public class MessageProcessor {
             }
 
             // Check for Default Message
-            if (Arrays.stream(message.getMessageTypeArr()).anyMatch(item -> item == QBaseMSGMessageType.DEFAULT)) {
+            if (message.getMessageTypes().stream().anyMatch(item -> item == CommunicationType.DEFAULT)) {
                 // Use default if told to do so
                 List<String> typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
                 try {
-					messageTypeList = typeList.stream().map(item -> QBaseMSGMessageType.valueOf(item)).collect(Collectors.toList());
+					messageTypeList = typeList.stream().map(item -> CommunicationType.valueOf(item)).collect(Collectors.toList());
 				} catch (Exception e) {
 					log.error(e.getLocalizedMessage());
 				}
@@ -204,7 +203,7 @@ public class MessageProcessor {
             }
 
             // Iterate our array of send types
-            for (QBaseMSGMessageType msgType : messageTypeList) {
+            for (CommunicationType msgType : messageTypeList) {
 
                 /* Get Message Provider */
                 QMessageProvider provider = messageFactory.getMessageProvider(msgType);
@@ -221,7 +220,7 @@ public class MessageProcessor {
                      * if user is unsubscribed, then dont send emails. But toast and sms are still
                      * applicable
                      */
-                    if (isUserUnsubscribed && !msgType.equals(QBaseMSGMessageType.EMAIL)) {
+                    if (isUserUnsubscribed && !msgType.equals(CommunicationType.EMAIL)) {
                         log.info("unsubscribed");
                         provider.sendMessage(templateBe, baseEntityContextMap);
                     }
@@ -241,11 +240,11 @@ public class MessageProcessor {
         log.info("FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration));
     }
 
-    private HashMap<String, Object> createBaseEntityContextMap(QMessageGennyMSG message) {
+    private HashMap<String, Object> createBaseEntityContextMap(QCommsMessage message) {
 
         HashMap<String, Object> baseEntityContextMap = new HashMap<>();
 
-        for (Map.Entry<String, String> entry : message.getMessageContextMap().entrySet()) {
+        for (Map.Entry<String, String> entry : message.getContextMap().entrySet()) {
             String key = entry.getKey();
             String value = entry.getValue();
 

@@ -2,25 +2,26 @@ package life.genny.qwandaq.message;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
+
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTypeAdapter;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.validation.constraints.NotEmpty;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
+
+import com.querydsl.core.annotations.QueryExclude;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.PanacheLocalDateTimeAdapter;
-
-import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.GennyToken;
-
-import com.querydsl.core.annotations.QueryExclude;
+import life.genny.qwandaq.utils.KafkaUtils;
 
 @Entity
 @Cacheable
@@ -251,7 +252,7 @@ public class QScheduleMessage extends PanacheEntity {
 		public GennyToken gennyToken;
 
 		public QEventMessage eventMessage;
-		public QMessageGennyMSG commsMessage;
+		public QCommsMessage commsMessage;
 
 		public Builder(String scheduleCode) {
 
@@ -330,7 +331,7 @@ public class QScheduleMessage extends PanacheEntity {
 			QEventMessage eventMessage = new QEventMessage("SCHEDULE_EVT", code);
 
 			eventMessage.setToken(this.msg.getToken());
-			eventMessage.getData().setTargetCode(targetCode);
+			eventMessage.setTargetCode(targetCode);
 
 			setEventMessage(eventMessage);
 			return this;
@@ -354,7 +355,7 @@ public class QScheduleMessage extends PanacheEntity {
 		 * @param commsMessage The communications message
 		 * @return The builder
 		 */
-		public Builder setCommsMessage(QMessageGennyMSG commsMessage) {
+		public Builder setCommsMessage(QCommsMessage commsMessage) {
 
 			this.commsMessage = commsMessage;
 			return this;
@@ -379,7 +380,7 @@ public class QScheduleMessage extends PanacheEntity {
 			if (this.eventMessage != null) {
 
 				String[] rxList = new String[]{ "SUPERUSER", gennyToken.getUserCode() };
-				this.eventMessage.setRecipientCodeArray(rxList);
+				this.eventMessage.setRecipientCodeArray(Arrays.asList(rxList));
 				this.eventMessage.setToken(this.gennyToken.getToken());
 
 				this.msg.setJsonMessage(jsonb.toJson(this.eventMessage));

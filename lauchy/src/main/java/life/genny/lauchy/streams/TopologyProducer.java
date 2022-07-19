@@ -1,9 +1,9 @@
 package life.genny.lauchy.streams;
 
-import io.quarkus.runtime.StartupEvent;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
@@ -12,12 +12,22 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Produced;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
@@ -26,13 +36,6 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Produced;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -190,9 +193,8 @@ public class TopologyProducer {
 				try {
 					targetBe.setValue(attribute, "[]");
 
-					QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(targetBe);
+					QDataMessage<BaseEntity> responseMsg = new QDataMessage<>(targetBe);
 					responseMsg.setTotal(1L);
-					responseMsg.setReturnCount(1L);
 					responseMsg.setToken(userToken.getToken());
 
 					KafkaUtils.writeMsg("webdata", responseMsg);

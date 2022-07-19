@@ -1,37 +1,25 @@
 package life.genny.qwandaq.message;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.GennyItem;
 
 @RegisterForReflection
-public class QDataB2BMessage extends QDataMessage {
-	
-	
+public class QDataB2BMessage extends QDataMessage<GennyItem> {
+
 	private static final long serialVersionUID = 1L;
 
-	  @JsonProperty
-	  private GennyItem[] items;
-	  private static final String DATATYPE_ITEM = GennyItem.class.getSimpleName();
+	public QDataB2BMessage() {
+		super();
+	}
 
-	  // For json parameters
-	  public QDataB2BMessage() {
-		  super(DATATYPE_ITEM);
-	  }
+	public QDataB2BMessage(GennyItem item) {
+		super(item);
+	}
 
-	  public QDataB2BMessage(final GennyItem[] items) {
-	    super(DATATYPE_ITEM);
-	    setItems(items);
-	  }
+	public QDataB2BMessage(List<GennyItem> list) {
+		super(list);
+	}
 
-	  public GennyItem[] getItems() {
-	    return items;
-	  }
-
-	  public void setItems(final GennyItem[] items) {
-	    this.items = items;
-	  }
-	
 }

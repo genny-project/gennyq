@@ -26,7 +26,7 @@ import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.ItemNotFoundException;
-import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -123,7 +123,7 @@ public class QwandaEndpoint {
 
 		// create ask msg from asks
 		log.info("Creating ask Message...");
-		QDataAskMessage msg = new QDataAskMessage(ask);
+		QDataMessage<Ask> msg = new QDataMessage<Ask>(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 

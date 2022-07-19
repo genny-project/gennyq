@@ -10,7 +10,7 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QCmdMessage;
+import life.genny.qwandaq.message.QCommandMessage;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -70,10 +70,9 @@ public class QToastMessageManager implements QMessageProvider {
 		body = MergeUtils.merge(body, contextMap);
 
 		// build toast command msg
-		QCmdMessage msg = new QCmdMessage("TOAST", style);
+		QCommandMessage msg = new QCommandMessage("TOAST", style);
 		msg.setMessage(body);
 		msg.setToken(userToken.getToken());
-		msg.setSend(true);
 
 		// send to frontend
 		KafkaUtils.writeMsg("webcmds", msg);

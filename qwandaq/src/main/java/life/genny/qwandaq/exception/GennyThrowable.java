@@ -1,13 +1,12 @@
 package life.genny.qwandaq.exception;
 
+import static life.genny.qwandaq.constants.GennyConstants.PACKAGE_PREFIX;
+
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
-
-import static life.genny.qwandaq.constants.GennyConstants.PACKAGE_PREFIX;
 
 /**
  * A genny exception interface for GennyException and GennyRuntimeException.
@@ -15,7 +14,7 @@ import static life.genny.qwandaq.constants.GennyConstants.PACKAGE_PREFIX;
  * @author Jasper Robison
  * @author Bryn Meachem
  */
-public interface GennyExceptionIntf {
+public interface GennyThrowable {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     

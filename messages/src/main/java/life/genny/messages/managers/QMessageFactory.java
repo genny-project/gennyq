@@ -4,13 +4,13 @@ import java.lang.invoke.MethodHandles;
 
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.message.QBaseMSGMessageType;
+import life.genny.qwandaq.message.CommunicationType;
 
 public class QMessageFactory {
 
 	private static final Logger log = Logger.getLogger(QMessageFactory.class);
 
-	public QMessageProvider getMessageProvider(QBaseMSGMessageType messageType) {
+	public QMessageProvider getMessageProvider(CommunicationType messageType) {
 
 		QMessageProvider provider;
 

@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.message.QSearchMessage;
+import life.genny.qwandaq.message.QDataMessage;
 
 public class TestJob {
 
@@ -21,13 +21,13 @@ public class TestJob {
 	 * Creates a new TestJob and adds it to a {@link LoadTestJobs} ConcurrentHashMap
 	 * 
 	 * @param jobLoader {@link LoadTestJobs} to use
-	 * @param searchMessage {@link QSearchMessage} to user
+	 * @param searchMessage The search message
 	 */
-	public TestJob(LoadTestJobs jobLoader, QSearchMessage searchMessage) {
+	public TestJob(LoadTestJobs jobLoader, QDataMessage<SearchEntity> searchMessage) {
 		this.start = Instant.now();
 		this.uuid = UUID.randomUUID().toString().toUpperCase();
 
-		SearchEntity entity = searchMessage.getSearchEntity();
+		SearchEntity entity = searchMessage.getItems().get(0);
 
 		entity.setCode(entity.getCode() + "_" + this.getUuid());
 		this.code = entity.getCode();

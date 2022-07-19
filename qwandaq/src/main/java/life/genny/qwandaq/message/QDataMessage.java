@@ -1,122 +1,95 @@
 package life.genny.qwandaq.message;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-public abstract class QDataMessage extends QMessage implements QDataMessageIntf {
+public class QDataMessage <T> extends QMessage {
 
-  /**
-   * @return String
-   */
-  @Override
-  public String getData_type() {
-    return data_type;
-  }
+    private static final String MESSAGE_TYPE = "DATA_MSG";
+	private String dataType;
+	private Boolean replace = false;
+	private String aliasCode;
+	private List<T> items = new ArrayList<>();
+	private Long total;
 
-  /**
-   * @param data_type the data type to set
-   */
-  public void setData_type(final String data_type) {
-    this.data_type = data_type;
-  }
+    public QDataMessage() {
+		super(MESSAGE_TYPE);
+	}
 
-  private static final String MESSAGE_TYPE = "DATA_MSG";
-  private String data_type;
-  private Boolean delete = false;
-  private Boolean replace = false;
-  private boolean shouldDeleteLinkedBaseEntities;
-  private String aliasCode;
+	public QDataMessage(T item) {
+		super(MESSAGE_TYPE);
+		add(item);
+		updateDataType();
+	}
 
-  public QDataMessage() {
+	public QDataMessage(List<T> list) {
+		super(MESSAGE_TYPE);
+		add(list);
+		updateDataType();
+	}
 
-    // super();
-  }
+	public static String getMessageType() {
+		return MESSAGE_TYPE;
+	}
 
-  public QDataMessage(final String data_type) {
+	public String getDataType() {
+		return dataType;
+	}
 
-    super(MESSAGE_TYPE);
-    this.data_type = data_type;
-  }
+	public void setDataType(String dataType) {
+		this.dataType = dataType;
+	}
 
-  /**
-   * @return Boolean
-   */
-  @Override
-  public Boolean getDelete() {
-    return delete;
-  }
+	public Boolean getReplace() {
+		return replace;
+	}
 
-  /**
-   * @param delete the delete status to set
-   */
-  public void setDelete(final Boolean delete) {
-    this.delete = delete;
-  }
+	public void setReplace(Boolean replace) {
+		this.replace = replace;
+	}
 
-  /**
-   * @return String
-   */
-  @Override
-  public String toString() {
-    return "QDataMessage [data_type=" + data_type + ", delete=" + delete + "]";
-  }
+	public String getAliasCode() {
+		return aliasCode;
+	}
 
-  /**
-   * @return String
-   */
-  public String getAliasCode() {
-    return aliasCode;
-  }
+	public void setAliasCode(String aliasCode) {
+		this.aliasCode = aliasCode;
+	}
 
-  /**
-   * @param aliasCode the aliasCode to set
-   */
-  public void setAliasCode(final String aliasCode) {
-    this.aliasCode = aliasCode;
-  }
+	public List<T> getItems() {
+        return items;
+    }
 
-  /**
-   * @return the replace
-   */
-  public Boolean getReplace() {
-    return replace;
-  }
+    public void setItems(List<T> items) {
+        this.items = items;
+		this.total = Long.valueOf(items.size());
+    }
 
-  /**
-   * @param replace the replace to set
-   */
-  public void setReplace(Boolean replace) {
-    this.replace = replace;
-  }
+	public Long getTotal() {
+        return total;
+    }
 
-  /**
-   * @return the shouldDeleteLinkedBaseEntities
-   */
-  public Object getShouldDeleteLinkedBaseEntities() {
-    return shouldDeleteLinkedBaseEntities;
-  }
+    public void setTotal(Long total) {
+        this.total = total;
+    }
 
-  /**
-   * @return boolean
-   */
-  public boolean isShouldDeleteLinkedBaseEntities() {
-    return (boolean) getShouldDeleteLinkedBaseEntities();
-  }
+    public void add(T item) {
+		this.items.add(item);
+		this.total = Long.valueOf(items.size());
+	}
 
-  /**
-   * @param shouldDeleteLinkedBaseEntities the shouldDeleteLinkedBaseEntities to
-   *                                       set
-   */
-  public void setShouldDeleteLinkedBaseEntities(Object shouldDeleteLinkedBaseEntities) {
-    this.shouldDeleteLinkedBaseEntities = (Boolean) shouldDeleteLinkedBaseEntities;
-  }
+	public void add(List<T> list) {
+		this.items.addAll(list);
+		this.total = Long.valueOf(items.size());
+	}
 
-  public Boolean isDelete() {
-    return this.delete;
-  }
-
-  public Boolean isReplace() {
-    return this.replace;
-  }
+	public void updateDataType() {
+		if (items.isEmpty())
+			return;
+		setDataType(items.get(0).getClass().getName());
+	}
 
 }

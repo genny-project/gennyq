@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_psKGMOU9EDqdkewuEFk4_Q" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_mkTt4elCEDqyUvOpxqPrew" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_eventMessageItem" structureRef="life.genny.qwandaq.message.QEventMessage"/>
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
@@ -14,8 +14,8 @@
   <bpmn2:interface id="_215E8D3C-AA93-42FA-AA3D-7ED10509D484_ServiceInterface" name="life.genny.kogito.common.service.BaseEntityService" implementationRef="life.genny.kogito.common.service.BaseEntityService">
     <bpmn2:operation id="_215E8D3C-AA93-42FA-AA3D-7ED10509D484_ServiceOperation" name="getBaseEntityQuestionGroup" implementationRef="getBaseEntityQuestionGroup"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_37491701-FB56-4FFB-8403-56C5084BBD4D" name="Default Collaboration">
-    <bpmn2:participant id="_521C0443-B70F-4A0E-B24A-3BD6E0721D3B" name="Pool Participant" processRef="edit"/>
+  <bpmn2:collaboration id="_19A9083D-5CBF-42D9-8054-A0C44CFAAB22" name="Default Collaboration">
+    <bpmn2:participant id="_82D09CF6-08C7-48CA-88A5-0840AE13DE67" name="Pool Participant" processRef="edit"/>
   </bpmn2:collaboration>
   <bpmn2:process id="edit" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Edit" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[Edit an Item]]></bpmn2:documentation>
@@ -129,9 +129,9 @@
       <bpmn2:outgoing>_9572DC60-677E-4D82-AB76-CAAF0FA0D1CE</bpmn2:outgoing>
       <bpmn2:script>System.out.println("Running Edit!");
 
-questionCode = eventMessage.getData().getCode();
-sourceCode = eventMessage.getData().getSourceCode();
-targetCode = eventMessage.getData().getTargetCode();
+questionCode = eventMessage.getCode();
+sourceCode = eventMessage.getSourceCode();
+targetCode = eventMessage.getTargetCode();
 kcontext.setVariable("questionCode", questionCode);
 kcontext.setVariable("sourceCode", sourceCode);
 kcontext.setVariable("targetCode", targetCode);</bpmn2:script>
@@ -250,7 +250,7 @@ kcontext.setVariable("targetCode", targetCode);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_psKGMOU9EDqdkewuEFk4_Q</bpmn2:source>
-    <bpmn2:target>_psKGMOU9EDqdkewuEFk4_Q</bpmn2:target>
+    <bpmn2:source>_mkTt4elCEDqyUvOpxqPrew</bpmn2:source>
+    <bpmn2:target>_mkTt4elCEDqyUvOpxqPrew</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

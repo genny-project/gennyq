@@ -11,7 +11,7 @@ import org.jboss.logging.Logger;
  * @author Bryn Meacham
  * @author Jasper Robison
  */
-public class GennyException extends Exception implements GennyExceptionIntf {
+public class GennyException extends Exception implements GennyThrowable {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     

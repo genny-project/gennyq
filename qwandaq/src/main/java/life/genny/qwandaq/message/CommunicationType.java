@@ -1,6 +1,6 @@
 package life.genny.qwandaq.message;
 
-public enum QBaseMSGMessageType {
+public enum CommunicationType {
 	DEFAULT,
 	SMS,
 	EMAIL,

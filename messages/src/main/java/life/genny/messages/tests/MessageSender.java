@@ -5,7 +5,7 @@
 //import life.genny.messages.managers.QMessageFactory;
 //import life.genny.qwandaq.entity.BaseEntity;
 //import life.genny.qwandaq.message.QBaseMSGMessageType;
-//import life.genny.qwandaq.message.QMessageGennyMSG;
+//import life.genny.qwandaq.message.QCommsMessage;
 //import life.genny.qwandaq.utils.BaseEntityUtils;
 //import org.jose4j.json.internal.json_simple.parser.ParseException;
 //import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@
 //
 //        if (beRecipient != null) {
 //            /* Init Sendgrid to Agent Msg */
-//            QMessageGennyMSG msg = new QMessageGennyMSG.Builder("MSG_AGT2_ASSIGNED")
+//            QCommsMessage msg = new QCommsMessage.Builder("MSG_AGT2_ASSIGNED")
 //                    .addRecipient(beRecipient)
 ////                    .addContext("INTERN", newBe)
 ////                    .addContext("URL:ENCODE", "SBE_INTERNS"+userToken.getJTI().toUpperCase()+"/ACT_PRI_EVENT_VIEW/"+newBe.getCode())

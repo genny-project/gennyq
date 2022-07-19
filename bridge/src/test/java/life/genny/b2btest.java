@@ -35,7 +35,7 @@ public class b2btest {
 
 		gennyItems.add(gennyItem);
 
-		QDataB2BMessage dataMsg = new QDataB2BMessage(gennyItems.toArray(new GennyItem[0]));
+		QDataB2BMessage dataMsg = new QDataB2BMessage(gennyItems);
 		dataMsg.setAliasCode("STATELESS");
 
 		Jsonb jsonb = JsonbBuilder.create();

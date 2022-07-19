@@ -22,8 +22,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -75,23 +74,13 @@ public class FrontendService {
 		log.info("targetCode :" + targetCode);
 		log.info("processId :" + processId);
 
-		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
+		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 
 		BaseEntity target = null;
 		if ("NON_EXISTENT".equals(targetCode)) {
 			target = new BaseEntity(targetCode, targetCode);
 		} else {
-			target = beUtils.getBaseEntityByCode(targetCode);
-		}
-
-		if (source == null) {
-			log.error("No Source entity found!");
-			return null;
-		}
-
-		if (target == null) {
-			log.error("No Target entity found!");
-			return null;
+			target = beUtils.getBaseEntity(targetCode);
 		}
 
 		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
@@ -108,7 +97,7 @@ public class FrontendService {
 
 		// create ask msg from asks
 		log.info("Creating ask Message...");
-		QDataAskMessage msg = new QDataAskMessage(ask);
+		QDataMessage<Ask> msg = new QDataMessage<Ask>(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 
@@ -133,7 +122,7 @@ public class FrontendService {
 		}
 
 		// Find the DEF
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity defBE = defUtils.getDEF(target);
 		log.info("ProcessBE identified as a " + defBE);
 
@@ -149,7 +138,7 @@ public class FrontendService {
 	 */
 	public String setupProcessBE(String targetCode, String askMessageJson) {
 
-		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		QDataMessage<Ask> askMsg = jsonb.fromJson(askMessageJson, QDataMessage.class);
 
 		// init entity and force the realm
 		log.info("Creating Process Entity...");
@@ -161,7 +150,7 @@ public class FrontendService {
 		if ("NON_EXISTENT".equals(targetCode)) {
 			target = new BaseEntity(targetCode, targetCode);
 		} else {
-			target = beUtils.getBaseEntityByCode(targetCode);
+			target = beUtils.getBaseEntity(targetCode);
 		}
 
 		// find all allowed attribute codes
@@ -215,7 +204,7 @@ public class FrontendService {
 		}
 
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		QDataAskMessage askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		QDataMessage<Ask> askMsg = jsonb.fromJson(askMessageJson, QDataMessage.class);
 
 		recursivelyUpdateAskTarget(askMsg.getItems().get(0), processBE);
 
@@ -252,7 +241,7 @@ public class FrontendService {
 	public void sendBaseEntitys(String processBEJson, String askMessageJson, String processId, String defCode, String targetCode) {
 
 		BaseEntity processBE = null;
-		QDataAskMessage askMsg = null;
+		QDataMessage<Ask> askMsg = null;
 
 		try {
 			processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
@@ -261,7 +250,7 @@ public class FrontendService {
 			return;
 		}
 		try {
-			askMsg = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+			askMsg = jsonb.fromJson(askMessageJson, QDataMessage.class);
 		} catch (java.lang.NullPointerException e) {
 			log.error("Ask json must not be null or have null entry! -> " + askMessageJson);
 			return;
@@ -287,11 +276,10 @@ public class FrontendService {
 		}
 
 		// send entity front end
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+		QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>();
 		msg.add(processBE);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
 
 		log.info("Sending "+processBE.getBaseEntityAttributes().size()+" processBE attributes");
@@ -339,18 +327,16 @@ public class FrontendService {
 			if (codes != null && !codes.isEmpty()) {
 
 				// grab selection baseentitys
-				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
+				QDataMessage<BaseEntity> selectionMsg = new QDataMessage<BaseEntity>();
 				for (String code : codes) {
 					if ((code.startsWith("{startDate")) ||(code.startsWith("endDate"))) {
 						log.error("BE:"+target.getCode()+":attribute :"+attribute.getCode()+":BAD code "+code);
 						continue;
 					}
-					BaseEntity selection = beUtils.getBaseEntityByCode(code);
-					if (selection == null)
-						throw new ItemNotFoundException(code);
+					BaseEntity selection = beUtils.getBaseEntity(code);
 
 					// Ensure only the PRI_NAME attribute exists in the selection
-					selection = beUtils.addNonLiteralAttributes(selection);
+					selection = BaseEntityUtils.addNonLiteralAttributes(selection);
 					selection = beUtils.privacyFilter(selection, Collections.singletonList("PRI_NAME"));
 					selectionMsg.add(selection);
 				}
@@ -397,10 +383,10 @@ public class FrontendService {
 	 * @param askMsgJson The ask message to send
 	 */
 	public void sendQDataAskMessage(String askMessageJson, String processBEJson) {
-		log.info("sendQDataAskMessage: "+askMessageJson);
+
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
-		log.info("sendQDataAskMessage: got to here");
+		QDataMessage<Ask> askMessage = jsonb.fromJson(askMessageJson, QDataMessage.class);
+
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
 
@@ -410,9 +396,9 @@ public class FrontendService {
 		
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 		askMessage.getItems().set(0, ask);
-		log.info("sendQDataAskMessage: got to here too");
+		log.info("sendQDataMessage<Ask>: got to here too");
 		askMessage.setToken(userToken.getToken());
-		askMessage.setTag("sendQDataAskMessage");
+		askMessage.setTag("sendQDataMessage<Ask>");
 		KafkaUtils.writeMsg("webcmds", askMessage);
 	}
 
@@ -423,13 +409,13 @@ public class FrontendService {
 	 */
 	public void sendDropdownItems(String askMessageJson) {
 
-		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		QDataMessage<Ask> askMessage = jsonb.fromJson(askMessageJson, QDataMessage.class);
 
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
-		BaseEntity target = beUtils.getBaseEntityByCode(ask.getTargetCode());
+		BaseEntity target = beUtils.getBaseEntity(ask.getTargetCode());
 
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+		QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>();
 		recursivelyHandleDropdownAttributes(ask, target, msg);
 		msg.setTag("SendDropDownItems");
 
@@ -443,7 +429,7 @@ public class FrontendService {
 	 * @param target The target entity used in finding values
 	 * @param ask    The msg to add entities to
 	 */
-	public void recursivelyHandleDropdownAttributes(Ask ask, BaseEntity target, QDataBaseEntityMessage msg) {
+	public void recursivelyHandleDropdownAttributes(Ask ask, BaseEntity target, QDataMessage<BaseEntity> msg) {
 
 		// recursively handle any child asks
 		if (ask.getChildAsks() != null) {
@@ -460,7 +446,7 @@ public class FrontendService {
 
 			// fetch entity for each and add to msg
 			for (String code : codes) {
-				BaseEntity be = beUtils.getBaseEntityByCode(code);
+				BaseEntity be = beUtils.getBaseEntityOrNull(code);
 
 				if (be != null) {
 					msg.add(be);

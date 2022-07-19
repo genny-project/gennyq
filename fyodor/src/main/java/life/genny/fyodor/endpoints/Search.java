@@ -1,12 +1,9 @@
 package life.genny.fyodor.endpoints;
 
-import java.util.UUID;
-
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -19,7 +16,6 @@ import org.jboss.logging.Logger;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.FyodorSearch;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.ServiceToken;
@@ -56,38 +52,6 @@ public class Search {
 	ServiceToken serviceToken;
 
 	Jsonb jsonb = JsonbBuilder.create();
-
-	@GET
-	@Path("/api/schedule")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response schedule() {
-
-		String uuid = UUID.randomUUID().toString().toUpperCase();
-
-		log.info("Scheduling test event for " + uuid);
-
-		if (userToken == null) {
-			log.error("Bad or no header token in Search POST provided");
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
-
-
-		log.info("GENNY_TOKEN = " + userToken);
-		log.info("SERVICE_TOKEN = " + serviceToken);
-
-		BaseEntity user = beUtils.getUserBaseEntity();
-
-		// TODO
-		// new QScheduleMessage.Builder("SCHEDULE_TEST")
-		// 	.setEventMessage("TEST_EVENT", uuid)
-		// 	.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
-		// 	.setGennyToken(userToken)
-		// 	.schedule();
-
-		log.info("Done!");
-
-		return Response.ok().build();
-	}
 
 	/**
 	 * A POST request for search results based on a 

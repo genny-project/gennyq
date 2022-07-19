@@ -24,7 +24,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
@@ -34,9 +33,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.exception.NullParameterException;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataAttributeMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 
@@ -147,7 +144,7 @@ public class QwandaUtils {
 		try {
 			for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
-				QDataAttributeMessage msg = new QDataAttributeMessage();
+				QDataMessage<Attribute> msg = new QDataMessage<>();
 
 				int attributesLoaded = currentPage * CHUNK_LOAD_SIZE;
 
@@ -512,7 +509,7 @@ public class QwandaUtils {
 		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
 
 		List<Ask> childAsks = new ArrayList<>();
-		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
+		QDataMessage<BaseEntity> entityMessage = new QDataMessage<BaseEntity>();
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
@@ -564,7 +561,7 @@ public class QwandaUtils {
 
 		ask.setDisabled(disabled);
 
-		QDataAskMessage askMsg = new QDataAskMessage(ask);
+		QDataMessage<Ask> askMsg = new QDataMessage<>(ask);
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		String json = jsonb.toJson(askMsg);
@@ -606,7 +603,7 @@ public class QwandaUtils {
 						e.printStackTrace();
 					}
 				}
-				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
+				QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>(be);
 				msg.setReplace(true);
 				msg.setToken(userToken.getToken());
 				KafkaUtils.writeMsg("webcmds", msg);
@@ -639,7 +636,7 @@ public class QwandaUtils {
 			if (ea.isPresent()) {
 				ea.get().setFeedback(prefix + ":" + message);
 
-				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
+				QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>(be);
 				msg.setReplace(true);
 				msg.setToken(userToken.getToken());
 				KafkaUtils.writeMsg("webcmds", msg);

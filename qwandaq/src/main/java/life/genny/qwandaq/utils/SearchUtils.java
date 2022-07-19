@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -30,11 +29,8 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.MessageData;
-import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QEventDropdownMessage;
-import life.genny.qwandaq.message.QSearchMessage;
+import life.genny.qwandaq.message.QDataMessage;
+import life.genny.qwandaq.message.QDropdownMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
@@ -81,27 +77,14 @@ public class SearchUtils {
 		String json = jsonb.toJson(searchBE);
 		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
-		if (response == null) {
-			log.error("Null response from " + uri);
-			return null;
-		}
-
 		Integer status = response.statusCode();
 
 		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
 			log.error("Bad response status " + status + " from " + uri);
 		}
 
-		try {
-			// deserialise and grab entities
-			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
-			return Arrays.asList(results.getEntities());
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
-
-		return null;
+		QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+		return results.getEntities();
 	}
 
 	/**
@@ -118,10 +101,29 @@ public class SearchUtils {
 		String json = jsonb.toJson(searchBE);
 		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
-		if (response == null) {
-			log.error("Null response from " + uri);
-			return null;
+		Integer status = response.statusCode();
+
+		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
+			log.error("Bad response status " + status + " from " + uri);
 		}
+
+		QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+		return results.getCodes();
+	}
+
+	/**
+	 * Call the Fyodor API to fetch a count of {@link BaseEntity}
+	 * objects using a {@link SearchEntity} object.
+	 *
+	 * @param searchBE A {@link SearchEntity} object used to determine the results
+	 * @return A count of items
+	 */
+	public Long countBaseEntitys(SearchEntity searchBE) {
+
+		// build uri, serialize payload and fetch data from fyodor
+		String uri = GennySettings.fyodorServiceUrl() + "/api/search/count";
+		String json = jsonb.toJson(searchBE);
+		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		Integer status = response.statusCode();
 
@@ -129,16 +131,8 @@ public class SearchUtils {
 			log.error("Bad response status " + status + " from " + uri);
 		}
 
-		try {
-			// deserialise and grab entities
-			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
-			return Arrays.asList(results.getCodes());
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
-
-		return null;
+		QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
+		return results.getTotal();
 	}
 
 	/**
@@ -258,7 +252,7 @@ public class SearchUtils {
 		searchEntity.updateActionIndex();
 
 		// package and send search message to fyodor
-		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
+		QDataMessage<SearchEntity> searchBeMsg = new QDataMessage<>(searchEntity);
 		searchBeMsg.setToken(userToken.getToken());
 		searchBeMsg.setDestination("webcmds");
 		KafkaUtils.writeMsg("search_events", searchBeMsg);
@@ -281,40 +275,6 @@ public class SearchUtils {
 		facts.put("userToken", userToken);
 		facts.put("searchBE", searchBE);
 
-		Map<String, Object> results = null;
-		// Map<String, Object> results = new RuleFlowGroupWorkItemHandler()
-		// 		.executeRules(
-		// 				beUtils,
-		// 				facts,
-		// 				"SearchFilters",
-		// 				"SearchUtils:getUserFilters");
-
-		if (results != null) {
-
-			Object obj = results.get("payload");
-
-			if (obj instanceof QBulkMessage) {
-				QBulkMessage bulkMsg = (QBulkMessage) results.get("payload");
-
-				// Check if bulkMsg not empty
-				if (bulkMsg.getMessages().length > 0) {
-
-					// Get the first QDataBaseEntityMessage from bulkMsg
-					QDataBaseEntityMessage msg = bulkMsg.getMessages()[0];
-
-					// Check if msg is not empty
-					if (!msg.getItems().isEmpty()) {
-
-						// Extract the baseEntityAttributes from the first BaseEntity
-						Set<EntityAttribute> filtersSet = msg.getItems().get(0).getBaseEntityAttributes();
-						filters.addAll(filtersSet);
-					}
-				}
-			}
-		} else {
-			log.error("results are null");
-			filters = new ArrayList<EntityAttribute>();
-		}
 		return filters;
 	}
 
@@ -612,7 +572,7 @@ public class SearchUtils {
 
 				// send the results
 				log.info("Sending Results: " + finalResultList.size());
-				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(finalResultList);
+				QDataMessage<BaseEntity> msg = new QDataMessage<>(finalResultList);
 				msg.setToken(userToken.getToken());
 				msg.setReplace(true);
 				msg.setParentCode(searchBE.getCode());
@@ -636,7 +596,7 @@ public class SearchUtils {
 				} else {
 					log.error("SearchEntity is NULLLLL!!!!");
 				}
-				QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
+				QDataMessage<SearchEntity> searchMsg = new QDataMessage<>(searchBE);
 				searchMsg.setToken(userToken.getToken());
 				searchMsg.setReplace(true);
 				KafkaUtils.writeMsg("webcmds", searchMsg);
@@ -723,16 +683,13 @@ public class SearchUtils {
 	 */
 	public void performDropdownSearch(Ask ask) {
 
-		// setup message data
-		MessageData messageData = new MessageData();
-		messageData.setCode(ask.getQuestion().getCode());
-		messageData.setSourceCode(ask.getSourceCode());
-		messageData.setTargetCode(ask.getTargetCode());
-		messageData.setValue("");
-
 		// setup dropdown message and assign data
-		QEventDropdownMessage msg = new QEventDropdownMessage();
-		msg.setData(messageData);
+		QDropdownMessage msg = new QDropdownMessage();
+		// msg.setData(messageData);
+		// messageData.setCode(ask.getQuestion().getCode());
+		// messageData.setSourceCode(ask.getSourceCode());
+		// messageData.setTargetCode(ask.getTargetCode());
+		// messageData.setValue("");
 		msg.setAttributeCode(ask.getQuestion().getAttribute().getCode());
 
 		// publish to events for dropkick

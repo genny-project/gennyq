@@ -19,7 +19,7 @@ import org.eclipse.microprofile.context.ThreadContext;
 import java.util.List;
 
 import life.genny.messages.process.MessageProcessor;
-import life.genny.qwandaq.message.QMessageGennyMSG;
+import life.genny.qwandaq.message.QCommsMessage;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -81,12 +81,12 @@ public class InternalConsumer {
 				log.error("UserToken is null!");
 				return;
 			}
-			QMessageGennyMSG message = null;
+			QCommsMessage message = null;
 
 			// Try Catch to stop consumer from dying upon error
 			try {
 				log.info("Deserialising Message");
-				message = jsonb.fromJson(data, QMessageGennyMSG.class);
+				message = jsonb.fromJson(data, QCommsMessage.class);
 			} catch (Exception e) {
 				log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
 				log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);

@@ -1,5 +1,7 @@
 package life.genny.kogito.common.service;
 
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
+
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -11,13 +13,11 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
-import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataAttributeMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -73,7 +73,7 @@ public class InitService {
 		log.info("Sending Project " + project.getCode());
 
 		// configure msg and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(project);
+		QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>(project);
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("PROJECT");
 		KafkaUtils.writeMsg("webdata", msg);
@@ -89,7 +89,7 @@ public class InitService {
 		log.info("Sending User " + user.getCode());
 
 		// configure msg and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(user);
+		QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>(user);
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("USER");
 
@@ -108,8 +108,8 @@ public class InitService {
 
 		for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
-			QDataAttributeMessage msg = CacheUtils.getObject(productCode,
-					"ATTRIBUTES_P" + currentPage, QDataAttributeMessage.class);
+			QDataMessage<Attribute> msg = CacheUtils.getObject(productCode,
+					"ATTRIBUTES_P" + currentPage, QDataMessage.class);
 
 			// set token and send
 			msg.setToken(userToken.getToken());
@@ -143,7 +143,7 @@ public class InitService {
 		log.info("Sending "+pcms.size()+" PCMs");
 
 		// configure ask msg
-		QDataAskMessage askMsg = new QDataAskMessage();
+		QDataMessage<Ask> askMsg = new QDataMessage<Ask>();
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		askMsg.setAliasCode("PCM_INIT_ASK_MESSAGE");
@@ -166,7 +166,7 @@ public class InitService {
 		KafkaUtils.writeMsg("webdata", askMsg);
 
 		// configure msg and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
+		QDataMessage<BaseEntity> msg = new QDataMessage<BaseEntity>(pcms);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		msg.setAliasCode("PCM_INIT_MESSAGE");
@@ -183,7 +183,7 @@ public class InitService {
 		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
 
 		// configure msg and send
-		QDataAskMessage msg = new QDataAskMessage(ask);
+		QDataMessage<Ask> msg = new QDataMessage<Ask>(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 

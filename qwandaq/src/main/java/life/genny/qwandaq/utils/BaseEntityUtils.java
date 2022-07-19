@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
@@ -29,7 +30,6 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.DebugException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.exception.NullParameterException;
-import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
@@ -176,43 +176,6 @@ public class BaseEntityUtils {
 		}
 
 		return entity;
-	}
-
-	/**
-	 * Call the Fyodor API to fetch a count of {@link BaseEntity}
-	 * objects using a {@link SearchEntity} object.
-	 *
-	 * @param searchBE A {@link SearchEntity} object used to determine the results
-	 * @return A count of items
-	 */
-	public Long getBaseEntityCount(SearchEntity searchBE) {
-
-		// build uri, serialize payload and fetch data from fyodor
-		String uri = GennySettings.fyodorServiceUrl() + "/api/search/count";
-		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
-
-		if (response == null) {
-			log.error("Null response from " + uri);
-			return null;
-		}
-
-		Integer status = response.statusCode();
-
-		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Bad response status " + status + " from " + uri);
-		}
-
-		try {
-			// deserialise and grab entities
-			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
-			return results.getTotal();
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
-
-		return null;
 	}
 
 	/**

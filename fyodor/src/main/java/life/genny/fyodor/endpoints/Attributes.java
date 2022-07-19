@@ -1,7 +1,7 @@
 package life.genny.fyodor.endpoints;
 
-import io.vertx.core.http.HttpServerRequest;
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -12,13 +12,16 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.message.QDataAttributeMessage;
+import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 
 /**
@@ -83,7 +86,7 @@ public class Attributes {
 
 		List<Attribute> attributeList = databaseUtils.findAttributes(realm, 0, 10000, "");
 
-		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList.toArray(new Attribute[0]));
+		QDataMessage<Attribute> attributeMsg = new QDataMessage<>(attributeList);
 		return Response.ok(attributeMsg).build();
 	}
 
