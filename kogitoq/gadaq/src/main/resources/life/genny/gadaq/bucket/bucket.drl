@@ -1,0 +1,29 @@
+package life.genny.gadaq.bucket;
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.UserToken;
+
+rule "BUCKET_CODES"
+	ruleflow-group 'BucketSearches'
+	no-loop true
+	when
+		not  SearchEntity (code == "BUCKET_CODES")
+		userToken : UserToken()
+	then
+		System.out.println("Generate "+drools.getRule().getName() );
+
+		List<String> bucketCodes = new ArrayList<String>();
+		bucketCodes.add("SBE_AVAILABLE_INTERNS");
+		bucketCodes.add("SBE_APPLIED_APPLICATIONS");
+		bucketCodes.add("SBE_SHORTLISTED_APPLICATIONS");
+		bucketCodes.add("SBE_INTERVIEWED_APPLICATIONS");
+		bucketCodes.add("SBE_OFFERED_APPLICATIONS");
+		bucketCodes.add("SBE_PLACED_APPLICATIONS");
+		bucketCodes.add("SBE_INPROGRESS_APPLICATIONS");
+
+		CacheUtils.putObject(userToken.getProductCode(), "BUCKET_CODES", bucketCodes);
+end

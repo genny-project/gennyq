@@ -1,0 +1,69 @@
+package life.genny.gadaq.bucket;
+
+import java.util.List;
+import java.util.ArrayList;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.utils.CacheUtils;
+import org.kie.api.runtime.process.WorkflowProcessInstance;
+import life.genny.qwandaq.models.GennySettings;
+
+rule "interviewedApp"
+    ruleflow-group 'BucketSearches'
+     no-loop true
+    when
+       not  SearchEntity (code == "SBE_INTERVIEWED_APPLICATIONS")
+        userToken : UserToken()
+     then
+     	System.out.println("   Generate "+drools.getRule().getName() );
+        SearchEntity searchBE = new SearchEntity(drools.getRule().getName(), "Interview")
+                              .addSort("PRI_CREATED", "Created", SearchEntity.Sort.DESC)
+                              .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "APP_%")
+                              .addFilter("PRI_STAGE", SearchEntity.StringFilter.EQUAL, "INTERVIEWED")
+                              .addFilter("PRI_DISABLED", false)
+
+                              .addAssociatedColumn("PRI_INTERN_CODE", "PRI_NAME", "Name")
+                              .addAssociatedColumn("LNK_INTERNSHIP", "LNK_HOST_COMPANY", "PRI_NAME", "Host Company")
+                              .addAssociatedColumn("LNK_INTERNSHIP", "PRI_NAME", "Internship")
+                              .addAssociatedColumn("LNK_EDU_PROVIDER", "PRI_NAME", "Education Provider")
+                              /* .addColumn("PRI_ASSOC_HC", "Host Company") */
+                              /* .addColumn("PRI_TITLE", "Internship") */
+                              .addColumn("PRI_INTERVIEW_START_DATETIME", "Interview Date")
+                              .addColumn("PRI_INTERVIEW_TYPE", "Interview Type")
+
+                              .addColumn("PRI_ASSOC_INDUSTRY", "Industry")
+                              .addColumn("PRI_INTERN_STUDENT_ID", "Student ID")
+                              .addColumn("PRI_ASSOC_EP", "Edu Provider")
+                              .addColumn("PRI_ASSOC_OCCUPATION", "Occupation")
+                              .addColumn("PRI_ADDRESS_FULL", "Address")
+
+                              .addColumn("PRI_TRANSPORT", "Transport")
+                              .addColumn("PRI_INTERN_MOBILE", "Mobile")
+                              .addColumn("PRI_INTERN_EMAIL", "Email")
+
+                              .addColumn("PRI_STATUS_COLOR", " ")
+                              .addColumn("PRI_IMAGE_URL", " ")
+                              .addColumn("PRI_IMAGE_SECONDARY", " ")
+							  .addAssociatedColumn("PRI_INTERN_CODE", "LNK_AGENT", "PRI_NAME", "Agent Name")
+							  .addAssociatedColumn("PRI_INTERN_CODE", "LNK_AGENT", "PRI_IMAGE_URL", "Agent Image")
+							  .addAssociatedColumn("LNK_COMP_INTERNSHIP", "PRI_COLOUR", "Completing Internship Type Colour")
+
+							  /* Wildcard blacklist */
+							  /* .addBlacklist("PRI_ROLES_AND_RESPONSIBILITIES") */
+							  /* .addBlacklist("PRI_BASE_LEARNING_OUTCOMES") */
+
+							  /* Wildcard Whitelisted Attributes */
+							  .addWhitelist("PRI_NAME")
+
+                              .setDisplayMode("CARD:MAIN_5")
+                              /* Actions */
+                              .addAction("PRI_EVENT_VIEW_APPLICATION", "View Internship Summary")
+                              .addAction("PRI_EVENT_VIEW", "View Intern Profile")
+							  .setCachable(true)
+							  .setWildcardDepth(2)
+                              .setPageStart(0)
+                              .setPageSize(GennySettings.defaultBucketSize());
+
+
+      CacheUtils.putObject(userToken.getProductCode(), searchBE.getCode(), searchBE);
+end
