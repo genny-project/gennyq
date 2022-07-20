@@ -20,9 +20,9 @@
 
 package life.genny.qwandaq.validation;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import javax.persistence.Column;
@@ -56,8 +56,6 @@ import life.genny.qwandaq.converter.StringListConverter;
  * @version     %I%, %G%
  * @since       1.0
  */
-
-
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "validation", 
@@ -68,24 +66,10 @@ indexes = {
 uniqueConstraints = @UniqueConstraint(columnNames = {"code", "realm"}))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-
-public class Validation extends CodedEntity implements Serializable {
-
-	/** 
-	 * @return String
-	 */
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "Validation [regex=" + regex + "]";
-	}
+public class Validation extends CodedEntity {
 
 	private static final long serialVersionUID = 1L;
-
 	private static final String DEFAULT_CODE_PREFIX = "VLD_";
-	
 	private static final String DEFAULT_REGEX = ".*";
 
 	/**
@@ -96,14 +80,12 @@ public class Validation extends CodedEntity implements Serializable {
 	@Type(type = "text")
 	@Column(name = "regex", updatable = true, nullable = false)	
 	private String regex;
-	
-	
+
 	@Column(name = "selection_grp",  length = 512,updatable = true, nullable = true)	
-	  @Convert(converter = StringListConverter.class)	
+	@Convert(converter = StringListConverter.class)	
 	private List<String> selectionBaseEntityGroupList;
 	
 	private Boolean recursiveGroup = false;
-	
 	private Boolean multiAllowed = false;
 
 	@Column(name = "options", length = 2048, updatable = true, nullable = true)
@@ -111,120 +93,44 @@ public class Validation extends CodedEntity implements Serializable {
 	
 	@Column(name = "errormsg", length = 280, updatable = true, nullable = true)
 	private String errormsg;
-	
-	
-	/**
-	 * @return the options
-	 */
-	public String getOptions() {
-		return options;
-	}
 
-	/**
-	 * @param options the options to set
-	 */
-	public void setOptions(String options) {
-		this.options = options;
-	}
-	
-	
-	
-	/** 
-	 * @return String
-	 */
-	public String getErrormsg() {
-		return errormsg;
-	}
-
-	
-	/** 
-	 * @param errormsg the error msg to set
-	 */
-	public void setErrormsg(String errormsg) {
-		this.errormsg = errormsg;
-	}
-
-	/**
-	 * Constructor.
-	 */
-	@SuppressWarnings("unused")
-	public Validation()
-	{
+	public Validation() {
 		super();
 	}
 	
-	public Validation(String aCode, String aName, String aRegex) throws PatternSyntaxException
-	{
-		super(aCode, aName);
-		setRegex(aRegex);
+	public Validation(String code, String name, String regex) throws PatternSyntaxException {
+		super(code, name);
+		setRegex(regex);
 	}
 	
-	public Validation(String aCode, String aName, String aRegex,String aOptions) throws PatternSyntaxException
-	{
-		super(aCode, aName);
-		setRegex(aRegex);
-		setOptions(aOptions);
-	}
+    public String getOptions() {
+        return options;
+    }
 
-	
-	public Validation(String aCode, String aName, String aSelectionBaseEntityGroup, Boolean recursive, Boolean multiAllowed) throws PatternSyntaxException
-	{
-		super(aCode, aName);
-		setRegex(DEFAULT_REGEX);
-		List<String> aSelectionBaseEntityGroupList = new CopyOnWriteArrayList<String>();
-		aSelectionBaseEntityGroupList.add(aSelectionBaseEntityGroup);
-		setSelectionBaseEntityGroupList(aSelectionBaseEntityGroupList);
-		setMultiAllowed(multiAllowed);
-	}
+    public void setOptions(String options) {
+        this.options = options;
+    }
 
-	public Validation(String aCode, String aName, String aSelectionBaseEntityGroup, Boolean recursive, Boolean multiAllowed,String aOptions) throws PatternSyntaxException
-	{
-		super(aCode, aName);
-		setRegex(DEFAULT_REGEX);
-		List<String> aSelectionBaseEntityGroupList = new CopyOnWriteArrayList<String>();
-		aSelectionBaseEntityGroupList.add(aSelectionBaseEntityGroup);
-		setSelectionBaseEntityGroupList(aSelectionBaseEntityGroupList);
-		setMultiAllowed(multiAllowed);
-		setOptions(aOptions);
-	}
-	
-	public Validation(String aCode, String aName, List<String> aSelectionBaseEntityGroupList, Boolean recursive, Boolean multiAllowed) throws PatternSyntaxException
-	{
-		super(aCode, aName);
-		setRegex(DEFAULT_REGEX);
-		setSelectionBaseEntityGroupList(aSelectionBaseEntityGroupList);
-		setMultiAllowed(multiAllowed);
-	}
-	
-	public Validation(String aCode, String aName, List<String> aSelectionBaseEntityGroupList, Boolean recursive, Boolean multiAllowed,String aOptions) throws PatternSyntaxException
-	{
-		super(aCode, aName);
-		setRegex(DEFAULT_REGEX);
-		setSelectionBaseEntityGroupList(aSelectionBaseEntityGroupList);
-		setMultiAllowed(multiAllowed);
-		setOptions(aOptions);
-	}
+    public String getErrormsg() {
+        return errormsg;
+    }
 
-	/**
-	 * @return the regex
-	 */
+    public void setErrormsg(String errormsg) {
+        this.errormsg = errormsg;
+    }
+
 	public String getRegex() {
 		return regex;
 	}
 
-	/**
-	 * @param regex the regex to set
-	 */
 	public void setRegex(String regex) throws PatternSyntaxException {
-		if (regex!=null) {
-			validateRegex(regex);  // confirm the regex is valid, if invalid throws PatternSyntaxException
+		if (regex != null) {
+			validateRegex(regex); 
 		} else {
 			regex = ".*";
 		}
 		this.regex = regex;
 	}
-
-	
 	
 	/**
 	 * @return the selectionBaseEntityGroup
@@ -254,14 +160,12 @@ public class Validation extends CodedEntity implements Serializable {
 		this.recursiveGroup = recursiveGroup;
 	}
 
-	
 	/**
 	 * @return the multiAllowed
 	 */
 	public Boolean getMultiAllowed() {
 		return multiAllowed;
 	}
-
 	
 	/** 
 	 * @return Boolean
@@ -269,7 +173,6 @@ public class Validation extends CodedEntity implements Serializable {
 	public Boolean isMultiAllowed() {
 		return getMultiAllowed();
 	}
-
 	
 	/** 
 	 * @return Boolean
@@ -289,7 +192,7 @@ public class Validation extends CodedEntity implements Serializable {
 	 * @param regex the regex to validate
 	 */
 	static public void validateRegex(String regex) {
-		java.util.regex.Pattern p = java.util.regex.Pattern.compile(regex);
+		Pattern.compile(regex);
 	}
 
 	/**
@@ -300,4 +203,10 @@ public class Validation extends CodedEntity implements Serializable {
 	static public String getDefaultCodePrefix() {
 		return DEFAULT_CODE_PREFIX;
 	}
+
+	@Override
+	public String toString() {
+		return "Validation [regex=" + regex + "]";
+	}
+
 }

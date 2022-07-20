@@ -16,11 +16,6 @@
 
 package life.genny.qwandaq.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -31,6 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
@@ -43,16 +39,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.AnswerLink;
-import life.genny.qwandaq.CodedEntity;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.exception.BadDataException;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -61,10 +48,13 @@ import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
 
-
-
-// import org.hibernate.annotations.CascadeType;
-
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.AnswerLink;
+import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.exception.BadDataException;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -85,8 +75,6 @@ import org.jboss.logging.Logger;
  * @since 1.0
  */
 
-@XmlRootElement
-@XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
 	@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { 
 	"code",
@@ -115,71 +103,31 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	private static final String DEFAULT_CODE_PREFIX = "BAS_";
 
-	public static final String PRI_NAME = "PRI_NAME";
-	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
-	public static final String PRI_PHONE = "PRI_PHONE";
-	public static final String PRI_ADDRESS_FULL = "PRI_ADDRESS_FULL";
-	public static final String PRI_EMAIL = "PRI_EMAIL";
-
-	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade=CascadeType.ALL)
-	@JsonBackReference(value = "entityAttribute")
-	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
 	@Filters({
 			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
 			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
 	})
 	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
 
-	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
-	@JsonBackReference(value = "entityEntity")
-	// @Cascade({ CascadeType.MERGE, CascadeType.REMOVE })
-	/* Stores the links of BaseEntity to another BaseEntity */
 	private Set<EntityEntity> links = new LinkedHashSet<>();
 
 	@Transient
 	@JsonbTransient
 	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
-	/*@JsonIgnore
-	@XmlTransient
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
-	@Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	@JsonbTransient*/
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
 
-	@XmlTransient
-	@Transient
-	private Boolean fromCache = false;
-
-	@JsonIgnore
 	@JsonbTransient
-	@XmlTransient
 	@Transient
 	private transient Map<String, EntityAttribute> attributeMap = null;
 
 	/**
-	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
-	 */
-	public Map<String, EntityAttribute> getAttributeMap() {
-		return attributeMap;
-	}
-
-	/**
-	 * @param attributeMap the attributeMap to set
-	 */
-	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
-		this.attributeMap = attributeMap;
-	}
-
-	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public BaseEntity() {
-		// super();
-		// dummy
+		super();
 	}
 
 	/**
@@ -228,7 +176,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * @return the baseEntityAttributes
 	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Set<EntityAttribute> getBaseEntityAttributes() {
 		return baseEntityAttributes;
 	}
@@ -250,8 +197,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * @return the links
 	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	// @JsonbTransient
 	public Set<EntityEntity> getLinks() {
 		return links;
 	}
@@ -275,7 +220,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * @return the questions
 	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Set<EntityQuestion> getQuestions() {
 		return this.questions;
 	}
@@ -297,13 +241,20 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		this.questions.addAll(questions);
 	}
 
-	/**
+    public Map<String, EntityAttribute> getAttributeMap() {
+        return attributeMap;
+    }
+
+    public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
+        this.attributeMap = attributeMap;
+    }
+
+    /**
 	 * getDefaultCodePrefix This method is expected to be overridden in specialised
 	 * child classes.
 	 * 
 	 * @return the default Code prefix for this class.
 	 */
-
 	static public String getDefaultCodePrefix() {
 		return DEFAULT_CODE_PREFIX;
 	}
@@ -486,7 +437,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		if (existing.isPresent()) {
 			existing.get().setValue(value);
 			existing.get().setWeight(weight);
-			// removeAttribute(existing.get().getAttributeCode());
 		} else {
 			this.getBaseEntityAttributes().add(entityAttribute);
 		}
@@ -666,15 +616,9 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return Set
 	 */
 	@Transient
-	@XmlTransient
-	@JsonIgnore
 	@JsonbTransient
 	public Set<EntityAttribute> merge(final BaseEntity entity) {
 		final Set<EntityAttribute> changes = new HashSet<EntityAttribute>();
-
-		// go through the attributes in the entity and check if already existing , if so
-		// then check the
-		// value and override, else add new attribute
 
 		for (final EntityAttribute ea : entity.getBaseEntityAttributes()) {
 			final Attribute attribute = ea.getAttribute();
@@ -684,23 +628,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 				final Object newValue = this.getValue(ea);
 				if (newValue != null) {
 					if (!newValue.equals(oldValue)) {
-						// override the old value // TODO allow versioning
-						try {
-							this.setValue(attribute, this.getValue(ea), ea.getValueDouble());
-						} catch (BadDataException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+						this.setValue(attribute, this.getValue(ea), ea.getValueDouble());
 					}
 				}
 			} else {
-				// add this new entityAttribute
-				try {
-					addAttribute(ea);
-					changes.add(ea);
-				} catch (final BadDataException e) {
-					// TODO - log error and continue
-				}
+				addAttribute(ea);
+				changes.add(ea);
 			}
 		}
 
@@ -712,10 +645,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param attribute
 	 * @return T
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	private <T> T getValue(final Attribute attribute) {
 		// TODO Dumb find for attribute. needs a hashMap
 
@@ -732,10 +663,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param ea  the ea to get
 	 * @return T
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	private <T> T getValue(final EntityAttribute ea) {
 		return ea.getValue();
 
@@ -746,10 +675,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param attributeCode the attributeCode to get with
 	 * @return Optional
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> getValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -770,10 +697,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param attributeCode the code of the attribute value to get
 	 * @return Optional
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> getLoopValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -789,10 +714,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param attributeCode the code of the attribute value to get
 	 * @return String
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public String getValueAsString(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -815,10 +738,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param <T>           The Type to return
 	 * @return T
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> T getValue(final String attributeCode, T defaultValue) {
 
 		Optional<T> result = getValue(attributeCode);
@@ -838,10 +759,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param <T>           The Type to return
 	 * @return T
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> T getLoopValue(final String attributeCode, T defaultValue) {
 
 		Optional<T> result = getLoopValue(attributeCode);
@@ -857,10 +776,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param attributeCode the attribute code
 	 * @return Boolean
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public Boolean is(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -886,10 +803,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return Optional
 	 * @throws BadDataException if value cannot be set
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final Attribute attribute, T value, Double weight) throws BadDataException {
 
 		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attribute.getCode());
@@ -917,10 +832,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return Optional
 	 * @throws BadDataException if value cannot be set
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final Attribute attribute, T value) throws BadDataException {
 		return setValue(attribute, value, 0.0);
 	}
@@ -934,10 +847,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return Optional
 	 * @throws BadDataException if value cannot be set
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final String attributeCode, T value) throws BadDataException {
 		return setValue(attributeCode, value, 0.0);
 	}
@@ -952,10 +863,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return Optional
 	 * @throws BadDataException if value cannot be set
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final String attributeCode, T value, Double weight) throws BadDataException {
 		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attributeCode);
 
@@ -1050,68 +959,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	}
 
 	/**
-	 * @return the fromCache
-	 */
-	public Boolean getFromCache() {
-		return fromCache;
-	}
-
-	/**
-	 * @return Boolean
-	 */
-	public Boolean isFromCache() {
-		return getFromCache();
-	}
-
-	/**
-	 * @param fromCache the fromCache to set
-	 */
-	public void setFromCache(Boolean fromCache) {
-		this.fromCache = fromCache;
-	}
-
-	/**
-	 * @return String[]
-	 */
-	@Transient
-	@JsonbTransient
-	public String[] getPushCodes() {
-		return getPushCodes(new String[0]);
-	}
-
-	/**
-	 * @param initialCodes the initialCodes to set
-	 * @return String[]
-	 */
-	@Transient
-	@JsonbTransient
-	public String[] getPushCodes(String... initialCodes) {
-		// go through all the links
-		Set<String> codes = new HashSet<String>();
-		codes.addAll(new HashSet<>(Arrays.asList(initialCodes)));
-		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
-			for (EntityAttribute ea : this.baseEntityAttributes) {
-				// if (ea.getAttributeCode().startsWith("LNK_")) {
-				String value = ea.getValueString();
-				if (value != null) {
-					if (value.startsWith("[") && !value.equals("[]")) {
-						value = value.substring(2, value.length() - 2);
-					}
-					if (value.startsWith("PER") || (value.startsWith("CPY"))) {
-						codes.add(value);
-					}
-				}
-			}
-			// }
-			if (this.getCode().startsWith("PER") || (this.getCode().startsWith("CPY"))) {
-				codes.add(this.getCode());
-			}
-		}
-
-		return codes.toArray(new String[0]);
-	}
-
-	/**
 	 * @param prefix the prefix to set
 	 * @return Optional&lt;EntityAttribute&gt;
 	 */
@@ -1153,7 +1000,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		} else {
 			attributeMap = null;
 		}
-
 	}
 
 }

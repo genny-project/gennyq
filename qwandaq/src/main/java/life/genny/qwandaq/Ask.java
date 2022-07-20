@@ -16,15 +16,10 @@
 
 package life.genny.qwandaq;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
@@ -35,15 +30,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
-import javax.validation.Valid;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.querydsl.core.annotations.QueryExclude;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
@@ -76,8 +63,6 @@ import life.genny.qwandaq.exception.BadDataException;
  * @version %I%, %G%
  * @since 1.0
  */
-@XmlRootElement
-@XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "ask", 
 	indexes = { 
 		@Index(columnList = "id", name = "code_idx"),
@@ -98,7 +83,6 @@ public class Ask extends CoreEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlTransient
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "question_id", nullable = false)
 	private Question question;
@@ -118,42 +102,23 @@ public class Ask extends CoreEntity {
 	private Double weight = 0.0;
 
 	private Long parentId = 0L;
-
-	private Boolean formTrigger = false;
-	private Boolean createOnTrigger = false;
-
 	private Ask[] childAsks;
-
-	// @Embedded
-	// @Valid
-	// @JsonInclude(Include.NON_NULL)
-	// private AnswerList answerList;
-
-	@Embedded
-	@Valid
-	@JsonInclude(Include.NON_NULL)
-	private ContextList contextList;
 
 	@Transient
 	private String processId = "no-idq";
 
-	/**
-	 * Constructor.
-	 * dummy for hibernate
-	 */
-	@SuppressWarnings("unused")
 	public Ask() {
+		super();
 	}
 
 	/**
 	 * Constructor.
 	 * 
-	 * @param aQuestion The associated Question
+	 * @param question The associated Question
 	 */
-	public Ask(final Question aQuestion) {
-		super(aQuestion.getName());
-		setQuestion(aQuestion);
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
+	public Ask(final Question question) {
+		super(question.getName());
+		setQuestion(question);
 		this.disabled = false;
 		this.hidden = false;
 	}
@@ -172,7 +137,6 @@ public class Ask extends CoreEntity {
 		this.sourceCode = aSourceCode;
 		this.targetCode = aTargetCode;
 		this.attributeCode = aAttributeCode;
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
 		this.disabled = false;
 		this.hidden = false;
 		this.readonly = false;
@@ -252,7 +216,6 @@ public class Ask extends CoreEntity {
 		this.sourceCode = aSourceCode;
 		this.targetCode = aTargetCode;
 		this.attributeCode = aQuestion.getAttributeCode();
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
 		this.mandatory = aMandatory;
 		this.weight = weight;
 		this.disabled = disabled;
@@ -273,35 +236,7 @@ public class Ask extends CoreEntity {
 	public void setQuestion(final Question question) {
 		this.question = question;
 		this.questionCode = question.getCode();
-		this.attributeCode = question.getAttributeCode(); // .getAttribute().getCode();
-	}
-
-	// /**
-	// * @return the answerList
-	// */
-	// public AnswerList getAnswerList() {
-	// return answerList;
-	// }
-
-	// /**
-	// * @param answerList the answerList to set
-	// */
-	// public void setAnswerList(final AnswerList answerList) {
-	// this.answerList = answerList;
-	// }
-
-	/**
-	 * @return the contextList
-	 */
-	public ContextList getContextList() {
-		return contextList;
-	}
-
-	/**
-	 * @param contextList the contextList to set
-	 */
-	public void setContextList(final ContextList contextList) {
-		this.contextList = contextList;
+		this.attributeCode = question.getAttributeCode();
 	}
 
 	/**
@@ -547,71 +482,6 @@ public class Ask extends CoreEntity {
 	}
 
 	/**
-	 * @return the formTrigger
-	 */
-	public Boolean getFormTrigger() {
-		return formTrigger;
-	}
-
-	/**
-	 * @return the formTrigger
-	 */
-	public Boolean isFormTrigger() {
-		return getFormTrigger();
-	}
-
-	/**
-	 * @param formTrigger the formTrigger to set
-	 */
-	public void setFormTrigger(Boolean formTrigger) {
-		this.formTrigger = formTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean getCreateOnTrigger() {
-		return createOnTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean isCreateOnTrigger() {
-		return getCreateOnTrigger();
-	}
-
-	/**
-	 * @param createOnTrigger the createOnTrigger to set
-	 */
-	public void setCreateOnTrigger(Boolean createOnTrigger) {
-		this.createOnTrigger = createOnTrigger;
-	}
-
-	/**
-	 * @return Boolean
-	 */
-	@XmlTransient
-	@Transient
-	@JsonbTransient
-	@JsonIgnore
-	public Boolean hasTriggerQuestion() {
-		// recurse through the childAsks
-		// this is used to tell if intermediate BaseEntity is to be created and then
-		// copied in upon a trigger question
-		if (this.formTrigger) {
-			return true;
-		} else {
-			if ((this.childAsks != null) && (this.childAsks.length > 0)) {
-				for (Ask childAsk : this.childAsks) {
-					return childAsk.hasTriggerQuestion();
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * Clone an Ask
 	 *
 	 * @param ask the Ask to clone
@@ -630,13 +500,8 @@ public class Ask extends CoreEntity {
 		newAsk.readonly = ask.getReadonly();
 		newAsk.weight = ask.getWeight();
 		newAsk.parentId = ask.getParentId();
-		newAsk.formTrigger = ask.getFormTrigger();
-		newAsk.createOnTrigger = ask.getCreateOnTrigger();
 		if (ask.getChildAsks() != null && ask.getChildAsks().length > 0) {
 			newAsk.childAsks = ask.getChildAsks();
-		}
-		if (ask.getContextList() != null) {
-			newAsk.contextList = ask.getContextList();
 		}
 		return newAsk;
 	}

@@ -101,10 +101,6 @@ public class Question extends CodedEntity implements Serializable {
 	@JoinColumn(name = "attribute_id", nullable = false)
 	private Attribute attribute;
 
-	@Embedded
-	@Valid
-	private ContextList contextList;
-
 	private String attributeCode;
 
 	private Boolean mandatory = false;
@@ -302,28 +298,6 @@ public class Question extends CodedEntity implements Serializable {
 	public void setAttribute(final Attribute attribute) {
 		this.attribute = attribute;
 	}
-
-	/**
-	 * @return the contextList
-	 */
-	public ContextList getContextList() {
-		return contextList;
-	}
-
-	/**
-	 * @param contextList the contextList to set
-	 */
-	public void setContextList(final ContextList contextList) {
-		this.contextList = contextList;
-	}
-
-	// /**
-	// * @return the childQuestions
-	// */
-	// public Set<QuestionQuestion> getChildQuestions() {
-	// return childQuestions;
-	// }
-	//
 
 	/**
 	 * @return the attributeCode
