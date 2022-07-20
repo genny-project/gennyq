@@ -167,9 +167,13 @@ public class BaseEntityUtils {
 		
 		// check in database if not in cache
 		if (entity == null) {			
-			log.debug(code + " not in cache for product " + productCode);
+			
 			try {
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
+				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
+				if (entity != null) {
+					CacheUtils.putObject(userToken.getProductCode(), entity.getCode(), entity);
+				}
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}

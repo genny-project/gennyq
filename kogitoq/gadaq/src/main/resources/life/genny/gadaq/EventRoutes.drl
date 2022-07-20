@@ -66,6 +66,23 @@ then
 	retract(msg);
 end
 
+
+rule RouteTestForm 
+salience 1000
+when
+	msg: QEventMessage( data.code matches "QUE_ADD_AGENT" )
+	kogitoUtils : KogitoUtils()
+	userToken : UserToken()
+	defUtils : DefUtils()
+then
+	System.out.println("Test Form - forwarding to prd_internmatch");
+	
+	System.out.println("Forwarding Event Message...");
+	KafkaUtils.writeMsg("genny_events", msg);
+	retract(msg);
+end
+
+
 rule RouteAddItem 
 when
 	msg: QEventMessage( data.code matches "QUE_ADD_.*" )

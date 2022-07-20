@@ -24,7 +24,8 @@ public class ProcessVariables  implements java.io.Serializable {
 
     private BaseEntity processEntity;
 	private String definitionCode;
-	private String targetCode;
+    private String targetCode;
+    private String askMessageJson;
 
 	public String getTargetCode() {
         return targetCode;
@@ -50,6 +51,14 @@ public class ProcessVariables  implements java.io.Serializable {
 
     public void setProcessEntity(BaseEntity processEntity) {
         this.processEntity = processEntity;
+    }
+
+    public String getAskMessageJson() {
+        return askMessageJson;
+    }
+
+    public void setAskMessageJson(String askMessageJson) {
+        this.askMessageJson = askMessageJson;
     }
 
 }
