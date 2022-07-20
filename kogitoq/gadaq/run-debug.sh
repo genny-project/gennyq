@@ -68,5 +68,15 @@ mkdir -p ../kogito-common/src/main/proto
 cp ../kogito-common/target/classes/META-INF/resources/persistence/protobuf/* ../kogito-common/src/main/proto/
 cp target/classes/META-INF/resources/persistence/protobuf/* src/main/proto/
 
-./mvnw clean  quarkus:dev -Ddebug=${GADAQ_DEBUG_PORT} -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
+#./mvnw clean  quarkus:dev -Ddebug=${GADAQ_DEBUG_PORT} -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 
+######export variables locally
+export GENNY_CLIENT_SECRET=31826357-bb96-4af4-a735-7a9c22ba8233
+export GENNY_SERVICE_PASSWORD="OhSudsyWhatAPitty@#0&5"
+export PROJECT_REALM=internmatch
+export PROJECT_URL=http://alyson2.genny.life:10090
+export PRODUCT_CODES=internmatch:mentormatch
+export GADAQ_PORT=10090
+#./mvnw clean  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=6590 -DskipTests=true
+./mvnw clean  quarkus:dev -Ddebug=5580 -Dquarkus.http.port=10090 -DskipTests=true
+######export variables locally

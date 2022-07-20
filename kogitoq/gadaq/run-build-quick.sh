@@ -1,0 +1,1 @@
+cd ~/projects/genny/gennyq/kogitoq/gadaq && ./build.sh && ./build-docker.sh && docker stop gadaq && docker rm gadaq && cd ~/projects/genny/genny-main && ./run.sh dev1 up

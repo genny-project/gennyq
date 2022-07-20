@@ -1,6 +1,8 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -87,6 +89,7 @@ public class SearchService {
 	 * Perform a Bucket search.
 	 */
 	public void sendBuckets() {
+
 	}
 
 	/**
@@ -123,4 +126,27 @@ public class SearchService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
+	public void getBuckets(String eventCode){
+		log.info("========================getBuckets()========================");
+		String searchCode = "SBE_"+StringUtils.removeStart(eventCode, "QUE_");
+		log.info("Sending Table :: " + searchCode);
+
+		List<SearchEntity> bucketCodes = new ArrayList<>();
+		bucketCodes.add(new SearchEntity("SBE_AVAILABLE_INTERNS", "AVAILABLE INTERNS"));
+		bucketCodes.add(new SearchEntity("SBE_APPLIED_APPLICATIONS", "APPLIED APPLICATIONS"));
+		bucketCodes.add(new SearchEntity("SBE_SHORTLISTED_APPLICATIONS", "SHORTLISTED APPLICATIONS"));
+		bucketCodes.add(new SearchEntity("SBE_INTERVIEWED_APPLICATIONS", "INTERVIEWED APPLICATIONS"));
+		bucketCodes.add(new SearchEntity("SBE_OFFERED_APPLICATIONS", "OFFERED APPLICATIONS"));
+		bucketCodes.add(new SearchEntity("SBE_PLACED_APPLICATIONS", "PLACED APPLICATIONS"));
+		bucketCodes.add(new SearchEntity("SBE_INPROGRESS_APPLICATIONS", "INPROGRESS APPLICATIONS"));
+
+		bucketCodes.stream().forEach(e -> {
+			e.setRealm(userToken.getProductCode());
+			CacheUtils.putObject(userToken.getProductCode(), e.getCode(), e);
+
+			searchUtils.searchTable(e.getCode());
+			sendSearchPCM("PCM_TABLE", searchCode);
+		});
+
+	}
 }

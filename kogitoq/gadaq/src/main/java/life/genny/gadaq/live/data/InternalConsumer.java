@@ -71,6 +71,10 @@ public class InternalConsumer {
 		else
 			kogitoUtils.funnelAnswers(answers);
 
+		log.info("=========================kogitoUtils.initBucketRule()=========================");
+		kogitoUtils.initBucketRule();
+		log.info("=========================kogitoUtils.initBucketRule()=========================");
+
 		scope.destroy();
 		// pass it on to the next stage of inference pipeline
 		QDataAnswerMessage msg = new QDataAnswerMessage(answers);

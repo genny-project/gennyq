@@ -6,15 +6,16 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.message.QEventMessage;
 
 rule "BUCKET_CODES"
 	ruleflow-group 'BucketSearches'
 	no-loop true
 	when
-		not  SearchEntity (code == "BUCKET_CODES")
+		msg: QEventMessage( data.code == "QUE_TAB_BUCKET_VIEW" )
 		userToken : UserToken()
 	then
-		System.out.println("Generate "+drools.getRule().getName() );
+		System.out.println("RULE =====================QUE_TAB_BUCKET_VIEW");
 
 		List<String> bucketCodes = new ArrayList<String>();
 		bucketCodes.add("SBE_AVAILABLE_INTERNS");
@@ -25,5 +26,5 @@ rule "BUCKET_CODES"
 		bucketCodes.add("SBE_PLACED_APPLICATIONS");
 		bucketCodes.add("SBE_INPROGRESS_APPLICATIONS");
 
-		CacheUtils.putObject(userToken.getProductCode(), "BUCKET_CODES", bucketCodes);
+		CacheUtils.putObject(userToken.getProductCode(), "SBE_TAB_BUCKET_VIEW", bucketCodes);
 end
