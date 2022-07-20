@@ -55,7 +55,7 @@ public class QEmailMessageManager implements QMessageProvider {
 		// test data
 		log.info("Showing what is in recipient BE, code=" + recipientBe.getCode());
 		for (EntityAttribute ea : recipientBe.getBaseEntityAttributes()) {
-			log.info("attributeCode=" + ea.getAttributeCode() + ", value=" + ea.getObjectAsString());
+			log.info("attributeCode=" + ea.getAttributeCode() + ", value=" + ea.getValueAsString());
 		}
 
 		String recipient = recipientBe.getValue("PRI_EMAIL", null);

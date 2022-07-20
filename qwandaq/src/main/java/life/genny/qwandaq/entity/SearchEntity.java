@@ -313,7 +313,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText("COL_" + attributeCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, colIndex);
-			ea.setIndex(colIndex.intValue());
+			ea.setWeight(colIndex);
 			colIndex += 1.0;
 		} catch (BadDataException e) {
 			log.error("Bad Column Initialisation");
@@ -346,7 +346,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText("ACT_" + attributeCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, actionIndex);
-			ea.setIndex(actionIndex.intValue());
+			ea.setWeight(actionIndex);
 			ea.setConfirmationFlag(confirmationFlag);
 			actionIndex += 1.0;
 		} catch (BadDataException e) {
@@ -367,7 +367,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText("ACT_" + attributeCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, 0.0);
-			ea.setIndex(0);
+			ea.setWeight(0.0);
 		} catch (BadDataException e) {
 			log.error("Bad Column Initialisation");
 		}
@@ -386,7 +386,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText("SCH_ACT_" + attributeCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, searchActionIndex);
-			ea.setIndex(searchActionIndex.intValue());
+			ea.setWeight(searchActionIndex);
 			searchActionIndex += 1.0;
 		} catch (BadDataException e) {
 			log.error("Bad Column Initialisation");
@@ -406,7 +406,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText("SCH_ACT_" + attributeCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, 0.0);
-			ea.setIndex(0);
+			ea.setWeight(0.0);
 		} catch (BadDataException e) {
 			log.error("Bad Column Initialisation");
 		}
@@ -426,7 +426,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText("ROW_ACT_" + attributeCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, 0.0);
-			ea.setIndex(0);
+			ea.setWeight(0.0);
 		} catch (BadDataException e) {
 			log.error("Bad Column Initialisation");
 		}
@@ -445,7 +445,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText(searchCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, searchIndex);
-			ea.setIndex(searchIndex.intValue());
+			ea.setWeight(searchIndex);
 			searchIndex += 1.0;
 		} catch (BadDataException e) {
 			log.error("Bad Linked Search Initialisation");
@@ -466,7 +466,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText(searchCode+"."+association, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, searchIndex);
-			ea.setIndex(searchIndex.intValue());
+			ea.setWeight(searchIndex);
 			searchIndex += 1.0;
 		} catch (BadDataException e) {
 			log.error("Bad Linked Search Initialisation");
@@ -488,7 +488,7 @@ public class SearchEntity extends BaseEntity {
 		AttributeText attributeColumn = new AttributeText("CMB_"+searchCode, columnName);
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, searchIndex);
-			ea.setIndex(combinedSearchIndex.intValue());
+			ea.setWeight(combinedSearchIndex);
 			combinedSearchIndex += 1.0;
 		} catch (BadDataException e) {
 			log.error("Bad Combined Search Initialisation");
@@ -512,7 +512,7 @@ public class SearchEntity extends BaseEntity {
 		try {
 			EntityAttribute ea = addAttribute(attributeColumn, colIndex);
 			ea.setValue(associatedLinkedBaseEntityCodeAttribute);
-			ea.setIndex(colIndex.intValue());
+			ea.setWeight(colIndex);
 			colIndex += 1.0;
 		} catch (BadDataException e) {
 			log.error("Bad Associated Column Initialisation");

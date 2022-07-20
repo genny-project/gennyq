@@ -1,30 +1,23 @@
 package life.genny.qwandaq.attribute;
 
+import java.io.Serializable;
+
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
 import life.genny.qwandaq.entity.BaseEntity;
 
 @Embeddable
-public class EntityAttributeId implements java.io.Serializable {
+public class EntityAttributeId implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@ManyToOne ( )
-	//	@JsonBackReference(value="entityAttribute")
-	@JsonManagedReference(value="entityAttribute")
-	@JsonIgnoreProperties("baseEntityAttributes")
+	@ManyToOne()
 	@JsonbTransient
 	public BaseEntity baseEntity;
 
 	@ManyToOne
-	@JsonBackReference(value="attribute")
-	//	@JsonIgnore
 	public Attribute attribute;
 
 	/** 

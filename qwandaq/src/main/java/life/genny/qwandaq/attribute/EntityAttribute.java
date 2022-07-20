@@ -1,27 +1,18 @@
 package life.genny.qwandaq.attribute;
 
-import java.io.StringReader;
+import java.io.Serializable;
 import java.math.BigDecimal;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.Cacheable;
@@ -36,14 +27,10 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 import org.javamoney.moneta.Money;
@@ -51,7 +38,10 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.converter.MoneyConverter;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.DebugException;
+import life.genny.qwandaq.exception.NullParameterException;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
@@ -67,11 +57,15 @@ import life.genny.qwandaq.entity.BaseEntity;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute implements java.io.Serializable, Comparable<Object> {
+public class EntityAttribute implements Serializable, Comparable<Object> {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
 	private static final long serialVersionUID = 1L;
+
+	final static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:SS");
+	final static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	final static DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
 	@Column
 	private String baseEntityCode;
@@ -89,16 +83,11 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	private String realm;
 
 	@Transient
-	@XmlTransient
-	@Column
-	private Integer index = 0; // used to assist with ordering
-
-	@Transient
 	private String feedback = null;
 
 	@EmbeddedId
 	@Column
-	public EntityAttributeId pk = new EntityAttributeId();
+	private EntityAttributeId pk = new EntityAttributeId();
 
 	/**
 	 * Stores the Created UMT DateTime that this object was created
@@ -167,6 +156,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	/**
 	 * Store the relative importance of the attribute for the baseEntity
 	 */
+	@Column
 	private Double weight;
 
 	/**
@@ -190,60 +180,23 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	/**
 	 * Constructor.
 	 * 
-	 * @param baseEntity
-	 *                   the entity that needs to contain attributes
-	 * @param attribute
-	 *                   the associated Attribute
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 */
-	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
-		autocreateCreated();
-		setBaseEntity(baseEntity);
-		setAttribute(attribute);
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-							// attribute from scoring.
-		}
-		setWeight(weight);
-		setReadonly(false);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param baseEntity
-	 *                   the entity that needs to contain attributes
-	 * @param attribute
-	 *                   the associated Attribute
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 * @param value
-	 *                   the value associated with this attribute
+	 * @param baseEntity the entity that needs to contain attributes
+	 * @param attribute the associated Attribute
+	 * @param weight the weighted importance of this attribute (relative to the other attributes)
+	 * @param value the value associated with this attribute
 	 */
 	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
 		autocreateCreated();
 		setBaseEntity(baseEntity);
 		setAttribute(attribute);
 		this.setPrivacyFlag(attribute.getDefaultPrivacyFlag());
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
-		}
-		setWeight(weight);
-		// Assume that Attribute Validation has been performed
-		if (value != null) {
-			setValue(value);
-		}
+		setWeight(weight != null ? weight : 0.0);
+		setValue(value);
 	}
 
 	/**
 	 * @return EntityAttributeId
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	public EntityAttributeId getPk() {
 		return pk;
@@ -257,8 +210,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	}
 
 	/**
-	 * @param baseEntityCode
-	 *                       the baseEntityCode to set
+	 * @param baseEntityCode the baseEntityCode to set
 	 */
 	public void setBaseEntityCode(final String baseEntityCode) {
 		this.baseEntityCode = baseEntityCode;
@@ -296,7 +248,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @return Attribute
 	 */
 	@Transient
-	// @JsonIgnore
 	public Attribute getAttribute() {
 		return getPk().getAttribute();
 	}
@@ -510,20 +461,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		this.valueBoolean = valueBoolean;
 	}
 
-	// /**
-	// * @return the valueDateRange
-	// */
-	// public Range<LocalDate> getValueDateRange() {
-	// return valueDateRange;
-	// }
-	//
-	// /**
-	// * @param valueDateRange the valueDateRange to set
-	// */
-	// public void setValueDateRange(Range<LocalDate> valueDateRange) {
-	// this.valueDateRange = valueDateRange;
-	// }
-
 	/**
 	 * @return the valueMoney
 	 */
@@ -582,7 +519,39 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		this.readonly = readonly;
 	}
 
-	/**
+	public static Logger getLog() {
+        return log;
+    }
+
+    public static long getSerialversionuid() {
+        return serialVersionUID;
+    }
+
+    public String getAttributeName() {
+        return attributeName;
+    }
+
+    public void setAttributeName(String attributeName) {
+        this.attributeName = attributeName;
+    }
+
+    public String getRealm() {
+        return realm;
+    }
+
+    public void setRealm(String realm) {
+        this.realm = realm;
+    }
+
+    public Boolean getConfirmationFlag() {
+        return confirmationFlag;
+    }
+
+    public void setConfirmationFlag(Boolean confirmationFlag) {
+        this.confirmationFlag = confirmationFlag;
+    }
+
+    /**
 	 * @return the feedback
 	 */
 	public String getFeedback() {
@@ -611,7 +580,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @return Date
 	 */
 	@Transient
-	@JsonIgnore
 	@JsonbTransient
 	public Date getCreatedDate() {
 
@@ -624,7 +592,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @return Date
 	 */
 	@Transient
-	@JsonIgnore
 	@JsonbTransient
 	public Date getUpdatedDate() {
 
@@ -642,43 +609,41 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @return T
 	 */
 	@SuppressWarnings("unchecked")
-	@JsonIgnore
 	@Transient
-	@XmlTransient
 	@JsonbProperty(nillable = true)
 	public <T> T getValue() {
-		if ((getPk() == null) || (getPk().attribute == null)) {
-			return getLoopValue();
-		}
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
-		switch (dataType) {
+
+		Attribute attribute = pk.getAttribute();
+		DataType dataType = attribute.getDataType();
+
+		switch (dataType.getClassName()) {
 			case "java.lang.Integer":
 			case "Integer":
-				return (T) getValueInteger();
+				return (T) valueInteger;
 			case "java.time.LocalDateTime":
 			case "LocalDateTime":
-				return (T) getValueDateTime();
+				return (T) valueDateTime;
 			case "java.time.LocalTime":
 			case "LocalTime":
-				return (T) getValueTime();
+				return (T) valueTime;
 			case "java.lang.Long":
 			case "Long":
-				return (T) getValueLong();
+				return (T) valueLong;
 			case "java.lang.Double":
 			case "Double":
-				return (T) getValueDouble();
+				return (T) valueDouble;
 			case "java.lang.Boolean":
 			case "Boolean":
-				return (T) getValueBoolean();
+				return (T) valueBoolean;
 			case "java.time.LocalDate":
 			case "LocalDate":
-				return (T) getValueDate();
+				return (T) valueDate;
 			case "org.javamoney.moneta.Money":
 			case "Money":
-				return (T) getValueMoney();
+				return (T) valueMoney;
 			case "java.lang.String":
 			default:
-				return (T) getValueString();
+				return (T) valueString;
 		}
 
 	}
@@ -689,393 +654,129 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @param <T>   the Type
 	 * @param value the value to set
 	 */
-	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> void setValue(final Object value) {
-		setValue(value, false);
-	}
 
-	/**
-	 * Set the value, specifying a lock status
-	 *
-	 * @param <T>   the Type
-	 * @param value the value to set
-	 * @param lock  should lock
-	 */
-	@SuppressWarnings("unchecked")
-	@JsonIgnore
-	@JsonbTransient
-	@Transient
-	@XmlTransient
-	public <T> void setValue(final Object value, final Boolean lock) {
+		if (value == null)
+			throw new NullParameterException("value");
+		if (readonly)
+			throw new DebugException("Cannot set value of readonly EntityAttribute: " + attributeCode);
 
-		if (this.getReadonly()) {
-			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
-					+ this.attributeCode);
-			return;
-		}
+		Attribute attribute = pk.getAttribute();
+		DataType dataType = attribute.getDataType();
 
-		if (getAttribute() == null) {
-			setLoopValue(value);
-			return;
-		}
+		switch (dataType.getClassName()) {
 
-		if (value instanceof String) {
-			String result = (String) value;
-			try {
-				if (getAttribute().getDataType().getClassName().equalsIgnoreCase(String.class.getCanonicalName())) {
-					setValueString(result);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(LocalDateTime.class.getCanonicalName())) {
-					List<String> formatStrings = Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
-							"yyyy-MM-dd HH:mm:ss",
-							"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-					for (String formatString : formatStrings) {
-						try {
-							Date olddate = new SimpleDateFormat(formatString).parse(result);
-							final LocalDateTime dateTime = olddate.toInstant().atZone(ZoneId.systemDefault())
-									.toLocalDateTime();
-							setValueDateTime(dateTime);
-							break;
+			case "java.lang.Integer":
+			case "Integer":
+				if (value instanceof BigDecimal)
+					setValueInteger(((BigDecimal) value).intValue());
+				else
+					setValueInteger((Integer) value);
+				break;
 
-						} catch (ParseException e) {
-						}
+			case "java.time.LocalDateTime":
+			case "LocalDateTime":
+				setValueDateTime((LocalDateTime) value);
+				break;
 
-					}
+			case "java.time.LocalDate":
+			case "LocalDate":
+				setValueDate((LocalDate) value);
+				break;
 
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
-					Date olddate = null;
-					try {
-						olddate = DateUtils.parseDate(result, "M/y", "yyyy-MM-dd", "yyyy/MM/dd",
-								"yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-					} catch (java.text.ParseException e) {
-						olddate = DateUtils.parseDate(result, "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
-								"yyyy-MM-dd HH:mm:ss",
-								"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-					}
-					final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-					setValueDate(date);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(LocalTime.class.getCanonicalName())) {
-					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-					final LocalTime date = LocalTime.parse(result, formatter);
-					setValueTime(date);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Money.class.getCanonicalName())) {
-					JsonReader reader = Json.createReader(new StringReader(result));
-					JsonObject obj = reader.readObject();
+			case "java.lang.Long":
+			case "Long":
+				if (value instanceof BigDecimal)
+					setValueLong(((BigDecimal) value).longValue());
+				else
+					setValueLong((Long) value);
+				break;
 
-					CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
-					Double amount = Double.valueOf(obj.getString("amount"));
+			case "java.time.LocalTime":
+			case "LocalTime":
+				setValueTime((LocalTime) value);
+				break;
 
-					Money money = Money.of(amount, currency);
-					setValueMoney(money);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Integer.class.getCanonicalName())) {
-					final Integer integer = Integer.parseInt(result);
-					setValueInteger(integer);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Double.class.getCanonicalName())) {
-					final Double d = Double.parseDouble(result);
-					setValueDouble(d);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Long.class.getCanonicalName())) {
-					final Long l = Long.parseLong(result);
-					setValueLong(l);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Boolean.class.getCanonicalName())) {
-					final Boolean b = Boolean.parseBoolean(result);
-					setValueBoolean(b);
-				} else {
-					setValueString(result);
-				}
-			} catch (Exception e) {
-				log.error("Conversion Error :" + value + " for attribute " + getAttribute() + " and SourceCode:"
-						+ this.baseEntityCode);
-			}
-		} else {
+			case "org.javamoney.moneta.Money":
+			case "Money":
+				setValueMoney((Money) value);
+				break;
 
-			switch (this.getAttribute().getDataType().getClassName()) {
+			case "java.lang.Double":
+			case "Double":
+				if (value instanceof BigDecimal)
+					setValueDouble(((BigDecimal) value).doubleValue());
+				else
+					setValueDouble((Double) value);
+				break;
 
-				case "java.lang.Integer":
-				case "Integer":
-					if (value instanceof BigDecimal)
-						setValueInteger(((BigDecimal) value).intValue());
-					else
-						setValueInteger((Integer) value);
-					break;
+			case "java.lang.Boolean":
+			case "Boolean":
+				setValueBoolean((Boolean) value);
+				break;
 
-				case "java.time.LocalDateTime":
-				case "LocalDateTime":
-					setValueDateTime((LocalDateTime) value);
-					break;
-
-				case "java.time.LocalDate":
-				case "LocalDate":
-					setValueDate((LocalDate) value);
-					break;
-
-				case "java.lang.Long":
-				case "Long":
-					if (value instanceof BigDecimal)
-						setValueLong(((BigDecimal) value).longValue());
-					else
-						setValueLong((Long) value);
-					break;
-
-				case "java.time.LocalTime":
-				case "LocalTime":
-					setValueTime((LocalTime) value);
-					break;
-
-				case "org.javamoney.moneta.Money":
-				case "Money":
-					setValueMoney((Money) value);
-					break;
-
-				case "java.lang.Double":
-				case "Double":
-					if (value instanceof BigDecimal)
-						setValueDouble(((BigDecimal) value).doubleValue());
-					else
-						setValueDouble((Double) value);
-					break;
-
-				case "java.lang.Boolean":
-				case "Boolean":
-					setValueBoolean((Boolean) value);
-					break;
-
-				case "java.lang.String":
-				default:
-					if (value instanceof Boolean) {
-						log.error("Value is boolean being saved to String. DataType = "
-								+ this.getAttribute().getDataType().getClassName() + " and attributecode="
-								+ this.getAttributeCode());
-						setValueBoolean((Boolean) value);
-					} else {
-						setValueString((String) value);
-					}
-					break;
-			}
-		}
-
-		// if the lock is set then 'Lock it in Eddie!'.
-		if (lock) {
-			this.setReadonly(true);
-		}
-	}
-
-	/**
-	 * Set the loop value
-	 *
-	 * @param <T>   the Type
-	 * @param value the value to set
-	 */
-	@JsonIgnore
-	@JsonbTransient
-	@Transient
-	@XmlTransient
-	public <T> void setLoopValue(final Object value) {
-		setLoopValue(value, false);
-	}
-
-	/**
-	 * Set the loop value, specifying a lock status
-	 *
-	 * @param <T>   the Type
-	 * @param value the value to set
-	 * @param lock  should lock
-	 */
-	@SuppressWarnings("unchecked")
-	@JsonIgnore
-	@JsonbTransient
-	@Transient
-	@XmlTransient
-	public <T> void setLoopValue(final Object value, final Boolean lock) {
-
-		if (this.getReadonly()) {
-			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
-					+ this.attributeCode);
-			return;
-		}
-
-		if (value instanceof Money)
-			setValueMoney((Money) value);
-		else if (value instanceof Integer)
-			setValueInteger((Integer) value);
-		else if (value instanceof LocalDateTime)
-			setValueDateTime((LocalDateTime) value);
-		else if (value instanceof LocalDate)
-			setValueDate((LocalDate) value);
-		else if (value instanceof Long)
-			setValueLong((Long) value);
-		else if (value instanceof LocalTime)
-			setValueTime((LocalTime) value);
-		else if (value instanceof Double)
-			setValueDouble((Double) value);
-		else if (value instanceof Boolean)
-			setValueBoolean((Boolean) value);
-		else if (value instanceof BigDecimal)
-			// NOTE: This assumes at least one will not be null and defaults to int
-			// otherwise
-			// This could cause issues with deserialisation.
-			if (this.getValueDouble() != null) {
-				setValueDouble(((BigDecimal) value).doubleValue());
-			} else if (this.getValueLong() != null) {
-				setValueLong(((BigDecimal) value).longValue());
-			} else {
-				setValueInteger(((BigDecimal) value).intValue());
-			}
-		else
-			setValueString((String) value);
-
-		if (lock) {
-			this.setReadonly(true);
+			case "java.lang.String":
+			case "String":
+			default:
+				setValueString((String) value);
+				break;
 		}
 	}
 
 	/**
 	 * @return String
 	 */
-	@JsonIgnore
 	@Transient
-	@XmlTransient
 	@JsonbTransient
-	public String getAsString() {
-		if ((getPk() == null) || (getPk().attribute == null)) {
-			return getAsLoopString();
-		}
+	public String getValueAsString() {
 
-		if (getValue() == null) {
-			return null;
-		}
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
-		switch (dataType) {
+		Attribute attribute = pk.getAttribute();
+		DataType dataType = attribute.getDataType();
+
+		switch (dataType.getClassName()) {
 			case "java.lang.Integer":
 			case "Integer":
-				return "" + getValueInteger();
+				return String.valueOf(valueInteger);
+
 			case "java.time.LocalDateTime":
 			case "LocalDateTime":
-				DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
-				Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-				String dout = df.format(datetime);
-				return dout;
-			case "java.lang.Long":
-			case "Long":
-				return "" + getValueLong();
-			case "java.time.LocalTime":
-			case "LocalTime":
-				DateFormat df2 = new SimpleDateFormat("HH:mm");
-				String dout2 = df2.format(getValueTime());
-				return dout2;
-			case "org.javamoney.moneta.Money":
-			case "Money":
-				DecimalFormat decimalFormat = new DecimalFormat("###############0.00");
-				String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
-				return "{\"amount\":" + amount + ",\"currency\":\"" + getValueMoney().getCurrency().getCurrencyCode()
-						+ "\"}";
-			case "java.lang.Double":
-			case "Double":
-				return getValueDouble().toString();
-			case "java.lang.Boolean":
-			case "Boolean":
-				return getValueBoolean() ? "TRUE" : "FALSE";
+				return valueDateTime.format(dateTimeFormatter);
+
 			case "java.time.LocalDate":
 			case "LocalDate":
-				df2 = new SimpleDateFormat("yyyy-MM-dd");
-				Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-				dout2 = df2.format(date);
-				return dout2;
+				return valueDate.format(dateFormatter);
+
+			case "java.lang.Long":
+			case "Long":
+				return String.valueOf(valueLong);
+
+			case "java.time.LocalTime":
+			case "LocalTime":
+				return valueTime.format(timeFormatter);
+
+			case "org.javamoney.moneta.Money":
+			case "Money":
+				String amount = new DecimalFormat("###############0.00").format(getValueMoney().getNumber().doubleValue());
+				return Json.createObjectBuilder()
+					.add("amount", amount)
+					.add("currency", getValueMoney().getCurrency().getCurrencyCode())
+					.build()
+					.toString();
+
+			case "java.lang.Double":
+			case "Double":
+				return String.valueOf(valueDouble);
+
+			case "java.lang.Boolean":
+			case "Boolean":
+				return valueBoolean ? "TRUE" : "FALSE";
 
 			case "java.lang.String":
 			default:
-				return getValueString();
+				return valueString;
 		}
-
-	}
-
-	/**
-	 * @return String
-	 */
-	@JsonIgnore
-	@Transient
-	@XmlTransient
-	@JsonbTransient
-	public String getAsLoopString() {
-
-		String ret = "";
-		if (getValueString() != null) {
-			return getValueString();
-		}
-		if (getValueInteger() != null) {
-			return getValueInteger().toString();
-		}
-		if (getValueDateTime() != null) {
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
-			Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-			String dout = df.format(datetime);
-			return dout;
-		}
-		if (getValueDate() != null) {
-			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
-			Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-			String dout2 = df2.format(date);
-			return dout2;
-		}
-		if (getValueTime() != null) {
-			DateFormat df2 = new SimpleDateFormat("HH:mm");
-			String dout2 = df2.format(getValueTime());
-			return dout2;
-		}
-		if (getValueLong() != null) {
-			return getValueLong().toString();
-		}
-		if (getValueDouble() != null) {
-			return getValueDouble().toString();
-		}
-		if (getValueBoolean() != null) {
-			return getValueBoolean() ? "TRUE" : "FALSE";
-		}
-
-		return ret;
-	}
-
-	/**
-	 * Get the loop value
-	 *
-	 * @param <T> the Type to return
-	 * @return T
-	 */
-	@SuppressWarnings("unchecked")
-	@JsonIgnore
-	@Transient
-	@XmlTransient
-	@JsonbTransient
-	public <T> T getLoopValue() {
-
-		if (getValueString() != null) {
-			return (T) getValueString();
-		} else if (getValueBoolean() != null) {
-			return (T) getValueBoolean();
-		} else if (getValueDateTime() != null) {
-			return (T) getValueDateTime();
-		} else if (getValueDouble() != null) {
-			return (T) getValueDouble();
-		} else if (getValueInteger() != null) {
-			return (T) getValueInteger();
-		} else if (getValueDate() != null) {
-			return (T) getValueDate();
-		} else if (getValueTime() != null) {
-			return (T) getValueTime();
-		} else if (getValueLong() != null) {
-			return (T) getValueLong();
-		}
-
-		return null;
 	}
 
 	/**
@@ -1083,11 +784,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	@Override
 	public int hashCode() {
-
-		HashCodeBuilder hcb = new HashCodeBuilder();
-		hcb.append(baseEntityCode);
-		hcb.append(attributeCode);
-		return hcb.toHashCode();
+		return new HashCodeBuilder().append(baseEntityCode).append(attributeCode).toHashCode();
 	}
 
 	/**
@@ -1097,18 +794,16 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	@Override
 	public boolean equals(Object obj) {
 
-		if (this == obj) {
+		if (this == obj)
 			return true;
-		}
-		if (!(obj instanceof EntityAttribute)) {
+		if (!(obj instanceof EntityAttribute))
 			return false;
-		}
-		EntityAttribute that = (EntityAttribute) obj;
-		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(baseEntityCode, that.baseEntityCode);
-		eb.append(attributeCode, that.attributeCode);
 
-		return eb.isEquals();
+		EntityAttribute that = (EntityAttribute) obj;
+		return new EqualsBuilder()
+			.append(baseEntityCode, that.baseEntityCode)
+			.append(attributeCode, that.attributeCode)
+			.isEquals();
 	}
 
 	/**
@@ -1166,154 +861,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 
 	@Override
 	public String toString() {
-		return "attributeCode=" + attributeCode + ", value="
-				+ getObjectAsString() + ", weight=" + weight + ", inferred=" + inferred + "] be="
-				+ this.getBaseEntityCode();
-	}
-
-	/**
-	 * Get the object
-	 *
-	 * @param <T> the Type to return
-	 * @return T
-	 */
-	@SuppressWarnings("unchecked")
-	@JsonIgnore
-	@Transient
-	@XmlTransient
-	@JsonbTransient
-	public <T> T getObject() {
-
-		if (getValueInteger() != null) {
-			return (T) getValueInteger();
-		}
-		if (getValueDateTime() != null) {
-			return (T) getValueDateTime();
-		}
-		if (getValueLong() != null) {
-			return (T) getValueLong();
-		}
-		if (getValueDouble() != null) {
-			return (T) getValueDouble();
-		}
-		if (getValueBoolean() != null) {
-			return (T) getValueBoolean();
-		}
-		if (getValueDate() != null) {
-			return (T) getValueDate();
-		}
-		if (getValueTime() != null) {
-			return (T) getValueTime();
-		}
-		if (getValueString() != null) {
-			return (T) getValueString();
-		}
-
-		return (T) getValueString();
-	}
-
-	@JsonIgnore
-	@Transient
-	@XmlTransient
-	@JsonbTransient
-	public String getObjectAsString() {
-
-		if (getValueInteger() != null) {
-			return "" + getValueInteger();
-		}
-
-		if (getValueDateTime() != null) {
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
-			Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-			String dout = df.format(datetime);
-			return dout;
-		}
-
-		if (getValueLong() != null) {
-			return "" + getValueLong();
-		}
-
-		if (getValueDouble() != null) {
-			return getValueDouble().toString();
-		}
-
-		if (getValueBoolean() != null) {
-			return getValueBoolean() ? "TRUE" : "FALSE";
-		}
-
-		if (getValueDate() != null) {
-			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
-			Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-			String dout2 = df2.format(date);
-			return dout2;
-		}
-		if (getValueTime() != null) {
-
-			String dout2 = getValueTime().toString();
-			return dout2;
-		}
-
-		if (getValueString() != null) {
-			return getValueString();
-		}
-
-		return getValueString();
-	}
-
-	/**
-	 * @return the attributeName
-	 */
-	public String getAttributeName() {
-		return attributeName;
-	}
-
-	/**
-	 * @param attributeName the attributeName to set
-	 */
-	public void setAttributeName(String attributeName) {
-		this.attributeName = attributeName;
-	}
-
-	/**
-	 * @return the index
-	 */
-	public Integer getIndex() {
-		return index;
-	}
-
-	/**
-	 * @param index the index to set
-	 */
-	public void setIndex(Integer index) {
-		this.index = index;
-	}
-
-	/**
-	 * @return the realm
-	 */
-	public String getRealm() {
-		return realm;
-	}
-
-	/**
-	 * @param realm the realm to set
-	 */
-	public void setRealm(String realm) {
-		this.realm = realm;
-	}
-
-	/**
-	 * @return Boolean
-	 */
-	public Boolean getConfirmationFlag() {
-		return confirmationFlag;
-	}
-
-	/**
-	 * @param confirmationFlag the confirmationFlag to set
-	 */
-	public void setConfirmationFlag(Boolean confirmationFlag) {
-		this.confirmationFlag = confirmationFlag;
+		return "attributeCode=" + attributeCode + ", value=" + getValueAsString() + ", weight=" + weight + ", inferred=" + inferred + "] be=" + this.getBaseEntityCode();
 	}
 
 }

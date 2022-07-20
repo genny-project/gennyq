@@ -350,7 +350,7 @@ public class QwandaUtils {
 				continue;
 			}
 
-			String value = ea.getAsString();
+			String value = ea.getValueAsString();
 
 			// if any are both blank and mandatory, then task is not complete
 			if (mandatory && StringUtils.isBlank(value)) {

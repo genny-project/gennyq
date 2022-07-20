@@ -152,23 +152,23 @@ public class FyodorSearch {
 
 			// Create where condition for the BE Code Filter
 			if (attributeCode.equals("PRI_CODE")) {
-				log.info("PRI_CODE like " + ea.getAsString());
+				log.info("PRI_CODE like " + ea.getValueAsString());
 
 				BooleanBuilder entityCodeBuilder = new BooleanBuilder();
-				entityCodeBuilder.and(baseEntity.code.like(ea.getAsString()));
+				entityCodeBuilder.and(baseEntity.code.like(ea.getValueAsString()));
 
 				// Process any AND/OR filters for BaseEntity Code
 				andAttributes.stream()
 						.filter(x -> removePrefixFromCode(x.getAttributeCode(), "AND").equals(attributeCode))
 						.forEach(x -> {
-							log.info("AND " + attributeCode + " like " + x.getAsString());
-							entityCodeBuilder.and(baseEntity.code.like(x.getAsString()));
+							log.info("AND " + attributeCode + " like " + x.getValueAsString());
+							entityCodeBuilder.and(baseEntity.code.like(x.getValueAsString()));
 						});
 				orAttributes.stream()
 						.filter(x -> removePrefixFromCode(x.getAttributeCode(), "OR").equals(attributeCode))
 						.forEach(x -> {
-							log.info("OR " + attributeCode + " like " + x.getAsString());
-							entityCodeBuilder.or(baseEntity.code.like(x.getAsString()));
+							log.info("OR " + attributeCode + " like " + x.getValueAsString());
+							entityCodeBuilder.or(baseEntity.code.like(x.getValueAsString()));
 						});
 				builder.and(entityCodeBuilder);
 

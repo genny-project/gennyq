@@ -55,6 +55,7 @@ import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -667,7 +668,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@Transient
 	private <T> T getValue(final EntityAttribute ea) {
 		return ea.getValue();
-
 	}
 
 	/**
@@ -680,34 +680,11 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	public <T> Optional<T> getValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
-
-		Optional<T> result = Optional.empty();
 		if (ea.isPresent()) {
-			if (ea.get() != null) {
-				if (ea.get().getValue() != null) {
-					result = Optional.of(ea.get().getValue());
-				}
-			}
+			return Optional.ofNullable(ea.get().getValue());
 		}
-		return result;
-	}
 
-	/**
-	 * @param <T>           the Type to return
-	 * @param attributeCode the code of the attribute value to get
-	 * @return Optional
-	 */
-	@JsonbTransient
-	@Transient
-	public <T> Optional<T> getLoopValue(final String attributeCode) {
-
-		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
-
-		Optional<T> result = Optional.empty();
-		if (ea.isPresent()) {
-			result = Optional.of(ea.get().getLoopValue());
-		}
-		return result;
+		return Optional.empty();
 	}
 
 	/**
@@ -719,15 +696,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	public String getValueAsString(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
-		String result = null;
 		if (ea.isPresent()) {
-			if (ea.get() != null) {
-				if (ea.get().getValue() != null) {
-					result = ea.get().getAsString();
-				}
-			}
+			return ea.get().getValueAsString();
 		}
-		return result;
+		return null;
 	}
 
 	/**
@@ -743,27 +715,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	public <T> T getValue(final String attributeCode, T defaultValue) {
 
 		Optional<T> result = getValue(attributeCode);
-		if (result.isPresent()) {
-			if (!result.equals(Optional.empty())) {
-				return result.get();
-			}
-		}
-		return defaultValue;
-	}
-
-	/**
-	 * Get the loop value
-	 *
-	 * @param attributeCode the attribute code
-	 * @param defaultValue  the default value
-	 * @param <T>           The Type to return
-	 * @return T
-	 */
-	@JsonbTransient
-	@Transient
-	public <T> T getLoopValue(final String attributeCode, T defaultValue) {
-
-		Optional<T> result = getLoopValue(attributeCode);
 		if (result.isPresent()) {
 			if (!result.equals(Optional.empty())) {
 				return result.get();
@@ -798,43 +749,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 *
 	 * @param attribute the attribute
 	 * @param value     the value to set
-	 * @param weight    the weight
 	 * @param <T>       The Type to return
 	 * @return Optional
-	 * @throws BadDataException if value cannot be set
 	 */
 	@JsonbTransient
 	@Transient
-	public <T> Optional<T> setValue(final Attribute attribute, T value, Double weight) throws BadDataException {
-
-		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attribute.getCode());
-
-		Optional<T> result = Optional.empty();
-		if (oldValue.isPresent()) {
-			if (oldValue.get().getLoopValue() != null) {
-				result = Optional.of(oldValue.get().getLoopValue());
-			}
-			EntityAttribute ea = oldValue.get();
-			ea.setValue(value);
-			ea.setWeight(weight);
-		} else {
-			this.addAttribute(attribute, weight, value);
-		}
-		return result;
-	}
-
-	/**
-	 * Set the value
-	 *
-	 * @param attribute the attribute
-	 * @param value     the value to set
-	 * @param <T>       The Type to return
-	 * @return Optional
-	 * @throws BadDataException if value cannot be set
-	 */
-	@JsonbTransient
-	@Transient
-	public <T> Optional<T> setValue(final Attribute attribute, T value) throws BadDataException {
+	public <T> Optional<T> setValue(final Attribute attribute, T value) {
 		return setValue(attribute, value, 0.0);
 	}
 
@@ -845,12 +765,26 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param value         the value to set
 	 * @param <T>           The Type to return
 	 * @return Optional
-	 * @throws BadDataException if value cannot be set
 	 */
 	@JsonbTransient
 	@Transient
-	public <T> Optional<T> setValue(final String attributeCode, T value) throws BadDataException {
+	public <T> Optional<T> setValue(final String attributeCode, T value) {
 		return setValue(attributeCode, value, 0.0);
+	}
+
+	/**
+	 * Set the value
+	 *
+	 * @param attribute the attribute
+	 * @param value     the value to set
+	 * @param weight    the weight
+	 * @param <T>       The Type to return
+	 * @return Optional
+	 */
+	@JsonbTransient
+	@Transient
+	public <T> Optional<T> setValue(final Attribute attribute, T value, Double weight) {
+		return setValue(attribute.getCode(), value, weight);
 	}
 
 	/**
@@ -861,23 +795,19 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param weight        the weight
 	 * @param <T>           The Type to return
 	 * @return Optional
-	 * @throws BadDataException if value cannot be set
 	 */
 	@JsonbTransient
 	@Transient
-	public <T> Optional<T> setValue(final String attributeCode, T value, Double weight) throws BadDataException {
-		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attributeCode);
+	public <T> Optional<T> setValue(final String attributeCode, T value, Double weight) {
 
-		Optional<T> result = Optional.empty();
-		if (oldValue.isPresent()) {
-			if (oldValue.get().getLoopValue() != null) {
-				result = Optional.of(oldValue.get().getLoopValue());
-			}
-			EntityAttribute ea = oldValue.get();
-			ea.setValue(value);
-			ea.setWeight(weight);
+		Optional<EntityAttribute> existing = findEntityAttribute(attributeCode);
+		if (existing.isPresent()) {
+			existing.get().setValue(value);
+			existing.get().setWeight(weight);
+			return Optional.ofNullable(existing.get().getValue());
 		}
-		return result;
+
+		throw new ItemNotFoundException(getCode()+":"+attributeCode);
 	}
 
 	/**
@@ -979,7 +909,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 				}
 			}
-
 		}
 
 		return highest;

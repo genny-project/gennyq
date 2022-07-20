@@ -68,36 +68,19 @@ public class DataType implements Serializable {
 
 	private static final Logger log = Logger.getLogger(DataType.class);
 
-	public static final String DTT_LINK = "LNK_ATTRIBUTE"; // This datatype classname indicates the datatype belongs to
-															// the BaseEntity set with parent
 	@NotNull
 	@Size(max = 120)
-	private String dttCode; // e.g. java.util.String
+	private String dttCode;
 
 	@NotNull
 	@Size(max = 120)
-	private String className; // e.g. java.util.String
+	private String className;
 
 	@NotNull
 	@Size(max = 120)
-	// @JsonIgnore
-	private String typeName; // e.g. TEXT
+	private String typeName;
 
 	private String inputmask;
-
-	/**
-	 * @return String
-	 */
-	public String getComponent() {
-		return component;
-	}
-
-	/**
-	 * @param component the component to set
-	 */
-	public void setComponent(String component) {
-		this.component = component;
-	}
 
 	private String component;
 
@@ -113,68 +96,25 @@ public class DataType implements Serializable {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public DataType() {
-		// super();
-		// dummy for hibernate
+		super();
 	}
 
-	public DataType(final Class clazz) {
-		this(clazz, new ValidationList());
+	public DataType(final Class c) {
+		this(c, new ValidationList());
 	}
 
 	public DataType(final String className) {
 		this(className, new ValidationList());
 	}
 
-	public DataType(final String className, final ValidationList aValidationList, final String name,
-			final String inputmask) {
+	public DataType(final Class c, final ValidationList validationList) {
+		this(c.getCanonicalName(), validationList);
+	}
+
+	public DataType(final String className, final ValidationList validationList) {
 		setDttCodeFromClassName(className);
-		setClassName(className);
-		setValidationList(aValidationList.getValidationList());
-		setTypeName(name);
-		setInputmask(inputmask);
-	}
-
-	public DataType(final String className, final ValidationList aValidationList, final String name,
-			final String inputmask, final String component) {
-		setDttCodeFromClassName(className);
-		setClassName(className);
-		setValidationList(aValidationList.getValidationList());
-		setTypeName(name);
-		setInputmask(inputmask);
-		setComponent(component);
-	}
-
-	public DataType(final String className, final ValidationList aValidationList, final String name) {
-		this(className, aValidationList, name, "");
-	}
-
-	/**
-	 * @param str the className string used to set the Dtt
-	 */
-	public void setDttCodeFromClassName(String str) {
-		String[] strs = str.split("\\.");
-		String type;
-
-		if (strs.length > 1) {
-			type = strs[strs.length - 1];
-		} else {
-			type = strs[0];
-		}
-		if (str.contains("DTT")) {
-			setDttCode(str);
-		} else {
-			setDttCode("DTT_" + type.toUpperCase());
-		}
-	}
-
-	public DataType(final String className, final ValidationList aValidationList) {
-		this(className, aValidationList, className);
-	}
-
-	public DataType(final Class clazz, final ValidationList aValidationList) {
-		this(clazz.getCanonicalName(), aValidationList);
+		setValidationList(validationList.getValidationList());
 	}
 
 	/**
@@ -185,8 +125,7 @@ public class DataType implements Serializable {
 	}
 
 	/**
-	 * @param validationList
-	 *                       the validationList to set
+	 * @param validationList the validationList to set
 	 */
 	public void setValidationList(final List<Validation> validationList) {
 		this.validationList = validationList;
@@ -200,8 +139,7 @@ public class DataType implements Serializable {
 	}
 
 	/**
-	 * @param className
-	 *                  the className to set
+	 * @param className the className to set
 	 */
 	public void setClassName(final String className) {
 		this.className = className;
@@ -215,8 +153,7 @@ public class DataType implements Serializable {
 	}
 
 	/**
-	 * @param name
-	 *             the name to set
+	 * @param name the name to set
 	 */
 	public void setTypeName(String name) {
 		this.typeName = name;
@@ -230,8 +167,7 @@ public class DataType implements Serializable {
 	}
 
 	/**
-	 * @param code
-	 *             the name to set
+	 * @param code the name to set
 	 */
 	public void setDttCode(String code) {
 		this.dttCode = code;
@@ -245,11 +181,24 @@ public class DataType implements Serializable {
 	}
 
 	/**
-	 * @param inputmask
-	 *                  the inputmask to set
+	 * @param inputmask the inputmask to set
 	 */
 	public void setInputmask(String inputmask) {
 		this.inputmask = inputmask;
+	}
+
+	/**
+	 * @return String
+	 */
+	public String getComponent() {
+		return component;
+	}
+
+	/**
+	 * @param component the component to set
+	 */
+	public void setComponent(String component) {
+		this.component = component;
 	}
 
 	/**
@@ -275,6 +224,26 @@ public class DataType implements Serializable {
 	public String toString() {
 		return "DataType(" + className + " component: " + this.component + ", inputmask:" + this.inputmask + ")";
 	}
+
+	/**
+	 * @param str the className string used to set the Dtt
+	 */
+	public void setDttCodeFromClassName(String str) {
+		String[] strs = str.split("\\.");
+		String type;
+
+		if (strs.length > 1) {
+			type = strs[strs.length - 1];
+		} else {
+			type = strs[0];
+		}
+		if (str.contains("DTT")) {
+			setDttCode(str);
+		} else {
+			setDttCode("DTT_" + type.toUpperCase());
+		}
+	}
+
 
 	/**
 	 * Get an Instance of a class
