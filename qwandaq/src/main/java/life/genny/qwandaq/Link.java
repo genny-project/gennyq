@@ -43,15 +43,9 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * @version %I%, %G%
  * @since 1.0
  */
-
-
 @Embeddable
 @RegisterForReflection
 public class Link implements Serializable {
-
-	static public String RULE_PARENT_OVERRIDE = "PO";
-	static public String RULE_CHILD_OVERRIDE = "CO";	
-	static public String RULE_NO_OVERRIDE = null;
 
 	/**
 	 * A field that stores the human readable attributecode associated with this link.
@@ -75,16 +69,10 @@ public class Link implements Serializable {
 
 	public Double weight;
 
-	public String childColor;
-	public String parentColor;
-	public String rule;
-
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public Link() {
-		// dummy for hibernate
 	}
 
 	/**
@@ -125,7 +113,6 @@ public class Link implements Serializable {
 		this.attributeCode = linkCode;
 		this.linkValue = linkValue;
 		this.weight = weight;
-		this.rule = Link.RULE_NO_OVERRIDE;
 	}
 	/**
 	 * @return the attributeCode
@@ -134,16 +121,12 @@ public class Link implements Serializable {
 		return attributeCode;
 	}
 
-
-
 	/**
 	 * @param attributeCode the attributeCode to set
 	 */
 	public void setAttributeCode(String attributeCode) {
 		this.attributeCode = attributeCode;
 	}
-
-
 
 	/**
 	 * @return the targetCode
@@ -152,16 +135,12 @@ public class Link implements Serializable {
 		return targetCode;
 	}
 
-
-
 	/**
 	 * @param targetCode the targetCode to set
 	 */
 	public void setTargetCode(String targetCode) {
 		this.targetCode = targetCode;
 	}
-
-
 
 	/**
 	 * @return the sourceCode
@@ -170,16 +149,12 @@ public class Link implements Serializable {
 		return sourceCode;
 	}
 
-
-
 	/**
 	 * @param sourceCode the sourceCode to set
 	 */
 	public void setSourceCode(String sourceCode) {
 		this.sourceCode = sourceCode;
 	}
-
-
 
 	/**
 	 * @return thelinkValue 
@@ -188,16 +163,12 @@ public class Link implements Serializable {
 		return linkValue;
 	}
 
-
-
 	/**
 	 * @param linkValue the linkValue to set
 	 */
 	public void setLinkValue(String linkValue) {
 		this.linkValue = linkValue;
 	}
-
-
 
 	/**
 	 * @return the weight
@@ -206,8 +177,6 @@ public class Link implements Serializable {
 		return weight;
 	}
 
-
-
 	/**
 	 * @param weight the weight to set
 	 */
@@ -215,73 +184,13 @@ public class Link implements Serializable {
 		this.weight = weight;
 	}
 
-
-
-	/**
-	 * @return the childColor
-	 */
-	public String getChildColor() {
-		return childColor;
-	}
-
-
-
-	/**
-	 * @param childColor the childColor to set
-	 */
-	public void setChildColor(String childColor) {
-		this.childColor = childColor;
-	}
-
-
-
-	/**
-	 * @return the parentColor
-	 */
-	public String getParentColor() {
-		return parentColor;
-	}
-
-
-
-	/**
-	 * @param parentColor the parentColor to set
-	 */
-	public void setParentColor(String parentColor) {
-		this.parentColor = parentColor;
-	}
-
-
-
-	/**
-	 * @return the rule
-	 */
-	public String getRule() {
-		return rule;
-	}
-
-
-
-	/**
-	 * @param rule the rule to set
-	 */
-	public void setRule(String rule) {
-		this.rule = rule;
-	}
-
-
-
-
 	/** 
 	 * @return int
 	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(attributeCode, childColor, linkValue, parentColor, sourceCode, targetCode, weight);
+		return Objects.hash(attributeCode, linkValue, sourceCode, targetCode, weight);
 	}
-
-
-
 
 	/** 
 	 * Check equality.
@@ -301,14 +210,12 @@ public class Link implements Serializable {
 			return false;
 		}
 		Link other = (Link) obj;
-		return Objects.equals(attributeCode, other.attributeCode) && Objects.equals(childColor, other.childColor)
-			&& Objects.equals(linkValue, other.linkValue) && Objects.equals(parentColor, other.parentColor)
-			&& Objects.equals(sourceCode, other.sourceCode) && Objects.equals(targetCode, other.targetCode)
+		return Objects.equals(attributeCode, other.attributeCode)
+			&& Objects.equals(linkValue, other.linkValue)
+			&& Objects.equals(sourceCode, other.sourceCode)
+			&& Objects.equals(targetCode, other.targetCode)
 			&& Objects.equals(weight, other.weight);
 	}
-
-
-
 
 	/** 
 	 * @return String
@@ -323,10 +230,7 @@ public class Link implements Serializable {
 			+ (attributeCode != null ? "attributeCode=" + attributeCode + ", " : "")
 			+ (linkValue != null ? "linkValue=" + linkValue + ", " : "")
 			+ (weight != null ? "weight=" + weight + ", " : "")
-			+ (childColor != null ? "childColor=" + childColor + ", " : "")
-			+ (parentColor != null ? "parentColor=" + parentColor + ", " : "") + (rule != null ? "rule=" + rule : "")
 			+ "]";
 	}
-
 
 }

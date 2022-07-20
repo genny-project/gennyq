@@ -64,22 +64,40 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	@Override
 	public List<Validation> convertToEntityAttribute(String joined) {
 
-		JsonArray jsonArray = jsonb.fromJson(String.format("[%s]", joined), JsonArray.class);
+		log.info(joined);
+		if (StringUtils.isEmpty(joined)) {
+			return new ArrayList<Validation>();
+		}
+
+		List<String> lst = stringToList(joined);
 
 		Validation v = new Validation();
-		v.setCode(jsonArray.getString(0));
-		v.setName(jsonArray.getString(1));
-		v.setRegex(jsonArray.getString(2));
-
-		JsonArray validationGroups = jsonb.fromJson(jsonArray.getString(3), JsonArray.class);
-		v.setSelectionBaseEntityGroupList(Arrays.asList(validationGroups.toArray(new String[0])));
-
-		v.setMultiAllowed("TRUE".equalsIgnoreCase(jsonArray.getString(4)));
-		v.setRecursiveGroup("TRUE".equalsIgnoreCase(jsonArray.getString(5)));
+		v.setCode(lst.get(0));
+		v.setName(lst.get(1));
+		v.setRegex(lst.get(2));
+		v.setSelectionBaseEntityGroupList(stringToList(lst.get(3)));
+		v.setMultiAllowed("TRUE".equalsIgnoreCase(lst.get(4)));
+		v.setRecursiveGroup("TRUE".equalsIgnoreCase(lst.get(5)));
 
 		List<Validation> validations = new ArrayList<>();
 		validations.add(v);
 		return validations;
+	}
+
+	/**
+	 * Helper function to convert string to list of strings
+	 * @param str The string to convert
+	 * @return The list if strings
+	 */
+	public List<String> stringToList(String str) {
+		// remove brackets
+		str = StringUtils.removeStart(str, "[");
+		str = StringUtils.removeEnd(str, "]");
+		// remove first and last quotes
+		str = StringUtils.removeStart(str, "\"");
+		str = StringUtils.removeEnd(str, "\"");
+
+		return Arrays.asList(str.split("\",\""));
 	}
 
 }

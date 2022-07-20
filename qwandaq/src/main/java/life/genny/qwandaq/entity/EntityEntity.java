@@ -28,7 +28,6 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlTransient;
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.converter.MoneyConverter;
@@ -121,19 +120,16 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateAdapter.class)
 	private LocalDate valueDate;
 
 	/**
 	 * Store the LocalTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalTimeAdapter.class)
 	private LocalTime valueTime;
 
 	@Column(name = "money", length = 128)
@@ -502,7 +498,6 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> T getValue() {
 		final String dataType = getPk().getAttribute().getDataType().getClassName();
 		switch (dataType) {
@@ -571,7 +566,6 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> void setValue(final Object value) {
 
 		if (value instanceof String) {
@@ -698,7 +692,6 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public String getAsString() {
 		String dataType = "";
 		try {
@@ -744,7 +737,6 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public String getObjectAsString(Object value) {
 		if (value instanceof Integer)
 			return ""+value;
