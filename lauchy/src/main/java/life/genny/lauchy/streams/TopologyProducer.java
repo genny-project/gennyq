@@ -2,6 +2,8 @@ package life.genny.lauchy.streams;
 
 import io.quarkus.runtime.StartupEvent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -45,6 +47,7 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+import life.genny.qwandaq.models.UniquePair;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -52,7 +55,6 @@ public class TopologyProducer {
 	static Logger log = Logger.getLogger(TopologyProducer.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
-	
 
 	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
 	Boolean enableBlacklist;
@@ -75,11 +77,11 @@ public class TopologyProducer {
 	@Inject
 	BaseEntityUtils beUtils;
 
-		@Inject
-		GraphQLUtils gqlUtils;
-	
-		@Inject
-		DatabaseUtils databaseUtils;
+	@Inject
+	GraphQLUtils gqlUtils;
+
+	@Inject
+	DatabaseUtils databaseUtils;
 
 	void onStart(@Observes StartupEvent ev) {
 
@@ -120,7 +122,7 @@ public class TopologyProducer {
 		JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
 		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
 	}
-	
+
 	/**
 	 * Helper function to tidy some values
 	 *
@@ -235,11 +237,30 @@ public class TopologyProducer {
 			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
 					+ ", Attribute found for UNQ_" + attributeCode + " LOOKING for duplicate using "+uniqueAttribute.get().getValue());
 					
-			// Check if the value is already in the database
-			//databaseUtils.findValueByAttributeCount(productCode, target.getCode(), uniqueAttribute.get().getValue(), answer.getValue());
-			// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
+					// Check if the value is already in the database
+				JsonArray uniqueArray = jsonb.fromJson(uniqueAttribute.get().getValueString(), JsonArray.class);
+				List<UniquePair> uniquePairs = new ArrayList<>();
+				
+						for (javax.json.JsonValue jsonValue : uniqueArray) { 
+							JsonObject uniqueJson = jsonb.fromJson(jsonValue.toString(), JsonObject.class);
+							uniquePairs.add(new UniquePair(answer.getAttributeCode(), answer.getValue()));
+						}
+    	
 
-			//return false;
+					Long count = databaseUtils.countBaseEntities(userToken.getProductCode(), defBE, uniquePairs);
+			
+		
+			// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
+						if (count > 0) {
+							BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
+							QDataBaseEntityMessage qDataBaseEntity = new QDataBaseEntityMessage(errorBE);
+							qDataBaseEntity.setToken(userToken.getToken());
+							qDataBaseEntity.setTag("Duplicate Error");
+							qDataBaseEntity.setMessage("Error: This value already exists and must be unique.");
+							KafkaUtils.writeMsg("webcmds", jsonb.toJson(qDataBaseEntity));
+							return false;
+						}
+			
 		} else {
 			log.info("uniqueAttribute is Not present! for UNQ_" + attributeCode);
 		}
@@ -375,7 +396,8 @@ public class TopologyProducer {
 			}
 		}
 
-		return true;
+	return true;
+
 	}
 
 	/**
