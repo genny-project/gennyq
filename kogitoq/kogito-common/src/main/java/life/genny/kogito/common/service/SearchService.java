@@ -9,6 +9,8 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.message.MessageData;
+import life.genny.qwandaq.message.QDataAttributeMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -126,27 +128,32 @@ public class SearchService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
-	public void getBuckets(String eventCode){
-		log.info("========================getBuckets()========================");
+	public void getBuckets(String eventCode) throws  Exception {
 		String searchCode = "SBE_"+StringUtils.removeStart(eventCode, "QUE_");
-		log.info("Sending Table :: " + searchCode);
 
-		List<SearchEntity> bucketCodes = new ArrayList<>();
-		bucketCodes.add(new SearchEntity("SBE_AVAILABLE_INTERNS", "AVAILABLE INTERNS"));
-		bucketCodes.add(new SearchEntity("SBE_APPLIED_APPLICATIONS", "APPLIED APPLICATIONS"));
-		bucketCodes.add(new SearchEntity("SBE_SHORTLISTED_APPLICATIONS", "SHORTLISTED APPLICATIONS"));
-		bucketCodes.add(new SearchEntity("SBE_INTERVIEWED_APPLICATIONS", "INTERVIEWED APPLICATIONS"));
-		bucketCodes.add(new SearchEntity("SBE_OFFERED_APPLICATIONS", "OFFERED APPLICATIONS"));
-		bucketCodes.add(new SearchEntity("SBE_PLACED_APPLICATIONS", "PLACED APPLICATIONS"));
-		bucketCodes.add(new SearchEntity("SBE_INPROGRESS_APPLICATIONS", "INPROGRESS APPLICATIONS"));
+		List<String> bucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
+
+		sendBucketData(searchCode,bucketCodes);
 
 		bucketCodes.stream().forEach(e -> {
-			e.setRealm(userToken.getProductCode());
-			CacheUtils.putObject(userToken.getProductCode(), e.getCode(), e);
-
-			searchUtils.searchTable(e.getCode());
-			sendSearchPCM("PCM_TABLE", searchCode);
+			searchUtils.searchTable(e);
 		});
 
 	}
+
+	public void sendBucketData(String source, List<String> bucketCodes) {
+		List<BaseEntity> listBase = new ArrayList<>();
+		for(String str: bucketCodes){
+			BaseEntity base = new BaseEntity(str);
+			base.setRealm(userToken.getRealm());
+			listBase.add(new BaseEntity(str));
+		}
+
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(listBase);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		msg.setParentCode(source);
+		KafkaUtils.writeMsg("webcmds", msg);
+	}
+
 }

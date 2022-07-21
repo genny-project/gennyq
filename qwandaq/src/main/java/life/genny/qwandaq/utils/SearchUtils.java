@@ -20,6 +20,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.message.*;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -30,12 +31,6 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.MessageData;
-import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QEventDropdownMessage;
-import life.genny.qwandaq.message.QSearchMessage;
-import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
@@ -739,5 +734,4 @@ public class SearchUtils {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("events", msg);
 	}
-
 }
