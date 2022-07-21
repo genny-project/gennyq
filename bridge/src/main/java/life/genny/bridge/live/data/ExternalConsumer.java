@@ -8,7 +8,6 @@ import java.util.UUID;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.json.Json;
 import io.vertx.core.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -183,10 +182,10 @@ public class ExternalConsumer {
 	 * @param gennyToken the users GennyToken
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
-		JsonObject nonTokenBody = (JsonObject) body.remove("token");
+		// JsonObject nonTokenBody = (JsonObject) body.remove("token");
 		
 
-		log.info("Incoming Payload = " + nonTokenBody.toString());
+		log.info("Incoming Payload = " + body.toString());
 
 		if (body == null || body.getString("msg_type") == null) {
 			log.error("Bad body JsonObject passed");
