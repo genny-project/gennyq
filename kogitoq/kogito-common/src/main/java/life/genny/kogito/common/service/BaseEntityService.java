@@ -13,11 +13,10 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.DebugException;
-import life.genny.qwandaq.exception.NullParameterException;
-import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -62,6 +61,9 @@ public class BaseEntityService {
 		BaseEntity entity = beUtils.create(def);
 		log.info("BaseEntity Created: " + entity.getCode());
 
+		entity.setStatus(EEntityStatus.PENDING);
+		beUtils.updateBaseEntity(entity);
+
 		return entity.getCode();
 	}
 
@@ -76,6 +78,13 @@ public class BaseEntityService {
 		// archive the entity
 		baseEntity.setStatus(EEntityStatus.ARCHIVED);
 		beUtils.updateBaseEntity(baseEntity);
+	}
+
+	public void setActive(String entityCode) {
+
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		entity.setStatus(EEntityStatus.ACTIVE);
+		beUtils.updateBaseEntity(entity);
 	}
 
 	public String getDEFPrefix(String definitionCode) {
@@ -124,13 +133,14 @@ public class BaseEntityService {
 	/**
 	 * Merge a process entity into another entity
 	 */
-	public void mergeFromProcessEntity(String entityCode, String processBEJson) {
+	public void mergeFromProcessEntity(String entityCode, String processJson) {
 
-		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		BaseEntity processEntity = processData.getProcessEntity();
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 
 		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
+		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
 
 			if (ea.getAttribute() == null) {
 				log.debug("Attribute is null, fetching " + ea.getAttributeCode());

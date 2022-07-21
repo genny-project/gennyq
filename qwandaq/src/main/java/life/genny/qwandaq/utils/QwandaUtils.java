@@ -24,7 +24,6 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.Answers;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
@@ -310,11 +309,13 @@ public class QwandaUtils {
 
 		String code = ask.getAttributeCode();
 
-		// grab attribute code of current ask
+		// grab attribute code of current ask if conditions met
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
-			log.debugf("Prefix {} not in accepted list", code.substring(0, 4));
+			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
-			log.debugf("Attribute {} in exclude list", code);
+			log.debugf("Attribute %s in exclude list", code);
+		} else if (ask.getReadonly()) {
+			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
 		} else {
 			codes.add(code);
 		}
@@ -404,7 +405,7 @@ public class QwandaUtils {
 	public Ask recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
 
 		// return ask if submit is found
-		if (ask.getQuestion().getAttribute().getCode().equals("PRI_SUBMIT")) {
+		if (ask.getQuestion().getAttribute().getCode().equals("EVT_SUBMIT")) {
 			log.info("[@] Setting PRI_SUBMIT disabled = " + disabled);
 			ask.setDisabled(disabled);
 		}

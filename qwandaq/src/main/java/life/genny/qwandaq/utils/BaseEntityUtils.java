@@ -499,7 +499,7 @@ public class BaseEntityUtils {
 	 * @param entity The entity to update
 	 * @return The updated BaseEntity
 	 */
-	public static BaseEntity addNonLiteralAttributes(BaseEntity entity) {
+	public BaseEntity addNonLiteralAttributes(BaseEntity entity) {
 
 		// Handle Created and Updated attributes
 		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));

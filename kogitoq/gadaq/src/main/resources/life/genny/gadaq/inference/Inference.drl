@@ -5,7 +5,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.models.ProcessVariables;
+import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.Answer;
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -34,12 +34,12 @@ then
 
 	String processId = answer.getProcessId();
 	String productCode = userToken.getProductCode();
-	ProcessVariables processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_BE", ProcessVariables.class);
+	ProcessQuestions processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessQuestions.class);
 
 	String lastName = processVariables.getProcessEntity().getValue("PRI_LASTNAME", null);
-	if (lastName == null) {
+	if (lastName == null)
 		return;
-	}
+
 	lastName = WordUtils.capitalize(lastName);
 	String name = firstName + " " + lastName;
 
@@ -60,12 +60,12 @@ then
 
 	String processId = answer.getProcessId();
 	String productCode = userToken.getProductCode();
-	ProcessVariables processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_BE", ProcessVariables.class);
+	ProcessQuestions processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessQuestions.class);
 
 	String firstName = processVariables.getProcessEntity().getValue("PRI_FIRSTNAME", null);
-	if (firstName == null) {
+	if (firstName == null)
 		return;
-	}
+
 	firstName = WordUtils.capitalize(firstName);
 	String name = firstName + " " + lastName;
 

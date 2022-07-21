@@ -195,6 +195,8 @@ public class InitService {
 	 */
 	public void sendOutstandingTasks() {
 
+		// TODO: allow this to check for internal gadaq processQuestions too
+
 		// we store the summary code in the persons lifecycle
 		JsonArray array = gqlUtils.queryTable("ReceiveQuestionRequest", "sourceCode", userToken.getUserCode(), "id");
 		if (array == null || array.isEmpty()) {

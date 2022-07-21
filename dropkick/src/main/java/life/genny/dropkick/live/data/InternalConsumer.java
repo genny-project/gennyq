@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
@@ -30,10 +29,12 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.DebugException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
+import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -106,207 +107,11 @@ public class InternalConsumer {
 		scope.init(event);
 		log.debug("Consumed message: " + event);
 
-		if (!isValidDropdownMessage(event)) {
-			scope.destroy();
-			return;
-		}
-		log.debug("Processing valid message: " + event);
-
-		String output = fetchDropdownResults(event);
-		if (output == null) {
-			scope.destroy();
-			return;
-		}
-
-		// write using KafkaUtils for bridge switching
-		log.debug("Sending results: " + output);
-		KafkaUtils.writeMsg("webdata", output);
-
-		// log duration
-		scope.destroy();
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
-
-	/**
-	 * Check if dropdown message is valid and has all necessary fields.
-	 *
-	 * @param data Message to check
-	 * @return Boolean value determining validity
-	 */
-	public Boolean isValidDropdownMessage(String data) {
-
-		JsonObject json = jsonb.fromJson(data, JsonObject.class);
-
-		// Check to make sure it has an event type
-		if (!json.containsKey("event_type")) {
-			return false;
-		}
-
-		String eventType = json.getString("event_type");
-
-		// Check the event type is a dropdown event
-		if (!eventType.equals("DD")) {
-			return false;
-		}
-
-		JsonObject dataJson = json.getJsonObject("data");
-
-		// Check attribute code exists
-		if (!json.containsKey("attributeCode")) {
-			log.error("No Attribute code in message " + data);
-			return false;
-		}
-
-		// Check Source exists
-		if (!dataJson.containsKey("sourceCode")) {
-			log.error("Missing sourceCode in Dropdown Message [" + dataJson.toString() + "]");
-			return false;
-		}
-
-		// Check Target exists
-		if (!dataJson.containsKey("targetCode")) {
-			log.error("Missing targetCode in Dropdown Message [" + dataJson.toString() + "]");
-			return false;
-		}
-
-		// Grab info required to find the DEF
-		String attributeCode = json.getString("attributeCode");
-		String targetCode = dataJson.getString("targetCode");
-		String processId = null;
-		if (dataJson.containsKey("processId")) {
-			processId = dataJson.getString("processId");
-		} else {
-			JsonObject nonTokenJson = json;
-			if (nonTokenJson.containsKey("token")) {
-				 nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
-			}
-			
-			log.error("No processId in DD Event "+nonTokenJson);
-		}
-	
-		BaseEntity target = null;
-		BaseEntity defBE = null;
-
-		if (!StringUtils.isBlank(processId)) {
-			// This means that the target should come from the graphql
-			ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
-			if (processVariables == null) {
-				log.error("Could not find process instance for processId [" + processId + "]");
-				return false;
-			}
-			target = processVariables.getProcessEntity();
-			defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
-		} else {
-
-			target = beUtils.getBaseEntityOrNull(targetCode);
-			if (target == null) {
-				return false;
-			}
-		}
-
-		// Find the DEF
-		if (defBE == null) {
-			defBE = defUtils.getDEF(target);
-		}
-		if (defBE == null) {
-			log.error("No DEF found for target " + targetCode);
-			return false;
-		}
-
-		// Check if attribute code exists as a SER for the DEF
-		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attributeCode);
-
-		if (!searchAttribute.isPresent()) {
-			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
-					+ ", No attribute found for SER_" + attributeCode);
-			return false;
-		}
-
-		// Parse search json to object
-		String searchValue = searchAttribute.get().getValueString();
-		JsonObject searchJson = jsonb.fromJson(searchValue, JsonObject.class);
-		log.info("Attribute exists in " + defBE.getCode() + " for SER_" + attributeCode + " --> " + searchValue);
-
-		if (searchJson.containsKey("enabled")) {
-
-			Boolean isEnabled = searchJson.getBoolean("enabled");
-			log.info("Search Json Enabled = " + isEnabled);
-
-			return isEnabled;
-		}
-
-		return true;
-	}
-
-	/**
-	 * Fetch the targetCode stored in the processInstance 
-	 * for the given processId.
-	 */
-	public ProcessVariables fetchProcessInstanceProcessBE(String processId) {
-		BaseEntity processBe = null;
-		String defCode = null;
-		String processBeStr = null;
-
-		log.info("Fetching processBE for processId : " + processId);
-
-		// check in cache first (But not ready yet, processQuestions would need to save
-		// the processBe into cache every answer received)
-		String processVariablesStr = CacheUtils.getObject(userToken.getProductCode(), processId + ":PROCESS_BE",
-				String.class);
-		if (!StringUtils.isBlank(processVariablesStr)) {
-			log.info("ProcessVariables fetched from cache");
-			ProcessVariables processVariables = null;
-			try {
-				processVariables = jsonb.fromJson(processVariablesStr, ProcessVariables.class);
-			} catch (Exception e) {
-				log.error("Error parsing processVariables from cache: " + processVariablesStr);
-			}
-			return processVariables;
-		} else {
-			log.info("ProcessVariables for " + processId + ":PROCESS_BE not found in cache");
-		}
-
-		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
-		if (array.isEmpty()) {
-			log.error("Nothing found for processId: " + processId);
-			return null;
-		}
-		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
-
-		// grab the targetCode from process questions variables
-		processBeStr = variables.getString("processBEJson");
-		defCode = variables.containsKey("defCode") ? variables.getString("defCode") : null;
-		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
-
-		if (defCode == null) {
-			BaseEntity defBE = defUtils.getDEF(processBe);
-			defCode = defBE.getCode();
-		}
-		ProcessVariables processVariables = new ProcessVariables();
-		processVariables.setProcessEntity(processBe);
-		processVariables.setDefinitionCode(defCode);
-
-		// cache
-		CacheUtils.putObject(userToken.getProductCode(), processId + ":PROCESS_BE", processVariables);
-
-		return processVariables;
-	}
-
-	/**
-	 * Fetch and return the results for this dropdown. Will return null
-	 * if items can not be fetched for this message. This null must
-	 * be filtered by streams builder.
-	 *
-	 * @param data
-	 * @return
-	 */
-	public String fetchDropdownResults(String data) {
-
-		JsonObject jsonStr = jsonb.fromJson(data, JsonObject.class);
-
+		// deserialise message
+		JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
 		JsonObject dataJson = jsonStr.getJsonObject("data");
 
+		// grab necessarry info
 		String attrCode = jsonStr.getString("attributeCode");
 		String sourceCode = dataJson.getString("sourceCode");
 		String targetCode = dataJson.getString("targetCode");
@@ -317,30 +122,17 @@ public class InternalConsumer {
 
 		log.info(attrCode + ":" + parentCode + ":[" + searchText + "]");
 
-		BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
-
-		if (source == null) {
-			log.error("Source Entity is NULL!");
-			return null;
-		}
+		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 
 		BaseEntity target = null;
 		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
-			ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
-			target = processVariables.getProcessEntity();
-			defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
+			ProcessQuestions processData = fetchProcessData(processId);
+			target = processData.getProcessEntity();
+			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		} else {
-			target = beUtils.getBaseEntityOrNull(targetCode);
-		}
-
-		if (target == null) {
-			log.error("Target Entity is NULL!");
-			return null;
-		}
-
-		if (defBE == null) {
+			target = beUtils.getBaseEntity(targetCode);
 			defBE = defUtils.getDEF(target);
 		}
 
@@ -350,23 +142,15 @@ public class InternalConsumer {
 		// Because it is a drop down event we will search the DEF for the search
 		// attribute
 		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attrCode);
-
-		if (!searchAttribute.isPresent()) {
-			log.error("No present search attribute for " + defBE.getCode());
-			return null;
+		if (searchAttribute.isEmpty()) {
+			throw new ItemNotFoundException(String.format("%s -> %s", defBE.getCode(), "SER_"+attrCode));
 		}
 
 		String searchValue = searchAttribute.get().getValueString();
 		log.info("Search Attribute Value = " + searchValue);
 
-		JsonObject searchValueJson = null;
-		try {
-			searchValueJson = jsonb.fromJson(searchValue, JsonObject.class);
-		} catch (JsonbException e1) {
-			e1.printStackTrace();
-		}
-
-		log.info("SearchValueJson=" + searchValueJson);
+		JsonObject searchValueJson = jsonb.fromJson(searchValue, JsonObject.class);
+		log.info("SearchValueJson = " + searchValueJson);
 
 		Integer pageStart = 0;
 		Integer pageSize = searchValueJson.containsKey("dropdownSize") ? searchValueJson.getInt("dropdownSize")
@@ -384,16 +168,6 @@ public class InternalConsumer {
 		}
 		if (target != null) {
 			ctxMap.put("TARGET", target);
-		}
-
-		if (source == null) {
-			log.error("Source is NULL!");
-			return null;
-		}
-
-		if (target == null) {
-			log.error("Target is NULL!");
-			return null;
 		}
 
 		JsonArray jsonParms = searchValueJson.getJsonArray("parms");
@@ -459,9 +233,8 @@ public class InternalConsumer {
 
 									// These will return True by default if source or target are null
 									if (!MergeUtils.contextsArePresent(paramSourceCode, ctxMap)) {
-										log.error(ANSIColour.RED + "A Parent value is missing for " + paramSourceCode
-												+ ", Not sending dropdown results" + ANSIColour.RESET);
-										return null;
+										throw new DebugException(
+												String.format("A Parent value is missing for %s, Not sending dropdown results", paramSourceCode));
 									}
 
 									paramSourceCode = MergeUtils.merge(paramSourceCode, ctxMap);
@@ -472,9 +245,8 @@ public class InternalConsumer {
 									paramTargetCode = json.getString("targetCode");
 
 									if (!MergeUtils.contextsArePresent(paramTargetCode, ctxMap)) {
-										log.error(ANSIColour.RED + "A Parent value is missing for " + paramTargetCode
-												+ ", Not sending dropdown results" + ANSIColour.RESET);
-										return null;
+										throw new DebugException(
+												String.format("A Parent value is missing for %s, Not sending dropdown results", paramTargetCode));
 									}
 
 									paramTargetCode = MergeUtils.merge(paramTargetCode, ctxMap);
@@ -580,36 +352,29 @@ public class InternalConsumer {
 		// Merge required attribute values
 		// NOTE: This should correct any wrong datatypes too
 		searchBE = defUtils.mergeFilterValueVariables(searchBE, ctxMap);
-
-		if (searchBE == null) {
-			log.error(ANSIColour.RED + "Cannot Perform Search!!!" + ANSIColour.RESET);
-			return null;
-		}
+		if (searchBE == null)
+			throw new DebugException("searchBE is null");
 
 		// Perform search and evaluate columns
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchBE);
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
-		if (results == null) {
+		if (results == null)
+			throw new DebugException("Dropdown search returned null");
 
-			log.error(ANSIColour.RED + "Dropdown search returned NULL!" + ANSIColour.RESET);
-			return null;
+		if (results.isEmpty())
+			log.info("DROPDOWN : NO RESULTS");
 
-		} else if (results.size() > 0) {
+		msg = new QDataBaseEntityMessage(results);
+		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
-			msg = new QDataBaseEntityMessage(results);
-			log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
+		for (BaseEntity item : msg.getItems()) {
+			String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(), item.getValueAsString("PRI_NAME"));
 
-			for (BaseEntity item : msg.getItems()) {
-
-				if (item.getValueAsString("PRI_NAME") == null) {
-					log.warn("DROPDOWN : item: " + item.getCode() + " ===== " + item.getValueAsString("PRI_NAME"));
-				} else {
-					log.info("DROPDOWN : item: " + item.getCode() + " ===== " + item.getValueAsString("PRI_NAME"));
-				}
-			}
-		} else {
-			log.info("DROPDOWN :Loaded NO baseentitys");
+			if (item.getValueAsString("PRI_NAME") == null)
+				log.warn(logStr);
+			else
+				log.info(logStr);
 		}
 
 		// Set all required message fields and return msg
@@ -620,8 +385,47 @@ public class InternalConsumer {
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);
 		msg.setShouldDeleteLinkedBaseEntities(false);
+		KafkaUtils.writeMsg("webdata", msg);
 
-		return jsonb.toJson(msg);
+		// log duration
+		scope.destroy();
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+	}
+
+	/**
+	 * Fetch the targetCode stored in the processInstance 
+	 * for the given processId.
+	 * @param processId The id of the process to fetch for
+	 * @return The process data
+	 */
+	public ProcessQuestions fetchProcessData(String processId) {
+
+		log.info("Fetching processBE for processId : " + processId);
+		String key = String.format("%s:PROCESS_DATA", processId); 
+
+		// check cache first
+		ProcessQuestions processData = CacheUtils.getObject(userToken.getProductCode(), key, ProcessQuestions.class);
+		if (processData != null) {
+			return processData;
+		}
+
+		// otherwise query graphql
+		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
+		if (array.isEmpty()) {
+			log.error("Nothing found for processId: " + processId);
+			return null;
+		}
+
+		// grab json and deserialise
+		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
+		String processJson = variables.getString("processJson");
+		processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+
+		// cache the object for quicker retrieval
+		CacheUtils.putObject(userToken.getProductCode(), key, processData);
+
+		return processData;
 	}
 
 }

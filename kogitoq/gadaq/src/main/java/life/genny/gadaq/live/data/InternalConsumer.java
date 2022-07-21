@@ -22,6 +22,7 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
+import static life.genny.qwandaq.utils.SecurityUtils.obfuscate;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -102,7 +103,7 @@ public class InternalConsumer {
 		if (nonTokenJson.containsKey("token")) {
 				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();
 		}
-		log.info("Received Event : " +nonTokenJson.toString());
+		log.info("Received Event : " + obfuscate(event));
 
 		// init scope and process msg
 		scope.init(event);

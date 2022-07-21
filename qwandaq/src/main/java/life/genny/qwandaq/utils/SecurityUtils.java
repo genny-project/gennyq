@@ -5,6 +5,10 @@ import java.util.Date;
 import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.lang3.StringUtils;
@@ -24,9 +28,9 @@ import life.genny.qwandaq.models.GennyToken;
  */
 public class SecurityUtils {
 
-	public static final String SERVICE_USERNAME = "service";
-
 	static final Logger log = Logger.getLogger(SecurityUtils.class);
+	static Jsonb jsonb = JsonbBuilder.create();
+	public static final String SERVICE_USERNAME = "service";
 
 	/**
 	* Function to validate the authority for a given token string
@@ -156,5 +160,30 @@ public class SecurityUtils {
 
 		// Builds the JWT and serializes it to a compact, URL-safe string
 		return builder.compact();
+	}
+
+	/**
+	 * Obfuscate the token from a stringified JsonObject.
+	 * @param json the complete json object string
+	 * @return The secure json object string
+	 */
+	public static String obfuscate(String json) {
+
+		JsonObject obj = jsonb.fromJson(json, JsonObject.class);
+
+		return obfuscate(obj).toString();
+	}
+
+	/**
+	 * Obfuscate the token from a JsonObject.
+	 * @param json the complete json object
+	 * @return The secure json object
+	 */
+	public static JsonObject obfuscate(JsonObject json) {
+
+		if (!json.containsKey("token"))
+			return json;
+
+		return Json.createObjectBuilder(json).remove("token").build();
 	}
 }

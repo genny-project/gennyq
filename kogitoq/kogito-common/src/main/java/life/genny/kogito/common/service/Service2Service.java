@@ -9,7 +9,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.models.KogitoData;
+import life.genny.kogito.common.models.S2SData;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.intf.GennyScopeInit;
@@ -33,12 +33,12 @@ public class Service2Service {
 	GennyScopeInit scope;
 
 	/**
-	 * Add a token to a KogitoData message for sending.
+	 * Add a token to a S2SData message for sending.
 	 *
-	 * @param data The KogitoData object
+	 * @param data The S2SData object
 	 * @return The  updated data object
 	 */
-	public KogitoData addToken(KogitoData data) {
+	public S2SData addToken(S2SData data) {
 
 		data.setToken(userToken.getToken());
 		return data;
@@ -47,9 +47,9 @@ public class Service2Service {
 	/**
 	 * Initialise the RequestScope.
 	 *
-	 * @param data The KogitoData object
+	 * @param data The S2SData object
 	 */
-	public void initialiseScope(KogitoData data) {
+	public void initialiseScope(S2SData data) {
 		log.info(data.toString());
 		scope.init(jsonb.toJson(data));
 	}

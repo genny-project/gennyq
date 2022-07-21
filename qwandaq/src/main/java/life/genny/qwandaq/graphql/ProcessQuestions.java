@@ -12,6 +12,7 @@ public class ProcessQuestions extends ProcessInstanceVariables {
 	private String targetCode;
 	private String pcmCode;
 	private String definitionCode;
+	private String events;
     private BaseEntity processEntity;
     private QDataAskMessage askMessage;
 
@@ -57,6 +58,14 @@ public class ProcessQuestions extends ProcessInstanceVariables {
 
     public void setDefinitionCode(String definitionCode) {
         this.definitionCode = definitionCode;
+    }
+
+    public String getEvents() {
+        return events;
+    }
+
+    public void setEvents(String events) {
+        this.events = events;
     }
 
     public BaseEntity getProcessEntity() {

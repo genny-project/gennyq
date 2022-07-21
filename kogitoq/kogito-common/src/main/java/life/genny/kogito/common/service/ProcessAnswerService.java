@@ -12,8 +12,8 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -50,15 +50,19 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processBEJson, String targetCode, String processId, String defCode) {
+	public String storeIncomingAnswer(String answerJson, String processJson) {
 
-		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		String processId = processData.getProcessId();
+		String targetCode = processData.getTargetCode();
+
+		BaseEntity processEntity = processData.getProcessEntity();
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
 
 		// ensure targetCode is correct
-		if (!answer.getTargetCode().equals(processBE.getCode())) {
+		if (!answer.getTargetCode().equals(processEntity.getCode())) {
 			log.warn("Bad targetCode in answer!");
-			return processBEJson;
+			return jsonb.toJson(processData);
 		}
 
 		// only copy the entityAttributes used in the Asks
@@ -71,7 +75,7 @@ public class ProcessAnswerService {
 			BaseEntity definition = defUtils.getDEF(target);
 			if (!defUtils.answerValidForDEF(definition, answer)) {
 				log.error("Bad incoming answer... Not saving!");
-				return processBEJson;
+				return jsonb.toJson(processData);
 			}
 		}
 
@@ -81,29 +85,22 @@ public class ProcessAnswerService {
 		answer.setAttribute(attribute);
 
 		// debug log the value before saving
-		String currentValue = processBE.getValueAsString(attributeCode);
+		String currentValue = processEntity.getValueAsString(attributeCode);
 		log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
 
 		// update the baseentity
-		try {
-			processBE.addAnswer(answer);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
-
-		String productCode = userToken.getProductCode();
-		String key = processId+":PROCESS_BE";
-
-		// update the cached ProcessVariables object
-		ProcessVariables processVariables = CacheUtils.getObject(productCode, key, ProcessVariables.class);
-		processVariables.setProcessEntity(processBE);
-		CacheUtils.putObject(productCode, key, processVariables);
-
-		String value = processBE.getValueAsString(answer.getAttributeCode());
+		processEntity.addAnswer(answer);
+		String value = processEntity.getValueAsString(answer.getAttributeCode());
 		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
-		log.info("Process Entity cached to " + key);
 
-		return jsonb.toJson(processBE);
+		// update the cached process data object
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:PROCESS_DATA", processId); 
+		processData.setProcessEntity(processEntity);
+		CacheUtils.putObject(productCode, key, processData);
+		log.infof("ProcessData cached to %s", key);
+
+		return jsonb.toJson(processData);
 	}
 
 	/**
@@ -113,16 +110,17 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity storing the answer data
 	 * @return Boolean representing whether all mandatory questions have been answered
 	 */
-	public Boolean checkMandatory(String askMessageJson, String processBEJson) {
+	public Boolean checkMandatory(String processJson) {
 
-		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		BaseEntity processEntity = processData.getProcessEntity();
+		QDataAskMessage askMessage = processData.getAskMessage();
 
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);
 
 		// find the submit ask
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
 		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		QDataAskMessage msg = new QDataAskMessage(ask);
@@ -136,14 +134,14 @@ public class ProcessAnswerService {
 	/**
 	 * Save all answers gathered in the processBE.
 	 *
-	 * @param sourceCode The source of the answers
 	 * @param targetCode The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
-	// @Transactional
-	public void saveAllAnswers(String sourceCode, String targetCode, String processBEJson) {
+	public void saveAllAnswers(String processJson) {
 
-		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		BaseEntity processEntity = processData.getProcessEntity();
+		String targetCode = processData.getTargetCode();
 
 		// only copy the entityAttributes used in the Asks
 		if ("NON_EXISTENT".equals(targetCode)) {
@@ -154,7 +152,7 @@ public class ProcessAnswerService {
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
 		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
+		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
 
 			if (ea.getAttribute() == null) {
 				log.warn("Attribute is null, fetching " + ea.getAttributeCode());
@@ -162,14 +160,9 @@ public class ProcessAnswerService {
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
-
 			ea.setBaseEntity(target);
+			target.addAttribute(ea);
 
-			try {
-				target.addAttribute(ea);
-			} catch (BadDataException e) {
-				e.printStackTrace();
-			}
 			// set name
 			if ("PRI_NAME".equals(ea.getAttributeCode())) {
 				target.setName(ea.getValue());
