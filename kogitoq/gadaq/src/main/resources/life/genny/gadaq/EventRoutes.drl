@@ -59,7 +59,7 @@ end
 
 rule RouteView 
 when
-	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code == "QUE_TREE_ITEM_HOST_COMPANIES" )
+	msg: QEventMessage(( data.code matches "QUE_.*_VIEW" && data.code != "QUE_TAB_BUCKET_VIEW") || data.code == "ACT_VIEW" || data.code == "QUE_TREE_ITEM_HOST_COMPANIES" )
 	kogitoUtils : KogitoUtils()
 then
 	kogitoUtils.triggerWorkflow(SELF, "view", "eventMessage", msg);
