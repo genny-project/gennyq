@@ -5,7 +5,9 @@ import io.quarkus.runtime.StartupEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Arrays;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.enterprise.context.ApplicationScoped;
@@ -26,6 +28,7 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.models.ProcessVariables;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -144,7 +147,7 @@ public class TopologyProducer {
 
 		JsonObject json = jsonb.fromJson(data, JsonObject.class);
 
-		if(json.containsKey("empty")) {
+		if (json.containsKey("empty")) {
 			log.info("Detected a payload with empty=false.. ignoring & proceding..");
 			return false;
 		}
@@ -174,96 +177,133 @@ public class TopologyProducer {
 				return blacklist();
 			}
 
-				String processId = null;
-		if (answer.getProcessId() != null) {
-			processId = answer.getProcessId();
-		} else {
-			JsonObject nonTokenJson = json;
-			if (nonTokenJson.containsKey("token")) {
-				 nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
-			}
-			
-			log.error("No processId in DD Event "+nonTokenJson);
-		}
-	
-		BaseEntity target = null;
-		BaseEntity defBE = null;
-		String askMessageJson = null;
+			String processId = null;
+			if (answer.getProcessId() != null) {
+				processId = answer.getProcessId();
+			} else {
+				JsonObject nonTokenJson = json;
+				if (nonTokenJson.containsKey("token")) {
+					nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
+				}
 
-		if (!StringUtils.isBlank(processId)) {
-			// This means that the target should come from the graphql
-			ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
-			if (processVariables == null) {
-				log.error("Could not find process instance variables for processId [" + processId + "]");
+				log.error("No processId in DD Event " + nonTokenJson);
+			}
+
+			BaseEntity target = null;
+			BaseEntity defBE = null;
+			String askMessageJson = null;
+
+			if (!StringUtils.isBlank(processId)) {
+				// This means that the target should come from the graphql
+				ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
+				if (processVariables == null) {
+					log.error("Could not find process instance variables for processId [" + processId + "]");
+					return false;
+				}
+				target = processVariables.getProcessEntity();
+				defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
+				askMessageJson = processVariables.getAskMessageJson();
+				// Check integrity
+				log.info("CHECK Integrity of processId [" + processId + "]");
+				if (!target.getCode().equals(answer.getTargetCode())) {
+					log.warn("TargetCode " + target.getCode() + " does not match answer target "
+							+ answer.getTargetCode() + " BLACKLISTED");
+					return blacklist();
+				}
+				Optional<EntityAttribute> fieldAttribute = target.findEntityAttribute(attributeCode);
+				if (!fieldAttribute.isPresent()) {
+					log.warn("AttributeCode " + attributeCode + " is not present in the target so BLACKLISTED!");
+					return blacklist();
+				}
+			} else {
+				target = beUtils.getBaseEntityOrNull(answer.getTargetCode());
+				if (target == null) {
+					return false;
+				}
+			}
+
+			// Find the DEF
+			if (defBE == null) {
+				defBE = defUtils.getDEF(target);
+			}
+			if (defBE == null) {
+				log.error("No DEF found for target " + answer.getTargetCode());
 				return false;
 			}
-			target = processVariables.getProcessEntity();
-			defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
-			askMessageJson = processVariables.getAskMessageJson();
-			// Check integrity
-			log.info("CHECK Integrity of processId [" + processId + "]");
-			if (!target.getCode().equals(answer.getTargetCode())) {
-				log.warn("TargetCode " + target.getCode() + " does not match answer target "
-						+ answer.getTargetCode() + " BLACKLISTED");
-				return blacklist();
-			}
-			Optional<EntityAttribute> fieldAttribute= target.findEntityAttribute(attributeCode);
-			if (!fieldAttribute.isPresent()) {
-				log.warn("AttributeCode " +attributeCode+" is not present in the target so BLACKLISTED!"
-					);
-				return blacklist();
-			}
-		} else {
-			target = beUtils.getBaseEntityOrNull(answer.getTargetCode());
-			if (target == null) {
-				return false;
-			}
-		}
+			log.info("Full DEF BE -->" + defBE.getCode() + " Found fine for target " + answer.getTargetCode());
 
-		// Find the DEF
-		if (defBE == null) {
-			defBE = defUtils.getDEF(target);
-		}
-		if (defBE == null) {
-			log.error("No DEF found for target " + answer.getTargetCode());
-			return false;
-		}
-		log.info("Full DEF BE -->"+defBE.getCode()+" Found fine for target " + answer.getTargetCode());
+			// Check if attribute code exists as a UNQ for the DEF
+			Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + attributeCode);
 
-		// Check if attribute code exists as a UNQ for the DEF
-		Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + attributeCode);
+			if (uniqueAttribute.isPresent()) {
+				log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
+						+ ", Attribute found for UNQ_" + attributeCode + " LOOKING for duplicate using "
+						+ uniqueAttribute.get().getValue());
+				String uniqueIndexes = uniqueAttribute.get().getValue();
+				// remove the square brackets
+				uniqueIndexes = uniqueIndexes.substring(1, uniqueIndexes.length() - 1);
+				String[] uniqueArray = uniqueIndexes.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+				// Check if the value is already in the database
+				log.info("The list is " + Arrays.toString(uniqueArray) + " and is " + uniqueArray.length);
 
-		if (uniqueAttribute.isPresent()) {
-			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
-					+ ", Attribute found for UNQ_" + attributeCode + " LOOKING for duplicate using "+uniqueAttribute.get().getValue());
-					
-					// Check if the value is already in the database
-				JsonArray uniqueArray = jsonb.fromJson(uniqueAttribute.get().getValueString(), JsonArray.class);
 				List<UniquePair> uniquePairs = new ArrayList<>();
-				
-						for (javax.json.JsonValue jsonValue : uniqueArray) { 
-							JsonObject uniqueJson = jsonb.fromJson(jsonValue.toString(), JsonObject.class);
-							uniquePairs.add(new UniquePair(answer.getAttributeCode(), answer.getValue()));
-						}
-    	
 
-					Long count = databaseUtils.countBaseEntities(userToken.getProductCode(), defBE, uniquePairs);
-			
-		
-			// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
-						if (count > 0) {
-							BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
-							QDataBaseEntityMessage qDataBaseEntity = new QDataBaseEntityMessage(errorBE);
-							qDataBaseEntity.setToken(userToken.getToken());
-							qDataBaseEntity.setTag("Duplicate Error");
-							qDataBaseEntity.setMessage("Error: This value already exists and must be unique.");
-							KafkaUtils.writeMsg("webcmds", jsonb.toJson(qDataBaseEntity));
-							return false;
+				for (String uniqueAttributeStr : uniqueArray) {
+					uniqueAttributeStr = uniqueAttributeStr.replaceAll("\"", "");
+
+					// find the existing value of the specified attribute
+					String uniqueValue = null;
+					log.info("Processing uniqueAttributeStr " + uniqueAttributeStr + "");
+					if (uniqueAttributeStr.equals(answer.getAttributeCode())) {
+						uniqueValue = answer.getValue();
+						uniquePairs.add(new UniquePair(uniqueAttributeStr, uniqueValue));
+						log.info("Handling uniquePair live " + uniqueAttributeStr + " with value " + uniqueValue);
+					} else {
+						if (!target.containsEntityAttribute(uniqueAttributeStr)) {
+							// assume that the value is null
+						} else {
+							uniqueValue = target.getValueAsString(uniqueAttributeStr);
 						}
-			
-		} else {
-			log.info("uniqueAttribute is Not present! for UNQ_" + attributeCode);
-		}
+						if (!StringUtils.isBlank(uniqueValue)) {
+							uniquePairs.add(new UniquePair(uniqueAttributeStr, uniqueValue));
+						}
+						log.info("Handling uniquePair dependency " + uniqueAttributeStr + " with value " + uniqueValue);
+					}
+
+				}
+
+				Long count = databaseUtils.countBaseEntities(userToken.getProductCode(), defBE, uniquePairs);
+				log.info("Number of baseentities found for uniquePairs " + uniquePairs + " is " + count);
+
+				// if duplicate found then send back the baseentity with the conflicting
+				// attribute and feedback message to display
+				if (count > 0) {
+					log.info("Sending duplicate error to FE");
+					BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
+					Attribute att = qwandaUtils.getAttribute(answer.getAttributeCode());
+					errorBE.addAttribute(att);
+					errorBE.setValue(att, answer.getValue());
+					Optional<EntityAttribute> ea = errorBE.findEntityAttribute(answer.getAttributeCode());
+					if (ea.isPresent()) {
+						ea.get().setFeedback("Error: This value already exists and must be unique.");
+						QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
+						msg.setReplace(true);
+						msg.setToken(userToken.getToken());
+						KafkaUtils.writeMsg("webcmds", msg);
+					}
+
+					// QCmdMessage msg = new QCmdMessage("TOAST", "ERROR");
+					// msg.setMessage("The field (" + uniqueAttribute.get().getAttribute().getName()
+					// 		+ ") must be unique. Please try again.");
+					// msg.setToken(userToken.getToken());
+					// msg.setSend(true);
+					// KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
+					return false;
+				}
+
+			} else {
+				log.info("uniqueAttribute is Not present! for UNQ_" + attributeCode);
+			}
 
 			// check source entity exists
 			BaseEntity sourceBe = beUtils.getBaseEntityByCode(answer.getSourceCode());
@@ -396,7 +436,7 @@ public class TopologyProducer {
 			}
 		}
 
-	return true;
+		return true;
 
 	}
 
@@ -479,7 +519,7 @@ public class TopologyProducer {
 	}
 
 	/**
-	 * Fetch the targetCode stored in the processInstance 
+	 * Fetch the targetCode stored in the processInstance
 	 * for the given processId.
 	 */
 	public ProcessVariables fetchProcessInstanceProcessBE(String processId) {
