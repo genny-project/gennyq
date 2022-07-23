@@ -4,6 +4,12 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.jboss.logging.Logger;
 
@@ -22,6 +28,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.models.UniquePair;
 
 @ApplicationScoped
 public class ProcessAnswerService {
@@ -132,6 +139,34 @@ public class ProcessAnswerService {
 
 		return answered;
 	}
+
+	/**
+	 * Check that uniqueness of BE  (if required) is satisifed .
+	 *
+	 * @param processBE. The target BE containing the answer data
+	 * @param defCode. The baseentity type code of the processBE
+	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
+	 * @return Boolean representing whether uniqueness is satisifed
+	 */
+	public Boolean checkUniqueness(String processBEJson, String defCode, Boolean acceptSubmission) {
+		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		BaseEntity defBE = beUtils.getBaseEntity(defCode);
+
+		// Check if attribute code exists as a UNQ for the DEF
+		List<EntityAttribute> uniqueAttributes = defBE.findPrefixEntityAttributes("UNQ");
+
+		for (EntityAttribute uniqueAttribute : uniqueAttributes) {
+			// Convert to non def attribute Code
+			String attributeCode = uniqueAttribute.getAttributeCode().replace("UNQ_", "");
+			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(attributeCode, uniqueAttribute.getAsString(), processBE, defBE);
+		}
+
+		return acceptSubmission;
+	}
+
+
+
+
 
 	/**
 	 * Save all answers gathered in the processBE.

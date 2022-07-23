@@ -673,13 +673,14 @@ public class QwandaUtils {
 		return (sum % 89 == 0);
 	}
 
-	public boolean checkDuplicate(Answer answer, BaseEntity target, BaseEntity defBE) {
+	
+	public boolean checkDuplicateAttribute(final String attributeCode, final String value, BaseEntity target, BaseEntity defBE) {
 		// Check if attribute code exists as a UNQ for the DEF
-		Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + answer.getAttributeCode());
+		Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + attributeCode);
 
 		if (uniqueAttribute.isPresent()) {
 			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
-					+ ", Attribute found for UNQ_" + answer.getAttributeCode()+ " LOOKING for duplicate using "
+					+ ", Attribute found for UNQ_" + attributeCode+ " LOOKING for duplicate using "
 					+ uniqueAttribute.get().getValue());
 			String uniqueIndexes = uniqueAttribute.get().getValue();
 			// remove the square brackets
@@ -696,8 +697,8 @@ public class QwandaUtils {
 				// find the existing value of the specified attribute
 				String uniqueValue = null;
 				log.info("Processing uniqueAttributeStr " + uniqueAttributeStr + "");
-				if (uniqueAttributeStr.equals(answer.getAttributeCode())) {
-					uniqueValue = answer.getValue();
+				if (uniqueAttributeStr.equals(attributeCode)) {
+					uniqueValue = value;
 					uniquePairs.add(new UniquePair(uniqueAttributeStr, uniqueValue));
 					log.info("Handling uniquePair live " + uniqueAttributeStr + " with value " + uniqueValue);
 				} else {
@@ -722,10 +723,10 @@ public class QwandaUtils {
 			if (count > 0) {
 				log.info("Sending duplicate error to FE");
 				BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
-				Attribute att = getAttribute(answer.getAttributeCode());
+				Attribute att = getAttribute(attributeCode);
 				errorBE.addAttribute(att);
-				errorBE.setValue(att, answer.getValue());
-				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(answer.getAttributeCode());
+				errorBE.setValue(att, value);
+				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(attributeCode);
 				if (ea.isPresent()) {
 					ea.get().setFeedback("Error: This value already exists and must be unique.");
 					QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
@@ -744,10 +745,10 @@ public class QwandaUtils {
 			} else {
 				// clear any error message
 				BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
-				Attribute att = getAttribute(answer.getAttributeCode());
+				Attribute att = getAttribute(attributeCode);
 				errorBE.addAttribute(att);
-				errorBE.setValue(att, answer.getValue());
-				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(answer.getAttributeCode());
+				errorBE.setValue(att, value);
+				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(attributeCode);
 				if (ea.isPresent()) {
 					ea.get().setFeedback(null);
 					QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
@@ -758,7 +759,7 @@ public class QwandaUtils {
 			}
 
 		} else {
-			log.info("uniqueAttribute is Not present! for UNQ_" + answer.getAttributeCode());
+			log.info("uniqueAttribute is Not present! for UNQ_" + attributeCode);
 		}
 		return true; // all ok
 	}

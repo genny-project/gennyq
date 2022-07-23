@@ -232,7 +232,7 @@ public class TopologyProducer {
 			}
 			log.info("Full DEF BE -->" + defBE.getCode() + " Found fine for target " + answer.getTargetCode());
 
-			if (!qwandaUtils.checkDuplicate(answer, target, defBE)) {
+			if (!qwandaUtils.checkDuplicateAttribute(answer.getAttributeCode(), answer.getValue(),  target, defBE)) {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
 				return false;
 			}
