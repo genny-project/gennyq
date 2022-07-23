@@ -70,14 +70,14 @@ end
 rule RouteTestForm 
 salience 1000
 when
-	msg: QEventMessage( data.code matches "QUE_ADD_AGENT" )
+	msg: QEventMessage( data.code matches "QUE_ADD_AGENT" || data.code matches "QUE_ADD_HOST_CPY")
 	kogitoUtils : KogitoUtils()
 	userToken : UserToken()
 	defUtils : DefUtils()
 then
 	System.out.println("Test Form - forwarding to prd_internmatch");
 	
-	System.out.println("Forwarding Event Message...");
+	System.out.println("Forwarding Event Message..."+msg.getData().getCode());
 	KafkaUtils.writeMsg("genny_events", msg);
 	retract(msg);
 end

@@ -189,7 +189,8 @@ public class FrontendService {
 				e.printStackTrace();
 			}
 		}
-
+		// Now load into cache to help baseentityUtils...
+		CacheUtils.putObject(userToken.getProductCode(), processBE.getCode(), processBE);
 		log.info("ProcessBE contains " + processBE.getBaseEntityAttributes().size() + " entity attributes");
 
 		return jsonb.toJson(processBE);

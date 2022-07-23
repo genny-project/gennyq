@@ -106,6 +106,9 @@ public class ProcessAnswerService {
 		processVariables.setProcessEntity(processBE);
 		CacheUtils.putObject(productCode, key, processVariables);
 
+		// Now save the latest in cache to be compatible with many other services.
+		CacheUtils.putObject(productCode, processBE.getCode(), processBE);
+
 		String value = processBE.getValueAsString(answer.getAttributeCode());
 		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 		log.info("Process Entity cached to " + key);

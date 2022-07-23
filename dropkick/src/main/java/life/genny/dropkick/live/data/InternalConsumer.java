@@ -187,16 +187,17 @@ public class InternalConsumer {
 	
 		BaseEntity target = null;
 		BaseEntity defBE = null;
+		String askMessageJson = null;
 
 		if (!StringUtils.isBlank(processId)) {
-			// This means that the target should come from the graphql
 			ProcessVariables processVariables = fetchProcessInstanceProcessBE(processId);
-			if (processVariables == null) {
-				log.error("Could not find process instance for processId [" + processId + "]");
-				return false;
-			}
-			target = processVariables.getProcessEntity();
-			defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
+				if (processVariables == null) {
+					log.error("Could not find process instance variables for processId [" + processId + "]");
+					return false;
+				}
+				target = processVariables.getProcessEntity();
+				defBE = beUtils.getBaseEntityOrNull(processVariables.getDefinitionCode());
+				askMessageJson = processVariables.getAskMessageJson();
 		} else {
 
 			target = beUtils.getBaseEntityOrNull(targetCode);
@@ -240,13 +241,14 @@ public class InternalConsumer {
 	}
 
 	/**
-	 * Fetch the targetCode stored in the processInstance 
+	 * Fetch the targetCode stored in the processInstance
 	 * for the given processId.
 	 */
 	public ProcessVariables fetchProcessInstanceProcessBE(String processId) {
 		BaseEntity processBe = null;
 		String defCode = null;
 		String processBeStr = null;
+		String askMessageJsonStr = null;
 
 		log.info("Fetching processBE for processId : " + processId);
 
@@ -276,6 +278,7 @@ public class InternalConsumer {
 
 		// grab the targetCode from process questions variables
 		processBeStr = variables.getString("processBEJson");
+		askMessageJsonStr = variables.getString("askMessageJson");
 		defCode = variables.containsKey("defCode") ? variables.getString("defCode") : null;
 		processBe = jsonb.fromJson(processBeStr, BaseEntity.class);
 
@@ -286,6 +289,7 @@ public class InternalConsumer {
 		ProcessVariables processVariables = new ProcessVariables();
 		processVariables.setProcessEntity(processBe);
 		processVariables.setDefinitionCode(defCode);
+		processVariables.setAskMessageJson(askMessageJsonStr);
 
 		// cache
 		CacheUtils.putObject(userToken.getProductCode(), processId + ":PROCESS_BE", processVariables);
@@ -579,6 +583,9 @@ public class InternalConsumer {
 
 		// Merge required attribute values
 		// NOTE: This should correct any wrong datatypes too
+
+		// TODO Hack to get around baseentityUtils thinking that processBE is cached.
+
 		searchBE = defUtils.mergeFilterValueVariables(searchBE, ctxMap);
 
 		if (searchBE == null) {
