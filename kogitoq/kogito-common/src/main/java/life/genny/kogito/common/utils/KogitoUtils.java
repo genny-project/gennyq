@@ -382,4 +382,8 @@ public class KogitoUtils {
 
 		session.dispose();
 	}
+
+
+	
+
 }

@@ -40,6 +40,8 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 
+import life.genny.qwandaq.models.UniquePair;
+
 /**
  * A utility class to assist in any Qwanda Engine Question
  * and Answer operations.
@@ -73,7 +75,8 @@ public class QwandaUtils {
 	@Inject
 	UserToken userToken;
 
-	public QwandaUtils() { }
+	public QwandaUtils() {
+	}
 
 	// Deliberately package private!
 	Attribute saveAttribute(final Attribute attribute) {
@@ -81,12 +84,12 @@ public class QwandaUtils {
 		String productCode = userToken.getProductCode();
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
-		if(existingAttrib != null) {
-			if(CommonUtils.compare(attribute, existingAttrib)) {
+		if (existingAttrib != null) {
+			if (CommonUtils.compare(attribute, existingAttrib)) {
 				log.warn("Attribute already exists with same fields: " + existingAttrib.getCode());
 				return existingAttrib;
 			}
-			log.info("Updating existing attribute!: "  + existingAttrib.getCode());
+			log.info("Updating existing attribute!: " + existingAttrib.getCode());
 		}
 
 		CacheUtils.putObject(productCode, attribute.getCode(), attribute);
@@ -96,7 +99,8 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Get an attribute from the in memory attribute map. If productCode not found, it
+	 * Get an attribute from the in memory attribute map. If productCode not found,
+	 * it
 	 * will try to fetch attributes from the DB.
 	 *
 	 * @param attributeCode the code of the attribute to get
@@ -128,7 +132,7 @@ public class QwandaUtils {
 	 */
 	public void loadAllAttributesIntoCache(String productCode) {
 
-		if(StringUtils.isBlank(productCode)) {
+		if (StringUtils.isBlank(productCode)) {
 			log.error("RECEIVED NULL PRODUCT CODE WHILE LOADING ATTRIBUTES INTO CACHE!");
 		}
 
@@ -157,10 +161,12 @@ public class QwandaUtils {
 					nextLoad = (int) (attributeCount - attributesLoaded);
 				}
 
-				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad, null);
+				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad,
+						null);
 				long lastMemory = PerformanceUtils.getMemoryUsage("MEGABYTES");
 
-				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad + " attributes");
+				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad
+						+ " attributes");
 				log.info("Current memory usage: " + lastMemory + "MB");
 
 				for (Attribute attribute : attributeList) {
@@ -179,12 +185,12 @@ public class QwandaUtils {
 				msg.add(attributeList);
 
 				if (attributeList.size() > 0) {
-					log.debug("Start AttributeID:" 
-							+ attributeList.get(0).getId() + ", End AttributeID:" 
+					log.debug("Start AttributeID:"
+							+ attributeList.get(0).getId() + ", End AttributeID:"
 							+ attributeList.get(attributeList.size() - 1).getId());
 				}
 
-				CacheUtils.putObject(productCode, "ATTRIBUTES_P"+currentPage, msg);
+				CacheUtils.putObject(productCode, "ATTRIBUTES_P" + currentPage, msg);
 			}
 
 			log.info("Cached " + totalAttribsCached + " attributes");
@@ -194,17 +200,15 @@ public class QwandaUtils {
 		}
 	}
 
-
-
 	/**
-	* Generate an ask for a question using the question code, the 
-	* source and the target. This operation is recursive if the 
-	* question is a group.
-	*
-	* @param code The code of the question
-	* @param source The source entity
-	* @param target The target entity
-	* @return The generated Ask
+	 * Generate an ask for a question using the question code, the
+	 * source and the target. This operation is recursive if the
+	 * question is a group.
+	 *
+	 * @param code   The code of the question
+	 * @param source The source entity
+	 * @param target The target entity
+	 * @return The generated Ask
 	 */
 	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
 
@@ -218,7 +222,7 @@ public class QwandaUtils {
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if ("QUE_BASEENTITY_GRP".equals(code)) {
 			return generateAskGroupUsingBaseEntity(target);
-	
+
 		}
 
 		String productCode = userToken.getProductCode();
@@ -254,15 +258,17 @@ public class QwandaUtils {
 			log.info("[*] Parent Question: " + question.getCode());
 
 			// fetch questionQuestions from the DB
-			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode, question.getCode());
+			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode,
+					question.getCode());
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"+ questionQuestion.getTargetCode());
+				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
+						+ questionQuestion.getTargetCode());
 
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
-				
+
 				// set boolean fields
 				child.setMandatory(questionQuestion.getMandatory());
 				child.setDisabled(questionQuestion.getDisabled());
@@ -283,10 +289,10 @@ public class QwandaUtils {
 	}
 
 	/**
-	* Recursively set the processId down through an ask tree.
-	*
-	* @param ask The ask to traverse
-	* @param processId The processId to set
+	 * Recursively set the processId down through an ask tree.
+	 *
+	 * @param ask       The ask to traverse
+	 * @param processId The processId to set
 	 */
 	public void recursivelySetProcessId(Ask ask, String processId) {
 
@@ -300,11 +306,11 @@ public class QwandaUtils {
 	}
 
 	/**
-	* Get all attribute codes active within an ask using recursion.
-	*
-	* @param codes The set of codes to add to
-	* @param ask The ask to traverse
-	* @return The udpated set of codes
+	 * Get all attribute codes active within an ask using recursion.
+	 *
+	 * @param codes The set of codes to add to
+	 * @param ask   The ask to traverse
+	 * @return The udpated set of codes
 	 */
 	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
 
@@ -329,11 +335,11 @@ public class QwandaUtils {
 	}
 
 	/**
-	* Check if all Ask mandatory fields are answered for a BaseEntity.
-	*
-	* @param ask The ask to check
-	* @param baseEntity The BaseEntity to check against
-	* @return Boolean
+	 * Check if all Ask mandatory fields are answered for a BaseEntity.
+	 *
+	 * @param ask        The ask to check
+	 * @param baseEntity The BaseEntity to check against
+	 * @return Boolean
 	 */
 	public Boolean mandatoryFieldsAreAnswered(Ask ask, BaseEntity baseEntity) {
 
@@ -360,7 +366,7 @@ public class QwandaUtils {
 				answered = false;
 			}
 
-			String resultLine = (mandatory?"[M]":"[O]")+ " : " + ea.getAttributeCode() + " : " + value; 
+			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + ea.getAttributeCode() + " : " + value;
 			log.info("===> " + resultLine);
 		}
 
@@ -397,7 +403,7 @@ public class QwandaUtils {
 	/**
 	 * Find the submit ask using recursion.
 	 *
-	 * @param ask The ask to traverse
+	 * @param ask      The ask to traverse
 	 * @param disabled Should the submit ask be disabled
 	 * @return The updated ask
 	 */
@@ -418,7 +424,6 @@ public class QwandaUtils {
 
 		return ask;
 	}
-
 
 	/**
 	 * Save an {@link Answer} object.
@@ -482,11 +487,10 @@ public class QwandaUtils {
 		return targets;
 	}
 
-
 	/**
 	 * Delete a currently scheduled message via shleemy.
 	 *
-	 * @param code      the code of the schedule message to delete
+	 * @param code the code of the schedule message to delete
 	 */
 	public void deleteSchedule(String code) {
 
@@ -557,8 +561,8 @@ public class QwandaUtils {
 	/**
 	 * Update the status of the disabled field for an Ask on the web.
 	 *
-	 * @param ask       the ask to update
-	 * @param disabled  the disabled status to set
+	 * @param ask      the ask to update
+	 * @param disabled the disabled status to set
 	 */
 	public void updateAskDisabled(Ask ask, Boolean disabled) {
 
@@ -574,7 +578,7 @@ public class QwandaUtils {
 	/**
 	 * Send an updated entity for each unique target in answers.
 	 *
-	 * @param answers   the answers to send entities for
+	 * @param answers the answers to send entities for
 	 */
 	public void sendToFrontEnd(Answer... answers) {
 
@@ -617,9 +621,9 @@ public class QwandaUtils {
 	/**
 	 * Send feedback for answer data. ERROR, WARN, SUSPICIOUS or HINT.
 	 *
-	 * @param answer    the answer to send for
-	 * @param prefix    the prefix to send
-	 * @param message   the message to send
+	 * @param answer  the answer to send for
+	 * @param prefix  the prefix to send
+	 * @param message the message to send
 	 */
 	public void sendFeedback(Answer answer, String prefix, String message) {
 
@@ -668,4 +672,95 @@ public class QwandaUtils {
 				(total, idx) -> total + weights[idx] * (idx == 0 ? abnDigits[idx] - 1 : abnDigits[idx]));
 		return (sum % 89 == 0);
 	}
+
+	public boolean checkDuplicate(Answer answer, BaseEntity target, BaseEntity defBE) {
+		// Check if attribute code exists as a UNQ for the DEF
+		Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + answer.getAttributeCode());
+
+		if (uniqueAttribute.isPresent()) {
+			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
+					+ ", Attribute found for UNQ_" + answer.getAttributeCode()+ " LOOKING for duplicate using "
+					+ uniqueAttribute.get().getValue());
+			String uniqueIndexes = uniqueAttribute.get().getValue();
+			// remove the square brackets
+			uniqueIndexes = uniqueIndexes.substring(1, uniqueIndexes.length() - 1);
+			String[] uniqueArray = uniqueIndexes.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+			// Check if the value is already in the database
+			log.info("The list is " + Arrays.toString(uniqueArray) + " and is " + uniqueArray.length);
+
+			List<UniquePair> uniquePairs = new ArrayList<>();
+
+			for (String uniqueAttributeStr : uniqueArray) {
+				uniqueAttributeStr = uniqueAttributeStr.replaceAll("\"", "");
+
+				// find the existing value of the specified attribute
+				String uniqueValue = null;
+				log.info("Processing uniqueAttributeStr " + uniqueAttributeStr + "");
+				if (uniqueAttributeStr.equals(answer.getAttributeCode())) {
+					uniqueValue = answer.getValue();
+					uniquePairs.add(new UniquePair(uniqueAttributeStr, uniqueValue));
+					log.info("Handling uniquePair live " + uniqueAttributeStr + " with value " + uniqueValue);
+				} else {
+					if (!target.containsEntityAttribute(uniqueAttributeStr)) {
+						// assume that the value is null
+					} else {
+						uniqueValue = target.getValueAsString(uniqueAttributeStr);
+					}
+					if (!StringUtils.isBlank(uniqueValue)) {
+						uniquePairs.add(new UniquePair(uniqueAttributeStr, uniqueValue));
+					}
+					log.info("Handling uniquePair dependency " + uniqueAttributeStr + " with value " + uniqueValue);
+				}
+
+			}
+
+			Long count = databaseUtils.countBaseEntities(userToken.getProductCode(), defBE, uniquePairs);
+			log.info("Number of "+userToken.getProductCode()+" baseentities found for uniquePairs " + uniquePairs + " is " + count);
+
+			// if duplicate found then send back the baseentity with the conflicting
+			// attribute and feedback message to display
+			if (count > 0) {
+				log.info("Sending duplicate error to FE");
+				BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
+				Attribute att = getAttribute(answer.getAttributeCode());
+				errorBE.addAttribute(att);
+				errorBE.setValue(att, answer.getValue());
+				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(answer.getAttributeCode());
+				if (ea.isPresent()) {
+					ea.get().setFeedback("Error: This value already exists and must be unique.");
+					QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
+					msg.setReplace(true);
+					msg.setToken(userToken.getToken());
+					KafkaUtils.writeMsg("webcmds", msg);
+				}
+
+				// QCmdMessage msg = new QCmdMessage("TOAST", "ERROR");
+				// msg.setMessage("The field (" + uniqueAttribute.get().getAttribute().getName()
+				// + ") must be unique. Please try again.");
+				// msg.setToken(userToken.getToken());
+				// msg.setSend(true);
+				// KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
+				return false;
+			} else {
+				// clear any error message
+				BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
+				Attribute att = getAttribute(answer.getAttributeCode());
+				errorBE.addAttribute(att);
+				errorBE.setValue(att, answer.getValue());
+				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(answer.getAttributeCode());
+				if (ea.isPresent()) {
+					ea.get().setFeedback(null);
+					QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
+					msg.setReplace(true);
+					msg.setToken(userToken.getToken());
+					KafkaUtils.writeMsg("webcmds", msg);
+				}
+			}
+
+		} else {
+			log.info("uniqueAttribute is Not present! for UNQ_" + answer.getAttributeCode());
+		}
+		return true; // all ok
+	}
+
 }
