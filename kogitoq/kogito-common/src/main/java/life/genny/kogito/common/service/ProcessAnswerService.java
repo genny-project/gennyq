@@ -130,15 +130,10 @@ public class ProcessAnswerService {
 
 		// find the submit ask
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processBE);
-		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
-
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", msg);
-
-		return answered;
+		return qwandaUtils.sendSubmit(askMessageJson, answered);
 	}
+
+	
 
 	/**
 	 * Check that uniqueness of BE  (if required) is satisifed .
@@ -148,18 +143,23 @@ public class ProcessAnswerService {
 	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
-	public Boolean checkUniqueness(String processBEJson, String defCode, Boolean acceptSubmission) {
+	public Boolean checkUniqueness(String processBEJson, String defCode, Boolean acceptSubmission, String askMessageJson) {
 		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
 		BaseEntity defBE = beUtils.getBaseEntity(defCode);
 
 		// Check if attribute code exists as a UNQ for the DEF
 		List<EntityAttribute> uniqueAttributes = defBE.findPrefixEntityAttributes("UNQ");
-
+		log.info("Found " + uniqueAttributes.size() + " UNQ attributes");
+		
 		for (EntityAttribute uniqueAttribute : uniqueAttributes) {
 			// Convert to non def attribute Code
 			String attributeCode = uniqueAttribute.getAttributeCode().replace("UNQ_", "");
-			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(attributeCode, uniqueAttribute.getAsString(), processBE, defBE);
+			log.info("Checking UNQ attribute " + attributeCode);
+			String uniqueValue = processBE.getValueAsString(attributeCode);
+			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(attributeCode, uniqueValue, processBE, defBE);
 		}
+
+		qwandaUtils.sendSubmit(askMessageJson, acceptSubmission); // Disable submit button if not unique
 
 		return acceptSubmission;
 	}

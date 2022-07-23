@@ -234,6 +234,8 @@ public class TopologyProducer {
 
 			if (!qwandaUtils.checkDuplicateAttribute(answer.getAttributeCode(), answer.getValue(),  target, defBE)) {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
+				// force submit off
+				qwandaUtils.sendSubmit(askMessageJson,false);
 				return false;
 			}
 

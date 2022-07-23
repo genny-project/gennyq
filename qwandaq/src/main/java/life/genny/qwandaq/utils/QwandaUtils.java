@@ -426,6 +426,31 @@ public class QwandaUtils {
 	}
 
 	/**
+	 * Send Submit enable/disable.
+	 *
+	 * @param askMessageJson The ask message representing the questions
+	 * @param enable. Enable the submit button
+	 * @return Boolean representing whether the submit button was enabled
+	 */
+	public Boolean sendSubmit(String askMessageJson, Boolean enable) {
+
+		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+
+		// NOTE: We only ever check the first ask in the message
+		Ask ask = askMessage.getItems().get(0);
+
+		// find the submit ask
+		recursivelyFindAndUpdateSubmitDisabled(ask, !enable);
+
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg("webcmds", msg);
+
+		return enable;
+	}
+
+	/**
 	 * Save an {@link Answer} object.
 	 *
 	 * @param answer The answer to save
@@ -716,7 +741,11 @@ public class QwandaUtils {
 			}
 
 			Long count = databaseUtils.countBaseEntities(userToken.getProductCode(), defBE, uniquePairs);
-			log.info("Number of "+userToken.getProductCode()+" baseentities found for uniquePairs " + uniquePairs + " is " + count);
+			String uniquePairString = "";
+			for (UniquePair uniquePair : uniquePairs) {
+				uniquePairString += uniquePair.getAttributeCode() + "=" + uniquePair.getValue() + ",";
+			}
+			log.info("Number of "+userToken.getProductCode()+" baseentities found for uniquePairs " + uniquePairString + " is " + count);
 
 			// if duplicate found then send back the baseentity with the conflicting
 			// attribute and feedback message to display
