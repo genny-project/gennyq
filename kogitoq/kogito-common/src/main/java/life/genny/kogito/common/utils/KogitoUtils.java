@@ -365,4 +365,25 @@ public class KogitoUtils {
 		return;
 	}
 
+	public void initBucketRule() {
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+		session.getAgenda().getAgendaGroup("bucket").setFocus();
+
+		// insert utils and other beans
+		session.insert(kogitoUtils);
+		session.insert(jsonb);
+		session.insert(defUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+
+		// Infer data
+		session.fireAllRules();
+
+		session.dispose();
+	}
+
+
+	
+
 }

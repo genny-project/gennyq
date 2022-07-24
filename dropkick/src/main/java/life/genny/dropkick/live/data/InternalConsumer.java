@@ -351,6 +351,9 @@ public class InternalConsumer {
 
 		// Merge required attribute values
 		// NOTE: This should correct any wrong datatypes too
+
+		// TODO Hack to get around baseentityUtils thinking that processBE is cached.
+
 		searchBE = defUtils.mergeFilterValueVariables(searchBE, ctxMap);
 		if (searchBE == null)
 			throw new DebugException("searchBE is null");

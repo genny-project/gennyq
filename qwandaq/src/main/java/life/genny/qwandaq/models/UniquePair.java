@@ -26,5 +26,11 @@ public class UniquePair {
         this.value = value;
     }
 
+    @Override
+    public String toString() {
+        return "UniquePair [attributeCode=" + attributeCode + ", value=" + value + "]";
+    }
+
+    
     
 }

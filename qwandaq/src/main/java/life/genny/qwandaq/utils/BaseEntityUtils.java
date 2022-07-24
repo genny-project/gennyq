@@ -34,6 +34,9 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.constants.GennyConstants;
+
 /**
  * A non-static utility class used for standard
  * operations involving BaseEntitys.
@@ -161,10 +164,11 @@ public class BaseEntityUtils {
 			throw new DebugException("code is empty");
 
 		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(productCode, code);
-		// BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-		BaseEntity entity = null;
+		//  BaseEntityKey key = new BaseEntityKey(productCode, code);
+		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 		
+			BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+
 		// check in database if not in cache
 		if (entity == null) {			
 			

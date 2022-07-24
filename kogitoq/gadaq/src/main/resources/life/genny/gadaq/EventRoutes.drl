@@ -59,7 +59,7 @@ end
 
 rule RouteView 
 when
-	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code == "QUE_TREE_ITEM_HOST_COMPANIES" )
+	msg: QEventMessage(( data.code matches "QUE_.*_VIEW" && data.code != "QUE_TAB_BUCKET_VIEW") || data.code == "ACT_VIEW" || data.code == "QUE_TREE_ITEM_HOST_COMPANIES" )
 	kogitoUtils : KogitoUtils()
 then
 	kogitoUtils.triggerWorkflow(SELF, "view", "eventMessage", msg);
@@ -70,14 +70,14 @@ end
 rule RouteTestForm 
 salience 1000
 when
-	msg: QEventMessage( data.code matches "QUE_ADD_AGENT" )
+	msg: QEventMessage( data.code matches "QUE_ADD_AGENT" || data.code matches "QUE_ADD_HOST_CPY")
 	kogitoUtils : KogitoUtils()
 	userToken : UserToken()
 	defUtils : DefUtils()
 then
 	System.out.println("Test Form - forwarding to prd_internmatch");
 	
-	System.out.println("Forwarding Event Message...");
+	System.out.println("Forwarding Event Message..."+msg.getData().getCode());
 	KafkaUtils.writeMsg("genny_events", msg);
 	retract(msg);
 end

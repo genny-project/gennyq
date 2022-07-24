@@ -636,14 +636,14 @@ public class DatabaseUtils {
 
 		if (uniquePairs.size()==1) {
 			return (Long) entityManager
-			.createQuery("SELECT count(1) FROM BaseEntity be, BaseEntity_Attribute ea WHERE be.id=ea.BASEENTITY_ID and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' and ea.attributeCode=:attributeCode and ea.valueString=:valueString")
+			.createQuery("SELECT count(1) FROM BaseEntity be, EntityAttribute ea WHERE be.code=ea.baseEntityCode and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' and ea.attributeCode=:attributeCode and ea.valueString=:valueString")
 				.setParameter("realmStr", productCode)
 				.setParameter("attributeCode", uniquePairs.get(0).getAttributeCode())
 				.setParameter("valueString", uniquePairs.get(0).getValue())
 				.getResultList().get(0);
 		} else if (uniquePairs.size() == 2) {
 			return (Long) entityManager
-			.createQuery("SELECT count(1) FROM BaseEntity be, BaseEntity_Attribute ea, BaseEntity_Attribute ea2 WHERE be.id=ea.BASEENTITY_ID and be.id=ea2.BASEENTITY_ID and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' "
+			.createQuery("SELECT count(1) FROM BaseEntity be, EntityAttribute ea, EntityAttribute ea2 WHERE be.code=ea.baseEntityCode and be.code=ea2.baseEntityCode and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' "
 			+" and ea.attributeCode=:attributeCode and ea.valueString=:valueString"
 			+" and ea2.attributeCode=:attributeCode2 and ea2.valueString=:valueString2")
 				.setParameter("realmStr", productCode)
