@@ -128,7 +128,7 @@ public class InternalConsumer {
 		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
-			ProcessQuestions processData = fetchProcessData(processId);
+			ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
 			target = processData.getProcessEntity();
 			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		} else {
@@ -391,41 +391,6 @@ public class InternalConsumer {
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
-
-	/**
-	 * Fetch the targetCode stored in the processInstance 
-	 * for the given processId.
-	 * @param processId The id of the process to fetch for
-	 * @return The process data
-	 */
-	public ProcessQuestions fetchProcessData(String processId) {
-
-		log.info("Fetching processBE for processId : " + processId);
-		String key = String.format("%s:PROCESS_DATA", processId); 
-
-		// check cache first
-		ProcessQuestions processData = CacheUtils.getObject(userToken.getProductCode(), key, ProcessQuestions.class);
-		if (processData != null) {
-			return processData;
-		}
-
-		// otherwise query graphql
-		JsonArray array = gqlUtils.queryTable("ProcessInstances", "id", processId, "variables");
-		if (array.isEmpty()) {
-			log.error("Nothing found for processId: " + processId);
-			return null;
-		}
-
-		// grab json and deserialise
-		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
-		String processJson = variables.getString("processJson");
-		processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-
-		// cache the object for quicker retrieval
-		CacheUtils.putObject(userToken.getProductCode(), key, processData);
-
-		return processData;
 	}
 
 }

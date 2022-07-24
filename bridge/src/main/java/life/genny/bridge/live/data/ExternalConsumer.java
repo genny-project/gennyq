@@ -1,14 +1,14 @@
 package life.genny.bridge.live.data;
 
 import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import java.util.UUID;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import io.vertx.core.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import life.genny.bridge.blacklisting.BlackListInfo;
@@ -24,8 +24,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
+
 
 /**
  * ExternalConsumer --- External clients can connect to the endpoint configured in {@link
@@ -183,6 +182,8 @@ public class ExternalConsumer {
 	 * @param gennyToken the users GennyToken
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
+		// JsonObject nonTokenBody = (JsonObject) body.remove("token");
+		
 
 		log.info("Incoming Payload = " + body.toString());
 

@@ -52,6 +52,7 @@ public class Service2Service {
 	public void initialiseScope(S2SData data) {
 		log.info(data.toString());
 		scope.init(jsonb.toJson(data));
+		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 	}
 
 	/**

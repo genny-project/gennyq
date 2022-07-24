@@ -23,6 +23,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.NotInitializedException;
 import life.genny.qwandaq.validation.Validation;
+import life.genny.qwandaq.models.UniquePair;
 
 /*
  * A utility class used for standard read and write 
@@ -51,13 +52,14 @@ public class DatabaseUtils {
 
 	/**
 	 * Get all attributes with a specific Prefix
+	 * 
 	 * @param productCode - Product Code to load from
-	 * @param prefix - Prefix to check for
+	 * @param prefix      - Prefix to check for
 	 * @return A list of attributes
 	 */
 	// TODO: Lint this against accepted prefixes
 	public List<Attribute> findAttributesWithPrefix(String productCode, String prefix) {
-		return findAttributes(productCode, null, null, "PRM_");		
+		return findAttributes(productCode, null, null, "PRM_");
 	}
 
 	/**
@@ -65,6 +67,7 @@ public class DatabaseUtils {
 	 * If pageSize and pageNumber are both null, all results will be returned at
 	 * once.
 	 * If wildcard is not null, the result codes will contain the wildcard string.
+	 * 
 	 * @param realm      the realm to find in
 	 * @param pageSize   the pageSize to fetch
 	 * @param pageNumber the pageNumber to fetch
@@ -78,14 +81,14 @@ public class DatabaseUtils {
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM Validation WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
 		Query query = entityManager.createQuery(queryStr, Validation.class)
-			.setParameter("realmStr", realm);
+				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
 			query.setParameter("code", "%" + wildcard + "%");
 		}
 		if (pageNumber != null && pageSize != null) {
 			query = query.setFirstResult((pageNumber - 1) * pageSize)
-				.setMaxResults(pageSize);
+					.setMaxResults(pageSize);
 		}
 
 		return query.getResultList();
@@ -93,15 +96,16 @@ public class DatabaseUtils {
 
 	/**
 	 * Count the number of attributes in a realm database.
+	 * 
 	 * @param realm The realm to query on
 	 * @return A Long representing the number of attributes
 	 */
 	public Long countAttributes(String realm) {
 		checkEntityManager();
 		return (Long) entityManager
-			.createQuery("SELECT count(1) FROM Attribute WHERE realm=:realmStr AND name not like 'App\\_%'")
-			.setParameter("realmStr", realm)
-			.getResultList().get(0);
+				.createQuery("SELECT count(1) FROM Attribute WHERE realm=:realmStr AND name not like 'App\\_%'")
+				.setParameter("realmStr", realm)
+				.getResultList().get(0);
 	}
 
 	/**
@@ -109,6 +113,7 @@ public class DatabaseUtils {
 	 * If pageSize and pageNumber are both null, all results will be returned at
 	 * once.
 	 * If wildcard is not null, the result codes will contain the wildcard string.
+	 * 
 	 * @param realm    the realm to find in
 	 * @param startIdx the start index to fetch
 	 * @param pageSize the pageSize to fetch (Starting from Page 1)
@@ -123,7 +128,7 @@ public class DatabaseUtils {
 				+ " AND name not like 'App\\_%' order by id";
 
 		Query query = entityManager.createQuery(queryStr, Attribute.class)
-			.setParameter("realmStr", realm);
+				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
 			query.setParameter("code", "%" + wildcard + "%");
@@ -142,6 +147,7 @@ public class DatabaseUtils {
 	 * If pageSize and pageNumber are both null, all results will be returned at
 	 * once.
 	 * If wildcard is not null, the result codes will contain the wildcard string.
+	 * 
 	 * @param realm      the realm to find in
 	 * @param pageSize   the pageSize to fetch
 	 * @param pageNumber the pageNumber to fetch
@@ -155,14 +161,14 @@ public class DatabaseUtils {
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM BaseEntity WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
 		Query query = entityManager.createQuery(queryStr, BaseEntity.class)
-			.setParameter("realmStr", realm);
+				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
 			query.setParameter("code", "%" + wildcard + "%");
 		}
 		if (pageNumber != null && pageSize != null) {
 			query = query.setFirstResult((pageNumber - 1) * pageSize)
-				.setMaxResults(pageSize);
+					.setMaxResults(pageSize);
 		}
 
 		return query.getResultList();
@@ -174,6 +180,7 @@ public class DatabaseUtils {
 	 * If pageSize and pageNumber are both null, all results will be returned at
 	 * once.
 	 * If wildcard is not null, the result codes will contain the wildcard string.
+	 * 
 	 * @param realm      the realm to find in
 	 * @param pageSize   the pageSize to fetch
 	 * @param pageNumber the pageNumber to fetch
@@ -186,14 +193,14 @@ public class DatabaseUtils {
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM Question WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
 		Query query = entityManager.createQuery(queryStr, Question.class)
-			.setParameter("realmStr", realm);
+				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
 			query.setParameter("code", "%" + wildcard + "%");
 		}
 		if (pageNumber != null && pageSize != null) {
 			query = query.setFirstResult((pageNumber - 1) * pageSize)
-				.setMaxResults(pageSize);
+					.setMaxResults(pageSize);
 		}
 
 		return query.getResultList();
@@ -206,6 +213,7 @@ public class DatabaseUtils {
 	 * once.
 	 * If wildcard is not null, the result sourceCodes will contain the wildcard
 	 * string.
+	 * 
 	 * @param realm      the realm to find in
 	 * @param pageSize   the pageSize to fetch
 	 * @param pageNumber the pageNumber to fetch
@@ -220,14 +228,14 @@ public class DatabaseUtils {
 		String queryStr = "FROM QuestionQuestion WHERE realm=:realmStr"
 				+ (isWildcard ? " AND sourceCode like :code" : "");
 		Query query = entityManager.createQuery(queryStr, QuestionQuestion.class)
-			.setParameter("realmStr", realm);
+				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
 			query.setParameter("code", "%" + wildcard + "%");
 		}
 		if (pageNumber != null && pageSize != null) {
 			query = query.setFirstResult((pageNumber - 1) * pageSize)
-				.setMaxResults(pageSize);
+					.setMaxResults(pageSize);
 		}
 
 		return query.getResultList();
@@ -235,6 +243,7 @@ public class DatabaseUtils {
 
 	/**
 	 * Grab a Validation from the database using a code and a realm.
+	 * 
 	 * @param realm the realm to find in
 	 * @param code  the code to find by
 	 * @return Validation
@@ -244,14 +253,15 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 		return entityManager
-			.createQuery("FROM Validation WHERE realm=:realmStr AND code=:code", Validation.class)
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.getSingleResult();
+				.createQuery("FROM Validation WHERE realm=:realmStr AND code=:code", Validation.class)
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.getSingleResult();
 	}
 
 	/**
 	 * Fetch an Attribute from the database using a realm and a code.
+	 * 
 	 * @param realm the realm to find in
 	 * @param code  the code to find by
 	 * @return Attribute
@@ -261,10 +271,10 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 		return entityManager
-			.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.getSingleResult();
+				.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.getSingleResult();
 	}
 
 	/**
@@ -278,14 +288,15 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 		return entityManager
-			.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.getSingleResult();
+				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.getSingleResult();
 	}
 
 	/**
 	 * Fetch A {@link Question} from the database using the question code.
+	 * 
 	 * @param realm the realm to find in
 	 * @param code  the code to find by
 	 * @return Question
@@ -295,36 +306,38 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 		return entityManager
-			.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.getSingleResult();
+				.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.getSingleResult();
 	}
 
 	/**
 	 * Find a QuestionQuestion using a realm, a sourceCode and a targetCode.
+	 * 
 	 * @param realm      the realm to find in
 	 * @param sourceCode the sourceCode to find by
 	 * @param targetCode the targetCode to find by
 	 * @return List list of QuestionQuestions
 	 */
 
-	public QuestionQuestion findQuestionQuestionBySourceAndTarget(String realm, 
+	public QuestionQuestion findQuestionQuestionBySourceAndTarget(String realm,
 			String sourceCode, String targetCode) {
 
 		checkEntityManager();
 		return entityManager
-			.createQuery(
-				"FROM QuestionQuestion WHERE realm=:realmStr AND sourceCode = :sourceCode AND targetCode = :targetCode",
-				QuestionQuestion.class)
-			.setParameter("realmStr", realm)
-			.setParameter("sourceCode", sourceCode)
-			.setParameter("targetCode", targetCode)
-			.getSingleResult();
+				.createQuery(
+						"FROM QuestionQuestion WHERE realm=:realmStr AND sourceCode = :sourceCode AND targetCode = :targetCode",
+						QuestionQuestion.class)
+				.setParameter("realmStr", realm)
+				.setParameter("sourceCode", sourceCode)
+				.setParameter("targetCode", targetCode)
+				.getSingleResult();
 	}
 
 	/**
 	 * Find a list of QuestionQuestions using a realm and a sourceCode
+	 * 
 	 * @param realm      the realm to find in
 	 * @param sourceCode the sourceCode to find by
 	 * @return List list of QuestionQuestions
@@ -333,16 +346,17 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 		return entityManager
-			.createQuery(
-					"FROM QuestionQuestion WHERE realm=:realmStr AND sourceCode = :sourceCode order by weight ASC",
-					QuestionQuestion.class)
-			.setParameter("realmStr", realm)
-			.setParameter("sourceCode", sourceCode)
-			.getResultList();
+				.createQuery(
+						"FROM QuestionQuestion WHERE realm=:realmStr AND sourceCode = :sourceCode order by weight ASC",
+						QuestionQuestion.class)
+				.setParameter("realmStr", realm)
+				.setParameter("sourceCode", sourceCode)
+				.getResultList();
 	}
 
 	/**
 	 * Find a list of Asks using question code, sourceCode and targetCode.
+	 * 
 	 * @param realm        realm to find in
 	 * @param questionCode questionCode to find
 	 * @param sourceCode   sourceCode to find by
@@ -354,18 +368,19 @@ public class DatabaseUtils {
 
 		checkEntityManager();
 		return entityManager
-			.createQuery("FROM Ask WHERE realm=:realmStr AND sourceCode=:sourceCode"
-					+ " AND targetCode=:targetCode AND questionCode=:questionCode", Ask.class)
-			.setParameter("questionCode", questionCode)
-			.setParameter("sourceCode", sourceCode)
-			.setParameter("realmStr", realm)
-			.setParameter("targetCode", targetCode)
-			.getResultList();
+				.createQuery("FROM Ask WHERE realm=:realmStr AND sourceCode=:sourceCode"
+						+ " AND targetCode=:targetCode AND questionCode=:questionCode", Ask.class)
+				.setParameter("questionCode", questionCode)
+				.setParameter("sourceCode", sourceCode)
+				.setParameter("realmStr", realm)
+				.setParameter("targetCode", targetCode)
+				.getResultList();
 	}
 
 	/**
 	 * Find the parent links.
-	 * @param realm Realm to query
+	 * 
+	 * @param realm      Realm to query
 	 * @param targetCode Code of the target entity
 	 * @return A list of Links
 	 */
@@ -373,13 +388,14 @@ public class DatabaseUtils {
 		checkEntityManager();
 		return entityManager.createQuery("SELECT ee.link FROM EntityEntity ee"
 				+ " where ee.pk.targetCode=:targetCode and ee.pk.source.realm=:realmStr", Link.class)
-			.setParameter("targetCode", targetCode)
-			.setParameter("realmStr", realm)
-			.getResultList();
+				.setParameter("targetCode", targetCode)
+				.setParameter("realmStr", realm)
+				.getResultList();
 	}
 
 	/**
 	 * Save a {@link Validation} to the database.
+	 * 
 	 * @param validation A {@link Validation} object to save
 	 */
 	@Transactional
@@ -404,6 +420,7 @@ public class DatabaseUtils {
 
 	/**
 	 * Save an {@link Attribute} to the database.
+	 * 
 	 * @param attribute An {@link Attribute} object to save
 	 */
 	@Transactional
@@ -428,6 +445,7 @@ public class DatabaseUtils {
 
 	/**
 	 * Save a {@link BaseEntity} to the database.
+	 * 
 	 * @param entity A {@link BaseEntity} object to save
 	 */
 	@Transactional
@@ -450,9 +468,9 @@ public class DatabaseUtils {
 		log.info("Successfully saved BaseEntity " + entity.getCode());
 	}
 
-
 	/**
 	 * Save a {@link Question} to the database.
+	 * 
 	 * @param question A {@link Question} object to save
 	 */
 	@Transactional
@@ -477,6 +495,7 @@ public class DatabaseUtils {
 
 	/**
 	 * Save a {@link QuestionQuestion} to the database.
+	 * 
 	 * @param questionQuestion A {@link QuestionQuestion} object to save
 	 */
 	@Transactional
@@ -493,7 +512,7 @@ public class DatabaseUtils {
 					pk.getSourceCode(),
 					pk.getTargetCode());
 		} catch (NoResultException e) {
-			log.debugf("{}:{} not found in database, creating new row...", 
+			log.debugf("{}:{} not found in database, creating new row...",
 					questionQuestion.getSourceCode(), questionQuestion.getTargetCode());
 		}
 
@@ -508,6 +527,7 @@ public class DatabaseUtils {
 
 	/**
 	 * Delete a Validation from the database.
+	 * 
 	 * @param realm realm to delete in
 	 * @param code  Code of the Validation to delete.
 	 */
@@ -517,15 +537,16 @@ public class DatabaseUtils {
 		log.info("Deleting Validation " + code);
 		checkEntityManager();
 		entityManager.createQuery("DELETE Validation WHERE realm=:realmStr AND code=:code")
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.executeUpdate();
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.executeUpdate();
 
 		log.info("Successfully deleted Validation " + code + " in realm " + realm);
 	}
 
 	/**
 	 * Delete an atttribute from the database.
+	 * 
 	 * @param realm realm to delete in
 	 * @param code  Code of the attribute to delete.
 	 */
@@ -535,15 +556,16 @@ public class DatabaseUtils {
 		log.info("Deleting Attribute " + code);
 		checkEntityManager();
 		entityManager.createQuery("DELETE Attribute WHERE realm=:realmStr AND code=:code")
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.executeUpdate();
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.executeUpdate();
 
 		log.info("Successfully deleted Attribute " + code + " in realm " + realm);
 	}
 
 	/**
 	 * Delete a BaseEntity from the database.
+	 * 
 	 * @param realm realm to delete in
 	 * @param code  Code of the BaseEntity to delete.
 	 */
@@ -553,15 +575,16 @@ public class DatabaseUtils {
 		log.info("Deleting BaseEntity " + code);
 		checkEntityManager();
 		entityManager.createQuery("DELETE BaseEntity WHERE realm=:realmStr AND code=:code")
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.executeUpdate();
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.executeUpdate();
 
 		log.info("Successfully deleted BaseEntity " + code + " in realm " + realm);
 	}
 
 	/**
 	 * Delete a Question from the database.
+	 * 
 	 * @param realm realm to delete in
 	 * @param code  Code of the Question to delete.
 	 */
@@ -571,15 +594,16 @@ public class DatabaseUtils {
 		log.info("Deleting Question " + code);
 		checkEntityManager();
 		entityManager.createQuery("DELETE Question WHERE realm=:realmStr AND code=:code")
-			.setParameter("realmStr", realm)
-			.setParameter("code", code)
-			.executeUpdate();
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.executeUpdate();
 
 		log.info("Successfully deleted Question " + code + " in realm " + realm);
 	}
 
 	/**
 	 * Delete a QuestionQuestion from the database.
+	 * 
 	 * @param realm      the realm to delete in
 	 * @param sourceCode the sourceCode to delete by
 	 * @param targetCode the targetCode to delete by
@@ -591,12 +615,45 @@ public class DatabaseUtils {
 		checkEntityManager();
 		entityManager.createQuery(
 				"DELETE QuestionQuestion WHERE realm=:realmStr AND sourceCode=:sourceCode AND targetCode=:targetCode")
-			.setParameter("realmStr", realm)
-			.setParameter("sourceCode", sourceCode)
-			.setParameter("targetCode", targetCode)
-			.executeUpdate();
+				.setParameter("realmStr", realm)
+				.setParameter("sourceCode", sourceCode)
+				.setParameter("targetCode", targetCode)
+				.executeUpdate();
 
 		log.info("Successfully deleted QuestionQuestion " + sourceCode + ":" + targetCode + " in realm " + realm);
 	}
 
+	/**
+	 * Count the number of baseentities in a realm database that match the unique attributeCode:value pairs.
+	 * @param productCode The realm to query on
+	 * @param defBe The DEF to search for
+	 * @param uniquePairs The attributeCode:value pairs to search for
+	 * @return A Long representing the number of baseentities that match
+	 */
+	public Long countBaseEntities(final String productCode, final BaseEntity defBe, final List< UniquePair> uniquePairs) {
+		// Assume for now, just one or two pairs
+		String prefix = (String)defBe.getValueAsString("PRI_PREFIX"); // will always existand safe from sql injection
+
+		if (uniquePairs.size()==1) {
+			return (Long) entityManager
+			.createQuery("SELECT count(1) FROM BaseEntity be, BaseEntity_Attribute ea WHERE be.id=ea.BASEENTITY_ID and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' and ea.attributeCode=:attributeCode and ea.valueString=:valueString")
+				.setParameter("realmStr", productCode)
+				.setParameter("attributeCode", uniquePairs.get(0).getAttributeCode())
+				.setParameter("valueString", uniquePairs.get(0).getValue())
+				.getResultList().get(0);
+		} else if (uniquePairs.size() == 2) {
+			return (Long) entityManager
+			.createQuery("SELECT count(1) FROM BaseEntity be, BaseEntity_Attribute ea, BaseEntity_Attribute ea2 WHERE be.id=ea.BASEENTITY_ID and be.id=ea2.BASEENTITY_ID and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' "
+			+" and ea.attributeCode=:attributeCode and ea.valueString=:valueString"
+			+" and ea2.attributeCode=:attributeCode2 and ea2.valueString=:valueString2")
+				.setParameter("realmStr", productCode)
+				.setParameter("attributeCode", uniquePairs.get(0).getAttributeCode())
+				.setParameter("valueString", uniquePairs.get(0).getValue())
+					.setParameter("attributeCode2", uniquePairs.get(1).getAttributeCode())
+				.setParameter("valueString2", uniquePairs.get(1).getValue())
+				.getResultList().get(0);
+		} else {
+			throw new IllegalArgumentException("Only one or two unique pairs are supported");
+		}
+	}
 }

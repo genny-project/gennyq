@@ -1,6 +1,10 @@
 package life.genny.lauchy.streams;
 
 import io.quarkus.runtime.StartupEvent;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -8,24 +12,34 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -33,6 +47,7 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+import life.genny.qwandaq.models.UniquePair;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -62,6 +77,12 @@ public class TopologyProducer {
 	@Inject
 	BaseEntityUtils beUtils;
 
+	@Inject
+	GraphQLUtils gqlUtils;
+
+	@Inject
+	DatabaseUtils databaseUtils;
+
 	void onStart(@Observes StartupEvent ev) {
 
 		if (service.showValues()) {
@@ -81,7 +102,7 @@ public class TopologyProducer {
 		builder
 				.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
 				.peek((k, v) -> scope.init(v))
-				.peek((k, v) -> log.info("Received message: " + v))
+				.peek((k, v) -> log.info("Received message: " + stripToken(v)))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
 				.filter((k, v) -> validate(v))
@@ -89,6 +110,17 @@ public class TopologyProducer {
 				.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
 
 		return builder.build();
+	}
+
+	/**
+	 * Helper function to show the data without a token
+	 *
+	 * @param data
+	 * @return
+	 */
+	public String stripToken(String data) {
+		JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
+		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
 	}
 
 	/**
@@ -127,6 +159,8 @@ public class TopologyProducer {
 		for (int i = 0; i < items.size(); i++) {
 
 			Answer answer = jsonb.fromJson(items.get(i).toString(), Answer.class);
+			String attributeCode = answer.getAttributeCode();
+			String processAttributeCode = null;
 
 			// TODO: check questionCode by fetching from Questions
 			// TODO: check askID by fetching from Tasks
@@ -140,6 +174,83 @@ public class TopologyProducer {
 				return blacklist();
 			}
 
+				String processId = null;
+		if (answer.getProcessId() != null) {
+			processId = answer.getProcessId();
+		} else {
+			JsonObject nonTokenJson = json;
+			if (nonTokenJson.containsKey("token")) {
+				 nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
+			}
+			
+			log.error("No processId in DD Event "+nonTokenJson);
+		}
+	
+		BaseEntity target = null;
+		BaseEntity defBE = null;
+		String askMessageJson = null;
+
+		if (!StringUtils.isBlank(processId)) {
+			// This means that the target should come from the graphql
+			ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+			target = processData.getProcessEntity();
+			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+			askMessageJson = jsonb.toJson(processData.getAskMessage());
+			// Check integrity
+			log.info("CHECK Integrity of processId [" + processId + "]");
+			if (!target.getCode().equals(answer.getTargetCode())) {
+				log.warn("TargetCode " + target.getCode() + " does not match answer target "
+						+ answer.getTargetCode() + " BLACKLISTED");
+				return blacklist();
+			}
+			Optional<EntityAttribute> fieldAttribute= target.findEntityAttribute(attributeCode);
+			if (!fieldAttribute.isPresent()) {
+				log.warn("AttributeCode " +attributeCode+" is not present in the target so BLACKLISTED!"
+					);
+				return blacklist();
+			}
+		} else {
+			target = beUtils.getBaseEntity(answer.getTargetCode());
+			defBE = defUtils.getDEF(target);
+		}
+
+		log.info("Full DEF BE -->"+defBE.getCode()+" Found fine for target " + answer.getTargetCode());
+
+		// Check if attribute code exists as a UNQ for the DEF
+		Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + attributeCode);
+
+		if (uniqueAttribute.isPresent()) {
+			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
+					+ ", Attribute found for UNQ_" + attributeCode + " LOOKING for duplicate using "+uniqueAttribute.get().getValue());
+					
+					// Check if the value is already in the database
+				JsonArray uniqueArray = jsonb.fromJson(uniqueAttribute.get().getValueString(), JsonArray.class);
+				List<UniquePair> uniquePairs = new ArrayList<>();
+				
+						for (javax.json.JsonValue jsonValue : uniqueArray) { 
+							JsonObject uniqueJson = jsonb.fromJson(jsonValue.toString(), JsonObject.class);
+							uniquePairs.add(new UniquePair(answer.getAttributeCode(), answer.getValue()));
+						}
+    	
+
+					Long count = databaseUtils.countBaseEntities(userToken.getProductCode(), defBE, uniquePairs);
+			
+		
+			// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
+						if (count > 0) {
+							BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
+							QDataBaseEntityMessage qDataBaseEntity = new QDataBaseEntityMessage(errorBE);
+							qDataBaseEntity.setToken(userToken.getToken());
+							qDataBaseEntity.setTag("Duplicate Error");
+							qDataBaseEntity.setMessage("Error: This value already exists and must be unique.");
+							KafkaUtils.writeMsg("webcmds", jsonb.toJson(qDataBaseEntity));
+							return false;
+						}
+			
+		} else {
+			log.info("uniqueAttribute is Not present! for UNQ_" + attributeCode);
+		}
+
 			// check source entity exists
 			BaseEntity sourceBe = beUtils.getBaseEntityByCode(answer.getSourceCode());
 			if (sourceBe == null) {
@@ -148,35 +259,46 @@ public class TopologyProducer {
 			}
 			log.info("Source = " + sourceBe.getCode() + ":" + sourceBe.getName());
 
-			// check target entity exist
-			BaseEntity targetBe = beUtils.getBaseEntityByCode(answer.getTargetCode());
-			if (targetBe == null) {
-				log.error("Target " + answer.getTargetCode() + " does not exist");
-				return blacklist();
-			}
+			// TODO: do this better
+			// The attribute should be in askMessageJson
 
-			// check DEF was found for target
-			BaseEntity defBe = defUtils.getDEF(targetBe);
-			if (defBe == null) {
-				// log.errorv("DEF entity not found for {}", targetBe.getCode());
-				log.error("DEF entity not found for " + targetBe.getCode());
-				return blacklist();
-			}
-
-			// check attribute code is allowed by targetDEF
-			if (!defBe.containsEntityAttribute("ATT_" + answer.getAttributeCode())) {
-				// log.errorv("AttributeCode {} not allowed for {}", answer.getAttributeCode(),
-				// defBe.getCode());
-				log.error("AttributeCode " + answer.getAttributeCode() + " not allowed for " + defBe.getCode());
-				return blacklist();
-			}
-
-			// check attribute exists
 			Attribute attribute = qwandaUtils.getAttribute(answer.getAttributeCode());
 			if (attribute == null) {
-				// log.errorv("AttributeCode {} does not existing", answer.getAttributeCode());
-				log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
+				log.error("Attribute " + answer.getAttributeCode() + " does not exist");
 				return blacklist();
+			}
+
+			// check target entity exist
+			if (StringUtils.isBlank(processId)) {
+				BaseEntity targetBe = beUtils.getBaseEntityByCode(answer.getTargetCode());
+				if (targetBe == null) {
+					log.error("Target " + answer.getTargetCode() + " does not exist");
+					return blacklist();
+				}
+
+				// check DEF was found for target
+				BaseEntity defBe = defUtils.getDEF(targetBe);
+				if (defBe == null) {
+					// log.errorv("DEF entity not found for {}", targetBe.getCode());
+					log.error("DEF entity not found for " + targetBe.getCode());
+					return blacklist();
+				}
+
+				// check attribute code is allowed by targetDEF
+				if (!defBe.containsEntityAttribute("ATT_" + answer.getAttributeCode())) {
+					// log.errorv("AttributeCode {} not allowed for {}", answer.getAttributeCode(),
+					// defBe.getCode());
+					log.error("AttributeCode " + answer.getAttributeCode() + " not allowed for " + defBe.getCode());
+					return blacklist();
+				}
+
+				// check attribute exists
+				// TODO: do this better
+				if (!askMessageJson.contains(answer.getAttributeCode())) {
+					// log.errorv("AttributeCode {} does not existing", answer.getAttributeCode());
+					log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
+					return blacklist();
+				}
 			}
 
 			DataType dataType = attribute.getDataType();
@@ -188,9 +310,9 @@ public class TopologyProducer {
 
 				// So send back a dummy empty value for the LNK_PERSON
 				try {
-					targetBe.setValue(attribute, "[]");
+					target.setValue(attribute, "[]");
 
-					QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(targetBe);
+					QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(target);
 					responseMsg.setTotal(1L);
 					responseMsg.setReturnCount(1L);
 					responseMsg.setToken(userToken.getToken());
@@ -260,7 +382,8 @@ public class TopologyProducer {
 			}
 		}
 
-		return true;
+	return true;
+
 	}
 
 	/**

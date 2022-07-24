@@ -8,6 +8,7 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -62,7 +63,9 @@ public class InternalConsumer {
 	public void getData(String data) {
 
 		Instant start = Instant.now();
-		log.info("Received Data : " + data);
+		JsonObject nonTokenJson = jsonb.fromJson(data, JsonObject.class);
+		 nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
+		log.info("Received Data : " + nonTokenJson.toString());
 
 		// init scope and process msg
 		scope.init(data);

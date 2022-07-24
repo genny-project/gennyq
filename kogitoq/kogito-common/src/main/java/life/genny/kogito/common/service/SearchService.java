@@ -1,6 +1,8 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -123,4 +125,31 @@ public class SearchService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
+	public void getBuckets(String eventCode) throws  Exception {
+		String searchCode = "SBE_"+StringUtils.removeStart(eventCode, "QUE_");
+
+		List<String> bucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
+
+		sendBucketData(searchCode,bucketCodes);
+
+		bucketCodes.stream().forEach(e -> {
+			searchUtils.searchTable(e);
+		});
+
+	}
+
+	public void sendBucketData(String source, List<String> bucketCodes) {
+		List<BaseEntity> listBase = new ArrayList<>();
+		for(String str: bucketCodes){
+			BaseEntity base = new BaseEntity(str);
+			base.setRealm(userToken.getRealm());
+			listBase.add(new BaseEntity(str));
+		}
+
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(listBase);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		msg.setParentCode(source);
+		KafkaUtils.writeMsg("webcmds", msg);
+	}
 }

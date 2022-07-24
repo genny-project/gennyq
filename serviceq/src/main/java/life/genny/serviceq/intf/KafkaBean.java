@@ -56,7 +56,7 @@ public class KafkaBean implements KafkaInterface {
 				throw new Exception("Outgoing message must have a token. Found null!");
 			}
 		} catch (Exception e) {
-			log.debug("Message could not be deserialized to a JsonObject.");
+			log.debug("Message could not be deserialized to a JsonObject.-->"+payload);
 		}
 
 		// create metadata for correct bridge if outgoing
