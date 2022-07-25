@@ -163,7 +163,7 @@ public class BaseEntityUtils {
 		// check for entity in the cache
 		//  BaseEntityKey key = new BaseEntityKey(productCode, code);
 		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-
+		BaseEntity entity = null;
 		// check in database if not in cache
 		if (entity == null) {			
 			try {
