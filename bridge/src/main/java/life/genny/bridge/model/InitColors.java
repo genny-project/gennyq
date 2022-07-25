@@ -8,12 +8,17 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * @author Jasper Robison
  */
 @RegisterForReflection
-public class InitColours {
+public class InitColors {
 
 	private String primary;
 	private String secondary;
 
-	public InitColours() {
+	public InitColors() {
+    }
+
+    public InitColors(String primary, String secondary) {
+        this.primary = primary;
+        this.secondary = secondary;
     }
 
     public String getPrimary() {

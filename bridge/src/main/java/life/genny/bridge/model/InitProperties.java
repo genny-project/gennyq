@@ -24,7 +24,7 @@ public class InitProperties {
 
     String realm;
 	String clientId;
-	InitColours colours;
+	InitColors colors;
 
     @JsonbProperty("ENV_KEYCLOAK_REDIRECTURI")
     String keycloakRedirectUri;
@@ -84,12 +84,12 @@ public class InitProperties {
         return clientId;
     }
 
-    public InitColours getColours() {
-        return colours;
+    public InitColors getColors() {
+        return colors;
     }
 
-    public void setColours(InitColours colours) {
-        this.colours = colours;
+    public void setColors(InitColors colors) {
+        this.colors = colors;
     }
 
     /**
