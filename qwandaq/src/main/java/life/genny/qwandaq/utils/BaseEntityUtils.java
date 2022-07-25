@@ -138,7 +138,10 @@ public class BaseEntityUtils {
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String code) {
-
+		if (userToken == null) {
+			log.error("userToken is null");
+			return null;
+		}
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
   
