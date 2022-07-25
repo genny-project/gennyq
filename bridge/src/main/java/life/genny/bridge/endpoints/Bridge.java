@@ -37,8 +37,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
-
-
 /**
  * Bridge ---Endpoints consisting in providing model data from the model
  * life.genny.bridge.model also there are some endpoints that handle the data
@@ -89,7 +87,26 @@ public class Bridge {
         log.info("Using URL for init: " + url);
 
 		try {
-			InitProperties props = new InitProperties(uriInfo.getBaseUri().toString());
+			// init config properties
+			InitProperties props = new InitProperties();
+			props.setRealm("internmatch");
+			props.setKeycloakRedirectUri(CommonUtils.getSystemEnv("ENV_KEYCLOAK_REDIRECTURI"));
+			props.setMediaProxyUrl(url);
+			props.setApiUrl(url);
+
+			// init clientId
+			String cid = props.determineClientId(url);
+			if ("internmatch".equals(cid)) {
+				cid = "alyson";
+			}
+			props.setClientId(cid);
+
+			// // init colours
+			// InitColours colours = new InitColours();
+			// colours.setPrimary(primary);
+			// colours.setSecondary(secondary);
+			// props.setColours(colours);
+
 			log.info("props=["+props+"]");
 			String json = jsonb.toJson(props);
 			return Response.ok(json).build();

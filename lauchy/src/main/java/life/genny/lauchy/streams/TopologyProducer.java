@@ -215,12 +215,7 @@ public class TopologyProducer {
 				defBE = defUtils.getDEF(target);
 			}
 
-			// } else {
-			// 	target = beUtils.getBaseEntity(answer.getTargetCode());
-			// 	defBE = defUtils.getDEF(target);
-			// }
-
-			log.info("Full DEF BE -->"+defBE.getCode()+" Found fine for target " + answer.getTargetCode());
+			log.infof("Definition %s found for target %s", defBE.getCode(), answer.getTargetCode());
 
 			// Check if attribute code exists as a UNQ for the DEF
 			Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + attributeCode);

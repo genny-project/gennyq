@@ -407,7 +407,7 @@ public class DatabaseUtils {
 		try {
 			existingValidation = findValidationByCode(validation.getRealm(), validation.getCode());
 		} catch (NoResultException e) {
-			log.debugf("{} not found in database, creating new row...", validation.getCode());
+			log.debugf("%s not found in database, creating new row...", validation.getCode());
 		}
 
 		if (existingValidation == null) {
@@ -432,7 +432,7 @@ public class DatabaseUtils {
 		try {
 			existingAttribute = findAttributeByCode(attribute.getRealm(), attribute.getCode());
 		} catch (NoResultException e) {
-			log.debugf("{} not found in database, creating new row...", attribute.getCode());
+			log.debugf("%s not found in database, creating new row...", attribute.getCode());
 		}
 
 		if (existingAttribute == null) {
@@ -457,7 +457,7 @@ public class DatabaseUtils {
 		try {
 			existingEntity = findBaseEntityByCode(entity.getRealm(), entity.getCode());
 		} catch (NoResultException e) {
-			log.debugf("{} not found in database, creating new row...", entity.getCode());
+			log.debugf("%s not found in database, creating new row...", entity.getCode());
 		}
 
 		if (existingEntity == null) {
@@ -482,7 +482,7 @@ public class DatabaseUtils {
 		try {
 			existingQuestion = findQuestionByCode(question.getRealm(), question.getCode());
 		} catch (NoResultException e) {
-			log.debugf("{} not found in database, creating new row...", question.getCode());
+			log.debugf("%s not found in database, creating new row...", question.getCode());
 		}
 
 		if (existingQuestion == null) {
@@ -512,7 +512,7 @@ public class DatabaseUtils {
 					pk.getSourceCode(),
 					pk.getTargetCode());
 		} catch (NoResultException e) {
-			log.debugf("{}:{} not found in database, creating new row...",
+			log.debugf("%s:%s not found in database, creating new row...",
 					questionQuestion.getSourceCode(), questionQuestion.getTargetCode());
 		}
 
