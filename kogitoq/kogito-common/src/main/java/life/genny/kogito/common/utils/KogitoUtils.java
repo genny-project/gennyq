@@ -26,6 +26,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 
@@ -48,6 +49,9 @@ public class KogitoUtils {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	GraphQLUtils gqlUtils;
@@ -286,6 +290,7 @@ public class KogitoUtils {
 		session.insert(beUtils);
 		session.insert(defUtils);
 		session.insert(gqlUtils);
+		session.insert(qwandaUtils);
 		session.insert(msg);
 
 		// trigger EventRoutes rules
@@ -384,6 +389,6 @@ public class KogitoUtils {
 	}
 
 
-	
+
 
 }
