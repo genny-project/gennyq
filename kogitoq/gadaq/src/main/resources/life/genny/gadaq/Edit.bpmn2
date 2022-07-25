@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_psKGMOU9EDqdkewuEFk4_Q" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_mWhgoO4QEDqKkLdPPd1nww" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_eventMessageItem" structureRef="life.genny.qwandaq.message.QEventMessage"/>
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
@@ -9,13 +9,14 @@
   <bpmn2:itemDefinition id="__9A946931-A84E-4FB7-A34B-EE83E177F938_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__9A946931-A84E-4FB7-A34B-EE83E177F938_targetCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__9A946931-A84E-4FB7-A34B-EE83E177F938_pcmCodeInputXItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="__9A946931-A84E-4FB7-A34B-EE83E177F938_eventsInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__215E8D3C-AA93-42FA-AA3D-7ED10509D484_targetCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__215E8D3C-AA93-42FA-AA3D-7ED10509D484_questionCodeOutputXItem" structureRef="String"/>
   <bpmn2:interface id="_215E8D3C-AA93-42FA-AA3D-7ED10509D484_ServiceInterface" name="life.genny.kogito.common.service.BaseEntityService" implementationRef="life.genny.kogito.common.service.BaseEntityService">
     <bpmn2:operation id="_215E8D3C-AA93-42FA-AA3D-7ED10509D484_ServiceOperation" name="getBaseEntityQuestionGroup" implementationRef="getBaseEntityQuestionGroup"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_37491701-FB56-4FFB-8403-56C5084BBD4D" name="Default Collaboration">
-    <bpmn2:participant id="_521C0443-B70F-4A0E-B24A-3BD6E0721D3B" name="Pool Participant" processRef="edit"/>
+  <bpmn2:collaboration id="_F376892B-695D-44F4-930F-F91B2EB2DF53" name="Default Collaboration">
+    <bpmn2:participant id="_49FD5F73-CD95-4A91-B69F-7E71EB26358B" name="Pool Participant" processRef="edit"/>
   </bpmn2:collaboration>
   <bpmn2:process id="edit" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Edit" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[Edit an Item]]></bpmn2:documentation>
@@ -92,11 +93,13 @@
         <bpmn2:dataInput id="_9A946931-A84E-4FB7-A34B-EE83E177F938_sourceCodeInputX" drools:dtype="String" itemSubjectRef="__9A946931-A84E-4FB7-A34B-EE83E177F938_sourceCodeInputXItem" name="sourceCode"/>
         <bpmn2:dataInput id="_9A946931-A84E-4FB7-A34B-EE83E177F938_targetCodeInputX" drools:dtype="String" itemSubjectRef="__9A946931-A84E-4FB7-A34B-EE83E177F938_targetCodeInputXItem" name="targetCode"/>
         <bpmn2:dataInput id="_9A946931-A84E-4FB7-A34B-EE83E177F938_pcmCodeInputX" drools:dtype="String" itemSubjectRef="__9A946931-A84E-4FB7-A34B-EE83E177F938_pcmCodeInputXItem" name="pcmCode"/>
+        <bpmn2:dataInput id="_9A946931-A84E-4FB7-A34B-EE83E177F938_eventsInputX" drools:dtype="String" itemSubjectRef="__9A946931-A84E-4FB7-A34B-EE83E177F938_eventsInputXItem" name="events"/>
         <bpmn2:inputSet>
           <bpmn2:dataInputRefs>_9A946931-A84E-4FB7-A34B-EE83E177F938_questionCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_9A946931-A84E-4FB7-A34B-EE83E177F938_sourceCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_9A946931-A84E-4FB7-A34B-EE83E177F938_targetCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_9A946931-A84E-4FB7-A34B-EE83E177F938_pcmCodeInputX</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_9A946931-A84E-4FB7-A34B-EE83E177F938_eventsInputX</bpmn2:dataInputRefs>
         </bpmn2:inputSet>
       </bpmn2:ioSpecification>
       <bpmn2:dataInputAssociation>
@@ -116,6 +119,13 @@
         <bpmn2:assignment>
           <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[PCM_FORM]]></bpmn2:from>
           <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_9A946931-A84E-4FB7-A34B-EE83E177F938_pcmCodeInputX]]></bpmn2:to>
+        </bpmn2:assignment>
+      </bpmn2:dataInputAssociation>
+      <bpmn2:dataInputAssociation>
+        <bpmn2:targetRef>_9A946931-A84E-4FB7-A34B-EE83E177F938_eventsInputX</bpmn2:targetRef>
+        <bpmn2:assignment>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[SUBMIT,CANCEL,RESET]]></bpmn2:from>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_9A946931-A84E-4FB7-A34B-EE83E177F938_eventsInputX]]></bpmn2:to>
         </bpmn2:assignment>
       </bpmn2:dataInputAssociation>
     </bpmn2:callActivity>
@@ -250,7 +260,7 @@ kcontext.setVariable("targetCode", targetCode);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_psKGMOU9EDqdkewuEFk4_Q</bpmn2:source>
-    <bpmn2:target>_psKGMOU9EDqdkewuEFk4_Q</bpmn2:target>
+    <bpmn2:source>_mWhgoO4QEDqKkLdPPd1nww</bpmn2:source>
+    <bpmn2:target>_mWhgoO4QEDqKkLdPPd1nww</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
