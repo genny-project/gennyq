@@ -163,18 +163,12 @@ public class BaseEntityUtils {
 		// check for entity in the cache
 		//  BaseEntityKey key = new BaseEntityKey(productCode, code);
 		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-		
-			BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
 
 		// check in database if not in cache
 		if (entity == null) {			
-			
 			try {
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
-				if (entity != null) {
-					CacheUtils.putObject(userToken.getProductCode(), entity.getCode(), entity);
-				}
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}
