@@ -99,25 +99,18 @@ public class SearchService {
 	 */
 	public void sendSearchPCM(String pcmCode, String searchCode) {
 
-		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
+		// update content
+		BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
 		Attribute attribute = qwandaUtils.getAttribute("PRI_LOC1");
 		EntityAttribute ea = new EntityAttribute(content, attribute, 1.0, pcmCode);
+		content.addAttribute(ea);
 
-		try {
-			content.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
-
-		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
+		// update target pcm
+		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
 		ea = new EntityAttribute(pcm, attribute, 1.0, searchCode);
+		pcm.addAttribute(ea);
 
-		try {
-			pcm.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
-
+		// send to alyson
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(content);
 		msg.add(pcm);
 		msg.setToken(userToken.getToken());

@@ -20,7 +20,6 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessQuestions;

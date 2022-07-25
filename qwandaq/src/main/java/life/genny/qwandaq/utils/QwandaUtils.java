@@ -429,13 +429,11 @@ public class QwandaUtils {
 	/**
 	 * Send Submit enable/disable.
 	 *
-	 * @param askMessageJson The ask message representing the questions
+	 * @param askMessage The ask message representing the questions
 	 * @param enable. Enable the submit button
 	 * @return Boolean representing whether the submit button was enabled
 	 */
-	public Boolean sendSubmit(String askMessageJson, Boolean enable) {
-
-		QDataAskMessage askMessage = jsonb.fromJson(askMessageJson, QDataAskMessage.class);
+	public Boolean sendSubmit(QDataAskMessage askMessage, Boolean enable) {
 
 		// NOTE: We only ever check the first ask in the message
 		Ask ask = askMessage.getItems().get(0);

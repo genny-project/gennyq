@@ -1,16 +1,13 @@
 package life.genny.kogito.common.service;
 
+import java.util.List;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -18,7 +15,6 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -28,7 +24,6 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.models.UniquePair;
 
 @ApplicationScoped
 public class ProcessAnswerService {
@@ -129,6 +124,13 @@ public class ProcessAnswerService {
 		// find the submit ask
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
 		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg("webcmds", msg);
+
+		return answered;
 	}
 
 	/**
@@ -139,9 +141,11 @@ public class ProcessAnswerService {
 	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
-	public Boolean checkUniqueness(String processBEJson, String defCode, Boolean acceptSubmission, String askMessageJson) {
-		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
-		BaseEntity defBE = beUtils.getBaseEntity(defCode);
+	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
+		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+		BaseEntity processEntity = processData.getProcessEntity();
+		QDataAskMessage askMessage = processData.getAskMessage();
 
 		// Check if attribute code exists as a UNQ for the DEF
 		List<EntityAttribute> uniqueAttributes = defBE.findPrefixEntityAttributes("UNQ");
@@ -149,13 +153,16 @@ public class ProcessAnswerService {
 		
 		for (EntityAttribute uniqueAttribute : uniqueAttributes) {
 			// Convert to non def attribute Code
-			String attributeCode = uniqueAttribute.getAttributeCode().replace("UNQ_", "");
+			String attributeCode = uniqueAttribute.getAttributeCode();
+			attributeCode = StringUtils.removeStart(attributeCode, "UNQ_");
 			log.info("Checking UNQ attribute " + attributeCode);
-			String uniqueValue = processBE.getValueAsString(attributeCode);
-			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(attributeCode, uniqueValue, processBE, defBE);
+
+			String uniqueValue = processEntity.getValueAsString(attributeCode);
+			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(attributeCode, uniqueValue, processEntity, defBE);
 		}
 
-		qwandaUtils.sendSubmit(askMessageJson, acceptSubmission); // Disable submit button if not unique
+		// disable submit button if not unique
+		qwandaUtils.sendSubmit(askMessage, acceptSubmission);
 
 		return acceptSubmission;
 	}
