@@ -105,13 +105,14 @@ public class Bridge {
 
 			// init clientId
 			String cid = props.determineClientId(url);
+			log.info("cid = " + cid);
+			BaseEntity project = beUtils.getBaseEntity(cid, "PRJ_"+cid.toUpperCase());
 			if ("internmatch".equals(cid)) {
 				cid = "alyson";
 			}
 			props.setClientId(cid);
 
 			// init colours
-			BaseEntity project = beUtils.getBaseEntity(cid, "PRJ_"+cid.toUpperCase());
 			String primary = project.getValueAsString("PRI_COLOR_PRIMARY");
 			String secondary = project.getValueAsString("PRI_COLOR_SECONDARY");
 			props.setColors(new InitColors(primary, secondary));
