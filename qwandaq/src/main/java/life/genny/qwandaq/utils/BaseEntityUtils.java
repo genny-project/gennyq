@@ -29,6 +29,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.DebugException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
@@ -164,6 +165,14 @@ public class BaseEntityUtils {
 		//  BaseEntityKey key = new BaseEntityKey(productCode, code);
 		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 		BaseEntity entity = null;
+		try { //TODO sort out later, this is a hack to get the entity from the cache until infinispan BE..
+			entity= CacheUtils.getObject(productCode, code, BaseEntity.class);
+		}catch(Exception e)
+		{
+			//log.warn("Cached BaseEntity not using persistence and not there", e);
+			entity = null;
+		}
+			
 		// check in database if not in cache
 		if (entity == null) {			
 			try {

@@ -111,6 +111,10 @@ public class InternalConsumer {
 		JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
 		JsonObject dataJson = jsonStr.getJsonObject("data");
 
+		if (!jsonStr.getString("event_type").equals("DD")) {
+			return; // TODO: This should not get here?
+		}
+
 		// grab necessarry info
 		String attrCode = jsonStr.getString("attributeCode");
 		String sourceCode = dataJson.getString("sourceCode");
