@@ -1,1 +1,1 @@
-["authInit.proto","personLifecycle.proto","receiveQuestionRequest.proto","processQuestions.proto","createBaseEntity.proto","edit.proto","view.proto","sendmessage.proto","updatepcm.proto"]
+["personLifecycle.proto","createBaseEntity.proto","processQuestions.proto","receiveQuestionRequest.proto","edit.proto","updatepcm.proto","view.proto","authInit.proto","sendmessage.proto"]
