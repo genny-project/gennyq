@@ -57,15 +57,13 @@ public class DefUtils {
 
 	public DefUtils() { }
 
-	public String getDefPrefix(String productCode, String definitionCode) {
-		return defPrefixMap.get(productCode).get(definitionCode);
-	}
-
 	/**
 	 * Initialize the in memory DEF store
 	 *
 	 * @param productCode The product of DEFs to initialize
 	 */
+	// TODO: remove this soon
+	@Deprecated
 	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
@@ -182,6 +180,8 @@ public class DefUtils {
 	 * @param entity The {@link BaseEntity} to check
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
+	// TODO: remove this soon
+	@Deprecated
 	public BaseEntity getInternmatchDEF(final BaseEntity entity) {
 
 		String productCode = userToken.getProductCode();
