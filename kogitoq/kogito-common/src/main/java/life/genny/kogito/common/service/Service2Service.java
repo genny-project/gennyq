@@ -56,6 +56,13 @@ public class Service2Service {
 	}
 
 	/**
+	 * log token
+	 */
+	public void logToken() {
+		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+	}
+
+	/**
 	 * Send a message to signify that an item's creation is complete
 	 */
 	public void sendItemComplete(String definitionCode, String entityCode) {

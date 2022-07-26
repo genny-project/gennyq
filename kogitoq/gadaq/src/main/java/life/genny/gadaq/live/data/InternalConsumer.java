@@ -1,5 +1,7 @@
 package life.genny.gadaq.live.data;
 
+import static life.genny.qwandaq.utils.SecurityUtils.obfuscate;
+
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
@@ -8,7 +10,6 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -23,7 +24,6 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
-import static life.genny.qwandaq.utils.SecurityUtils.obfuscate;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -57,30 +57,29 @@ public class InternalConsumer {
 
 	/**
 	 * Consume incoming answers for inference
+	 * @param data The incoming data
 	 */
 	@Incoming("valid_data")
 	@Blocking
 	public void getData(String data) {
 
 		Instant start = Instant.now();
-		JsonObject nonTokenJson = jsonb.fromJson(data, JsonObject.class);
-		 nonTokenJson = Json.createObjectBuilder(nonTokenJson).remove("token").build();
-		log.info("Received Data : " + nonTokenJson.toString());
+		log.info("Received Data : " + obfuscate(data));
 
 		// init scope and process msg
 		scope.init(data);
 		List<Answer> answers = kogitoUtils.runDataInference(data);
 		if (answers.isEmpty())
-			log.warn("[!] Received no answers!!!");
-		else
-			kogitoUtils.funnelAnswers(answers);
+			log.warn("[!] No answers after inference");
+		// else
+		// 	kogitoUtils.funnelAnswers(answers);
 
-		scope.destroy();
 		// pass it on to the next stage of inference pipeline
 		QDataAnswerMessage msg = new QDataAnswerMessage(answers);
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg("genny_data", msg);
 
+		scope.destroy();
 		// log duration
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
@@ -88,7 +87,6 @@ public class InternalConsumer {
 
 	/**
 	 * Consume from the genny_events topic.
-	 *
 	 * @param event The incoming event
 	 */
 	@Incoming("events")
@@ -101,10 +99,6 @@ public class InternalConsumer {
 			if ("DD".equals(eventJson.getString("event_type"))) {
 				return; // Don't process Dropdowns
 			}
-		}
-		JsonObject nonTokenJson = eventJson;
-		if (nonTokenJson.containsKey("token")) {
-				 nonTokenJson = javax.json.Json.createObjectBuilder(nonTokenJson).remove("token").build();
 		}
 		log.info("Received Event : " + obfuscate(event));
 

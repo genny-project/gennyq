@@ -2,17 +2,12 @@ package life.genny.qwandaq.utils;
 
 import java.io.Serializable;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.NotInitializedException;
-import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.intf.KafkaInterface;
 
 /*
@@ -45,15 +40,7 @@ public class KafkaUtils implements Serializable {
 	 */
 	public static void writeMsg(String channel, Object payload) {
 
-		JsonObject jsonObject = jsonb.fromJson(jsonb.toJson(payload), JsonObject.class);
-		if (jsonObject.containsKey("tag") && StringUtils.isBlank(jsonObject.getString("tag"))) {
-			jsonObject.remove("tag");
-			JsonObjectBuilder builder = Json.createObjectBuilder();
-			jsonObject.forEach(builder::add);
-			jsonObject = builder.add("tag", getCallerMethodName()).build();
-		}
-
-		writeMsg(channel, jsonb.toJson(jsonObject));
+		writeMsg(channel, jsonb.toJson(payload));
 	}
 
 	/**
@@ -62,11 +49,6 @@ public class KafkaUtils implements Serializable {
 	 * @param payload the payload to send
 	 */
 	public static void writeMsg(String channel, String payload) {
-
-		if (channel == null)
-			throw new NullParameterException("channel");
-		if (payload == null)
-			throw new NullParameterException("payload");
 
 		// write to kafka channel through interface
 		checkInterface();

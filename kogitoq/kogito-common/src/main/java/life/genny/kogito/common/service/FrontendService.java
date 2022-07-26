@@ -333,8 +333,6 @@ public class FrontendService {
 		BaseEntity processEntity = processData.getProcessEntity();
 		QDataAskMessage askMessage = processData.getAskMessage();
 		String processId = processData.getProcessId();
-		String definitionCode = processData.getDefinitionCode();
-		String targetCode = processData.getTargetCode();
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();

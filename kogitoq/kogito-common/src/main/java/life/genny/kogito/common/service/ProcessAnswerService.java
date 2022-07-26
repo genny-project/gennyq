@@ -143,12 +143,13 @@ public class ProcessAnswerService {
 	 */
 	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
+		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		BaseEntity processEntity = processData.getProcessEntity();
 		QDataAskMessage askMessage = processData.getAskMessage();
 
 		// Check if attribute code exists as a UNQ for the DEF
-		List<EntityAttribute> uniqueAttributes = defBE.findPrefixEntityAttributes("UNQ");
+		List<EntityAttribute> uniqueAttributes = definition.findPrefixEntityAttributes("UNQ");
 		log.info("Found " + uniqueAttributes.size() + " UNQ attributes");
 		
 		for (EntityAttribute uniqueAttribute : uniqueAttributes) {
@@ -158,7 +159,7 @@ public class ProcessAnswerService {
 			log.info("Checking UNQ attribute " + attributeCode);
 
 			String uniqueValue = processEntity.getValueAsString(attributeCode);
-			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(attributeCode, uniqueValue, processEntity, defBE);
+			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(target, definition, attributeCode, uniqueValue);
 		}
 
 		// disable submit button if not unique

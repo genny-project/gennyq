@@ -178,43 +178,6 @@ public class BaseEntityUtils {
 	}
 
 	/**
-	 * Call the Fyodor API to fetch a count of {@link BaseEntity}
-	 * objects using a {@link SearchEntity} object.
-	 *
-	 * @param searchBE A {@link SearchEntity} object used to determine the results
-	 * @return A count of items
-	 */
-	public Long getBaseEntityCount(SearchEntity searchBE) {
-
-		// build uri, serialize payload and fetch data from fyodor
-		String uri = GennySettings.fyodorServiceUrl() + "/api/search/count";
-		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
-
-		if (response == null) {
-			log.error("Null response from " + uri);
-			return null;
-		}
-
-		Integer status = response.statusCode();
-
-		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Bad response status " + status + " from " + uri);
-		}
-
-		try {
-			// deserialise and grab entities
-			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
-			return results.getTotal();
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
-
-		return null;
-	}
-
-	/**
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
 	 * @param baseEntity The BaseEntity to update
