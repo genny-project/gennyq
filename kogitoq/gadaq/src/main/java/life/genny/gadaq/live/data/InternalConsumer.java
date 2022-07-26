@@ -94,7 +94,7 @@ public class InternalConsumer {
 	@Incoming("events")
 	@Blocking
 	public void getEvent(String event) {
-
+		log.info("Incoming json message = " + event);
 		Instant start = Instant.now();
 		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
 		if (eventJson.containsKey("event_type")) {

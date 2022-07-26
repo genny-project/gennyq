@@ -9,6 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
@@ -34,6 +36,16 @@ when
 then
 	String processId = msg.getData().getProcessId();
 	kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
+	retract(msg);
+end
+
+rule RouteUpdate 
+when
+	msg: QEventMessage( data.code == "QUE_UPDATE" )
+	kogitoUtils : KogitoUtils()
+then
+	String processId = msg.getData().getProcessId();
+	kogitoUtils.sendSignal(SELF, "processQuestions", processId, "update", "");
 	retract(msg);
 end
 
@@ -67,7 +79,7 @@ then
 end
 
 
-rule RouteTestForm 
+rule RouteInternshipApply
 salience 1000
 when
 	msg: QEventMessage( data.code matches "ACT_PRI_EVENT_APPLY")
@@ -79,6 +91,28 @@ then
 	
 	System.out.println("Forwarding Event Message..."+msg.getData().getCode());
 	KafkaUtils.writeMsg("genny_events", msg);
+	retract(msg);
+end
+
+rule RouteTestForm 
+when
+	msg: QEventMessage( data.code matches "TEST_QUE_.*")
+	userToken: UserToken()
+	kogitoUtils : KogitoUtils()
+	beUtils: BaseEntityUtils()
+	defUtils:	DefUtils()
+	qwandaUtils: QwandaUtils()
+then
+	
+	System.out.println("Displaying Test Question Group ..."+msg.getData().getCode());
+	JsonObject payload = Json.createObjectBuilder()
+		.add("questionCode", msg.getData().getCode().substring("TEST_".length()))
+		.add("userCode", userToken.getUserCode())
+		.add("sourceCode", userToken.getUserCode())
+		.add("targetCode", msg.getData().getTargetCode())
+		.build();
+
+	kogitoUtils.triggerWorkflow(SELF,"testQuestion", payload);
 	retract(msg);
 end
 
