@@ -193,7 +193,7 @@ public class TopologyProducer {
 			return false;
 		}
 
-		// Check target code
+		// check target is same
 		BaseEntity target = processData.getProcessEntity();
 		if (!target.getCode().equals(answer.getTargetCode())) {
 			log.warn("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
