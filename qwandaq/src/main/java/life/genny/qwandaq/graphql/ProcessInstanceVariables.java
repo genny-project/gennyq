@@ -11,6 +11,7 @@ public class ProcessInstanceVariables implements Serializable {
     }
 
     private String processId;
+	private String targetCode;
 
     public String getProcessId() {
         return processId;
@@ -18,5 +19,13 @@ public class ProcessInstanceVariables implements Serializable {
 
     public void setProcessId(String processId) {
         this.processId = processId;
+    }
+
+    public String getTargetCode() {
+        return targetCode;
+    }
+
+    public void setTargetCode(String targetCode) {
+        this.targetCode = targetCode;
     }
 }

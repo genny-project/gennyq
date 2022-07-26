@@ -333,11 +333,13 @@ public class KogitoUtils {
 		session.insert(userToken);
 
 		// insert answers from message
+		int answerCount = msg.getItems().length
+		;
 		for (Answer answer : msg.getItems()) {
 			log.debug("Inserting answer: " + answer.getAttributeCode() + "=" + answer.getValue() + " into session");
 			session.insert(answer);
 		}
-		log.debug("Inserted " + msg.getItems().length + " answers into session");
+		log.debug("Inserted " + answerCount + " answers into session");
 
 		// Infer data
 		session.fireAllRules();
@@ -348,6 +350,9 @@ public class KogitoUtils {
 			.map(o -> (Answer) o)
 			.collect(Collectors.toList());
 
+		answerCount = answers.size() - answerCount;
+
+		log.debug("Inferred " + answerCount + " answers");
 		session.dispose();
 		return answers;
 	}

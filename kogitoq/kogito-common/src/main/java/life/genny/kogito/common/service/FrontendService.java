@@ -218,9 +218,9 @@ public class FrontendService {
 		QDataAskMessage askMessage = processData.getAskMessage();
 
 		// init entity and force the realm
-		log.info("Creating Process Entity...");
 		String processEntityCode = "QBE_" 
 			+ ("NON_EXISTENT".equals(targetCode) ? processId.toUpperCase() : targetCode.substring(4));
+		log.info("Creating Process Entity " + processEntityCode + "...");
 
 		BaseEntity processEntity = new BaseEntity(processEntityCode, "QuestionBE");
 		processEntity.setRealm(userToken.getProductCode());
