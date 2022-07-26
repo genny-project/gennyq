@@ -112,13 +112,7 @@ public class FrontendService {
 		log.info("==========================================");
 
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
-
-		BaseEntity target = null;
-		if ("NON_EXISTENT".equals(targetCode)) {
-			target = new BaseEntity(targetCode, targetCode);
-		} else {
-			target = beUtils.getBaseEntity(targetCode);
-		}
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
 		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 
@@ -188,11 +182,6 @@ public class FrontendService {
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String targetCode = processData.getTargetCode();
 
-		if ("NON_EXISTENT".equals(targetCode)) {
-			processData.setDefinitionCode("DEF_NON_EXISTANT");
-			return jsonb.toJson(processData);
-		}
-
 		// Find the DEF
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
@@ -214,24 +203,16 @@ public class FrontendService {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String targetCode = processData.getTargetCode();
-		String processId = processData.getProcessId();
 		QDataAskMessage askMessage = processData.getAskMessage();
 
 		// init entity and force the realm
-		log.info("Creating Process Entity...");
-		String processEntityCode = "QBE_" 
-			+ ("NON_EXISTENT".equals(targetCode) ? processId.toUpperCase() : targetCode.substring(4));
+		String processEntityCode = "QBE_" + targetCode.substring(4);
+		log.info("Creating Process Entity " + processEntityCode + "...");
 
 		BaseEntity processEntity = new BaseEntity(processEntityCode, "QuestionBE");
 		processEntity.setRealm(userToken.getProductCode());
 
-		// only copy the entityAttributes used in the Asks
-		BaseEntity target = null;
-		if ("NON_EXISTENT".equals(targetCode)) {
-			target = new BaseEntity(targetCode, targetCode);
-		} else {
-			target = beUtils.getBaseEntity(targetCode);
-		}
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
@@ -336,8 +317,6 @@ public class FrontendService {
 		BaseEntity processEntity = processData.getProcessEntity();
 		QDataAskMessage askMessage = processData.getAskMessage();
 		String processId = processData.getProcessId();
-		String definitionCode = processData.getDefinitionCode();
-		String targetCode = processData.getTargetCode();
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();

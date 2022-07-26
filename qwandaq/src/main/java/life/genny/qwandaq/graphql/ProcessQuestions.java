@@ -9,7 +9,6 @@ public class ProcessQuestions extends ProcessInstanceVariables {
 
 	private String questionCode;
 	private String sourceCode;
-	private String targetCode;
 	private String pcmCode;
 	private String definitionCode;
 	private String events;
@@ -34,14 +33,6 @@ public class ProcessQuestions extends ProcessInstanceVariables {
 
     public void setSourceCode(String sourceCode) {
         this.sourceCode = sourceCode;
-    }
-
-    public String getTargetCode() {
-        return targetCode;
-    }
-
-    public void setTargetCode(String targetCode) {
-        this.targetCode = targetCode;
     }
 
 	public String getPcmCode() {

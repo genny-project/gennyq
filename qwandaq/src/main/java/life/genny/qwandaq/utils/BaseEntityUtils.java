@@ -167,19 +167,9 @@ public class BaseEntityUtils {
 		// check for entity in the cache
 		//  BaseEntityKey key = new BaseEntityKey(productCode, code);
 		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+
+		// NOTE: No more hacks, keep it simple and reliable until infinispan auto updates are working.
 		BaseEntity entity = null;
-		try { //TODO sort out later, this is a hack to get the entity from the cache until infinispan BE..
-			String rawValue = (String)CacheUtils.readCache(productCode,code);
-			if (rawValue != null) {
-				log.debug("Recieved raw Cache String ->"+rawValue);
-				entity = jsonb.fromJson(rawValue, BaseEntity.class);
-			}
-			//entity= CacheUtils.getObject(productCode, code, BaseEntity.class);
-		}catch(Exception e)
-		{
-			log.warn("Cached BaseEntity not using persistence and not there", e);
-			entity = null;
-		}
 			
 		// check in database if not in cache
 		if (entity == null) {			
@@ -192,43 +182,6 @@ public class BaseEntityUtils {
 		}
 
 		return entity;
-	}
-
-	/**
-	 * Call the Fyodor API to fetch a count of {@link BaseEntity}
-	 * objects using a {@link SearchEntity} object.
-	 *
-	 * @param searchBE A {@link SearchEntity} object used to determine the results
-	 * @return A count of items
-	 */
-	public Long getBaseEntityCount(SearchEntity searchBE) {
-
-		// build uri, serialize payload and fetch data from fyodor
-		String uri = GennySettings.fyodorServiceUrl() + "/api/search/count";
-		String json = jsonb.toJson(searchBE);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
-
-		if (response == null) {
-			log.error("Null response from " + uri);
-			return null;
-		}
-
-		Integer status = response.statusCode();
-
-		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Bad response status " + status + " from " + uri);
-		}
-
-		try {
-			// deserialise and grab entities
-			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
-			return results.getTotal();
-		} catch (Exception e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
-		}
-
-		return null;
 	}
 
 	/**
