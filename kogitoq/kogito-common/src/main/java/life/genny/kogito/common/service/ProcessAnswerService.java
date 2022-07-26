@@ -101,7 +101,8 @@ public class ProcessAnswerService {
 		processData.setProcessEntity(processEntity);
 		CacheUtils.putObject(productCode, key, processData);
 		log.infof("ProcessData cached to %s", key);
-
+		// TODO, just until cacheUtils has direct BE support
+		CacheUtils.putObject(productCode,processEntity.getCode(), processEntity);
 		return jsonb.toJson(processData);
 	}
 

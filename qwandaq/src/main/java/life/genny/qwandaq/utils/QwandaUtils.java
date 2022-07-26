@@ -268,6 +268,11 @@ public class QwandaUtils {
 
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 
+				// Do not include PRI_SUBMIT
+				if ("PRI_SUBMIT".equals(child.getAttributeCode())) {
+					continue;
+				}
+
 				// set boolean fields
 				child.setMandatory(questionQuestion.getMandatory());
 				child.setDisabled(questionQuestion.getDisabled());

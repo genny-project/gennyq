@@ -111,6 +111,10 @@ public class InternalConsumer {
 		JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
 		JsonObject dataJson = jsonStr.getJsonObject("data");
 
+		if (!jsonStr.getString("event_type").equals("DD")) {
+			return; // TODO: This should not get here?
+		}
+
 		// grab necessarry info
 		String attrCode = jsonStr.getString("attributeCode");
 		String sourceCode = dataJson.getString("sourceCode");
@@ -355,40 +359,45 @@ public class InternalConsumer {
 		// TODO Hack to get around baseentityUtils thinking that processBE is cached.
 
 		searchBE = defUtils.mergeFilterValueVariables(searchBE, ctxMap);
-		if (searchBE == null)
-			throw new DebugException("searchBE is null");
+		if (searchBE != null) {
 
-		// Perform search and evaluate columns
-		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchBE);
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+			// Perform search and evaluate columns
+			List<BaseEntity> results = searchUtils.searchBaseEntitys(searchBE);
+			QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
-		if (results == null)
-			throw new DebugException("Dropdown search returned null");
+			if (results == null)
+				throw new DebugException("Dropdown search returned null");
 
-		if (results.isEmpty())
-			log.info("DROPDOWN : NO RESULTS");
+			if (results.isEmpty())
+				log.info("DROPDOWN : NO RESULTS");
 
-		msg = new QDataBaseEntityMessage(results);
-		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
+			msg = new QDataBaseEntityMessage(results);
+			log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
-		for (BaseEntity item : msg.getItems()) {
-			String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(), item.getValueAsString("PRI_NAME"));
+			for (BaseEntity item : msg.getItems()) {
+				String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
+						item.getValueAsString("PRI_NAME"));
 
-			if (item.getValueAsString("PRI_NAME") == null)
-				log.warn(logStr);
-			else
-				log.info(logStr);
+				if (item.getValueAsString("PRI_NAME") == null)
+					log.warn(logStr);
+				else
+					log.info(logStr);
+			}
+
+			// Set all required message fields and return msg
+			msg.setParentCode(parentCode);
+			msg.setQuestionCode(questionCode);
+			msg.setToken(userToken.getToken());
+			msg.setLinkCode("LNK_CORE");
+			msg.setLinkValue("ITEMS");
+			msg.setReplace(true);
+			msg.setShouldDeleteLinkedBaseEntities(false);
+			KafkaUtils.writeMsg("webdata", msg);
+
+		} else {
+			log.error("DROPDOWN : SearchBE is null");
+			//throw new DebugException("searchBE is null");
 		}
-
-		// Set all required message fields and return msg
-		msg.setParentCode(parentCode);
-		msg.setQuestionCode(questionCode);
-		msg.setToken(userToken.getToken());
-		msg.setLinkCode("LNK_CORE");
-		msg.setLinkValue("ITEMS");
-		msg.setReplace(true);
-		msg.setShouldDeleteLinkedBaseEntities(false);
-		KafkaUtils.writeMsg("webdata", msg);
 
 		// log duration
 		scope.destroy();

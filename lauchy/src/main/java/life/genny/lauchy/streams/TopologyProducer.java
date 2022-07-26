@@ -228,9 +228,14 @@ public class TopologyProducer {
 				JsonArray uniqueArray = jsonb.fromJson(uniqueAttribute.get().getValueString(), JsonArray.class);
 				List<UniquePair> uniquePairs = new ArrayList<>();
 
-				for (javax.json.JsonValue jsonValue : uniqueArray) { 
-					JsonObject uniqueJson = jsonb.fromJson(jsonValue.toString(), JsonObject.class);
-					uniquePairs.add(new UniquePair(answer.getAttributeCode(), answer.getValue()));
+				for (javax.json.JsonValue jsonValue : uniqueArray) {
+					log.debug("Checking JsonArray UNQ attributeCode->"+jsonValue.toString());
+					if (answer.getAttributeCode().equals(jsonValue.toString())) {
+						uniquePairs.add(new UniquePair(answer.getAttributeCode(), answer.getValue()));
+					} else {
+						String value = target.getValueAsString(jsonValue.toString());
+						uniquePairs.add(new UniquePair(jsonValue.toString(), value));
+					}
 				}
 
 
