@@ -33,6 +33,8 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
+import org.apache.commons.lang3.StringUtils;
+
 @ApplicationScoped
 public class FrontendService {
 
@@ -384,6 +386,9 @@ public class FrontendService {
 				// grab selection baseentitys
 				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
 				for (String code : codes) {
+					if (StringUtils.isBlank(code)) {
+						continue;
+					}
 					if ((code.startsWith("{startDate")) ||(code.startsWith("endDate"))) {
 						log.error("BE:"+target.getCode()+":attribute :"+attribute.getCode()+":BAD code "+code);
 						continue;
