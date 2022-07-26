@@ -67,18 +67,12 @@ public class ProcessAnswerService {
 			return jsonb.toJson(processData);
 		}
 
-		// only copy the entityAttributes used in the Asks
-		BaseEntity target = null;
-		if ("NON_EXISTENT".equals(targetCode)) {
-			log.info("Not Checking validity of answer");
-		} else {
-			target = beUtils.getBaseEntity(targetCode);
-			// check if the answer is valid for the target
-			BaseEntity definition = defUtils.getDEF(target);
-			if (!defUtils.answerValidForDEF(definition, answer)) {
-				log.error("Bad incoming answer... Not saving!");
-				return jsonb.toJson(processData);
-			}
+		// check if the answer is valid for the target
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+		BaseEntity definition = defUtils.getDEF(target);
+		if (!defUtils.answerValidForDEF(definition, answer)) {
+			log.error("Bad incoming answer... Not saving!");
+			return jsonb.toJson(processData);
 		}
 
 		// find the attribute
@@ -172,7 +166,6 @@ public class ProcessAnswerService {
 
 	/**
 	 * Save all answers gathered in the processBE.
-	 *
 	 * @param targetCode The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
@@ -181,12 +174,6 @@ public class ProcessAnswerService {
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		String targetCode = processData.getTargetCode();
-
-		// only copy the entityAttributes used in the Asks
-		if ("NON_EXISTENT".equals(targetCode)) {
-			log.info("Not saving to NON_EXISTENT");
-			return;
-		}
 
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 

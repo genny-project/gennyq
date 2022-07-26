@@ -39,8 +39,8 @@ public class Service2Service {
 	 * @return The  updated data object
 	 */
 	public S2SData addToken(S2SData data) {
-
 		data.setToken(userToken.getToken());
+		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 		return data;
 	}
 
