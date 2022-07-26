@@ -299,7 +299,6 @@ public class SearchUtils {
 		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
 		searchBeMsg.setToken(userToken.getToken());
 		searchBeMsg.setDestination("webcmds");
-		log.info("\n\n\n\n\n\n\n SEARCH EVENTSSSS \n\n\n\n\n\n");
 		KafkaUtils.writeMsg("search_events", searchBeMsg);
 	}
 

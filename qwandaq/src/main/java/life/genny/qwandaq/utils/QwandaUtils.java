@@ -716,16 +716,15 @@ public class QwandaUtils {
 
 		if (unique.isEmpty()) {
 			log.infof("UNQ_%s Not present!", attributeCode);
-			return true;
+			return false;
 		}
 
 		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
 		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using " + unique.get().getValue());
 
 		String uniqueIndexes = unique.get().getValue();
-		// remove the square brackets
-		uniqueIndexes = uniqueIndexes.substring(1, uniqueIndexes.length() - 1);
-		String[] uniqueArray = uniqueIndexes.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+		uniqueIndexes = BaseEntityUtils.cleanUpAttributeValue(uniqueIndexes);
+		String[] uniqueArray = uniqueIndexes.split(",");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
 		SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
@@ -740,6 +739,7 @@ public class QwandaUtils {
 		searchEntity.setRealm(userToken.getProductCode());
 
 		Long count = searchUtils.countBaseEntitys(searchEntity);
+		log.infof("Found %s entities", count);
 		if (count == 0)
 			return false;
 

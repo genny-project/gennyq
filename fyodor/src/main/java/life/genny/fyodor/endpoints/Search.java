@@ -128,6 +128,7 @@ public class Search {
 			return "0";
 		}
 		Long count = search.performCount(searchEntity);
+		log.infof("Found %s entities", count);
 
 		return ""+count;
 	}
