@@ -373,23 +373,25 @@ public class DefUtils {
 
 					if (requiresMerging != null && requiresMerging) {
 						// update Map with latest baseentity
-						ctxMap.keySet().forEach(key -> {
-							Object value = ctxMap.get(key);
-							if (value.getClass().equals(BaseEntity.class)) {
-								BaseEntity baseEntity = (BaseEntity) value;
-								ctxMap.put(key, beUtils.getBaseEntityByCode(baseEntity.getCode()));
-							}
-						});
+						if (beUtils != null) {
+							ctxMap.keySet().forEach(key -> {
+								Object value = ctxMap.get(key);
+								if (value.getClass().equals(BaseEntity.class)) {
+									BaseEntity baseEntity = (BaseEntity) value;
+									ctxMap.put(key, beUtils.getBaseEntityByCode(baseEntity.getCode()));
+								}
+							});
+						}
 						// check if contexts are present
 						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper
 							// (6/08/2021)
 							Object mergedObj = MergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
 									ctxMap);
-							// Ensure Dataype is Correct, then set Value
+							// Ensure Datatype is Correct, then set Value
 							ea.setValue(mergedObj);
 						} else {
-							log.error(ANSIColour.RED + "Not all contexts are present for " + attrValStr
+							log.warn(ANSIColour.RED + "Not all contexts are present for " + attrValStr
 									+ ANSIColour.RESET);
 							return null;
 						}

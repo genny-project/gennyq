@@ -264,7 +264,7 @@ public class FrontendService {
 		processData.setProcessEntity(processEntity);
 
 		// TODO, until cacheUtils supprots BEs
-		CacheUtils.putObject(userToken.getProductCode(), processEntityCode, jsonb.toJson(processEntity));
+		CacheUtils.putObject(userToken.getProductCode(), processEntityCode, processEntity);
 
 		return jsonb.toJson(processData);
 	}

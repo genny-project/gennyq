@@ -169,10 +169,15 @@ public class BaseEntityUtils {
 		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 		BaseEntity entity = null;
 		try { //TODO sort out later, this is a hack to get the entity from the cache until infinispan BE..
-			entity= CacheUtils.getObject(productCode, code, BaseEntity.class);
+			String rawValue = (String)CacheUtils.readCache(productCode,code);
+			if (rawValue != null) {
+				log.debug("Recieved raw Cache String ->"+rawValue);
+				entity = jsonb.fromJson(rawValue, BaseEntity.class);
+			}
+			//entity= CacheUtils.getObject(productCode, code, BaseEntity.class);
 		}catch(Exception e)
 		{
-			//log.warn("Cached BaseEntity not using persistence and not there", e);
+			log.warn("Cached BaseEntity not using persistence and not there", e);
 			entity = null;
 		}
 			
