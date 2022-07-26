@@ -30,7 +30,7 @@ message ReceiveQuestionRequest {
 	optional string pcmCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string processBEJson = 8; 
+	optional string processJson = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
 	optional string questionCode = 9; 
