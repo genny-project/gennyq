@@ -18,15 +18,18 @@ message Edit {
 	optional string pcmCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string questionCode = 4; 
+	optional string processJson = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string sourceCode = 5; 
+	optional string questionCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string targetCode = 6; 
+	optional string sourceCode = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string targetCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 7; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 8; 
 }
 /* @Indexed */ 
 message MessageData { 
