@@ -6,7 +6,7 @@ option kogito_model = "PersonLifecycle";
 option kogito_id = "personLifecycle";
 
 /* @Indexed */ 
-message KogitoData { 
+message S2SData { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string code = 1; 
@@ -63,7 +63,7 @@ message PersonLifecycle {
 	optional string askMessageJson = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional KogitoData data = 4; 
+	optional S2SData data = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
 	optional string definitionCode = 5; 

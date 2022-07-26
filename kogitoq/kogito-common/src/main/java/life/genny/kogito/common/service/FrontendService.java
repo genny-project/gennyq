@@ -263,6 +263,9 @@ public class FrontendService {
 		log.info("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
 		processData.setProcessEntity(processEntity);
 
+		// TODO, until cacheUtils supprots BEs
+		CacheUtils.putObject(userToken.getProductCode(), processEntityCode, processEntity);
+
 		return jsonb.toJson(processData);
 	}
 
