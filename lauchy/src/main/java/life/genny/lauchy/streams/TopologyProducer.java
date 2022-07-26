@@ -212,7 +212,7 @@ public class TopologyProducer {
 
 		// check duplicate attributes
 		QDataAskMessage askMessage = processData.getAskMessage();
-		if (!qwandaUtils.checkDuplicateAttribute(target, defBE, answer.getAttributeCode(), answer.getValue())) {
+		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
 			log.error("Duplicate answer detected for target " + answer.getTargetCode());
 			qwandaUtils.sendSubmit(askMessage, false);
 			return false;

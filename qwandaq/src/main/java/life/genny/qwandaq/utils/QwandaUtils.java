@@ -704,12 +704,12 @@ public class QwandaUtils {
 
 	/**
 	 * Check the uniqueness of an answer
-	 * @param target t
-	 * @param definition t
-	 * @param attributeCode t
-	 * @param value t
+	 * @param target The target entity
+	 * @param definition The definition entity
+	 * @param attributeCode The code of the attribute
+	 * @param value The value to check
 	 */
-	public Boolean checkDuplicateAttribute(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
+	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
 		// Check if attribute code exists as a UNQ for the DEF
 		Optional<EntityAttribute> unique = definition.findEntityAttribute("UNQ_" + attributeCode);
@@ -719,8 +719,8 @@ public class QwandaUtils {
 			return true;
 		}
 
-		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode()
-				+ ", Attribute found for UNQ_" + attributeCode + " LOOKING for duplicate using "+unique.get().getValue());
+		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
+		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using " + unique.get().getValue());
 
 		String uniqueIndexes = unique.get().getValue();
 		// remove the square brackets
@@ -741,7 +741,7 @@ public class QwandaUtils {
 
 		Long count = searchUtils.countBaseEntitys(searchEntity);
 		if (count == 0)
-			return true;
+			return false;
 
 		// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
 		BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
@@ -751,7 +751,7 @@ public class QwandaUtils {
 		msg.setMessage("Error: This value already exists and must be unique.");
 		KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
 
-		return false;
+		return true;
 	}
 
 }

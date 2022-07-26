@@ -160,7 +160,8 @@ public class ProcessAnswerService {
 			log.info("Checking UNQ attribute " + attributeCode);
 
 			String uniqueValue = processEntity.getValueAsString(attributeCode);
-			acceptSubmission &= qwandaUtils.checkDuplicateAttribute(target, definition, attributeCode, uniqueValue);
+			if (qwandaUtils.isDuplicate(target, definition, attributeCode, uniqueValue))
+				acceptSubmission = false;
 		}
 
 		// disable submit button if not unique

@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
@@ -92,18 +93,11 @@ when
 then
 	System.out.println("Routing Add Item!");
 	String code = StringUtils.removeStart(msg.getData().getCode(), "QUE_ADD_");
-	String prefix = defUtils.getDefPrefix(userToken.getProductCode(), "DEF_"+code);
-
+	String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
 	System.out.println("Prefix = " + prefix);
 
-	/* if (!"PER".equals(prefix)) { */
-	/* 	return; */
-	/* } */
-
-	/* NOTE: This is very very temporary */
-	if ("PROPERTY".equals(code)) {
+	if (!"PER".equals(prefix))
 		return;
-	}
 
 	JsonObject json = Json.createObjectBuilder()
 		.add("definitionCode", "DEF_"+code)
