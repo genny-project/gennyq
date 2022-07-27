@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.kie.api.runtime.KieRuntimeBuilder;
 import org.kie.api.runtime.KieSession;
+import org.apache.commons.lang3.StringUtils;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
@@ -26,6 +27,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 
@@ -48,6 +50,9 @@ public class KogitoUtils {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	GraphQLUtils gqlUtils;
@@ -278,14 +283,11 @@ public class KogitoUtils {
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
-		session.getAgenda().getAgendaGroup("EventRoutes").setFocus();
+		initSession(session, "EventRoutes");
 
-		session.insert(kogitoUtils);
-		session.insert(jsonb);
-		session.insert(userToken);
-		session.insert(beUtils);
-		session.insert(defUtils);
+		// Insert Extras
 		session.insert(gqlUtils);
+		session.insert(qwandaUtils);
 		session.insert(msg);
 
 		// trigger EventRoutes rules
@@ -318,36 +320,34 @@ public class KogitoUtils {
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
-		session.getAgenda().getAgendaGroup("Inference").setFocus();
-
-		// insert utils and other beans
-		session.insert(kogitoUtils);
-		session.insert(jsonb);
-		session.insert(defUtils);
-		session.insert(beUtils);
-		session.insert(userToken);
+		initSession(session, "Inference");
 
 		// insert answers from message
+		int answerCount = msg.getItems().length;
+
 		for (Answer answer : msg.getItems()) {
 			log.debug("Inserting answer: " + answer.getAttributeCode() + "=" + answer.getValue() + " into session");
 			session.insert(answer);
 		}
-		log.debug("Inserted " + msg.getItems().length + " answers into session");
+		log.debug("Inserted " + answerCount + " answers into session");
 
 		// Infer data
 		session.fireAllRules();
 
-		// feed all answers from facts into ProcessQuestions
+		// Collect all new answers from the rules
 		List<Answer> answers = session.getObjects().stream()
 			.filter(o -> (o instanceof Answer))
 			.map(o -> (Answer) o)
 			.collect(Collectors.toList());
 
+		answerCount = answers.size() - answerCount;
+
+		log.debug("Inferred " + answerCount + " answers");
 		session.dispose();
 		return answers;
 	}
 
-	public Boolean funnelAnswers(List<Answer> answers) {
+	public void funnelAnswers(List<Answer> answers) {
 		// feed all answers from facts into ProcessQuestions
 		answers.stream()
 			.filter(answer -> answer.getProcessId() != null)
@@ -362,7 +362,52 @@ public class KogitoUtils {
 					return;
 				}
 			});
-		return true;
+		return;
+	}
+
+	/**
+	 * Initialise bucket data by rule
+	 */
+	@Deprecated
+	public void initBucketRule() {
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+		initSession(session, "bucket");
+
+		session.fireAllRules();
+		session.dispose();
+	}
+
+	private void initSession(KieSession session, String focus) {
+		if(!StringUtils.isBlank(focus))
+			session.getAgenda().getAgendaGroup(focus).setFocus();
+
+		// insert utils and other beans
+		session.insert(kogitoUtils);
+		session.insert(jsonb);
+		session.insert(defUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+	}
+
+	/**
+	 * Initialise data by rule group
+	 * @param ruleGroupName Group rule name
+	 */
+	public void initDataByRuleGroup(String ruleGroupName) {
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+		session.getAgenda().getAgendaGroup(ruleGroupName).setFocus();
+
+		// insert utils and other beans
+		session.insert(kogitoUtils);
+		session.insert(jsonb);
+		session.insert(defUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+
+		session.fireAllRules();
+		session.dispose();
 	}
 
 }

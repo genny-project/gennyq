@@ -21,6 +21,7 @@
     <version.org.optaplanner>8.24.0.Final</version.org.optaplanner>
     <!-- drools -->
     <version.org.drools>8.24.0.Beta</version.org.drools>
+		<jandex.version>1.0.7</jandex.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -153,7 +154,7 @@
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-        <version>1.2.2</version>
+				<version>${jandex.version}</version>
         <executions>
           <execution>
             <id>make-index</id>

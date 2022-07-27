@@ -4,6 +4,7 @@ import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -18,6 +19,7 @@ import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -25,6 +27,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class NavigationService {
@@ -50,6 +53,9 @@ public class NavigationService {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
+	@Inject
+	SearchUtils searchUtils;
 
 	/**
 	 * Trigger the default redirection for the user.
@@ -109,8 +115,39 @@ public class NavigationService {
 		msg.add(pcm);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-
+		log.info("Sending PCMs for " + questionCode);
 		KafkaUtils.writeMsg("webdata", msg);
+
+		recursivelyPerformPcmSearches(pcm);
+	}
+
+	/**
+	 * Recuresively traverse a pcm tree and send out any nested searches.
+	 * @param pcm The pcm to begin raversing
+	 */
+	public void recursivelyPerformPcmSearches(BaseEntity pcm) {
+
+		log.info("(0) running recursive function for " + pcm.getCode());
+
+		// filter location attributes
+		Set<EntityAttribute> locs = pcm.getBaseEntityAttributes()
+			.stream()
+			.filter(ea -> ea.getAttributeCode().startsWith("PRI_LOC"))
+			.collect(Collectors.toSet());
+
+		// perform searches
+		locs.stream()
+			.filter(ea -> ea.getValueString().startsWith("SBE"))
+			.map(ea -> CacheUtils.getObject(userToken.getProductCode(), ea.getValueString(), SearchEntity.class))
+			.peek(sbe -> log.info("Sending Search " + sbe.getCode()))
+			.forEach(sbe -> searchUtils.searchBaseEntitys(sbe));
+
+		// run function for nested pcms
+		locs.stream()
+			.filter(ea -> ea.getValueString().startsWith("PCM"))
+			.map(ea -> beUtils.getBaseEntity(ea.getValueString()))
+			.peek(ent -> recursivelyPerformPcmSearches(ent));
+
 	}
 
 	/**

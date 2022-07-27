@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,7 +16,7 @@ import org.jboss.logging.Logger;
  */
 public class TimeUtils {
 
-	static final Logger log = Logger.getLogger(TimeUtils.class);
+	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/** 
 	 * Format a LocalTime object to a string
@@ -26,13 +27,8 @@ public class TimeUtils {
 	 */
 	public static String formatTime(LocalTime time, String format) {
 
-		if (time != null && format != null) {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-
-			return time.format(formatter);
-		}
-
-		return null;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+		return time.format(formatter);
 	}
 
 	/** 
@@ -44,13 +40,8 @@ public class TimeUtils {
 	 */
 	public static String formatDate(LocalDate date, String format) {
 
-		if (date != null && format != null) {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-
-			return date.format(formatter);
-		}
-
-		return null;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+		return date.format(formatter);
 	}
 
 	/** 
@@ -62,13 +53,8 @@ public class TimeUtils {
 	 */
 	public static String formatDateTime(LocalDateTime dateTime, String format) {
 
-		if (dateTime != null && format != null) {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-
-			return dateTime.format(formatter);
-		}
-
-		return null;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+		return dateTime.format(formatter);
 	}
 
 	/** 
@@ -80,13 +66,8 @@ public class TimeUtils {
 	 */
 	public static String formatZonedDateTime(ZonedDateTime dateTime, String format) {
 
-		if (dateTime != null && format != null) {
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
-
-			return dateTime.format(formatter);
-		}
-
-		return null;
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+		return dateTime.format(formatter);
 	}
 
 }

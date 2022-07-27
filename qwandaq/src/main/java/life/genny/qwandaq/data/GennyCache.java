@@ -186,7 +186,12 @@ public class GennyCache {
 			log.error("Could not find a cache called " + cacheName);
 		}
 
-		cache.put(key, value);
+		// TODO: Remove this try catch very soon
+		try {
+			cache.put(key, value);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		return cache.get(key);
 	}
 }

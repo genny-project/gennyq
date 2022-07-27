@@ -1,31 +1,19 @@
 package life.genny.lauchy.streams;
 
-import io.quarkus.runtime.StartupEvent;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.validation.Validation;
-import life.genny.serviceq.Service;
-import life.genny.serviceq.intf.GennyScopeInit;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.Topology;
@@ -33,6 +21,28 @@ import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Produced;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.StartupEvent;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.GraphQLUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.validation.Validation;
+import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -62,13 +72,18 @@ public class TopologyProducer {
 	@Inject
 	BaseEntityUtils beUtils;
 
+	@Inject
+	GraphQLUtils gqlUtils;
+
+	@Inject
+	DatabaseUtils databaseUtils;
+
 	void onStart(@Observes StartupEvent ev) {
 
 		if (service.showValues()) {
 			log.info("Blacklist        :" + (enableBlacklist ? "ON" : "OFF"));
 		}
 
-		log.info("Initializing ServiceQ Services");
 		service.fullServiceInit(true);
 		log.info("[*] Finished Topology Startup!");
 	}
@@ -81,10 +96,10 @@ public class TopologyProducer {
 		builder
 				.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
 				.peek((k, v) -> scope.init(v))
-				.peek((k, v) -> log.info("Received message: " + v))
+				.peek((k, v) -> log.info("Received message: " + stripToken(v)))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
-				.filter((k, v) -> validate(v))
+				.filter((k, v) -> validateData(v))
 				.peek((k, v) -> log.info("Forwarding valid message"))
 				.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
 
@@ -92,8 +107,17 @@ public class TopologyProducer {
 	}
 
 	/**
+	 * Helper function to show the data without a token
+	 * @param data
+	 * @return
+	 */
+	public String stripToken(String data) {
+		JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
+		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
+	}
+
+	/**
 	 * Helper function to tidy some values
-	 *
 	 * @param data
 	 * @return
 	 */
@@ -104,162 +128,161 @@ public class TopologyProducer {
 
 	/**
 	 * Function for validating a data message.
-	 *
 	 * @param data the data to validate
-	 * @return Boolean
+	 * @return Boolean representing whether the msg is valid
 	 */
-	public Boolean validate(String data) {
+	public Boolean validateData(String data) {
 
-		JsonObject json = jsonb.fromJson(data, JsonObject.class);
+		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
-		if(json.containsKey("empty")) {
-			log.info("Detected a payload with empty=false.. ignoring & proceding..");
-			return false;
-		}
-
-		JsonArray items = json.getJsonArray("items");
-
-		if (items.size() == 0) {
+		if (msg.getItems().length == 0) {
 			log.info("Detected a payload with empty items.. ignoring & proceding..");
 			return false;
 		}
 
-		for (int i = 0; i < items.size(); i++) {
+		try {
+			for (Answer answer : msg.getItems()) {
+				if (!validateAnswer(answer))
+					break;
 
-			Answer answer = jsonb.fromJson(items.get(i).toString(), Answer.class);
-
-			// TODO: check questionCode by fetching from Questions
-			// TODO: check askID by fetching from Tasks
-
-			// check that user is the source of message
-			if (!(userToken.getUserCode()).equals(answer.getSourceCode())) {
-				// log.errorv("UserCode {} does not match answer source {}",
-				// userToken.getUserCode(), answer.getSourceCode());
-				log.error("UserCode " + userToken.getUserCode() + " does not match answer source "
-						+ answer.getSourceCode());
-				return blacklist();
+				return true;
 			}
-
-			// check source entity exists
-			BaseEntity sourceBe = beUtils.getBaseEntityByCode(answer.getSourceCode());
-			if (sourceBe == null) {
-				log.error("Source " + answer.getSourceCode() + " does not exist");
-				return blacklist();
-			}
-			log.info("Source = " + sourceBe.getCode() + ":" + sourceBe.getName());
-
-			// check target entity exist
-			BaseEntity targetBe = beUtils.getBaseEntityByCode(answer.getTargetCode());
-			if (targetBe == null) {
-				log.error("Target " + answer.getTargetCode() + " does not exist");
-				return blacklist();
-			}
-
-			// check DEF was found for target
-			BaseEntity defBe = defUtils.getDEF(targetBe);
-			if (defBe == null) {
-				// log.errorv("DEF entity not found for {}", targetBe.getCode());
-				log.error("DEF entity not found for " + targetBe.getCode());
-				return blacklist();
-			}
-
-			// check attribute code is allowed by targetDEF
-			if (!defBe.containsEntityAttribute("ATT_" + answer.getAttributeCode())) {
-				// log.errorv("AttributeCode {} not allowed for {}", answer.getAttributeCode(),
-				// defBe.getCode());
-				log.error("AttributeCode " + answer.getAttributeCode() + " not allowed for " + defBe.getCode());
-				return blacklist();
-			}
-
-			// check attribute exists
-			Attribute attribute = qwandaUtils.getAttribute(answer.getAttributeCode());
-			if (attribute == null) {
-				// log.errorv("AttributeCode {} does not existing", answer.getAttributeCode());
-				log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
-				return blacklist();
-			}
-
-			DataType dataType = attribute.getDataType();
-
-			// HACK: TODO ACC - To send back an empty LNK_PERSON for a bucket search
-			if (("LNK_PERSON".equals(answer.getAttributeCode()))
-					&& ("BKT_APPLICATIONS".equals(answer.getTargetCode()))
-					&& ("[]".equals(answer.getValue()))) {
-
-				// So send back a dummy empty value for the LNK_PERSON
-				try {
-					targetBe.setValue(attribute, "[]");
-
-					QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(targetBe);
-					responseMsg.setTotal(1L);
-					responseMsg.setReturnCount(1L);
-					responseMsg.setToken(userToken.getToken());
-
-					KafkaUtils.writeMsg("webdata", responseMsg);
-					log.info("Detected cleared BKT_APPLICATIONS search from " + userToken.getEmailUserCode());
-
-				} catch (BadDataException e) {
-					e.printStackTrace();
-				}
-			}
-
-			if ("PRI_ABN".equals(answer.getAttributeCode())) {
-
-				if (!isValidABN(answer.getValue())) {
-					// log.errorv("invalid ABN {}", answer.getValue());
-					log.error("invalid ABN " + answer.getValue());
-					return blacklist();
-				}
-
-			} else if ("PRI_CREDITCARD".equals(answer.getAttributeCode())) {
-
-				if (!isValidCreditCard(answer.getValue())) {
-					// log.errorv("invalid Credit Card {}", answer.getValue());
-					log.error("invalid Credit Card " + answer.getValue());
-					return blacklist();
-				}
-
-			} else {
-				Boolean isAnyValid = false;
-
-				// check the answer field and allow through if null
-				if (answer.getValue() == null) {
-					log.warn("Received a null answer field from: " + userToken.getUserCode() + ", for: "
-							+ answer.getAttributeCode());
-					isAnyValid = true;
-					continue;
-				}
-
-				for (Validation validation : dataType.getValidationList()) {
-
-					// Now check the validation
-					String regex = validation.getRegex();
-					log.info("Answer Value: " + answer.getValue());
-					boolean regexOk = Pattern.compile(regex).matcher(answer.getValue()).matches();
-
-					if (regexOk) {
-						isAnyValid = true;
-						// log.infov("Regex OK! [{}] for regex {}", answer.getValue().toString(),
-						// regex);
-						log.info("Regex OK! [ " + answer.getValue() + " ] for regex " + regex);
-						break;
-					}
-					// log.errorv("Regex failed! Att: [{}] {} [{}] for regex {} ... {}",
-					// answer.getAttributeCode(),
-					// attribute.getDataType().getDttCode(),
-					// answer.getValue(),
-					// regex,
-					// validation.getErrormsg());
-					log.error("Regex failed! " + regex + " ... " + validation.getErrormsg());
-				}
-
-				// blacklist if none of the regex match
-				if (!isAnyValid) {
-					return blacklist();
-				}
-			}
+		} catch (NullPointerException npe) {
+			npe.printStackTrace();
 		}
 
+		return false;
+	}
+	
+	/**
+	 * Function for validating an asnwer.
+	 * @param answer the answer to validate
+	 * @return Boolean representing whether the answer is valid
+	 */
+	public Boolean validateAnswer(Answer answer) {
+
+		// TODO: check questionCode by fetching from Questions
+		// TODO: check askID by fetching from Tasks
+
+		// check that user is the source of message
+		if (!(userToken.getUserCode()).equals(answer.getSourceCode())) {
+			log.errorf("UserCode %s does not match answer source %s",
+					userToken.getUserCode(),
+					answer.getSourceCode());
+			return blacklist();
+		}
+
+		// check processId is no blank
+		String processId = answer.getProcessId();
+		log.info("CHECK Integrity of processId [" + processId + "]");
+		if (StringUtils.isBlank(processId)) {
+			log.error("ProcessId is blank");
+			return blacklist();
+		}
+
+		// fetch process data from graphql
+		ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+		if (processData == null) {
+			log.error("Could not find process instance variables for processId [" + processId + "]");
+			return false;
+		}
+
+		// check target is same
+		BaseEntity target = processData.getProcessEntity();
+		if (!target.getCode().equals(answer.getTargetCode())) {
+			log.warn("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
+			return blacklist();
+		}
+
+		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+		log.infof("Definition %s found for target %s", defBE.getCode(), answer.getTargetCode());
+
+		String attributeCode = answer.getAttributeCode();
+		Optional<EntityAttribute> fieldAttribute = target.findEntityAttribute(attributeCode);
+		if (fieldAttribute.isEmpty()) {
+			log.errorf("AttributeCode %s is not present", attributeCode);
+			return blacklist();
+		}
+
+		// check duplicate attributes
+		QDataAskMessage askMessage = processData.getAskMessage();
+		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
+			log.error("Duplicate answer detected for target " + answer.getTargetCode());
+			qwandaUtils.sendSubmit(askMessage, false);
+			return false;
+		}
+
+		// TODO: The attribute should be retrieved from askMessage
+		Attribute attribute = qwandaUtils.getAttribute(answer.getAttributeCode());
+
+		// check attribute code is allowed by target DEF
+		if (!defBE.containsEntityAttribute("ATT_" + answer.getAttributeCode())) {
+			log.error("AttributeCode " + answer.getAttributeCode() + " not allowed for " + defBE.getCode());
+			return blacklist();
+		}
+
+		if (!jsonb.toJson(askMessage).contains(answer.getAttributeCode())) {
+			log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
+			return blacklist();
+		}
+
+		temporaryBucketSearchHandler(answer, target, attribute);
+
+		// handleBucketSearch(ans)
+		if ("PRI_ABN".equals(answer.getAttributeCode())) {
+
+			if (isValidABN(answer.getValue())) {
+				return true;
+			}
+			log.errorf("invalid ABN %s", answer.getValue());
+			return blacklist();
+		}
+
+		if ("PRI_CREDITCARD".equals(answer.getAttributeCode())) {
+
+			if (isValidCreditCard(answer.getValue())) {
+				return true;
+			}
+			log.errorf("invalid Credit Card %s", answer.getValue());
+			return blacklist();
+		}
+
+		// check if answer is null
+		if (answer.getValue() == null) {
+			log.warnf("Received a null answer value from: %s, for: %s", userToken.getUserCode(), answer.getAttributeCode());
+			return true;
+		}
+
+		// blacklist if none of the regex match
+		if (!validationsAreMet(answer, attribute))
+			return blacklist();
+
+		return true;
+	}
+
+	/**
+	 * Check if all validations are met for an answer.
+	 * @param answer The answer to check
+	 * @param attribute The Attribute of the answer
+	 * @return Boolean representing whether the validation conditions have been met
+	 */
+	public Boolean validationsAreMet(Answer answer, Attribute attribute) {
+
+		log.info("Answer Value: " + answer.getValue());
+		DataType dataType = attribute.getDataType();
+
+		// check each validation against value
+		for (Validation validation : dataType.getValidationList()) {
+
+			String regex = validation.getRegex();
+			boolean regexOk = Pattern.compile(regex).matcher(answer.getValue()).matches();
+
+			if (!regexOk) {
+				log.error("Regex FAILED! " + regex + " ... " + validation.getErrormsg());
+				return false;
+			}
+			log.info("Regex OK! [ " + answer.getValue() + " ] for regex " + regex);
+		}
 		return true;
 	}
 
@@ -339,6 +362,37 @@ public class TopologyProducer {
 			alternate = !alternate;
 		}
 		return (sum % 10 == 0);
+	}
+
+	/**
+	 * A Temporary handler for the bucket quick search.
+	 * @param answer The Answer to handle
+	 * @param target The target entity
+	 * @param attribute The attribute used
+	 */
+	// NOTE: This should be removed soon and rethought
+	public void temporaryBucketSearchHandler(Answer answer, BaseEntity target, Attribute attribute) {
+
+		if (("LNK_PERSON".equals(answer.getAttributeCode()))
+				&& ("BKT_APPLICATIONS".equals(answer.getTargetCode()))
+				&& ("[]".equals(answer.getValue()))) {
+
+			// So send back a dummy empty value for the LNK_PERSON
+			try {
+				target.setValue(attribute, "[]");
+
+				QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(target);
+				responseMsg.setTotal(1L);
+				responseMsg.setReturnCount(1L);
+				responseMsg.setToken(userToken.getToken());
+
+				KafkaUtils.writeMsg("webdata", responseMsg);
+				log.info("Detected cleared BKT_APPLICATIONS search from " + userToken.getEmailUserCode());
+
+			} catch (BadDataException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

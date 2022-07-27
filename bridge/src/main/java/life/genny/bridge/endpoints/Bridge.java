@@ -1,7 +1,5 @@
 package life.genny.bridge.endpoints;
 
-import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.JsonObject;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -9,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -25,19 +24,24 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import life.genny.bridge.blacklisting.BlackListInfo;
-import life.genny.bridge.model.InitProperties;
-import life.genny.qwandaq.message.QDataB2BMessage;
-import life.genny.qwandaq.models.AttributeCodeValueString;
-import life.genny.qwandaq.models.GennyItem;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
-
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
+import life.genny.bridge.blacklisting.BlackListInfo;
+import life.genny.bridge.model.InitColors;
+import life.genny.bridge.model.InitProperties;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.message.QDataB2BMessage;
+import life.genny.qwandaq.models.AttributeCodeValueString;
+import life.genny.qwandaq.models.GennyItem;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
 
 /**
  * Bridge ---Endpoints consisting in providing model data from the model
@@ -53,6 +57,9 @@ public class Bridge {
 	private static final Logger log = Logger.getLogger(Bridge.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	@Inject
 	UserToken userToken;
@@ -89,7 +96,27 @@ public class Bridge {
         log.info("Using URL for init: " + url);
 
 		try {
-			InitProperties props = new InitProperties(uriInfo.getBaseUri().toString());
+			// init config properties
+			InitProperties props = new InitProperties();
+			props.setRealm("internmatch");
+			props.setKeycloakRedirectUri(CommonUtils.getSystemEnv("ENV_KEYCLOAK_REDIRECTURI"));
+			props.setMediaProxyUrl(url);
+			props.setApiUrl(url);
+
+			// init clientId
+			String cid = props.determineClientId(url);
+			log.info("cid = " + cid);
+			BaseEntity project = beUtils.getBaseEntity(cid, "PRJ_"+cid.toUpperCase());
+			if ("internmatch".equals(cid)) {
+				cid = "alyson";
+			}
+			props.setClientId(cid);
+
+			// init colours
+			String primary = project.getValueAsString("PRI_COLOR_PRIMARY");
+			String secondary = project.getValueAsString("PRI_COLOR_SECONDARY");
+			props.setColors(new InitColors(primary, secondary));
+
 			log.info("props=["+props+"]");
 			String json = jsonb.toJson(props);
 			return Response.ok(json).build();

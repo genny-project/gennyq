@@ -57,38 +57,6 @@ public class Search {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@GET
-	@Path("/api/schedule")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response schedule() {
-
-		String uuid = UUID.randomUUID().toString().toUpperCase();
-
-		log.info("Scheduling test event for " + uuid);
-
-		if (userToken == null) {
-			log.error("Bad or no header token in Search POST provided");
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
-
-
-		log.info("GENNY_TOKEN = " + userToken);
-		log.info("SERVICE_TOKEN = " + serviceToken);
-
-		BaseEntity user = beUtils.getUserBaseEntity();
-
-		// TODO
-		// new QScheduleMessage.Builder("SCHEDULE_TEST")
-		// 	.setEventMessage("TEST_EVENT", uuid)
-		// 	.setTriggerTime(LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(5))
-		// 	.setGennyToken(userToken)
-		// 	.schedule();
-
-		log.info("Done!");
-
-		return Response.ok().build();
-	}
-
 	/**
 	 * A POST request for search results based on a 
 	 * {@link SearchEntity}. Will only fetch codes.
@@ -145,17 +113,22 @@ public class Search {
 	@POST
 	@Path("/count25")
 	@Produces(MediaType.APPLICATION_JSON)
-	public String count(SearchEntity searchBE) {
+	public String count25(SearchEntity searchEntity) {
+		// TODO: Remove this endpoint
+		return count(searchEntity);
+	}
+
+	@POST
+	@Path("/api/search/count")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String count(SearchEntity searchEntity) {
 
 		if (userToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return "0";
 		}
-
-		log.info("GENNY_TOKEN = " + userToken);
-		log.info("SERVICE_TOKEN = " + serviceToken);
-
-		Long count = search.performCount(searchBE);
+		Long count = search.performCount(searchEntity);
+		log.infof("Found %s entities", count);
 
 		return ""+count;
 	}

@@ -109,8 +109,9 @@ public class CacheUtils {
 		log.debug("Cache Realm is " + realm);
 
 		String data = (String) readCache(realm, key);
+		log.debug("key: " + key + ", data: " + data);
+
 		if (StringUtils.isEmpty(data)) {
-			log.debug("key: " + key + ", data: " + data);
 			return null;
 		}
 
@@ -148,6 +149,7 @@ public class CacheUtils {
 
 		String json = jsonb.toJson(obj);
 		cache.getRemoteCache(realm).put(key, json);
+		log.debug("Caching: [" + realm + ":" + key + "]=" + obj);
 	}
 
 	/**

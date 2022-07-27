@@ -10,7 +10,6 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.data.BridgeInfo;
 
 /**
  * A Bridge ID management class for data message route selection.

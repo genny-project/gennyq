@@ -1,18 +1,16 @@
 package life.genny.bridge.model;
 
-import life.genny.qwandaq.utils.CommonUtils;
-
-import java.util.Arrays;
 import java.util.Optional;
 
 import javax.json.bind.annotation.JsonbProperty;
 
-import org.jboss.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.bridge.exception.BridgeException;
 import life.genny.bridge.exception.ClientIdException;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * InitProperties --- The class contains all the fields neccessary to contruct the protocol external clients
@@ -24,37 +22,20 @@ import life.genny.bridge.exception.ClientIdException;
 @RegisterForReflection
 public class InitProperties {
 
-    @JsonbProperty
     String realm;
+	String clientId;
+	InitColors colors;
+
     @JsonbProperty("ENV_KEYCLOAK_REDIRECTURI")
     String keycloakRedirectUri;
     @JsonbProperty("ENV_MEDIA_PROXY_URL")
     String mediaProxyUrl;
     @JsonbProperty("api_url")
     String apiUrl;
-    @JsonbProperty
-    String clientId;
 
 	private static final Logger log = Logger.getLogger(InitProperties.class);
 
-    public InitProperties(String url) throws BridgeException {
-
-        this();
-        setMediaProxyUrl(url);
-        setApiUrl(url);
-
-		String cid = determineClientId(url);
-		if ("internmatch".equals(cid)) {
-			cid = "alyson";
-		}
-
-		setClientId(cid);
-    }
-
-    public InitProperties() throws BridgeException {
-
-        setRealm("internmatch");
-        setKeycloakRedirectUri(CommonUtils.getSystemEnv("ENV_KEYCLOAK_REDIRECTURI"));
+    public InitProperties() {
     }
 
 	public String getRealm() {
@@ -103,6 +84,14 @@ public class InitProperties {
         return clientId;
     }
 
+    public InitColors getColors() {
+        return colors;
+    }
+
+    public void setColors(InitColors colors) {
+        this.colors = colors;
+    }
+
     /**
      * It will throw a BridgeException error if the required field is null or empty
      *
@@ -132,7 +121,7 @@ public class InitProperties {
      * @throws ClientIdException if the client id cannot be properly parsed from the uri, usually because none of the product
      * codes match the URI
      */
-    private String determineClientId(String uri) throws BridgeException {
+    public String determineClientId(String uri) throws BridgeException {
         String productCodeArray = CommonUtils.getSystemEnv("PRODUCT_CODES");
         throwIfNull(productCodeArray, "PRODUCT_CODES");
 

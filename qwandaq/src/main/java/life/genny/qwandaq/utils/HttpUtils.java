@@ -12,6 +12,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.models.GennyToken;
 
 /**
@@ -51,8 +52,6 @@ public class HttpUtils {
 	@Deprecated
 	public static HttpResponse<String> put(String uri, String body, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
@@ -61,13 +60,10 @@ public class HttpUtils {
 				.build();
 
 		try {
-			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-			return response;
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			log.error(e);
+			throw new GennyRuntimeException("PUT request error", e);
 		}
-
-		return null;
 	}
 
 	/**
@@ -127,11 +123,7 @@ public class HttpUtils {
 	@Deprecated
 	public static java.net.http.HttpResponse<String> post(String uri, String body, String contentType, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
-		Builder requestBuilder = null;
-
-		requestBuilder = HttpRequest.newBuilder()
+		Builder requestBuilder = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", contentType);
 
@@ -144,16 +136,9 @@ public class HttpUtils {
 				.build();
 
 		try {
-			return client.send(request, HttpResponse.BodyHandlers.ofString());
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			log.error("Error getting response back from " + uri);
-			e.printStackTrace();
-
-			log.error("Null response from: " + uri);
-			log.error("Payload: " + body);
-			log.error("Token: " + (token != null ? token : "null"));
-	
-			return null;
+			throw new GennyRuntimeException("POST request error", e);
 		}
 	}
 
@@ -180,8 +165,6 @@ public class HttpUtils {
 	@Deprecated
 	public static HttpResponse<String> get(String uri, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
@@ -189,12 +172,10 @@ public class HttpUtils {
 				.GET().build();
 
 		try {
-			return  client.send(request, HttpResponse.BodyHandlers.ofString());
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			log.error(e);
+			throw new GennyRuntimeException("GET request error", e);
 		}
-
-		return null;
 	}
 
 	/**
@@ -220,8 +201,6 @@ public class HttpUtils {
 	@Deprecated
 	public static HttpResponse<String> delete(String uri, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
@@ -229,13 +208,10 @@ public class HttpUtils {
 				.DELETE().build();
 
 		try {
-			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-			return response;
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			log.error(e);
+			throw new GennyRuntimeException("DELETE request error", e);
 		}
-
-		return null;
 	}
 
 	/**
@@ -310,11 +286,8 @@ public class HttpUtils {
 	 * - The authorization parameter only has token
 	 * - The authorization parameter starts with bearer and join by space with a
 	 * token
-	 *
-	 *
 	 * @param authorization Value of the authorization header normally with this
 	 *                      format: Bearer eydsMSklo30...
-	 *
 	 * @return token Token extracted or the same token if nothing found to extract
 	 */
 	public static GennyToken extractGennyTokenFromHeaders(String authorization) {
@@ -324,19 +297,15 @@ public class HttpUtils {
 	/**
 	 * Create a URI object from a uri string.
 	 * TODO: Need to work on this more.
-	 *
 	 * @param uri The uri string
 	 * @return A URI object
 	 */
 	private static URI createURI(String uri) throws IllegalArgumentException {
 		try {
-			log.info("Creating uri: " + uri);
+			log.info("Creating URI: " + uri);
 			return URI.create(uri);
 		} catch(IllegalArgumentException e) {
-			log.error("Bad Uri: [" + uri + "]");
-			e.printStackTrace();
-			// pass it further down the chain
-			throw e;
+			throw new GennyRuntimeException("Bad Uri: [" + uri + "]", e);
 		}
 	}
 }

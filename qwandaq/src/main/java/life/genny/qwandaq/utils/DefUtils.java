@@ -21,6 +21,9 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.ItemNotFoundException;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 
@@ -45,21 +48,22 @@ public class DefUtils {
 
 	@Inject
 	BaseEntityUtils beUtils;
+	
+	@Inject
+	SearchUtils searchUtils;
 
 	@Inject
 	UserToken userToken;
 
 	public DefUtils() { }
 
-	public String getDefPrefix(String productCode, String definitionCode) {
-		return defPrefixMap.get(productCode).get(definitionCode);
-	}
-
 	/**
 	 * Initialize the in memory DEF store
 	 *
 	 * @param productCode The product of DEFs to initialize
 	 */
+	// TODO: remove this soon
+	@Deprecated
 	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
@@ -70,7 +74,7 @@ public class DefUtils {
 
 		searchBE.setRealm(productCode);
 
-		List<String> codes = beUtils.getBaseEntityCodes(searchBE);
+		List<String> codes = searchUtils.searchBaseEntityCodes(searchBE);
 
 		if (codes == null) {
 			log.error("Could not fetch DEF codes!");
@@ -81,16 +85,12 @@ public class DefUtils {
 		defPrefixMap.put(productCode, new ConcurrentHashMap<String, String>());
 
 		for (String code : codes) {
+
 			if (code == null) {
 				log.error("Code is null, skipping DEF prefix");
 				continue;
 			}
-
-			BaseEntity def = beUtils.getBaseEntityByCode(productCode, code);
-			if (def == null) {
-				log.error("Def is null!");
-				continue;
-			}
+			BaseEntity def = beUtils.getBaseEntity(productCode, code);
 
 			String prefix = def.getValue("PRI_PREFIX", null);
 			if (prefix == null) {
@@ -99,6 +99,7 @@ public class DefUtils {
 
 			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
 			defPrefixMap.get(productCode).put(prefix, code);
+			CacheUtils.putObject(productCode, def.getCode()+":PREFIX", prefix);
 		}
 	}
 
@@ -111,8 +112,7 @@ public class DefUtils {
 	public BaseEntity getDEF(final BaseEntity entity) {
 
 		if (entity == null) {
-			log.error("The passed BaseEntity is NULL, supplying trace");
-			return null;
+			throw new ItemNotFoundException("entity");
 		}
 
 		// save processing time on particular entities
@@ -120,7 +120,7 @@ public class DefUtils {
 			return entity;
 		}
 		if (entity.getCode().startsWith("PRJ_")) {
-			return beUtils.getBaseEntityByCode("DEF_PROJECT");
+			return beUtils.getBaseEntity("DEF_PROJECT");
 		}
 
 		// NOTE: temporary special check for internmatch
@@ -133,17 +133,17 @@ public class DefUtils {
 
 		// null/empty check the role attribute
 		if (codes == null) {
-			log.error("Entity " + entity.getCode() + " does not contain LNK_DEF attribute");
-			return null;
+			throw new GennyRuntimeException("Entity " + entity.getCode() + " does not contain LNK_DEF attribute");
 		}
 		if (codes.isEmpty()) {
-			log.error("LNK_DEF is empty for " + entity.getCode());
-			return null;
+			throw new GennyRuntimeException("LNK_DEF is empty for " + entity.getCode());
 		}
 
 		// fetch DEF if no merging is needed
 		if (codes.size() == 1) {
-			return beUtils.getBaseEntityByCode(codes.get(0));
+			String definitionCode = codes.get(0);
+			BaseEntity definition = beUtils.getBaseEntity(definitionCode);
+			return definition;
 		}
 
 		String mergedCode = "DEF_" + String.join("_", codes);
@@ -154,7 +154,7 @@ public class DefUtils {
 		Collections.reverse(codes);
 		for (String code : codes) {
 
-			BaseEntity def = beUtils.getBaseEntityByCode(code);
+			BaseEntity def = beUtils.getBaseEntity(code);
 			if (def == null) {
 				log.warn("No DEF for " + code);
 				continue;
@@ -180,10 +180,11 @@ public class DefUtils {
 	 * @param entity The {@link BaseEntity} to check
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
+	// TODO: remove this soon
+	@Deprecated
 	public BaseEntity getInternmatchDEF(final BaseEntity entity) {
 
 		String productCode = userToken.getProductCode();
-
 		List<EntityAttribute> isAs = entity.findPrefixEntityAttributes("PRI_IS_");
 
 		// remove the non DEF ones
@@ -289,10 +290,12 @@ public class DefUtils {
 	 */
 	public Boolean answerValidForDEF(Answer answer) {
 
+		if (answer == null)
+			throw new NullParameterException("answer");
+
 		BaseEntity target = beUtils.getBaseEntityByCode(answer.getTargetCode());
 		if (target == null) {
-			log.error("TargetCode " + answer.getTargetCode() + " does not exist");
-			return false;
+			throw new ItemNotFoundException(answer.getTargetCode());
 		}
 		BaseEntity defBE = getDEF(target);
 
@@ -309,6 +312,11 @@ public class DefUtils {
 	 */
 	public Boolean answerValidForDEF(BaseEntity defBE, Answer answer) {
 
+		if (defBE == null)
+			throw new NullParameterException("defBE");
+		if (answer == null)
+			throw new NullParameterException("answer");
+
 		String targetCode = answer.getTargetCode();
 		String attributeCode = answer.getAttributeCode();
 
@@ -318,11 +326,6 @@ public class DefUtils {
 		} else if (targetCode.startsWith("SBE_")
 				&& (attributeCode.startsWith("COL_") || attributeCode.startsWith("CAL_")
 						|| attributeCode.startsWith("SRT_") || attributeCode.startsWith("ACT_"))) {
-			return true;
-		}
-
-		if (defBE == null) {
-			log.error("Cannot work out DEF " + answer.getTargetCode());
 			return true;
 		}
 
@@ -368,23 +371,25 @@ public class DefUtils {
 
 					if (requiresMerging != null && requiresMerging) {
 						// update Map with latest baseentity
-						ctxMap.keySet().forEach(key -> {
-							Object value = ctxMap.get(key);
-							if (value.getClass().equals(BaseEntity.class)) {
-								BaseEntity baseEntity = (BaseEntity) value;
-								ctxMap.put(key, beUtils.getBaseEntityByCode(baseEntity.getCode()));
-							}
-						});
+						if (beUtils != null) {
+							ctxMap.keySet().forEach(key -> {
+								Object value = ctxMap.get(key);
+								if (value.getClass().equals(BaseEntity.class)) {
+									BaseEntity baseEntity = (BaseEntity) value;
+									ctxMap.put(key, beUtils.getBaseEntityByCode(baseEntity.getCode()));
+								}
+							});
+						}
 						// check if contexts are present
 						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper
 							// (6/08/2021)
 							Object mergedObj = MergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
 									ctxMap);
-							// Ensure Dataype is Correct, then set Value
+							// Ensure Datatype is Correct, then set Value
 							ea.setValue(mergedObj);
 						} else {
-							log.error(ANSIColour.RED + "Not all contexts are present for " + attrValStr
+							log.warn(ANSIColour.RED + "Not all contexts are present for " + attrValStr
 									+ ANSIColour.RESET);
 							return null;
 						}

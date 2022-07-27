@@ -1,12 +1,15 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.message.QCmdMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -52,8 +55,8 @@ public class SearchService {
 	 * @param targetCode The code of the target to display
 	 */
 	public void sendTable(String eventCode) {
-
-		String searchCode = "SBE_"+StringUtils.removeStart(eventCode, "QUE_");
+		String codeTrimmed = StringUtils.removeStart(eventCode, "QUE_TREE_ITEM_");
+		String searchCode = "SBE_"+StringUtils.removeStart(codeTrimmed, "QUE_");
 		log.info("Sending Table :: " + searchCode);
 
 		searchUtils.searchTable(searchCode);
@@ -97,25 +100,18 @@ public class SearchService {
 	 */
 	public void sendSearchPCM(String pcmCode, String searchCode) {
 
-		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
+		// update content
+		BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
 		Attribute attribute = qwandaUtils.getAttribute("PRI_LOC1");
 		EntityAttribute ea = new EntityAttribute(content, attribute, 1.0, pcmCode);
+		content.addAttribute(ea);
 
-		try {
-			content.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
-
-		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
+		// update target pcm
+		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
 		ea = new EntityAttribute(pcm, attribute, 1.0, searchCode);
+		pcm.addAttribute(ea);
 
-		try {
-			pcm.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
-
+		// send to alyson
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(content);
 		msg.add(pcm);
 		msg.setToken(userToken.getToken());
@@ -123,4 +119,56 @@ public class SearchService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
+	/**
+	 * Get bucket data with bucket event
+	 * @param eventCode Bucket event code
+	 */
+	public void getBuckets(String eventCode) {
+		try {
+			String searchCode = "SBE_" + StringUtils.removeStart(eventCode, "QUE_");
+
+			List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
+			List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
+			sendBucketCodes(bucketCodes);
+
+			originBucketCodes.stream().forEach(e -> {
+				searchUtils.searchTable(e);
+				sendSearchPCM("PCM_PROCESS", e);
+			});
+		}catch (Exception ex){
+			log.error(ex);
+		}
+	}
+
+	/**
+	 * Send the list of bucket codes to frond-end
+	 * @param bucketCodes The list of bucket codes
+	 */
+	public void sendBucketCodes(List<String> bucketCodes) {
+		QCmdMessage msgProcess = new QCmdMessage("DISPLAY","PROCESS");
+		msgProcess.setToken(userToken.getToken());
+		KafkaUtils.writeMsg("webcmds", msgProcess);
+
+		QCmdMessage msgCodes = new QCmdMessage("BUCKET_CODES","BUCKET_CODES");
+		msgCodes.setToken(userToken.getToken());
+		msgCodes.setSourceCode("BUCKET_CODES");
+		msgCodes.setTargetCodes(bucketCodes);
+		KafkaUtils.writeMsg("webcmds", msgCodes);
+	}
+
+	/**
+	 * Get the list of bucket codes with session id
+	 * @param originBucketCodes List of bucket codes
+	 * @return The list of bucket code with session id
+	 */
+	public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes){
+		List<String> bucketCodes = new ArrayList<>();
+		originBucketCodes.stream().forEach(e -> {
+			SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),e, SearchEntity.class);
+			String searchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
+			bucketCodes.add(searchCode);
+		});
+
+		return bucketCodes;
+	}
 }

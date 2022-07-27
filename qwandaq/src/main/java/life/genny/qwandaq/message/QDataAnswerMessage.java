@@ -14,8 +14,7 @@ public class QDataAnswerMessage extends QDataMessage {
 	private static final String DATATYPE_ANSWER = Answer.class.getSimpleName();
 
 	public QDataAnswerMessage() {
-
-		// super(DATATYPE_ANSWER); // removed for native execution
+		super(DATATYPE_ANSWER);
 	}
 
 	public QDataAnswerMessage(Answer[] items) {
