@@ -1,4 +1,4 @@
-package life.genny.qwandaq.baseentityattribute;
+package life.genny.qwandaq.serialization.baseentityattribute;
 
 message BaseEntityAttribute {
   optional string attributeCode = 1;

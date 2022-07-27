@@ -13,7 +13,7 @@ public class BaseEntityAttributeKeyMessageMarshaller implements MessageMarshalle
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.serialization.baseentity.BaseEntityAttributeKey";
+		return "life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey";
 	}
 
 	@Override

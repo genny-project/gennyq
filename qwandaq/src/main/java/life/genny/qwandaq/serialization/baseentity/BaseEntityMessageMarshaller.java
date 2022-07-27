@@ -6,9 +6,6 @@ import java.time.ZoneOffset;
 
 import org.infinispan.protostream.MessageMarshaller;
 
-import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.entity.BaseEntity;
-
 public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity> {
 
 	@Override
@@ -18,7 +15,7 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.entity.BaseEntity";
+		return "life.genny.qwandaq.serialization.baseentity.BaseEntity";
 	}
 
 	// @Override
@@ -32,13 +29,7 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		}
 		be.setName(reader.readString("name"));
 		be.setRealm(reader.readString("realm"));
-		Integer statusInt = reader.readInt("status");
-		for (EEntityStatus enumValue : EEntityStatus.values()) {
-			if (enumValue.getStatus().equals(statusInt)) {
-				be.setStatus(enumValue);
-				break;
-			}
-		}
+		be.setStatus(reader.readInt("status"));
 		Long updatedLong = reader.readLong("updated");
 		if (updatedLong != null) {
 			be.setUpdated(LocalDateTime.ofEpochSecond(updatedLong / 1000, 0, ZoneOffset.UTC));
@@ -51,13 +42,13 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		// writer.writeLong("id", be.getId());
 		writer.writeString("code", be.getCode());
 		LocalDateTime created = be.getCreated();
-		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC)*1000 : null;
+		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeLong("created", createdLong);
 		writer.writeString("name", be.getName());
 		writer.writeString("realm", be.getRealm());
-		writer.writeInt("status", be.getStatus().ordinal());
+		writer.writeInt("status", be.getStatus());
 		LocalDateTime updated = be.getUpdated();
-		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC)*1000 : null;
+		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeLong("updated", updatedLong);
 	}
 
