@@ -92,7 +92,7 @@ public class InternalConsumer {
 	@Incoming("events")
 	@Blocking
 	public void getEvent(String event) {
-		log.info("Incoming json message = " + event);
+		
 		Instant start = Instant.now();
 		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
 		if (eventJson.containsKey("event_type")) {
@@ -100,7 +100,7 @@ public class InternalConsumer {
 				return; // Don't process Dropdowns
 			}
 		}
-		log.info("Received Event : " + obfuscate(event));
+		log.info("Received Event : " + obfuscate(eventJson));
 
 		// init scope and process msg
 		scope.init(event);
