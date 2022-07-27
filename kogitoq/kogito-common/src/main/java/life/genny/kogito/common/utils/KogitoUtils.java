@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.kie.api.runtime.KieRuntimeBuilder;
 import org.kie.api.runtime.KieSession;
+import org.apache.commons.lang3.StringUtils;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
@@ -282,13 +283,9 @@ public class KogitoUtils {
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
-		session.getAgenda().getAgendaGroup("EventRoutes").setFocus();
+		initSession(session, "EventRoutes");
 
-		session.insert(kogitoUtils);
-		session.insert(jsonb);
-		session.insert(userToken);
-		session.insert(beUtils);
-		session.insert(defUtils);
+		// Insert Extras
 		session.insert(gqlUtils);
 		session.insert(qwandaUtils);
 		session.insert(msg);
@@ -323,18 +320,11 @@ public class KogitoUtils {
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
-		session.getAgenda().getAgendaGroup("Inference").setFocus();
-
-		// insert utils and other beans
-		session.insert(kogitoUtils);
-		session.insert(jsonb);
-		session.insert(defUtils);
-		session.insert(beUtils);
-		session.insert(userToken);
+		initSession(session, "Inference");
 
 		// insert answers from message
-		int answerCount = msg.getItems().length
-		;
+		int answerCount = msg.getItems().length;
+
 		for (Answer answer : msg.getItems()) {
 			log.debug("Inserting answer: " + answer.getAttributeCode() + "=" + answer.getValue() + " into session");
 			session.insert(answer);
@@ -378,7 +368,15 @@ public class KogitoUtils {
 	public void initBucketRule() {
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
-		session.getAgenda().getAgendaGroup("bucket").setFocus();
+		initSession(session, "bucket");
+
+		session.fireAllRules();
+		session.dispose();
+	}
+
+	private void initSession(KieSession session, String focus) {
+		if(!StringUtils.isBlank(focus))
+			session.getAgenda().getAgendaGroup(focus).setFocus();
 
 		// insert utils and other beans
 		session.insert(kogitoUtils);
@@ -386,14 +384,7 @@ public class KogitoUtils {
 		session.insert(defUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
-
-		// Infer data
-		session.fireAllRules();
-
-		session.dispose();
 	}
-
-
 
 
 }
