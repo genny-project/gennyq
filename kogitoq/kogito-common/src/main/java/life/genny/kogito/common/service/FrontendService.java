@@ -375,7 +375,6 @@ public class FrontendService {
 
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
-		Attribute nameAttribute = qwandaUtils.getAttribute("PRI_NAME");
 
 		if (attribute.getCode().startsWith("LNK_")) {
 

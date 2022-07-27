@@ -191,6 +191,22 @@ public class InitService {
 	}
 
 	/**
+	 * Send Add Items Menu
+	 */
+	public void sendDrafts() {
+
+		BaseEntity user = beUtils.getUserBaseEntity();
+		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_DRAFTS_GRP", user, user);
+
+		// configure msg and send
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+
+		KafkaUtils.writeMsg("webdata", msg);
+	}
+
+	/**
 	 * Send Outstanding Tasks
 	 */
 	public void sendOutstandingTasks() {
