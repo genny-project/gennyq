@@ -71,8 +71,8 @@ public class InternalConsumer {
 		List<Answer> answers = kogitoUtils.runDataInference(data);
 		if (answers.isEmpty())
 			log.warn("[!] No answers after inference");
-		// else
-		// 	kogitoUtils.funnelAnswers(answers);
+		else
+		 	kogitoUtils.funnelAnswers(answers);
 
 		// pass it on to the next stage of inference pipeline
 		QDataAnswerMessage msg = new QDataAnswerMessage(answers);
