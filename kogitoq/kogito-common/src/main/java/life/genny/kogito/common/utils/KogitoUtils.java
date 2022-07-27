@@ -393,6 +393,21 @@ public class KogitoUtils {
 		session.dispose();
 	}
 
+	public void initDataByRuleGroup(String ruleGroupName) {
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+		session.getAgenda().getAgendaGroup(ruleGroupName).setFocus();
+
+		// insert utils and other beans
+		session.insert(kogitoUtils);
+		session.insert(jsonb);
+		session.insert(defUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+
+		session.fireAllRules();
+		session.dispose();
+	}
 
 
 

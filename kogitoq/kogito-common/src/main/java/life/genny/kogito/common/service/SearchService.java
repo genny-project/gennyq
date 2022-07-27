@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.message.QCmdMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -54,8 +55,8 @@ public class SearchService {
 	 * @param targetCode The code of the target to display
 	 */
 	public void sendTable(String eventCode) {
-
-		String searchCode = "SBE_"+StringUtils.removeStart(eventCode, "QUE_");
+		String codeTrimmed = StringUtils.removeStart(eventCode, "QUE_TREE_ITEM_");
+		String searchCode = "SBE_"+StringUtils.removeStart(codeTrimmed, "QUE_");
 		log.info("Sending Table :: " + searchCode);
 
 		searchUtils.searchTable(searchCode);
@@ -118,31 +119,42 @@ public class SearchService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
-	public void getBuckets(String eventCode) throws  Exception {
-		String searchCode = "SBE_"+StringUtils.removeStart(eventCode, "QUE_");
+	public void getBuckets(String eventCode) {
+		try {
+			String searchCode = "SBE_" + StringUtils.removeStart(eventCode, "QUE_");
 
-		List<String> bucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
+			List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
+			List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
+			sendBucketCodes(bucketCodes);
 
-		sendBucketData(searchCode,bucketCodes);
-
-		bucketCodes.stream().forEach(e -> {
-			searchUtils.searchTable(e);
-		});
-
+			originBucketCodes.stream().forEach(e -> {
+				searchUtils.searchTable(e);
+			});
+		}catch (Exception ex){
+			log.error(ex);
+		}
 	}
 
-	public void sendBucketData(String source, List<String> bucketCodes) {
-		List<BaseEntity> listBase = new ArrayList<>();
-		for(String str: bucketCodes){
-			BaseEntity base = new BaseEntity(str);
-			base.setRealm(userToken.getRealm());
-			listBase.add(new BaseEntity(str));
-		}
+	public void sendBucketCodes(List<String> bucketCodes) {
+		QCmdMessage msgProcess = new QCmdMessage("DISPLAY","PROCESS");
+		msgProcess.setToken(userToken.getToken());
+		KafkaUtils.writeMsg("webcmds", msgProcess);
 
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(listBase);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		msg.setParentCode(source);
-		KafkaUtils.writeMsg("webcmds", msg);
+		QCmdMessage msgCodes = new QCmdMessage("BUCKET_CODES","BUCKET_CODES");
+		msgCodes.setToken(userToken.getToken());
+		msgCodes.setSourceCode("BUCKET_CODES");
+		msgCodes.setTargetCodes(bucketCodes);
+		KafkaUtils.writeMsg("webcmds", msgCodes);
+	}
+
+	public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes){
+		List<String> bucketCodes = new ArrayList<>();
+		originBucketCodes.stream().forEach(e -> {
+			SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),e, SearchEntity.class);
+			String searchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
+			bucketCodes.add(searchCode);
+		});
+
+		return bucketCodes;
 	}
 }
