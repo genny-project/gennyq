@@ -1,7 +1,9 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -62,7 +64,6 @@ public class SummaryService {
 	 * Send the user's summary based on their lifecycle state.
 	 */
 	public void sendSummary() {
-
 		// we store the summary code in the persons lifecycle
 		JsonArray array = gqlUtils.queryTable("PersonLifecycle", "entityCode", userToken.getUserCode(), "summary");
 		if (array == null || array.isEmpty()) {
@@ -154,5 +155,42 @@ public class SummaryService {
 		}
 	}
 
+	/**
+	 * Get internmatch summary
+	 */
+	public void getInternSummary() {
+		try {
+			String summaryCodes = "SUMMARY_CODES";
+			List<String> bucketCodes = CacheUtils.getObject(userToken.getRealm(), summaryCodes, List.class);
+
+			sendInternSummaryCodes(summaryCodes, bucketCodes);
+
+			bucketCodes.stream().forEach(e -> {
+				searchUtils.searchTable(e);
+			});
+		} catch (Exception ex){
+			log.error(ex);
+		}
+	}
+
+	/**
+	 * Get internmatch bucket codes
+	 * @param source Summary code
+	 * @param bucketCodes : original bucket
+	 */
+	public void sendInternSummaryCodes(String source, List<String> bucketCodes) {
+		List<BaseEntity> listBase = new ArrayList<>();
+		for(String str: bucketCodes){
+			BaseEntity base = new BaseEntity(str);
+			base.setRealm(userToken.getRealm());
+			listBase.add(new BaseEntity(str));
+		}
+
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(listBase);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		msg.setParentCode(source);
+		KafkaUtils.writeMsg("webcmds", msg);
+	}
 }
 

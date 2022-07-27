@@ -365,6 +365,10 @@ public class KogitoUtils {
 		return;
 	}
 
+	/**
+	 * Initialise bucket data by rule
+	 */
+	@Deprecated
 	public void initBucketRule() {
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
@@ -386,5 +390,24 @@ public class KogitoUtils {
 		session.insert(userToken);
 	}
 
+	/**
+	 * Initialise data by rule group
+	 * @param ruleGroupName Group rule name
+	 */
+	public void initDataByRuleGroup(String ruleGroupName) {
+		// start new session
+		KieSession session = kieRuntimeBuilder.newKieSession();
+		session.getAgenda().getAgendaGroup(ruleGroupName).setFocus();
+
+		// insert utils and other beans
+		session.insert(kogitoUtils);
+		session.insert(jsonb);
+		session.insert(defUtils);
+		session.insert(beUtils);
+		session.insert(userToken);
+
+		session.fireAllRules();
+		session.dispose();
+	}
 
 }

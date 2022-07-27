@@ -30,6 +30,7 @@ import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.exception.ItemNotFoundException;
 import life.genny.qwandaq.exception.NullParameterException;
@@ -37,9 +38,8 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.UserToken;
-
 import life.genny.qwandaq.models.UniquePair;
+import life.genny.qwandaq.models.UserToken;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -702,99 +702,56 @@ public class QwandaUtils {
 		return (sum % 89 == 0);
 	}
 
-	
-	public boolean checkDuplicateAttribute(final String attributeCode, final String value, BaseEntity target, BaseEntity defBE) {
+	/**
+	 * Check the uniqueness of an answer
+	 * @param target The target entity
+	 * @param definition The definition entity
+	 * @param attributeCode The code of the attribute
+	 * @param value The value to check
+	 */
+	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
+
 		// Check if attribute code exists as a UNQ for the DEF
-		Optional<EntityAttribute> uniqueAttribute = defBE.findEntityAttribute("UNQ_" + attributeCode);
+		Optional<EntityAttribute> unique = definition.findEntityAttribute("UNQ_" + attributeCode);
 
-		if (uniqueAttribute.isPresent()) {
-			log.info("Target: " + target.getCode() + ", Definition: " + defBE.getCode()
-					+ ", Attribute found for UNQ_" + attributeCode+ " LOOKING for duplicate using "
-					+ uniqueAttribute.get().getValue());
-			String uniqueIndexes = uniqueAttribute.get().getValue();
-			// remove the square brackets
-			uniqueIndexes = uniqueIndexes.substring(1, uniqueIndexes.length() - 1);
-			String[] uniqueArray = uniqueIndexes.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
-			// Check if the value is already in the database
-			log.info("The list is " + Arrays.toString(uniqueArray) + " and is " + uniqueArray.length);
-
-			List<UniquePair> uniquePairs = new ArrayList<>();
-
-			for (String uniqueAttributeStr : uniqueArray) {
-				uniqueAttributeStr = uniqueAttributeStr.replaceAll("\"", "");
-
-				// find the existing value of the specified attribute
-				String uniqueValue = null;
-				log.info("Processing uniqueAttributeStr " + uniqueAttributeStr + "");
-				if (uniqueAttributeStr.equals(attributeCode)) {
-					uniqueValue = value;
-					uniquePairs.add(new UniquePair(uniqueAttributeStr, uniqueValue));
-					log.info("Handling uniquePair live " + uniqueAttributeStr + " with value " + uniqueValue);
-				} else {
-					if (!target.containsEntityAttribute(uniqueAttributeStr)) {
-						// assume that the value is null
-					} else {
-						uniqueValue = target.getValueAsString(uniqueAttributeStr);
-					}
-					if (!StringUtils.isBlank(uniqueValue)) {
-						uniquePairs.add(new UniquePair(uniqueAttributeStr, uniqueValue));
-					}
-					log.info("Handling uniquePair dependency " + uniqueAttributeStr + " with value " + uniqueValue);
-				}
-
-			}
-
-			Long count = databaseUtils.countBaseEntities(userToken.getProductCode(), defBE, uniquePairs);
-			String uniquePairString = "";
-			for (UniquePair uniquePair : uniquePairs) {
-				uniquePairString += uniquePair.getAttributeCode() + "=" + uniquePair.getValue() + ",";
-			}
-			log.info("Number of "+userToken.getProductCode()+" baseentities found for uniquePairs " + uniquePairString + " is " + count);
-
-			// if duplicate found then send back the baseentity with the conflicting
-			// attribute and feedback message to display
-			if (count > 0) {
-				log.info("Sending duplicate error to FE");
-				BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
-				Attribute att = getAttribute(attributeCode);
-				errorBE.addAttribute(att);
-				errorBE.setValue(att, value);
-				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(attributeCode);
-				if (ea.isPresent()) {
-					ea.get().setFeedback("Error: This value already exists and must be unique.");
-					QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
-					msg.setReplace(true);
-					msg.setToken(userToken.getToken());
-					KafkaUtils.writeMsg("webcmds", msg);
-				}
-
-				// QCmdMessage msg = new QCmdMessage("TOAST", "ERROR");
-				// msg.setMessage("The field (" + uniqueAttribute.get().getAttribute().getName()
-				// + ") must be unique. Please try again.");
-				// msg.setToken(userToken.getToken());
-				// msg.setSend(true);
-				// KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
-				return false;
-			} else {
-				// clear any error message
-				BaseEntity errorBE = new BaseEntity(target.getCode(), defBE.getCode());
-				Attribute att = getAttribute(attributeCode);
-				errorBE.addAttribute(att);
-				errorBE.setValue(att, value);
-				Optional<EntityAttribute> ea = errorBE.findEntityAttribute(attributeCode);
-				if (ea.isPresent()) {
-					ea.get().setFeedback(null);
-					QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
-					msg.setReplace(true);
-					msg.setToken(userToken.getToken());
-					KafkaUtils.writeMsg("webcmds", msg);
-				}
-			}
-
-		} else {
-			log.info("uniqueAttribute is Not present! for UNQ_" + attributeCode);
+		if (unique.isEmpty()) {
+			log.infof("UNQ_%s Not present!", attributeCode);
+			return false;
 		}
-		return true; // all ok
+
+		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
+		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using " + unique.get().getValue());
+
+		String uniqueIndexes = unique.get().getValue();
+		uniqueIndexes = BaseEntityUtils.cleanUpAttributeValue(uniqueIndexes);
+		String[] uniqueArray = uniqueIndexes.split(",");
+
+		String prefix = definition.getValueAsString("PRI_PREFIX");
+		SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
+			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix+"_%")
+			.setPageStart(0)
+			.setPageSize(1);
+
+		for (String uniqueAttr : uniqueArray) { 
+			searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, value);
+		}
+
+		searchEntity.setRealm(userToken.getProductCode());
+
+		Long count = searchUtils.countBaseEntitys(searchEntity);
+		log.infof("Found %s entities", count);
+		if (count == 0)
+			return false;
+
+		// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
+		BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
+		msg.setToken(userToken.getToken());
+		msg.setTag("Duplicate Error");
+		msg.setMessage("Error: This value already exists and must be unique.");
+		KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
+
+		return true;
 	}
 
 }

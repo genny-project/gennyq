@@ -61,11 +61,6 @@ import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
 
-
-
-// import org.hibernate.annotations.CascadeType;
-
-
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
  * base parent for many Qwanda classes and serves to establish Hibernate

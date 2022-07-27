@@ -57,15 +57,13 @@ public class DefUtils {
 
 	public DefUtils() { }
 
-	public String getDefPrefix(String productCode, String definitionCode) {
-		return defPrefixMap.get(productCode).get(definitionCode);
-	}
-
 	/**
 	 * Initialize the in memory DEF store
 	 *
 	 * @param productCode The product of DEFs to initialize
 	 */
+	// TODO: remove this soon
+	@Deprecated
 	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
@@ -101,6 +99,7 @@ public class DefUtils {
 
 			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
 			defPrefixMap.get(productCode).put(prefix, code);
+			CacheUtils.putObject(productCode, def.getCode()+":PREFIX", prefix);
 		}
 	}
 
@@ -143,10 +142,7 @@ public class DefUtils {
 		// fetch DEF if no merging is needed
 		if (codes.size() == 1) {
 			String definitionCode = codes.get(0);
-			BaseEntity definition = beUtils.getBaseEntityByCode(definitionCode);
-			if (definition == null) {
-				throw new GennyRuntimeException("Could not find definition with code " + definitionCode);
-			}
+			BaseEntity definition = beUtils.getBaseEntity(definitionCode);
 			return definition;
 		}
 
@@ -158,7 +154,7 @@ public class DefUtils {
 		Collections.reverse(codes);
 		for (String code : codes) {
 
-			BaseEntity def = beUtils.getBaseEntityByCode(code);
+			BaseEntity def = beUtils.getBaseEntity(code);
 			if (def == null) {
 				log.warn("No DEF for " + code);
 				continue;
@@ -184,6 +180,8 @@ public class DefUtils {
 	 * @param entity The {@link BaseEntity} to check
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
+	// TODO: remove this soon
+	@Deprecated
 	public BaseEntity getInternmatchDEF(final BaseEntity entity) {
 
 		String productCode = userToken.getProductCode();

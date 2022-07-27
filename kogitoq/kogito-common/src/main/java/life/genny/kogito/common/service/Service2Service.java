@@ -39,8 +39,8 @@ public class Service2Service {
 	 * @return The  updated data object
 	 */
 	public S2SData addToken(S2SData data) {
-
 		data.setToken(userToken.getToken());
+		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 		return data;
 	}
 
@@ -52,6 +52,13 @@ public class Service2Service {
 	public void initialiseScope(S2SData data) {
 		log.info(data.toString());
 		scope.init(jsonb.toJson(data));
+		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+	}
+
+	/**
+	 * log token
+	 */
+	public void logToken() {
 		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 	}
 

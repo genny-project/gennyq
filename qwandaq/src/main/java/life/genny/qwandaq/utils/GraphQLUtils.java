@@ -103,7 +103,11 @@ public class GraphQLUtils {
 			log.error("No data field found in: " + body);
 			return null;
 		}
-		return dataObj.getJsonArray(table);
+		if (dataObj.containsKey(table))
+			return dataObj.getJsonArray(table);
+
+		log.warnf("No table %s found in %s", table, body);
+		return null;
 	}
 
 	/**

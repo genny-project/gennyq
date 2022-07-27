@@ -20,12 +20,10 @@ import life.genny.qwandaq.utils.HttpUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
-
 /**
- * Attribute --- Endpoints providing database attribute access
+ * Attributes Endpoints providing database attribute access
  *
  * @author jasper.robison@gada.io
- *
  */
 @Path("/attributes")
 public class Attributes {

@@ -623,37 +623,4 @@ public class DatabaseUtils {
 		log.info("Successfully deleted QuestionQuestion " + sourceCode + ":" + targetCode + " in realm " + realm);
 	}
 
-	/**
-	 * Count the number of baseentities in a realm database that match the unique attributeCode:value pairs.
-	 * @param productCode The realm to query on
-	 * @param defBe The DEF to search for
-	 * @param uniquePairs The attributeCode:value pairs to search for
-	 * @return A Long representing the number of baseentities that match
-	 */
-	public Long countBaseEntities(final String productCode, final BaseEntity defBe, final List< UniquePair> uniquePairs) {
-		// Assume for now, just one or two pairs
-		String prefix = (String)defBe.getValueAsString("PRI_PREFIX"); // will always existand safe from sql injection
-
-		if (uniquePairs.size()==1) {
-			return (Long) entityManager
-			.createQuery("SELECT count(1) FROM BaseEntity be, EntityAttribute ea WHERE be.code=ea.baseEntityCode and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' and ea.attributeCode=:attributeCode and ea.valueString=:valueString")
-				.setParameter("realmStr", productCode)
-				.setParameter("attributeCode", uniquePairs.get(0).getAttributeCode())
-				.setParameter("valueString", uniquePairs.get(0).getValue())
-				.getResultList().get(0);
-		} else if (uniquePairs.size() == 2) {
-			return (Long) entityManager
-			.createQuery("SELECT count(1) FROM BaseEntity be, EntityAttribute ea, EntityAttribute ea2 WHERE be.code=ea.baseEntityCode and be.code=ea2.baseEntityCode and be.realm=:realmStr AND be.code like '"+prefix+"\\_%' "
-			+" and ea.attributeCode=:attributeCode and ea.valueString=:valueString"
-			+" and ea2.attributeCode=:attributeCode2 and ea2.valueString=:valueString2")
-				.setParameter("realmStr", productCode)
-				.setParameter("attributeCode", uniquePairs.get(0).getAttributeCode())
-				.setParameter("valueString", uniquePairs.get(0).getValue())
-					.setParameter("attributeCode2", uniquePairs.get(1).getAttributeCode())
-				.setParameter("valueString2", uniquePairs.get(1).getValue())
-				.getResultList().get(0);
-		} else {
-			throw new IllegalArgumentException("Only one or two unique pairs are supported");
-		}
-	}
 }

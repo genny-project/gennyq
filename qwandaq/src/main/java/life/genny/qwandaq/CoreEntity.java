@@ -244,7 +244,6 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
 		autocreateUpdate();
-		// annoying. log.debug("Entity created at " + getCreatedDate());
 	}
 
 	/**
