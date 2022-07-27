@@ -133,6 +133,7 @@ public class SearchService {
 
 			originBucketCodes.stream().forEach(e -> {
 				searchUtils.searchTable(e);
+				sendSearchPCM("PCM_PROCESS", e);
 			});
 		}catch (Exception ex){
 			log.error(ex);
