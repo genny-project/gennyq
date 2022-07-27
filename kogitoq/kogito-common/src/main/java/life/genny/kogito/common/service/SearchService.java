@@ -119,6 +119,10 @@ public class SearchService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
+	/**
+	 * Get bucket data with bucket event
+	 * @param eventCode Bucket event code
+	 */
 	public void getBuckets(String eventCode) {
 		try {
 			String searchCode = "SBE_" + StringUtils.removeStart(eventCode, "QUE_");
@@ -129,12 +133,17 @@ public class SearchService {
 
 			originBucketCodes.stream().forEach(e -> {
 				searchUtils.searchTable(e);
+				sendSearchPCM("PCM_PROCESS", e);
 			});
 		}catch (Exception ex){
 			log.error(ex);
 		}
 	}
 
+	/**
+	 * Send the list of bucket codes to frond-end
+	 * @param bucketCodes The list of bucket codes
+	 */
 	public void sendBucketCodes(List<String> bucketCodes) {
 		QCmdMessage msgProcess = new QCmdMessage("DISPLAY","PROCESS");
 		msgProcess.setToken(userToken.getToken());
@@ -147,6 +156,11 @@ public class SearchService {
 		KafkaUtils.writeMsg("webcmds", msgCodes);
 	}
 
+	/**
+	 * Get the list of bucket codes with session id
+	 * @param originBucketCodes List of bucket codes
+	 * @return The list of bucket code with session id
+	 */
 	public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes){
 		List<String> bucketCodes = new ArrayList<>();
 		originBucketCodes.stream().forEach(e -> {

@@ -64,10 +64,6 @@ public class SummaryService {
 	 * Send the user's summary based on their lifecycle state.
 	 */
 	public void sendSummary() {
-		if(userToken.getRealm().equalsIgnoreCase("internmatch")){
-			getInternSummary();
-		}
-
 		// we store the summary code in the persons lifecycle
 		JsonArray array = gqlUtils.queryTable("PersonLifecycle", "entityCode", userToken.getUserCode(), "summary");
 		if (array == null || array.isEmpty()) {
@@ -159,6 +155,9 @@ public class SummaryService {
 		}
 	}
 
+	/**
+	 * Get internmatch summary
+	 */
 	public void getInternSummary() {
 		try {
 			String summaryCodes = "SUMMARY_CODES";
@@ -174,6 +173,11 @@ public class SummaryService {
 		}
 	}
 
+	/**
+	 * Get internmatch bucket codes
+	 * @param source Summary code
+	 * @param bucketCodes : original bucket
+	 */
 	public void sendInternSummaryCodes(String source, List<String> bucketCodes) {
 		List<BaseEntity> listBase = new ArrayList<>();
 		for(String str: bucketCodes){
