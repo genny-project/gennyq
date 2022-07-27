@@ -1,4 +1,4 @@
-package life.genny.qwandaq.entity;
+package life.genny.qwandaq.baseentity;
 
 message BaseEntity {
   optional string dtype = 1;

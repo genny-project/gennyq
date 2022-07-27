@@ -27,6 +27,8 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeInitializerImpl;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKeyInitializerImpl;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 /**
@@ -97,7 +99,10 @@ public class GennyCache {
 		serCtxInitList.add(baseEntitySCI);
 		SerializationContextInitializer baseEntityKeySCI = new BaseEntityKeyInitializerImpl();
 		serCtxInitList.add(baseEntityKeySCI);
-
+		SerializationContextInitializer baseEntityAttributeSCI = new BaseEntityAttributeInitializerImpl();
+		serCtxInitList.add(baseEntityAttributeSCI);
+		SerializationContextInitializer baseEntityAttributeKeySCI = new BaseEntityAttributeKeyInitializerImpl();
+		serCtxInitList.add(baseEntityAttributeKeySCI);
 		return serCtxInitList;
 	}
 
