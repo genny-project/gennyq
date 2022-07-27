@@ -376,7 +376,11 @@ public class DefUtils {
 								Object value = ctxMap.get(key);
 								if (value.getClass().equals(BaseEntity.class)) {
 									BaseEntity baseEntity = (BaseEntity) value;
-									ctxMap.put(key, beUtils.getBaseEntityByCode(baseEntity.getCode()));
+									if (baseEntity != null) {
+										ctxMap.put(key, beUtils.getBaseEntityByCode(baseEntity.getCode()));
+									} else {
+										log.error("Missing "+key+" data in ctxMap");
+									}
 								}
 							});
 						}
