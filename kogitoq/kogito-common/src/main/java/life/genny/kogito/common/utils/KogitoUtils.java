@@ -375,6 +375,10 @@ public class KogitoUtils {
 		return;
 	}
 
+	/**
+	 * Initialise bucket data by rule
+	 */
+	@Deprecated
 	public void initBucketRule() {
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
@@ -393,6 +397,10 @@ public class KogitoUtils {
 		session.dispose();
 	}
 
+	/**
+	 * Initialise data by rule group
+	 * @param ruleGroupName Group rule name
+	 */
 	public void initDataByRuleGroup(String ruleGroupName) {
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();
