@@ -133,6 +133,10 @@ public class InternalConsumer {
 
 		if (!StringUtils.isBlank(processId)) {
 			ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+			if (processData == null) {
+				log.error("Process data not found for processId: " + processId);
+				return;
+			}
 			target = processData.getProcessEntity();
 			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		} else {
