@@ -180,6 +180,13 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
+		// Check if inferredflag is set	
+		if (answer.getInferred()) {
+			log.error("InferredFlag is set");
+			return blacklist();
+		}
+
+
 		// fetch process data from graphql
 		ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
 		if (processData == null) {

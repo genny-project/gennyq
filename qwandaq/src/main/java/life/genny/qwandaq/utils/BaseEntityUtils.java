@@ -170,6 +170,7 @@ public class BaseEntityUtils {
 
 		// NOTE: No more hacks, keep it simple and reliable until infinispan auto updates are working.
 		BaseEntity entity = null;
+		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
 			
 		// check in database if not in cache
 		if (entity == null) {			
