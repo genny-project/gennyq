@@ -669,11 +669,8 @@ public class SearchUtils {
 				}
 				CacheUtils.putObject(productCode, searchBE.getCode(), searchBE);
 
-				if (searchBE != null) {
-					log.info("Sending Search Entity : " + searchBE.getCode());
-				} else {
-					log.error("SearchEntity is NULLLLL!!!!");
-				}
+				log.info("Sending Search Entity : " + searchBE.getCode());
+				
 				QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
 				searchMsg.setToken(userToken.getToken());
 				searchMsg.setReplace(true);
