@@ -115,9 +115,9 @@ public class InternalConsumer {
 			KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
 
 			if (json.containsKey("data_type")) {
-				log.info("QBEM ebing sent outside:"+json);
+				log.info("QBEM ebing sent outside:" + json);
 			} else {
-				
+
 			}
 
 			if (!incoming.contains("<body>Unauthorized</body>")) {
@@ -137,4 +137,5 @@ public class InternalConsumer {
 			e.printStackTrace();
 		}
 	}
+
 }
