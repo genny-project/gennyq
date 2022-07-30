@@ -132,7 +132,7 @@ public class FyodorSearch {
 						try {
 							be = beUtils.addNonLiteralAttributes(be);
 						} catch (Exception e) {
-							log.info("Stacktrace caught, printing but not failing...")
+							log.info("Stacktrace caught, printing but not failing...");
 							e.printStackTrace();
 						}
 						be = beUtils.privacyFilter(be, allowed);
@@ -616,7 +616,7 @@ public class FyodorSearch {
 					try {
 						be = beUtils.addNonLiteralAttributes(be);
 					} catch (Exception e) {
-						log.info("Stacktrace caught, printing but not failing...")
+						log.info("Stacktrace caught, printing but not failing...");
 						e.printStackTrace();
 					}
 					if (!columnWildcard) {
