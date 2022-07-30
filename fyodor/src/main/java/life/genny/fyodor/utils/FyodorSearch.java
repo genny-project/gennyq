@@ -129,7 +129,12 @@ public class FyodorSearch {
 
 					// Filter unwanted attributes
 					if (columnWildcard == null) {
-						be = beUtils.addNonLiteralAttributes(be);
+						try {
+							be = beUtils.addNonLiteralAttributes(be);
+						} catch (Exception e) {
+							log.info("Stacktrace caught, printing but not failing...")
+							e.printStackTrace();
+						}
 						be = beUtils.privacyFilter(be, allowed);
 					}
 
@@ -608,7 +613,12 @@ public class FyodorSearch {
 
 					BaseEntity be = entities.get(i);
 
-					be = beUtils.addNonLiteralAttributes(be);
+					try {
+						be = beUtils.addNonLiteralAttributes(be);
+					} catch (Exception e) {
+						log.info("Stacktrace caught, printing but not failing...")
+						e.printStackTrace();
+					}
 					if (!columnWildcard) {
 						be = beUtils.privacyFilter(be, allowed);
 					}
