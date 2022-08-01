@@ -301,22 +301,8 @@ public class KogitoUtils {
 	 * @param data The stringified data message
 	 * @return A list of answers output from the inference rules
 	 */
-	public List<Answer> runDataInference(String data) {
+	public List<Answer> runDataInference(QDataAnswerMessage msg) {
 
-		// check if event is a valid event
-		QDataAnswerMessage msg = null;
-		try {
-			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
-		} catch (Exception e) {
-			log.error("Cannot parse this data!");
-			e.printStackTrace();
-			return new ArrayList<>();
-		}
-
-		if (msg.getItems().length == 0) {
-			log.debug("Received empty answer message: " + data);
-			return new ArrayList<>();
-		}
 
 		// start new session
 		KieSession session = kieRuntimeBuilder.newKieSession();

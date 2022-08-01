@@ -1,6 +1,6 @@
 package life.genny.gadaq.live.data;
 
-import static life.genny.qwandaq.utils.SecurityUtils.obfuscate;
+
 
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
@@ -63,14 +63,28 @@ public class InternalConsumer {
 	@Blocking
 	public void getData(String data) {
 
-		Instant start = Instant.now();
-		log.info("Received Data : " + obfuscate(data));
 
 		// init scope and process msg
 		scope.init(data);
+
+		QDataAnswerMessage msg = null;
+		try {
+			msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+		} catch (Exception e) {
+			log.error("Cannot parse this data!");
+			e.printStackTrace();
+		}
+		// check if event is a valid event
+		int answerCount = msg.getItems().length;
+
+		if (answerCount) {
+			log.debug("Received empty answer message: " + data);
+		}
+
 		List<Answer> answers = kogitoUtils.runDataInference(data);
-		if (answers.isEmpty())
-			log.warn("[!] No answers after inference");
+		int answerCountDelta = answers.size() - answerCount;
+		if (answerCountDelta == 0)
+			log.warn("[!] No inferred answers");
 		else
 		 	kogitoUtils.funnelAnswers(answers);
 
@@ -80,9 +94,6 @@ public class InternalConsumer {
 		KafkaUtils.writeMsg("genny_data", msg);
 
 		scope.destroy();
-		// log duration
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	/**
@@ -103,11 +114,8 @@ public class InternalConsumer {
 		log.info("Received Event : " + obfuscate(eventJson));
 
 		// init scope and process msg
-		scope.init(event);
+		scope.init(event, start);
 		kogitoUtils.routeEvent(event);
 		scope.destroy();
-		// log duration
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 }

@@ -2,6 +2,11 @@ package life.genny.serviceq.intf;
 
 import io.quarkus.arc.Arc;
 
+import java.time.Duration;
+import java.time.Instant;
+
+import static life.genny.qwandaq.utils.SecurityUtils.obfuscate;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonObject;
@@ -21,7 +26,7 @@ public class GennyScopeInit {
 	static final Logger log = Logger.getLogger(GennyScopeInit.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
-
+	Instant start, end;
 	@Inject
 	UserToken userToken;
 
@@ -36,7 +41,9 @@ public class GennyScopeInit {
 	 *
 	 * @param data The consumed message from kafka
 	 **/
-	public void init(String data) { 
+	public void init(String data, Instant start) { 
+		this.start = start;
+		log.info("Received Data : " + obfuscate(data));
 
 		// activate request scope and fetch UserToken
 		Arc.container().requestContext().activate();
@@ -61,10 +68,17 @@ public class GennyScopeInit {
 		}
     }
 
+	public void init(String data) {
+		init(data, Instant.now());
+	}
+
 	/**
 	 * Destroy the UserToken using the request context.
 	 **/
 	public void destroy() { 
 		Arc.container().requestContext().activate();
+		// log duration
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 }
