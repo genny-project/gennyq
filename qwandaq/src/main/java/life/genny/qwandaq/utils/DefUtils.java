@@ -22,8 +22,8 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.exception.ItemNotFoundException;
-import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 

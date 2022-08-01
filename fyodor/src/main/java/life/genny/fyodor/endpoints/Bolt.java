@@ -1,4 +1,4 @@
-package life.genny.fyodor.endponts;
+package life.genny.fyodor.endpoints;
 
 import java.util.List;
 
@@ -32,7 +32,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.serviceq.Service;
 
 @Path("/bolt")

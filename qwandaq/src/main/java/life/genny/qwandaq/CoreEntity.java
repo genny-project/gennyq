@@ -123,7 +123,11 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	/**
 	 * Constructor.
 	 */
+	@Deprecated
 	public CoreEntity() {
+		super();
+		if(created == null)
+			autocreateCreated();
 	}
 
 	/**
@@ -135,10 +139,9 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	 *              the name of the core entity
 	 */
 	public CoreEntity(final String realm, final String name) {
-		super();
+		this();
 		this.realm = realm;
 		this.name = name;
-		autocreateCreated();
 	}
 
 	/**
@@ -148,10 +151,8 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	 *             the summary name of the core entity
 	 */
 	public CoreEntity(final String name) {
-		super();
-		this.realm = DEFAULT_REALM;
-		this.name = name;
-		autocreateCreated();
+		this(DEFAULT_REALM, name);
+		log.trace("Warning: DEFAULT_REALM: " + DEFAULT_REALM + " used to create CoreEntity: " + name);
 	}
 
 	/**
@@ -191,8 +192,6 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	@XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	@JsonbTransient
 	public LocalDateTime getCreated() {
-		if(created == null)
-			autocreateCreated();
 		return created;
 	}
 

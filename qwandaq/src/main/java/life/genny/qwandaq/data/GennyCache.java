@@ -42,7 +42,7 @@ public class GennyCache {
 
 	Set<String> realms = new HashSet<String>();
 
-	private Map<String, RemoteCache> caches = new HashMap<>();
+	private Map<String, RemoteCache<String, String>> caches = new HashMap<>();
 
 	private RemoteCacheManager remoteCacheManager;
 
@@ -129,7 +129,7 @@ public class GennyCache {
 
 		if (realms.contains(realm)) {
 			return caches.get(realm); 
-		}
+		} else log.warn("New Cache created: " + realm);
 
 		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
 		realms.add(realm);
@@ -179,14 +179,10 @@ public class GennyCache {
 		RemoteCache<CoreEntityKey, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
 		if (cache == null) {
 			log.error("Could not find a cache called " + cacheName);
+			return null;
 		}
 
-		// TODO: Remove this try catch very soon
-		try {
-			cache.put(key, value);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		cache.put(key, value);
 		return cache.get(key);
 	}
 }

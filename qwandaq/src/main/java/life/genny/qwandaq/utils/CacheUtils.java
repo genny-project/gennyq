@@ -16,6 +16,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.cache.RemoteCacheNotFoundException;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
@@ -48,7 +49,11 @@ public class CacheUtils {
 	 */
 	public static void clear(String realm) {
 
-		cache.getRemoteCache(realm).clear();
+		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
+		if(remoteCache == null)
+			throw new RemoteCacheNotFoundException(realm);
+
+		remoteCache.clear();
 	}
 
 	/**
@@ -59,8 +64,12 @@ public class CacheUtils {
 	 * @return Object
 	 */
 	public static Object readCache(String realm, String key) {
+		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
+		if(remoteCache == null) {
+			throw new RemoteCacheNotFoundException(realm);
+		}
 
-		Object ret = cache.getRemoteCache(realm).get(key);
+		Object ret = remoteCache.get(key);
 		return ret;
 	}
 
@@ -74,12 +83,12 @@ public class CacheUtils {
 	 * @return returns the newly written value
 	 */
 	public static String writeCache(String realm, String key, String value) {
-		log.info("realm is " + realm);
-		log.info("key is " + key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
-		log.info("remoteCache was returned");
+		if(remoteCache == null) {
+			throw new RemoteCacheNotFoundException(realm);
+		}
+		log.trace("Writing Cache [" + realm + "]: " + key + " = " + value);
 		remoteCache.put(key, value);
-		log.info("cache finished writing for "+realm+" "+key);
 
 		return remoteCache.get(key);
 	}
@@ -91,8 +100,11 @@ public class CacheUtils {
 	* @param key The key of the entry to remove.
 	 */
 	public static void removeEntry(String realm, String key) {
-		
-		cache.getRemoteCache(realm).remove(key);
+		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
+		if(remoteCache == null) {
+			throw new RemoteCacheNotFoundException(realm);
+		}
+		remoteCache.remove(key);
 	}
 
 	/**
@@ -106,10 +118,8 @@ public class CacheUtils {
 	 */
 	public static <T> T getObject(String realm, String key, Class<T> c) {
 
-		log.debug("Cache Realm is " + realm);
-
+		log.trace("Reading Cache [" + realm + "]: " + key);
 		String data = (String) readCache(realm, key);
-		log.debug("key: " + key + ", data: " + data);
 
 		if (StringUtils.isEmpty(data)) {
 			return null;
@@ -146,10 +156,8 @@ public class CacheUtils {
 	 * @param obj the obj to put
 	 */
 	public static void putObject(String realm, String key, Object obj) {
-
 		String json = jsonb.toJson(obj);
-		cache.getRemoteCache(realm).put(key, json);
-		log.debug("Caching: [" + realm + ":" + key + "]=" + obj);
+		writeCache(realm, key, json);
 	}
 
 	/**
@@ -184,8 +192,12 @@ public class CacheUtils {
 	 * 
 	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
 	 */
-	static List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
-		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
+	static List<CoreEntity> getEntitiesByPrefix(String realm, String prefix, CoreEntityKey keyStruct) {
+		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
+		if(remoteCache == null) {
+			throw new RemoteCacheNotFoundException(realm);
+		}
+		List<CoreEntity> entities = remoteCache
 		.entrySet().stream().map((Map.Entry<String, String> entry) -> {
 			String key = entry.getKey();
 			CoreEntityKey currentKey = keyStruct.fromKey(key);

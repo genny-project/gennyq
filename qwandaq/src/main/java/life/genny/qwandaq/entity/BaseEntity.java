@@ -52,7 +52,8 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -171,20 +172,15 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
+	@Deprecated
 	public BaseEntity() {
-		// super();
+		super();
 		// dummy
 	}
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param aName the summary name of the core entity
-	 */
-	public BaseEntity(final String aName) {
-		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
+	public BaseEntity(final String realm, final String aCode, final String aName) {
 
+		super(realm, aCode, aName);
 	}
 
 	/**
@@ -195,7 +191,16 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 */
 	@ProtoFactory
 	public BaseEntity(final String aCode, final String aName) {
-		super(aCode, aName);
+		this(CodedEntity.DEFAULT_REALM, aCode, aName);
+	}
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param aName the summary name of the core entity
+	 */
+	public BaseEntity(final String aName) {
+		this(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
 
 	}
 

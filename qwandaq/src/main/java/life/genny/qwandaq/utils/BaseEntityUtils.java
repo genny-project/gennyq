@@ -26,9 +26,9 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.exception.DebugException;
-import life.genny.qwandaq.exception.ItemNotFoundException;
-import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
@@ -565,8 +565,7 @@ public class BaseEntityUtils {
 				name = defBE.getName();
 
 			// create entity and set realm
-			item = new BaseEntity(code.toUpperCase(), name);
-			item.setRealm(userToken.getProductCode());
+			item = new BaseEntity(userToken.getProductCode(), code.toUpperCase(), name);
 		}
 
 		// save to DB and cache

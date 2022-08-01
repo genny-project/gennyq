@@ -20,8 +20,6 @@
 
 package life.genny.qwandaq;
 
-import java.lang.invoke.MethodHandles;
-
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
@@ -87,17 +85,33 @@ public abstract class CodedEntity extends CoreEntity {
 	@Transient
 	private Integer index;
 
-	// TODO, this probably should not be exposed once we have hibernate/infinispan
-	// in place
 	private EEntityStatus status = EEntityStatus.ACTIVE;
 
 	/**
 	 * Constructor.
 	 */
+	@Deprecated
 	protected CodedEntity() {
 		// dummy
 		// super();
 		// setIndex(0);
+	}
+
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param realm
+	 *              the security realm of the core entity
+	 * @param name
+	 *             the summary name of the coded entity
+	 * @param code
+	 *             the unique code of the coded entity
+	 */
+	public CodedEntity(String realm, String name, String code) {
+		super(realm, name);
+		setCode(code);
+		setIndex(0);
 	}
 
 	/**
@@ -109,9 +123,7 @@ public abstract class CodedEntity extends CoreEntity {
 	 *             the unique code of the coded entity
 	 */
 	public CodedEntity(String code, String name) {
-		super(name);
-		setCode(code);
-		setIndex(0);
+		this(CoreEntity.DEFAULT_REALM, name, code);
 	}
 
 	/**
