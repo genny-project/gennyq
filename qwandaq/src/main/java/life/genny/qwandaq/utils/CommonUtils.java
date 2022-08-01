@@ -52,7 +52,6 @@ public class CommonUtils {
             } else {
                 log.warn(msg);
             }
-
         }
 
         return result;
