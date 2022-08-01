@@ -138,6 +138,9 @@ public class HttpUtils {
 		try {
 			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
+			log.error("URI: " + uri);
+			log.error("body: " + body);
+			log.error("Content Type: " + contentType);
 			throw new GennyRuntimeException("POST request error", e);
 		}
 	}

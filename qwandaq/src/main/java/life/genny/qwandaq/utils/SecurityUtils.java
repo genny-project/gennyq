@@ -186,4 +186,24 @@ public class SecurityUtils {
 
 		return Json.createObjectBuilder(json).remove("token").build();
 	}
+
+	/**
+	 * It checks that no confidential information has been leaked. It will delete the key properties
+	 * if it finds any
+	 *
+	 * @param json A JsonObject
+	 * @return A JsonObject without the confidential key properties
+	 */
+	public static JsonObject removeKeys(final JsonObject json) {
+
+		if (json.containsKey("token")) {
+			json.remove("token");
+		}
+
+		if (json.containsKey("recipientCodeArray")) {
+			json.remove("recipientCodeArray");
+		}
+
+		return json;
+	}
 }

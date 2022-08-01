@@ -639,7 +639,7 @@ public class BaseEntityUtils {
 		}
 
 		// this is a user, generate keycloak id
-		uuid = KeycloakUtils.createDummyUser(serviceToken.getToken(), userToken.getKeycloakRealm());
+		uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
 		Optional<String> optCode = defBE.getValue("PRI_PREFIX");
 
 		if (optCode.isEmpty()) {
