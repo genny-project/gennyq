@@ -9,7 +9,7 @@ import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 
 /**
  * A few Common Utils to use throughout Genny.
- * 
+ *
  * @author Bryn
  * @author Jasper
  */
@@ -46,7 +46,7 @@ public class CommonUtils {
     public static String getSystemEnv(String env, boolean alert) {
         String result = System.getenv(env);
         if(result == null && alert) {
-            log.error("Could not find System Environment Variable: " + env);
+            log.warn("Could not find System Environment Variable: " + env);
         }
 
         return result;
