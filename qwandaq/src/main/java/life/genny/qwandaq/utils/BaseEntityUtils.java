@@ -472,35 +472,63 @@ public class BaseEntityUtils {
 	public BaseEntity addNonLiteralAttributes(BaseEntity entity) {
 
 		// Handle Created and Updated attributes
-		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
-		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
-		created.setValueDateTime(entity.getCreated());
-		entity.addAttribute(created);
+		try {
+			Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
+			EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
+			created.setValueDateTime(entity.getCreated());
+			entity.addAttribute(created);
+		} catch(NullPointerException e) {
+			log.error("NPE");
+		}
 
+		try {
 		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
 		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
 		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
+	} catch(NullPointerException e) {
+		log.error("NPE");
+	}
 
+
+	try {
 		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
 		updated.setValueDateTime(entity.getUpdated());
 		entity.addAttribute(updated);
+	} catch(NullPointerException e) {
+		log.error("NPE");
+	}
 
+
+	try {
 		Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
 		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
 		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
 		entity.addAttribute(updatedDate);
+	} catch(NullPointerException e) {
+		log.error("NPE");
+	}
 
+
+	try {
 		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
 		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
 		code.setValueString(entity.getCode());
 		entity.addAttribute(code);
+	} catch(NullPointerException e) {
+		log.error("NPE");
+	}
 
+	try {
 		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
+	} catch(NullPointerException e) {
+		log.error("NPE");
+	}
+
 
 		return entity;
 	}
