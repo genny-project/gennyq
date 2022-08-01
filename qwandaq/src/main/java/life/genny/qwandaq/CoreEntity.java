@@ -191,6 +191,8 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	@XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	@JsonbTransient
 	public LocalDateTime getCreated() {
+		if(created == null)
+			autocreateCreated();
 		return created;
 	}
 
