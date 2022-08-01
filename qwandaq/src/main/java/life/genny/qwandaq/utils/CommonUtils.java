@@ -49,7 +49,10 @@ public class CommonUtils {
             String msg = "Could not find System Environment Variable: " + env;
             if(alert) {
                 log.error(msg);
-            } else log.warn(msg);
+            } else {
+                log.warn(msg);
+            }
+
         }
 
         return result;
