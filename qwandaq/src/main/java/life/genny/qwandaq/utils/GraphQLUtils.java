@@ -129,7 +129,7 @@ public class GraphQLUtils {
         String query = String.format("query { %s ( where: { %s }){ %s }}", 
 				table, queryFields, String.join(" ", returns));
 
-		log.debug("GraphQL Query: " + query);
+		log.info("GraphQL Query: " + query);
 
         String uri = GennySettings.dataIndexUrl() + "/graphql";
         HttpResponse<String> response = HttpUtils.post(uri, query, "application/GraphQL", userToken);
