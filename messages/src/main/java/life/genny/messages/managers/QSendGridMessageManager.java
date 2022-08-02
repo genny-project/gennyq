@@ -36,7 +36,10 @@ public class QSendGridMessageManager implements QMessageProvider {
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 
 		log.info("SendGrid email type");
-
+		if(contextMap == null) {
+			log.error("CONTEXT MAP IS NULL");
+			return;
+		}
 		BaseEntity recipientBe = (BaseEntity) contextMap.get("RECIPIENT");
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
 		
