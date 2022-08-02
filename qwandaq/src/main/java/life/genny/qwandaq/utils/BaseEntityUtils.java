@@ -496,7 +496,6 @@ public class BaseEntityUtils {
 		}
 		entity.addAttribute(createdDate);
 
-
 		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
 		try {
@@ -506,7 +505,6 @@ public class BaseEntityUtils {
 			log.error("NPE for PRI_UPDATED");
 		}
 
-
 		try {
 			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
 			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
@@ -515,7 +513,6 @@ public class BaseEntityUtils {
 		} catch(NullPointerException e) {
 			log.error("NPE for PRI_UPDATED_DATE");
 		}
-
 
 		try {
 			Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
@@ -534,7 +531,6 @@ public class BaseEntityUtils {
 		} catch(NullPointerException e) {
 			log.error("NPE for PRI_NAME");
 		}
-
 
 		return entity;
 	}
