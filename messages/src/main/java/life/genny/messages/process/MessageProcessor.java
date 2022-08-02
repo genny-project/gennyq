@@ -6,8 +6,18 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import io.vertx.core.Vertx;
 
 import org.jboss.logging.Logger;
+
+import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.context.ThreadContext;
+import life.genny.serviceq.intf.GennyScopeInit;
+
+import java.lang.Runnable;
 
 import life.genny.messages.managers.QMessageFactory;
 import life.genny.messages.managers.QMessageProvider;
@@ -31,6 +41,10 @@ public class MessageProcessor {
 
     private static final Logger log = Logger.getLogger(MessageProcessor.class);
 
+	private static final ManagedExecutor executor = ManagedExecutor.builder()
+	.propagated(ThreadContext.CDI)
+	.build();
+
     static QMessageFactory messageFactory = new QMessageFactory();
 
 	@Inject
@@ -38,12 +52,40 @@ public class MessageProcessor {
 
 	@Inject
 	BaseEntityUtils beUtils;
-
+    
 	@Inject
-	ServiceToken serviceToken;
+	GennyScopeInit scope;
 
-	@Inject
-	UserToken userToken;
+    @Inject
+    Vertx vertx;
+
+
+    public void processGenericMessage(QMessageGennyMSG message, ServiceToken serviceToken) {
+        executor.execute(new Runnable() {
+            public void run() {
+                
+                System.out.println(processMessageHelper(message, serviceToken));
+            }
+        });
+        // log.info("Starting thread");
+        // vertx.<String>executeBlocking(promise -> {
+        //     // This code will be executed in a worker thread
+        //     System.out.println("Thread: " + Thread.currentThread());
+        //     boolean status = false;
+		// 	try {
+		// 		log.info("Processing Message");
+        //         status = processMessageHelper(message, serviceToken);
+		// 	} catch (Exception e) {
+		// 		System.err.println(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);
+		// 		System.err.println(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
+		// 	}
+        //     String result = "Done " + (status ? "success": "failure");
+        //     System.out.println(result);
+        //     promise.complete(result);
+        // }, asyncResult -> {
+        //     System.out.println("Result: " + asyncResult.result()); // Done
+        // });
+    }
 
     /**
      * Generic Message Handling method.
@@ -52,8 +94,9 @@ public class MessageProcessor {
      * @param serviceToken
      * @param userToken
      */
-    public void processGenericMessage(QMessageGennyMSG message) {
-
+    @ActivateRequestContext
+    private boolean processMessageHelper(QMessageGennyMSG message, ServiceToken serviceToken) {
+        UserToken userToken = new UserToken(message.getToken());
         // Begin recording duration
         long start = System.currentTimeMillis();
 
@@ -108,6 +151,8 @@ public class MessageProcessor {
 
         if (templateBe == null) {
             log.warn(ANSIColour.YELLOW + "No Template found for " + message.getTemplateCode() + ANSIColour.RESET);
+			scope.destroy();
+            return false;
         } else {
             log.info("Using TemplateBE " + templateBe.getCode());
 
@@ -125,6 +170,8 @@ public class MessageProcessor {
 					messageTypeList = typeList.stream().map(item -> QBaseMSGMessageType.valueOf(item)).collect(Collectors.toList());
 				} catch (Exception e) {
 					log.error(e.getLocalizedMessage());
+                    scope.destroy();
+                    return false;
 				}
             }
         }
@@ -152,6 +199,7 @@ public class MessageProcessor {
                     recipientBe.addAttribute(mobile);
                 } catch (Exception e) {
                     log.error(e);
+                    return false;
                 }
             }
 
@@ -159,6 +207,7 @@ public class MessageProcessor {
                 recipientBeList.add(recipientBe);
             } else {
                 log.error(ANSIColour.RED + "Could not process recipient " + recipient + ANSIColour.RESET);
+                return false;
             }
         }
 
@@ -239,6 +288,7 @@ public class MessageProcessor {
 
         long duration = System.currentTimeMillis() - start;
         log.info("FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration));
+        return true;
     }
 
     private HashMap<String, Object> createBaseEntityContextMap(QMessageGennyMSG message) {
