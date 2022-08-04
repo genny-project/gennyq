@@ -1,7 +1,7 @@
 #!/bin/bash
 productCode=${1:-internmatch}
-questionCode=${2:-BASEENTTITY_GRP}
-targetCode=${3:-PER_F6BE8CA8-14CA-4BA7-9327-F435C7BE4042}
+questionCode=${2:-QUE_INTERN_GRP}
+targetCode=${3:-PER_BF0E997C-4AE0-46C1-B485-E46B077DF5C8}
 sourceCode=PER_0F6169E1-FDD5-4DAF-BEC3-4126C6626752
 TOKEN=`./gettoken-cache.sh ${productCode}`
 echo $TOKEN
