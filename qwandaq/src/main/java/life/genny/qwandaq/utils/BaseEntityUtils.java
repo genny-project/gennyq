@@ -270,8 +270,16 @@ public class BaseEntityUtils {
 
 		Optional<String> attributeValue = baseEntity.getValue(attributeCode);
 		if (attributeValue.isPresent()) {
-			return cleanUpAttributeValue(attributeValue.get());
+
+			Object value = attributeValue.get();
+			if (value == null)
+				return null;
+			if (!(value instanceof String))
+				return null;
+
+			return cleanUpAttributeValue((String) value);
 		}
+
 		return null;
 	}
 
@@ -341,6 +349,7 @@ public class BaseEntityUtils {
 				return ea.get().getObject();
 			}
 		}
+
 		return null;
 	}
 
@@ -496,7 +505,6 @@ public class BaseEntityUtils {
 		}
 		entity.addAttribute(createdDate);
 
-
 		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
 		try {
@@ -506,7 +514,6 @@ public class BaseEntityUtils {
 			log.error("NPE for PRI_UPDATED");
 		}
 
-
 		try {
 			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
 			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
@@ -515,7 +522,6 @@ public class BaseEntityUtils {
 		} catch(NullPointerException e) {
 			log.error("NPE for PRI_UPDATED_DATE");
 		}
-
 
 		try {
 			Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
@@ -534,7 +540,6 @@ public class BaseEntityUtils {
 		} catch(NullPointerException e) {
 			log.error("NPE for PRI_NAME");
 		}
-
 
 		return entity;
 	}
