@@ -270,8 +270,15 @@ public class BaseEntityUtils {
 
 		Optional<String> attributeValue = baseEntity.getValue(attributeCode);
 		if (attributeValue.isPresent()) {
+
+			if (attributeValue.get() == null)
+				return null;
+			if (!(attributeValue.get() instanceof String))
+				return null;
+
 			return cleanUpAttributeValue(attributeValue.get());
 		}
+
 		return null;
 	}
 
@@ -341,6 +348,7 @@ public class BaseEntityUtils {
 				return ea.get().getObject();
 			}
 		}
+
 		return null;
 	}
 
