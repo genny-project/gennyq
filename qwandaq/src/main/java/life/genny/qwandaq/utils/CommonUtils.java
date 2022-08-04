@@ -1,6 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
@@ -15,6 +16,28 @@ import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
  */
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
+
+    /**
+     * Prints a list over multiple lines
+     * works well assuming that the toString method of the item is well defined
+     * @param list list to print
+     */
+    public static void printList(List<?> list) {
+        for(Object item : list) {
+            log.info(item);
+        }
+    }
+
+    /**
+     * Prints a map over multiple lines
+     * works well assuming that the toString methods of the keys and values are well defined
+     * @param map map to print
+     */
+    public static void printMap(Map<?, ?> map) {
+        for(Object key : map.keySet()) {
+            log.info(key + "=" + map.get(key));
+        }
+    }
 
     /**
      * Safe-compare two Objects (null-safe)
