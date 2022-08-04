@@ -271,12 +271,13 @@ public class BaseEntityUtils {
 		Optional<String> attributeValue = baseEntity.getValue(attributeCode);
 		if (attributeValue.isPresent()) {
 
-			if (attributeValue.get() == null)
+			Object value = attributeValue.get();
+			if (value == null)
 				return null;
-			if (!(attributeValue.get() instanceof String))
+			if (!(value instanceof String))
 				return null;
 
-			return cleanUpAttributeValue(attributeValue.get());
+			return cleanUpAttributeValue((String) value);
 		}
 
 		return null;
