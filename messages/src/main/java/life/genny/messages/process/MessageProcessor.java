@@ -61,11 +61,13 @@ public class MessageProcessor {
 
 
     public void processGenericMessage(QMessageGennyMSG message, ServiceToken serviceToken) {
-        executor.execute(new Runnable() {
-            public void run() {
-                
+        // if(this.beUtils == null) this.beUtils = beUtils;
+        log.info("Starting thread");
+        System.out.println("BE Utils: " + (this.beUtils != null));
+        executor.supplyAsync(() -> {
+                System.out.println("BE Utils: " + (beUtils != null));
                 System.out.println(processMessageHelper(message, serviceToken));
-            }
+                return processMessageHelper(message, serviceToken);
         });
         // log.info("Starting thread");
         // vertx.<String>executeBlocking(promise -> {

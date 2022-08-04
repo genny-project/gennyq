@@ -71,7 +71,7 @@ public class InternalConsumer {
 		log.info("################################################################");
 
 		// Log entire data for debugging purposes
-		log.info("data ----> " + data);
+		log.trace("data ----> " + data);
 
 		
 		//executor.runAsync(() -> {
@@ -86,7 +86,7 @@ public class InternalConsumer {
 				log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
 				log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
 			}
-
+		log.info("BE Utils consumer: " + (beUtils != null));
 			// Try Catch to stop consumer from dying upon error
 				mp.processGenericMessage(message, serviceToken);
 			scope.destroy();
