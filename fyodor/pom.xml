@@ -18,8 +18,8 @@
     <jackson.version>2.13.0</jackson.version>
     <jandex.version>1.0.7</jandex.version>
     <jjwt.version>0.7.0</jjwt.version>
-    <querydsl.version>4.4.0</querydsl.version>
-    <testcontainers.version>1.16.0</testcontainers.version>
+    <querydsl.version>5.0.0</querydsl.version>
+    <testcontainers.version>1.17.0</testcontainers.version>
   </properties>
 
   <dependencyManagement>
