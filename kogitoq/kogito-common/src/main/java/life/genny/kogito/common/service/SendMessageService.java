@@ -95,15 +95,26 @@ public class SendMessageService {
 			.send();
 	}
 
+	/**
+	* Send all genny messages for a given milestone code.
+	* @param milestoneCode The workflow location to send messages for
+	*
+	* @param coreBEJson The core BaseEntity json for which all Contexts can be derived.
+	 */
+	public void sendAllMessagesJson(String milestoneCode, String coreBEJson) {
+		BaseEntity coreBE = jsonb.fromJson(coreBEJson, BaseEntity.class);
+		String productCode = coreBE.getRealm();
+		sendAllMessages(productCode, milestoneCode, coreBE);
+	}
 
 /**
 	* Send all genny messages for a given milestone code.
-	*
+	* @param productCode. The productCode to use.
 	* @param milestoneCode The workflow location to send messages for
 	*
-	* @param coreBE The core BaseEntity json for which all Contexts can be derived.
+	* @param coreBE The core BaseEntity for which all Contexts can be derived.
 	 */
-	public void sendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
+	public void sendAllMessages(String productCode,String milestoneCode, BaseEntity coreBE) {
 		SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES", "Fetch All Messages associated with milestone Code")
 			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "MSG_%")
 			.addFilter("PRI_MILESTONE", SearchEntity.StringFilter.LIKE, "%\""+milestoneCode.toUpperCase()+"\"%")
