@@ -23,7 +23,7 @@ public class TopologyProducer {
 
 	@Inject
 	Validator validator;
-	
+
 	@Inject
 	GennyScopeInit scope;
 	

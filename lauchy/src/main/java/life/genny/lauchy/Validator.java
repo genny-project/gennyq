@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.lauchy.streams.TopologyProducer;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -38,13 +39,15 @@ import io.quarkus.runtime.StartupEvent;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+/**
+ * Validator class to be used in lauchy. Will validate and tidy up data to be used in the {@link TopologyProducer}
+ */
 @ApplicationScoped
 public class Validator {
 	static Logger log = Logger.getLogger(Validator.class);
 
 	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
 	Boolean enableBlacklist;
-
 
 	@Inject
 	Service service;
