@@ -32,17 +32,14 @@ public class QSendGridMessageManager extends QMessageProvider {
 	
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
-		log.info("BE UTils: " + (beUtils != null ? "not null" : "null!"));
 
 		log.info("SendGrid email type");
 
-		log.debug("Fetching recipient BE and project BE. Context MAP:");
 		CommonUtils.printMap(contextMap);
 		BaseEntity recipientBe = (BaseEntity) contextMap.get("RECIPIENT");
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
-		log.debug("Fetched. Fetching base entity: " + recipientBe.getCode());
+		
 		recipientBe = beUtils.getBaseEntityByCode(recipientBe.getCode());
-		log.debug("Fetched!");
 
 		if (templateBe == null) {
 			log.error(ANSIColour.RED+"TemplateBE passed is NULL!!!!"+ANSIColour.RESET);
@@ -94,7 +91,9 @@ public class QSendGridMessageManager extends QMessageProvider {
 
 			Object value = contextMap.get(key);
 			if(value == null) {
-				log.error("Could not retrieve value for: " + key);
+				log.error("========================== FATAL ==================");
+				log.error("Could not retrieve value for: " + key + " in message " + templateBe.getCode());
+				log.error("=================================================");
 				continue;
 			}
 			if (BaseEntity.class.equals(value.getClass())) {
@@ -224,11 +223,14 @@ public class QSendGridMessageManager extends QMessageProvider {
 			request.setEndpoint("mail/send");
 			request.setBody(mail.build());
 			Response response = sg.api(request);
-			log.info(response.getStatusCode());
-			log.info(response.getBody());
-			log.info(response.getHeaders());
-
-			log.info(ANSIColour.GREEN+"SendGrid Message Sent to " + recipient + "!"+ANSIColour.RESET);
+			if(response.getStatusCode() == javax.ws.rs.core.Response.Status.ACCEPTED.getStatusCode()) {
+				log.info(ANSIColour.GREEN+"SendGrid Message Sent to " + recipient + "!"+ANSIColour.RESET);
+			} else {
+				log.error(ANSIColour.RED+"Error sending to SendGrid!");
+				log.error(ANSIColour.RED+response.getStatusCode());
+				log.error(ANSIColour.RED+response.getBody());
+				log.error(ANSIColour.RED+response.getHeaders());
+			}
 		} catch (IOException e) {
 			log.error(e);
 		}

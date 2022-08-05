@@ -16,16 +16,12 @@ import life.genny.qwandaq.models.UserToken;
 public abstract class QMessageProvider {
 	
 	@Inject
-	protected BaseEntityUtils beUtils;
+	BaseEntityUtils beUtils;
 
 	@Inject
 	protected UserToken userToken;
 
 	protected static Jsonb jsonb = JsonbBuilder.create();
-
-	public QMessageProvider() {
-		System.err.println("[!] Inside thread inside message provider: " + (beUtils!=null));
-	}
 
 
 	public abstract void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap);

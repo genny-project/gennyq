@@ -16,7 +16,6 @@ public class QToastMessageManager extends QMessageProvider {
 	
 	private static final Logger log = Logger.getLogger(QToastMessageManager.class);
 
-	
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 		

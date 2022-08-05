@@ -56,7 +56,6 @@ public class MessageProcessor {
 	QwandaUtils qwandaUtils;
 
     public void processGenericMessage(QMessageGennyMSG message) {
-        log.info("[!] Be Utils outside: " + (beUtils!=null));
         executor.supplyAsync(() -> {
             Object result = "";
             try {
@@ -78,8 +77,6 @@ public class MessageProcessor {
      * @return status of sending message
      */
     private Object processMessageHelper(QMessageGennyMSG message) {
-        log.info("[!] Inside thread: " + (beUtils!=null));
-        System.err.println("[!] Inside thread: " + (beUtils!=null));
         // UserToken userToken = new UserToken(message.getToken());
         // Begin recording duration
         long start = System.currentTimeMillis();
@@ -200,7 +197,7 @@ public class MessageProcessor {
         }
 
         long duration = System.currentTimeMillis() - start;
-        return CommonUtils.logAndReturn(log::info, "FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration));
+        return CommonUtils.logAndReturn(log::info, "FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration) + "ms");
     }
 
     private List<BaseEntity> getRecipientBeList(String[] recipientArr) {
