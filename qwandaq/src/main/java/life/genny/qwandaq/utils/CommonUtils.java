@@ -7,6 +7,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 /**
  * A few Common Utils to use throughout Genny.
@@ -16,6 +17,28 @@ import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
  */
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
+
+    /**
+     * Log on a specific log level in a specific log and return an object
+     * @param level - level to log on in the logger
+     * @param msg - message to log
+     * @return msg
+     */
+    public static Object logAndReturn(FILogCallback level, Object msg) {
+        level.log(msg);
+        return msg;
+    }
+
+    /**
+     * Log info and return an object
+     * @param log - log stream to log on (for class specific logs)
+     * @param msg - message to log
+     * @return msg
+     */
+    public static Object logAndReturn(Logger log, Object msg) {
+        log.info(msg);
+        return msg;
+    }
 
     /**
      * Prints a list over multiple lines

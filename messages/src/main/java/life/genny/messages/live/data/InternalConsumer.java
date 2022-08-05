@@ -12,17 +12,11 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.context.ThreadContext;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import java.util.List;
 
 import life.genny.messages.process.MessageProcessor;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.serviceq.Service;
@@ -46,11 +40,6 @@ public class InternalConsumer {
 	@Inject
 	BaseEntityUtils beUtils;
 
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	ServiceToken serviceToken;
 
     void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
@@ -74,23 +63,20 @@ public class InternalConsumer {
 		log.trace("data ----> " + data);
 
 		
-		//executor.runAsync(() -> {
-			scope.init(data);
-			QMessageGennyMSG message = null;
+		scope.init(data);
+		QMessageGennyMSG message = null;
 
-			// Try Catch to stop consumer from dying upon error
-			try {
-				log.info("Deserialising Message");
-				message = jsonb.fromJson(data, QMessageGennyMSG.class);
-			} catch (Exception e) {
-				log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
-				log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
-			}
-		log.info("BE Utils consumer: " + (beUtils != null));
-			// Try Catch to stop consumer from dying upon error
-				mp.processGenericMessage(message, serviceToken);
-			scope.destroy();
-		//});
+		// Try Catch to stop consumer from dying upon error
+		try {
+			log.info("Deserialising Message");
+			message = jsonb.fromJson(data, QMessageGennyMSG.class);
+		} catch (Exception e) {
+			log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
+			log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
+		}
+		
+		mp.processGenericMessage(message);
+		scope.destroy();
 
 	}
 }

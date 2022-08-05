@@ -1,35 +1,22 @@
 package life.genny.messages.managers;
 
-import javax.inject.Inject;
 import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.utils.MergeUtils;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 
-import life.genny.qwandaq.models.UserToken;
-
 @ApplicationScoped
-public class QToastMessageManager implements QMessageProvider {
+public class QToastMessageManager extends QMessageProvider {
 	
 	private static final Logger log = Logger.getLogger(QToastMessageManager.class);
 
-	static Jsonb jsonb = JsonbBuilder.create();
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	UserToken userToken;
-
+	
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 		

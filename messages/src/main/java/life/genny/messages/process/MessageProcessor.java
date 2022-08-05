@@ -1,36 +1,33 @@
 package life.genny.messages.process;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.util.*;
+import java.util.*; // TODO: We should avoid wildcard imports if we can (mainly due to unforeseen class conflicts)
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-
-import io.vertx.core.Vertx;
 
 import org.jboss.logging.Logger;
 
 import org.eclipse.microprofile.context.ManagedExecutor;
-import org.eclipse.microprofile.context.ThreadContext;
-import life.genny.serviceq.intf.GennyScopeInit;
 
-import java.lang.Runnable;
+import life.genny.qwandaq.message.QBaseMSGMessageType;
+import life.genny.qwandaq.message.QMessageGennyMSG;
 
 import life.genny.messages.managers.QMessageFactory;
 import life.genny.messages.managers.QMessageProvider;
 import life.genny.messages.util.MsgUtils;
+
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QBaseMSGMessageType;
-import life.genny.qwandaq.message.QMessageGennyMSG;
+
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.models.ServiceToken;
+
+// Utils imports
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.MergeUtils;
@@ -41,74 +38,59 @@ public class MessageProcessor {
 
     private static final Logger log = Logger.getLogger(MessageProcessor.class);
 
-	private static final ManagedExecutor executor = ManagedExecutor.builder()
-	.propagated(ThreadContext.CDI)
-	.build();
+	private static final ManagedExecutor executor = ManagedExecutor.builder().build();
 
-    static QMessageFactory messageFactory = new QMessageFactory();
+	@Inject
+	BaseEntityUtils beUtils;
+
+    @Inject
+    QMessageFactory messageFactory;
+
+    @Inject
+    UserToken userToken;
+
+    @Inject
+    ServiceToken serviceToken;
 
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	@Inject
-	BaseEntityUtils beUtils;
-    
-	@Inject
-	GennyScopeInit scope;
-
-    @Inject
-    Vertx vertx;
-
-
-    public void processGenericMessage(QMessageGennyMSG message, ServiceToken serviceToken) {
-        // if(this.beUtils == null) this.beUtils = beUtils;
-        log.info("Starting thread");
-        System.out.println("BE Utils: " + (this.beUtils != null));
+    public void processGenericMessage(QMessageGennyMSG message) {
+        log.info("[!] Be Utils outside: " + (beUtils!=null));
         executor.supplyAsync(() -> {
-                System.out.println("BE Utils: " + (beUtils != null));
-                System.out.println(processMessageHelper(message, serviceToken));
-                return processMessageHelper(message, serviceToken);
+            Object result = "";
+            try {
+                result = processMessageHelper(message);
+            } catch(Exception e) {
+                result = CommonUtils.logAndReturn(log::error, "Issue with thread");
+                e.printStackTrace();
+            }
+
+            return result;
         });
-        // log.info("Starting thread");
-        // vertx.<String>executeBlocking(promise -> {
-        //     // This code will be executed in a worker thread
-        //     System.out.println("Thread: " + Thread.currentThread());
-        //     boolean status = false;
-		// 	try {
-		// 		log.info("Processing Message");
-        //         status = processMessageHelper(message, serviceToken);
-		// 	} catch (Exception e) {
-		// 		System.err.println(ANSIColour.RED+"Message Processing Failed!!!!!"+ANSIColour.RESET);
-		// 		System.err.println(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
-		// 	}
-        //     String result = "Done " + (status ? "success": "failure");
-        //     System.out.println(result);
-        //     promise.complete(result);
-        // }, asyncResult -> {
-        //     System.out.println("Result: " + asyncResult.result()); // Done
-        // });
     }
 
     /**
      * Generic Message Handling method.
      *
      * @param message
-     * @param serviceToken
-     * @param userToken
+     * 
+     * @return status of sending message
      */
-    @ActivateRequestContext
-    private boolean processMessageHelper(QMessageGennyMSG message, ServiceToken serviceToken) {
-        UserToken userToken = new UserToken(message.getToken());
+    private Object processMessageHelper(QMessageGennyMSG message) {
+        log.info("[!] Inside thread: " + (beUtils!=null));
+        System.err.println("[!] Inside thread: " + (beUtils!=null));
+        // UserToken userToken = new UserToken(message.getToken());
         // Begin recording duration
         long start = System.currentTimeMillis();
 
         String realm = userToken.getProductCode();
 
-        log.debug("Realm is " + realm + " - Incoming Message :: " + message.toString());
-
         if (message == null) {
             log.error(ANSIColour.RED + "GENNY COM MESSAGE IS NULL" + ANSIColour.RESET);
         }
+
+        log.debug("Realm is " + realm + " - Incoming Message :: " + message.toString());
 
         BaseEntity projectBe = beUtils.getBaseEntityByCode("PRJ_" + realm.toUpperCase());
 
@@ -122,9 +104,6 @@ public class MessageProcessor {
 
         List<QBaseMSGMessageType> messageTypeList = Arrays.asList(message.getMessageTypeArr());
 
-		String[] recipientArr = message.getRecipientArr();
-        List<BaseEntity> recipientBeList = new ArrayList<BaseEntity>();
-
         BaseEntity templateBe = null;
         if (message.getTemplateCode() != null) {
             templateBe = beUtils.getBaseEntityByCode(message.getTemplateCode());
@@ -136,6 +115,7 @@ public class MessageProcessor {
 
             if (cc != null) {
                 log.debug("Using CC from template BaseEntity");
+
                 cc = beUtils.cleanUpAttributeValue(cc);
                 message.getMessageContextMap().put("CC", cc);
             }
@@ -147,14 +127,12 @@ public class MessageProcessor {
         }
 
         // Create context map with BaseEntities
-        HashMap<String, Object> baseEntityContextMap = new HashMap<>();
+        Map<String, Object> baseEntityContextMap = new HashMap<>();
         baseEntityContextMap = createBaseEntityContextMap(message);
         baseEntityContextMap.put("PROJECT", projectBe);
 
         if (templateBe == null) {
             log.warn(ANSIColour.YELLOW + "No Template found for " + message.getTemplateCode() + ANSIColour.RESET);
-			scope.destroy();
-            return false;
         } else {
             log.info("Using TemplateBE " + templateBe.getCode());
 
@@ -172,51 +150,15 @@ public class MessageProcessor {
 					messageTypeList = typeList.stream().map(item -> QBaseMSGMessageType.valueOf(item)).collect(Collectors.toList());
 				} catch (Exception e) {
 					log.error(e.getLocalizedMessage());
-                    scope.destroy();
-                    return false;
+                    return CommonUtils.logAndReturn(log::error, e);
 				}
             }
         }
 
-        Attribute emailAttr = qwandaUtils.getAttribute("PRI_EMAIL");
-        Attribute mobileAttr = qwandaUtils.getAttribute("PRI_MOBILE");
-
-        for (String recipient : recipientArr) {
-
-            BaseEntity recipientBe = null;
-
-            if (recipient.contains("[\"") && recipient.contains("\"]")) {
-                // This is a BE Code
-                String code = beUtils.cleanUpAttributeValue(recipient);
-                recipientBe = beUtils.getBaseEntityByCode(code);
-            } else {
-                // Probably an actual email
-                String code = "RCP_" + UUID.randomUUID().toString().toUpperCase();
-                recipientBe = new BaseEntity(code, recipient);
-
-                try {
-                    EntityAttribute email = new EntityAttribute(recipientBe, emailAttr, 1.0, recipient);
-                    recipientBe.addAttribute(email);
-                    EntityAttribute mobile = new EntityAttribute(recipientBe, mobileAttr, 1.0, recipient);
-                    recipientBe.addAttribute(mobile);
-                } catch (Exception e) {
-                    log.error(e);
-                    return false;
-                }
-            }
-
-            if (recipientBe != null) {
-                recipientBeList.add(recipientBe);
-            } else {
-                log.error(ANSIColour.RED + "Could not process recipient " + recipient + ANSIColour.RESET);
-                return false;
-            }
-        }
-
-        BaseEntity unsubscriptionBe = beUtils.getBaseEntityByCode("COM_EMAIL_UNSUBSCRIPTION");
-        log.info("unsubscribe be :: " + unsubscriptionBe);
-        String templateCode = message.getTemplateCode() + "_UNSUBSCRIBE";
-
+		String[] recipientArr = message.getRecipientArr();
+        List<BaseEntity> recipientBeList = getRecipientBeList(recipientArr);
+        // TODO: Why not merge these two loops into one? That would save on processing time as they are essentially the same and the results
+        // of the recipientBeList are all independent
 
         /* Iterating and triggering email to each recipient individually */
         for (BaseEntity recipientBe : recipientBeList) {
@@ -254,43 +196,93 @@ public class MessageProcessor {
                 baseEntityContextMap.put("URL", url);
             }
 
-            // Iterate our array of send types
-            for (QBaseMSGMessageType msgType : messageTypeList) {
-
-                /* Get Message Provider */
-                QMessageProvider provider = messageFactory.getMessageProvider(msgType);
-
-                Boolean isUserUnsubscribed = false;
-                if (unsubscriptionBe != null) {
-                    /* check if unsubscription list for the template code has the userCode */
-                    String templateAssociation = unsubscriptionBe.getValue(templateCode, "");
-                    isUserUnsubscribed = templateAssociation.contains(recipientBe.getCode());
-                }
-
-                if (provider != null) {
-                    /*
-                     * if user is unsubscribed, then dont send emails. But toast and sms are still
-                     * applicable
-                     */
-                    if (isUserUnsubscribed && !msgType.equals(QBaseMSGMessageType.EMAIL)) {
-                        log.info("unsubscribed");
-                        provider.sendMessage(templateBe, baseEntityContextMap);
-                    }
-
-                    /* if subscribed, allow messages */
-                    if (!isUserUnsubscribed) {
-                        log.info("subscribed");
-                        provider.sendMessage(templateBe, baseEntityContextMap);
-                    }
-                } else {
-                    log.error(ANSIColour.RED + ">>>>>> Provider is NULL for entity: " + ", msgType: " + msgType.toString() + " <<<<<<<<<" + ANSIColour.RESET);
-                }
-            }
+            sendToProvider(message, baseEntityContextMap, templateBe, recipientBe, messageTypeList);
         }
 
         long duration = System.currentTimeMillis() - start;
-        log.info("FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration));
-        return true;
+        return CommonUtils.logAndReturn(log::info, "FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration));
+    }
+
+    private List<BaseEntity> getRecipientBeList(String[] recipientArr) {
+        Attribute emailAttr = qwandaUtils.getAttribute("PRI_EMAIL");
+        Attribute mobileAttr = qwandaUtils.getAttribute("PRI_MOBILE");
+        List<BaseEntity> recipientBeList = new ArrayList<>();
+
+        for (String recipient : recipientArr) {
+
+            BaseEntity recipientBe = null;
+
+            if (recipient.contains("[\"") && recipient.contains("\"]")) {
+                // This is a BE Code
+                String code = beUtils.cleanUpAttributeValue(recipient);
+                recipientBe = beUtils.getBaseEntityByCode(code);
+            } else {
+                // Probably an actual email
+                String code = "RCP_" + UUID.randomUUID().toString().toUpperCase();
+                recipientBe = new BaseEntity(code, recipient);
+
+                try {
+                    EntityAttribute email = new EntityAttribute(recipientBe, emailAttr, 1.0, recipient);
+                    recipientBe.addAttribute(email);
+                    EntityAttribute mobile = new EntityAttribute(recipientBe, mobileAttr, 1.0, recipient);
+                    recipientBe.addAttribute(mobile);
+                } catch (Exception e) {
+                    log.error("Exception when passing recipient BE: " + recipient);
+                    e.printStackTrace();
+                }
+            }
+
+            if (recipientBe != null) {
+                recipientBeList.add(recipientBe);
+            } else {
+                log.error(ANSIColour.RED + "Could not process recipient " + recipient + ANSIColour.RESET);
+            }
+        }
+
+        return recipientBeList;
+    }
+
+    // TODO: Make this nicer
+    // Ideally we have all our code broken out into different functions in this class, and this is the beginning of that
+    // This class should make more use of attributes
+    private void sendToProvider(QMessageGennyMSG message, Map<String, Object> baseEntityContextMap, 
+                    BaseEntity templateBe, BaseEntity recipientBe, List<QBaseMSGMessageType> messageTypeList) {
+        final String templateCode = message.getTemplateCode() + "_UNSUBSCRIBE";
+        final BaseEntity unsubscriptionBe = beUtils.getBaseEntityByCode("COM_EMAIL_UNSUBSCRIPTION");
+        if(unsubscriptionBe == null) {
+            log.warn("Unsubscription Base Entity is null! All users will be treated at subscribed");
+        }
+
+        log.debug("unsubscribe be :: " + unsubscriptionBe);
+
+        // Iterate our array of send types
+        for (QBaseMSGMessageType msgType : messageTypeList) {
+            /* Get Message Provider */
+            final QMessageProvider provider = messageFactory.getMessageProvider(msgType);
+            Boolean isUserUnsubscribed = false;
+
+            if (unsubscriptionBe != null) {
+                /* check if unsubscription list for the template code has the userCode */
+                String templateAssociation = unsubscriptionBe.getValue(templateCode, "");
+                isUserUnsubscribed = templateAssociation.contains(recipientBe.getCode());
+            }
+
+            /*
+                * if user is unsubscribed, then dont send emails. But toast and sms are still
+                * applicable
+                */
+
+            if (isUserUnsubscribed && !QBaseMSGMessageType.EMAIL.equals(msgType)) {
+                log.info("unsubscribed");
+                provider.sendMessage(templateBe, baseEntityContextMap);
+            }
+
+            /* if subscribed, allow messages */
+            if (!isUserUnsubscribed) {
+                log.info("subscribed");
+                provider.sendMessage(templateBe, baseEntityContextMap);
+            }
+        }
     }
 
     private HashMap<String, Object> createBaseEntityContextMap(QMessageGennyMSG message) {

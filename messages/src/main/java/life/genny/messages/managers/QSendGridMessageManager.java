@@ -1,7 +1,5 @@
 package life.genny.messages.managers;
 
-import javax.inject.Inject;
-
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -13,8 +11,8 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.TimeUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -25,28 +23,26 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class QSendGridMessageManager implements QMessageProvider {
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class QSendGridMessageManager extends QMessageProvider {
 
 	private static final Logger log = Logger.getLogger(QSendGridMessageManager.class);
-
-	@Inject
-	BaseEntityUtils beUtils;
-
+	
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
-		log.info("BE UTils: " + (beUtils != null));
+		log.info("BE UTils: " + (beUtils != null ? "not null" : "null!"));
 
 		log.info("SendGrid email type");
-		if(contextMap == null) {
-			log.error("CONTEXT MAP IS NULL");
-			return;
-		}
 
-		log.info("Fetching recipient BE from and " + contextMap);
+		log.debug("Fetching recipient BE and project BE. Context MAP:");
+		CommonUtils.printMap(contextMap);
 		BaseEntity recipientBe = (BaseEntity) contextMap.get("RECIPIENT");
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
-		
+		log.debug("Fetched. Fetching base entity: " + recipientBe.getCode());
 		recipientBe = beUtils.getBaseEntityByCode(recipientBe.getCode());
+		log.debug("Fetched!");
 
 		if (templateBe == null) {
 			log.error(ANSIColour.RED+"TemplateBE passed is NULL!!!!"+ANSIColour.RESET);
@@ -55,6 +51,7 @@ public class QSendGridMessageManager implements QMessageProvider {
 
 		if (recipientBe == null) {
 			log.error(ANSIColour.RED+"Target is NULL"+ANSIColour.RESET);
+			return;
 		}
 
 		String timezone = recipientBe.getValue("PRI_TIMEZONE_ID", "UTC");
@@ -96,8 +93,11 @@ public class QSendGridMessageManager implements QMessageProvider {
 		for (String key : contextMap.keySet()) {
 
 			Object value = contextMap.get(key);
-
-			if (value.getClass().equals(BaseEntity.class)) {
+			if(value == null) {
+				log.error("Could not retrieve value for: " + key);
+				continue;
+			}
+			if (BaseEntity.class.equals(value.getClass())) {
 				log.info("Processing key as BASEENTITY: " + key);
 				BaseEntity be = (BaseEntity) value;
 				HashMap<String, String> deepReplacementMap = new HashMap<>();

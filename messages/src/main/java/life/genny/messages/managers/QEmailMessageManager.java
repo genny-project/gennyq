@@ -6,13 +6,11 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.TimeUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.json.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,12 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ApplicationScoped
-public class QEmailMessageManager implements QMessageProvider {
+public class QEmailMessageManager extends QMessageProvider {
 
 	private static final Logger log = Logger.getLogger(QEmailMessageManager.class);
-
-	@Inject
-	BaseEntityUtils beUtils;
 
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
