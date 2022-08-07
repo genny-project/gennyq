@@ -47,23 +47,22 @@ public class SendMessageService {
 	@Inject
 	DefUtils defUtils;
 
-
 	/**
-	* Send a genny message.
-	*
-	* @param templateCode The template to use
-	* @param recipientBEJson The recipient BaseEntity json
+	 * Send a genny message.
+	 *
+	 * @param templateCode    The template to use
+	 * @param recipientBEJson The recipient BaseEntity json
 	 */
 	public void sendMessage(String templateCode, String recipientBECode) {
 		sendMessage(templateCode, recipientBECode, null);
 	}
 
 	/**
-	* Send a genny message.
-	*
-	* @param templateCode The template to use
-	* @param recipientBEJson The recipient BaseEntity json
-	* @param ctxMap The map of contexts to use
+	 * Send a genny message.
+	 *
+	 * @param templateCode    The template to use
+	 * @param recipientBEJson The recipient BaseEntity json
+	 * @param ctxMap          The map of contexts to use
 	 */
 	public void sendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
 		log.info("recipientBECode : " + recipientBECode);
@@ -71,13 +70,12 @@ public class SendMessageService {
 		sendMessage(templateCode, recipientBe, ctxMap);
 	}
 
-
 	/**
-	* Send a genny message.
-	*
-	* @param templateCode The template to use
-	* @param recipientBEJson The recipient BaseEntity json
-	* @param ctxMap The map of contexts to use
+	 * Send a genny message.
+	 *
+	 * @param templateCode    The template to use
+	 * @param recipientBEJson The recipient BaseEntity json
+	 * @param ctxMap          The map of contexts to use
 	 */
 	public void sendMessage(String templateCode, BaseEntity recipientBE, Map<String, String> ctxMap) {
 
@@ -90,38 +88,43 @@ public class SendMessageService {
 			msgBuilder.setMessageContextMap(ctxMap);
 		}
 		msgBuilder.addRecipient(recipientBE)
-			.setUtils(beUtils)
-			.setToken(userToken)
-			.send();
+				.setUtils(beUtils)
+				.setToken(userToken)
+				.send();
 	}
 
 	/**
-	* Send all genny messages for a given milestone code.
-	* @param milestoneCode The workflow location to send messages for
-	*
-	* @param coreBEJson The core BaseEntity json for which all Contexts can be derived.
+	 * Send all genny messages for a given milestone code.
+	 * 
+	 * @param milestoneCode The workflow location to send messages for
+	 *
+	 * @param coreBEJson    The core BaseEntity json for which all Contexts can be
+	 *                      derived.
 	 */
 	public void sendAllMessagesJson(String milestoneCode, String coreBEJson) {
+		log.info("For milestoneCode : " + milestoneCode + " with the coreBEJson:" + coreBEJson);
 		BaseEntity coreBE = jsonb.fromJson(coreBEJson, BaseEntity.class);
 		String productCode = coreBE.getRealm();
+		log.info("productCode is " + productCode);
 		sendAllMessages(productCode, milestoneCode, coreBE);
 	}
 
-/**
-	* Send all genny messages for a given milestone code.
-	* @param productCode. The productCode to use.
-	* @param milestoneCode The workflow location to send messages for
-	*
-	* @param coreBE The core BaseEntity for which all Contexts can be derived.
+	/**
+	 * Send all genny messages for a given milestone code.
+	 * 
+	 * @param productCode.  The productCode to use.
+	 * @param milestoneCode The workflow location to send messages for
+	 *
+	 * @param coreBE        The core BaseEntity for which all Contexts can be
+	 *                      derived.
 	 */
-	public void sendAllMessages(String productCode,String milestoneCode, BaseEntity coreBE) {
-		SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES", "Fetch All Messages associated with milestone Code")
-			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "MSG_%")
-			.addFilter("PRI_MILESTONE", SearchEntity.StringFilter.LIKE, "%\""+milestoneCode.toUpperCase()+"\"%")
-			.setPageStart(0)
-			.setPageSize(100);
-
-		
+	public void sendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
+		SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES",
+				"Fetch All Messages associated with milestone Code")
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "MSG_%")
+				.addFilter("PRI_MILESTONE", SearchEntity.StringFilter.LIKE, "%\"" + milestoneCode.toUpperCase() + "\"%")
+				.setPageStart(0)
+				.setPageSize(100);
 
 		searchEntity.setRealm(productCode);
 
@@ -130,9 +133,8 @@ public class SendMessageService {
 		log.info("messages : " + messages.size());
 		for (BaseEntity message : messages) {
 			log.info("message : " + message.getCode());
-			//sendMessage(message.getCode(), coreBE);
+			// sendMessage(message.getCode(), coreBE);
 		}
 	}
-
 
 }

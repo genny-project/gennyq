@@ -60,7 +60,8 @@ public class BaseEntityUtils {
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	public BaseEntityUtils() { }
+	public BaseEntityUtils() {
+	}
 
 	/**
 	 * Fetch the user base entity of the {@link UserToken}.
@@ -83,8 +84,9 @@ public class BaseEntityUtils {
 	}
 
 	/**
-	 * Get a base entity using a code, but throw an 
+	 * Get a base entity using a code, but throw an
 	 * ItemNotFoundException if the entitiy does not exist.
+	 * 
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity
 	 */
@@ -94,10 +96,11 @@ public class BaseEntityUtils {
 	}
 
 	/**
-	 * Get a base entity using a code, but throw an 
+	 * Get a base entity using a code, but throw an
 	 * ItemNotFoundException if the entitiy does not exist.
+	 * 
 	 * @param productCode The product to search in
-	 * @param code The code of the entity to fetch
+	 * @param code        The code of the entity to fetch
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
@@ -111,6 +114,7 @@ public class BaseEntityUtils {
 
 	/**
 	 * Get a base entity using the code, or return null if not found.
+	 * 
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity, or null if not found
 	 */
@@ -121,8 +125,9 @@ public class BaseEntityUtils {
 
 	/**
 	 * Get a base entity using the code, or return null if not found.
+	 * 
 	 * @param productCode The product to search in
-	 * @param code The code of the entity to fetch
+	 * @param code        The code of the entity to fetch
 	 * @return The BaseEntity, or null if not found
 	 */
 	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
@@ -144,20 +149,20 @@ public class BaseEntityUtils {
 		}
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}
-  
+
 	/**
 	 * Fetch A {@link BaseEntity} from the cache using a code.
 	 *
 	 * @param productCode The productCode to use
-	 * @param code The code of the BaseEntity to fetch
+	 * @param code        The code of the BaseEntity to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
 
-		if (productCode == null) 
+		if (productCode == null)
 			throw new NullParameterException("productCode");
-		if (code == null) 
+		if (code == null)
 			throw new NullParameterException("code");
 		if (StringUtils.isBlank(productCode))
 			throw new DebugException("productCode is empty");
@@ -165,18 +170,21 @@ public class BaseEntityUtils {
 			throw new DebugException("code is empty");
 
 		// check for entity in the cache
-		//  BaseEntityKey key = new BaseEntityKey(productCode, code);
-		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		// BaseEntityKey key = new BaseEntityKey(productCode, code);
+		// BaseEntity entity = (BaseEntity)
+		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 
-		// NOTE: No more hacks, keep it simple and reliable until infinispan auto updates are working.
+		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
+		// updates are working.
 		BaseEntity entity = null;
 		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-			
+
 		// check in database if not in cache
-		if (entity == null) {			
+		if (entity == null) {
 			try {
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
+				log.debug(code + " not in cache for product " + productCode + " but "
+						+ (entity == null ? "not found in db" : "found in db"));
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}
@@ -209,8 +217,10 @@ public class BaseEntityUtils {
 		databaseUtils.saveBaseEntity(baseEntity);
 		CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
 
-		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		// return (BaseEntity) CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),
+		// baseEntity.getCode());
+		// return (BaseEntity)
+		// CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
 		return baseEntity;
 	}
 
@@ -457,7 +467,8 @@ public class BaseEntityUtils {
 
 	/**
 	 * Apply the privacy filter to a BaseEntity.
-	 * @param entity The be to apply the filter to
+	 * 
+	 * @param entity  The be to apply the filter to
 	 * @param allowed The list of allowed attribute codes
 	 * @return The filtered BaseEntity
 	 */
@@ -475,6 +486,7 @@ public class BaseEntityUtils {
 
 	/**
 	 * Add all non literal attributes to the baseentity.
+	 * 
 	 * @param entity The entity to update
 	 * @return The updated BaseEntity
 	 */
@@ -486,7 +498,7 @@ public class BaseEntityUtils {
 		// Ensure createdDate is not null
 		try {
 			created.setValueDateTime(entity.getCreated());
-		} catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			log.error("NPE for PRI_CREATED. Generating created date");
 			entity.autocreateCreated();
 			created.setValueDateTime(entity.getCreated());
@@ -498,7 +510,7 @@ public class BaseEntityUtils {
 		// Ensure createdDate is not null
 		try {
 			createdDate.setValueDate(entity.getCreated().toLocalDate());
-		} catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			log.error("NPE for PRI_CREATED_DATE. Generating created date");
 			entity.autocreateCreated();
 			createdDate.setValueDate(entity.getCreated().toLocalDate());
@@ -510,7 +522,7 @@ public class BaseEntityUtils {
 		try {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
-		} catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			log.error("NPE for PRI_UPDATED");
 		}
 
@@ -519,7 +531,7 @@ public class BaseEntityUtils {
 			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
 			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
 			entity.addAttribute(updatedDate);
-		} catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			log.error("NPE for PRI_UPDATED_DATE");
 		}
 
@@ -528,7 +540,7 @@ public class BaseEntityUtils {
 			EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
 			code.setValueString(entity.getCode());
 			entity.addAttribute(code);
-		} catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			log.error("NPE for PRI_CODE");
 		}
 
@@ -537,7 +549,7 @@ public class BaseEntityUtils {
 			EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 			name.setValueString(entity.getName());
 			entity.addAttribute(name);
-		} catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			log.error("NPE for PRI_NAME");
 		}
 
@@ -645,15 +657,56 @@ public class BaseEntityUtils {
 		}
 
 		Attribute linkDef = qwandaUtils.getAttribute("LNK_DEF");
-		item.addAnswer(new Answer(item, item, linkDef, "[\""+defBE.getCode()+"\"]"));
+		item.addAnswer(new Answer(item, item, linkDef, "[\"" + defBE.getCode() + "\"]"));
 
 		// author of the BE
 		Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
-		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\""+userToken.getUserCode()+"\"]"));
+		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item);
 
 		return item;
+	}
+
+	/**
+	 * Add a new attributeCode and value to a baseentity.
+	 *
+	 * @param be            The baseentity to use
+	 * @param attributeCode The attributeCode to use
+	 * @param value         The value to use
+	 *
+	 * @return The updated BaseEntity
+	 */
+	public BaseEntity addValue(final BaseEntity be, final String attributeCode, final String value) {
+		try {
+			if (be == null)
+				throw new NullParameterException("be");
+			if (attributeCode == null)
+				throw new NullParameterException("attributeCode");
+			if (value == null)
+				throw new NullParameterException("value");
+			Attribute attribute = null;
+			try {
+				attribute = qwandaUtils.getAttribute(attributeCode);
+			} catch (Exception e) {
+				log.error("No Attribute found for " + attributeCode + " for be code " + be.getCode());
+			}
+			if (attribute == null)
+				throw new DebugException("No Attribute found for " + attributeCode);
+			EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
+			be.addAttribute(ea);
+			return be;
+		} catch (Exception e) {
+			if (be == null) {
+				log.error("BaseEntity is null found for " + attributeCode);
+			} else {
+				log.error("No Attribute found for " + attributeCode + " for be code that is not null");
+			}
+			log.error("Error adding value to be " + be.getCode() + " for attribute " + attributeCode + " with value "
+					+ value);
+			return be;
+		}
+
 	}
 
 	/**
