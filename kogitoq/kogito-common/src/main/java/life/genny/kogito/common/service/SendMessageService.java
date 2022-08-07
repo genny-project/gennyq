@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import java.util.Map;
 import java.util.List;
+import java.util.HashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -10,6 +11,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.UserToken;
@@ -129,12 +131,85 @@ public class SendMessageService {
 		searchEntity.setRealm(productCode);
 
 		List<BaseEntity> messages = searchUtils.searchBaseEntitys(searchEntity);
+		if (messages != null) {
+			log.info("messages : " + messages.size());
+			for (BaseEntity message : messages) {
+				log.info("message : " + message.getCode());
+				// Construct a contextMap
+				Map<String, String> ctxMap = new HashMap<>();
+				String recipientBECode = null;
 
-		log.info("messages : " + messages.size());
-		for (BaseEntity message : messages) {
-			log.info("message : " + message.getCode());
-			// sendMessage(message.getCode(), coreBE);
+				// Determine the recipientBECode
+				String recipientLnkValue = message.getValueAsString("PRI_RECIPIENT_LNK");
+				if (recipientLnkValue != null) {
+					// check the various formats to get the recipientBECode
+					if (recipientLnkValue.startsWith("SELF")) { // The coreBE is the recipient
+						ctxMap.put("RECIPIENT", coreBE.getCode());
+						recipientBECode = coreBE.getCode();
+					} else if (recipientLnkValue.startsWith("PER_")) {
+						ctxMap.put("RECIPIENT", recipientLnkValue);
+						recipientBECode = recipientLnkValue;
+					} else {
+						// check if it is a LNK path (of the coreBE)
+						// "LNK_INTERN"
+						if (recipientLnkValue.startsWith("LNK_")) {
+							String[] splitStr = recipientLnkValue.split(":");
+							Integer numPathItems = splitStr.length;
+							BaseEntity lnkBe = coreBE; // seed
+							for (int index = 0; index < numPathItems; index++) {
+								lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, splitStr[index]);
+							}
+							ctxMap.put("RECIPIENT", lnkBe.getCode());
+							recipientBECode = lnkBe.getCode();
+						}
+					}
+				} else {
+					log.error("NO PRI_RECIPIENT_LNK present");
+					continue;
+				}
+
+				// Determine the sender
+				String senderLnkValue = message.getValueAsString("PRI_SENDER_LNK");
+				if (senderLnkValue != null) {
+					// check the various formats to get the senderBECode
+					if (senderLnkValue.startsWith("USER")) { // The user is the sender
+						ctxMap.put("SENDER", userToken.getUserCode());
+					} else if (senderLnkValue.startsWith("PER_")) {
+						ctxMap.put("SENDER", senderLnkValue);
+					} else {
+						// check if it is a LNK path (of the coreBE)
+						// "LNK_INTERN"
+						if (senderLnkValue.startsWith("LNK_")) {
+							String[] splitStr = senderLnkValue.split(":");
+							Integer numPathItems = splitStr.length;
+							BaseEntity lnkBe = coreBE; // seed
+							for (int index = 0; index < numPathItems; index++) {
+								lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, splitStr[index]);
+							}
+							ctxMap.put("SENDER", lnkBe.getCode());
+						}
+					}
+				} else {
+					log.error("NO PRI_SENDER_LNK present");
+					continue;
+				}
+				// Now extract all the contexts from the core baseentity LNKs
+				List<EntityAttribute> lnkEAs = coreBE.findPrefixEntityAttributes("LNK");
+				String contextMapStr = "";
+				for (EntityAttribute ea : lnkEAs) {
+					String aliasCode = ea.getAttributeCode().substring("LNK_".length());
+					String aliasValue = ea.getAsString();
+					contextMapStr += aliasCode + "=" + aliasValue + ",";
+					ctxMap.put(aliasCode, aliasValue);
+				}
+
+				log.info("Sending Message " + message.getCode() + " to " + recipientBECode + " with ctx="
+						+ contextMapStr);
+				sendMessage(message.getCode(), recipientBECode, ctxMap);
+
+			}
+		} else {
+			log.warn("No messages found for milestoneCode " + milestoneCode);
 		}
 	}
-
 }
