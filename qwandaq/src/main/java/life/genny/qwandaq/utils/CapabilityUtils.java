@@ -71,7 +71,17 @@ public class CapabilityUtils {
 	@Inject
 	BaseEntityUtils beUtils;
 
+	static BaseEntity ROL_DEF;
+
 	public CapabilityUtils() {
+		ROL_DEF = beUtils.getBaseEntityByCode("DEF_ROLE");
+	}
+
+	public BaseEntity createRole(String roleCode) {
+		roleCode = sanitizeRoleCode(roleCode);
+		BaseEntity role = beUtils.create(ROL_DEF, roleCode.substring(4), roleCode);
+		log.debug("Created role: " + role.getCode());
+		return role;
 	}
 
 	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
@@ -487,6 +497,17 @@ public class CapabilityUtils {
 		}
 
 		return modes;
+	}
+
+	public static String sanitizeRoleCode(final String rawRoleCode) {
+		String cleanRoleCode = rawRoleCode.toUpperCase();
+		if (!cleanRoleCode.startsWith(ROLE_BE_PREFIX)) {
+			//TODO: CHECK FOR OTHER PREFIX
+
+			cleanRoleCode = ROLE_BE_PREFIX + cleanRoleCode;
+		}
+
+		return cleanRoleCode;
 	}
 
 	public static String cleanCapabilityCode(final String rawCapabilityCode) {
