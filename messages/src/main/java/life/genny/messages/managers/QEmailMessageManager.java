@@ -4,6 +4,7 @@ import life.genny.messages.managers.SMTP.SendGrid.SendEmailWithSendGridAPI;
 import life.genny.messages.util.MsgUtils;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.utils.TimeUtils;
@@ -35,12 +36,12 @@ public class QEmailMessageManager extends QMessageProvider {
 		recipientBe = beUtils.getBaseEntityByCode(recipientBe.getCode());
 
 		if (templateBe == null) {
-			log.error(ANSIColour.RED + "TemplateBE passed is NULL!!!!" + ANSIColour.RESET);
-			return;
+			throw new NullParameterException("templateBe");
 		}
 
 		if (recipientBe == null) {
 			log.error(ANSIColour.RED + "Target is NULL" + ANSIColour.RESET);
+			throw new NullParameterException("recipientBe");
 		}
 
 		String timezone = recipientBe.getValue("PRI_TIMEZONE_ID", "UTC");
@@ -65,7 +66,7 @@ public class QEmailMessageManager extends QMessageProvider {
 
 		if (recipient == null) {
 			log.error(ANSIColour.RED + "Target " + recipientBe.getCode() + ", PRI_EMAIL is NULL" + ANSIColour.RESET);
-			return;
+			throw new NullParameterException("recipient");
 		}
 
 		String subject = templateBe.getValue("PRI_SUBJECT", null);
