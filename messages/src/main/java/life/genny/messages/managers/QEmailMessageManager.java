@@ -4,7 +4,7 @@ import life.genny.messages.managers.SMTP.SendGrid.SendEmailWithSendGridAPI;
 import life.genny.messages.util.MsgUtils;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.utils.TimeUtils;

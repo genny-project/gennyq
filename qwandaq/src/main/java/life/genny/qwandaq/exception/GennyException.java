@@ -8,10 +8,10 @@ import org.jboss.logging.Logger;
  * Custom Genny System exception to identify 
  * common issues within the logic.
  *
- * @author Bryn Meacham
+ * @author Bryn Meachem
  * @author Jasper Robison
  */
-public class GennyException extends Exception implements GennyExceptionIntf {
+public abstract class GennyException extends Exception implements GennyExceptionIntf {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     

@@ -1,4 +1,6 @@
-package life.genny.qwandaq.exception;
+package life.genny.qwandaq.exception.runtime;
+
+import life.genny.qwandaq.exception.GennyRuntimeException;
 
 /**
  * An Exception to signify malformed of incorrect data.
