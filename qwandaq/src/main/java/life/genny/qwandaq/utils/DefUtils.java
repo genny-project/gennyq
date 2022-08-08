@@ -293,10 +293,7 @@ public class DefUtils {
 		if (answer == null)
 			throw new NullParameterException("answer");
 
-		BaseEntity target = beUtils.getBaseEntityByCode(answer.getTargetCode());
-		if (target == null) {
-			throw new ItemNotFoundException(answer.getTargetCode());
-		}
+		BaseEntity target = beUtils.getBaseEntity(answer.getTargetCode());
 		BaseEntity defBE = getDEF(target);
 
 		return answerValidForDEF(defBE, answer);
