@@ -97,7 +97,7 @@ public class CapabilityUtils {
 
 	public Attribute addCapability(final String rawCapabilityCode, final String name) {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		log.info("Setting Capability : " + cleanCapabilityCode + " : " + name);
+		log.debug("Setting Capability : " + cleanCapabilityCode + " : " + name);
 		
 		Attribute attribute = qwandaUtils.getAttribute(cleanCapabilityCode);
 
@@ -152,7 +152,6 @@ public class CapabilityUtils {
 		String key = getCacheKey(roleCode, cleanCapabilityCode);
 		String modesString = getModeString(modes);
 
-		log.info("updateCachedRoleSet test:: " + key);
 		// if no cache then create
 		return CacheUtils.writeCache(productCode, key, modesString);
 	}
@@ -277,7 +276,6 @@ public class CapabilityUtils {
 	 * @return Boolean True if the user has the capability, False otherwise.
 	 */
 	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
-		log.info("Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
 		if(shouldOverride())
 			return true;
 
@@ -380,7 +378,6 @@ public class CapabilityUtils {
 			return false;
 		}
 
-		log.info("Testing condition with value: " + condition);
 		String[] conditionArray = condition.split(":");
 
 		String capability = conditionArray[0];
