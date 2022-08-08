@@ -29,4 +29,6 @@ buildNumber.properties
 *.iml
 *idea/
 .DS_Store
-
+/*.project
+/*.factorypath
+/*.classpath
