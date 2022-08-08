@@ -22,8 +22,8 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.exception.ItemNotFoundException;
-import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 
@@ -133,10 +133,10 @@ public class DefUtils {
 
 		// null/empty check the role attribute
 		if (codes == null) {
-			throw new GennyRuntimeException("Entity " + entity.getCode() + " does not contain LNK_DEF attribute");
+			throw new NullParameterException(entity.getCode() + ":LNK_DEF");
 		}
 		if (codes.isEmpty()) {
-			throw new GennyRuntimeException("LNK_DEF is empty for " + entity.getCode());
+			throw new NullParameterException(entity.getCode() + ":LNK_DEF");
 		}
 
 		// fetch DEF if no merging is needed

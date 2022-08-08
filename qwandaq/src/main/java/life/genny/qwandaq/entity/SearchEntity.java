@@ -20,7 +20,7 @@ import life.genny.qwandaq.attribute.AttributeLong;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.AttributeTime;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 
 /* 
  * SearchEntity class implements the search of base entities applying 

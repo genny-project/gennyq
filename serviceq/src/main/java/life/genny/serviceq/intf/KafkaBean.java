@@ -14,8 +14,8 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.intf.KafkaInterface;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.exception.DebugException;
-import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.serviceq.live.data.InternalProducer;
 
 @ApplicationScoped

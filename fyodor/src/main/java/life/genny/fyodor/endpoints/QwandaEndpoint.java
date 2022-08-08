@@ -25,7 +25,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.ItemNotFoundException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
