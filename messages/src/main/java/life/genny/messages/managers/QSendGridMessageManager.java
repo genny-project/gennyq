@@ -1,7 +1,5 @@
 package life.genny.messages.managers;
 
-import javax.inject.Inject;
-
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.Response;
@@ -11,10 +9,11 @@ import com.sendgrid.helpers.mail.objects.Email;
 import com.sendgrid.helpers.mail.objects.Personalization;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.TimeUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
@@ -25,30 +24,31 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class QSendGridMessageManager implements QMessageProvider {
+import javax.enterprise.context.ApplicationScoped;
+
+@ApplicationScoped
+public class QSendGridMessageManager extends QMessageProvider {
 
 	private static final Logger log = Logger.getLogger(QSendGridMessageManager.class);
-
-	@Inject
-	BaseEntityUtils beUtils;
-
+	
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 
 		log.info("SendGrid email type");
 
+		CommonUtils.printMap(contextMap);
 		BaseEntity recipientBe = (BaseEntity) contextMap.get("RECIPIENT");
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
 		
-		recipientBe = beUtils.getBaseEntityByCode(recipientBe.getCode());
+		recipientBe = beUtils.getBaseEntityOrNull(recipientBe.getCode());
 
 		if (templateBe == null) {
-			log.error(ANSIColour.RED+"TemplateBE passed is NULL!!!!"+ANSIColour.RESET);
-			return;
+			throw new NullParameterException("templateBe");
 		}
 
 		if (recipientBe == null) {
-			log.error(ANSIColour.RED+"Target is NULL"+ANSIColour.RESET);
+			log.error(ANSIColour.RED+"Target (recipientBe) is NULL"+ANSIColour.RESET);
+			throw new NullParameterException("recipientBe");
 		}
 
 		String timezone = recipientBe.getValue("PRI_TIMEZONE_ID", "UTC");
@@ -72,8 +72,7 @@ public class QSendGridMessageManager implements QMessageProvider {
 		log.info("Recipient BeCode: " + recipientBe.getCode() + " Recipient Email: " + recipient + ", Timezone: " + timezone);
 
 		if (recipient == null) {
-			log.error(ANSIColour.RED+"Target " + recipientBe.getCode() + ", PRI_EMAIL is NULL"+ANSIColour.RESET);
-			return;
+			throw new NullParameterException(recipientBe.getCode() + ":PRI_EMAIL");
 		}
 
 		String templateId = templateBe.getValue("PRI_SENDGRID_ID", null);
@@ -90,8 +89,13 @@ public class QSendGridMessageManager implements QMessageProvider {
 		for (String key : contextMap.keySet()) {
 
 			Object value = contextMap.get(key);
-
-			if (value.getClass().equals(BaseEntity.class)) {
+			if(value == null) {
+				log.error("========================== FATAL ==================");
+				log.error("Could not retrieve value for: " + key + " in message " + templateBe.getCode());
+				log.error("=================================================");
+				continue;
+			}
+			if (BaseEntity.class.equals(value.getClass())) {
 				log.info("Processing key as BASEENTITY: " + key);
 				BaseEntity be = (BaseEntity) value;
 				HashMap<String, String> deepReplacementMap = new HashMap<>();
@@ -218,13 +222,16 @@ public class QSendGridMessageManager implements QMessageProvider {
 			request.setEndpoint("mail/send");
 			request.setBody(mail.build());
 			Response response = sg.api(request);
-			log.info(response.getStatusCode());
-			log.info(response.getBody());
-			log.info(response.getHeaders());
-
-			log.info(ANSIColour.GREEN+"SendGrid Message Sent to " + recipient + "!"+ANSIColour.RESET);
+			if(response.getStatusCode() == javax.ws.rs.core.Response.Status.ACCEPTED.getStatusCode()) {
+				log.info(ANSIColour.GREEN+"SendGrid Message Sent to " + recipient + "!"+ANSIColour.RESET);
+			} else {
+				log.error(ANSIColour.RED+"Error sending to SendGrid!");
+				log.error(ANSIColour.RED+response.getStatusCode());
+				log.error(ANSIColour.RED+response.getBody());
+				log.error(ANSIColour.RED+response.getHeaders());
+			}
 		} catch (IOException e) {
-			log.error(e);
+			e.printStackTrace();
 		}
 
 	}

@@ -323,7 +323,7 @@ public class MergeUtils {
 	 * @param	contextAssociationJson	the json instructions for fetching associations.
 	 * @param	overwrite				should the function overwrite any already existing contexts
 	 */
-	public static void addAssociatedContexts(BaseEntityUtils beUtils, HashMap<String, Object> ctxMap, String contextAssociationJson, boolean overwrite) {
+	public static void addAssociatedContexts(BaseEntityUtils beUtils, Map<String, Object> ctxMap, String contextAssociationJson, boolean overwrite) {
 
 		// Enter Try-Catch for better error logging
 		try {

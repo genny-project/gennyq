@@ -11,6 +11,7 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 
 /**
  * Custom Genny Scope Initializer class for initializing the UserToken after consuming from Kafka.
@@ -25,6 +26,9 @@ public class GennyScopeInit {
 	@Inject
 	UserToken userToken;
 
+	@Inject
+	BaseEntityUtils beUtils;
+
 	/**
 	 * Default Constructor.
 	 **/
@@ -36,7 +40,11 @@ public class GennyScopeInit {
 	 *
 	 * @param data The consumed message from kafka
 	 **/
-	public void init(String data) { 
+	public void init(String data) {
+		if(beUtils == null) {
+			log.error("NULL BE UTILS");
+			this.beUtils = new BaseEntityUtils();
+		}
 
 		// activate request scope and fetch UserToken
 		Arc.container().requestContext().activate();
@@ -45,7 +53,6 @@ public class GennyScopeInit {
 			log.error("Null data received at Scope Init");
 			return;
 		}
-
 		try {
 
 			JsonObject json = jsonb.fromJson(data, JsonObject.class);
