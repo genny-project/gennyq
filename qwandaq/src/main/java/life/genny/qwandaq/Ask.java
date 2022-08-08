@@ -16,9 +16,7 @@
 
 package life.genny.qwandaq;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.json.bind.annotation.JsonbTransient;
@@ -46,9 +44,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.querydsl.core.annotations.QueryExclude;
 
-import org.apache.commons.lang3.builder.CompareToBuilder;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 
-import life.genny.qwandaq.exception.BadDataException;
+import org.apache.commons.lang3.builder.CompareToBuilder;
 
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
