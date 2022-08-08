@@ -73,6 +73,8 @@ public class InternalConsumer {
 		} catch (Exception e) {
 			log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
 			log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
+			scope.destroy();
+			return;
 		}
 		
 		mp.processGenericMessage(message);
