@@ -13,6 +13,7 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.models.GennyToken;
 
 /**
@@ -41,6 +42,8 @@ public class HttpUtils {
 		return put(uri, body, token.getToken());
 	}
 
+	// public static void logHeaders()
+
 	/**
 	 * Create and send a PUT request.
 	 *
@@ -59,10 +62,18 @@ public class HttpUtils {
 				.PUT(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 
+		HttpResponse<String> response = null;
 		try {
-			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return response;
 		} catch (IOException | InterruptedException e) {
-			throw new GennyRuntimeException("PUT request error", e);
+			throw GennyResponseException.newBuilder(uri)
+						.setRequestBody(body)
+						.setToken(token)
+						.setRequestType("PUT")
+						.fromHttpResponse(response)
+						.setAssociatedException(e)
+						.build();
 		}
 	}
 
