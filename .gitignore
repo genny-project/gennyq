@@ -26,3 +26,5 @@ buildNumber.properties
 # IntelliJ
 *.iml
 *idea/
+.DS_Store
+

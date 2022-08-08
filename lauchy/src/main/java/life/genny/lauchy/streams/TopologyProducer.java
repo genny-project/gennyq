@@ -58,5 +58,4 @@ public class TopologyProducer {
 		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
 	}
 
-
 }

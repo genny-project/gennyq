@@ -102,18 +102,21 @@ public class InternalConsumer {
 	@Blocking
 	public void getData(String event) {
 
-		// init scope and process msg
 		Instant start = Instant.now();
-		scope.init(event);
-		log.debug("Consumed message: " + event);
-
+		
 		// deserialise message
 		JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
-		JsonObject dataJson = jsonStr.getJsonObject("data");
+	
 
 		if (!jsonStr.getString("event_type").equals("DD")) {
 			return; // TODO: This should not get here?
 		}
+
+		// init scope and process msg
+		scope.init(event);
+		log.debug("Consumed message: " + event);
+
+		JsonObject dataJson = jsonStr.getJsonObject("data");
 
 		// grab necessarry info
 		String attrCode = jsonStr.getString("attributeCode");
@@ -133,6 +136,10 @@ public class InternalConsumer {
 
 		if (!StringUtils.isBlank(processId)) {
 			ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+			if (processData == null) {
+				log.error("Process data not found for processId: " + processId);
+				return;
+			}
 			target = processData.getProcessEntity();
 			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		} else {
