@@ -47,6 +47,9 @@ public class SendMessageService {
 	QwandaUtils qwandaUtils;
 
 	@Inject
+	DatabaseUtils databaseUtils;
+
+	@Inject
 	DefUtils defUtils;
 
 	/**
@@ -130,11 +133,12 @@ public class SendMessageService {
 
 		searchEntity.setRealm(productCode);
 
-		List<BaseEntity> messages = searchUtils.searchBaseEntitys(searchEntity);
-		if (messages != null) {
-			log.info("messages : " + messages.size());
-			for (BaseEntity message : messages) {
-				log.info("message : " + message.getCode());
+		List<String> messageCodes = searchUtils.searchBaseEntityCodes(searchEntity);
+		if (messageCodes != null) {
+			log.info("messages : " + messageCodes.size());
+			for (String messageCode : messageCodes) {
+				log.info("messageCode : " + messageCode);
+				BaseEntity message = beUtils.getBaseEntityByCode(messageCode);
 				// Construct a contextMap
 				Map<String, String> ctxMap = new HashMap<>();
 				String recipientBECode = null;
@@ -199,6 +203,7 @@ public class SendMessageService {
 				for (EntityAttribute ea : lnkEAs) {
 					String aliasCode = ea.getAttributeCode().substring("LNK_".length());
 					String aliasValue = ea.getAsString();
+					aliasValue = aliasValue.replace("\"", "").replace("[", "").replace("]", "");
 					contextMapStr += aliasCode + "=" + aliasValue + ",";
 					ctxMap.put(aliasCode, aliasValue);
 				}
