@@ -6,6 +6,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
@@ -147,7 +148,7 @@ public class CommonUtils {
 	public static String replacePrefix(String str, String prefix) {
 
 		if (str.charAt(3) != '_') {
-			throw new GennyRuntimeException(str + " is does not have a valid three character prefix");
+			throw new GennyPrefixException(str + " is does not have a valid three character prefix");
 		}
 		return prefix + str.substring(3);
 	}

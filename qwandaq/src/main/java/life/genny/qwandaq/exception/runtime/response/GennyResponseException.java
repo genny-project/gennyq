@@ -5,6 +5,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.utils.HttpUtils;
 
 public class GennyResponseException extends GennyRuntimeException {
     
@@ -24,12 +25,24 @@ public class GennyResponseException extends GennyRuntimeException {
 
     Exception associatedException;
     
-    public GennyResponseException() {
-
+    public GennyResponseException(String uri) {
+        super("Error with response from uri: " + uri);
     }
 
-    public static Builder newBuilder() {
-        return new Builder();
+    @Override
+    public void printStackTrace() {
+        log.error("Http Error for request: " + requestType + ": " + uri);
+        log.error("Status Code: " + statusCode);
+        if(requestBody != null) {
+            log.error("=========== REQUEST BODY =========");
+            log.error(requestBody);
+        }
+        log.debug("=========== TOKEN =========");
+        log.debug(token);
+        log.debug("======== RESPONSE HEADERS ===========");
+        HttpUtils.logHeaders(log::debug, responseHeaders);
+
+        super.printStackTrace();
     }
 
     public static Builder newBuilder(String uri) {
@@ -39,8 +52,8 @@ public class GennyResponseException extends GennyRuntimeException {
     public static class Builder {
         private GennyResponseException exception;
 
-        public Builder() {
-            exception = new GennyResponseException();
+        public Builder(String uri) {
+            exception = new GennyResponseException(uri);
         }
 
         public Builder setAssociatedException(Exception e) {
@@ -78,11 +91,6 @@ public class GennyResponseException extends GennyRuntimeException {
             setHttpResponse(response);
             setResponseHeaders(response.headers());
             return this;
-        }
-
-        public Builder(String uri) {
-            this();
-            setURI(uri);
         }
 
         public Builder setRequestType(String requestType) {
