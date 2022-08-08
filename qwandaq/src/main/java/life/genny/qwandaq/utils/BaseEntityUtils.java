@@ -136,11 +136,9 @@ public class BaseEntityUtils {
 	 * @param code The code of the BaseEntity to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
-	@Deprecated
 	public BaseEntity getBaseEntityByCode(String code) {
 		if (userToken == null) {
-			log.error("userToken is null");
-			return null;
+			throw new NullParameterException("User Token");
 		}
 		return getBaseEntityByCode(userToken.getProductCode(), code);
 	}

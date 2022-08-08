@@ -12,6 +12,6 @@ TOKEN=`./gettoken-cache.sh ${realm}`
 echo ''
 echo $TOKEN
 echo ''
-CTX_MAP='{"templateCode": "MSG_TEMP_PASSWORD", "recipientBeCode":"PER_0F6169E1-FDD5-4DAF-BEC3-4126C6626752"}'
+CTX_MAP='{"templateCode": "'$messageTemplateCode'", "recipientBeCode":"'$recipientBeCode'"}'
 curl -v -H "Content-Type: application/json"  -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -X POST http://alyson2.genny.life:${port}/sendmessage -d "$CTX_MAP"
 echo ""
