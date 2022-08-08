@@ -33,7 +33,7 @@ public class QEmailMessageManager extends QMessageProvider {
 		BaseEntity recipientBe = (BaseEntity) contextMap.get("RECIPIENT");
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
 
-		recipientBe = beUtils.getBaseEntityByCode(recipientBe.getCode());
+		recipientBe = beUtils.getBaseEntityOrNull(recipientBe.getCode());
 
 		if (templateBe == null) {
 			throw new NullParameterException("templateBe");
