@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import life.genny.qwandaq.test.TestCase;
 
 import life.genny.qwanda.datatype.CapabilityMode;
 
