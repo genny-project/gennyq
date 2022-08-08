@@ -9,6 +9,7 @@ import com.sendgrid.helpers.mail.objects.Email;
 import com.sendgrid.helpers.mail.objects.Personalization;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.utils.TimeUtils;
@@ -42,13 +43,12 @@ public class QSendGridMessageManager extends QMessageProvider {
 		recipientBe = beUtils.getBaseEntityByCode(recipientBe.getCode());
 
 		if (templateBe == null) {
-			log.error(ANSIColour.RED+"TemplateBE passed is NULL!!!!"+ANSIColour.RESET);
-			return;
+			throw new NullParameterException("templateBe");
 		}
 
 		if (recipientBe == null) {
-			log.error(ANSIColour.RED+"Target is NULL"+ANSIColour.RESET);
-			return;
+			log.error(ANSIColour.RED+"Target (recipientBe) is NULL"+ANSIColour.RESET);
+			throw new NullParameterException("recipientBe");
 		}
 
 		String timezone = recipientBe.getValue("PRI_TIMEZONE_ID", "UTC");
@@ -72,8 +72,7 @@ public class QSendGridMessageManager extends QMessageProvider {
 		log.info("Recipient BeCode: " + recipientBe.getCode() + " Recipient Email: " + recipient + ", Timezone: " + timezone);
 
 		if (recipient == null) {
-			log.error(ANSIColour.RED+"Target " + recipientBe.getCode() + ", PRI_EMAIL is NULL"+ANSIColour.RESET);
-			return;
+			throw new NullParameterException(recipientBe.getCode() + ":PRI_EMAIL");
 		}
 
 		String templateId = templateBe.getValue("PRI_SENDGRID_ID", null);
@@ -232,7 +231,7 @@ public class QSendGridMessageManager extends QMessageProvider {
 				log.error(ANSIColour.RED+response.getHeaders());
 			}
 		} catch (IOException e) {
-			log.error(e);
+			e.printStackTrace();
 		}
 
 	}
