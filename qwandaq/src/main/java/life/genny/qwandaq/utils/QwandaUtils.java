@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,7 +18,6 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -38,7 +35,6 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.UniquePair;
 import life.genny.qwandaq.models.UserToken;
 
 /**
@@ -221,11 +217,9 @@ public class QwandaUtils {
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if ("QUE_BASEENTITY_GRP".equals(code)) {
 			return generateAskGroupUsingBaseEntity(target);
-
 		}
 
 		String productCode = userToken.getProductCode();
-
 		log.debug("Fetching Question: " + code);
 
 		// find the question in the database
