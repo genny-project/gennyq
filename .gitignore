@@ -11,7 +11,9 @@ pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 pom.xml.next
-
+.project
+.classpath
+.factorypath
 kogitoq/gadaq/scripts/msg.json
 
 release.properties
