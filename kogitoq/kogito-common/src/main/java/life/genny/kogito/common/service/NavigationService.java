@@ -13,6 +13,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
@@ -23,11 +24,6 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class NavigationService {
@@ -56,6 +52,9 @@ public class NavigationService {
 
 	@Inject
 	SearchUtils searchUtils;
+
+	@Inject
+	DefUtils defUtils;
 
 	/**
 	 * Trigger the default redirection for the user.
@@ -216,4 +215,59 @@ public class NavigationService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
     }
+
+	/**
+	 * Redirect by question code
+	 * @param questionCode Question code
+	 */
+	public void redirectByQuestionCode(String questionCode) {
+		String redirectCode = getRedirectCodeByQuestionCode(questionCode);
+
+		// build json and trigger view workflow
+		JsonObject json = Json.createObjectBuilder()
+				.add("eventMessage", Json.createObjectBuilder()
+						.add("data", Json.createObjectBuilder()
+								.add("code", redirectCode)
+								.add("targetCode", userToken.getUserCode())))
+				.build();
+
+		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
+	}
+
+	/**
+	 * Return definition code by question code
+	 * @param questionCode
+	 * Example: *_*_<question_code>_*
+	 *          *_<question_code>_*
+	 * @return Definition code
+	 */
+	public String getDefCodeByQuestionCode(String questionCode){
+		String defCode = "";
+		String[] splitted = questionCode.split("_");
+		if(splitted.length > 1) {
+			defCode = splitted[splitted.length - 2];
+		}
+		return defCode;
+	}
+
+	/**
+	 * return redirect question code
+	 * @param questionCode Question code
+	 * @return redirect question code
+	 */
+	public String getRedirectCodeByQuestionCode(String questionCode){
+		String defCode =  getDefCodeByQuestionCode(questionCode);
+		BaseEntity target = beUtils.getBaseEntity(defCode);
+		BaseEntity definition = defUtils.getDEF(target);
+
+		String defaultRedirectCode = definition.getValueAsString("PRI_DEFAULT_REDIRECT");
+		log.info("Actioning redirect for user " + target.getCode() + " : " + defaultRedirectCode);
+
+		if (defaultRedirectCode == null) {
+			log.error("User has no default redirect!");
+			return "";
+		}
+
+		return defaultRedirectCode;
+	}
 }
