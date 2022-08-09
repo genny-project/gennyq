@@ -217,11 +217,9 @@ public class QwandaUtils {
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if ("QUE_BASEENTITY_GRP".equals(code)) {
 			return generateAskGroupUsingBaseEntity(target);
-
 		}
 
 		String productCode = userToken.getProductCode();
-
 		log.debug("Fetching Question: " + code);
 
 		// find the question in the database
