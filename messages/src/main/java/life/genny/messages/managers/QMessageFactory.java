@@ -1,7 +1,11 @@
 package life.genny.messages.managers;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.utils.CommonUtils;
