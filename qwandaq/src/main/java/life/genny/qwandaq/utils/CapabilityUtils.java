@@ -13,6 +13,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -84,6 +85,7 @@ public class CapabilityUtils {
 		return role;
 	}
 
+
 	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
@@ -120,7 +122,8 @@ public class CapabilityUtils {
 					+ " TO BASE ENTITITY: " + targetBe.getCode());
 			return targetBe;
 		}
-
+		// addCapabilityToBaseEntity(target, "intern_profile", VIEW, EDIT, ADD)
+		// PRM_INTERN_PROFILE = ["VIEW", "EDIT", "ADD"]
 		updateCachedRoleSet(targetBe.getCode(), cleanCapabilityCode, modes);
 		return targetBe;
 	}
@@ -486,7 +489,14 @@ public class CapabilityUtils {
 	}
 
 	public static CapabilityMode[] getCapModesFromString(String modeString) {
-		JsonArray array = jsonb.fromJson(modeString, JsonArray.class);
+		JsonArray array = null;
+		
+		try {
+			array = jsonb.fromJson(modeString, JsonArray.class);
+		} catch(JsonbException e) {
+			log.error("Error deserializing: " + modeString);
+			return null;
+		}
 		CapabilityMode[] modes = new CapabilityMode[array.size()];
 
 		for (int i = 0; i < array.size(); i++) {
