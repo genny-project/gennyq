@@ -99,6 +99,22 @@ public class SendMessageService {
 	}
 
 	/**
+	 * Send all genny messages for a given milestone code and coreBE code.
+	 * 
+	 * @param milestoneCode The workflow location to send messages for
+	 *
+	 * @param coreBEcode    The core BaseEntity code for which all Contexts can be
+	 *                      derived.
+	 */
+	public void sendAllMessagesCode(String milestoneCode, String coreBeCode) {
+		log.info("For milestoneCode : " + milestoneCode + " with the coreBeCode:" + coreBeCode);
+		BaseEntity coreBE = beUtils.getBaseEntity(userToken.getProductCode(), coreBeCode);
+		String productCode = coreBE.getRealm();
+		log.info("productCode is " + productCode);
+		sendAllMessages(productCode, milestoneCode, coreBE);
+	}
+
+	/**
 	 * Send all genny messages for a given milestone code.
 	 * 
 	 * @param milestoneCode The workflow location to send messages for

@@ -67,6 +67,32 @@ public class BaseEntityService {
 		return entity.getCode();
 	}
 
+	public void delete(String code) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Deleting entity using EEntityStatus" + baseEntity.getCode());
+
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.DELETED);
+		beUtils.updateBaseEntity(baseEntity);
+	}
+
+	public void pendingDelete(String code) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Pending Deleting entity using EEntityStatus" + baseEntity.getCode());
+
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.PENDING_DELETE);
+		beUtils.updateBaseEntity(baseEntity);
+	}
+
 	public void decommission(String code) {
 
 		if (code == null)
@@ -84,6 +110,13 @@ public class BaseEntityService {
 
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 		entity.setStatus(EEntityStatus.ACTIVE);
+		beUtils.updateBaseEntity(entity);
+	}
+
+	public void setDisabled(String entityCode) {
+
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		entity.setStatus(EEntityStatus.DISABLED);
 		beUtils.updateBaseEntity(entity);
 	}
 
