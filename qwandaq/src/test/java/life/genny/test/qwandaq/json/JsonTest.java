@@ -1,4 +1,4 @@
-package life.genny.qwandaq.json;
+package life.genny.test.qwandaq.json;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
