@@ -74,11 +74,11 @@ public class NavigationService {
 
 		// build json and trigger view workflow
 		JsonObject json = Json.createObjectBuilder()
-			.add("eventMessage", Json.createObjectBuilder()
-				.add("data", Json.createObjectBuilder()
-					.add("code", defaultRedirectCode)
-					.add("targetCode", userToken.getUserCode())))
-			.build();
+				.add("eventMessage", Json.createObjectBuilder()
+						.add("data", Json.createObjectBuilder()
+								.add("code", defaultRedirectCode)
+								.add("targetCode", userToken.getUserCode())))
+				.build();
 
 		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
 	}
@@ -86,7 +86,7 @@ public class NavigationService {
 	/**
 	 * Control main content navigation using a pcm and a question
 	 *
-	 * @param pcmCode The code of the PCM baseentity
+	 * @param pcmCode      The code of the PCM baseentity
 	 * @param questionCode The code of the question
 	 */
 	public void navigateContent(final String pcmCode, final String questionCode) {
@@ -123,6 +123,7 @@ public class NavigationService {
 
 	/**
 	 * Recuresively traverse a pcm tree and send out any nested searches.
+	 * 
 	 * @param pcm The pcm to begin raversing
 	 */
 	public void recursivelyPerformPcmSearches(BaseEntity pcm) {
@@ -131,41 +132,41 @@ public class NavigationService {
 
 		// filter location attributes
 		Set<EntityAttribute> locs = pcm.getBaseEntityAttributes()
-			.stream()
-			.filter(ea -> ea.getAttributeCode().startsWith("PRI_LOC"))
-			.collect(Collectors.toSet());
+				.stream()
+				.filter(ea -> ea.getAttributeCode().startsWith("PRI_LOC"))
+				.collect(Collectors.toSet());
 
 		// perform searches
 		locs.stream()
-			.filter(ea -> ea.getValueString().startsWith("SBE"))
-			.map(ea -> CacheUtils.getObject(userToken.getProductCode(), ea.getValueString(), SearchEntity.class))
-			.peek(sbe -> log.info("Sending Search " + sbe.getCode()))
-			.forEach(sbe -> searchUtils.searchBaseEntitys(sbe));
+				.filter(ea -> ea.getValueString().startsWith("SBE"))
+				.map(ea -> CacheUtils.getObject(userToken.getProductCode(), ea.getValueString(), SearchEntity.class))
+				.peek(sbe -> log.info("Sending Search " + sbe.getCode()))
+				.forEach(sbe -> searchUtils.searchBaseEntitys(sbe));
 
 		// run function for nested pcms
 		locs.stream()
-			.filter(ea -> ea.getValueString().startsWith("PCM"))
-			.map(ea -> beUtils.getBaseEntity(ea.getValueString()))
-			.peek(ent -> recursivelyPerformPcmSearches(ent));
+				.filter(ea -> ea.getValueString().startsWith("PCM"))
+				.map(ea -> beUtils.getBaseEntity(ea.getValueString()))
+				.peek(ent -> recursivelyPerformPcmSearches(ent));
 
 	}
 
 	/**
 	 * Send a view event.
 	 *
-	 * @param code The code of the view event.
+	 * @param code       The code of the view event.
 	 * @param targetCode The targetCode of the view event.
 	 */
 	public void sendViewEvent(final String code, final String targetCode) {
 
 		JsonObject json = Json.createObjectBuilder()
-			.add("event_type", "VIEW")
-			.add("msg_type", "EVT_MSG")
-			.add("token", userToken.getToken())
-			.add("data", Json.createObjectBuilder()
-				.add("code", code)
-				.add("targetCode", targetCode))
-			.build();
+				.add("event_type", "VIEW")
+				.add("msg_type", "EVT_MSG")
+				.add("token", userToken.getToken())
+				.add("data", Json.createObjectBuilder()
+						.add("code", code)
+						.add("targetCode", targetCode))
+				.build();
 
 		log.info("Sending View Event -> " + code + " : " + targetCode);
 
@@ -175,45 +176,55 @@ public class NavigationService {
 	/**
 	 * Function to update a pcm location
 	 */
-    public void updatePcm(String pcmCode, String loc, String newValue) {
+	public void updatePcm(String pcmCode, String loc, String newValue) {
 
-        log.info("Replacing " + pcmCode + ":" + loc + " with " + newValue);
+		log.info("Replacing " + pcmCode + ":" + loc + " with " + newValue);
 
-        String cachedCode = userToken.getJTI() + ":" + pcmCode;
-        BaseEntity pcm = CacheUtils.getObject(userToken.getProductCode(), cachedCode, BaseEntity.class);
+		String cachedCode = userToken.getJTI() + ":" + pcmCode;
+		BaseEntity pcm = CacheUtils.getObject(userToken.getProductCode(), cachedCode, BaseEntity.class);
 
-        if (pcm == null) {
-            log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
-            pcm = beUtils.getBaseEntityByCode(userToken.getProductCode(), pcmCode);
-        }
+		if (pcm == null) {
+			log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
+			pcm = beUtils.getBaseEntityByCode(userToken.getProductCode(), pcmCode);
+		}
 
-        if (pcm == null) {
-            log.error("Couldn't find PCM with code " + pcmCode);
-            throw new NullPointerException("Couldn't find PCM with code " + pcmCode);
-        }
+		if (pcm == null) {
+			log.error("Couldn't find PCM with code " + pcmCode);
+			throw new NullPointerException("Couldn't find PCM with code " + pcmCode);
+		}
 
-        log.info("Found PCM " + pcm);
+		log.info("Found PCM " + pcm);
 
-        Optional<EntityAttribute> locOptional = pcm.findEntityAttribute(loc);
-        if (!locOptional.isPresent()) {
-            log.error("Couldn't find base entity attribute " + loc);
-            throw new NullPointerException("Couldn't find base entity attribute " + loc);
-        }
+		Optional<EntityAttribute> locOptional = pcm.findEntityAttribute(loc);
+		if (!locOptional.isPresent()) {
+			log.error("Couldn't find base entity attribute " + loc);
+			throw new NullPointerException("Couldn't find base entity attribute " + loc);
+		}
 
-        EntityAttribute locAttribute = locOptional.get();
-        log.info(locAttribute.getAttributeCode() + " has valueString " + locAttribute.getValueString());
-        locAttribute.setValueString(newValue);
+		EntityAttribute locAttribute = locOptional.get();
+		log.info(locAttribute.getAttributeCode() + " has valueString " + locAttribute.getValueString());
+		locAttribute.setValueString(newValue);
 
-        Set<EntityAttribute> attributes = pcm.getBaseEntityAttributes();
-        attributes.removeIf(att -> att.getAttributeCode().equals(loc));
-        attributes.add(locAttribute);
-        pcm.setBaseEntityAttributes(attributes);
+		Set<EntityAttribute> attributes = pcm.getBaseEntityAttributes();
+		attributes.removeIf(att -> att.getAttributeCode().equals(loc));
+		attributes.add(locAttribute);
+		pcm.setBaseEntityAttributes(attributes);
 
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcm);
-        msg.setToken(userToken.getToken());
-        msg.setReplace(true);
-        KafkaUtils.writeMsg("webdata", msg);
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcm);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg("webdata", msg);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
-    }
+		CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
+	}
+
+	public void showProcessPage(final String targetCode) {
+		String sourceCode = userToken.getUserCode();
+		String eventJson = "{\"data\":{\"targetCode\":\"" + targetCode + "\",\"sourceCode\":\"" + sourceCode
+				+ "\",\"parentCode\":\"QUE_SIDEBAR_GRP\",\"code\":\"QUE_TAB_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
+				+ userToken.getToken() + "\"}";
+
+		KafkaUtils.writeMsg("events", eventJson);
+	}
+
 }
