@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,6 +56,8 @@ public class NavigationService {
 
 	@Inject
 	DefUtils defUtils;
+
+	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
 	/**
 	 * Trigger the default redirection for the user.
@@ -236,17 +239,15 @@ public class NavigationService {
 
 	/**
 	 * Return definition code by question code
-	 * @param questionCode
-	 * Example: *_*_<question_code>_*
-	 *          *_<question_code>_*
+	 * @param questionCode question code
 	 * @return Definition code
 	 */
 	public String getDefCodeByQuestionCode(String questionCode){
-		String defCode = "";
-		String[] splitted = questionCode.split("_");
-		if(splitted.length > 1) {
-			defCode = splitted[splitted.length - 2];
-		}
+		String defCode = "DEF_" + questionCode.replaceFirst("QUE_QA_","")
+							.replaceFirst("QUE_ADD_","")
+							.replaceFirst("QUE_","")
+							.replace("_GRP","");
+
 		return defCode;
 	}
 
@@ -258,16 +259,35 @@ public class NavigationService {
 	public String getRedirectCodeByQuestionCode(String questionCode){
 		String defCode =  getDefCodeByQuestionCode(questionCode);
 		BaseEntity target = beUtils.getBaseEntity(defCode);
-		BaseEntity definition = defUtils.getDEF(target);
 
-		String defaultRedirectCode = definition.getValueAsString("PRI_DEFAULT_REDIRECT");
-		log.info("Actioning redirect for user " + target.getCode() + " : " + defaultRedirectCode);
+		String defaultRedirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+		log.info("Actioning redirect for question: " + target.getCode() + " : " + defaultRedirectCode);
+
+		//Secondly, check user to get redirect code
+		if (defaultRedirectCode == null) {
+			defaultRedirectCode = getRedirectCodeByUser();
+		}
 
 		if (defaultRedirectCode == null) {
-			log.error("User has no default redirect!");
+			log.error("Question and user has no default redirect!");
 			return "";
 		}
 
 		return defaultRedirectCode;
+	}
+
+	public String getRedirectCodeByUser(){
+		String defCode = "";
+		BaseEntity user = beUtils.getUserBaseEntity();
+		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
+		if(priIsAttributes.size() > 0){
+			EntityAttribute attr = priIsAttributes.get(0);
+			defCode = "DEF_" + attr.getAttributeCode().replaceFirst(PRI_IS_PREFIX, "");
+		}
+
+		BaseEntity target = beUtils.getBaseEntity(defCode);
+		String redirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+
+		return redirectCode;
 	}
 }
