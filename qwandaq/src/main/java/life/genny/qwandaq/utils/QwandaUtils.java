@@ -607,6 +607,8 @@ public class QwandaUtils {
 	 * @param definition The definition entity
 	 * @param attributeCode The code of the attribute
 	 * @param value The value to check
+	 * 
+	 * @return whether or not the answer is a duplicate
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
