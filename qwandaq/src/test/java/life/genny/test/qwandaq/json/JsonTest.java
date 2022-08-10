@@ -1,4 +1,4 @@
-package life.genny.qwandaq.json;
+package life.genny.test.qwandaq.json;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -7,19 +7,26 @@ import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.test.utils.suite.TestBuilder;
 
 public class JsonTest {
 
+	static Jsonb jsonb = JsonbBuilder.create();
+
+	private static <T> T serializeDeserialize(Object o, Class<T> c) {
+		return jsonb.fromJson(jsonb.toJson(o), c);
+	}
+
 	@Test
-	public void pojoSerDeserTest()
+	public void baseEntityTest()
 	{
-		Jsonb jsonb = JsonbBuilder.create();
-
-		// BaseEntity
 		BaseEntity baseEntity = new BaseEntity("TST_JSON", "Test Json");
-		baseEntity = jsonb.fromJson(jsonb.toJson(baseEntity), BaseEntity.class);
+		assert(baseEntity.equals(serializeDeserialize(baseEntity, BaseEntity.class)));
+	}
 
-		// SearchEntity
+	@Test
+	public void searchEntityTest()
+	{
 		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
 		.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
 		.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "DEF_%")
@@ -27,9 +34,6 @@ public class JsonTest {
 		.setPageStart(0).setPageSize(1000);
 
 		searchEntity.setRealm("genny");
-
-		searchEntity = jsonb.fromJson(jsonb.toJson(searchEntity), SearchEntity.class);
-
-		System.out.println("Sucessfully completed POJO SerDeser Test!");
+		assert(searchEntity.equals(serializeDeserialize(searchEntity, BaseEntity.class)));
 	}
 }
