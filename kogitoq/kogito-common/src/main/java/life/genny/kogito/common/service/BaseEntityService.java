@@ -13,13 +13,8 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-<<<<<<< HEAD
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.GennyRuntimeException;
-=======
-import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.exception.runtime.DebugException;
->>>>>>> 10.1.0
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.models.ServiceToken;
