@@ -66,13 +66,14 @@ public class FrontendService {
 
 	/**
 	 * Create processData from inputs.
+	 * 
 	 * @param questionCode The code of the question to send
-	 * @param sourceCode The source user
-	 * @param targetCode The Target entity
-	 * @param pcmCode The code eof the PCM to use
+	 * @param sourceCode   The source user
+	 * @param targetCode   The Target entity
+	 * @param pcmCode      The code eof the PCM to use
 	 * @return The processData json
 	 */
-	public String inputs(String questionCode, String sourceCode, String targetCode, 
+	public String inputs(String questionCode, String sourceCode, String targetCode,
 			String pcmCode, String events, String processId) {
 
 		ProcessQuestions processData = new ProcessQuestions();
@@ -136,13 +137,13 @@ public class FrontendService {
 		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
 		CacheUtils.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
 
-
 		return jsonb.toJson(processData);
 	}
 
 	/**
 	 * Create the events ask group.
-	 * @param events The events string
+	 * 
+	 * @param events     The events string
 	 * @param sourceCode The source entity code
 	 * @param targetCode The target entity code
 	 * @return The events ask group
@@ -164,8 +165,8 @@ public class FrontendService {
 		// split events string by comma
 		for (String event : events.split(",")) {
 			// create child and add to ask
-			Attribute attribute = new Attribute("EVT_"+event, event, submit.getDataType());
-			Question question = new Question("QUE_"+event, event, attribute);
+			Attribute attribute = new Attribute("EVT_" + event, event, submit.getDataType());
+			Question question = new Question("QUE_" + event, event, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.addChildAsk(child);
 		}
@@ -327,7 +328,8 @@ public class FrontendService {
 		}
 
 		// grab all entityAttributes from the entity
-		Set<EntityAttribute> entityAttributes = ConcurrentHashMap.newKeySet(processEntity.getBaseEntityAttributes().size());
+		Set<EntityAttribute> entityAttributes = ConcurrentHashMap
+				.newKeySet(processEntity.getBaseEntityAttributes().size());
 		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
 			entityAttributes.add(ea);
 		}
@@ -347,10 +349,10 @@ public class FrontendService {
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
 
-		log.info("Sending "+processEntity.getBaseEntityAttributes().size()+" processBE attributes");
+		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
 
 		// check cache first
-		String key = String.format("%s:PROCESS_DATA", processId); 
+		String key = String.format("%s:PROCESS_DATA", processId);
 		CacheUtils.putObject(userToken.getProductCode(), key, processData);
 		log.infof("processData cached to %s", key);
 
@@ -360,7 +362,7 @@ public class FrontendService {
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processEntity, ask.getQuestion().getCode());
 
-		KafkaUtils.writeMsg("webdata", jsonb.toJson(msg));
+		KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
 	}
 
 	/**
@@ -389,13 +391,28 @@ public class FrontendService {
 					if (StringUtils.isBlank(code)) {
 						continue;
 					}
-					if ((code.startsWith("{startDate")) ||(code.startsWith("endDate"))) {
-						log.error("BE:"+target.getCode()+":attribute :"+attribute.getCode()+":BAD code "+code);
+					if ((code.startsWith("{startDate")) || (code.startsWith("endDate"))) {
+						log.error(
+								"BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
 						continue;
 					}
-					BaseEntity selection = beUtils.getBaseEntity(code);
-					if (selection == null)
-						throw new ItemNotFoundException(code);
+					BaseEntity selection = null;
+					try {
+						selection = beUtils.getBaseEntity(code);
+					} catch (ItemNotFoundException e) {
+						log.error(
+								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
+										+ attribute.getCode());
+						// throw new ItemNotFoundException(code);
+						continue;
+					}
+					if (selection == null) {
+						log.error(
+								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
+										+ attribute.getCode());
+						// throw new ItemNotFoundException(code);
+						continue;
+					}
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
@@ -405,11 +422,11 @@ public class FrontendService {
 
 				// send selections
 				if (selectionMsg.getItems() != null) {
-				selectionMsg.setToken(userToken.getToken());
-				selectionMsg.setReplace(true);
-				log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
-				KafkaUtils.writeMsg("webdata", selectionMsg);
-				}	else {
+					selectionMsg.setToken(userToken.getToken());
+					selectionMsg.setReplace(true);
+					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
+					KafkaUtils.writeMsg("webdata", selectionMsg);
+				} else {
 					log.info("No selection items found for " + attribute.getCode());
 				}
 			}
@@ -432,7 +449,7 @@ public class FrontendService {
 		}
 
 		// recursively run on children
-		if ((ask.getChildAsks() != null)&&(ask.getChildAsks().length > 0)) {
+		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
 			for (Ask child : ask.getChildAsks()) {
 				recuresivelyFindAndSendDropdownItems(child, target, rootCode);
 			}
@@ -455,9 +472,9 @@ public class FrontendService {
 		Ask ask = askMessage.getItems().get(0);
 
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
-	
-		log.info("Mandatory fields are "+(answered ? "answered" : "not answered"));
-		
+
+		log.info("Mandatory fields are " + (answered ? "answered" : "not answered"));
+
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 		askMessage.getItems().set(0, ask);
 		askMessage.setToken(userToken.getToken());
