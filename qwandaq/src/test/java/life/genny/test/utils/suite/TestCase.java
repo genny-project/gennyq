@@ -22,6 +22,10 @@ public class TestCase<Input, Expected> {
         this.name = name;
     }
 
+    public Expected test() {
+        return testCallback.test(input);
+    }
+
     // TODO: Elaborate on this to string
     @Override
     public String toString() {

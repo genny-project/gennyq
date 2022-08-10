@@ -22,26 +22,24 @@ public class CapabilityUtilsTest {
     @Test
     public void cleanCapabilityCodeTest() {
         TestBuilder<String, String> builder = new TestBuilder<String, String>();
-        JUnitTester<String, String> tester = builder.getTester(CapabilityUtilsTest.class);
+        // JUnitTester<String, String> tester = builder.getTester(CapabilityUtilsTest.class);
 
-        List<TestCase<String, String>> tests = new ArrayList<>();
-        tests.add(
-            builder.setName("Clean Cap 1")
+        // List<TestCase<String, String>> tests = new ArrayList<>();
+            String result = builder.setName("Clean Cap 1")
                     .setInput("OWN_APPLE")
                     .setExpected("PRM_OWN_APPLE")
                     .setTestFunction(CapabilityUtils::cleanCapabilityCode)
-                    .build()
-        );
-        
-        tests.add(
+                    .build().test();
+
+            
+
             builder.setName("Clean Cap 2")
                     .setInput("oWn_ApplE")
                     .setExpected("PRM_OWN_APPLE")
                     .setTestFunction(CapabilityUtils::cleanCapabilityCode)
-                    .build()
-        );
+                    .build().test();
 
-        tester.testCases("Clean Capability Code", tests);
+        // tester.testCases("Clean Capability Code", tests);
 
     }
 

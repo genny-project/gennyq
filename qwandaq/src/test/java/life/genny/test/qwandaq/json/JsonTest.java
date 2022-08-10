@@ -7,12 +7,13 @@ import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.test.utils.suite.TestBuilder;
 
 public class JsonTest {
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	private <T> T serializeDeserialize(Object o, Class<T> c) {
+	private static <T> T serializeDeserialize(Object o, Class<T> c) {
 		return jsonb.fromJson(jsonb.toJson(o), c);
 	}
 
@@ -20,6 +21,16 @@ public class JsonTest {
 	public void baseEntityTest()
 	{
 		BaseEntity baseEntity = new BaseEntity("TST_JSON", "Test Json");
+
+        TestBuilder<Object, Object> builder = new TestBuilder<Object, Object>();
+        // JUnitTester<String, String> tester = builder.getTester(CapabilityUtilsTest.class);
+
+        // List<TestCase<String, String>> tests = new ArrayList<>();
+            String result = builder.setName("Clean Cap 1")
+                    .setInput("OWN_APPLE")
+                    .setExpected("PRM_OWN_APPLE")
+                    .setTestFunction(JsonTest::serializeDeserialize)
+                    .build().test();
 		assert(baseEntity.equals(serializeDeserialize(baseEntity, BaseEntity.class)));
 	}
 
