@@ -305,11 +305,27 @@ public class KeycloakUtils {
     /**
      * Initialise a Dummy User in keycloak.
      *
-     * @param token the token to use to create tje user
-     * @param realm the realm to create the user in
-     * @return String
+     * @param token the token to use to create the user
+     * @param realm the realm to create the user under
+     * @return the user uuid
      */
     public static String createDummyUser(GennyToken token, String realm) {
+        return createDummyUser(token.getToken(), realm);
+    }
+
+    /**
+     * Initialise a Dummy User in keycloak.
+     *
+     * @param token the token to use to create the user
+     * @param realm the realm to create the user in
+     * @return the user uuid
+     */
+<<<<<<< HEAD
+    public static String createDummyUser(GennyToken token, String realm) {
+=======
+    @Deprecated
+    public static String createDummyUser(String token, String realm) {
+>>>>>>> 10.1.0
 
         String username = UUID.randomUUID().toString().substring(0, 18);
 		String email = username + "@gmail.com";
@@ -356,10 +372,12 @@ public class KeycloakUtils {
 
         } catch (IOException e) {
             log.error("Error trying to fetch keycloak user Id!");
+            log.error("Response Body: " + response.body());
 			e.printStackTrace();
         }
 
 		log.error("Could not return keycloak user Id");
+        log.error("Response Body: " + response.body());
         return null;
     }
 
@@ -375,7 +393,11 @@ public class KeycloakUtils {
     @Deprecated(forRemoval = true, since = "10.1.0")
     public static String getKeycloakUserId(final String token, final String realm, final String username) throws IOException {
 
+<<<<<<< HEAD
         final List<LinkedHashMap<?, ?>> users = fetchKeycloakUser(token, realm, username);
+=======
+        final List<LinkedHashMap<?,?>> users = fetchKeycloakUser(token, realm, username);
+>>>>>>> 10.1.0
         if (!users.isEmpty()) {
             return (String) users.get(0).get("id");
         }
@@ -394,7 +416,11 @@ public class KeycloakUtils {
      * @param username the username to fetch for
      * @return List
      */
+<<<<<<< HEAD
     public static List<LinkedHashMap<?, ?>> fetchKeycloakUser(final String token, final String realm, final String username) {
+=======
+    public static List<LinkedHashMap<?,?>> fetchKeycloakUser(final String token, final String realm, final String username) {
+>>>>>>> 10.1.0
 
         String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users?username=" + username;
 
@@ -421,7 +447,11 @@ public class KeycloakUtils {
                 return null;
             }
 
+<<<<<<< HEAD
             List<LinkedHashMap<?, ?>> results = new ArrayList<LinkedHashMap<?, ?>>();
+=======
+            List<LinkedHashMap<?,?>> results = new ArrayList<LinkedHashMap<?,?>>();
+>>>>>>> 10.1.0
 
             try(InputStream is = new ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8))) {
                 results = JsonSerialization.readValue(is, (new ArrayList<UserRepresentation>()).getClass());

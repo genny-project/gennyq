@@ -14,6 +14,8 @@ import org.eclipse.microprofile.reactive.messaging.Message;
 import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.intf.KafkaInterface;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.serviceq.live.data.InternalProducer;
 
 @ApplicationScoped
@@ -37,27 +39,17 @@ public class KafkaBean implements KafkaInterface {
 	 */
 	public void write(String channel, String payload) { 
 
-		if (channel == null) {
-			log.error("Channel must not be null!");
-			return;
-		}
-
-		if (payload == null) {
-			log.error("Payload must not be null!");
-			return;
-		}
+		if (channel == null)
+			throw new NullParameterException("channel");
+		if (payload == null)
+			throw new NullParameterException("payload");
 
 		// find GennyToken from payload contents
-		JsonObject payloadObj = null;
-
-		try {
-			payloadObj = jsonb.fromJson(payload, JsonObject.class);
-			if (!payloadObj.containsKey("token")) {
-				throw new Exception("Outgoing message must have a token. Found null!");
-			}
-		} catch (Exception e) {
-			log.debug("Message could not be deserialized to a JsonObject.");
-		}
+		JsonObject json = jsonb.fromJson(payload, JsonObject.class);
+		if (json == null)
+			throw new DebugException("Outgoing message could not be deserialized to json");
+		if (!json.containsKey("token"))
+			throw new DebugException("Outgoing message must have a token");
 
 		// create metadata for correct bridge if outgoing
 		OutgoingKafkaRecordMetadata<String> metadata = OutgoingKafkaRecordMetadata.<String>builder()
@@ -96,6 +88,7 @@ public class KafkaBean implements KafkaInterface {
 				break;
 			case "genny_data":
 				producer.getToGennyData().send(payload);
+				break;
 			case "search_events":
 				producer.getToSearchEvents().send(payload);
 				break;

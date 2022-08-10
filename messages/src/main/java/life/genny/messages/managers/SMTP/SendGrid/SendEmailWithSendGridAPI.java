@@ -28,6 +28,7 @@ public class SendEmailWithSendGridAPI {
             String requestBody = mail.toString();
 //            System.out.println("####### requestBody: " + requestBody);
 
+            // TODO: Proper response logging
             HttpResponse<String> httpResponse = HttpUtils.post(path, requestBody, apiKey);
             if (httpResponse != null) {
                 int statusCode = httpResponse.statusCode();

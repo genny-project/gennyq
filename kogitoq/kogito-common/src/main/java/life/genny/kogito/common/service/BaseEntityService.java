@@ -13,8 +13,10 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.exception.GennyException;
+import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -47,41 +49,30 @@ public class BaseEntityService {
 
 	public String commission(String definitionCode) {
 
-		if (definitionCode == null || !definitionCode.startsWith("DEF_")) {
-			log.error("Invalid definitionCode: " + definitionCode);
-			return null;
-		}
+		if (definitionCode == null)
+			throw new NullParameterException("definitionCode");
+		if (!definitionCode.startsWith("DEF_"))
+			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity
-		BaseEntity def = beUtils.getBaseEntityByCode(definitionCode);
-		if(def == null) {
-			log.error("Could not find DEF BaseEntity with code: " + definitionCode);
-		}
+		BaseEntity def = beUtils.getBaseEntity(definitionCode);
 
 		// use entity create function and save to db
-		try {
-			BaseEntity entity = beUtils.create(def);
-			log.info("BaseEntity Created: " + entity.getCode());
+		BaseEntity entity = beUtils.create(def);
+		log.info("BaseEntity Created: " + entity.getCode());
 
-			return entity.getCode();
+		entity.setStatus(EEntityStatus.PENDING);
+		beUtils.updateBaseEntity(entity);
 
-		} catch (Exception e) {
-			log.error("Error creating BaseEntity! DEF Code: " + definitionCode);
-			e.printStackTrace();
-		}
-
-		return null;
+		return entity.getCode();
 	}
 
 	public void decommission(String code) {
 
-		BaseEntity baseEntity = beUtils.getBaseEntityByCode(code);
+		if (code == null)
+			throw new NullParameterException("code");
 
-		if (baseEntity == null) {
-			log.error("BaseEntity " + code + " is null!");
-			return;
-		}
-
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
 		log.info("Decommissioning entity " + baseEntity.getCode());
 
 		// archive the entity
@@ -89,18 +80,20 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(baseEntity);
 	}
 
+	public void setActive(String entityCode) {
+
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		entity.setStatus(EEntityStatus.ACTIVE);
+		beUtils.updateBaseEntity(entity);
+	}
+
 	public String getDEFPrefix(String definitionCode) {
 
-		BaseEntity definition = beUtils.getBaseEntityByCode(definitionCode);
-
-		if (definition == null) {
-			log.error("No definition exists with code " + definitionCode);
-			return null;
-		}
+		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
 
 		Optional<String> prefix = definition.getValue("PRI_PREFIX");
 		if (prefix.isEmpty()) {
-			throw new GennyException("definition " + definition.getCode() + " has no prefix attribute!");
+			throw new NullParameterException(definition.getCode() + ":PRI_PREFIX");
 		}
 
 		return prefix.get();
@@ -108,11 +101,11 @@ public class BaseEntityService {
 
 	public String getBaseEntityQuestionGroup(String targetCode) {
 
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
 
 		if (definition == null) {
-			throw new GennyException("No definition for target " + target);
+			throw new NullParameterException("DEF:" + targetCode);
 		}
 
 		return CommonUtils.replacePrefix(definition.getCode(), "QUE");
@@ -123,7 +116,7 @@ public class BaseEntityService {
 	 */
 	public void updateKeycloak(String userCode) {
 
-		BaseEntity user = beUtils.getBaseEntityByCode(userCode);
+		BaseEntity user = beUtils.getBaseEntity(userCode);
 		String email = user.getValue("PRI_EMAIL", null);
 		String firstName = user.getValue("PRI_FIRSTNAME", null);
 		String lastName = user.getValue("PRI_LASTNAME", null);
@@ -138,35 +131,24 @@ public class BaseEntityService {
 	}
 
 	/**
-	 * Mere a process entity into another entity
+	 * Merge a process entity into another entity
 	 */
-	public void mergeFromProcessEntity(String entityCode, String processBEJson) {
+	public void mergeFromProcessEntity(String entityCode, String processJson) {
 
-		BaseEntity entity = beUtils.getBaseEntityByCode(entityCode);
-		BaseEntity processBE = jsonb.fromJson(processBEJson, BaseEntity.class);
+		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		BaseEntity processEntity = processData.getProcessEntity();
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 
 		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : processBE.getBaseEntityAttributes()) {
+		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
 
 			if (ea.getAttribute() == null) {
-				log.warn("Attribute is null, fetching " + ea.getAttributeCode());
-
+				log.debug("Attribute is null, fetching " + ea.getAttributeCode());
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
-			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is NULL");
-			}
-
 			ea.setBaseEntity(entity);
-			if (ea.getPk().getBaseEntity() == null) {
-				log.info("Attribute: " + ea.getAttributeCode() + ", ENTITY is STILLLLLLL NULL");
-			}
-			try {
-				entity.addAttribute(ea);
-			} catch (BadDataException e) {
-				e.printStackTrace();
-			}
+			entity.addAttribute(ea);
 		}
 
 		// save these answrs to db and cache

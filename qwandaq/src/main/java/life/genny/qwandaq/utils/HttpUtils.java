@@ -3,8 +3,12 @@ package life.genny.qwandaq.utils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.net.http.HttpResponse;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -12,7 +16,10 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 /**
  * A Static utility class for standard HTTP requests.
@@ -41,6 +48,39 @@ public class HttpUtils {
 	}
 
 	/**
+	 * Log a set of {@link HttpHeaders}
+	 * @param level - the log level to log at (default: info)
+	 * @param headers - the headers to log
+	 */
+	public static void logHeaders(FILogCallback level, HttpHeaders headers) {
+		Map<String, List<String>> headerMap = headers.map();
+		headerMap.keySet().stream().forEach((key) -> {
+			List<String> values = headerMap.get(key);
+			String valueString = values.stream()
+			.collect(Collectors.joining(", ", "[", "]"));
+
+			level.log(key + ": " + valueString);
+		});
+	}
+
+	/**
+	 * Log a set of {@link HttpHeaders} to the info log level
+	 * @param log - the logger to log from
+	 * @param headers - the headers to log
+	 */
+	public static void logHeaders(Logger log, HttpHeaders headers) {
+		logHeaders(log::info, headers);
+	}
+
+	/**
+	 * Log a set of {@link HttpHeaders} to the {@link HttpUtils#log} level
+	 * @param headers - the headers to log
+	 */
+	public static void logHeaders(HttpHeaders headers) {
+		logHeaders(log, headers);
+	}
+
+	/**
 	 * Create and send a PUT request.
 	 *
 	 * @param uri   The target URI of the request.
@@ -52,8 +92,6 @@ public class HttpUtils {
 	@Deprecated
 	public static HttpResponse<String> put(String uri, String body, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
@@ -61,14 +99,20 @@ public class HttpUtils {
 				.PUT(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 
+		HttpResponse<String> response = null;
 		try {
-			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 			return response;
 		} catch (IOException | InterruptedException e) {
-			log.error(e);
+			throw GennyResponseException.newBuilder(uri)
+						.setRequestBody(body)
+						.setToken(token)
+						.setRequestType("PUT")
+						.includeRequest(request)
+						.fromHttpResponse(response)
+						.setAssociatedException(e)
+						.build();
 		}
-
-		return null;
 	}
 
 	/**
@@ -132,11 +176,7 @@ public class HttpUtils {
 	@Deprecated
 	public static java.net.http.HttpResponse<String> post(String uri, String body, String contentType, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
-		Builder requestBuilder = null;
-
-		requestBuilder = HttpRequest.newBuilder()
+		Builder requestBuilder = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", contentType);
 
@@ -147,18 +187,20 @@ public class HttpUtils {
 		HttpRequest request = requestBuilder
 				.POST(HttpRequest.BodyPublishers.ofString(body))
 				.build();
-
+		
+		HttpResponse<String> response = null;
 		try {
-			return client.send(request, HttpResponse.BodyHandlers.ofString());
+			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return response;
 		} catch (IOException | InterruptedException e) {
-			log.error("Error getting response back from " + uri);
-			e.printStackTrace();
-
-			log.error("Null response from: " + uri);
-			log.error("Payload: " + body);
-			log.error("Token: " + (token != null ? token : "null"));
-	
-			return null;
+			throw GennyResponseException.newBuilder(uri)
+						.setRequestBody(body)
+						.setToken(token)
+						.setRequestType("POST")
+						.includeRequest(request)
+						.fromHttpResponse(response)
+						.setAssociatedException(e)
+						.build();
 		}
 	}
 
@@ -186,21 +228,25 @@ public class HttpUtils {
 	@Deprecated
 	public static HttpResponse<String> get(String uri, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
 				.GET().build();
 
+		HttpResponse<String> response = null;
 		try {
-			return  client.send(request, HttpResponse.BodyHandlers.ofString());
+			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return response;
 		} catch (IOException | InterruptedException e) {
-			log.error(e);
+			throw GennyResponseException.newBuilder(uri)
+						.setToken(token)
+						.setRequestType("GET")
+						.includeRequest(request)
+						.fromHttpResponse(response)
+						.setAssociatedException(e)
+						.build();
 		}
-
-		return null;
 	}
 
 	/**
@@ -227,22 +273,25 @@ public class HttpUtils {
 	@Deprecated
 	public static HttpResponse<String> delete(String uri, String token) {
 
-		HttpClient client = HttpClient.newHttpClient();
-
 		HttpRequest request = HttpRequest.newBuilder()
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
 				.DELETE().build();
 
-		try {
-			HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-			return response;
-		} catch (IOException | InterruptedException e) {
-			log.error(e);
-		}
-
-		return null;
+				HttpResponse<String> response = null;
+				try {
+					response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+					return response;
+				} catch (IOException | InterruptedException e) {
+					throw GennyResponseException.newBuilder(uri)
+								.setToken(token)
+								.setRequestType("DELETE")
+								.includeRequest(request)
+								.fromHttpResponse(response)
+								.setAssociatedException(e)
+								.build();
+				}
 	}
 
 	/**
@@ -316,11 +365,8 @@ public class HttpUtils {
 	 * - The authorization parameter only has token
 	 * - The authorization parameter starts with bearer and join by space with a
 	 * token
-	 *
-	 *
 	 * @param authorization Value of the authorization header normally with this
 	 *                      format: Bearer eydsMSklo30...
-	 *
 	 * @return token Token extracted or the same token if nothing found to extract
 	 */
 	public static GennyToken extractGennyTokenFromHeaders(String authorization) {
@@ -330,19 +376,15 @@ public class HttpUtils {
 	/**
 	 * Create a URI object from a uri string.
 	 * TODO: Need to work on this more.
-	 *
 	 * @param uri The uri string
 	 * @return A URI object
 	 */
 	private static URI createURI(String uri) throws IllegalArgumentException {
 		try {
-			log.info("Creating uri: " + uri);
+			log.info("Creating URI: " + uri);
 			return URI.create(uri);
 		} catch(IllegalArgumentException e) {
-			log.error("Bad Uri: [" + uri + "]");
-			e.printStackTrace();
-			// pass it further down the chain
-			throw e;
+			throw new GennyRuntimeException("Bad Uri: [" + uri + "]", e) {};
 		}
 	}
 }

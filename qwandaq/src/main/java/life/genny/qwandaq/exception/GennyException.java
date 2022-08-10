@@ -1,18 +1,18 @@
 package life.genny.qwandaq.exception;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Arrays;
-import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
-
-import static life.genny.qwandaq.constants.GennyConstants.PACKAGE_PREFIX;
 
 /**
  * Custom Genny System exception to identify 
  * common issues within the logic.
+ *
+ * @author Bryn Meachem
+ * @author Jasper Robison
  */
-public class GennyException extends RuntimeException {
+public abstract class GennyException extends Exception implements GennyExceptionIntf {
+
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     
     public GennyException() {
@@ -27,40 +27,7 @@ public class GennyException extends RuntimeException {
         super(errorMessage, err);
     }
 
-    @Override
     public void printStackTrace() {
-        printStackTrace(false);
+        this.printGennyStackTrace(this, true);
     }
-
-    /**
-     * Print a non verbose stack trace of the exception (only lines from gennyq, unless no lines are present)
-     * @param verbose
-     */
-    public void printStackTrace(Boolean verbose) {
-        log.error("[!] " + this.getMessage());
-		
-        if(verbose) {
-            super.printStackTrace();
-            return;
-        }
-
-        StackTraceElement[] stack = this.getStackTrace();
-        
-        Stream<StackTraceElement> elementStream = Arrays.asList(stack).stream();
-        
-        Boolean hasNonVerboseElements = elementStream.anyMatch(element -> element.getClassName().startsWith(PACKAGE_PREFIX));
-        
-        // If there is nothing to print, print verbose
-        if(!hasNonVerboseElements) {
-            this.printStackTrace(true);
-            return;
-        }
-        
-        elementStream.forEach(element -> {
-            String line = "on " + element.getModuleName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
-            if(element.getClassName().startsWith(PACKAGE_PREFIX))
-                log.error(line);
-            else log.debug(line);
-        });
-	}
 }

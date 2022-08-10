@@ -1,14 +1,14 @@
 package life.genny.bridge.live.data;
 
 import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import java.util.UUID;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import io.vertx.core.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import life.genny.bridge.blacklisting.BlackListInfo;
@@ -26,8 +26,9 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
+
+
+
 
 /**
  * ExternalConsumer --- External clients can connect to the endpoint configured in {@link
@@ -45,7 +46,9 @@ public class ExternalConsumer {
 
 	@Inject RoleBasedPermission permissions;
 	@Inject BlackListInfo blacklist;
-	@Inject Service service;
+	@Inject
+	Service service;
+	
 
 	@ConfigProperty(name = "bridge.id", defaultValue = "false")
 	String bridgeId;
@@ -186,6 +189,8 @@ public class ExternalConsumer {
 	 * @param gennyToken the users GennyToken
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
+		// JsonObject nonTokenBody = (JsonObject) body.remove("token");
+		
 
 		log.info("Incoming Payload = " + body.toString());
 
@@ -197,6 +202,7 @@ public class ExternalConsumer {
 		String msgType = body.getString("msg_type");
 		String productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES");
 		String topicName = "";
+		String payload = body.toString();
 
 		if (msgType.equals("DATA_MSG")) {
 			if (!StringUtils.isEmpty(productCodes)) {
@@ -204,23 +210,50 @@ public class ExternalConsumer {
 			} else {
 				topicName = "genny_data";
 			}
+			// publish message
+			KafkaUtils.writeMsg(topicName, payload);
+
+			// Now send back to the originating frontend so they know we got it.
+			// TODO
+
 		} else if (msgType.equals("EVT_MSG")) {
 			if (!StringUtils.isEmpty(productCodes)) {
 				topicName = "events";
 			} else {
 				topicName = "genny_events";
-				topicName = "events";
 			}
+			// publish message
+			KafkaUtils.writeMsg(topicName, payload);
 		}
 
-		// publish message
-		String payload = body.toString();
-		KafkaUtils.writeMsg(topicName, payload);
+		
+		
+		
 
 		// remove token from log for security purposes
 		body.remove("token");
 		payload = body.toString();
 		log.info("Sent payload "+payload+" from user " + gennyToken.getUserCode() + " to topic "+topicName);
+	}
+
+	/**
+	 * It checks that no confidential information has been leaked. It will delete the key properties
+	 * if it finds any
+	 *
+	 * @param json A JsonObject
+	 * @return A JsonObject without the confidential key properties
+	 */
+	public static JsonObject removeKeys(final JsonObject json) {
+
+		if (json.containsKey("token")) {
+			json.remove("token");
+		}
+
+		if (json.containsKey("recipientCodeArray")) {
+			json.remove("recipientCodeArray");
+		}
+
+		return json;
 	}
 
 }

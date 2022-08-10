@@ -19,7 +19,8 @@ package life.genny.qwandaq;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
@@ -30,6 +31,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+<<<<<<< HEAD
+=======
+import java.io.Serializable;
+>>>>>>> 10.1.0
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collections;

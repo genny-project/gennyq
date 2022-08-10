@@ -17,7 +17,11 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+<<<<<<< HEAD
 import life.genny.qwandaq.serialization.common.key.cache.CacheKey;
+=======
+import life.genny.qwandaq.graphql.ProcessQuestions;
+>>>>>>> 10.1.0
 
 /*
  * A non-static utility class used for operations regarding the GraphQL data-index.
@@ -104,7 +108,11 @@ public class GraphQLUtils {
 			log.error("No data field found in: " + body);
 			return null;
 		}
-		return dataObj.getJsonArray(table);
+		if (dataObj.containsKey(table))
+			return dataObj.getJsonArray(table);
+
+		log.warnf("No table %s found in %s", table, body);
+		return null;
 	}
 
 	/**
@@ -126,7 +134,7 @@ public class GraphQLUtils {
         String query = String.format("query { %s ( where: { %s }){ %s }}", 
 				table, queryFields, String.join(" ", returns));
 
-		log.debug("GraphQL Query: " + query);
+		log.info("GraphQL Query: " + query);
 
         String uri = GennySettings.dataIndexUrl() + "/graphql";
         HttpResponse<String> response = HttpUtils.post(uri, query, "application/GraphQL", userToken);
@@ -160,6 +168,41 @@ public class GraphQLUtils {
 		CacheUtils.putObject(CacheName.METADATA, targetCodeKey, targetCode);
 
 		return targetCode;
+	}
+
+	/**
+	 * Fetch the targetCode stored in the processInstance 
+	 * for the given processId.
+	 * @param processId The id of the process to fetch for
+	 * @return The process data
+	 */
+	public ProcessQuestions fetchProcessData(String processId) {
+
+		log.info("Fetching processBE for processId : " + processId);
+		String key = String.format("%s:PROCESS_DATA", processId); 
+
+		// check cache first
+		ProcessQuestions processData = CacheUtils.getObject(userToken.getProductCode(), key, ProcessQuestions.class);
+		if (processData != null) {
+			return processData;
+		}
+
+		// otherwise query graphql
+		JsonArray array = queryTable("ProcessInstances", "id", processId, "variables");
+		if (array.isEmpty()) {
+			log.error("Nothing found for processId: " + processId);
+			return null;
+		}
+
+		// grab json and deserialise
+		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
+		String processJson = variables.getString("processJson");
+		processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+
+		// cache the object for quicker retrieval
+		CacheUtils.putObject(userToken.getProductCode(), key, processData);
+
+		return processData;
 	}
 
 }

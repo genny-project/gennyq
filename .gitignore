@@ -6,12 +6,14 @@ target/
 **/.classpath
 **/.factorypath
 **/.project
-
+scripts/event.json
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
 pom.xml.next
-
+.project
+.classpath
+.factorypath
 kogitoq/gadaq/scripts/msg.json
 
 release.properties
@@ -23,3 +25,10 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 !**/.vscode/launch.json
+# IntelliJ
+*.iml
+*idea/
+.DS_Store
+/*.project
+/*.factorypath
+/*.classpath

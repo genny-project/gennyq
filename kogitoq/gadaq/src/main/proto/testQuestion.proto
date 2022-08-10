@@ -1,0 +1,49 @@
+syntax = "proto2"; 
+package life.genny.gadaq.testQuestion; 
+import "kogito-index.proto";
+import "kogito-types.proto";
+option kogito_model = "TestQuestion";
+option kogito_id = "testQuestion";
+
+/* @Indexed */ 
+message S2SData { 
+	option java_package = "life.genny.kogito.common.models";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string events = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string pcmCode = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string questionCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string sourceCode = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string targetCode = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 6; 
+}
+/* @Indexed */ 
+message TestQuestion { 
+	option java_package = "life.genny.gadaq";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional S2SData data = 1; 
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
+	optional string id = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string pcmCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string questionCode = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string sourceCode = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string targetCode = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string userCode = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 8; 
+}

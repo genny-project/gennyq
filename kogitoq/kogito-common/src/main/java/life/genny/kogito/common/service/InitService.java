@@ -27,6 +27,7 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
 
 /**
@@ -61,6 +62,9 @@ public class InitService {
 
 	@Inject
 	GraphQLUtils gqlUtils;
+
+	@Inject
+	SearchUtils searchUtils;
 
 	/**
 	 * Send the Project BaseEntity.
@@ -135,7 +139,7 @@ public class InitService {
 
 		searchBE.setRealm(productCode);
 		searchBE.setPageSize(1000);
-		List<BaseEntity> pcms = beUtils.getBaseEntitys(searchBE);
+		List<BaseEntity> pcms = searchUtils.searchBaseEntitys(searchBE);
 		if (pcms == null) {
 			log.info("No PCMs found for " + productCode);
 			return;
@@ -194,6 +198,8 @@ public class InitService {
 	 * Send Outstanding Tasks
 	 */
 	public void sendOutstandingTasks() {
+
+		// TODO: allow this to check for internal gadaq processQuestions too
 
 		// we store the summary code in the persons lifecycle
 		JsonArray array = gqlUtils.queryTable("ReceiveQuestionRequest", "sourceCode", userToken.getUserCode(), "id");

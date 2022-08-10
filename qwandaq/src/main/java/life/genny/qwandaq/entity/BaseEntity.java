@@ -52,7 +52,8 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -60,11 +61,6 @@ import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
-
-
-
-// import org.hibernate.annotations.CascadeType;
-
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the

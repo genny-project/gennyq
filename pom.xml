@@ -26,8 +26,8 @@
     <!-- Quarkus Properties -->
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>2.10.2.Final</quarkus.platform.version>
-    <quarkus-plugin.version>2.10.2.Final</quarkus-plugin.version>
+    <quarkus.platform.version>2.10.4.Final</quarkus.platform.version>
+    <quarkus-plugin.version>2.10.4.Final</quarkus-plugin.version>
 
     <!-- Maven Properties -->
     <maven.version>3.8.1</maven.version>
@@ -52,7 +52,7 @@
     <jandex.version>1.0.7</jandex.version>
     <jjwt.version>0.7.0</jjwt.version>
 
-    <querydsl.version>4.4.0</querydsl.version>
+    <querydsl.version>5.0.0</querydsl.version>
     <testcontainers.version>1.17.0</testcontainers.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -67,14 +67,14 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <!-- kogito -->
-    <kogito.version>1.24.0.Final</kogito.version>
+    <kogito.version>1.25.0.Final</kogito.version>
     <kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
     <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
-    <kogito.bom.version>1.24.0.Final</kogito.bom.version>
-    <version.org.optaplanner>8.24.0.Final</version.org.optaplanner>
+    <kogito.bom.version>1.25.0.Final</kogito.bom.version>
+    <version.org.optaplanner>8.25.0.Final</version.org.optaplanner>
 
     <!-- drools -->
-    <version.org.drools>8.24.0.Beta</version.org.drools>
+    <version.org.drools>8.25.0.Beta</version.org.drools>
     <!-- override default to fast-jar packaging for forward-compatibility -->
     <quarkus.package.type>fast-jar</quarkus.package.type>
     <!-- dependencies version -->

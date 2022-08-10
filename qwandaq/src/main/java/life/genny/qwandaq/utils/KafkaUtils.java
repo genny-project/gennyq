@@ -2,14 +2,13 @@ package life.genny.qwandaq.utils;
 
 import java.io.Serializable;
 
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import life.genny.qwandaq.intf.KafkaInterface;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
+
+import life.genny.qwandaq.exception.runtime.NotInitializedException;
+import life.genny.qwandaq.intf.KafkaInterface;
 
 /*
  * A static utility class used for standard 
@@ -41,65 +40,29 @@ public class KafkaUtils implements Serializable {
 	 */
 	public static void writeMsg(String channel, Object payload) {
 
-		String json = null;
-
-		if (payload instanceof JsonObject) {
-			JsonObject jsonObject = (JsonObject) payload;
-			if (jsonObject.containsKey("tag")) {
-				if (StringUtils.isBlank(jsonObject.getString("tag"))) {
-					String callerName = getCallerMethodName();
-					json = javax.json.Json.createObjectBuilder(jsonObject).add("tag", callerName).build().toString();
-				} else {
-					json = jsonb.toJson(payload);
-				}
-			} else {
-				json = jsonb.toJson(payload);
-			}
-		} else if (payload instanceof QDataBaseEntityMessage) {
-			QDataBaseEntityMessage msg = (QDataBaseEntityMessage) payload;
-			String callerName = getCallerMethodName();
-			msg.setTag(callerName);
-			// jsonify the payload and write
-			json = jsonb.toJson(msg);
-		} else {
-			// jsonify the payload and write
-			json = jsonb.toJson(payload);
-		}
-
-		writeMsg(channel, json);
+		writeMsg(channel, jsonb.toJson(payload));
 	}
 
 	/**
-	 * Write a String to a kafka channel as a payload
-	 *
+	 * Write a String to a kafka channel as a payload.
 	 * @param channel the channel to send to
 	 * @param payload the payload to send
 	 */
 	public static void writeMsg(String channel, String payload) {
 
-		if (payload == null) {
-			log.error("Payload is null");
-			return;
-		}
-		if (!checkInterface()) {
-			return;
-		}
-		if (channel.isBlank()) {
-			log.error("Channel is blank, cannot send payload!");
-			return;
-		}
 		// write to kafka channel through interface
+		checkInterface();
 		kafkaInterface.write(channel, payload);
 	}
 
-	private static Boolean checkInterface() {
+	/**
+	 * Check if the kafkaInterface is initialized.
+	 */
+	private static void checkInterface() {
 
 		if (kafkaInterface == null) {
-			log.error("KafkaUtils not initialised! Initialise with: KafkaUtils.init(KafkaInterface)");
-			return false;
+			throw new NotInitializedException("KafkaUtils not initialised!");
 		}
-
-		return true;
 	}
 
 	public static String getCurrentMethodName() {

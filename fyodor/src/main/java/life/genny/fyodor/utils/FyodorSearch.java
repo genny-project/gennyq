@@ -36,13 +36,16 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.QEntityAttribute;
+<<<<<<< HEAD
 import life.genny.qwandaq.constants.CacheName;
 import life.genny.qwandaq.datatype.DataType;
+=======
+>>>>>>> 10.1.0
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
@@ -131,8 +134,8 @@ public class FyodorSearch {
 
 					// Filter unwanted attributes
 					if (columnWildcard == null) {
-						be = privacyFilter(be, allowed);
-						be = handleSpecialAttributes(be, allowed);
+						be = beUtils.addNonLiteralAttributes(be);
+						be = beUtils.privacyFilter(be, allowed);
 					}
 
 					for (EntityAttribute calEA : cals) {
@@ -611,10 +614,10 @@ public class FyodorSearch {
 
 					BaseEntity be = entities.get(i);
 
+					be = beUtils.addNonLiteralAttributes(be);
 					if (!columnWildcard) {
-						be = privacyFilter(be, allowed);
+						be = beUtils.privacyFilter(be, allowed);
 					}
-					be = handleSpecialAttributes(be, allowed);
 
 					be.setIndex(i);
 					beArray[i] = be;
@@ -686,7 +689,7 @@ public class FyodorSearch {
 	 */
 	public static Predicate getAttributeSearchColumn(EntityAttribute ea, QEntityAttribute entityAttribute) {
 
-		String attributeFilterValue = ea.getValue().toString();
+		String attributeFilterValue = ea.getAsString();
 		String condition = SearchEntity.convertFromSaveable(ea.getAttributeName());
 		log.info(ea.getAttributeCode() + " " + condition + " " + attributeFilterValue);
 
@@ -1010,65 +1013,6 @@ public class FyodorSearch {
 		}
 		attributeFilter.addAll(assocAttributeFilter);
 		return attributeFilter;
-	}
-
-	public static BaseEntity privacyFilter(BaseEntity be, List<String> allowed) {
-
-		// Filter out unwanted attributes
-		be.setBaseEntityAttributes(
-				be.getBaseEntityAttributes()
-						.stream()
-						.filter(x -> allowed.contains(x.getAttributeCode()))
-						.collect(Collectors.toSet()));
-
-		return be;
-	}
-
-	public static BaseEntity handleSpecialAttributes(BaseEntity be, List<String> allowed) {
-
-		try {
-			// Handle Created and Updated attributes
-			if (allowed.contains("PRI_CREATED")) {
-				Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
-				EntityAttribute created = new EntityAttribute(be, createdAttr, 1.0);
-				created.setValueDateTime(be.getCreated());
-				be.addAttribute(created);
-			}
-			if (allowed.contains("PRI_CREATED_DATE")) {
-				Attribute createdAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
-				EntityAttribute created = new EntityAttribute(be, createdAttr, 1.0);
-				created.setValueDate(be.getCreated().toLocalDate());
-				be.addAttribute(created);
-			}
-			if (allowed.contains("PRI_UPDATED")) {
-				Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
-				EntityAttribute updated = new EntityAttribute(be, updatedAttr, 1.0);
-				updated.setValueDateTime(be.getUpdated());
-				be.addAttribute(updated);
-			}
-			if (allowed.contains("PRI_UPDATED_DATE")) {
-				Attribute updatedAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
-				EntityAttribute updated = new EntityAttribute(be, updatedAttr, 1.0);
-				updated.setValueDate(be.getUpdated().toLocalDate());
-				be.addAttribute(updated);
-			}
-			if (allowed.contains("PRI_CODE")) {
-				Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
-				EntityAttribute code = new EntityAttribute(be, codeAttr, 1.0);
-				code.setValueString(be.getCode());
-				be.addAttribute(code);
-			}
-			if (allowed.contains("PRI_NAME")) {
-				Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
-				EntityAttribute name = new EntityAttribute(be, nameAttr, 1.0);
-				name.setValueString(be.getName());
-				be.addAttribute(name);
-			}
-		} catch (BadDataException e) {
-			log.error("could not add special attributes to entity");
-		}
-
-		return be;
 	}
 
 	public Answer getAssociatedColumnValue(BaseEntity baseBE, String calEACode) {

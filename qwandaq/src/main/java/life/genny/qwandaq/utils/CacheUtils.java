@@ -107,11 +107,18 @@ public class CacheUtils {
 	 */
 	public static <T> T getObject(CacheName cacheName, CacheKeyIntf key, Class<T> c) {
 
+<<<<<<< HEAD
 		log.debug("Cache Realm is " + cacheName.cacheName);
 
 		String data = (String) readCache(cacheName, key);
+=======
+		log.trace("Cache Realm is " + realm);
+
+		String data = (String) readCache(realm, key);
+		log.trace("key: " + key + ", data: " + data);
+
+>>>>>>> 10.1.0
 		if (StringUtils.isEmpty(data)) {
-			log.debug("key: " + key + ", data: " + data);
 			return null;
 		}
 
@@ -148,7 +155,12 @@ public class CacheUtils {
 	public static void putObject(CacheName cacheName, CacheKeyIntf key, Object obj) {
 
 		String json = jsonb.toJson(obj);
+<<<<<<< HEAD
 		cache.getRemoteCache(cacheName).put(key, json);
+=======
+		cache.getRemoteCache(realm).put(key, json);
+		log.trace("Caching: [" + realm + ":" + key + "]=" + obj);
+>>>>>>> 10.1.0
 	}
 
 	/**
