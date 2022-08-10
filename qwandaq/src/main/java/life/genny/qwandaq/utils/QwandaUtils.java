@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,7 +18,6 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -38,7 +35,6 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.UniquePair;
 import life.genny.qwandaq.models.UserToken;
 
 /**
@@ -421,6 +417,7 @@ public class QwandaUtils {
 			ask.setDisabled(disabled);
 		}
 
+
 		// recursively check child asks for submit
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
@@ -602,104 +599,6 @@ public class QwandaUtils {
 		askMsg.setReplace(true);
 		String json = jsonb.toJson(askMsg);
 		KafkaUtils.writeMsg("webcmds", json);
-	}
-
-	/**
-	 * Send an updated entity for each unique target in answers.
-	 *
-	 * @param answers the answers to send entities for
-	 */
-	public void sendToFrontEnd(Answer... answers) {
-
-		if (answers == null)
-			throw new NullParameterException("answers");
-
-		String productCode = userToken.getProductCode();
-
-		// sort answers into target BaseEntitys
-		Map<String, List<Answer>> answersPerTargetCodeMap = Stream.of(answers)
-				.collect(Collectors.groupingBy(Answer::getTargetCode));
-
-		for (String targetCode : answersPerTargetCodeMap.keySet()) {
-
-			// find the baseentity
-			BaseEntity target = CacheUtils.getObject(productCode, targetCode, BaseEntity.class);
-			if (target != null) {
-
-				BaseEntity be = new BaseEntity(target.getCode(), target.getName());
-				be.setRealm(userToken.getProductCode());
-
-				for (Answer answer : answers) {
-
-					try {
-						Attribute att = getAttribute(answer.getAttributeCode());
-						be.addAttribute(att);
-						be.setValue(att, answer.getValue());
-					} catch (BadDataException e) {
-						e.printStackTrace();
-					}
-				}
-				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
-				msg.setReplace(true);
-				msg.setToken(userToken.getToken());
-				KafkaUtils.writeMsg("webcmds", msg);
-			}
-		}
-	}
-
-	/**
-	 * Send feedback for answer data. ERROR, WARN, SUSPICIOUS or HINT.
-	 *
-	 * @param answer  the answer to send for
-	 * @param prefix  the prefix to send
-	 * @param message the message to send
-	 */
-	public void sendFeedback(Answer answer, String prefix, String message) {
-
-		// find the baseentity
-		BaseEntity target = CacheUtils.getObject(userToken.getProductCode(), answer.getTargetCode(), BaseEntity.class);
-
-		BaseEntity be = new BaseEntity(target.getCode(), target.getName());
-		be.setRealm(userToken.getProductCode());
-
-		try {
-
-			Attribute att = getAttribute(answer.getAttributeCode());
-			be.addAttribute(att);
-			be.setValue(att, answer.getValue());
-			Optional<EntityAttribute> ea = be.findEntityAttribute(answer.getAttributeCode());
-
-			if (ea.isPresent()) {
-				ea.get().setFeedback(prefix + ":" + message);
-
-				QDataBaseEntityMessage msg = new QDataBaseEntityMessage(be);
-				msg.setReplace(true);
-				msg.setToken(userToken.getToken());
-				KafkaUtils.writeMsg("webcmds", msg);
-			}
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Is the number a valid ABN.
-	 *
-	 * @param abn the abn to check
-	 * @return boolean
-	 */
-	public boolean isValidAbnFormat(final String abn) {
-		if (NumberUtils.isDigits(abn) && abn.length() != 11) {
-			return false;
-		}
-		final int[] weights = { 10, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19 };
-		// split abn number string by digits to get int array
-		int[] abnDigits = Stream.of(abn.split("\\B")).mapToInt(Integer::parseInt).toArray();
-		// reduce by applying weight[index] * abnDigits[index] (NOTE: substract 1 for
-		// the first digit in abn number)
-		int sum = IntStream.range(0, weights.length).reduce(0,
-				(total, idx) -> total + weights[idx] * (idx == 0 ? abnDigits[idx] - 1 : abnDigits[idx]));
-		return (sum % 89 == 0);
 	}
 
 	/**

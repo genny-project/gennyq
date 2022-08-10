@@ -15,8 +15,6 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbException;
-
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -33,11 +31,9 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
@@ -102,18 +98,21 @@ public class InternalConsumer {
 	@Blocking
 	public void getData(String event) {
 
-		// init scope and process msg
 		Instant start = Instant.now();
-		scope.init(event);
-		log.debug("Consumed message: " + event);
-
+		
 		// deserialise message
 		JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
-		JsonObject dataJson = jsonStr.getJsonObject("data");
+	
 
 		if (!jsonStr.getString("event_type").equals("DD")) {
 			return; // TODO: This should not get here?
 		}
+
+		// init scope and process msg
+		scope.init(event);
+		log.debug("Consumed message: " + event);
+
+		JsonObject dataJson = jsonStr.getJsonObject("data");
 
 		// grab necessarry info
 		String attrCode = jsonStr.getString("attributeCode");
@@ -133,6 +132,10 @@ public class InternalConsumer {
 
 		if (!StringUtils.isBlank(processId)) {
 			ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+			if (processData == null) {
+				log.error("Process data not found for processId: " + processId);
+				return;
+			}
 			target = processData.getProcessEntity();
 			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		} else {

@@ -206,4 +206,24 @@ public class ProcessAnswerService {
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
+	/**
+	 * Clear completed or canceled process Cache Entries.
+	 *
+	 * @param productCode 
+	 * @param processBEcode
+	 * @return Boolean existed
+	 */
+	public Boolean clearProcessCacheEntries(String processId,String targetCode) {
+
+		String processEntityCode = "QBE_" + targetCode.substring(4);
+		// clear the raw QUE cached baseentity
+		CacheUtils.removeEntry(userToken.getProductCode(), processEntityCode);
+	
+		// clear the cached process process data object
+		String key = String.format("%s:PROCESS_DATA", processId); 
+		CacheUtils.removeEntry(userToken.getProductCode(), key);
+		log.infof("Cleared caches for %s",processId);
+		return true;
+	}
+
 }

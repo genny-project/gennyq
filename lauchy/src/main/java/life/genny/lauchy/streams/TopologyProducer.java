@@ -189,6 +189,7 @@ public class TopologyProducer {
 
 		// fetch process data from graphql
 		ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+		log.debug("Returned processData for (pid="+processId+")=" + processData);
 		if (processData == null) {
 			log.error("Could not find process instance variables for processId [" + processId + "]");
 			return false;

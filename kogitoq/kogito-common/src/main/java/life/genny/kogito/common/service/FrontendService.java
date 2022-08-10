@@ -26,14 +26,14 @@ import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+
+import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-
-import org.apache.commons.lang3.StringUtils;
 
 @ApplicationScoped
 public class FrontendService {

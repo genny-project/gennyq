@@ -36,7 +36,6 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.QEntityAttribute;
-import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
@@ -683,7 +682,7 @@ public class FyodorSearch {
 	 */
 	public static Predicate getAttributeSearchColumn(EntityAttribute ea, QEntityAttribute entityAttribute) {
 
-		String attributeFilterValue = ea.getValue().toString();
+		String attributeFilterValue = ea.getAsString();
 		String condition = SearchEntity.convertFromSaveable(ea.getAttributeName());
 		log.info(ea.getAttributeCode() + " " + condition + " " + attributeFilterValue);
 

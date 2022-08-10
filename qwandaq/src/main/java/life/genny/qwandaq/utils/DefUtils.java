@@ -133,10 +133,10 @@ public class DefUtils {
 
 		// null/empty check the role attribute
 		if (codes == null) {
-			throw new GennyRuntimeException("Entity " + entity.getCode() + " does not contain LNK_DEF attribute");
+			throw new NullParameterException(entity.getCode() + ":LNK_DEF");
 		}
 		if (codes.isEmpty()) {
-			throw new GennyRuntimeException("LNK_DEF is empty for " + entity.getCode());
+			throw new NullParameterException(entity.getCode() + ":LNK_DEF");
 		}
 
 		// fetch DEF if no merging is needed
