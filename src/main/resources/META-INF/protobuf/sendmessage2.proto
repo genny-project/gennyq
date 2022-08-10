@@ -1,0 +1,28 @@
+syntax = "proto2"; 
+package life.genny.gadaq.sendmessage2; 
+import "kogito-index.proto";
+import "kogito-types.proto";
+option kogito_model = "Sendmessage2";
+option kogito_id = "sendmessage2";
+
+/* @Indexed */ 
+message Map { 
+	option java_package = "java.util";
+}
+/* @Indexed */ 
+message Sendmessage2 { 
+	option java_package = "life.genny.gadaq";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="readonly,input") */ 
+	optional Map ctxMap = 1; 
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
+	optional string id = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input,readonly") */ 
+	optional string recipientBeCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input,readonly") */ 
+	optional string templateCode = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 5; 
+}
