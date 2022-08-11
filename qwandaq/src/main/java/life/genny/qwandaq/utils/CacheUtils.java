@@ -16,6 +16,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
@@ -159,7 +160,7 @@ public class CacheUtils {
 	* @param key The key they item is saved against
 	* @return The CoreEntity returned
 	 */
-	public static CoreEntity getEntity(String cacheName, CoreEntityKey key) {
+	public static CoreEntitySerializable getEntity(String cacheName, CoreEntityKey key) {
 		return cache.getEntityFromCache(cacheName, key);
 	}
 
@@ -171,7 +172,7 @@ public class CacheUtils {
 	* @param entity The CoreEntity to save
 	* @return The CoreEntity being saved
 	 */
-	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
+	public static boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 

@@ -23,6 +23,7 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -34,6 +35,7 @@ import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 
 /**
  * A non-static utility class used for standard
@@ -154,7 +156,10 @@ public class BaseEntityUtils {
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
+		return getBaseEntityByCode(productCode, code, true);
+	}
 
+	private BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
 		if (productCode == null) 
 			throw new NullParameterException("productCode");
 		if (code == null) 
@@ -165,21 +170,21 @@ public class BaseEntityUtils {
 			throw new DebugException("code is empty");
 
 		// check for entity in the cache
-		//  BaseEntityKey key = new BaseEntityKey(productCode, code);
-		//  BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-
-		// NOTE: No more hacks, keep it simple and reliable until infinispan auto updates are working.
+		BaseEntityKey key = new BaseEntityKey(productCode, code);
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+	
 		BaseEntity entity = null;
-		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-			
+		
 		// check in database if not in cache
-		if (entity == null) {			
+		if (baseEntitySerializable == null) {			
 			try {
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}
+		} else {
+			entity = (BaseEntity) baseEntitySerializable.toCoreEntity();
 		}
 
 		return entity;

@@ -53,6 +53,8 @@ import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -1149,6 +1151,20 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			attributeMap = null;
 		}
 
+	}
+
+	@Override
+	public CoreEntitySerializable getCoreEntitySerializable() {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = new life.genny.qwandaq.serialization.baseentity.BaseEntity();
+		baseEntitySerializable.setCode(getCode());
+		baseEntitySerializable.setCreated(getCreated());
+		// baseEntitySerializable.setDtype();
+		baseEntitySerializable.setId(getId());
+		baseEntitySerializable.setName(getName());
+		baseEntitySerializable.setRealm(getRealm());
+		baseEntitySerializable.setStatus(getStatus().getStatus());
+		baseEntitySerializable.setUpdated(getUpdated());
+		return baseEntitySerializable;
 	}
 
 }

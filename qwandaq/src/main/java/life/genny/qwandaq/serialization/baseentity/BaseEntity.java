@@ -2,7 +2,16 @@ package life.genny.qwandaq.serialization.baseentity;
 
 import java.time.LocalDateTime;
 
-public class BaseEntity {
+import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+
+/*
+ * A representation of BaseEntity in the cache
+ * 
+ * @author Varun Shastry
+ */
+public class BaseEntity implements CoreEntitySerializable {
 	
 	private String dtype;
 	
@@ -98,6 +107,20 @@ public class BaseEntity {
 
 	public void setStatus(Integer status) {
 		this.status = status;
+	}
+
+	@Override
+	public CoreEntity toCoreEntity() {
+		life.genny.qwandaq.entity.BaseEntity baseEntity = new life.genny.qwandaq.entity.BaseEntity();
+		baseEntity.setCode(getCode());
+		baseEntity.setCreated(getCreated());
+		// baseEntity.setDtype();
+		baseEntity.setId(getId());
+		baseEntity.setName(getName());
+		baseEntity.setRealm(getRealm());
+		baseEntity.setStatus(EEntityStatus.valueOf(getStatus()));
+		baseEntity.setUpdated(getUpdated());
+		return baseEntity;
 	}
 
 }

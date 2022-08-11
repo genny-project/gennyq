@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
@@ -622,6 +624,12 @@ public class Question extends CodedEntity implements Serializable {
 	 */
 	public void setIcon(String icon) {
 		this.icon = icon;
+	}
+
+	@Override
+	public CoreEntitySerializable getCoreEntitySerializable() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

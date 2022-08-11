@@ -42,6 +42,7 @@ import org.hibernate.annotations.Type;
 
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.converter.StringListConverter;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 /**
  * Validation represents a distinct abstract Validation Representation in the Qwanda library.
@@ -299,5 +300,11 @@ public class Validation extends CodedEntity implements Serializable {
 	 */
 	static public String getDefaultCodePrefix() {
 		return DEFAULT_CODE_PREFIX;
+	}
+
+	@Override
+	public CoreEntitySerializable getCoreEntitySerializable() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -31,7 +31,7 @@ public enum EEntityStatus {
 	}
   
 
-	public EEntityStatus valueOf(Integer value)
+	public static EEntityStatus valueOf(Integer value)
 	{
 		for (EEntityStatus enumValue : EEntityStatus.values()) {
 			if (enumValue.getStatus().equals(value)) {

@@ -40,6 +40,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /**
@@ -292,6 +293,12 @@ public class Attribute extends CodedEntity implements Serializable {
 
 		// Check the id if necessary
 		return checkId ? (other.getId() == getId()) : true;
+	}
+
+	@Override
+	public CoreEntitySerializable getCoreEntitySerializable() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

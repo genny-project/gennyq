@@ -49,6 +49,7 @@ import com.querydsl.core.annotations.QueryExclude;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
 import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
@@ -660,6 +661,12 @@ public class Ask extends CoreEntity {
 		children[children.length - 1] = child;
 
 		setChildAsks(children);
+	}
+
+	@Override
+	public CoreEntitySerializable getCoreEntitySerializable() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
