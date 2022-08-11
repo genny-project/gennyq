@@ -188,4 +188,26 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 		log.info("Saved answers for entity " + entityCode);
 	}
+
+	/**
+	 * Update entityAttributes
+	 */
+	public void updateBaseEntity(String baseEntityCode, String attributeCode, String value) {
+
+		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
+
+		if (attributeCode.startsWith("LNK_")) {
+			// Check if value is in JsonArray format , otherwise wrap it..
+			if (value != null) {
+				if (!value.startsWith("[")) {
+					value = "[\"" + value + "\"]";
+				}
+			}
+		}
+
+		be = beUtils.addValue(be, attributeCode, value);
+
+		beUtils.updateBaseEntity(be);
+	}
+
 }

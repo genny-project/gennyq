@@ -415,7 +415,6 @@ public class QwandaUtils {
 			ask.setDisabled(disabled);
 		}
 
-
 		// recursively check child asks for submit
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
@@ -430,7 +429,7 @@ public class QwandaUtils {
 	 * Send Submit enable/disable.
 	 *
 	 * @param askMessage The ask message representing the questions
-	 * @param enable. Enable the submit button
+	 * @param enable.    Enable the submit button
 	 * @return Boolean representing whether the submit button was enabled
 	 */
 	public Boolean sendSubmit(QDataAskMessage askMessage, Boolean enable) {
@@ -601,10 +600,11 @@ public class QwandaUtils {
 
 	/**
 	 * Check the uniqueness of an answer
-	 * @param target The target entity
-	 * @param definition The definition entity
+	 * 
+	 * @param target        The target entity
+	 * @param definition    The definition entity
 	 * @param attributeCode The code of the attribute
-	 * @param value The value to check
+	 * @param value         The value to check
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
@@ -617,20 +617,55 @@ public class QwandaUtils {
 		}
 
 		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
-		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using " + unique.get().getValue());
+		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using "
+				+ unique.get().getValue());
 
 		String uniqueIndexes = unique.get().getValue();
 		uniqueIndexes = BaseEntityUtils.cleanUpAttributeValue(uniqueIndexes);
 		String[] uniqueArray = uniqueIndexes.split(",");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
+		log.info("Looking for duplicates using prefix: " + prefix);
 		SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix+"_%")
-			.setPageStart(0)
-			.setPageSize(1);
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
+				.setPageStart(0)
+				.setPageSize(1);
 
-		for (String uniqueAttr : uniqueArray) { 
-			searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, value);
+		log.info("Checking all the target data");
+		for (EntityAttribute ea : target.getBaseEntityAttributes()) {
+			log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
+		}
+
+		for (String uniqueAttr : uniqueArray) {
+			if (!uniqueAttr.equals(attributeCode)) {
+				String attrValue = "";
+				if (!target.containsEntityAttribute(uniqueAttr)) {
+					// fetch from original target
+					BaseEntity originalTarget = beUtils.getBaseEntityByCode(
+							definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3)); // leave the '_'
+					attrValue = originalTarget.getValueAsString(uniqueAttr);
+				} else {
+					attrValue = target.getValueAsString(uniqueAttr);
+				}
+
+				if (attrValue.startsWith("[")) {
+					// TODO, do this better to remove the outside square brackets and quotes
+					attrValue = attrValue.substring(1, attrValue.length() - 1);
+					attrValue = attrValue.substring(1, attrValue.length() - 1);
+				}
+				log.info("Checking for duplicate using target attribute: " + uniqueAttr.toString() + " and "
+						+ attrValue);
+				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, attrValue);
+			} else {
+				if (value.startsWith("[")) {
+					// TODO, do this better to remove the outside square brackets and quotes
+					value = value.substring(1, value.length() - 1);
+					value = value.substring(1, value.length() - 1);
+				}
+				log.info("Checking for duplicate using given attribute: " + uniqueAttr.toString() + " and " + value);
+				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, value);
+			}
+
 		}
 
 		searchEntity.setRealm(userToken.getProductCode());
@@ -640,7 +675,8 @@ public class QwandaUtils {
 		if (count == 0)
 			return false;
 
-		// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
+		// if duplicate found then send back the baseentity with the conflicting
+		// attribute and feedback message to display
 		BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
 		msg.setToken(userToken.getToken());
