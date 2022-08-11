@@ -16,9 +16,7 @@
 
 package life.genny.qwandaq;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.json.bind.annotation.JsonbTransient;
@@ -50,7 +48,6 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 
 import life.genny.qwandaq.exception.BadDataException;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
  * object is refered to as a means of requesting information from a source about

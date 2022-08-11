@@ -11,9 +11,9 @@ import org.jboss.logging.Logger;
  * @author Jasper Robison
  * @author Bryn Meachem
  */
-public class GennyRuntimeException extends RuntimeException implements GennyExceptionIntf {
+public abstract class GennyRuntimeException extends RuntimeException implements GennyExceptionIntf {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
+	protected static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
     
     public GennyRuntimeException() {
         super();

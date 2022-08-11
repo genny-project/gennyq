@@ -8,12 +8,12 @@ import static io.restassured.RestAssured.given;
 @QuarkusTest
 public class BridgeTest {
 
-    @Test
-    public void testHelloEndpoint() {
-        given()
-          .when().get("/api/events/init?url=http://localhost:8080")
-          .then()
-             .statusCode(200);
-    }
+    // @Test
+    // public void testHelloEndpoint() {
+    //     given()
+    //       .when().get("/api/events/init?url=http://localhost:8080")
+    //       .then()
+    //          .statusCode(200);
+    // }
 
 }

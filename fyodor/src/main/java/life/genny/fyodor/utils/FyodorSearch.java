@@ -34,14 +34,14 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.QEntityAttribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
@@ -394,7 +394,6 @@ public class FyodorSearch {
 
 				// This should get around the bug that occurs with filter LIKE "%"
 				if (!isAnyStringFilter) {
-
 					query.leftJoin(eaFilterJoin)
 							.on(eaFilterJoin.pk.baseEntity.id.eq(baseEntity.id)
 									.and(eaFilterJoin.attributeCode.eq(joinAttributeCode)));
@@ -683,7 +682,7 @@ public class FyodorSearch {
 	 */
 	public static Predicate getAttributeSearchColumn(EntityAttribute ea, QEntityAttribute entityAttribute) {
 
-		String attributeFilterValue = ea.getValue().toString();
+		String attributeFilterValue = ea.getAsString();
 		String condition = SearchEntity.convertFromSaveable(ea.getAttributeName());
 		log.info(ea.getAttributeCode() + " " + condition + " " + attributeFilterValue);
 

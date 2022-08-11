@@ -13,9 +13,9 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.DebugException;
 import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
@@ -67,6 +67,32 @@ public class BaseEntityService {
 		return entity.getCode();
 	}
 
+	public void delete(String code) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Deleting entity using EEntityStatus" + baseEntity.getCode());
+
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.DELETED);
+		beUtils.updateBaseEntity(baseEntity);
+	}
+
+	public void pendingDelete(String code) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Pending Deleting entity using EEntityStatus" + baseEntity.getCode());
+
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.PENDING_DELETE);
+		beUtils.updateBaseEntity(baseEntity);
+	}
+
 	public void decommission(String code) {
 
 		if (code == null)
@@ -87,13 +113,20 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 	}
 
+	public void setDisabled(String entityCode) {
+
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		entity.setStatus(EEntityStatus.DISABLED);
+		beUtils.updateBaseEntity(entity);
+	}
+
 	public String getDEFPrefix(String definitionCode) {
 
 		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
 
 		Optional<String> prefix = definition.getValue("PRI_PREFIX");
 		if (prefix.isEmpty()) {
-			throw new GennyRuntimeException("definition " + definition.getCode() + " has no prefix attribute!");
+			throw new NullParameterException(definition.getCode() + ":PRI_PREFIX");
 		}
 
 		return prefix.get();
@@ -105,7 +138,7 @@ public class BaseEntityService {
 		BaseEntity definition = defUtils.getDEF(target);
 
 		if (definition == null) {
-			throw new GennyRuntimeException("No definition for target " + target);
+			throw new NullParameterException("DEF:" + targetCode);
 		}
 
 		return CommonUtils.replacePrefix(definition.getCode(), "QUE");

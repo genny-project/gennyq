@@ -1,20 +1,67 @@
 package life.genny.qwandaq.utils;
 
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 /**
  * A few Common Utils to use throughout Genny.
- * 
+ *
  * @author Bryn
  * @author Jasper
  */
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
+
+    /**
+     * Log on a specific log level in a specific log and return an object
+     * @param level - level to log on in the logger
+     * @param msg - message to log
+     * @return msg
+     */
+    public static Object logAndReturn(FILogCallback level, Object msg) {
+        level.log(msg);
+        return msg;
+    }
+
+    /**
+     * Log info and return an object
+     * @param log - log stream to log on (for class specific logs)
+     * @param msg - message to log
+     * @return msg
+     */
+    public static Object logAndReturn(Logger log, Object msg) {
+        log.info(msg);
+        return msg;
+    }
+
+    /**
+     * Prints a list over multiple lines
+     * works well assuming that the toString method of the item is well defined
+     * @param list list to print
+     */
+    public static void printList(List<?> list) {
+        for(Object item : list) {
+            log.info(item);
+        }
+    }
+
+    /**
+     * Prints a map over multiple lines
+     * works well assuming that the toString methods of the keys and values are well defined
+     * @param map map to print
+     */
+    public static void printMap(Map<?, ?> map) {
+        for(Object key : map.keySet()) {
+            log.info(key + "=" + map.get(key));
+        }
+    }
 
     /**
      * Safe-compare two Objects (null-safe)
@@ -46,7 +93,12 @@ public class CommonUtils {
     public static String getSystemEnv(String env, boolean alert) {
         String result = System.getenv(env);
         if(result == null && alert) {
-            log.error("Could not find System Environment Variable: " + env);
+            String msg = "Could not find System Environment Variable: " + env;
+            if(alert) {
+                log.error(msg);
+            } else {
+                log.warn(msg);
+            }
         }
 
         return result;
@@ -101,7 +153,7 @@ public class CommonUtils {
 	public static String replacePrefix(String str, String prefix) {
 
 		if (str.charAt(3) != '_') {
-			throw new GennyRuntimeException(str + " is does not have a valid three character prefix");
+			throw new GennyPrefixException(str + " is does not have a valid three character prefix");
 		}
 		return prefix + str.substring(3);
 	}

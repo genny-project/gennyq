@@ -75,12 +75,10 @@ public class CacheUtils {
 	 * @return returns the newly written value
 	 */
 	public static String writeCache(String realm, String key, String value) {
-		log.info("realm is " + realm);
-		log.info("key is " + key);
+
+		log.infof("realm: %s, key: %s", realm, key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
-		log.info("remoteCache was returned");
 		remoteCache.put(key, value);
-		log.info("cache finished writing for "+realm+" "+key);
 
 		return remoteCache.get(key);
 	}
@@ -107,10 +105,10 @@ public class CacheUtils {
 	 */
 	public static <T> T getObject(String realm, String key, Class<T> c) {
 
-		log.debug("Cache Realm is " + realm);
+		log.debugf("realm: %s, key: %s", realm, key);
 
 		String data = (String) readCache(realm, key);
-		log.debug("key: " + key + ", data: " + data);
+		log.tracef("key: %s, value: %s", key, data);
 
 		if (StringUtils.isEmpty(data)) {
 			return null;
@@ -150,7 +148,7 @@ public class CacheUtils {
 
 		String json = jsonb.toJson(obj);
 		cache.getRemoteCache(realm).put(key, json);
-		log.debug("Caching: [" + realm + ":" + key + "]=" + obj);
+		log.tracef("Caching: [%s:%s]=%s", realm , key, obj);
 	}
 
 	/**

@@ -266,7 +266,7 @@ public class KogitoUtils {
 		try {
 			msg = jsonb.fromJson(event, QEventMessage.class);
 		} catch (Exception e) {
-			log.error("Cannot parse this event!");
+			log.error("Cannot parse this event! "+event);
 			e.printStackTrace();
 			return;
 		}

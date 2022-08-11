@@ -3,7 +3,6 @@ package life.genny.qwandaq.exception;
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.jboss.logging.Logger;
 
@@ -28,7 +27,7 @@ public interface GennyExceptionIntf {
 
         log.error("[!] " + throwable.getMessage());
         if (verbose) {
-            throwable.printStackTrace();
+            throwable.printStackTrace(System.err);
             return;
         }
 
