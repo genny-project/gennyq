@@ -25,6 +25,8 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -524,5 +526,52 @@ public class CapabilityUtils {
 	 */
 	private static String getCacheKey(String roleCode, String capCode) {
 		return roleCode + ":" + capCode;
+	}
+
+	/**
+	 * Get a redirect code for user based on their roles.
+	 * @return The redirect code
+	 * @throws RoleException
+	 */
+	public String getUserRoleRedirectCode() throws RoleException {
+		
+		// grab user role codes
+		BaseEntity user = beUtils.getUserBaseEntity();
+		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, "LNK_ROLE");
+
+		if (roles == null || roles.isEmpty())
+			throw new RoleException(String.format("No roles found for user %s", user.getCode()));
+
+		// TODO: return redirect for roles based on priority
+		for (String role : roles) {
+			try {
+				// return first found redirect
+				return getRoleRedirectCode(role);
+			} catch (RoleException e) {
+				log.debug(e.getMessage());
+			}
+		}
+
+		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+	}
+
+	/**
+	 * Get the redirect code for a role.
+	 * @param roleCode The code of the role
+	 * @return The redirect code
+	 * @throws RoleException
+	 */
+	public String getRoleRedirectCode(String roleCode) throws RoleException {
+		
+		if (roleCode == null)
+			throw new NullParameterException(roleCode);
+
+		// TODO: grab redirect for role
+		String redirectCode = "";
+
+		if (redirectCode == null)
+			throw new RoleException(String.format("No redirect found in role %s", roleCode));
+
+		return redirectCode;
 	}
 }

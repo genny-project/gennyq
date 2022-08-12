@@ -9,17 +9,17 @@ import life.genny.qwandaq.exception.GennyRuntimeException;
  */
 public class NullParameterException extends GennyRuntimeException {
 
-	static String ERR_TEXT = " is null";
+	static String ERR_TEXT = "%s is null";
 
 	public NullParameterException() {
 		super();
 	}
 
 	public NullParameterException(String parameter) {
-		super(parameter + ERR_TEXT);
+		super(String.format(ERR_TEXT, parameter));
 	}
 	
 	public NullParameterException(String parameter, Throwable err) {
-		super(parameter + ERR_TEXT, err);
+		super(String.format(ERR_TEXT, parameter), err);
 	}
 }

@@ -1,32 +1,30 @@
 package life.genny.bridge.live.data;
 
-import io.quarkus.runtime.StartupEvent;
-
-import io.vertx.ext.bridge.BridgeEventType;
-import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import java.util.UUID;
+
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import io.vertx.core.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.StartupEvent;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import life.genny.bridge.blacklisting.BlackListInfo;
-import life.genny.qwandaq.data.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
+import life.genny.qwandaq.session.bridge.BridgeSwitch;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
-import org.apache.commons.lang3.StringUtils;
-
-
-
 
 /**
  * ExternalConsumer --- External clients can connect to the endpoint configured in {@link
@@ -155,9 +153,6 @@ public class ExternalConsumer {
 	Boolean validateMessage(BridgeEvent bridgeEvent) {
 
 		JsonObject rawMessage = bridgeEvent.getRawMessage().getJsonObject("body");
-		if (rawMessage.toString().contains("[{}]")) { // Dummy heartbeat answer
-			return false;
-		}
 		if (rawMessage.toBuffer().length() > 100000) {
 			log.error("message of size "
 					+ rawMessage.toBuffer().length()

@@ -21,10 +21,14 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.session.stack.StackCache;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
@@ -57,27 +61,50 @@ public class NavigationService {
 	@Inject
 	SearchUtils searchUtils;
 
+	@Inject
+	CapabilityUtils capabilityUtils;
+
 	/**
 	 * Trigger the default redirection for the user.
 	 */
-	public void defaultRedirect() {
+	public void redirect() {
 
-		// grab default redirect from user be
-		BaseEntity user = beUtils.getUserBaseEntity();
-		String defaultRedirectCode = user.getValueAsString("PRI_DEFAULT_REDIRECT");
-		log.info("Actioning redirect for user " + user.getCode() + " : " + defaultRedirectCode);
-
-		if (defaultRedirectCode == null) {
-			log.error("User has no default redirect!");
-			return;
+		// pop off the stack of redirects
+		String redirectCode = StackCache.get(userToken);
+		
+		// Otherwise use default role redirect
+		if (redirectCode == null) {
+			try {
+				redirectCode = capabilityUtils.getUserRoleRedirectCode();
+			} catch (RoleException e) {
+				log.warn(e.getMessage());
+			}
 		}
+
+		// Otherwise redirect to dashboard
+		if (redirectCode == null)
+			redirectCode = "QUE_DASHBOARD_VIEW";
+
+		redirect(redirectCode);
+	}
+
+	/**
+	 * Trigger a redirect based on a code.
+	 * @param code
+	 */
+	public void redirect(String code) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+
+		log.infof("Actioning redirect %s for user %s", code, userToken.getUserCode());
 
 		// build json and trigger view workflow
 		JsonObject json = Json.createObjectBuilder()
 				.add("eventMessage", Json.createObjectBuilder()
-						.add("data", Json.createObjectBuilder()
-								.add("code", defaultRedirectCode)
-								.add("targetCode", userToken.getUserCode())))
+					.add("data", Json.createObjectBuilder()
+						.add("code", code)
+						.add("targetCode", userToken.getUserCode())))
 				.build();
 
 		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
