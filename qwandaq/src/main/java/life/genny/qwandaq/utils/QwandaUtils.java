@@ -608,6 +608,10 @@ public class QwandaUtils {
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
+		if (StringUtils.isBlank(value)) {
+			return false;
+		}
+
 		// Check if attribute code exists as a UNQ for the DEF
 		Optional<EntityAttribute> unique = definition.findEntityAttribute("UNQ_" + attributeCode);
 
@@ -625,11 +629,13 @@ public class QwandaUtils {
 		String[] uniqueArray = uniqueIndexes.split(",");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
-		log.info("Looking for duplicates using prefix: " + prefix);
+		log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
 		SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
 				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
 				.setPageStart(0)
 				.setPageSize(1);
+
+		searchEntity.setRealm(target.getRealm());
 
 		log.info("Checking all the target data");
 		for (EntityAttribute ea : target.getBaseEntityAttributes()) {
@@ -655,7 +661,7 @@ public class QwandaUtils {
 				}
 				log.info("Checking for duplicate using target attribute: " + uniqueAttr.toString() + " and "
 						+ attrValue);
-				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, attrValue);
+				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + attrValue + "%");
 			} else {
 				if (value.startsWith("[")) {
 					// TODO, do this better to remove the outside square brackets and quotes
@@ -663,7 +669,7 @@ public class QwandaUtils {
 					value = value.substring(1, value.length() - 1);
 				}
 				log.info("Checking for duplicate using given attribute: " + uniqueAttr.toString() + " and " + value);
-				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, value);
+				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + value + "%");
 			}
 
 		}
@@ -677,12 +683,23 @@ public class QwandaUtils {
 
 		// if duplicate found then send back the baseentity with the conflicting
 		// attribute and feedback message to display
+		// QUE target code needs to be set
 		BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
-		msg.setToken(userToken.getToken());
-		msg.setTag("Duplicate Error");
-		msg.setMessage("Error: This value already exists and must be unique.");
-		KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
+		Optional<EntityAttribute> optEa = target.findEntityAttribute(attributeCode);
+		if (optEa.isPresent()) {
+			String feedback = "Error: This value already exists and must be unique.";
+			EntityAttribute ea = optEa.get();
+			ea.setFeedback(feedback);
+			log.info("Added " + ea);
+			errorBE.addAttribute(ea);
+			QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
+			msg.setToken(userToken.getToken());
+			msg.setTag("Duplicate Error");
+			msg.setReplace(false);
+			msg.setMessage(feedback);
+			KafkaUtils.writeMsg("webcmds", msg);
+			log.debug("Sent duplicate error message to frontend for " + target.getCode());
+		}
 
 		return true;
 	}
