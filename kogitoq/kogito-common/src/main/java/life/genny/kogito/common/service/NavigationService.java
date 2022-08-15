@@ -65,6 +65,7 @@ public class NavigationService {
 
 	@Inject
 	CapabilityUtils capabilityUtils;
+
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
 	/**

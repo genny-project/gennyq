@@ -271,7 +271,8 @@ public class TaskService {
 				Attribute attribute = qwandaUtils.getAttribute(code);
 				Object value = null;
 				// default toggles to false
-				if (attribute.getDataType().getComponent().equals("flag"))
+				String className = attribute.getDataType().getClassName();
+				if (className.contains("Boolean") || className.contains("bool"))
 					value = false;
 
 				return new EntityAttribute(processEntity, attribute, 1.0, value);
