@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonValue;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
@@ -30,6 +32,7 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.HttpUtils;
+import life.genny.qwandaq.exception.checked.GraphQLException;
 
 /*
  * A static utility class used for standard Kogito interactions
@@ -347,6 +350,10 @@ public class KogitoUtils {
 		return answers;
 	}
 
+	/**
+	 * Funnel a list of answers into ProcessQuestions.
+	 * @param answers List of answers
+	 */
 	public void funnelAnswers(List<Answer> answers) {
 		// feed all answers from facts into ProcessQuestions
 		answers.stream()
@@ -363,6 +370,41 @@ public class KogitoUtils {
 				}
 			});
 		return;
+	}
+
+	/**
+	 * Get the processId of an outstanding task in ProcessQuestions.
+	 * @return The processId
+	 */
+	public String getOutstandingTaskProcessId() throws GraphQLException {
+
+		// TODO: allow this to check for internal gadaq processQuestions too
+		// we store the summary code in the persons lifecycle
+		JsonArray array = gqlUtils.queryTable("ReceiveQuestionRequest", "sourceCode", userToken.getUserCode(), "id");
+		if (array == null || array.isEmpty())
+			throw new GraphQLException("No ReceiveQuestionRequest items found");
+
+		// grab ProcessInstances with the parentId equal to this calling id
+		String callProcessId = array.getJsonObject(0).getString("id");
+		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id", "variables");
+		if (array == null || array.isEmpty())
+			throw new GraphQLException("No ProcessInstances items found");
+
+		log.info(array.toString());
+
+		// iterate processInstance tokens
+		for (JsonValue value : array) {
+
+			JsonObject object = value.asJsonObject();
+			JsonObject variables = jsonb.fromJson(object.getString("variables"), JsonObject.class);
+			String status = variables.getString("status");
+
+			// return first active instance id
+			if (status.equals("ACTIVE"))
+				return object.getString("id");
+		}
+
+		throw new GraphQLException("All intances are complete");
 	}
 
 	/**

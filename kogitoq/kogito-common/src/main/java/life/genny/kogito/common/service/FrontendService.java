@@ -1,5 +1,7 @@
 package life.genny.kogito.common.service;
 
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +40,7 @@ import life.genny.qwandaq.utils.QwandaUtils;
 @ApplicationScoped
 public class FrontendService {
 
-	private static final Logger log = Logger.getLogger(FrontendService.class);
+	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -60,32 +62,6 @@ public class FrontendService {
 	@Inject
 	NavigationService navigationService;
 
-	public String getCurrentUserCode() {
-		return userToken.getUserCode();
-	}
-
-	/**
-	 * Create processData from inputs.
-	 * @param questionCode The code of the question to send
-	 * @param sourceCode The source user
-	 * @param targetCode The Target entity
-	 * @param pcmCode The code eof the PCM to use
-	 * @return The processData json
-	 */
-	public String inputs(String questionCode, String sourceCode, String targetCode, 
-			String pcmCode, String events, String processId) {
-
-		ProcessQuestions processData = new ProcessQuestions();
-		processData.setQuestionCode(questionCode);
-		processData.setSourceCode(sourceCode);
-		processData.setTargetCode(targetCode);
-		processData.setPcmCode(pcmCode);
-		processData.setEvents(events);
-		processData.setProcessId(processId);
-
-		return jsonb.toJson(processData);
-	}
-
 	/**
 	 * Get asks using a question code, for a given source and target.
 	 *
@@ -95,182 +71,38 @@ public class FrontendService {
 	 * @param processId    The processId to set in the asks
 	 * @return The ask message
 	 */
-	public String getAsks(String processJson) {
+	public void sendAsks(String processJson) {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-
+		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
+
+		String key = String.format("%s:%s", processId, questionCode);
+		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
-		String processId = processData.getProcessId();
 
-		log.info("==========================================");
-		log.info("processId : " + processId);
-		log.info("questionCode : " + questionCode);
-		log.info("sourceCode : " + sourceCode);
-		log.info("targetCode : " + targetCode);
-		log.info("pcmCode : " + processData.getPcmCode());
-		log.info("events : " + processData.getEvents());
-		log.info("==========================================");
-
-		BaseEntity source = beUtils.getBaseEntity(sourceCode);
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-
-		// fetch question from DB
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-		Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
-		ask.addChildAsk(events);
-		qwandaUtils.recursivelySetProcessId(ask, processId);
-
-		// create ask msg from asks
-		log.info("Creating ask Message...");
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		processData.setAskMessage(msg);
+		// update ask target
+		BaseEntity processEntity = processData.getProcessEntity();
+		recursivelyUpdateAskTarget(ask, processEntity);
 
 		// put targetCode in cache
 		// NOTE: This is mainly only necessary for initial dropdown items
 		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
 		CacheUtils.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
 
+		// check mandatories and update submit
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
+		log.info("Mandatory fields are " + (answered ? "answered" : "not answered"));
+		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
-		return jsonb.toJson(processData);
-	}
-
-	/**
-	 * Create the events ask group.
-	 * @param events The events string
-	 * @param sourceCode The source entity code
-	 * @param targetCode The target entity code
-	 * @return The events ask group
-	 */
-	public Ask createEvents(String events, String sourceCode, String targetCode) {
-
-		if (events == null)
-			throw new NullParameterException("events");
-
-		// fetch attributes and create group
-		Attribute submit = qwandaUtils.getAttribute("EVT_SUBMIT");
-		Attribute groupAttribute = qwandaUtils.getAttribute("QQQ_QUESTION_GROUP");
-		Question groupQuestion = new Question("QUE_EVENTS", "", groupAttribute);
-
-		// init ask
-		Ask ask = new Ask(groupQuestion, sourceCode, targetCode);
-		ask.setRealm(userToken.getProductCode());
-
-		// split events string by comma
-		for (String event : events.split(",")) {
-			// create child and add to ask
-			Attribute attribute = new Attribute("EVT_"+event, event, submit.getDataType());
-			Question question = new Question("QUE_"+event, event, attribute);
-			Ask child = new Ask(question, sourceCode, targetCode);
-			ask.addChildAsk(child);
-		}
-
-		return ask;
-	}
-
-	/**
-	 * Work out the DEF for the baseentity .
-	 *
-	 * @param targetCode The code of the target entity
-	 * @return The DEF
-	 */
-	public String getDEF(String processJson) {
-
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		String targetCode = processData.getTargetCode();
-
-		// Find the DEF
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		BaseEntity definition = defUtils.getDEF(target);
-		log.info("ProcessBE identified as a " + definition);
-
-		processData.setDefinitionCode(definition.getCode());
-
-		return jsonb.toJson(processData);
-	}
-
-	/**
-	 * Setup the process entity used to store task data.
-	 *
-	 * @param targetCode     The code of the target entity
-	 * @param askMessageJson The ask message to use in setup
-	 * @return The updated process entity
-	 */
-	public String setupProcessBE(String processJson) {
-
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		String targetCode = processData.getTargetCode();
-		QDataAskMessage askMessage = processData.getAskMessage();
-
-		// init entity and force the realm
-		String processEntityCode = "QBE_" + targetCode.substring(4);
-		log.info("Creating Process Entity " + processEntityCode + "...");
-
-		BaseEntity processEntity = new BaseEntity(processEntityCode, "QuestionBE");
-		processEntity.setRealm(userToken.getProductCode());
-
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		// find all allowed attribute codes
-		Set<String> attributeCodes = new HashSet<>();
-		for (Ask ask : askMessage.getItems()) {
-			attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
-		}
-
-		log.info("Found " + attributeCodes.size() + " active attributes in asks");
-
-		// add an entityAttribute to process entity for each attribute
-		for (String code : attributeCodes) {
-
-			// check for existing attribute in target
-			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
-
-				// otherwise create new attribute
-				Attribute attribute = qwandaUtils.getAttribute(code);
-				Object value = null;
-				// default toggles to false
-				if (attribute.getDataType().getComponent().equals("flag"))
-					value = false;
-
-				return new EntityAttribute(processEntity, attribute, 1.0, value);
-			});
-
-			processEntity.addAttribute(ea);
-		}
-
-		log.info("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
-		processData.setProcessEntity(processEntity);
-
-		// TODO, until cacheUtils supprots BEs
-		CacheUtils.putObject(userToken.getProductCode(), processEntityCode, processEntity);
-
-		return jsonb.toJson(processData);
-	}
-
-	/**
-	 * Update the ask target to match the process entity code.
-	 *
-	 * @param processBEJson  The json of the process entity
-	 * @param askMessageJson The ask message to use in setup
-	 * @return The updated ask message
-	 */
-	public String updateAskTarget(String processJson) {
-
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-
-		BaseEntity processEntity = processData.getProcessEntity();
-		QDataAskMessage askMessage = processData.getAskMessage();
-		log.info("Updating Ask Target " + askMessage.getItems().get(0));
-
-		recursivelyUpdateAskTarget(askMessage.getItems().get(0), processEntity);
-		processData.setAskMessage(askMessage);
-
-		return jsonb.toJson(processData);
+		// send to user
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		msg.setTag("sendAsks");
+		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
 	/**
@@ -290,6 +122,7 @@ public class FrontendService {
 			}
 		}
 	}
+
 
 	/**
 	 * Control main content navigation using a pcm and a question
@@ -317,17 +150,13 @@ public class FrontendService {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity processEntity = processData.getProcessEntity();
-		QDataAskMessage askMessage = processData.getAskMessage();
+		List<String> attributeCodes = processData.getAttributeCodes();
 		String processId = processData.getProcessId();
-
-		// find all allowed attribute codes
-		Set<String> attributeCodes = new HashSet<>();
-		for (Ask ask : askMessage.getItems()) {
-			attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
-		}
+		String questionCode = processData.getQuestionCode();
 
 		// grab all entityAttributes from the entity
-		Set<EntityAttribute> entityAttributes = ConcurrentHashMap.newKeySet(processEntity.getBaseEntityAttributes().size());
+		Set<EntityAttribute> entityAttributes = ConcurrentHashMap
+				.newKeySet(processEntity.getBaseEntityAttributes().size());
 		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
 			entityAttributes.add(ea);
 		}
@@ -347,20 +176,20 @@ public class FrontendService {
 		msg.setTotal(Long.valueOf(msg.getItems().size()));
 		msg.setTag("SendBaseEntities");
 
-		log.info("Sending "+processEntity.getBaseEntityAttributes().size()+" processBE attributes");
+		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
 
 		// check cache first
-		String key = String.format("%s:PROCESS_DATA", processId); 
+		String key = String.format("%s:PROCESS_DATA", processId);
 		CacheUtils.putObject(userToken.getProductCode(), key, processData);
 		log.infof("processData cached to %s", key);
 
-		// NOTE: only using first ask item
-		Ask ask = askMessage.getItems().get(0);
+		key = String.format("%s:%s", processId, questionCode);
+		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processEntity, ask.getQuestion().getCode());
 
-		KafkaUtils.writeMsg("webdata", jsonb.toJson(msg));
+		KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
 	}
 
 	/**
@@ -389,13 +218,28 @@ public class FrontendService {
 					if (StringUtils.isBlank(code)) {
 						continue;
 					}
-					if ((code.startsWith("{startDate")) ||(code.startsWith("endDate"))) {
-						log.error("BE:"+target.getCode()+":attribute :"+attribute.getCode()+":BAD code "+code);
+					if ((code.startsWith("{startDate")) || (code.startsWith("endDate"))) {
+						log.error(
+								"BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
 						continue;
 					}
-					BaseEntity selection = beUtils.getBaseEntity(code);
-					if (selection == null)
-						throw new ItemNotFoundException(code);
+					BaseEntity selection = null;
+					try {
+						selection = beUtils.getBaseEntity(code);
+					} catch (ItemNotFoundException e) {
+						log.error(
+								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
+										+ attribute.getCode());
+						// throw new ItemNotFoundException(code);
+						continue;
+					}
+					if (selection == null) {
+						log.error(
+								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
+										+ attribute.getCode());
+						// throw new ItemNotFoundException(code);
+						continue;
+					}
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
@@ -405,11 +249,11 @@ public class FrontendService {
 
 				// send selections
 				if (selectionMsg.getItems() != null) {
-				selectionMsg.setToken(userToken.getToken());
-				selectionMsg.setReplace(true);
-				log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
-				KafkaUtils.writeMsg("webdata", selectionMsg);
-				}	else {
+					selectionMsg.setToken(userToken.getToken());
+					selectionMsg.setReplace(true);
+					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
+					KafkaUtils.writeMsg("webdata", selectionMsg);
+				} else {
 					log.info("No selection items found for " + attribute.getCode());
 				}
 			}
@@ -432,37 +276,11 @@ public class FrontendService {
 		}
 
 		// recursively run on children
-		if ((ask.getChildAsks() != null)&&(ask.getChildAsks().length > 0)) {
+		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
 			for (Ask child : ask.getChildAsks()) {
 				recuresivelyFindAndSendDropdownItems(child, target, rootCode);
 			}
 		}
-	}
-
-	/**
-	 * Send an ask message to the frontend through the webdata topic.
-	 *
-	 * @param askMsgJson The ask message to send
-	 */
-	public void sendQDataAskMessage(String processJson) {
-
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		QDataAskMessage askMessage = processData.getAskMessage();
-
-		BaseEntity processEntity = processData.getProcessEntity();
-
-		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems().get(0);
-
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
-	
-		log.info("Mandatory fields are "+(answered ? "answered" : "not answered"));
-		
-		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
-		askMessage.getItems().set(0, ask);
-		askMessage.setToken(userToken.getToken());
-		askMessage.setTag("sendQDataAskMessage");
-		KafkaUtils.writeMsg("webcmds", askMessage);
 	}
 
 	/**
@@ -473,10 +291,11 @@ public class FrontendService {
 	public void sendDropdownItems(String processJson) {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		QDataAskMessage askMessage = processData.getAskMessage();
+		String processId = processData.getProcessId();
+		String questionCode = processData.getQuestionCode();
 
-		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems().get(0);
+		String key = String.format("%s:%s", processId, questionCode);
+		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 		BaseEntity target = beUtils.getBaseEntity(ask.getTargetCode());
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();

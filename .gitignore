@@ -25,7 +25,8 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 !**/.vscode/launch.json
-# IntelliJ
+**/.vscode
+# IntelliJ 
 *.iml
 *idea/
 .DS_Store

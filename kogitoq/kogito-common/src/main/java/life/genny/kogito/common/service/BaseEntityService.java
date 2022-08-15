@@ -1,12 +1,14 @@
 package life.genny.kogito.common.service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.EEntityStatus;
@@ -48,9 +50,14 @@ public class BaseEntityService {
 	DefUtils defUtils;
 
 	public String commission(String definitionCode) {
+		// TODO
+		// String randomCode = UUID.randomUUID().toString().substring(0,
+		// 32).toUpperCase();
+		// return commission(definitionCode, randomCode);
 
 		if (definitionCode == null)
 			throw new NullParameterException("definitionCode");
+
 		if (!definitionCode.startsWith("DEF_"))
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
@@ -65,6 +72,63 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 
 		return entity.getCode();
+	}
+
+	public String commission(String definitionCode, String processId) {
+
+		return commission(definitionCode, processId, EEntityStatus.PENDING);
+	}
+
+	public String commission(String definitionCode, String processId, EEntityStatus status) {
+
+		if (definitionCode == null)
+			throw new NullParameterException("definitionCode");
+		if (processId == null)
+			throw new NullParameterException("processId");
+		if (status == null)
+			throw new NullParameterException("status");
+		if (!definitionCode.startsWith("DEF_"))
+			throw new DebugException("Invalid definitionCode: " + definitionCode);
+
+		// fetch the def baseentity
+		BaseEntity def = beUtils.getBaseEntity(definitionCode);
+
+		// use entity create function and save to db
+		String defaultName = StringUtils.capitalize(def.getCode().substring(4));
+		BaseEntity entity = beUtils.create(def, defaultName,
+				def.getValueAsString("PRI_PREFIX") + "_" + processId.toUpperCase());
+		log.info("BaseEntity Created: " + entity.getCode());
+
+		entity.setStatus(status);
+		beUtils.updateBaseEntity(entity);
+
+		return entity.getCode();
+	}
+
+	public void delete(String code) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Deleting entity using EEntityStatus" + baseEntity.getCode());
+
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.DELETED);
+		beUtils.updateBaseEntity(baseEntity);
+	}
+
+	public void pendingDelete(String code) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Pending Deleting entity using EEntityStatus" + baseEntity.getCode());
+
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.PENDING_DELETE);
+		beUtils.updateBaseEntity(baseEntity);
 	}
 
 	public void decommission(String code) {
@@ -84,6 +148,13 @@ public class BaseEntityService {
 
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 		entity.setStatus(EEntityStatus.ACTIVE);
+		beUtils.updateBaseEntity(entity);
+	}
+
+	public void setDisabled(String entityCode) {
+
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		entity.setStatus(EEntityStatus.DISABLED);
 		beUtils.updateBaseEntity(entity);
 	}
 
@@ -155,4 +226,51 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 		log.info("Saved answers for entity " + entityCode);
 	}
+
+	/**
+	 * Update entityAttributes
+	 */
+	public void updateBaseEntity(String baseEntityCode, String attributeCode, String value) {
+
+		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
+
+		if (attributeCode.startsWith("LNK_")) {
+			// Check if value is in JsonArray format , otherwise wrap it..
+			if (value != null) {
+				if (!value.startsWith("[")) {
+					value = "[\"" + value + "\"]";
+				}
+			}
+		}
+
+		be = beUtils.addValue(be, attributeCode, value);
+
+		beUtils.updateBaseEntity(be);
+	}
+
+	/**
+	 * Update baseentity with setup attribute values
+	 */
+	public void setupBaseEntity(String baseEntityCode, String... attributeCodeValue) {
+
+		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
+
+		for (int i = 0; i < attributeCodeValue.length; i++) {
+			String[] split = attributeCodeValue[i].split("=");
+			String attributeCode = split[0];
+			String value = split[1];
+			if (attributeCode.startsWith("LNK_")) {
+				// Check if value is in JsonArray format , otherwise wrap it..
+				if (value != null) {
+					if (!value.startsWith("[")) {
+						value = "[\"" + value + "\"]";
+					}
+				}
+			}
+			be = beUtils.addValue(be, attributeCode, value);
+		}
+
+		beUtils.updateBaseEntity(be);
+	}
+
 }

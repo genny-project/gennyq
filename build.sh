@@ -4,7 +4,12 @@ if [ "$#" -ge 1 ]; then
 	projects=( gennyq $@ )
 else
 	./mvnw clean install -Dcheckstyle.skip -Dstyle.color=always
-	exit 0;
+	if [[ "$?" -ne 0 ]] ; then
+		echo "Build failed"
+		exit 1;
+	else
+		exit 0;
+	fi
 fi
 
 # iterate projects
@@ -18,8 +23,7 @@ do
 	# exit if build failed
 	if [[ "$?" -ne 0 ]] ; then
 		echo "Build failed"
-		exit $rc
+		exit 1;
 	fi
 done
-
 

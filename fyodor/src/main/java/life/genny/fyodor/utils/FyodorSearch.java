@@ -34,8 +34,9 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.QEntityAttribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
@@ -393,7 +394,6 @@ public class FyodorSearch {
 
 				// This should get around the bug that occurs with filter LIKE "%"
 				if (!isAnyStringFilter) {
-
 					query.leftJoin(eaFilterJoin)
 							.on(eaFilterJoin.pk.baseEntity.id.eq(baseEntity.id)
 									.and(eaFilterJoin.attributeCode.eq(joinAttributeCode)));

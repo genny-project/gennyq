@@ -53,9 +53,11 @@ public class SearchService {
 	 *
 	 * @param targetCode The code of the target to display
 	 */
-	public void sendTable(String eventCode) {
-		String codeTrimmed = StringUtils.removeStart(eventCode, "QUE_TREE_ITEM_");
-		String searchCode = "SBE_"+StringUtils.removeStart(codeTrimmed, "QUE_");
+	public void sendTable(String code) {
+
+		// trim TREE_ITEM_ from code if present
+		code = StringUtils.removeStart(code, "TREE_ITEM_");
+		String searchCode = "SBE_"+code;
 		log.info("Sending Table :: " + searchCode);
 
 		searchUtils.searchTable(searchCode);
@@ -120,11 +122,11 @@ public class SearchService {
 
 	/**
 	 * Get bucket data with bucket event
-	 * @param eventCode Bucket event code
+	 * @param code Bucket event code
 	 */
-	public void getBuckets(String eventCode) {
+	public void getBuckets(String code) {
 		try {
-			String searchCode = "SBE_" + StringUtils.removeStart(eventCode, "QUE_");
+			String searchCode = "SBE_" + code;
 
 			List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
 			List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);

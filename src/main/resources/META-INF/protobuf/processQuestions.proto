@@ -41,13 +41,16 @@ message ProcessQuestions {
  @VariableInfo(tags="input") */ 
 	optional string sourceCode = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string status = 12; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
-	optional string targetCode = 12; 
+	optional string targetCode = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string userCode = 13; 
+	optional string userCode = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 14; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 15; 
 }
 /* @Indexed */ 
 message S2SData { 

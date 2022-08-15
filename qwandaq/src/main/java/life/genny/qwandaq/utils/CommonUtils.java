@@ -12,7 +12,7 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 /**
  * A few Common Utils to use throughout Genny.
- * 
+ *
  * @author Bryn
  * @author Jasper
  */
@@ -93,7 +93,12 @@ public class CommonUtils {
     public static String getSystemEnv(String env, boolean alert) {
         String result = System.getenv(env);
         if(result == null && alert) {
-            log.error("Could not find System Environment Variable: " + env);
+            String msg = "Could not find System Environment Variable: " + env;
+            if(alert) {
+                log.error(msg);
+            } else {
+                log.warn(msg);
+            }
         }
 
         return result;
@@ -188,6 +193,15 @@ public class CommonUtils {
 			throw new GennyPrefixException(str + " is does not have a valid three character prefix");
 		}
 		return prefix + str.substring(3);
+	}
+
+	/**
+	 * Remove a prefix from a string.
+	 * @param str The string to operate on
+	 * @return The string without the prefix
+	 */
+	public static String removePrefix(String str) {
+		return str.substring(str.indexOf("_")+1);
 	}
 
 }
