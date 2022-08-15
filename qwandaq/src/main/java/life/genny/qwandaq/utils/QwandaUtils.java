@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -310,7 +309,7 @@ public class QwandaUtils {
 	 * @param ask   The ask to traverse
 	 * @return The udpated set of codes
 	 */
-	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
+	public List<String> recursivelyGetAttributeCodes(List<String> codes, Ask ask) {
 
 		String code = ask.getAttributeCode();
 
@@ -429,14 +428,11 @@ public class QwandaUtils {
 	/**
 	 * Send Submit enable/disable.
 	 *
-	 * @param askMessage The ask message representing the questions
+	 * @param ask The ask message representing the questions
 	 * @param enable. Enable the submit button
 	 * @return Boolean representing whether the submit button was enabled
 	 */
-	public Boolean sendSubmit(QDataAskMessage askMessage, Boolean enable) {
-
-		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems().get(0);
+	public Boolean sendSubmit(Ask ask, Boolean enable) {
 
 		// find the submit ask
 		recursivelyFindAndUpdateSubmitDisabled(ask, !enable);
@@ -605,6 +601,7 @@ public class QwandaUtils {
 	 * @param definition The definition entity
 	 * @param attributeCode The code of the attribute
 	 * @param value The value to check
+	 * @return Boolean
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 

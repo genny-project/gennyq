@@ -111,10 +111,12 @@ public class ProcessAnswerService {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity processEntity = processData.getProcessEntity();
-		QDataAskMessage askMessage = processData.getAskMessage();
+		String processId = processData.getProcessId();
+		String targetCode = processData.getTargetCode();
+		String questionCode = processData.getQuestionCode();
 
-		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems().get(0);
+		String key = String.format("%s:%s", processId, questionCode);
+		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
 		// find the submit ask
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
@@ -137,11 +139,13 @@ public class ProcessAnswerService {
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
 	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
+
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		BaseEntity processEntity = processData.getProcessEntity();
-		QDataAskMessage askMessage = processData.getAskMessage();
+		String processId = processData.getProcessId();
+		String questionCode = processData.getQuestionCode();
 
 		// Check if attribute code exists as a UNQ for the DEF
 		List<EntityAttribute> uniqueAttributes = definition.findPrefixEntityAttributes("UNQ");
@@ -158,8 +162,11 @@ public class ProcessAnswerService {
 				acceptSubmission = false;
 		}
 
+		String key = String.format("%s:%s", processId, questionCode);
+		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+
 		// disable submit button if not unique
-		qwandaUtils.sendSubmit(askMessage, acceptSubmission);
+		qwandaUtils.sendSubmit(ask, acceptSubmission);
 
 		return acceptSubmission;
 	}

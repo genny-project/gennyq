@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -21,11 +22,11 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.exception.checked.RoleException;
+import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.session.stack.StackCache;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
@@ -36,7 +37,7 @@ import life.genny.qwandaq.utils.SearchUtils;
 @ApplicationScoped
 public class NavigationService {
 
-	private static final Logger log = Logger.getLogger(SearchService.class);
+	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -68,24 +69,7 @@ public class NavigationService {
 	 * Trigger the default redirection for the user.
 	 */
 	public void redirect() {
-
-		// pop off the stack of redirects
-		String redirectCode = StackCache.get(userToken);
-		
-		// Otherwise use default role redirect
-		if (redirectCode == null) {
-			try {
-				redirectCode = capabilityUtils.getUserRoleRedirectCode();
-			} catch (RoleException e) {
-				log.warn(e.getMessage());
-			}
-		}
-
-		// Otherwise redirect to dashboard
-		if (redirectCode == null)
-			redirectCode = "QUE_DASHBOARD_VIEW";
-
-		redirect(redirectCode);
+		redirect(null);
 	}
 
 	/**
@@ -94,20 +78,52 @@ public class NavigationService {
 	 */
 	public void redirect(String code) {
 
-		if (code == null)
-			throw new NullParameterException("code");
+		log.infof("Performing redirect with code %s", code);
 
-		log.infof("Actioning redirect %s for user %s", code, userToken.getUserCode());
+		// route using code if specified
+		if (code != null) {
+			kogitoUtils.triggerWorkflow(GADAQ, "view", 
+				Json.createObjectBuilder()
+				.add("code", code)
+				.add("targetCode", userToken.getUserCode())
+				.build()
+			);
+		}
 
-		// build json and trigger view workflow
-		JsonObject json = Json.createObjectBuilder()
-				.add("eventMessage", Json.createObjectBuilder()
-					.add("data", Json.createObjectBuilder()
-						.add("code", code)
-						.add("targetCode", userToken.getUserCode())))
-				.build();
+		// check for outstanding tasks
+		try {
+			String processId = kogitoUtils.getOutstandingTaskProcessId();
+			kogitoUtils.sendSignal(GADAQ, "processQuestions", processId, "requestion");
+			log.info("Outstanding task triggered");
+			return;
+		} catch (GraphQLException e) {
+			log.debug(e.getMessage());
+		} catch (GennyResponseException re) {
+			log.debug(re.getMessage());
+		}
 
-		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
+		// otherwise check for default role redirect
+		try {
+			String redirectCode = capabilityUtils.getUserRoleRedirectCode();
+			log.infof("Role Redirect found: %s", redirectCode);
+			kogitoUtils.triggerWorkflow(GADAQ, "view", 
+				Json.createObjectBuilder()
+				.add("code", redirectCode)
+				.build()
+			);
+			log.info("Role Redirect sent");
+			return;
+		} catch (RoleException e) {
+			log.warn(e.getMessage());
+		}
+
+		// default to dashboard
+		kogitoUtils.triggerWorkflow(GADAQ, "view", 
+			Json.createObjectBuilder()
+			.add("code", "DASHBOARD_VIEW")
+			.build()
+		);
+		log.info("Dashboard View triggered");
 	}
 
 	/**

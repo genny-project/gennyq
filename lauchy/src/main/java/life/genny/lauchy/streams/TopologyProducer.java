@@ -24,6 +24,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
@@ -35,6 +36,7 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
@@ -213,10 +215,12 @@ public class TopologyProducer {
 		}
 
 		// check duplicate attributes
-		QDataAskMessage askMessage = processData.getAskMessage();
+		String questionCode = processData.getQuestionCode();
+		String key = String.format("%s:%s", processId, questionCode);
+		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
 			log.error("Duplicate answer detected for target " + answer.getTargetCode());
-			qwandaUtils.sendSubmit(askMessage, false);
+			qwandaUtils.sendSubmit(ask, false);
 			return false;
 		}
 
@@ -229,7 +233,7 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
-		if (!jsonb.toJson(askMessage).contains(answer.getAttributeCode())) {
+		if (!jsonb.toJson(ask).contains(answer.getAttributeCode())) {
 			log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
 			return blacklist();
 		}

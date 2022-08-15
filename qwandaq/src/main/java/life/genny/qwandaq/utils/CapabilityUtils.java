@@ -531,7 +531,8 @@ public class CapabilityUtils {
 	/**
 	 * Get a redirect code for user based on their roles.
 	 * @return The redirect code
-	 * @throws RoleException
+	 * @throws RoleException If no roles are found for the user, or 
+	 * 		none of roles found have any associated redirect code
 	 */
 	public String getUserRoleRedirectCode() throws RoleException {
 		
@@ -541,6 +542,8 @@ public class CapabilityUtils {
 
 		if (roles == null || roles.isEmpty())
 			throw new RoleException(String.format("No roles found for user %s", user.getCode()));
+
+		log.info(roles.toString());
 
 		// TODO: return redirect for roles based on priority
 		for (String role : roles) {
@@ -559,15 +562,20 @@ public class CapabilityUtils {
 	 * Get the redirect code for a role.
 	 * @param roleCode The code of the role
 	 * @return The redirect code
-	 * @throws RoleException
+	 * @throws RoleException If no redirect is found for the role
 	 */
 	public String getRoleRedirectCode(String roleCode) throws RoleException {
 		
 		if (roleCode == null)
 			throw new NullParameterException(roleCode);
 
+		String product = userToken.getProductCode();
+		String key = String.format("%s:REDIRECT", roleCode);
+
+		log.info(key);
+
 		// TODO: grab redirect for role
-		String redirectCode = "";
+		String redirectCode = CacheUtils.getObject(product, key, String.class);
 
 		if (redirectCode == null)
 			throw new RoleException(String.format("No redirect found in role %s", roleCode));

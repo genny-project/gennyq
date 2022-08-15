@@ -158,4 +158,13 @@ public class CommonUtils {
 		return prefix + str.substring(3);
 	}
 
+	/**
+	 * Remove a prefix from a string.
+	 * @param str The string to operate on
+	 * @return The string without the prefix
+	 */
+	public static String removePrefix(String str) {
+		return str.substring(str.indexOf("_")+1);
+	}
+
 }
