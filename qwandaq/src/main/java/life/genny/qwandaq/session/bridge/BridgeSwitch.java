@@ -1,4 +1,4 @@
-package life.genny.qwandaq.data;
+package life.genny.qwandaq.session.bridge;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,8 +34,8 @@ public class BridgeSwitch {
 	 */
 	public static void addActiveBridgeId(GennyToken gennyToken, String bridgeId) {
 
-		String realm = gennyToken.getProductCode();
-		Set<String> activeBridgeIds = CacheUtils.getObject(realm, BRIDGE_SWITCH_KEY, Set.class);
+		String product = gennyToken.getProductCode();
+		Set<String> activeBridgeIds = CacheUtils.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
 
 		if (activeBridgeIds == null) {
 			activeBridgeIds = new HashSet<String>();
@@ -43,20 +43,20 @@ public class BridgeSwitch {
 
 		activeBridgeIds.add(bridgeId);
 
-		CacheUtils.putObject(realm, BRIDGE_SWITCH_KEY, activeBridgeIds);
+		CacheUtils.putObject(product, BRIDGE_SWITCH_KEY, activeBridgeIds);
 	}
 
 	/**
 	* Find an active bridge ID
 	*
-	* @param gennyToken Used to find the realm
+	* @param gennyToken Used to find the product
 	* @return String An active Bridge ID
 	 */
 	public static String findActiveBridgeId(GennyToken gennyToken) {
 
-		String realm = gennyToken.getProductCode();
+		String product = gennyToken.getProductCode();
 
-		Set<String> activeBridgeIds = CacheUtils.getObject(realm, BRIDGE_SWITCH_KEY, Set.class);
+		Set<String> activeBridgeIds = CacheUtils.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
 
 		// null check
 		if (activeBridgeIds == null) {
@@ -79,13 +79,13 @@ public class BridgeSwitch {
 	 */
 	public static void put(GennyToken gennyToken, String bridgeId) {
 
-		String realm = gennyToken.getProductCode();
+		String product = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
 
 		log.debug("Adding Switch to Cache --- " + key + " :: " + bridgeId);
 		
 		// grab from cache or create if null
-		BridgeInfo info = CacheUtils.getObject(realm, key, BridgeInfo.class);
+		BridgeInfo info = CacheUtils.getObject(product, key, BridgeInfo.class);
 		
 		if (info == null) {
 			info = new BridgeInfo();
@@ -95,7 +95,7 @@ public class BridgeSwitch {
 		String jti = gennyToken.getJTI();
 		info.mappings.put(jti, bridgeId);
 
-		CacheUtils.putObject(realm, key, info);
+		CacheUtils.putObject(product, key, info);
 	}
 
 	/**
@@ -107,11 +107,11 @@ public class BridgeSwitch {
 	 */
 	public static String get(GennyToken gennyToken) {
 
-		String realm = gennyToken.getProductCode();
+		String product = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
 		
 		// grab from cache
-		BridgeInfo info = CacheUtils.getObject(realm, key, BridgeInfo.class);
+		BridgeInfo info = CacheUtils.getObject(product, key, BridgeInfo.class);
 		
 		if (info == null) {
 			log.debug("No BridgeInfo object found for user " + gennyToken.getUserCode());

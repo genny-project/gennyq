@@ -246,7 +246,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
-
+		
 		String newBaseEntityCode = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		// return null if attributeCode valueString is null or empty
 		if (StringUtils.isEmpty(newBaseEntityCode)) {
@@ -678,35 +678,19 @@ public class BaseEntityUtils {
 	 * @return The updated BaseEntity
 	 */
 	public BaseEntity addValue(final BaseEntity be, final String attributeCode, final String value) {
-		try {
-			if (be == null)
-				throw new NullParameterException("be");
-			if (attributeCode == null)
-				throw new NullParameterException("attributeCode");
-			if (value == null)
-				throw new NullParameterException("value");
-			Attribute attribute = null;
-			try {
-				attribute = qwandaUtils.getAttribute(attributeCode);
-			} catch (Exception e) {
-				log.error("No Attribute found for " + attributeCode + " for be code " + be.getCode());
-			}
-			if (attribute == null)
-				throw new DebugException("No Attribute found for " + attributeCode);
-			EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
-			be.addAttribute(ea);
-			return be;
-		} catch (Exception e) {
-			if (be == null) {
-				log.error("BaseEntity is null found for " + attributeCode);
-			} else {
-				log.error("No Attribute found for " + attributeCode + " for be code that is not null");
-			}
-			log.error("Error adding value to be " + be.getCode() + " for attribute " + attributeCode + " with value "
-					+ value);
-			return be;
-		}
 
+		if (be == null)
+			throw new NullParameterException("be");
+		if (attributeCode == null)
+			throw new NullParameterException("attributeCode");
+		if (value == null)
+			throw new NullParameterException("value");
+
+		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+
+		EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
+		be.addAttribute(ea);
+		return be;
 	}
 
 	/**
