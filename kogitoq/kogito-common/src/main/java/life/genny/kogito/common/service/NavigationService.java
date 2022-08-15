@@ -268,18 +268,24 @@ public class NavigationService {
 	 * @return redirect question code
 	 */
 	public String getRedirectCodeByQuestionCode(String questionCode){
+		String defaultRedirectCode = "";
 		String defCode =  getDefCodeByQuestionCode(questionCode);
-		BaseEntity target = beUtils.getBaseEntity(defCode);
+		//firstly, check question code
+		try {
+			BaseEntity target = beUtils.getBaseEntity(defCode);
 
-		String defaultRedirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
-		log.info("Actioning redirect for question: " + target.getCode() + " : " + defaultRedirectCode);
+			defaultRedirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+			log.info("Actioning redirect for question: " + target.getCode() + " : " + defaultRedirectCode);
+		}catch (Exception ex){
+			log.error(ex);
+		}
 
 		//Secondly, check user to get redirect code
-		if (defaultRedirectCode == null) {
+		if (defaultRedirectCode == null || defaultRedirectCode.isEmpty()) {
 			defaultRedirectCode = getRedirectCodeByUser();
 		}
 
-		if (defaultRedirectCode == null) {
+		if (defaultRedirectCode == null || defaultRedirectCode.isEmpty()) {
 			log.error("Question and user has no default redirect!");
 			return "";
 		}
@@ -292,16 +298,21 @@ public class NavigationService {
 	 * @return redirect code
 	 */
 	public String getRedirectCodeByUser(){
+		String redirectCode = "";
 		String defCode = "";
-		BaseEntity user = beUtils.getUserBaseEntity();
-		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
-		if(priIsAttributes.size() > 0){
-			EntityAttribute attr = priIsAttributes.get(0);
-			defCode = "DEF_" + attr.getAttributeCode().replaceFirst(PRI_IS_PREFIX, "");
-		}
+		try {
+			BaseEntity user = beUtils.getUserBaseEntity();
+			List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
+			if (priIsAttributes.size() > 0) {
+				EntityAttribute attr = priIsAttributes.get(0);
+				defCode = "DEF_" + attr.getAttributeCode().replaceFirst(PRI_IS_PREFIX, "");
+			}
 
-		BaseEntity target = beUtils.getBaseEntity(defCode);
-		String redirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+			BaseEntity target = beUtils.getBaseEntity(defCode);
+			redirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+		} catch (Exception ex){
+			log.error(ex);
+		}
 
 		return redirectCode;
 	}
