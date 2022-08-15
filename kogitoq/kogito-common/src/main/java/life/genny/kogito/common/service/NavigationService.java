@@ -3,6 +3,7 @@ package life.genny.kogito.common.service;
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -269,6 +270,93 @@ public class NavigationService {
 				+ userToken.getToken() + "\"}";
 
 		KafkaUtils.writeMsg("events", eventJson);
+	}
+
+	/**
+	 * Redirect by question code
+	 * @param questionCode Question code
+	 */
+	public void redirectByQuestionCode(String questionCode) {
+		String redirectCode = getRedirectCodeByQuestionCode(questionCode);
+
+		// build json and trigger view workflow
+		JsonObject json = Json.createObjectBuilder()
+				.add("eventMessage", Json.createObjectBuilder()
+						.add("data", Json.createObjectBuilder()
+								.add("code", redirectCode)
+								.add("targetCode", userToken.getUserCode())))
+				.build();
+
+		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
+	}
+
+	/**
+	 * Return definition code by question code
+	 * @param questionCode question code
+	 * @return Definition code
+	 */
+	public String getDefCodeByQuestionCode(String questionCode){
+		String defCode = "DEF_" + questionCode.replaceFirst("QUE_QA_","")
+				.replaceFirst("QUE_ADD_","")
+				.replaceFirst("QUE_","")
+				.replace("_GRP","");
+
+		return defCode;
+	}
+
+	/**
+	 * return redirect question code
+	 * @param questionCode Question code
+	 * @return redirect question code
+	 */
+	public String getRedirectCodeByQuestionCode(String questionCode){
+		String defaultRedirectCode = "";
+		String defCode =  getDefCodeByQuestionCode(questionCode);
+		//firstly, check question code
+		try {
+			BaseEntity target = beUtils.getBaseEntity(defCode);
+
+			defaultRedirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+			log.info("Actioning redirect for question: " + target.getCode() + " : " + defaultRedirectCode);
+		}catch (Exception ex){
+			log.error(ex);
+		}
+
+		//Secondly, check user to get redirect code
+		if (defaultRedirectCode == null || defaultRedirectCode.isEmpty()) {
+			defaultRedirectCode = getRedirectCodeByUser();
+		}
+
+		if (defaultRedirectCode == null || defaultRedirectCode.isEmpty()) {
+			log.error("Question and user has no default redirect!");
+			return "";
+		}
+
+		return defaultRedirectCode;
+	}
+
+	/**
+	 * return redirect code by user
+	 * @return redirect code
+	 */
+	public String getRedirectCodeByUser(){
+		String redirectCode = "";
+		String defCode = "";
+		try {
+			BaseEntity user = beUtils.getUserBaseEntity();
+			List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
+			if (priIsAttributes.size() > 0) {
+				EntityAttribute attr = priIsAttributes.get(0);
+				defCode = "DEF_" + attr.getAttributeCode().replaceFirst(PRI_IS_PREFIX, "");
+			}
+
+			BaseEntity target = beUtils.getBaseEntity(defCode);
+			redirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+		} catch (Exception ex){
+			log.error(ex);
+		}
+
+		return redirectCode;
 	}
 
 }
