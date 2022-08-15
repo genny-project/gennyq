@@ -358,4 +358,5 @@ public class NavigationService {
 
 		return redirectCode;
 	}
+
 }
