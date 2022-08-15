@@ -244,7 +244,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
-
+		
 		String newBaseEntityCode = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		// return null if attributeCode valueString is null or empty
 		if (StringUtils.isEmpty(newBaseEntityCode)) {

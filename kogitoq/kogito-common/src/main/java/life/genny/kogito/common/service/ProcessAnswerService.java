@@ -44,7 +44,6 @@ public class ProcessAnswerService {
 	@Inject
 	DefUtils defUtils;
 
-
 	/**
 	 * Save incoming answer to the process baseentity.
 	 *

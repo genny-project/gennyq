@@ -3,6 +3,7 @@ package life.genny.kogito.common.service;
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -64,6 +65,7 @@ public class NavigationService {
 
 	@Inject
 	CapabilityUtils capabilityUtils;
+	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
 	/**
 	 * Trigger the default redirection for the user.
