@@ -42,16 +42,14 @@ public class ExternalConsumer {
 
 	@Inject RoleBasedPermission permissions;
 	@Inject BlackListInfo blacklist;
-	@Inject
-	Service service;
+	@Inject Service service;
 	
-
 	@ConfigProperty(name = "bridge.id", defaultValue = "false")
 	String bridgeId;
 
 	void onStart(@Observes StartupEvent ev) {
 
-		// service.initToken();
+		service.initToken();
 		service.initCache();
 		service.initKafka();
 		log.info("[*] Finished Startup!");

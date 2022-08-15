@@ -2,16 +2,13 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -22,19 +19,13 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-
-import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
@@ -239,9 +230,9 @@ public class TaskService {
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
 		// find all allowed attribute codes
-		List<String> attributeCodes = new ArrayList<>();
+		Set<String> attributeCodes = new HashSet<>();
 		attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
-		processData.setAttributeCodes(attributeCodes);
+		processData.setAttributeCodes(Arrays.asList(attributeCodes.toArray(new String[attributeCodes.size()])));
 
 		return jsonb.toJson(processData);
 	}

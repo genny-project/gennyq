@@ -386,7 +386,7 @@ public class KogitoUtils {
 
 		// grab ProcessInstances with the parentId equal to this calling id
 		String callProcessId = array.getJsonObject(0).getString("id");
-		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id", "state");
+		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id", "variables");
 		if (array == null || array.isEmpty())
 			throw new GraphQLException("No ProcessInstances items found");
 
@@ -396,10 +396,11 @@ public class KogitoUtils {
 		for (JsonValue value : array) {
 
 			JsonObject object = value.asJsonObject();
-			String state = object.getString("state");
+			JsonObject variables = jsonb.fromJson(object.getString("variables"), JsonObject.class);
+			String status = variables.getString("status");
 
 			// return first active instance id
-			if (state.equals("ACTIVE"))
+			if (status.equals("ACTIVE"))
 				return object.getString("id");
 		}
 
