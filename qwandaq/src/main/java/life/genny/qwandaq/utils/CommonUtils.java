@@ -121,7 +121,7 @@ public class CommonUtils {
     /**
      * Get a JSON style array of objects using {@link Object#toString()} for each object
      * @param <T> type
-     * @param array - array to get stringified array of
+     * @param arr - array to get stringified array of
      * @return a JSON style array of object
      */
     public static <T> String getArrayString(T[] arr) {
@@ -165,7 +165,7 @@ public class CommonUtils {
     /**
      * Create an equals break (======) of size len
      * @param len length of the equals break
-     * @return
+     * @return The equals string
      */
     public static String equalsBreak(int len) {
         String ret = "";
