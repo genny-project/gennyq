@@ -12,6 +12,8 @@ import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.Json;
+import javax.json.JsonArray;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
@@ -108,6 +110,7 @@ public class TopologyProducer {
 
 	/**
 	 * Helper function to show the data without a token
+	 * 
 	 * @param data
 	 * @return
 	 */
@@ -118,6 +121,7 @@ public class TopologyProducer {
 
 	/**
 	 * Helper function to tidy some values
+	 * 
 	 * @param data
 	 * @return
 	 */
@@ -128,6 +132,7 @@ public class TopologyProducer {
 
 	/**
 	 * Function for validating a data message.
+	 * 
 	 * @param data the data to validate
 	 * @return Boolean representing whether the msg is valid
 	 */
@@ -142,7 +147,7 @@ public class TopologyProducer {
 
 		try {
 			for (Answer answer : msg.getItems()) {
-				if (!validateAnswer(answer))
+				if (!validateAnswer(data, answer))
 					break;
 
 				return true;
@@ -153,13 +158,14 @@ public class TopologyProducer {
 
 		return false;
 	}
-	
+
 	/**
 	 * Function for validating an asnwer.
+	 * 
 	 * @param answer the answer to validate
 	 * @return Boolean representing whether the answer is valid
 	 */
-	public Boolean validateAnswer(Answer answer) {
+	public Boolean validateAnswer(String data, Answer answer) {
 
 		// TODO: check questionCode by fetching from Questions
 		// TODO: check askID by fetching from Tasks
@@ -180,16 +186,15 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
-		// Check if inferredflag is set	
+		// Check if inferredflag is set
 		if (answer.getInferred()) {
 			log.error("InferredFlag is set");
 			return blacklist();
 		}
 
-
 		// fetch process data from graphql
 		ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
-		log.debug("Returned processData for (pid="+processId+")=" + processData);
+		log.debug("Returned processData for (pid=" + processId + ")=" + processData);
 		if (processData == null) {
 			log.error("Could not find process instance variables for processId [" + processId + "]");
 			return false;
@@ -215,8 +220,43 @@ public class TopologyProducer {
 		// check duplicate attributes
 		QDataAskMessage askMessage = processData.getAskMessage();
 		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
-			log.error("Duplicate answer detected for target " + answer.getTargetCode());
+			log.warn("Duplicate answer detected for target " + answer.getTargetCode());
 			qwandaUtils.sendSubmit(askMessage, false);
+
+			JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
+			JsonArray items = dataJson.getJsonArray("items");
+
+			// dumbly loop through items until matching answer. This is ugly
+			String code = "";
+			for (int i = 0; i < items.size(); i++) {
+				JsonObject item = items.getJsonObject(i);
+				log.info("item:" + item.toString());
+				if (item.getString("attributeCode").equals(answer.getAttributeCode())) {
+					code = item.getString("code");
+					break;
+				}
+			}
+
+			log.info(dataJson.toString());
+
+			// send a special FIELDMSG
+			String cmd_type = "FIELDMSG";
+			String attrCode = answer.getAttributeCode();
+			String questionCode = code;
+			JsonObject errorMsgJson = Json.createObjectBuilder()
+					.add("cmd_type", cmd_type)
+					.add("msg_type", "CMD_MSG")
+					.add("code", code)
+					.add("attributeCode", attrCode)
+					.add("questionCode", questionCode)
+					.add("message", Json.createObjectBuilder()
+							.add("value", "This field must be unique and not have already been selected ")
+							.build())
+					.add("token", userToken.getToken())
+					.build();
+			log.info("errorMsg:" + errorMsgJson.toString());
+			KafkaUtils.writeMsg("webcmds", errorMsgJson.toString());
+
 			return false;
 		}
 
@@ -257,7 +297,8 @@ public class TopologyProducer {
 
 		// check if answer is null
 		if (answer.getValue() == null) {
-			log.warnf("Received a null answer value from: %s, for: %s", userToken.getUserCode(), answer.getAttributeCode());
+			log.warnf("Received a null answer value from: %s, for: %s", userToken.getUserCode(),
+					answer.getAttributeCode());
 			return true;
 		}
 
@@ -270,7 +311,8 @@ public class TopologyProducer {
 
 	/**
 	 * Check if all validations are met for an answer.
-	 * @param answer The answer to check
+	 * 
+	 * @param answer    The answer to check
 	 * @param attribute The Attribute of the answer
 	 * @return Boolean representing whether the validation conditions have been met
 	 */
@@ -374,8 +416,9 @@ public class TopologyProducer {
 
 	/**
 	 * A Temporary handler for the bucket quick search.
-	 * @param answer The Answer to handle
-	 * @param target The target entity
+	 * 
+	 * @param answer    The Answer to handle
+	 * @param target    The target entity
 	 * @param attribute The attribute used
 	 */
 	// NOTE: This should be removed soon and rethought
