@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,11 +22,15 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.checked.GraphQLException;
+import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
@@ -33,7 +38,7 @@ import life.genny.qwandaq.utils.SearchUtils;
 @ApplicationScoped
 public class NavigationService {
 
-	private static final Logger log = Logger.getLogger(SearchService.class);
+	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -58,32 +63,69 @@ public class NavigationService {
 	@Inject
 	SearchUtils searchUtils;
 
+	@Inject
+	CapabilityUtils capabilityUtils;
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
 	/**
 	 * Trigger the default redirection for the user.
 	 */
-	public void defaultRedirect() {
+	public void redirect() {
+		redirect(null);
+	}
 
-		// grab default redirect from user be
-		BaseEntity user = beUtils.getUserBaseEntity();
-		String defaultRedirectCode = user.getValueAsString("PRI_DEFAULT_REDIRECT");
-		log.info("Actioning redirect for user " + user.getCode() + " : " + defaultRedirectCode);
+	/**
+	 * Trigger a redirect based on a code.
+	 * @param code
+	 */
+	public void redirect(String code) {
 
-		if (defaultRedirectCode == null) {
-			log.error("User has no default redirect!");
-			return;
+		log.infof("Performing redirect with code %s", code);
+
+		// route using code if specified
+		if (code != null) {
+			kogitoUtils.triggerWorkflow(GADAQ, "view", 
+				Json.createObjectBuilder()
+				.add("code", code)
+				.add("targetCode", userToken.getUserCode())
+				.build()
+			);
 		}
 
-		// build json and trigger view workflow
-		JsonObject json = Json.createObjectBuilder()
-				.add("eventMessage", Json.createObjectBuilder()
-						.add("data", Json.createObjectBuilder()
-								.add("code", defaultRedirectCode)
-								.add("targetCode", userToken.getUserCode())))
-				.build();
+		// check for outstanding tasks
+		try {
+			String processId = kogitoUtils.getOutstandingTaskProcessId();
+			kogitoUtils.sendSignal(GADAQ, "processQuestions", processId, "requestion");
+			log.info("Outstanding task triggered");
+			return;
+		} catch (GraphQLException e) {
+			log.debug(e.getMessage());
+		} catch (GennyResponseException re) {
+			log.debug(re.getMessage());
+		}
 
-		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
+		// otherwise check for default role redirect
+		try {
+			String redirectCode = capabilityUtils.getUserRoleRedirectCode();
+			log.infof("Role Redirect found: %s", redirectCode);
+			kogitoUtils.triggerWorkflow(GADAQ, "view", 
+				Json.createObjectBuilder()
+				.add("code", redirectCode)
+				.build()
+			);
+			log.info("Role Redirect sent");
+			return;
+		} catch (RoleException e) {
+			log.warn(e.getMessage());
+		}
+
+		// default to dashboard
+		kogitoUtils.triggerWorkflow(GADAQ, "view", 
+			Json.createObjectBuilder()
+			.add("code", "DASHBOARD_VIEW")
+			.build()
+		);
+		log.info("Dashboard View triggered");
 	}
 
 	/**
@@ -316,4 +358,5 @@ public class NavigationService {
 
 		return redirectCode;
 	}
+
 }

@@ -1,7 +1,10 @@
 package life.genny.bridge.live.data;
 
+import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.bridge.model.grpc.Item;
@@ -9,6 +12,7 @@ import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 import life.genny.qwandaq.security.keycloak.TokenVerification;
+import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
@@ -30,7 +34,17 @@ public class InternalConsumer {
 	@Inject BlackListInfo blackList;
 	@Inject BridgeGrpcService grpcService;
 	@Inject GennyScopeInit scope;
+	@Inject Service service;
 	@Inject UserToken userToken;
+
+	void onStart(@Observes StartupEvent ev) {
+
+		service.initToken();
+		service.initCache();
+		service.initKafka();
+		log.info("[*] Finished Startup!");
+	}
+
 
 	/**
 	 * A request with a protocol which will add, delete all or delete just a record depending on the

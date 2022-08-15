@@ -428,14 +428,11 @@ public class QwandaUtils {
 	/**
 	 * Send Submit enable/disable.
 	 *
-	 * @param askMessage The ask message representing the questions
-	 * @param enable.    Enable the submit button
+	 * @param ask The ask message representing the questions
+	 * @param enable. Enable the submit button
 	 * @return Boolean representing whether the submit button was enabled
 	 */
-	public Boolean sendSubmit(QDataAskMessage askMessage, Boolean enable) {
-
-		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems().get(0);
+	public Boolean sendSubmit(Ask ask, Boolean enable) {
 
 		// find the submit ask
 		recursivelyFindAndUpdateSubmitDisabled(ask, !enable);
@@ -604,7 +601,8 @@ public class QwandaUtils {
 	 * @param target        The target entity
 	 * @param definition    The definition entity
 	 * @param attributeCode The code of the attribute
-	 * @param value         The value to check
+	 * @param value The value to check
+	 * @return Boolean
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
@@ -679,6 +677,11 @@ public class QwandaUtils {
 		Long count = searchUtils.countBaseEntitys(searchEntity);
 		log.infof("Found %s entities", count);
 		if (count == 0)
+			return false;
+
+		// not duplicate if it is targets code
+		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
+		if (codes != null && !codes.isEmpty() && codes.get(0).equals(target.getCode()))
 			return false;
 
 		// if duplicate found then send back the baseentity with the conflicting

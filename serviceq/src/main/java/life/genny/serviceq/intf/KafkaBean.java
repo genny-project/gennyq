@@ -11,7 +11,7 @@ import javax.json.bind.JsonbBuilder;
 import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
-import life.genny.qwandaq.data.BridgeSwitch;
+import life.genny.qwandaq.session.bridge.BridgeSwitch;
 import life.genny.qwandaq.intf.KafkaInterface;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.exception.runtime.DebugException;

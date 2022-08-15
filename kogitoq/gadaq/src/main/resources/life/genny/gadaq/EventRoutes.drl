@@ -2,6 +2,7 @@ package life.genny.gadaq;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +15,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.kogito.common.models.RLog;
@@ -75,10 +77,15 @@ when
 	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code == "QUE_TREE_ITEM_HOST_COMPANIES" )
 	kogitoUtils : KogitoUtils()
 then
-	kogitoUtils.triggerWorkflow(SELF, "view", "eventMessage", msg);
+	JsonObjectBuilder builder = Json.createObjectBuilder()
+			.add("code", CommonUtils.removePrefix(msg.getData().getCode()));
+
+	if (msg.getTargetCode() != null) 
+		builder.add("targetCode", msg.getTargetCode());
+
+	kogitoUtils.triggerWorkflow(SELF, "view", builder.build());
 	retract(msg);
 end
-
 
 rule RouteInternshipApply
 salience 1000
