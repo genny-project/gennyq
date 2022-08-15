@@ -11,12 +11,13 @@ public class BaseEntityAttributeInitializerImpl implements SerializationContextI
 
 	@Override
 	public String getProtoFileName() {
-		return "/life/genny/qwandaq/serialization/protos/baseentity_attribute.proto";
+		// return "/life/genny/qwandaq/serialization/protos/baseentity_attribute.proto";
+		return "baseentity_attribute.proto";
 	}
 
 	@Override
 	public String getProtoFile() throws UncheckedIOException {
-		return ResourceUtils.getResourceAsString(getClass(), getProtoFileName());
+		return ResourceUtils.getResourceAsString(getClass(), "/life/genny/qwandaq/serialization/protos/" + getProtoFileName());
 	}
 
 	@Override
