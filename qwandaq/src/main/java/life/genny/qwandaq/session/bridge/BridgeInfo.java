@@ -1,4 +1,4 @@
-package life.genny.qwandaq.data;
+package life.genny.qwandaq.session.bridge;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -15,5 +15,6 @@ public class BridgeInfo {
 
 	public ConcurrentMap<String, String> mappings = new ConcurrentHashMap<>();
 
-	public BridgeInfo() {}
+	public BridgeInfo() {
+	}
 }
