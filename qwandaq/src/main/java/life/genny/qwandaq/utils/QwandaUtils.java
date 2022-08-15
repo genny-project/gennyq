@@ -678,6 +678,11 @@ public class QwandaUtils {
 		if (count == 0)
 			return false;
 
+		// not duplicate if it is targets code
+		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
+		if (codes != null && !codes.isEmpty() && codes.get(0).equals(target.getCode()))
+			return false;
+
 		// if duplicate found then send back the baseentity with the conflicting
 		// attribute and feedback message to display
 		// QUE target code needs to be set

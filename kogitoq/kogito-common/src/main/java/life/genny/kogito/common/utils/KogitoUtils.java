@@ -10,6 +10,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonValue;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
@@ -385,12 +386,24 @@ public class KogitoUtils {
 
 		// grab ProcessInstances with the parentId equal to this calling id
 		String callProcessId = array.getJsonObject(0).getString("id");
-		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id");
+		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id", "state");
 		if (array == null || array.isEmpty())
 			throw new GraphQLException("No ProcessInstances items found");
 
-		// force this workflow to re-ask the questions
-		return array.getJsonObject(0).getString("id");
+		log.info(array.toString());
+
+		// iterate processInstance tokens
+		for (JsonValue value : array) {
+
+			JsonObject object = value.asJsonObject();
+			String state = object.getString("state");
+
+			// return first active instance id
+			if (state.equals("ACTIVE"))
+				return object.getString("id");
+		}
+
+		throw new GraphQLException("All intances are complete");
 	}
 
 	/**
