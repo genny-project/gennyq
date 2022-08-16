@@ -1,7 +1,5 @@
 package life.genny.qwandaq.datatype;
 
-import java.io.Serializable;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /*
@@ -10,7 +8,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * @author Adam Crow
  */
 @RegisterForReflection
-public enum CapabilityMode implements Serializable {
+public enum CapabilityMode {
 
 	/**
 	 * represents no capability in regards to something
