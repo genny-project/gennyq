@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -36,6 +37,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 
 /**
  * A non-static utility class used for standard
@@ -61,6 +63,9 @@ public class BaseEntityUtils {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Inject
+	BaseEntityAttributeUtils beaUtils;
 
 	public BaseEntityUtils() {
 	}
@@ -188,6 +193,11 @@ public class BaseEntityUtils {
 			}
 		} else {
 			entity = (BaseEntity) baseEntitySerializable.toCoreEntity();
+			Map<String, EntityAttribute> attributeMap = entity.getAttributeMap();
+			beaUtils.getBaseEntityAttributes().parallelStream().forEach(bea -> {
+				EntityAttribute ea = null;
+				attributeMap.put(bea.getAttributeCode(), ea);
+			});
 		}
 
 		return entity;

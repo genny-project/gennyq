@@ -4,10 +4,18 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import javax.persistence.Transient;
+
 import org.javamoney.moneta.Money;
 
+import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
-public class BaseEntityAttribute implements java.io.Serializable {
+
+public class BaseEntityAttribute implements CoreEntitySerializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -55,6 +63,12 @@ public class BaseEntityAttribute implements java.io.Serializable {
 
 	private Boolean confirmationFlag = false;
 
+	@Transient
+	private BaseEntity baseEntity;
+
+	@Transient
+	private Attribute attribute;
+
 	public BaseEntityAttribute() {
 	}
 
@@ -62,7 +76,7 @@ public class BaseEntityAttribute implements java.io.Serializable {
 			Boolean privacyFlag, Boolean readonly, String realm, LocalDateTime updated, Double valueDouble,
 			Boolean valueBoolean, Integer valueInteger, Long valueLong, LocalTime valueTime,
 			LocalDateTime valueDateTime, LocalDate valueDate, String valueString, Money valueMoney, Double weight,
-			Long attributeId, Long baseEntityId, String icon, Boolean confirmationFlag) {
+			Attribute attribute, BaseEntity baseEntity, String icon, Boolean confirmationFlag) {
 		super();
 		this.baseEntityCode = baseEntityCode;
 		this.attributeCode = attributeCode;
@@ -82,8 +96,8 @@ public class BaseEntityAttribute implements java.io.Serializable {
 		this.valueString = valueString;
 		this.money = valueMoney;
 		this.weight = weight;
-		this.attributeId = attributeId;
-		this.baseEntityId = baseEntityId;
+		this.attribute = attribute;
+		this.baseEntity = baseEntity;
 		this.icon = icon;
 		this.confirmationFlag = confirmationFlag;
 	}
@@ -264,4 +278,47 @@ public class BaseEntityAttribute implements java.io.Serializable {
 		this.confirmationFlag = confirmationFlag;
 	}
 
+	public BaseEntity getBaseEntity() {
+		return baseEntity;
+	}
+
+	public void setBaseEntity(BaseEntity baseEntity) {
+		this.baseEntity = baseEntity;
+	}
+
+	public Attribute getAttribute() {
+		return attribute;
+	}
+
+	public void setAttribute(Attribute attribute) {
+		this.attribute = attribute;
+	}
+
+	@Override
+	public CoreEntity toCoreEntity() {
+		EntityAttribute ea = new EntityAttribute();
+		ea.setRealm(getRealm());
+		ea.setBaseEntityCode(getBaseEntityCode());
+		ea.setAttributeCode(getAttributeCode());
+		ea.setCreated(getCreated());
+		ea.setInferred(getInferred());
+		ea.setPrivacyFlag(getPrivacyFlag());
+		ea.setReadonly(getReadonly());
+		ea.setUpdated(getUpdated());
+		ea.setValueBoolean(getValueBoolean());
+		ea.setValueDate(getValueDate());
+		ea.setValueDateTime(getValueDateTime());
+		ea.setValueDouble(getValueDouble());
+		ea.setValueInteger(getValueInteger());
+		ea.setValueLong(getValueLong());
+		ea.setValueMoney(getMoney());
+		ea.setValueString(getValueString());
+		ea.setUpdated(getUpdated());
+		ea.setWeight(getWeight());
+		ea.setAttribute(getAttribute());
+		ea.setBaseEntity(getBaseEntity());
+		// bea.setIcon(geticon);
+		ea.setConfirmationFlag(getConfirmationFlag());
+		return ea;
+	}
 }
