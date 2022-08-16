@@ -428,7 +428,7 @@ public class QwandaUtils {
 	/**
 	 * Send Submit enable/disable.
 	 *
-	 * @param ask The ask message representing the questions
+	 * @param ask     The ask message representing the questions
 	 * @param enable. Enable the submit button
 	 * @return Boolean representing whether the submit button was enabled
 	 */
@@ -601,7 +601,7 @@ public class QwandaUtils {
 	 * @param target        The target entity
 	 * @param definition    The definition entity
 	 * @param attributeCode The code of the attribute
-	 * @param value The value to check
+	 * @param value         The value to check
 	 * @return Boolean
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
@@ -620,7 +620,7 @@ public class QwandaUtils {
 
 		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
 		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using "
-				+ unique.get().getValue());
+				+ unique.get().getValue() + " and incoming value: " + value);
 
 		String uniqueIndexes = unique.get().getValue();
 		uniqueIndexes = BaseEntityUtils.cleanUpAttributeValue(uniqueIndexes);
@@ -635,12 +635,15 @@ public class QwandaUtils {
 
 		searchEntity.setRealm(target.getRealm());
 
-		log.info("Checking all the target data");
+		log.info("Checking all the existing target data");
 		for (EntityAttribute ea : target.getBaseEntityAttributes()) {
 			log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
 		}
 
+		log.info("Looping through all the unique attributes  to add to search " + uniqueArray.length
+				+ " unique elements");
 		for (String uniqueAttr : uniqueArray) {
+			// if not the incoming attribute
 			if (!uniqueAttr.equals(attributeCode)) {
 				String attrValue = "";
 				if (!target.containsEntityAttribute(uniqueAttr)) {
@@ -651,23 +654,36 @@ public class QwandaUtils {
 				} else {
 					attrValue = target.getValueAsString(uniqueAttr);
 				}
+				log.info("Existing uniqueAttr(" + uniqueAttr + ") is in target and has value " + attrValue);
 
-				if (attrValue.startsWith("[")) {
+				if ((attrValue != null) && attrValue.startsWith("[")) {
 					// TODO, do this better to remove the outside square brackets and quotes
-					attrValue = attrValue.substring(1, attrValue.length() - 1);
-					attrValue = attrValue.substring(1, attrValue.length() - 1);
+					try {
+						attrValue = attrValue.substring(1, attrValue.length() - 1);
+						attrValue = attrValue.substring(1, attrValue.length() - 1);
+					} catch (Exception e) {
+						attrValue = "";
+					}
+
+					log.info("Checking for duplicate using target attribute: " + uniqueAttr.toString() + " and "
+							+ attrValue);
+					searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE,
+							"%" + attrValue + "%");
 				}
-				log.info("Checking for duplicate using target attribute: " + uniqueAttr.toString() + " and "
-						+ attrValue);
-				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + attrValue + "%");
 			} else {
-				if (value.startsWith("[")) {
+				log.info("Existing uniqueAttr(" + uniqueAttr + ") is in incoming and has value " + value);
+				if ((value != null) && value.startsWith("[")) {
 					// TODO, do this better to remove the outside square brackets and quotes
-					value = value.substring(1, value.length() - 1);
-					value = value.substring(1, value.length() - 1);
+					try {
+						value = value.substring(1, value.length() - 1);
+						value = value.substring(1, value.length() - 1);
+					} catch (Exception e) {
+						value = "";
+					}
+					log.info(
+							"Checking for duplicate using given attribute: " + uniqueAttr.toString() + " and " + value);
+					searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + value + "%");
 				}
-				log.info("Checking for duplicate using given attribute: " + uniqueAttr.toString() + " and " + value);
-				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + value + "%");
 			}
 
 		}
