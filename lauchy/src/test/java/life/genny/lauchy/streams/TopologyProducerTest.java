@@ -27,45 +27,45 @@ import io.quarkus.test.junit.QuarkusTest;
 @QuarkusTest
 public class TopologyProducerTest {
 
-// @Inject
-// Topology topology;
+	// @Inject
+	// Topology topology;
 
-// TopologyTestDriver testDriver;
+	// TopologyTestDriver testDriver;
 
-// TestInputTopic<Integer, String> data;
+	// TestInputTopic<Integer, String> data;
 
-// TestOutputTopic<Integer, String> webData;
+	// TestOutputTopic<Integer, String> webData;
 
-// @BeforeEach
-// public void setUp() {
+	// @BeforeEach
+	// public void setUp() {
 
-// Properties config = new Properties();
-// config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testApplicationId");
-// config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
-// testDriver = new TopologyTestDriver(topology, config);
+	// 	Properties config = new Properties();
+	// 	config.put(StreamsConfig.APPLICATION_ID_CONFIG, "testApplicationId");
+	// 	config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
+	// 	testDriver = new TopologyTestDriver(topology, config);
 
-// data = testDriver.createInputTopic("data", new IntegerSerializer(), new
-// StringSerializer());
-// webData = testDriver.createOutputTopic("webdata", new IntegerDeserializer(),
-// new StringDeserializer());
-// }
+	// 	data = testDriver.createInputTopic("data", new IntegerSerializer(), new
+	// 		StringSerializer());
+	// 	webData = testDriver.createOutputTopic("webdata", new IntegerDeserializer(),
+	// 		new StringDeserializer());
+	// }
 
-// @AfterEach
-// public void tearDown(){
-// testDriver.close();
-// }
+	// @AfterEach
+	// public void tearDown(){
+	// 	testDriver.close();
+	// }
 
-// @Test
-// public void test() {
+	// @Test
+	// public void test() {
 
-// // TODO: Make this a proper test
+	// 	// TODO: Make this a proper test
 
-// String json = "";
-// data.pipeInput(json);
+	// 	String json = "";
+	// 	data.pipeInput(json);
 
-// TestRecord<Integer, String> result = webData.readRecord();
+	// 	TestRecord<Integer, String> result = webData.readRecord();
 
-// // Assertions.assertEquals(null, result);
+	// 	// Assertions.assertEquals(null, result);
 
-// }
+	// }
 }
