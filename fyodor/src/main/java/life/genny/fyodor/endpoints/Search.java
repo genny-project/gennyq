@@ -1,12 +1,9 @@
 package life.genny.fyodor.endpoints;
 
-import java.util.UUID;
-
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
-import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -19,7 +16,6 @@ import org.jboss.logging.Logger;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.FyodorSearch;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.ServiceToken;

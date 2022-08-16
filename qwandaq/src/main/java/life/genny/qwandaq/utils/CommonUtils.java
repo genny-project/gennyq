@@ -113,6 +113,29 @@ public class CommonUtils {
         return getSystemEnv(env, true);
     }
 
+    /**
+     * Get a JSON style array of objects using {@link Object#toString()} for each object
+     * @param <T> type
+     * @param list - list to get stringified array of
+     * @return a JSON style array of object
+     */
+    public static <T> String getArrayString(List<T> list) {
+        return getArrayString(list, (item) -> item.toString());
+    }
+
+    /**
+     * Get a JSON style array of objects using {@link Object#toString()} for each object
+     * @param <T> type
+     * @param arr - array to get stringified array of
+     * @return a JSON style array of object
+     */
+    public static <T> String getArrayString(T[] arr) {
+        return getArrayString(arr, (item) -> {
+            System.out.println("Item: " + item.toString());
+            return item.toString();
+        });
+    }
+
 
     /**
      * Get a JSON style array of objects. Pass a callback for custom values. Will default to {@link Object#toString()} otherwise
@@ -142,6 +165,20 @@ public class CommonUtils {
             result += "\"" + stringCallback.getString(object) + "\",";
         }
         return "[" + result.substring(0, result.length() - 1) + "]";
+    }
+
+    /**
+     * Create an equals break (======) of size len
+     * @param len length of the equals break
+     * @return The equals string
+     */
+    public static String equalsBreak(int len) {
+        String ret = "";
+        for(int i = 0; i < len; i++) {
+            ret += "=";
+        }
+
+        return ret;
     }
 
 	/**
