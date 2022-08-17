@@ -1,7 +1,10 @@
 package life.genny.lauchy.streams;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -102,8 +105,8 @@ public class TopologyProducer {
 				.peek((k, v) -> log.info("Received message: " + stripToken(v)))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
-        .mapValues((k, v) -> handleDependentDropdowns(v))
 				.filter((k, v) -> validateData(v))
+        .mapValues((k, v) -> handleDependentDropdowns(v))
 				.peek((k, v) -> log.info("Forwarding valid message"))
 				.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
 
@@ -122,6 +125,28 @@ public class TopologyProducer {
 	}
 
   public String handleDependentDropdowns(String data) {
+	QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+
+    // TODO: Just getting something working for now. Will optimize later
+  Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_")).forEach(answer -> {
+      String processId = answer.getProcessId();
+      ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+      BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+      defBE.getBaseEntityAttributes().stream().filter(ea -> ea.getAttributeCode().startsWith("DEP_LNK")).forEach(ea -> {
+
+      });
+    });
+	for(Answer answer : msg.getItems()) {
+		String processId = answer.getProcessId();
+		ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+		log.debugf("Processing answer %s. DEF: %s", answer.getTargetCode(), defBE.getCode());
+    log.debug("Question Code: " + processData.getQuestionCode());
+    log.debug("Attribute Code: " + answer.getAttributeCode());
+    defBE.getBaseEntityAttributes().stream().filter(ea -> ea.getAttributeCode().startsWith("DEP_LNK")).forEach(ea -> {
+        log.debug("EntityAttribute: " + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
+    });
+	}
       
     return data;
   }
@@ -148,7 +173,7 @@ public class TopologyProducer {
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
 		if (msg.getItems().length == 0) {
-			log.info("Detected a payload with empty items.. ignoring & proceding..");
+			log.warn("Detected a payload with empty items.. ignoring & proceding..");
 			return false;
 		}
 
@@ -185,7 +210,7 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
-		// check processId is no blank
+		// check processId is not blank
 		String processId = answer.getProcessId();
 		log.info("CHECK Integrity of processId [" + processId + "]");
 		if (StringUtils.isBlank(processId)) {
@@ -227,6 +252,7 @@ public class TopologyProducer {
 		// check duplicate attributes
 		String questionCode = processData.getQuestionCode();
 		String key = String.format("%s:%s", processId, questionCode);
+    log.info("KEY: " + key);
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
 			log.error("Duplicate answer detected for target " + answer.getTargetCode());
