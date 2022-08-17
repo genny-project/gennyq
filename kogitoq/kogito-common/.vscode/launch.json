@@ -6,42 +6,11 @@
     "configurations": [     
         {
             "type": "java",
-            "name": "Remote Debug (Kogito)",
+            "name": "Remote Debug (Internmatch)",
             "request": "attach",
             "hostName": "localhost",
-            "port": 5580,
-            "sourcePaths": ["../../../../qwandaq/target/qwandaq-10.1.0-sources.jar"],
-            "java.project.referencedLibraries": {
-    "           include": [
-                    "library/**/*.jar",
-                    "/home/username/lib/foo.jar"
-                ],
-    "           exclude": [
-                    "library/sources/**"
-                ],
-    "       sources": {
-        "   library/bar.jar": "library/sources/bar-src.jar",
-        "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "../../../../qwandaq/target/qwandaq-10.1.0-sources.jar"
+            "port": 8140
+        }
     ]
-    }
-}
-
-             
-        },
-        {
-            "type": "java",
-            "name": "Remote Debug (Attach OpenLiberty)",
-            "request": "attach",
-            "hostName": "localhost",
-            "port": 7777
-        },
-        {
-            "type": "java",
-            "name": "Launch Current File",
-            "request": "launch",
-            "mainClass": "${file}"
-        },
-    ]
+ 
 }

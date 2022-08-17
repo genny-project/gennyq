@@ -10,8 +10,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,7 +18,6 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -31,14 +28,13 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.exception.BadDataException;
-import life.genny.qwandaq.exception.ItemNotFoundException;
-import life.genny.qwandaq.exception.NullParameterException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.UniquePair;
 import life.genny.qwandaq.models.UserToken;
 
 /**
@@ -221,11 +217,9 @@ public class QwandaUtils {
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if ("QUE_BASEENTITY_GRP".equals(code)) {
 			return generateAskGroupUsingBaseEntity(target);
-
 		}
 
 		String productCode = userToken.getProductCode();
-
 		log.debug("Fetching Question: " + code);
 
 		// find the question in the database
@@ -421,7 +415,6 @@ public class QwandaUtils {
 			ask.setDisabled(disabled);
 		}
 
-
 		// recursively check child asks for submit
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
@@ -435,14 +428,11 @@ public class QwandaUtils {
 	/**
 	 * Send Submit enable/disable.
 	 *
-	 * @param askMessage The ask message representing the questions
+	 * @param ask     The ask message representing the questions
 	 * @param enable. Enable the submit button
 	 * @return Boolean representing whether the submit button was enabled
 	 */
-	public Boolean sendSubmit(QDataAskMessage askMessage, Boolean enable) {
-
-		// NOTE: We only ever check the first ask in the message
-		Ask ask = askMessage.getItems().get(0);
+	public Boolean sendSubmit(Ask ask, Boolean enable) {
 
 		// find the submit ask
 		recursivelyFindAndUpdateSubmitDisabled(ask, !enable);
@@ -607,12 +597,19 @@ public class QwandaUtils {
 
 	/**
 	 * Check the uniqueness of an answer
-	 * @param target The target entity
-	 * @param definition The definition entity
+	 * 
+	 * @param target        The target entity
+	 * @param definition    The definition entity
 	 * @param attributeCode The code of the attribute
+
 	 * @param value The value to check
+	 * @return is duplicate bool
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
+
+		if (StringUtils.isBlank(value)) {
+			return false;
+		}
 
 		// Check if attribute code exists as a UNQ for the DEF
 		Optional<EntityAttribute> unique = definition.findEntityAttribute("UNQ_" + attributeCode);
@@ -623,20 +620,73 @@ public class QwandaUtils {
 		}
 
 		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
-		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using " + unique.get().getValue());
+		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using "
+				+ unique.get().getValue() + " and incoming value: " + value);
 
 		String uniqueIndexes = unique.get().getValue();
 		uniqueIndexes = BaseEntityUtils.cleanUpAttributeValue(uniqueIndexes);
 		String[] uniqueArray = uniqueIndexes.split(",");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
+		log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
 		SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-			.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix+"_%")
-			.setPageStart(0)
-			.setPageSize(1);
+				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
+				.setPageStart(0)
+				.setPageSize(1);
 
-		for (String uniqueAttr : uniqueArray) { 
-			searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, value);
+		searchEntity.setRealm(target.getRealm());
+
+		log.info("Checking all the existing target data");
+		for (EntityAttribute ea : target.getBaseEntityAttributes()) {
+			log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
+		}
+
+		log.info("Looping through all the unique attributes  to add to search " + uniqueArray.length
+				+ " unique elements");
+		for (String uniqueAttr : uniqueArray) {
+			// if not the incoming attribute
+			if (!uniqueAttr.equals(attributeCode)) {
+				String attrValue = "";
+				if (!target.containsEntityAttribute(uniqueAttr)) {
+					// fetch from original target
+					BaseEntity originalTarget = beUtils.getBaseEntityByCode(
+							definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3)); // leave the '_'
+					attrValue = originalTarget.getValueAsString(uniqueAttr);
+				} else {
+					attrValue = target.getValueAsString(uniqueAttr);
+				}
+				log.info("Existing uniqueAttr(" + uniqueAttr + ") is in target and has value " + attrValue);
+
+				if ((attrValue != null) && attrValue.startsWith("[")) {
+					// TODO, do this better to remove the outside square brackets and quotes
+					try {
+						attrValue = attrValue.substring(1, attrValue.length() - 1);
+						attrValue = attrValue.substring(1, attrValue.length() - 1);
+					} catch (Exception e) {
+						attrValue = "";
+					}
+
+					log.info("Checking for duplicate using target attribute: " + uniqueAttr.toString() + " and "
+							+ attrValue);
+					searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE,
+							"%" + attrValue + "%");
+				}
+			} else {
+				log.info("Existing uniqueAttr(" + uniqueAttr + ") is in incoming and has value " + value);
+				if ((value != null) && value.startsWith("[")) {
+					// TODO, do this better to remove the outside square brackets and quotes
+					try {
+						value = value.substring(1, value.length() - 1);
+						value = value.substring(1, value.length() - 1);
+					} catch (Exception e) {
+						value = "";
+					}
+					log.info(
+							"Checking for duplicate using given attribute: " + uniqueAttr.toString() + " and " + value);
+					searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + value + "%");
+				}
+			}
+
 		}
 
 		searchEntity.setRealm(userToken.getProductCode());
@@ -646,13 +696,30 @@ public class QwandaUtils {
 		if (count == 0)
 			return false;
 
-		// if duplicate found then send back the baseentity with the conflicting attribute and feedback message to display
+		// not duplicate if it is targets code
+		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
+		if (codes != null && !codes.isEmpty() && codes.get(0).equals(target.getCode()))
+			return false;
+
+		// if duplicate found then send back the baseentity with the conflicting
+		// attribute and feedback message to display
+		// QUE target code needs to be set
 		BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
-		msg.setToken(userToken.getToken());
-		msg.setTag("Duplicate Error");
-		msg.setMessage("Error: This value already exists and must be unique.");
-		KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
+		Optional<EntityAttribute> optEa = target.findEntityAttribute(attributeCode);
+		if (optEa.isPresent()) {
+			String feedback = "Error: This value already exists and must be unique.";
+			EntityAttribute ea = optEa.get();
+			ea.setFeedback(feedback);
+			log.info("Added " + ea);
+			errorBE.addAttribute(ea);
+			QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
+			msg.setToken(userToken.getToken());
+			msg.setTag("Duplicate Error");
+			msg.setReplace(false);
+			msg.setMessage(feedback);
+			KafkaUtils.writeMsg("webcmds", msg);
+			log.debug("Sent duplicate error message to frontend for " + target.getCode());
+		}
 
 		return true;
 	}

@@ -50,6 +50,7 @@ public class TopologyProducer {
 
 	/**
 	 * Helper function to show the data without a token
+	 * 
 	 * @param data
 	 * @return
 	 */
@@ -57,5 +58,4 @@ public class TopologyProducer {
 		JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
 		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
 	}
-
 }

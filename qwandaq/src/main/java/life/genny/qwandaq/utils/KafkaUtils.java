@@ -7,7 +7,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.exception.NotInitializedException;
+import life.genny.qwandaq.exception.runtime.NotInitializedException;
 import life.genny.qwandaq.intf.KafkaInterface;
 
 /*

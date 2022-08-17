@@ -27,6 +27,7 @@ import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -34,7 +35,6 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
-import life.genny.qwandaq.exception.ItemNotFoundException;
 
 /**
  * Cache --- Endpoints providing cache access

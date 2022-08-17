@@ -21,7 +21,7 @@ import io.vertx.core.json.JsonObject;
 import life.genny.bridge.model.grpc.Empty;
 import life.genny.bridge.model.grpc.Item;
 import life.genny.bridge.model.grpc.Stream;
-import life.genny.qwandaq.data.BridgeSwitch;
+import life.genny.qwandaq.session.bridge.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 

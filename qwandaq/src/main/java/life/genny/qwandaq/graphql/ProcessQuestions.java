@@ -1,8 +1,9 @@
 package life.genny.qwandaq.graphql;
 
+import java.util.List;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QDataAskMessage;
 
 @RegisterForReflection
 public class ProcessQuestions extends ProcessInstanceVariables {
@@ -13,7 +14,7 @@ public class ProcessQuestions extends ProcessInstanceVariables {
 	private String definitionCode;
 	private String events;
     private BaseEntity processEntity;
-    private QDataAskMessage askMessage;
+	private List<String> attributeCodes;
 
 	public ProcessQuestions() {
 		super();
@@ -67,12 +68,12 @@ public class ProcessQuestions extends ProcessInstanceVariables {
         this.processEntity = processEntity;
     }
 
-	public QDataAskMessage getAskMessage() {
-        return askMessage;
-    }
+	public List<String> getAttributeCodes() {
+		return attributeCodes;
+	}
 
-    public void setAskMessage(QDataAskMessage askMessage) {
-        this.askMessage = askMessage;
-    }
+	public void setAttributeCodes(List<String> attributeCodes) {
+		this.attributeCodes = attributeCodes;
+	}
 
 }

@@ -190,31 +190,4 @@ public class InitService {
 		KafkaUtils.writeMsg("webdata", msg);
 	}
 
-	/**
-	 * Send Outstanding Tasks
-	 */
-	public void sendOutstandingTasks() {
-
-		// TODO: allow this to check for internal gadaq processQuestions too
-
-		// we store the summary code in the persons lifecycle
-		JsonArray array = gqlUtils.queryTable("ReceiveQuestionRequest", "sourceCode", userToken.getUserCode(), "id");
-		if (array == null || array.isEmpty()) {
-			log.error("No ReceiveQuestionRequest items found");
-			return;
-		}
-
-		// grab ProcessInstances with the parentId equal to this calling id
-		String callProcessId = array.getJsonObject(0).getString("id");
-		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id");
-		if (array == null || array.isEmpty()) {
-			log.error("No ProcessInstances items found");
-			return;
-		}
-
-		// force this workflow to re-ask the questions
-		String processId = array.getJsonObject(0).getString("id");
-		kogitoUtils.sendSignal(GADAQ, "processQuestions", processId, "requestion", "");
-	}
-
 }

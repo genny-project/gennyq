@@ -19,10 +19,10 @@ do
 	./mvnw clean install -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$dependency
 
 	# exit if build failed
-        if [[ "$?" -ne 0 ]] ; then
-                echo "Build failed"
-                exit $rc
-        fi
+	if [[ "$?" -ne 0 ]] ; then
+		echo "Build failed"
+		exit 1;
+	fi
 done
 
 # iterate projects
@@ -38,10 +38,10 @@ do
 	./mvnw clean install -Dquarkus.container-image.build=true -DskipTests=true -Dcheckstyle.skip -Dstyle.color=always -pl :$project
 
 	# exit if build failed
-        if [[ "$?" -ne 0 ]] ; then
-                echo "Build failed"
-                exit $rc
-        fi
+	if [[ "$?" -ne 0 ]] ; then
+		echo "Build failed"
+		exit 1;
+	fi
 
 	# tag the docker container
     echo "Tagging $project"

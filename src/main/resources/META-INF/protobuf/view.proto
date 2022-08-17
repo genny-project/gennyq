@@ -6,72 +6,19 @@ option kogito_model = "View";
 option kogito_id = "view";
 
 /* @Indexed */ 
-message MessageData { 
-	option java_package = "life.genny.qwandaq.message";
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string code = 1; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string content = 2; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 id = 3; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string parentCode = 4; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string processId = 5; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string rootCode = 6; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 7; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 8; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string value = 9; 
-}
-/* @Indexed */ 
-message QEventMessage { 
-	option java_package = "life.genny.qwandaq.message";
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional MessageData data = 1; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string event_type = 2; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string attributeCode = 3; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string message = 4; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string msg_type = 5; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 6; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated string recipientCodeArray = 7; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 8; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string tag = 9; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 10; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated string targetCodes = 11; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 12; 
-}
-/* @Indexed */ 
 message View { 
 	option java_package = "life.genny.gadaq";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="") */ 
+ @VariableInfo(tags="input") */ 
 	optional string code = 1; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input,readonly") */ 
-	optional QEventMessage eventMessage = 2; 
 	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
-	optional string id = 3; 
+	optional string id = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="") */ 
-	optional string targetCode = 4; 
+ @VariableInfo(tags="input") */ 
+	optional string targetCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input,readonly") */ 
-	optional string token = 5; 
+	optional string token = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 6; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 5; 
 }

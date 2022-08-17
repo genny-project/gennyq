@@ -20,7 +20,7 @@ import org.jboss.logging.Logger;
 
 import io.smallrye.jwt.auth.principal.JWTParser;
 import io.smallrye.jwt.auth.principal.ParseException;
-import life.genny.qwandaq.exception.GennyKeycloakException;
+import life.genny.qwandaq.exception.runtime.GennyKeycloakException;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.client.KeycloakHttpClient;
 

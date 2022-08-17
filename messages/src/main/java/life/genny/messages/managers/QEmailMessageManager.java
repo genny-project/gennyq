@@ -4,15 +4,14 @@ import life.genny.messages.managers.SMTP.SendGrid.SendEmailWithSendGridAPI;
 import life.genny.messages.util.MsgUtils;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.TimeUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.json.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,12 +21,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ApplicationScoped
-public class QEmailMessageManager implements QMessageProvider {
+public class QEmailMessageManager extends QMessageProvider {
 
 	private static final Logger log = Logger.getLogger(QEmailMessageManager.class);
-
-	@Inject
-	BaseEntityUtils beUtils;
 
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
@@ -37,15 +33,15 @@ public class QEmailMessageManager implements QMessageProvider {
 		BaseEntity recipientBe = (BaseEntity) contextMap.get("RECIPIENT");
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
 
-		recipientBe = beUtils.getBaseEntityByCode(recipientBe.getCode());
+		recipientBe = beUtils.getBaseEntityOrNull(recipientBe.getCode());
 
 		if (templateBe == null) {
-			log.error(ANSIColour.RED + "TemplateBE passed is NULL!!!!" + ANSIColour.RESET);
-			return;
+			throw new NullParameterException("templateBe");
 		}
 
 		if (recipientBe == null) {
 			log.error(ANSIColour.RED + "Target is NULL" + ANSIColour.RESET);
+			throw new NullParameterException("recipientBe");
 		}
 
 		String timezone = recipientBe.getValue("PRI_TIMEZONE_ID", "UTC");
@@ -70,7 +66,7 @@ public class QEmailMessageManager implements QMessageProvider {
 
 		if (recipient == null) {
 			log.error(ANSIColour.RED + "Target " + recipientBe.getCode() + ", PRI_EMAIL is NULL" + ANSIColour.RESET);
-			return;
+			throw new NullParameterException("recipient");
 		}
 
 		String subject = templateBe.getValue("PRI_SUBJECT", null);
