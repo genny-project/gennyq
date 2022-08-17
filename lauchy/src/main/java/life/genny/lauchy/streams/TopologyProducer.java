@@ -9,11 +9,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.json.Json;
-import javax.json.JsonArray;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
@@ -34,7 +34,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -103,6 +102,7 @@ public class TopologyProducer {
 				.peek((k, v) -> log.info("Received message: " + stripToken(v)))
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
+        .mapValues((k, v) -> handleDependentDropdowns(v))
 				.filter((k, v) -> validateData(v))
 				.peek((k, v) -> log.info("Forwarding valid message"))
 				.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
@@ -120,6 +120,11 @@ public class TopologyProducer {
 		JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
 		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
 	}
+
+  public String handleDependentDropdowns(String data) {
+      
+    return data;
+  }
 
 	/**
 	 * Helper function to tidy some values
@@ -139,7 +144,7 @@ public class TopologyProducer {
 	 * @return Boolean representing whether the msg is valid
 	 */
 	public Boolean validateData(String data) {
-
+    
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
 		if (msg.getItems().length == 0) {
