@@ -74,11 +74,14 @@ end
 
 rule RouteView 
 when
-	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code matches "QUE_TREE_ITEM_.*" )
+	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code matches "QUE_TABLE_.*" || data.code == "ACT_VIEW" || data.code matches "QUE_TREE_ITEM_.*" )
 	kogitoUtils : KogitoUtils()
 then
-	JsonObjectBuilder builder = Json.createObjectBuilder()
-			.add("code", CommonUtils.removePrefix(msg.getData().getCode()));
+    String code = CommonUtils.removePrefix(msg.getData().getCode());
+    code = code.replace("_VIEW","");
+    code = code.replace("TABLE_","");
+
+	JsonObjectBuilder builder = Json.createObjectBuilder().add("code", code);
 
 	if (msg.getData().getTargetCode() != null) 
 		builder.add("targetCode", msg.getData().getTargetCode());
@@ -121,7 +124,6 @@ then
 	kogitoUtils.triggerWorkflow(SELF,"testQuestion", payload);
 	retract(msg);
 end
-
 
 rule RouteAddItem 
 when
@@ -179,6 +181,7 @@ then
 	kogitoUtils.triggerWorkflow(SELF, "view", "eventMessage", msg);
 	retract(msg);
 end
+
 
 /**
  * If no route exists within gadaq, the message should be
