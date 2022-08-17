@@ -19,7 +19,7 @@ package life.genny.qwandaq;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;

@@ -46,6 +46,7 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityAttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -70,6 +71,9 @@ public class FyodorSearch {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	BaseEntityAttributeUtils beaUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
 

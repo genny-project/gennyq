@@ -5,8 +5,6 @@ import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import org.infinispan.client.hotrod.Search;
-import org.infinispan.query.dsl.QueryFactory;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -29,7 +27,7 @@ public class BaseEntityAttributeUtils {
 	 *
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttribute to fetch
-     * * @param attributeCode        The Attribute code of the BaseEntityAttribute to fetch
+     * @param attributeCode        The Attribute code of the BaseEntityAttribute to fetch
 	 * @return The corresponding BaseEntityAttribute, or null if not found.
 	 */
     public BaseEntityAttribute getBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
@@ -38,11 +36,11 @@ public class BaseEntityAttributeUtils {
     }
 
     /**
-	 * Fetch a {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
+	 * Fetch a list of {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode.
 	 *
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttribute to fetch
-     * * @param attributeCode        The Attribute code of the BaseEntityAttribute to fetch
+     * @param attributeCodes        The list of Attribute codes of the BaseEntityAttributes to fetch
 	 * @return The list of corresponding BaseEntityAttributes, or empty list if not found.
 	 */
     public List<BaseEntityAttribute> getBaseEntityAttributes(String productCode, String baseEntityCode,
@@ -61,9 +59,7 @@ public class BaseEntityAttributeUtils {
 	 * @return The corresponding list of all BaseEntityAttributes, or empty list if not found.
 	 */
     public List<BaseEntityAttribute> getAllBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-        // QueryFactory qb = Search.getSearchManager(cache).buildQueryBuilderForClass(Book.class).get();
-        // QueryFactory qf = Search.getQueryFactory();
-        throw new UnsupportedOperationException();
+        return CacheUtils.getBaseEntityAttributesForBaseEntityUsingIckle(productCode, baseEntityCode);
     }
 
     /**
@@ -71,7 +67,7 @@ public class BaseEntityAttributeUtils {
 	 *
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttribute to fetch
-     * * @param attributeCode        The Attribute code of the BaseEntityAttribute to fetch
+     * @param attributeCode        The Attribute code of the BaseEntityAttribute to fetch
 	 * @return The corresponding EntityAttribute, or null if not found.
 	 */
     public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
@@ -79,11 +75,11 @@ public class BaseEntityAttributeUtils {
     }
 
     /**
-	 * Fetch a {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
+	 * Fetch a list of {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode and attributeCodes list.
 	 *
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttribute to fetch
-     * * @param attributeCode        The Attribute code of the BaseEntityAttribute to fetch
+     * @param attributeCodes        The list of Attribute codes of the BaseEntityAttributes to fetch
 	 * @return The list of corresponding EntityAttributes, or empty list if not found.
 	 */
     public List<EntityAttribute> getEntityAttributes(String productCode, String baseEntityCode,
@@ -96,15 +92,17 @@ public class BaseEntityAttributeUtils {
     }
 
     /**
-	 * Fetch a {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
+	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
 	 *
 	 * @param productCode The productCode to use
-	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttribute to fetch
+	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttributes to fetch
 	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
 	 */
-    public List<BaseEntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-        // QueryFactory qb = Search.getSearchManager(cache).buildQueryBuilderForClass(Book.class).get();
-        // QueryFactory qf = Search.getQueryFactory();
-        throw new UnsupportedOperationException();
+    public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
+        List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
+        getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
+                .forEach(baseEntityAttribute -> baseEntityAttributes
+                        .add((EntityAttribute) baseEntityAttribute.toCoreEntity()));
+        return baseEntityAttributes;
     }
 }

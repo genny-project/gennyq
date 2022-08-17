@@ -46,7 +46,7 @@ import com.querydsl.core.annotations.QueryExclude;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
-import life.genny.qwandaq.exception.BadDataException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 /**
  * Ask represents the presentation of a Question to a source entity. A Question

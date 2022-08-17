@@ -21,6 +21,7 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import io.quarkus.logging.Log;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -160,7 +161,7 @@ public class BaseEntityUtils {
 	 *
 	 * @param productCode The productCode to use
 	 * @param code        The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
+	 * @return The corresponding BaseEntity bundled with BaseEntityAttributes, or null if not found.
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
@@ -179,7 +180,8 @@ public class BaseEntityUtils {
 
 		// check for entity in the cache
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils
+				.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 	
 		BaseEntity entity = null;
 		
@@ -193,11 +195,15 @@ public class BaseEntityUtils {
 			}
 		} else {
 			entity = (BaseEntity) baseEntitySerializable.toCoreEntity();
-			Map<String, EntityAttribute> attributeMap = entity.getAttributeMap();
-			beaUtils.getBaseEntityAttributes().parallelStream().forEach(bea -> {
+			Log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
+			if (bundleAttributes) {
+				Map<String, EntityAttribute> attributeMap = entity.getAttributeMap();
+				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
 				EntityAttribute ea = null;
 				attributeMap.put(bea.getAttributeCode(), ea);
-			});
+				});
+				Log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
+			}
 		}
 
 		return entity;
@@ -224,14 +230,12 @@ public class BaseEntityUtils {
 			}
 		}
 
-		databaseUtils.saveBaseEntity(baseEntity);
-		CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
+		// databaseUtils.saveBaseEntity(baseEntity);
+		// CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
 
-		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),
-		// baseEntity.getCode());
-		// return (BaseEntity)
-		// CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
-		return baseEntity;
+		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		boolean savedSuccssfully = CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		return savedSuccssfully ? baseEntity : null;
 	}
 
 	/**
