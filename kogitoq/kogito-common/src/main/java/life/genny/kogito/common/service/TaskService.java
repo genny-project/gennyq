@@ -1,7 +1,6 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +69,7 @@ public class TaskService {
 	 * @param pcmCode      The code eof the PCM to use
 	 * @return The processData json
 	 */
-	public String inputs(String questionCode, String sourceCode, String targetCode,
+	public ProcessQuestions inputs(String questionCode, String sourceCode, String targetCode,
 			String pcmCode, String events, String processId) {
 
 		ProcessQuestions processData = new ProcessQuestions();
@@ -81,16 +80,16 @@ public class TaskService {
 		processData.setEvents(events);
 		processData.setProcessId(processId);
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
 	 * Generate the asks and save them to the cache
 	 * @param processJson The process data json
 	 */
-	public void generateAndCacheAsks(String processJson) {
+	public void generateAndCacheAsks(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 
 		String questionCode = processData.getQuestionCode();
 		String sourceCode = processData.getSourceCode();
@@ -159,9 +158,9 @@ public class TaskService {
 	 * Update the ask target to use the process entity.
 	 * @param processJson The process data json
 	 */
-	public void updateAskTarget(String processJson) {
+	public void updateAskTarget(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
@@ -200,9 +199,9 @@ public class TaskService {
 	 * @param targetCode The code of the target entity
 	 * @return The DEF
 	 */
-	public String getDEF(String processJson) {
+	public ProcessQuestions getDEF(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String targetCode = processData.getTargetCode();
 
 		// Find the DEF
@@ -212,7 +211,9 @@ public class TaskService {
 
 		processData.setDefinitionCode(definition.getCode());
 
-		return jsonb.toJson(processData);
+		log.info("Set def code");
+
+		return processData;
 	}
 
 	/**
@@ -220,9 +221,9 @@ public class TaskService {
 	 * @param processJson The process data json
 	 * @return process json
 	 */
-	public String findAttributeCodes(String processJson) {
+	public ProcessQuestions findAttributeCodes(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 
@@ -234,7 +235,7 @@ public class TaskService {
 		attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
 		processData.setAttributeCodes(Arrays.asList(attributeCodes.toArray(new String[attributeCodes.size()])));
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
@@ -243,9 +244,9 @@ public class TaskService {
 	 * @param processJson The process data json
 	 * @return The updated process entity
 	 */
-	public String setupProcessBE(String processJson) {
+	public ProcessQuestions setupProcessBE(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String targetCode = processData.getTargetCode();
 		// QDataAskMessage askMessage = processData.getAskMessage();
 		List<String> attributeCodes = processData.getAttributeCodes();
@@ -287,7 +288,7 @@ public class TaskService {
 		// TODO, until cacheUtils supprots BEs
 		CacheUtils.putObject(userToken.getProductCode(), processEntityCode, processEntity);
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 }

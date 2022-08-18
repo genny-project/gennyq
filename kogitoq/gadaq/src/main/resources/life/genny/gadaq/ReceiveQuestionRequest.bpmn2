@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="xsi" id="_WSYpgf51EDqxI_L0sQ3Nrw" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="xsi" id="_2RHXUADjEDurT5QZMMzMEg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -7,16 +7,15 @@
   <bpmn2:itemDefinition id="_processIdItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_alreadyExistingItem" structureRef="Boolean"/>
   <bpmn2:itemDefinition id="_existing_pidItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="_askMessageJsonItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_mandatoryFieldsCompletedItem" structureRef="Boolean"/>
-  <bpmn2:itemDefinition id="_processJsonItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="_answerJsonItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="_processDataItem" structureRef="life.genny.qwandaq.graphql.ProcessQuestions"/>
+  <bpmn2:itemDefinition id="_answerItem" structureRef="life.genny.qwandaq.Answer"/>
   <bpmn2:itemDefinition id="_dataItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="_eventsItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_eventOutputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="start_process_questionsType" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:itemDefinition id="_CC23142C-AA13-4AB9-80E3-4A054939F854" structureRef=""/>
-  <bpmn2:itemDefinition id="_40D17CE9-9091-4C36-B8DA-06F86685F798" structureRef=""/>
+  <bpmn2:itemDefinition id="_074000EC-D22E-457B-92E2-4F3A88DDFB1C" structureRef=""/>
+  <bpmn2:itemDefinition id="_BEC3C313-B702-454C-A565-DC1CA59479FE" structureRef=""/>
   <bpmn2:itemDefinition id="__AC12C7E3-434A-424B-B220-5C9CA5382BCC_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__36C22626-601C-4362-8679-C175698C763C_eventInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="end_process_questionsType" structureRef="life.genny.kogito.common.models.S2SData"/>
@@ -27,16 +26,16 @@
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_eventsInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__5E941DE0-7695-414D-AFBC-1940672ECDBC_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__5E941DE0-7695-414D-AFBC-1940672ECDBC_dataOutputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:message id="_WSbFwP51EDqxI_L0sQ3Nrw" itemRef="start_process_questionsType" name="start_process_questions"/>
+  <bpmn2:message id="_2RIlcADjEDurT5QZMMzMEg" itemRef="start_process_questionsType" name="start_process_questions"/>
   <bpmn2:interface id="_AC12C7E3-434A-424B-B220-5C9CA5382BCC_ServiceInterface" name="life.genny.kogito.common.service.Service2Service" implementationRef="life.genny.kogito.common.service.Service2Service">
     <bpmn2:operation id="_AC12C7E3-434A-424B-B220-5C9CA5382BCC_ServiceOperation" name="initialiseScope" implementationRef="initialiseScope"/>
   </bpmn2:interface>
-  <bpmn2:message id="_WSbFwf51EDqxI_L0sQ3Nrw" itemRef="end_process_questionsType" name="end_process_questions"/>
+  <bpmn2:message id="_2RIlcQDjEDurT5QZMMzMEg" itemRef="end_process_questionsType" name="end_process_questions"/>
   <bpmn2:interface id="_5E941DE0-7695-414D-AFBC-1940672ECDBC_ServiceInterface" name="life.genny.kogito.common.service.Service2Service" implementationRef="life.genny.kogito.common.service.Service2Service">
     <bpmn2:operation id="_5E941DE0-7695-414D-AFBC-1940672ECDBC_ServiceOperation" name="addToken" implementationRef="addToken"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_999FE880-D3AD-4BD8-922A-DF0F5BB0AB35" name="Default Collaboration">
-    <bpmn2:participant id="_49951B76-B873-4969-9CA9-0D1983C23CEC" name="Pool Participant" processRef="receiveQuestionRequest"/>
+  <bpmn2:collaboration id="_BB1FF072-952F-49A5-AC52-E8709015939B" name="Default Collaboration">
+    <bpmn2:participant id="_B06538E1-4CF0-4AFD-8D87-0D64BDDDEF80" name="Pool Participant" processRef="receiveQuestionRequest"/>
   </bpmn2:collaboration>
   <bpmn2:process id="receiveQuestionRequest" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Receive Question Request" isExecutable="true" processType="Public">
     <bpmn2:extensionElements>
@@ -68,10 +67,9 @@
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:property>
-    <bpmn2:property id="askMessageJson" itemSubjectRef="_askMessageJsonItem" name="askMessageJson"/>
     <bpmn2:property id="mandatoryFieldsCompleted" itemSubjectRef="_mandatoryFieldsCompletedItem" name="mandatoryFieldsCompleted"/>
-    <bpmn2:property id="processJson" itemSubjectRef="_processJsonItem" name="processJson"/>
-    <bpmn2:property id="answerJson" itemSubjectRef="_answerJsonItem" name="answerJson"/>
+    <bpmn2:property id="processData" itemSubjectRef="_processDataItem" name="processData"/>
+    <bpmn2:property id="answer" itemSubjectRef="_answerItem" name="answer"/>
     <bpmn2:property id="data" itemSubjectRef="_dataItem" name="data">
       <bpmn2:extensionElements>
         <drools:metaData name="customTags">
@@ -177,7 +175,7 @@
       <bpmn2:inputSet>
         <bpmn2:dataInputRefs>_36C22626-601C-4362-8679-C175698C763C_eventInputX</bpmn2:dataInputRefs>
       </bpmn2:inputSet>
-      <bpmn2:messageEventDefinition drools:msgref="end_process_questions" messageRef="_WSbFwf51EDqxI_L0sQ3Nrw"/>
+      <bpmn2:messageEventDefinition drools:msgref="end_process_questions" messageRef="_2RIlcQDjEDurT5QZMMzMEg"/>
     </bpmn2:endEvent>
     <bpmn2:serviceTask id="_AC12C7E3-434A-424B-B220-5C9CA5382BCC" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.Service2Service" drools:serviceoperation="initialiseScope" name="Scope Init" implementation="Java" operationRef="_AC12C7E3-434A-424B-B220-5C9CA5382BCC_ServiceOperation">
       <bpmn2:documentation><![CDATA[Initialise the request scope]]></bpmn2:documentation>
@@ -214,7 +212,7 @@
       <bpmn2:outputSet>
         <bpmn2:dataOutputRefs>_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_eventOutputX</bpmn2:dataOutputRefs>
       </bpmn2:outputSet>
-      <bpmn2:messageEventDefinition drools:msgref="start_process_questions" messageRef="_WSbFwP51EDqxI_L0sQ3Nrw"/>
+      <bpmn2:messageEventDefinition drools:msgref="start_process_questions" messageRef="_2RIlcADjEDurT5QZMMzMEg"/>
     </bpmn2:startEvent>
     <bpmn2:scriptTask id="_DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC" name="Setup" scriptFormat="http://www.java.com/java">
       <bpmn2:extensionElements>
@@ -369,7 +367,7 @@ kcontext.setVariable("events", events);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_WSYpgf51EDqxI_L0sQ3Nrw</bpmn2:source>
-    <bpmn2:target>_WSYpgf51EDqxI_L0sQ3Nrw</bpmn2:target>
+    <bpmn2:source>_2RHXUADjEDurT5QZMMzMEg</bpmn2:source>
+    <bpmn2:target>_2RHXUADjEDurT5QZMMzMEg</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

@@ -16,25 +16,24 @@ public enum EEntityStatus {
 	PENDING_DELETE(6),  // 6 - This means that the entity is pending deletion, but not yet deleted
 	DELETED(7);         // 7 - This means that the entity is marked deleted
 	
-	private Integer status=0;
-		
-	private EEntityStatus(final Integer status) {
-		this.status = status;
+	// public static Integer status;
+	// 	
+	private EEntityStatus(final Integer s) {
 	}
 
-	public final Integer getStatus() {
-		return status;
-	}
+	// public final Integer getStatus() {
+	// 	return status;
+	// }
 
-	public void setStatus(Integer status) {
-		this.status = status;
-	}
+	// public void setStatus(Integer status) {
+	// 	this.status = status;
+	// }
   
 
-	public EEntityStatus valueOf(Integer value)
+	public static EEntityStatus valueOf(Integer value)
 	{
 		for (EEntityStatus enumValue : EEntityStatus.values()) {
-			if (enumValue.getStatus().equals(value)) {
+			if (enumValue.ordinal() == value) {
 				return enumValue;
 			}
 

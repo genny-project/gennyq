@@ -139,23 +139,20 @@ public class NavigationService {
 	 */
 	public void navigateContent(final String pcmCode, final String questionCode) {
 
+		log.info("One");
 		// fetch and update content pcm
-		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
-		try {
-			content.setValue("PRI_LOC1", pcmCode);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
+		BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
+		content.setValue("PRI_LOC1", pcmCode);
+
+		log.info("Two");
 
 		// fetch and update desired pcm
-		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
+		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
 		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
-		try {
-			pcm.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
+		pcm.addAttribute(ea);
+
+		log.info("Three");
 
 		// package all and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
@@ -165,6 +162,8 @@ public class NavigationService {
 		msg.setReplace(true);
 		log.info("Sending PCMs for " + questionCode);
 		KafkaUtils.writeMsg("webdata", msg);
+
+		log.info("Four");
 
 		recursivelyPerformPcmSearches(pcm);
 	}

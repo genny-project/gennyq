@@ -71,16 +71,15 @@ public class FrontendService {
 	 * @param processId    The processId to set in the asks
 	 * @return The ask message
 	 */
-	public void sendAsks(String processJson) {
+	public void sendAsks(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 
 		String key = String.format("%s:%s", processId, questionCode);
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
-		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
 
 		// update ask target
@@ -127,10 +126,10 @@ public class FrontendService {
 	/**
 	 * Control main content navigation using a pcm and a question
 	 */
-	public void navigateContent(String processJson) {
+	public void navigateContent(ProcessQuestions processData) {
 
 		log.info("Navigating to form...");
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String pcmCode = processData.getPcmCode();
 		String questionCode = processData.getQuestionCode();
 
@@ -146,9 +145,9 @@ public class FrontendService {
 	 * @param processId The process id to use for the baseentity cache
 	 * @param defCode   . The type of processBE (to save calculating it again)
 	 */
-	public void sendBaseEntitys(String processJson) {
+	public void sendBaseEntitys(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		List<String> attributeCodes = processData.getAttributeCodes();
 		String processId = processData.getProcessId();
@@ -288,9 +287,9 @@ public class FrontendService {
 	 *
 	 * @param askMsgJson The ask message to send
 	 */
-	public void sendDropdownItems(String processJson) {
+	public void sendDropdownItems(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 

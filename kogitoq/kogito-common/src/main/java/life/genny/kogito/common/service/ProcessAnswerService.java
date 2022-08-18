@@ -51,19 +51,19 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processJson) {
+	public ProcessQuestions storeIncomingAnswer(Answer answer, ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String processId = processData.getProcessId();
 		String targetCode = processData.getTargetCode();
 
 		BaseEntity processEntity = processData.getProcessEntity();
-		Answer answer = jsonb.fromJson(answerJson, Answer.class);
+		// Answer answer = jsonb.fromJson(answerJson, Answer.class);
 
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processEntity.getCode())) {
 			log.warn("Bad targetCode in answer!");
-			return jsonb.toJson(processData);
+			return processData;
 		}
 
 		// check if the answer is valid for the target
@@ -71,7 +71,7 @@ public class ProcessAnswerService {
 		BaseEntity definition = defUtils.getDEF(target);
 		if (!defUtils.answerValidForDEF(definition, answer)) {
 			log.error("Bad incoming answer... Not saving!");
-			return jsonb.toJson(processData);
+			return processData;
 		}
 
 		// find the attribute
@@ -96,7 +96,7 @@ public class ProcessAnswerService {
 		log.infof("ProcessData cached to %s", key);
 		// TODO, just until cacheUtils has direct BE support
 		CacheUtils.putObject(productCode,processEntity.getCode(), processEntity);
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
@@ -106,9 +106,9 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity storing the answer data
 	 * @return Boolean representing whether all mandatory questions have been answered
 	 */
-	public Boolean checkMandatory(String processJson) {
+	public Boolean checkMandatory(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		String processId = processData.getProcessId();
 		String targetCode = processData.getTargetCode();
@@ -137,9 +137,9 @@ public class ProcessAnswerService {
 	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
-	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
+	public Boolean checkUniqueness(ProcessQuestions processData, Boolean acceptSubmission) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		BaseEntity processEntity = processData.getProcessEntity();
@@ -175,9 +175,9 @@ public class ProcessAnswerService {
 	 * @param targetCode The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
-	public void saveAllAnswers(String processJson) {
+	public void saveAllAnswers(ProcessQuestions processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		String targetCode = processData.getTargetCode();
 
