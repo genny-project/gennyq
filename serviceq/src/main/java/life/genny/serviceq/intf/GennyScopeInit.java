@@ -14,7 +14,8 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 
 /**
- * Custom Genny Scope Initializer class for initializing the UserToken after consuming from Kafka.
+ * Custom Genny Scope Initializer class for initializing the UserToken after
+ * consuming from Kafka.
  **/
 @ApplicationScoped
 public class GennyScopeInit {
@@ -32,16 +33,17 @@ public class GennyScopeInit {
 	/**
 	 * Default Constructor.
 	 **/
-	public GennyScopeInit() { }
+	public GennyScopeInit() {
+	}
 
 	/**
-	 * Activate the UserToken using the request context 
+	 * Activate the UserToken using the request context
 	 * and initialise the UserToken using consumed data.
 	 *
 	 * @param data The consumed message from kafka
 	 **/
 	public void init(String data) {
-		if(beUtils == null) {
+		if (beUtils == null) {
 			log.error("NULL BE UTILS");
 			this.beUtils = new BaseEntityUtils();
 		}
@@ -58,6 +60,8 @@ public class GennyScopeInit {
 			JsonObject json = jsonb.fromJson(data, JsonObject.class);
 			String token = json.getString("token");
 
+			log.debug("Token: " + token);
+
 			// init GennyToken from token string
 			userToken.init(token);
 			log.debug("Token Initialized: " + userToken);
@@ -66,12 +70,12 @@ public class GennyScopeInit {
 			log.error("Error initializing token from data: " + data);
 			e.printStackTrace();
 		}
-    }
+	}
 
 	/**
 	 * Destroy the UserToken using the request context.
 	 **/
-	public void destroy() { 
+	public void destroy() {
 		Arc.container().requestContext().activate();
 	}
 }
