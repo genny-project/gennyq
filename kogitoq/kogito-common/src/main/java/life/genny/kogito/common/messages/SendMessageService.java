@@ -1,4 +1,4 @@
-package life.genny.kogito.common.service;
+package life.genny.kogito.common.messages;
 
 import java.util.Map;
 import java.util.List;
@@ -17,15 +17,12 @@ import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.UserToken;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.message.QSearchBeResult;
 
 @ApplicationScoped
 public class SendMessageService {
