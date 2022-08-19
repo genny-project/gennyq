@@ -151,9 +151,9 @@ public class SendMessageService {
 
 		List<String> messageCodes = searchUtils.searchBaseEntityCodes(searchEntity);
 		if (messageCodes != null) {
-			log.info("messages : " + messageCodes.size());
+			log.info("messages: " + messageCodes.size());
 			for (String messageCode : messageCodes) {
-				log.info("messageCode : " + messageCode);
+				log.info("messageCode: " + messageCode);
 				BaseEntity message = beUtils.getBaseEntityByCode(messageCode);
 				// Construct a contextMap
 				Map<String, String> ctxMap = new HashMap<>();
