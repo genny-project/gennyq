@@ -56,7 +56,8 @@ public class SendMessageService {
 	 * @param recipientBEJson The recipient BaseEntity json
 	 */
 	public void sendMessage(String templateCode, String recipientBECode) {
-		sendMessage(templateCode, recipientBECode, null);
+		SendMessage sendMessage = new SendMessage(templateCode, recipientBECode);
+		sendMessage.sendMessage();
 	}
 
 	/**
@@ -67,9 +68,8 @@ public class SendMessageService {
 	 * @param ctxMap          The map of contexts to use
 	 */
 	public void sendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
-		log.info("recipientBECode : " + recipientBECode);
-		BaseEntity recipientBe = beUtils.getBaseEntityByCode(recipientBECode);
-		sendMessage(templateCode, recipientBe, ctxMap);
+		SendMessage sendMessage = new SendMessage(templateCode, recipientBECode, ctxMap);
+		sendMessage.sendMessage();
 	}
 
 	/**
@@ -80,19 +80,8 @@ public class SendMessageService {
 	 * @param ctxMap          The map of contexts to use
 	 */
 	public void sendMessage(String templateCode, BaseEntity recipientBE, Map<String, String> ctxMap) {
-
-		log.info("templateCode : " + templateCode);
-		log.info("recipientBE (found BaseEntity): " + (recipientBE != null ? recipientBE.getCode() : "null"));
-		log.info("ctxMap : " + (ctxMap != null ? jsonb.toJson(ctxMap) : "null"));
-
-		QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(templateCode);
-		if (ctxMap != null) {
-			msgBuilder.setMessageContextMap(ctxMap);
-		}
-		msgBuilder.addRecipient(recipientBE)
-				.setUtils(beUtils)
-				.setToken(userToken)
-				.send();
+		SendMessage sendMessage = new SendMessage(templateCode, recipientBE, ctxMap);
+		sendMessage.sendMessage();
 	}
 
 	/**
