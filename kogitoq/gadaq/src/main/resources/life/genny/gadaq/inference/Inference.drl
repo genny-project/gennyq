@@ -5,7 +5,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.Answer;
 import org.apache.commons.lang3.text.WordUtils;
 
@@ -34,7 +34,7 @@ then
 
 	String processId = answer.getProcessId();
 	String productCode = userToken.getProductCode();
-	ProcessQuestions processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessQuestions.class);
+	ProcessData processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessData.class);
 
 	String lastName = processVariables.getProcessEntity().getValue("PRI_LASTNAME", null);
 	if (lastName == null)
@@ -60,7 +60,7 @@ then
 
 	String processId = answer.getProcessId();
 	String productCode = userToken.getProductCode();
-	ProcessQuestions processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessQuestions.class);
+	ProcessData processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessData.class);
 
 	String firstName = processVariables.getProcessEntity().getValue("PRI_FIRSTNAME", null);
 	if (firstName == null)

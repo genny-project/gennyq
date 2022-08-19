@@ -24,7 +24,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -71,9 +71,9 @@ public class FrontendService {
 	 * @param processId    The processId to set in the asks
 	 * @return The ask message
 	 */
-	public void sendAsks(ProcessQuestions processData) {
+	public void sendAsks(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 
@@ -126,10 +126,10 @@ public class FrontendService {
 	/**
 	 * Control main content navigation using a pcm and a question
 	 */
-	public void navigateContent(ProcessQuestions processData) {
+	public void navigateContent(ProcessData processData) {
 
 		log.info("Navigating to form...");
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String pcmCode = processData.getPcmCode();
 		String questionCode = processData.getQuestionCode();
 
@@ -145,9 +145,9 @@ public class FrontendService {
 	 * @param processId The process id to use for the baseentity cache
 	 * @param defCode   . The type of processBE (to save calculating it again)
 	 */
-	public void sendBaseEntitys(ProcessQuestions processData) {
+	public void sendBaseEntitys(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		List<String> attributeCodes = processData.getAttributeCodes();
 		String processId = processData.getProcessId();
@@ -287,9 +287,9 @@ public class FrontendService {
 	 *
 	 * @param askMsgJson The ask message to send
 	 */
-	public void sendDropdownItems(ProcessQuestions processData) {
+	public void sendDropdownItems(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 

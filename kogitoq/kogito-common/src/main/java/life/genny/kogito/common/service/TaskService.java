@@ -19,7 +19,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -69,10 +69,10 @@ public class TaskService {
 	 * @param pcmCode      The code eof the PCM to use
 	 * @return The processData json
 	 */
-	public ProcessQuestions inputs(String questionCode, String sourceCode, String targetCode,
+	public ProcessData inputs(String questionCode, String sourceCode, String targetCode,
 			String pcmCode, String events, String processId) {
 
-		ProcessQuestions processData = new ProcessQuestions();
+		ProcessData processData = new ProcessData();
 		processData.setQuestionCode(questionCode);
 		processData.setSourceCode(sourceCode);
 		processData.setTargetCode(targetCode);
@@ -87,9 +87,9 @@ public class TaskService {
 	 * Generate the asks and save them to the cache
 	 * @param processJson The process data json
 	 */
-	public void generateAndCacheAsks(ProcessQuestions processData) {
+	public void generateAndCacheAsks(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 
 		String questionCode = processData.getQuestionCode();
 		String sourceCode = processData.getSourceCode();
@@ -158,9 +158,9 @@ public class TaskService {
 	 * Update the ask target to use the process entity.
 	 * @param processJson The process data json
 	 */
-	public void updateAskTarget(ProcessQuestions processData) {
+	public void updateAskTarget(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
@@ -199,9 +199,9 @@ public class TaskService {
 	 * @param targetCode The code of the target entity
 	 * @return The DEF
 	 */
-	public ProcessQuestions getDEF(ProcessQuestions processData) {
+	public ProcessData getDEF(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String targetCode = processData.getTargetCode();
 
 		// Find the DEF
@@ -221,9 +221,9 @@ public class TaskService {
 	 * @param processJson The process data json
 	 * @return process json
 	 */
-	public ProcessQuestions findAttributeCodes(ProcessQuestions processData) {
+	public ProcessData findAttributeCodes(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 
@@ -244,9 +244,9 @@ public class TaskService {
 	 * @param processJson The process data json
 	 * @return The updated process entity
 	 */
-	public ProcessQuestions setupProcessBE(ProcessQuestions processData) {
+	public ProcessData setupProcessBE(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String targetCode = processData.getTargetCode();
 		// QDataAskMessage askMessage = processData.getAskMessage();
 		List<String> attributeCodes = processData.getAttributeCodes();

@@ -6,7 +6,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
 
 @RegisterForReflection
-public class ProcessQuestions extends ProcessInstanceVariables {
+public class ProcessData extends ProcessInstanceVariables {
 
 	private String questionCode;
 	private String sourceCode;
@@ -16,7 +16,7 @@ public class ProcessQuestions extends ProcessInstanceVariables {
     private BaseEntity processEntity;
 	private List<String> attributeCodes;
 
-	public ProcessQuestions() {
+	public ProcessData() {
 		super();
     }
 

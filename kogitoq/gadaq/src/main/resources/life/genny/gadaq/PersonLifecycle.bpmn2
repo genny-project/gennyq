@@ -11,7 +11,7 @@
   <bpmn2:itemDefinition id="_existing_pidItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_askMessageJsonItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_mandatoryFieldsCompletedItem" structureRef="Boolean"/>
-  <bpmn2:itemDefinition id="_processDataItem" structureRef="life.genny.qwandaq.graphql.ProcessQuestions"/>
+  <bpmn2:itemDefinition id="_processDataItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
   <bpmn2:itemDefinition id="_answerItem" structureRef="life.genny.qwandaq.Answer"/>
   <bpmn2:itemDefinition id="_dataItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="_summaryItem" structureRef="String"/>

@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 
 /*
  * A non-static utility class used for operations regarding the GraphQL data-index.
@@ -170,13 +170,13 @@ public class GraphQLUtils {
 	 * @param processId The id of the process to fetch for
 	 * @return The process data
 	 */
-	public ProcessQuestions fetchProcessData(String processId) {
+	public ProcessData fetchProcessData(String processId) {
 
 		log.info("Fetching processBE for processId : " + processId);
 		String key = String.format("%s:PROCESS_DATA", processId); 
 
 		// check cache first
-		ProcessQuestions processData = CacheUtils.getObject(userToken.getProductCode(), key, ProcessQuestions.class);
+		ProcessData processData = CacheUtils.getObject(userToken.getProductCode(), key, ProcessData.class);
 		if (processData != null) {
 			return processData;
 		}
@@ -191,7 +191,7 @@ public class GraphQLUtils {
 		// grab json and deserialise
 		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
 		String processJson = variables.getString("processJson");
-		processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		processData = jsonb.fromJson(processJson, ProcessData.class);
 
 		// cache the object for quicker retrieval
 		CacheUtils.putObject(userToken.getProductCode(), key, processData);

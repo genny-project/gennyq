@@ -29,7 +29,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
@@ -131,7 +131,7 @@ public class InternalConsumer {
 		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
-			ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+			ProcessData processData = gqlUtils.fetchProcessData(processId);
 			if (processData == null) {
 				log.error("Process data not found for processId: " + processId);
 				return;

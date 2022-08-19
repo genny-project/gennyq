@@ -15,7 +15,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -51,9 +51,9 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public ProcessQuestions storeIncomingAnswer(Answer answer, ProcessQuestions processData) {
+	public ProcessData storeIncomingAnswer(Answer answer, ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String targetCode = processData.getTargetCode();
 
@@ -106,9 +106,9 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity storing the answer data
 	 * @return Boolean representing whether all mandatory questions have been answered
 	 */
-	public Boolean checkMandatory(ProcessQuestions processData) {
+	public Boolean checkMandatory(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		String processId = processData.getProcessId();
 		String targetCode = processData.getTargetCode();
@@ -137,9 +137,9 @@ public class ProcessAnswerService {
 	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
-	public Boolean checkUniqueness(ProcessQuestions processData, Boolean acceptSubmission) {
+	public Boolean checkUniqueness(ProcessData processData, Boolean acceptSubmission) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		BaseEntity processEntity = processData.getProcessEntity();
@@ -175,9 +175,9 @@ public class ProcessAnswerService {
 	 * @param targetCode The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
-	public void saveAllAnswers(ProcessQuestions processData) {
+	public void saveAllAnswers(ProcessData processData) {
 
-		// ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		// ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		String targetCode = processData.getTargetCode();
 

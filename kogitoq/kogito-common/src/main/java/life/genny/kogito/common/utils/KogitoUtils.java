@@ -351,11 +351,11 @@ public class KogitoUtils {
 	}
 
 	/**
-	 * Funnel a list of answers into ProcessQuestions.
+	 * Funnel a list of answers into ProcessData.
 	 * @param answers List of answers
 	 */
 	public void funnelAnswers(List<Answer> answers) {
-		// feed all answers from facts into ProcessQuestions
+		// feed all answers from facts into ProcessData
 		answers.stream()
 			.filter(answer -> answer.getProcessId() != null)
 			.filter(answer -> !"no-id".equals(answer.getProcessId()))
@@ -373,7 +373,7 @@ public class KogitoUtils {
 	}
 
 	/**
-	 * Get the processId of an outstanding task in ProcessQuestions.
+	 * Get the processId of an outstanding task in ProcessData.
 	 * @return The processId
 	 */
 	public String getOutstandingTaskProcessId() throws GraphQLException {

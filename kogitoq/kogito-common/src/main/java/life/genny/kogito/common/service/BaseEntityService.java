@@ -18,7 +18,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -206,7 +206,7 @@ public class BaseEntityService {
 	 */
 	public void mergeFromProcessEntity(String entityCode, String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = processData.getProcessEntity();
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 

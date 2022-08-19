@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn2:definitions xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" xmlns:xsi="xsi" id="_S9IugADyEDu9TvlT0KyVUA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
-  <bpmn2:itemDefinition id="_processDataItem" structureRef="life.genny.qwandaq.graphql.ProcessQuestions"/>
-  <bpmn2:itemDefinition id="__EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessQuestions"/>
-  <bpmn2:itemDefinition id="__B2DDC98A-0115-41BC-A11C-6612901F1EAF_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessQuestions"/>
-  <bpmn2:itemDefinition id="__7BEFD2E3-6795-4637-A3ED-21A98E483831_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessQuestions"/>
+  <bpmn2:itemDefinition id="_processDataItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
+  <bpmn2:itemDefinition id="__EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
+  <bpmn2:itemDefinition id="__B2DDC98A-0115-41BC-A11C-6612901F1EAF_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
+  <bpmn2:itemDefinition id="__7BEFD2E3-6795-4637-A3ED-21A98E483831_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
   <bpmn2:interface id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_ServiceInterface" name="life.genny.kogito.common.service.FrontendService" implementationRef="life.genny.kogito.common.service.FrontendService">
     <bpmn2:operation id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_ServiceOperation" name="sendAsks" implementationRef="sendAsks"/>
   </bpmn2:interface>
@@ -55,7 +55,7 @@
       <bpmn2:incoming>_B0BC5BD4-07BA-456F-B0AD-33BD799C4E6D</bpmn2:incoming>
       <bpmn2:outgoing>_D2A2042F-2882-41ED-9812-0CFD914E371F</bpmn2:outgoing>
       <bpmn2:ioSpecification>
-        <bpmn2:dataInput id="_7BEFD2E3-6795-4637-A3ED-21A98E483831_processDataInputX" drools:dtype="life.genny.qwandaq.graphql.ProcessQuestions" itemSubjectRef="__7BEFD2E3-6795-4637-A3ED-21A98E483831_processDataInputXItem" name="processData"/>
+        <bpmn2:dataInput id="_7BEFD2E3-6795-4637-A3ED-21A98E483831_processDataInputX" drools:dtype="life.genny.qwandaq.graphql.ProcessData" itemSubjectRef="__7BEFD2E3-6795-4637-A3ED-21A98E483831_processDataInputXItem" name="processData"/>
         <bpmn2:inputSet>
           <bpmn2:dataInputRefs>_7BEFD2E3-6795-4637-A3ED-21A98E483831_processDataInputX</bpmn2:dataInputRefs>
         </bpmn2:inputSet>
@@ -74,7 +74,7 @@
       <bpmn2:incoming>_D2A2042F-2882-41ED-9812-0CFD914E371F</bpmn2:incoming>
       <bpmn2:outgoing>_1F6E8B0F-56E9-4E3B-8CFA-6F554BB54955</bpmn2:outgoing>
       <bpmn2:ioSpecification>
-        <bpmn2:dataInput id="_B2DDC98A-0115-41BC-A11C-6612901F1EAF_processDataInputX" drools:dtype="life.genny.qwandaq.graphql.ProcessQuestions" itemSubjectRef="__B2DDC98A-0115-41BC-A11C-6612901F1EAF_processDataInputXItem" name="processData"/>
+        <bpmn2:dataInput id="_B2DDC98A-0115-41BC-A11C-6612901F1EAF_processDataInputX" drools:dtype="life.genny.qwandaq.graphql.ProcessData" itemSubjectRef="__B2DDC98A-0115-41BC-A11C-6612901F1EAF_processDataInputXItem" name="processData"/>
         <bpmn2:inputSet>
           <bpmn2:dataInputRefs>_B2DDC98A-0115-41BC-A11C-6612901F1EAF_processDataInputX</bpmn2:dataInputRefs>
         </bpmn2:inputSet>
@@ -94,7 +94,7 @@
       <bpmn2:incoming>_1F6E8B0F-56E9-4E3B-8CFA-6F554BB54955</bpmn2:incoming>
       <bpmn2:outgoing>_E693C6B2-A283-428E-9585-E0300307CA4C</bpmn2:outgoing>
       <bpmn2:ioSpecification>
-        <bpmn2:dataInput id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_processDataInputX" drools:dtype="life.genny.qwandaq.graphql.ProcessQuestions" itemSubjectRef="__EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_processDataInputXItem" name="processData"/>
+        <bpmn2:dataInput id="_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_processDataInputX" drools:dtype="life.genny.qwandaq.graphql.ProcessData" itemSubjectRef="__EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_processDataInputXItem" name="processData"/>
         <bpmn2:inputSet>
           <bpmn2:dataInputRefs>_EED4D2ED-C8B1-47BE-ACEC-35CCA2C04030_processDataInputX</bpmn2:dataInputRefs>
         </bpmn2:inputSet>
