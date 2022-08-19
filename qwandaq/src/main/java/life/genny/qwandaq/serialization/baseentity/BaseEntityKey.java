@@ -60,4 +60,17 @@ public class BaseEntityKey implements CoreEntityKey {
 	public String getEntityCode() {
 		return getComponents()[1];
 	}
+
+	@Override
+	public boolean equals(Object otherBaseEntityKey) {
+		if (otherBaseEntityKey == null) {
+			return false;
+		}
+		return this.getKeyString().equals(((BaseEntityKey) otherBaseEntityKey).getKeyString());
+	}
+
+	@Override
+	public int hashCode() {
+		return this.getKeyString().hashCode();
+	}
 }
