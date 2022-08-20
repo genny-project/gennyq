@@ -4,7 +4,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;

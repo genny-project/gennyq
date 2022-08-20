@@ -1,28 +1,12 @@
 package life.genny.kogito.common.messages;
 
-import java.util.Map;
-import java.util.List;
-import java.util.HashMap;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
+import life.genny.qwandaq.entity.BaseEntity;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.message.QMessageGennyMSG;
-import life.genny.qwandaq.models.UserToken;
-
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-
-import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.entity.SearchEntity;
+import javax.enterprise.context.ApplicationScoped;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.Map;
 
 @ApplicationScoped
 public class SendMessageService {
