@@ -68,7 +68,7 @@ public class SendMessageService {
 	 *                      derived.
 	 */
 	public void sendAllMessagesJson(String milestoneCode, String coreBEJson) {
-		// This is ugly. I Need to change this bit later.
+		// TODO: This is ugly. I Need to change this bit later.
 		log.info("For milestoneCode : " + milestoneCode + " with the coreBEJson:" + coreBEJson);
 		BaseEntity coreBE = jsonb.fromJson(coreBEJson, BaseEntity.class);
 		String productCode = coreBE.getRealm();
