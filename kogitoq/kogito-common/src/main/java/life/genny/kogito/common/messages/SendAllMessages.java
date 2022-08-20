@@ -43,9 +43,6 @@ public class SendAllMessages implements SendAllMessagesStrategy {
 
     @Override
     public void sendAllMessages() {
-        SendAllMessages sendAllMessages = new SendAllMessages(productCode, milestoneCode, coreBE);
-        sendAllMessages.sendAllMessages();
-
         SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES",
                 "Fetch All Messages associated with milestone Code")
                 .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "MSG_%")
