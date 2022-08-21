@@ -238,7 +238,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
-		
+
 		String newBaseEntityCode = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		// return null if attributeCode valueString is null or empty
 		if (StringUtils.isEmpty(newBaseEntityCode)) {
@@ -675,8 +675,8 @@ public class BaseEntityUtils {
 			throw new NullParameterException("be");
 		if (attributeCode == null)
 			throw new NullParameterException("attributeCode");
-		if (value == null)
-			throw new NullParameterException("value");
+		// if (value == null)
+		// throw new NullParameterException("value");
 
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 
