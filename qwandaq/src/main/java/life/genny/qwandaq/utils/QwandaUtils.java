@@ -573,7 +573,7 @@ public class QwandaUtils {
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
-		KafkaUtils.writeMsg("webdata", entityMessage);
+//		KafkaUtils.writeMsg("webdata", entityMessage);
 
 		return ask;
 	}
