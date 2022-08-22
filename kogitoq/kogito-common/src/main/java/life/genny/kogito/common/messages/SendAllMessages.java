@@ -41,6 +41,7 @@ public class SendAllMessages implements SendAllMessagesStrategy {
         this.productCode = this.coreBE.getRealm();
     }
 
+    //TODO This functions needs to be redone.
     @Override
     public void sendAllMessages() {
         SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES",
