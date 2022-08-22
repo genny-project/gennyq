@@ -560,8 +560,12 @@ public class QwandaUtils {
 							String[] codes = BaseEntityUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
 
 							for (String code : codes) {
-								BaseEntity link = beUtils.getBaseEntityByCode(code);
-								entityMessage.add(link);
+								try {
+									BaseEntity link = beUtils.getBaseEntityByCode(code);
+									entityMessage.add(link);
+								} catch(Exception ex){
+									log.error(ex);
+								}
 							}
 						}
 					}
