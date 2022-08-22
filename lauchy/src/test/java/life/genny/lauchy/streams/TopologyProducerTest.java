@@ -24,8 +24,8 @@ import io.quarkus.test.junit.QuarkusTest;
 /**
  * Testing of the Topology without a broker, using TopologyTestDriver
  */
-// @QuarkusTest
-// public class TopologyProducerTest {
+@QuarkusTest
+public class TopologyProducerTest {
 
 // @Inject
 // Topology topology;
@@ -68,4 +68,4 @@ import io.quarkus.test.junit.QuarkusTest;
 // // Assertions.assertEquals(null, result);
 
 // }
-// }
+}

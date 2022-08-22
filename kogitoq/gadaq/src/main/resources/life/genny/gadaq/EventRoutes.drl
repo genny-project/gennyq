@@ -74,20 +74,20 @@ end
 
 rule RouteView 
 when
-	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code == "QUE_TREE_ITEM_HOST_COMPANIES" )
+	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code matches "QUE_TREE_ITEM_.*" )
 	kogitoUtils : KogitoUtils()
 then
 	JsonObjectBuilder builder = Json.createObjectBuilder()
 			.add("code", CommonUtils.removePrefix(msg.getData().getCode()));
 
-	if (msg.getTargetCode() != null) 
-		builder.add("targetCode", msg.getTargetCode());
+	if (msg.getData().getTargetCode() != null)
+		builder.add("targetCode", msg.getData().getTargetCode());
 
 	kogitoUtils.triggerWorkflow(SELF, "view", builder.build());
 	retract(msg);
 end
 
-rule RouteInternshipApply
+rule RouteApply
 salience 1000
 when
 	msg: QEventMessage( data.code matches "ACT_PRI_EVENT_APPLY")
@@ -95,14 +95,12 @@ when
 	userToken : UserToken()
 	defUtils : DefUtils()
 then
-	System.out.println(" - forwarding to prd_internmatch");
-	
 	System.out.println("Forwarding Event Message..."+msg.getData().getCode());
 	KafkaUtils.writeMsg("genny_events", msg);
 	retract(msg);
 end
 
-rule RouteTestForm 
+rule RouteTestForm
 when
 	msg: QEventMessage( data.code matches "TEST_QUE_.*")
 	userToken: UserToken()
@@ -111,7 +109,7 @@ when
 	defUtils:	DefUtils()
 	qwandaUtils: QwandaUtils()
 then
-	
+
 	System.out.println("Displaying Test Question Group ..."+msg.getData().getCode());
 	JsonObject payload = Json.createObjectBuilder()
 		.add("questionCode", msg.getData().getCode().substring("TEST_".length()))
@@ -125,7 +123,7 @@ then
 end
 
 
-rule RouteAddItem 
+rule RouteAddItem
 when
 	msg: QEventMessage( data.code matches "QUE_ADD_.*" )
 	kogitoUtils : KogitoUtils()
@@ -149,7 +147,7 @@ then
 	retract(msg);
 end
 
-rule RouteEditItem 
+rule RouteEditItem
 when
 	msg: QEventMessage( data.code == "ACT_EDIT" )
 	kogitoUtils : KogitoUtils()
@@ -158,7 +156,7 @@ then
 	retract(msg);
 end
 
-rule RouteUpdateSummary 
+rule RouteUpdateSummary
 when
 	msg: QEventMessage( data.code == "UPDATE_SUMMARY" )
 	kogitoUtils : KogitoUtils()
@@ -172,7 +170,7 @@ then
 	retract(msg);
 end
 
-rule RouteTreeItems 
+rule RouteTreeItems
 when
 	msg: QEventMessage( data.code matches "QUE_TREE_ITEM_.*"  && data.code != "QUE_TREE_ITEM_HOST_COMPANIES" )
 	kogitoUtils : KogitoUtils()

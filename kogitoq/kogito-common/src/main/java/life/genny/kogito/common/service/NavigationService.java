@@ -12,9 +12,17 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
@@ -28,12 +36,6 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CapabilityUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class NavigationService {
@@ -65,6 +67,7 @@ public class NavigationService {
 
 	@Inject
 	CapabilityUtils capabilityUtils;
+
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
 	/**
@@ -279,15 +282,13 @@ public class NavigationService {
 	public void redirectByQuestionCode(String questionCode) {
 		String redirectCode = getRedirectCodeByQuestionCode(questionCode);
 
-		// build json and trigger view workflow
-		JsonObject json = Json.createObjectBuilder()
-				.add("eventMessage", Json.createObjectBuilder()
-						.add("data", Json.createObjectBuilder()
-								.add("code", redirectCode)
-								.add("targetCode", userToken.getUserCode())))
-				.build();
+		JsonObjectBuilder builder = Json.createObjectBuilder()
+				.add("code", CommonUtils.removePrefix(redirectCode));
 
-		kogitoUtils.triggerWorkflow(GADAQ, "view", json);
+		if (userToken.getUserCode() != null)
+			builder.add("targetCode", userToken.getUserCode());
+
+		kogitoUtils.triggerWorkflow(GADAQ, "view", builder.build());
 	}
 
 	/**

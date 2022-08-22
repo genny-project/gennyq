@@ -9,11 +9,11 @@ import static io.restassured.RestAssured.given;
 public class BridgeTest {
 
     // @Test
-    // public void testHelloEndpoint() {
-    //     given()
-    //       .when().get("/api/events/init?url=http://localhost:8080")
-    //       .then()
-    //          .statusCode(200);
-    // }
+    public void helloEndpoint() {
+        given()
+          .when().get("/api/events/init?url=http://localhost:8080")
+          .then()
+             .statusCode(200);
+    }
 
 }

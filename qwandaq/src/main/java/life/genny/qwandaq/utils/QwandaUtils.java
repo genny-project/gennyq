@@ -428,7 +428,7 @@ public class QwandaUtils {
 	/**
 	 * Send Submit enable/disable.
 	 *
-	 * @param ask The ask message representing the questions
+	 * @param ask     The ask message representing the questions
 	 * @param enable. Enable the submit button
 	 * @return Boolean representing whether the submit button was enabled
 	 */
@@ -601,8 +601,9 @@ public class QwandaUtils {
 	 * @param target        The target entity
 	 * @param definition    The definition entity
 	 * @param attributeCode The code of the attribute
+
 	 * @param value The value to check
-	 * @return Boolean
+	 * @return is duplicate bool
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
@@ -611,20 +612,17 @@ public class QwandaUtils {
 		}
 
 		// Check if attribute code exists as a UNQ for the DEF
-		Optional<EntityAttribute> unique = definition.findEntityAttribute("UNQ_" + attributeCode);
+		String uniqueCode = String.format("UNQ_%s", attributeCode);
+		List<String> unqs = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, uniqueCode);
 
-		if (unique.isEmpty()) {
+		if (unqs == null || unqs.isEmpty()) {
 			log.infof("UNQ_%s Not present!", attributeCode);
 			return false;
 		}
 
+		BaseEntity originalTarget = beUtils.getBaseEntityByCode(definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3));
 		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
-		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using "
-				+ unique.get().getValue());
-
-		String uniqueIndexes = unique.get().getValue();
-		uniqueIndexes = BaseEntityUtils.cleanUpAttributeValue(uniqueIndexes);
-		String[] uniqueArray = uniqueIndexes.split(",");
+		log.info("Attribute " + uniqueCode + " must satisfy " + unqs.toString());
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
 		log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
@@ -635,41 +633,28 @@ public class QwandaUtils {
 
 		searchEntity.setRealm(target.getRealm());
 
-		log.info("Checking all the target data");
+		log.info("Checking all the existing target data");
 		for (EntityAttribute ea : target.getBaseEntityAttributes()) {
 			log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
 		}
 
-		for (String uniqueAttr : uniqueArray) {
-			if (!uniqueAttr.equals(attributeCode)) {
-				String attrValue = "";
-				if (!target.containsEntityAttribute(uniqueAttr)) {
-					// fetch from original target
-					BaseEntity originalTarget = beUtils.getBaseEntityByCode(
-							definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3)); // leave the '_'
-					attrValue = originalTarget.getValueAsString(uniqueAttr);
-				} else {
-					attrValue = target.getValueAsString(uniqueAttr);
-				}
+		log.infof("Looping through %s unique attribute", unqs.size());
 
-				if (attrValue.startsWith("[")) {
-					// TODO, do this better to remove the outside square brackets and quotes
-					attrValue = attrValue.substring(1, attrValue.length() - 1);
-					attrValue = attrValue.substring(1, attrValue.length() - 1);
+		for (String unique : unqs) {
+
+			if (!unique.equals(attributeCode)) {
+				if (!target.containsEntityAttribute(unique)) {
+					value = originalTarget.getValueAsString(unique);
+				} else {
+					value = target.getValueAsString(unique);
 				}
-				log.info("Checking for duplicate using target attribute: " + uniqueAttr.toString() + " and "
-						+ attrValue);
-				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + attrValue + "%");
-			} else {
-				if (value.startsWith("[")) {
-					// TODO, do this better to remove the outside square brackets and quotes
-					value = value.substring(1, value.length() - 1);
-					value = value.substring(1, value.length() - 1);
-				}
-				log.info("Checking for duplicate using given attribute: " + uniqueAttr.toString() + " and " + value);
-				searchEntity.addFilter(uniqueAttr.toString(), SearchEntity.StringFilter.LIKE, "%" + value + "%");
 			}
 
+			if (value.contains("[") && value.contains("]"))
+				value = BaseEntityUtils.cleanUpAttributeValue(value);
+
+			log.info("Adding unique filter: " + unique + " like " + value);
+			searchEntity.addFilter(unique, SearchEntity.StringFilter.LIKE, "%" + value + "%");
 		}
 
 		searchEntity.setRealm(userToken.getProductCode());
@@ -693,14 +678,16 @@ public class QwandaUtils {
 			String feedback = "Error: This value already exists and must be unique.";
 			EntityAttribute ea = optEa.get();
 			ea.setFeedback(feedback);
-			log.info("Added " + ea);
 			errorBE.addAttribute(ea);
+			log.info("Added " + ea);
+
 			QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
 			msg.setToken(userToken.getToken());
 			msg.setTag("Duplicate Error");
 			msg.setReplace(false);
 			msg.setMessage(feedback);
 			KafkaUtils.writeMsg("webcmds", msg);
+
 			log.debug("Sent duplicate error message to frontend for " + target.getCode());
 		}
 
