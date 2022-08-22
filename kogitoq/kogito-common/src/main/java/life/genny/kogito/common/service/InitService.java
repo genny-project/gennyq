@@ -1,17 +1,19 @@
 package life.genny.kogito.common.service;
 
+import static life.genny.qwandaq.datatype.CapabilityMode.ADD;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonArray;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
-import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -21,6 +23,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -63,6 +66,9 @@ public class InitService {
 
 	@Inject
 	SearchUtils searchUtils;
+
+	@Inject
+	CapabilityUtils capabilityUtils;
 
 	/**
 	 * Send the Project BaseEntity.
@@ -181,6 +187,14 @@ public class InitService {
 
 		BaseEntity user = beUtils.getUserBaseEntity();
 		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
+
+		List<Ask> children = new ArrayList<>();
+		for (Ask child : ask.getChildAsks()) {
+			String type = StringUtils.removeStart(child.getQuestionCode(), "QUE_ADD_");
+			if (capabilityUtils.hasCapability(type, ADD))
+				children.add(child);
+		}
+		ask.setChildAsks(children.toArray(new Ask[0]));
 
 		// configure msg and send
 		QDataAskMessage msg = new QDataAskMessage(ask);

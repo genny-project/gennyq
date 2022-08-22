@@ -50,7 +50,6 @@ public class SearchService {
 
 	/**
 	 * Perform a Detail View search.
-	 *
 	 * @param targetCode The code of the target to display
 	 */
 	public void sendTable(String code) {
@@ -66,7 +65,6 @@ public class SearchService {
 
 	/**
 	 * Perform a Detail View search.
-	 *
 	 * @param targetCode The code of the target to display
 	 */
 	public void sendDetailView(String targetCode) {
@@ -95,7 +93,6 @@ public class SearchService {
 
 	/**
 	 * Send a search PCM with the correct search code.
-	 *
 	 * @param pcmCode The code of pcm to send
 	 * @param searchCode The code of the searhc to send
 	 */

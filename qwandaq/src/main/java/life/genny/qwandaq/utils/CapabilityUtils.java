@@ -558,6 +558,18 @@ public class CapabilityUtils {
 		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
 	}
 
+
+	/**
+	 * Set the redirect code for a role.
+	 * @param role The role to set the redirect for
+	 * @param redirectCode The code to set as redirect
+	 */
+	public void setRoleRedirect(BaseEntity role, String redirectCode) {
+		 
+		String product = userToken.getProductCode();
+		CacheUtils.putObject(product, String.format("%s:REDIRECT", role.getCode()), redirectCode);
+	}
+
 	/**
 	 * Get the redirect code for a role.
 	 * @param roleCode The code of the role

@@ -248,7 +248,7 @@ public class QwandaUtils {
 		// check if it is a question group
 		if (question.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
 
-			log.info("[*] Parent Question: " + question.getCode());
+			log.debug("[*] Parent Question: " + question.getCode());
 
 			// fetch questionQuestions from the DB
 			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode,
@@ -257,7 +257,7 @@ public class QwandaUtils {
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
+				log.debug("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
 
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
