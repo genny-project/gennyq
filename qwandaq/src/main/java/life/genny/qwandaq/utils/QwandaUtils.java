@@ -531,8 +531,10 @@ public class QwandaUtils {
 
 		// create GRP ask
 		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
-//		Question question = new Question("QUE_EDIT_GRP", "Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
-		Question question = new Question("QUE_BASEENTITY_GRP", "Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+		// Question question = new Question("QUE_EDIT_GRP", "Edit " +
+		// baseEntity.getCode() + " : " + baseEntity.getName(),
+		Question question = new Question("QUE_BASEENTITY_GRP",
+				"Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
 				questionAttribute);
 		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
 
@@ -563,7 +565,7 @@ public class QwandaUtils {
 								try {
 									BaseEntity link = beUtils.getBaseEntityByCode(code);
 									entityMessage.add(link);
-								} catch(Exception ex){
+								} catch (Exception ex) {
 									log.error(ex);
 								}
 							}
@@ -578,7 +580,7 @@ public class QwandaUtils {
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
-//		KafkaUtils.writeMsg("webdata", entityMessage);
+		// KafkaUtils.writeMsg("webdata", entityMessage);
 
 		return ask;
 	}
@@ -606,8 +608,8 @@ public class QwandaUtils {
 	 * @param target        The target entity
 	 * @param definition    The definition entity
 	 * @param attributeCode The code of the attribute
-
-	 * @param value The value to check
+	 * 
+	 * @param value         The value to check
 	 * @return is duplicate bool
 	 */
 	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
@@ -625,9 +627,11 @@ public class QwandaUtils {
 			return false;
 		}
 
-		BaseEntity originalTarget = beUtils.getBaseEntityByCode(definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3));
+		BaseEntity originalTarget = beUtils
+				.getBaseEntityByCode(definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3));
 		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
 		log.info("Attribute " + uniqueCode + " must satisfy " + unqs.toString());
+		log.info("Value " + value);
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
 		log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
@@ -644,15 +648,17 @@ public class QwandaUtils {
 		}
 
 		log.infof("Looping through %s unique attribute", unqs.size());
-
+		String originalValue = value;
 		for (String unique : unqs) {
 
-			if (!unique.equals(attributeCode)) {
+			if (!unique.equals(attributeCode)) { // This unique is not matching the incoming attributeCode
 				if (!target.containsEntityAttribute(unique)) {
-					value = originalTarget.getValueAsString(unique);
+					value = originalTarget.getValueAsString(unique); // fetch from the original
 				} else {
-					value = target.getValueAsString(unique);
+					value = target.getValueAsString(unique); // else fetch from the working processBE
 				}
+			} else {
+				value = originalValue;
 			}
 
 			if (value.contains("[") && value.contains("]"))
