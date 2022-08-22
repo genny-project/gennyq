@@ -22,8 +22,6 @@ public abstract class QMessageProvider {
 	protected UserToken userToken;
 
 	protected static Jsonb jsonb = JsonbBuilder.create();
-
-
 	public abstract void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap);
 
 }
