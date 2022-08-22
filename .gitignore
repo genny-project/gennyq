@@ -20,7 +20,7 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 **/*-git.properties
-
+**/event.json
 .mvn/timing.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
