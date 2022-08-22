@@ -531,7 +531,8 @@ public class QwandaUtils {
 
 		// create GRP ask
 		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
-		Question question = new Question("QUE_EDIT_GRP", "Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+//		Question question = new Question("QUE_EDIT_GRP", "Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+		Question question = new Question("QUE_BASEENTITY_GRP", "Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
 				questionAttribute);
 		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
 
