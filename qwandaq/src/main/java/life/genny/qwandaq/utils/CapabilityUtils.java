@@ -2,22 +2,22 @@ package life.genny.qwandaq.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonArray;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import io.vertx.core.json.DecodeException;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -25,8 +25,8 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.checked.RoleException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -89,7 +89,9 @@ public class CapabilityUtils {
 		String code = cleanCapabilityCode(capabilityCode);
 		String key = String.format("%s:%s", target.getCode(), code);
 
-		CacheUtils.putObject(productCode, key, modes);
+		Set<CapabilityMode> set = new HashSet<>(Arrays.asList(modes));
+
+		CacheUtils.putObject(productCode, key, set);
 		log.infof("[^] Cached in %s -> %s:%s", productCode, target.getCode(), code);
 	}
 
@@ -141,13 +143,13 @@ public class CapabilityUtils {
 	 * @param capabilityCode The capability code
 	 * @return An array of CapabilityModes
 	 */
-	private CapabilityMode[] getCapabilitiesFromCache(final String targetCode, 
+	private Set<CapabilityMode> getCapabilitiesFromCache(final String targetCode, 
 			final String capabilityCode) throws RoleException {
 
 		String productCode = userToken.getProductCode();
 		String key = String.format("%s:%s", targetCode, capabilityCode);
 
-		CapabilityMode[] modes = CacheUtils.getObject(productCode, key, CapabilityMode[].class);
+		Set<CapabilityMode> modes = CacheUtils.getObject(productCode, key, HashSet.class);
 		if (modes == null)
 			throw new RoleException("Nothing present for capability combination: " + key);
 
@@ -195,10 +197,9 @@ public class CapabilityUtils {
 
 		for (String code : codes) {
 			try {
-				CapabilityMode[] modes = getCapabilitiesFromCache(code, cleanCapabilityCode);
-				List<CapabilityMode> modeList = Arrays.asList(modes);
+				Set<CapabilityMode> modes = getCapabilitiesFromCache(code, cleanCapabilityCode);
 				for (CapabilityMode checkMode : checkModes) {
-					if (!modeList.contains(checkMode))
+					if (!modes.contains(checkMode))
 						return false;
 				}
 			} catch (RoleException e) {
