@@ -180,7 +180,7 @@ public class BaseEntityUtils {
 		BaseEntity entity = null;
 		
 		// check in database if not in cache
-		if (baseEntitySerializable == null) {			
+		if (baseEntitySerializable == null) {
 			try {
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
