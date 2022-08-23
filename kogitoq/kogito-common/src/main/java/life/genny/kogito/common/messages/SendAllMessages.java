@@ -13,14 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SendAllMessages implements SendAllMessagesStrategy {
-
-    private static final Logger log = Logger.getLogger(SendMessageService.class);
-    @Inject
-    UserToken userToken;
-
-    @Inject
-    BaseEntityUtils beUtils;
+public class SendAllMessages extends MessageSendingStrategy {
 
     @Inject
     SearchUtils searchUtils;
@@ -43,7 +36,7 @@ public class SendAllMessages implements SendAllMessagesStrategy {
 
     //TODO This functions needs to be redone.
     @Override
-    public void sendAllMessages() {
+    public void sendMessage() {
         SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES",
                 "Fetch All Messages associated with milestone Code")
                 .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "MSG_%")

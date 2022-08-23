@@ -56,7 +56,7 @@ public class SendMessageService {
 	 *                      derived.
 	 */
 	public void sendAllMessagesCode(String milestoneCode, String coreBeCode) {
-		new SendAllMessages(milestoneCode, coreBeCode).sendAllMessages();
+		new SendAllMessages(milestoneCode, coreBeCode).sendMessage();
 	}
 
 	/**
@@ -74,7 +74,7 @@ public class SendMessageService {
 		String productCode = coreBE.getRealm();
 		log.info("productCode is " + productCode);
 
-		new SendAllMessages(productCode, milestoneCode, coreBE).sendAllMessages();
+		new SendAllMessages(productCode, milestoneCode, coreBE).sendMessage();
 	}
 
 	/**
@@ -87,6 +87,6 @@ public class SendMessageService {
 	 *                      derived.
 	 */
 	public void sendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
-		new SendAllMessages(productCode, milestoneCode, coreBE).sendAllMessages();
+		new SendAllMessages(productCode, milestoneCode, coreBE).sendMessage();
 	}
 }

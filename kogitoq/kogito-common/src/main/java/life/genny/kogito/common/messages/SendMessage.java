@@ -11,17 +11,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.Map;
 
-public class SendMessage implements SendMessageStrategy{
-
-    private static final Logger log = Logger.getLogger(SendMessageService.class);
-
-    Jsonb jsonb = JsonbBuilder.create();
-
-    @Inject
-    UserToken userToken;
-
-    @Inject
-    BaseEntityUtils beUtils;
+public class SendMessage extends MessageSendingStrategy{
 
     private String templateCode;
     private BaseEntity recipientBE;
