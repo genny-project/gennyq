@@ -76,6 +76,23 @@ public class CapabilityUtils {
 	public CapabilityUtils() {
 	}
 
+	/**
+	 * Add a capability to a BaseEntity.
+	 * @param productCode The product code
+	 * @param target The target entity
+	 * @param capabilityCode The capability code
+	 * @param modes The modes to set
+	 */
+	public void updateCapabilityCache(String productCode, BaseEntity target, final String capabilityCode,
+			final CapabilityMode... modes) {
+
+		String code = cleanCapabilityCode(capabilityCode);
+		String key = String.format("%s:%s", target, code);
+
+		CacheUtils.putObject(productCode, key, modes);
+	}
+
+
 	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
@@ -117,20 +134,18 @@ public class CapabilityUtils {
 		return targetBe;
 	}
 
-	private CapabilityMode[] getCapabilitiesFromCache(final String roleCode, final String cleanCapabilityCode) {
+	/**
+	 * Get a set of capability modes for a target and capability combination.
+	 * @param target The target entity
+	 * @param capabilityCode The capability code
+	 * @return An array of CapabilityModes
+	 */
+	private CapabilityMode[] getCapabilitiesFromCache(final String targetCode, final String capabilityCode) {
+
 		String productCode = userToken.getProductCode();
-		String key = getCacheKey(roleCode, cleanCapabilityCode);
-		String cachedObject = (String) CacheUtils.readCache(productCode, key);
+		String key = String.format("%s:%s", targetCode, capabilityCode);
 
-		JsonObject object = jsonb.fromJson(cachedObject, JsonObject.class);
-
-		if ("error".equals(object.getString("status"))) {
-			log.error("Error reading cache for realm: " + productCode + " with key: " + key);
-			return null;
-		}
-
-		String modeString = object.getString("value");
-		return getCapModesFromString(modeString);
+		return CacheUtils.getObject(productCode, key, CapabilityMode[].class);
 	}
 
 	/**
@@ -170,35 +185,19 @@ public class CapabilityUtils {
 		// there check the cache with the roleCode as the userCode
 		// TODO: Will need to revisit this implementation with Jasper
 
-		Optional<EntityAttribute> lnkRole = user.findEntityAttribute(LNK_ROLE_CODE);
+		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
 
 		// Make a list for the modes that have been found in the user's various roles
 		// TODO: Potentially change this to a system that matches from multiple roles
 		// instead of a single role
 		// List<CapabilityMode> foundModes = new ArrayList<>();
 
-		if (lnkRole.isPresent()) {
-			String rolesValue = lnkRole.get().getValueString();
-			try {
-				// Look through cache using each role
-				JsonArray roleArray = jsonb.fromJson(rolesValue, JsonArray.class);
-				for (int i = 0; i < roleArray.size(); i++) {
-					String roleCode = roleArray.getString(i);
-
-					CapabilityMode[] modes = getCapabilitiesFromCache(roleCode, cleanCapabilityCode);
-					List<CapabilityMode> modeList = Arrays.asList(modes);
-					for (CapabilityMode checkMode : checkModes) {
-						if (!modeList.contains(checkMode))
-							return false;
-					}
-				}
-
-				// There is a malformed LNK_ROLE Attribute, so we assume they don't have the
-				// capability
-			} catch (DecodeException exception) {
-				log.error("Error decoding LNK_ROLE for BaseEntity: " + user.getCode());
-				log.error("Value: " + rolesValue + ". Expected: a json array of roles");
-				return false;
+		for (String code : codes) {
+			CapabilityMode[] modes = getCapabilitiesFromCache(code, cleanCapabilityCode);
+			List<CapabilityMode> modeList = Arrays.asList(modes);
+			for (CapabilityMode checkMode : checkModes) {
+				if (!modeList.contains(checkMode))
+					return false;
 			}
 		}
 

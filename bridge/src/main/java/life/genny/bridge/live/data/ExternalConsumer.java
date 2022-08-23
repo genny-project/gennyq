@@ -43,6 +43,7 @@ public class ExternalConsumer {
 	@Inject RoleBasedPermission permissions;
 	@Inject BlackListInfo blacklist;
 	@Inject Service service;
+	@Inject InternalConsumer consumer;
 	
 	@ConfigProperty(name = "bridge.id", defaultValue = "false")
 	String bridgeId;
@@ -179,8 +180,6 @@ public class ExternalConsumer {
 	 * @param gennyToken the users GennyToken
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
-		// JsonObject nonTokenBody = (JsonObject) body.remove("token");
-		
 
 		log.info("Incoming Payload = " + body.toString());
 
@@ -202,9 +201,8 @@ public class ExternalConsumer {
 			}
 			// publish message
 			KafkaUtils.writeMsg(topicName, payload);
-
-			// Now send back to the originating frontend so they know we got it.
-			// TODO
+			// send confirmation back to frontend
+			consumer.handleIncomingMessage(payload);
 
 		} else if (msgType.equals("EVT_MSG")) {
 			if (!StringUtils.isEmpty(productCodes)) {
@@ -215,10 +213,6 @@ public class ExternalConsumer {
 			// publish message
 			KafkaUtils.writeMsg(topicName, payload);
 		}
-
-		
-		
-		
 
 		// remove token from log for security purposes
 		body.remove("token");
