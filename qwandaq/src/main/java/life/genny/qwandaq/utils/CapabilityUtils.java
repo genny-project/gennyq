@@ -2,22 +2,22 @@ package life.genny.qwandaq.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonArray;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import io.vertx.core.json.DecodeException;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -25,8 +25,8 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.Allowed;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.checked.RoleException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -76,6 +76,26 @@ public class CapabilityUtils {
 	public CapabilityUtils() {
 	}
 
+	/**
+	 * Add a capability to a BaseEntity.
+	 * @param productCode The product code
+	 * @param target The target entity
+	 * @param capabilityCode The capability code
+	 * @param modes The modes to set
+	 */
+	public void updateCapabilityCache(String productCode, BaseEntity target, final String capabilityCode,
+			final CapabilityMode... modes) {
+
+		String code = cleanCapabilityCode(capabilityCode);
+		String key = String.format("%s:%s", target.getCode(), code);
+
+		Set<CapabilityMode> set = new HashSet<>(Arrays.asList(modes));
+
+		CacheUtils.putObject(productCode, key, set);
+		log.infof("[^] Cached in %s -> %s:%s", productCode, target.getCode(), code);
+	}
+
+
 	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
@@ -117,20 +137,23 @@ public class CapabilityUtils {
 		return targetBe;
 	}
 
-	private CapabilityMode[] getCapabilitiesFromCache(final String roleCode, final String cleanCapabilityCode) {
+	/**
+	 * Get a set of capability modes for a target and capability combination.
+	 * @param target The target entity
+	 * @param capabilityCode The capability code
+	 * @return An array of CapabilityModes
+	 */
+	private Set<CapabilityMode> getCapabilitiesFromCache(final String targetCode, 
+			final String capabilityCode) throws RoleException {
+
 		String productCode = userToken.getProductCode();
-		String key = getCacheKey(roleCode, cleanCapabilityCode);
-		String cachedObject = (String) CacheUtils.readCache(productCode, key);
+		String key = String.format("%s:%s", targetCode, capabilityCode);
 
-		JsonObject object = jsonb.fromJson(cachedObject, JsonObject.class);
+		Set<CapabilityMode> modes = CacheUtils.getObject(productCode, key, HashSet.class);
+		if (modes == null)
+			throw new RoleException("Nothing present for capability combination: " + key);
 
-		if ("error".equals(object.getString("status"))) {
-			log.error("Error reading cache for realm: " + productCode + " with key: " + key);
-			return null;
-		}
-
-		String modeString = object.getString("value");
-		return getCapModesFromString(modeString);
+		return modes;
 	}
 
 	/**
@@ -165,39 +188,22 @@ public class CapabilityUtils {
 		}
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		BaseEntity user = beUtils.getUserBaseEntity();
-
-		// Look through all the user entity attributes for the capability code. If it is
-		// there check the cache with the roleCode as the userCode
-		// TODO: Will need to revisit this implementation with Jasper
-
-		Optional<EntityAttribute> lnkRole = user.findEntityAttribute(LNK_ROLE_CODE);
+		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
 
 		// Make a list for the modes that have been found in the user's various roles
 		// TODO: Potentially change this to a system that matches from multiple roles
 		// instead of a single role
 		// List<CapabilityMode> foundModes = new ArrayList<>();
 
-		if (lnkRole.isPresent()) {
-			String rolesValue = lnkRole.get().getValueString();
+		for (String code : codes) {
 			try {
-				// Look through cache using each role
-				JsonArray roleArray = jsonb.fromJson(rolesValue, JsonArray.class);
-				for (int i = 0; i < roleArray.size(); i++) {
-					String roleCode = roleArray.getString(i);
-
-					CapabilityMode[] modes = getCapabilitiesFromCache(roleCode, cleanCapabilityCode);
-					List<CapabilityMode> modeList = Arrays.asList(modes);
-					for (CapabilityMode checkMode : checkModes) {
-						if (!modeList.contains(checkMode))
-							return false;
-					}
+				Set<CapabilityMode> modes = getCapabilitiesFromCache(code, cleanCapabilityCode);
+				for (CapabilityMode checkMode : checkModes) {
+					if (!modes.contains(checkMode))
+						return false;
 				}
-
-				// There is a malformed LNK_ROLE Attribute, so we assume they don't have the
-				// capability
-			} catch (DecodeException exception) {
-				log.error("Error decoding LNK_ROLE for BaseEntity: " + user.getCode());
-				log.error("Value: " + rolesValue + ". Expected: a json array of roles");
+			} catch (RoleException e) {
+				log.debug(e.getMessage());
 				return false;
 			}
 		}
@@ -556,6 +562,17 @@ public class CapabilityUtils {
 		}
 
 		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+	}
+
+
+	/**
+	 * Set the redirect code for a role.
+	 * @param role The role to set the redirect for
+	 * @param redirectCode The code to set as redirect
+	 */
+	public void setRoleRedirect(String productCode, BaseEntity role, String redirectCode) {
+		 
+		CacheUtils.putObject(productCode, String.format("%s:REDIRECT", role.getCode()), redirectCode);
 	}
 
 	/**

@@ -56,15 +56,17 @@ message ProcessQuestions {
 message S2SData { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string events = 1; 
+	optional bool cancel = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string pcmCode = 2; 
+	optional string events = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 3; 
+	optional string pcmCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 4; 
+	optional string questionCode = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 5; 
+	optional string sourceCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 6; 
+	optional string targetCode = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 7; 
 }
