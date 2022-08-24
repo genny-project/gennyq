@@ -97,6 +97,9 @@ public class FrontendService {
 		log.info("Mandatory fields are " + (answered ? "answered" : "not answered"));
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
+		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+		qwandaUtils.updateDependentAsks(ask, processEntity, defBE);
+
 		// send to user
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
@@ -105,7 +108,7 @@ public class FrontendService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
-	/**
+	/** TODO: Consider returning a flatmap of asks here so we don't have to recurse again later on for other functions that would otherwise have to recurse through the asks (such as updating disabled)
 	 * Recursively update the ask target.
 	 *
 	 * @param ask    The ask to traverse

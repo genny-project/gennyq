@@ -326,12 +326,58 @@ public class QwandaUtils {
 		}
 
 		// grab all child ask attribute codes
-		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+		if (ask.hasChildren()) {
 			for (Ask childAsk : ask.getChildAsks()) {
 				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
 			}
 		}
 		return codes;
+	}
+
+	private Map<String, Ask> getAllAsksRecursively(Ask ask) {
+		return getAllAsksRecursively(ask, new HashMap<String, Ask>());
+	}
+
+	private Map<String, Ask> getAllAsksRecursively(Ask ask, Map<String, Ask> asks) {
+		log.info("Ask: " + ask.getAttributeCode() + " children: " + ask.hasChildren());
+		if(ask.hasChildren()) {
+			for(Ask childAsk : ask.getChildAsks()) {
+				asks.put(childAsk.getAttributeCode(), childAsk);
+				asks = getAllAsksRecursively(childAsk, asks);
+			}
+		}
+		return asks;
+	}
+
+	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
+		target.getBaseEntityAttributes().stream().forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
+		for (String d : dependencies) {
+			if (!target.getValue(d).isPresent()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
+		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
+		Map<String, Ask> flatMapAsks = getAllAsksRecursively(ask);
+
+		for (EntityAttribute dep : dependentAsks) {
+			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), "DEP_");
+			Ask targetAsk = flatMapAsks.get(attributeCode);
+			if(targetAsk == null) {
+				continue;
+			}
+			
+			String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
+
+			boolean depsAnswered = hasDepsAnswered(target, dependencies);
+			targetAsk.setDisabled(!depsAnswered);
+			targetAsk.setHidden(!depsAnswered);
+		}
+		
+		return ask;
 	}
 
 	/**
@@ -515,7 +561,7 @@ public class QwandaUtils {
 	public void deleteSchedule(String code) {
 
 		String uri = GennySettings.shleemyServiceUrl() + "/api/schedule/code/" + code;
-		HttpUtils.delete(uri, userToken.getToken());
+		HttpUtils.delete(uri, userToken);
 	}
 
 	/**
@@ -556,7 +602,7 @@ public class QwandaUtils {
 					if (ea.getAttributeCode().startsWith("LNK_")) {
 						if (ea.getValueString() != null) {
 
-							String[] codes = BaseEntityUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
+							String[] codes = beUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
 
 							for (String code : codes) {
 								BaseEntity link = beUtils.getBaseEntityByCode(code);
@@ -624,7 +670,7 @@ public class QwandaUtils {
 				+ unique.get().getValue() + " and incoming value: " + value);
 
 		String uniqueIndexes = unique.get().getValue();
-		uniqueIndexes = BaseEntityUtils.cleanUpAttributeValue(uniqueIndexes);
+		uniqueIndexes = beUtils.cleanUpAttributeValue(uniqueIndexes);
 		String[] uniqueArray = uniqueIndexes.split(",");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");

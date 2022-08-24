@@ -2,6 +2,7 @@ package life.genny.test.qwandaq.utils;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -30,6 +31,9 @@ public class BaseEntityUtilsTest {
 	@InjectMock
 	UserToken userToken;
 
+	@Inject
+	BaseEntityUtils beUtils;
+
 	@Test
 	public void nullInputTest() {
 		// TODO
@@ -53,9 +57,9 @@ public class BaseEntityUtilsTest {
 
 	public void cleanAttributeValueTest() {
 
-		assert(BaseEntityUtils.cleanUpAttributeValue("[\"SEL_ONE\"]").equals("SEL_ONE"));
-		assert(BaseEntityUtils.cleanUpAttributeValue("[\"SEL_ONE\", \"SEL_TWO\"]").equals("SEL_ONE,SEL_TWO"));
-		assert(BaseEntityUtils.cleanUpAttributeValue("[\"SEL_ONE\", \"SEL_TWO\", \"SEL_THREE\"]").equals("SEL_ONE,SEL_TWO,SEL_THREE"));
+		assert(beUtils.cleanUpAttributeValue("[\"SEL_ONE\"]").equals("SEL_ONE"));
+		assert(beUtils.cleanUpAttributeValue("[\"SEL_ONE\", \"SEL_TWO\"]").equals("SEL_ONE,SEL_TWO"));
+		assert(beUtils.cleanUpAttributeValue("[\"SEL_ONE\", \"SEL_TWO\", \"SEL_THREE\"]").equals("SEL_ONE,SEL_TWO,SEL_THREE"));
 	}
 
 	// TODO: Get Code Array

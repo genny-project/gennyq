@@ -106,7 +106,7 @@ public class TopologyProducer {
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
 				.filter((k, v) -> validateData(v))
-        .mapValues((k, v) -> handleDependentDropdowns(v))
+				.mapValues((k, v) -> handleDependentDropdowns(v))
 				.peek((k, v) -> log.info("Forwarding valid message"))
 				.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
 
@@ -124,32 +124,34 @@ public class TopologyProducer {
 		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
 	}
 
-  public String handleDependentDropdowns(String data) {
-	QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+	public String handleDependentDropdowns(String data) {
+		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
-    // TODO: Just getting something working for now. Will optimize later
-  Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_")).forEach(answer -> {
-      String processId = answer.getProcessId();
-      ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
-      BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-      defBE.getBaseEntityAttributes().stream().filter(ea -> ea.getAttributeCode().startsWith("DEP_LNK")).forEach(ea -> {
+		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_"))
+		.forEach(answer -> {
+			String processId = answer.getProcessId();
+			ProcessQuestions processData = gqlUtils.fetchProcessData(processId); // TODO: Wondering if we can just get the processData from the first processId we get
+			BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 
-      });
-    });
-	for(Answer answer : msg.getItems()) {
-		String processId = answer.getProcessId();
-		ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
-		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		log.debugf("Processing answer %s. DEF: %s", answer.getTargetCode(), defBE.getCode());
-    log.debug("Question Code: " + processData.getQuestionCode());
-    log.debug("Attribute Code: " + answer.getAttributeCode());
-    defBE.getBaseEntityAttributes().stream().filter(ea -> ea.getAttributeCode().startsWith("DEP_LNK")).forEach(ea -> {
-        log.debug("EntityAttribute: " + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
-    });
+			BaseEntity processEntity = processData.getProcessEntity();
+			List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
+
+			for (EntityAttribute dep : dependentAsks) {
+				String key = String.format("%s:%s", processId, processData.getQuestionCode());
+				Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+				if(ask == null) {
+					continue;
+				}
+				String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
+
+				boolean depsAnswered = qwandaUtils.hasDepsAnswered(processEntity, dependencies);
+				ask.setDisabled(!depsAnswered);
+				ask.setHidden(!depsAnswered);
+			}
+		});
+		
+		return data;
 	}
-      
-    return data;
-  }
 
 	/**
 	 * Helper function to tidy some values
@@ -169,7 +171,7 @@ public class TopologyProducer {
 	 * @return Boolean representing whether the msg is valid
 	 */
 	public Boolean validateData(String data) {
-    
+
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
 		if (msg.getItems().length == 0) {
@@ -252,7 +254,7 @@ public class TopologyProducer {
 		// check duplicate attributes
 		String questionCode = processData.getQuestionCode();
 		String key = String.format("%s:%s", processId, questionCode);
-    log.info("KEY: " + key);
+		log.info("KEY: " + key);
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
 			log.error("Duplicate answer detected for target " + answer.getTargetCode());
