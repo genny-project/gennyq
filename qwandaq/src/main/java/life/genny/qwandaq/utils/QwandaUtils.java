@@ -339,7 +339,6 @@ public class QwandaUtils {
 	}
 
 	private Map<String, Ask> getAllAsksRecursively(Ask ask, Map<String, Ask> asks) {
-		log.info("Ask: " + ask.getAttributeCode() + " children: " + ask.hasChildren());
 		if(ask.hasChildren()) {
 			for(Ask childAsk : ask.getChildAsks()) {
 				asks.put(childAsk.getAttributeCode(), childAsk);
