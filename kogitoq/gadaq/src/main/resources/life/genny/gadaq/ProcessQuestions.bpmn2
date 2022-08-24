@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_K6GSkATLEDuxANBta72yyw" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_ZLyzUAWLEDuxANBta72yyw" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -121,13 +121,14 @@
   <bpmn2:interface id="_260DD51A-9F4F-468A-BC4C-B73012C9A5CC_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
     <bpmn2:operation id="_260DD51A-9F4F-468A-BC4C-B73012C9A5CC_ServiceOperation" name="updateAskTarget" implementationRef="updateAskTarget"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_C083D1CB-68A0-4D17-9902-044038C3AD00" name="Default Collaboration">
-    <bpmn2:participant id="_23133002-7358-44F4-9B96-C6FB07DB953C" name="Pool Participant" processRef="processQuestions"/>
+  <bpmn2:collaboration id="_0F6FDAAF-D1A9-4FE8-94BB-1D3264D2D16C" name="Default Collaboration">
+    <bpmn2:participant id="_EA5C5B4E-C8E4-4BA8-A6DD-461F86E271F2" name="Pool Participant" processRef="processQuestions"/>
   </bpmn2:collaboration>
   <bpmn2:process id="processQuestions" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Process Questions" isExecutable="true" processType="Public">
     <bpmn2:extensionElements>
       <drools:import name="life.genny.qwandaq.entity.BaseEntity"/>
       <drools:import name="life.genny.qwandaq.message.QDataAnswerMessage"/>
+      <drools:import name="life.genny.kogito.common.models.S2SData"/>
     </bpmn2:extensionElements>
     <bpmn2:property id="questionCode" itemSubjectRef="_questionCodeItem" name="questionCode">
       <bpmn2:extensionElements>
@@ -655,7 +656,7 @@ data.setSourceCode(sourceCode);
 data.setTargetCode(targetCode);
 data.setPcmCode(pcmCode);
 data.setEvents(events);
-data.setCancel(false);
+data.setCancel();
 kcontext.setVariable("data",data);
 </bpmn2:script>
     </bpmn2:scriptTask>
@@ -1148,7 +1149,7 @@ kcontext.setVariable("status", "COMPLETE");
         <bpmn2:script>System.out.println("Cancel detected in processQuestions");
 if (data!=null) {
     System.out.println("data is not null:"+data);
-    data.setCancel(true);
+    data.setCancel();
     kcontext.setVariable("data",data);
 } else {
    System.out.println("data IS null:");
@@ -1253,11 +1254,11 @@ System.out.println (" targetCode = "+targetCode);  </bpmn2:script>
         <dc:Bounds height="56" width="56" x="1178" y="1291.5"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__C00E5A92-93BF-4AAC-8796-3B487C279491" bpmnElement="_C00E5A92-93BF-4AAC-8796-3B487C279491">
-        <dc:Bounds height="73" width="113" x="430.5" y="1281.5"/>
+        <dc:Bounds height="73" width="113" x="430.5" y="1280.5"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="edge_shape__CCFBDBFC-A2F1-4EC0-84AB-D2179B9AC3BE_to_shape__C00E5A92-93BF-4AAC-8796-3B487C279491" bpmnElement="_5F40D4D4-170E-4E1C-8C4C-F8AD1EE21AD7">
         <di:waypoint x="350.60317460317447" y="1319.4603174603176"/>
-        <di:waypoint x="430.5" y="1318"/>
+        <di:waypoint x="430.5" y="1317"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__89E1736F-871A-4A79-927B-EDF27526C798_to_shape__759CAAA4-B6F4-407F-B937-8044B34DDE8E" bpmnElement="_F0B3FE76-8AEC-4E25-945D-0E79095CD516">
         <di:waypoint x="682.5" y="1318"/>
@@ -1272,7 +1273,7 @@ System.out.println (" targetCode = "+targetCode);  </bpmn2:script>
         <di:waypoint x="1178" y="1319.5"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__C00E5A92-93BF-4AAC-8796-3B487C279491_to_shape__89E1736F-871A-4A79-927B-EDF27526C798" bpmnElement="_35C4070C-CAA2-43DB-A19E-4612E22DB7B8">
-        <di:waypoint x="487" y="1318"/>
+        <di:waypoint x="487" y="1317"/>
         <di:waypoint x="613" y="1318"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="shape__11A29A52-C9D0-4E65-BB61-661A380DF2EF" bpmnElement="_11A29A52-C9D0-4E65-BB61-661A380DF2EF" isExpanded="true">
@@ -1853,7 +1854,7 @@ System.out.println (" targetCode = "+targetCode);  </bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_K6GSkATLEDuxANBta72yyw</bpmn2:source>
-    <bpmn2:target>_K6GSkATLEDuxANBta72yyw</bpmn2:target>
+    <bpmn2:source>_ZLyzUAWLEDuxANBta72yyw</bpmn2:source>
+    <bpmn2:target>_ZLyzUAWLEDuxANBta72yyw</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
