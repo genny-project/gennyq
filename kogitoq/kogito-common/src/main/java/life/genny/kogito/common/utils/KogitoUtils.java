@@ -390,8 +390,6 @@ public class KogitoUtils {
 		if (array == null || array.isEmpty())
 			throw new GraphQLException("No ProcessInstances items found");
 
-		log.info(array.toString());
-
 		// iterate processInstance tokens
 		for (JsonValue value : array) {
 

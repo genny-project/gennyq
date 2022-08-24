@@ -80,7 +80,7 @@ then
 	JsonObjectBuilder builder = Json.createObjectBuilder()
 			.add("code", CommonUtils.removePrefix(msg.getData().getCode()));
 
-	if (msg.getData().getTargetCode() != null) 
+	if (msg.getData().getTargetCode() != null)
 		builder.add("targetCode", msg.getData().getTargetCode());
 
 	kogitoUtils.triggerWorkflow(SELF, "view", builder.build());
@@ -100,7 +100,7 @@ then
 	retract(msg);
 end
 
-rule RouteTestForm 
+rule RouteTestForm
 when
 	msg: QEventMessage( data.code matches "TEST_QUE_.*")
 	userToken: UserToken()
@@ -109,7 +109,7 @@ when
 	defUtils:	DefUtils()
 	qwandaUtils: QwandaUtils()
 then
-	
+
 	System.out.println("Displaying Test Question Group ..."+msg.getData().getCode());
 	JsonObject payload = Json.createObjectBuilder()
 		.add("questionCode", msg.getData().getCode().substring("TEST_".length()))
@@ -123,7 +123,7 @@ then
 end
 
 
-rule RouteAddItem 
+rule RouteAddItem
 when
 	msg: QEventMessage( data.code matches "QUE_ADD_.*" )
 	kogitoUtils : KogitoUtils()
@@ -147,7 +147,7 @@ then
 	retract(msg);
 end
 
-rule RouteEditItem 
+rule RouteEditItem
 when
 	msg: QEventMessage( data.code == "ACT_EDIT" )
 	kogitoUtils : KogitoUtils()
@@ -156,7 +156,7 @@ then
 	retract(msg);
 end
 
-rule RouteUpdateSummary 
+rule RouteUpdateSummary
 when
 	msg: QEventMessage( data.code == "UPDATE_SUMMARY" )
 	kogitoUtils : KogitoUtils()
@@ -170,7 +170,7 @@ then
 	retract(msg);
 end
 
-rule RouteTreeItems 
+rule RouteTreeItems
 when
 	msg: QEventMessage( data.code matches "QUE_TREE_ITEM_.*"  && data.code != "QUE_TREE_ITEM_HOST_COMPANIES" )
 	kogitoUtils : KogitoUtils()
