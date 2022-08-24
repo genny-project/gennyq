@@ -544,36 +544,66 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid atribute
-		baseEntity.getBaseEntityAttributes().stream()
-				.filter(ea -> defBE.containsEntityAttribute("ATT_" + ea.getAttributeCode()))
+		defBE.getBaseEntityAttributes().stream()
+//		baseEntity.getBaseEntityAttributes().stream()
+//				.filter(ea -> defBE.containsEntityAttribute("ATT_" + ea.getAttributeCode()))
 				.forEach((ea) -> {
+					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(),"ATT_");
+					attributeCode = StringUtils.removeStart(attributeCode,"DEP_");
+					attributeCode = StringUtils.removeStart(attributeCode,"DFT_");
+					attributeCode = StringUtils.removeStart(attributeCode,"UNQ_");
 
-					String questionCode = "QUE_"
-							+ StringUtils.removeStart(StringUtils.removeStart(ea.getAttributeCode(), "PRI_"), "LNK_");
+					Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
 
-					Question childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
-					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
+					if (!baseEA.isPresent()) {
+						String questionCode = attributeCode;
+						questionCode = "QUE_" + StringUtils.removeStart(StringUtils.removeStart(questionCode, "PRI_"), "LNK_");
+						Question childQues = null;
 
-					childAsks.add(childAsk);
+						try {
+							Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
+							childQues = new Question(questionCode, attribute.getName(), attribute);
+						} catch (Exception ex) {
+							childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
+						}
 
-					if (ea.getAttributeCode().startsWith("LNK_")) {
-						if (ea.getValueString() != null) {
+						Ask childAsk = new Ask(childQues, userToken.getUserCode(), attributeCode);
 
-							String[] codes = BaseEntityUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
+						childAsks.add(childAsk);
+					} else {
+						EntityAttribute baseAttrVal = baseEA.get();
+						String questionCode = "QUE_"
+								+ StringUtils.removeStart(StringUtils.removeStart(baseAttrVal.getAttributeCode(), "PRI_"), "LNK_");
 
-							for (String code : codes) {
-								try {
-									BaseEntity link = beUtils.getBaseEntityByCode(code);
+						Question childQues = new Question(questionCode, baseAttrVal.getAttribute().getName(), baseEA.get().getAttribute());
+						Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
+
+						childAsks.add(childAsk);
+
+						if (baseAttrVal.getAttributeCode().startsWith("LNK_")) {
+							if (baseAttrVal.getValueString() != null) {
+
+								if (baseAttrVal.getValueString().isEmpty()) {
+									BaseEntity link = beUtils.getBaseEntityByCode(baseAttrVal.getAttributeCode());
 									entityMessage.add(link);
-								} catch (Exception ex) {
-									log.error(ex);
+								} else {
+									String[] codes = BaseEntityUtils.cleanUpAttributeValue(baseAttrVal.getValueString()).split(",");
+
+									for (String code : codes) {
+										try {
+											BaseEntity link = beUtils.getBaseEntityByCode(code);
+											entityMessage.add(link);
+										} catch (Exception ex) {
+											log.error(ex);
+										}
+									}
 								}
 							}
 						}
-					}
 
-					if (defBE.containsEntityAttribute("SER_" + ea.getAttributeCode())) {
-						searchUtils.performDropdownSearch(childAsk);
+						if (defBE.containsEntityAttribute("SER_" + baseAttrVal.getAttributeCode())) {
+							searchUtils.performDropdownSearch(childAsk);
+						}
 					}
 				});
 
