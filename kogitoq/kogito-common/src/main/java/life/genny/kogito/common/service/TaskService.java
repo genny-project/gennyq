@@ -4,7 +4,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -14,10 +13,10 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
@@ -80,6 +79,10 @@ public class TaskService {
 		processData.setPcmCode(pcmCode);
 		processData.setEvents(events);
 		processData.setProcessId(processId);
+		processData.setAnswers(new ArrayList<Answer>());
+
+		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
+		processData.setProcessEntityCode(processEntityCode);
 
 		return jsonb.toJson(processData);
 	}
@@ -156,26 +159,6 @@ public class TaskService {
 	}
 
 	/**
-	 * Update the ask target to use the process entity.
-	 * @param processJson The process data json
-	 */
-	public void updateAskTarget(String processJson) {
-
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		BaseEntity processEntity = processData.getProcessEntity();
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
-
-		// fetch asks from cache
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
-		
-		// update ask target
-		recursivelyUpdateAskTarget(ask, processEntity);
-		CacheUtils.putObject(userToken.getProductCode(), key, ask);
-	}
-
-	/**
 	 * Recursively update the ask target.
 	 *
 	 * @param ask    The ask to traverse
@@ -200,7 +183,7 @@ public class TaskService {
 	 * @param targetCode The code of the target entity
 	 * @return The DEF
 	 */
-	public String getDEF(String processJson) {
+	public String getDefinitionCode(String processJson) {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String targetCode = processData.getTargetCode();
@@ -233,59 +216,6 @@ public class TaskService {
 		Set<String> attributeCodes = new HashSet<>();
 		attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
 		processData.setAttributeCodes(Arrays.asList(attributeCodes.toArray(new String[attributeCodes.size()])));
-
-		return jsonb.toJson(processData);
-	}
-
-	/**
-	 * Setup the process entity used to store task data.
-	 *
-	 * @param processJson The process data json
-	 * @return The updated process entity
-	 */
-	public String setupProcessBE(String processJson) {
-
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		String targetCode = processData.getTargetCode();
-		// QDataAskMessage askMessage = processData.getAskMessage();
-		List<String> attributeCodes = processData.getAttributeCodes();
-
-		// init entity and force the realm
-		String processEntityCode = "QBE_" + targetCode.substring(4);
-		log.info("Creating Process Entity " + processEntityCode + "...");
-
-		BaseEntity processEntity = new BaseEntity(processEntityCode, "QuestionBE");
-		processEntity.setRealm(userToken.getProductCode());
-
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		log.info("Found " + attributeCodes.size() + " active attributes in asks");
-
-		// add an entityAttribute to process entity for each attribute
-		for (String code : attributeCodes) {
-
-			// check for existing attribute in target
-			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
-
-				// otherwise create new attribute
-				Attribute attribute = qwandaUtils.getAttribute(code);
-				Object value = null;
-				// default toggles to false
-				String className = attribute.getDataType().getClassName();
-				if (className.contains("Boolean") || className.contains("bool"))
-					value = false;
-
-				return new EntityAttribute(processEntity, attribute, 1.0, value);
-			});
-
-			processEntity.addAttribute(ea);
-		}
-
-		log.info("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
-		processData.setProcessEntity(processEntity);
-
-		// TODO, until cacheUtils supprots BEs
-		CacheUtils.putObject(userToken.getProductCode(), processEntityCode, processEntity);
 
 		return jsonb.toJson(processData);
 	}

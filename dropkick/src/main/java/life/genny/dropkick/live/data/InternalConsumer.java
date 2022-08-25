@@ -136,7 +136,7 @@ public class InternalConsumer {
 				log.error("Process data not found for processId: " + processId);
 				return;
 			}
-			target = processData.getProcessEntity();
+			target = qwandaUtils.generateProcessEntity(processData);
 			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		} else {
 			target = beUtils.getBaseEntity(targetCode);

@@ -1,5 +1,6 @@
 package life.genny.kogito.common.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -44,6 +45,9 @@ public class ProcessAnswerService {
 	@Inject
 	DefUtils defUtils;
 
+	@Inject
+	FrontendService frontendService;
+
 	/**
 	 * Save incoming answer to the process baseentity.
 	 *
@@ -55,47 +59,36 @@ public class ProcessAnswerService {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String processId = processData.getProcessId();
-		String targetCode = processData.getTargetCode();
-
-		BaseEntity processEntity = processData.getProcessEntity();
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
 
 		// ensure targetCode is correct
-		if (!answer.getTargetCode().equals(processEntity.getCode())) {
+		if (!answer.getTargetCode().equals(processData.getProcessEntityCode())) {
 			log.warn("Bad targetCode in answer!");
 			return jsonb.toJson(processData);
 		}
 
 		// check if the answer is valid for the target
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		BaseEntity definition = defUtils.getDEF(target);
+		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		if (!defUtils.answerValidForDEF(definition, answer)) {
 			log.error("Bad incoming answer... Not saving!");
 			return jsonb.toJson(processData);
 		}
 
-		// find the attribute
-		String attributeCode = answer.getAttributeCode();
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-		answer.setAttribute(attribute);
+		processData.getAnswers().add(answer);
+		qwandaUtils.storeProcessData(processData);
 
-		// debug log the value before saving
-		String currentValue = processEntity.getValueAsString(attributeCode);
-		log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
+		return jsonb.toJson(processData);
+	}
 
-		// update the baseentity
-		processEntity.addAnswer(answer);
-		String value = processEntity.getValueAsString(answer.getAttributeCode());
-		log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
+	/**
+	 * @param processJson
+	 * @return
+	 */
+	public String deleteStoredAnswers(String processJson) {
 
-		// update the cached process data object
-		String productCode = userToken.getProductCode();
-		String key = String.format("%s:PROCESS_DATA", processId); 
-		processData.setProcessEntity(processEntity);
-		CacheUtils.putObject(productCode, key, processData);
-		log.infof("ProcessData cached to %s", key);
-		// TODO, just until cacheUtils has direct BE support
-		CacheUtils.putObject(productCode,processEntity.getCode(), processEntity);
+		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		processData.setAnswers(new ArrayList<>());
+
 		return jsonb.toJson(processData);
 	}
 
@@ -109,7 +102,7 @@ public class ProcessAnswerService {
 	public Boolean checkMandatory(String processJson) {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		BaseEntity processEntity = processData.getProcessEntity();
+		List<Answer> answers = processData.getAnswers();
 		String processId = processData.getProcessId();
 		String targetCode = processData.getTargetCode();
 		String questionCode = processData.getQuestionCode();
@@ -117,8 +110,12 @@ public class ProcessAnswerService {
 		String key = String.format("%s:%s", processId, questionCode);
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
+		// update ask target
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		frontendService.recursivelyUpdateAskTarget(ask, processEntity);
+
 		// find the submit ask
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, answers);
 		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		QDataAskMessage msg = new QDataAskMessage(ask);
@@ -142,7 +139,7 @@ public class ProcessAnswerService {
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
-		BaseEntity processEntity = processData.getProcessEntity();
+		List<Answer> answers = processData.getAnswers();
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 
@@ -152,11 +149,13 @@ public class ProcessAnswerService {
 		
 		for (EntityAttribute uniqueAttribute : uniqueAttributes) {
 			// Convert to non def attribute Code
-			String attributeCode = uniqueAttribute.getAttributeCode();
-			attributeCode = StringUtils.removeStart(attributeCode, "UNQ_");
+			final String attributeCode = StringUtils.removeStart(uniqueAttribute.getAttributeCode(), "UNQ_");
 			log.info("Checking UNQ attribute " + attributeCode);
 
-			String uniqueValue = processEntity.getValueAsString(attributeCode);
+			String uniqueValue = answers.stream()
+				.filter(a -> a.getAttributeCode().equals(attributeCode))
+				.findFirst().get().getValue();
+
 			if (qwandaUtils.isDuplicate(target, definition, attributeCode, uniqueValue))
 				acceptSubmission = false;
 		}
@@ -178,27 +177,25 @@ public class ProcessAnswerService {
 	public void saveAllAnswers(String processJson) {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		BaseEntity processEntity = processData.getProcessEntity();
 		String targetCode = processData.getTargetCode();
-
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
 		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
+		for (Answer answer : processData.getAnswers()) {
 
-			if (ea.getAttribute() == null) {
-				log.warn("Attribute is null, fetching " + ea.getAttributeCode());
+			// find the attribute
+			String attributeCode = answer.getAttributeCode();
+			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+			answer.setAttribute(attribute);
 
-				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
-				ea.setAttribute(attribute);
-			}
-			ea.setBaseEntity(target);
-			target.addAttribute(ea);
+			// debug log the value before saving
+			String currentValue = target.getValueAsString(attributeCode);
+			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
 
-			// set name
-			if ("PRI_NAME".equals(ea.getAttributeCode())) {
-				target.setName(ea.getValue());
-			}
+			// update the baseentity
+			target.addAnswer(answer);
+			String value = target.getValueAsString(answer.getAttributeCode());
+			log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 		}
 
 		// save these answrs to db and cache
@@ -219,15 +216,9 @@ public class ProcessAnswerService {
 	 * @param processBEcode
 	 * @return Boolean existed
 	 */
-	public Boolean clearProcessCacheEntries(String processId,String targetCode) {
+	public Boolean clearProcessCacheEntries(String processId, String targetCode) {
 
-		String processEntityCode = "QBE_" + targetCode.substring(4);
-		// clear the raw QUE cached baseentity
-		CacheUtils.removeEntry(userToken.getProductCode(), processEntityCode);
-	
-		// clear the cached process process data object
-		String key = String.format("%s:PROCESS_DATA", processId); 
-		CacheUtils.removeEntry(userToken.getProductCode(), key);
+		qwandaUtils.clearProcessData(processId);
 		log.infof("Cleared caches for %s",processId);
 		return true;
 	}

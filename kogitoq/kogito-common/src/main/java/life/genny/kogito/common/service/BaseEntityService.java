@@ -207,7 +207,7 @@ public class BaseEntityService {
 	public void mergeFromProcessEntity(String entityCode, String processJson) {
 
 		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		BaseEntity processEntity = processData.getProcessEntity();
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 
 		// iterate our stored process updates and create an answer

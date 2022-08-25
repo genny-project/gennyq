@@ -103,15 +103,18 @@ public class HttpUtils {
 			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 			return response;
 		} catch (IOException | InterruptedException e) {
-			throw GennyResponseException.newBuilder(uri)
-						.setRequestBody(body)
-						.setToken(token)
-						.setRequestType("PUT")
-						.includeRequest(request)
-						.fromHttpResponse(response)
-						.setAssociatedException(e)
-						.build();
+			GennyResponseException.newBuilder(uri)
+					.setRequestBody(body)
+					.setToken(token)
+					.setRequestType("PUT")
+					.includeRequest(request)
+					.fromHttpResponse(response)
+					.setAssociatedException(e)
+					.build()
+					.printStackTrace();
 		}
+
+		return null;
 	}
 
 	/**
@@ -188,15 +191,18 @@ public class HttpUtils {
 			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 			return response;
 		} catch (IOException | InterruptedException e) {
-			throw GennyResponseException.newBuilder(uri)
-						.setRequestBody(body)
-						.setToken(token)
-						.setRequestType("POST")
-						.includeRequest(request)
-						.fromHttpResponse(response)
-						.setAssociatedException(e)
-						.build();
+			GennyResponseException.newBuilder(uri)
+					.setRequestBody(body)
+					.setToken(token)
+					.setRequestType("POST")
+					.includeRequest(request)
+					.fromHttpResponse(response)
+					.setAssociatedException(e)
+					.build()
+					.printStackTrace();
 		}
+
+		return null;
 	}
 
 	/**
@@ -233,14 +239,17 @@ public class HttpUtils {
 			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 			return response;
 		} catch (IOException | InterruptedException e) {
-			throw GennyResponseException.newBuilder(uri)
-						.setToken(token)
-						.setRequestType("GET")
-						.includeRequest(request)
-						.fromHttpResponse(response)
-						.setAssociatedException(e)
-						.build();
+			GennyResponseException.newBuilder(uri)
+					.setToken(token)
+					.setRequestType("GET")
+					.includeRequest(request)
+					.fromHttpResponse(response)
+					.setAssociatedException(e)
+					.build()
+					.printStackTrace();
 		}
+
+		return null;
 	}
 
 	/**
@@ -272,19 +281,22 @@ public class HttpUtils {
 				.setHeader("Authorization", "Bearer " + token)
 				.DELETE().build();
 
-				HttpResponse<String> response = null;
-				try {
-					response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-					return response;
-				} catch (IOException | InterruptedException e) {
-					throw GennyResponseException.newBuilder(uri)
-								.setToken(token)
-								.setRequestType("DELETE")
-								.includeRequest(request)
-								.fromHttpResponse(response)
-								.setAssociatedException(e)
-								.build();
-				}
+		HttpResponse<String> response = null;
+		try {
+			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return response;
+		} catch (IOException | InterruptedException e) {
+			GennyResponseException.newBuilder(uri)
+					.setToken(token)
+					.setRequestType("DELETE")
+					.includeRequest(request)
+					.fromHttpResponse(response)
+					.setAssociatedException(e)
+					.build()
+					.printStackTrace();
+		}
+
+		return null;
 	}
 
 	/**
