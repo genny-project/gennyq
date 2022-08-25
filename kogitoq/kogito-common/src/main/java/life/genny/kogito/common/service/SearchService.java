@@ -2,14 +2,20 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.message.QCmdMessage;
+import life.genny.qwandaq.message.QSearchMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -171,5 +177,64 @@ public class SearchService {
 		});
 
 		return bucketCodes;
+	}
+
+	/**
+	 *  parse json string to answer and check sorting condition
+	 * @param data json string
+	 * @return return anwser
+	 */
+	public Map getAttributeBySortAndSearch(String data){
+		try {
+			JsonObject eventJson = jsonb.fromJson(data, JsonObject.class);
+			JsonArray items = eventJson.getJsonArray("items");
+			Map<String, String> map = new HashMap<>();
+
+			for (JsonValue item : items) {
+				JsonObject jsonObject = item.asJsonObject();
+
+				map.put("attributeCode",jsonObject.getString("attributeCode"));
+				map.put("targetCode",jsonObject.getString("targetCode"));
+				map.put("value", jsonObject.getString("value"));
+				map.put("token", eventJson.getString("token"));
+
+				return map;
+			}
+		} catch (Exception ex) {
+			log.error(ex);
+		}
+		return null;
+	}
+
+	/**
+	 * Send search message to front-end
+	 * @param token Token
+	 * @param searchBE Search base entity from cache
+	 */
+	public void setMessageBySearchEntity(SearchEntity searchBE) {
+		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
+		searchBeMsg.setToken(userToken.getToken());
+		searchBeMsg.setDestination("webcmds");
+		KafkaUtils.writeMsg("search_events", searchBeMsg);
+	}
+
+	/**
+	 * create new entity attribute by attribute code and sort by
+	 * @param attributeCode attribute code
+	 * @param sortBy sort by
+	 * @return new entity attribute
+	 */
+	public EntityAttribute createEntityAttributeBySort(String attributeCode, String sortBy){
+		EntityAttribute ea = null;
+		try {
+			BaseEntity base = beUtils.getBaseEntity(attributeCode);
+			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+			ea = new EntityAttribute(base, attribute, 1.0, attributeCode);
+			ea.setValueString(sortBy);
+			base.addAttribute(ea);
+		} catch(Exception ex){
+			log.error(ex);
+		}
+		return ea;
 	}
 }
