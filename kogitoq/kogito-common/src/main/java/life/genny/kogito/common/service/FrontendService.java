@@ -22,7 +22,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -64,7 +64,7 @@ public class FrontendService {
 	public void navigateContent(String processJson) {
 
 		log.info("Navigating to form...");
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String pcmCode = processData.getPcmCode();
 		String questionCode = processData.getQuestionCode();
 
@@ -82,7 +82,7 @@ public class FrontendService {
 	 */
 	public void sendAsks(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 
@@ -135,7 +135,7 @@ public class FrontendService {
 	 */
 	public void sendBaseEntitys(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
 		String processId = processData.getProcessId();
@@ -275,7 +275,7 @@ public class FrontendService {
 	 */
 	public void sendDropdownItems(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 

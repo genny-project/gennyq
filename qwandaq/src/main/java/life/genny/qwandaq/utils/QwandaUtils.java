@@ -32,7 +32,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -451,7 +451,7 @@ public class QwandaUtils {
 	 * Save process data to cache.
 	 * @param processData The data to save
 	 */
-	public void storeProcessData(ProcessQuestions processData) {
+	public void storeProcessData(ProcessData processData) {
 
 		String productCode = userToken.getProductCode();
 		String key = String.format("%s:PROCESS_DATA", processData.getProcessId()); 
@@ -478,12 +478,12 @@ public class QwandaUtils {
 	 * @param processId The id of the data to fetch
 	 * @return The saved data
 	 */
-	public ProcessQuestions fetchProcessData(String processId) {
+	public ProcessData fetchProcessData(String processId) {
 		
 		String productCode = userToken.getProductCode();
 		String key = String.format("%s:PROCESS_DATA", processId); 
 
-		return CacheUtils.getObject(productCode, key, ProcessQuestions.class);
+		return CacheUtils.getObject(productCode, key, ProcessData.class);
 	}
 
 	/**
@@ -492,7 +492,7 @@ public class QwandaUtils {
 	 * @param processData The process data
 	 * @return The updated process entity
 	 */
-	public BaseEntity generateProcessEntity(ProcessQuestions processData) {
+	public BaseEntity generateProcessEntity(ProcessData processData) {
 
 		String targetCode = processData.getTargetCode();
 		List<String> attributeCodes = processData.getAttributeCodes();

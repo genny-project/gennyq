@@ -6,7 +6,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.Answer;
 
 @RegisterForReflection
-public class ProcessQuestions extends ProcessInstanceVariables {
+public class ProcessData extends ProcessInstanceVariables {
 
 	private String questionCode;
 	private String sourceCode;
@@ -17,7 +17,7 @@ public class ProcessQuestions extends ProcessInstanceVariables {
 	private List<String> attributeCodes;
 	private List<Answer> answers;
 
-	public ProcessQuestions() {
+	public ProcessData() {
 		super();
     }
 

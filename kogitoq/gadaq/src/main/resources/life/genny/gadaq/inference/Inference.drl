@@ -6,7 +6,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.entity.BaseEntity;
 import org.apache.commons.lang3.text.WordUtils;
@@ -36,7 +36,7 @@ then
 	firstName = WordUtils.capitalize(firstName);
 
 	String processId = answer.getProcessId();
-	ProcessQuestions processData = qwandaUtils.fetchProcessData(processId); 
+	ProcessData processData = qwandaUtils.fetchProcessData(processId); 
 	BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
 	String lastName = processEntity.getValue("PRI_LASTNAME", null);
@@ -63,7 +63,7 @@ then
 	lastName = WordUtils.capitalize(lastName);
 
 	String processId = answer.getProcessId();
-	ProcessQuestions processData = qwandaUtils.fetchProcessData(processId); 
+	ProcessData processData = qwandaUtils.fetchProcessData(processId); 
 	BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
 	String firstName = processEntity.getValue("PRI_FIRSTNAME", null);

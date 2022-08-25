@@ -19,7 +19,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -72,7 +72,7 @@ public class TaskService {
 	public String inputs(String questionCode, String sourceCode, String targetCode,
 			String pcmCode, String events, String processId) {
 
-		ProcessQuestions processData = new ProcessQuestions();
+		ProcessData processData = new ProcessData();
 		processData.setQuestionCode(questionCode);
 		processData.setSourceCode(sourceCode);
 		processData.setTargetCode(targetCode);
@@ -93,7 +93,7 @@ public class TaskService {
 	 */
 	public void generateAndCacheAsks(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 
 		String questionCode = processData.getQuestionCode();
 		String sourceCode = processData.getSourceCode();
@@ -185,7 +185,7 @@ public class TaskService {
 	 */
 	public String getDefinitionCode(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String targetCode = processData.getTargetCode();
 
 		// Find the DEF
@@ -205,7 +205,7 @@ public class TaskService {
 	 */
 	public String findAttributeCodes(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 

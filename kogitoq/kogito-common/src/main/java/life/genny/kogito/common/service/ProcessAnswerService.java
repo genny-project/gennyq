@@ -16,7 +16,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -57,7 +57,7 @@ public class ProcessAnswerService {
 	 */
 	public String storeIncomingAnswer(String answerJson, String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
 
@@ -86,7 +86,7 @@ public class ProcessAnswerService {
 	 */
 	public String deleteStoredAnswers(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		processData.setAnswers(new ArrayList<>());
 
 		return jsonb.toJson(processData);
@@ -101,7 +101,7 @@ public class ProcessAnswerService {
 	 */
 	public Boolean checkMandatory(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		List<Answer> answers = processData.getAnswers();
 		String processId = processData.getProcessId();
 		String targetCode = processData.getTargetCode();
@@ -136,7 +136,7 @@ public class ProcessAnswerService {
 	 */
 	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
@@ -176,7 +176,7 @@ public class ProcessAnswerService {
 	 */
 	public void saveAllAnswers(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String targetCode = processData.getTargetCode();
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
