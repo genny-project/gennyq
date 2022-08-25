@@ -11,6 +11,7 @@ echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 echo "gadaq debug port ${GADAQ_DEBUG_PORT}"
 
+export GENNY_GADAQ_SERVICE_URL=${gennyhost}:${port}
 #export PRODUCT_CODES=${PRODUCT_CODES}
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service

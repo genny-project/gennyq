@@ -2,12 +2,15 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 
+import org.jboss.logging.Logger;
+
 public class TimerData implements Serializable {
 
     static final Long DEFAULT_TIMER_INTERVAL_MIN = 1L;
 
+    static final Logger log = Logger.getLogger(TimerData.class);
+
     private Long intervalMin = DEFAULT_TIMER_INTERVAL_MIN; //
-    private String delayStr = "R/PT" + DEFAULT_TIMER_INTERVAL_MIN + "M";
     private Long elapsedMin = 0L;
     private Long expiryMin = 3L;// 7L * 24L * 60L; // 7 days
 
@@ -26,14 +29,15 @@ public class TimerData implements Serializable {
 
     public TimerData(final Long intervalMin) {
         this.intervalMin = intervalMin;
-        this.delayStr = "R/PT" + intervalMin + "M";
     }
 
     public Long updateElapsed() {
-        return this.elapsedMin += this.intervalMin;
+        this.elapsedMin = this.elapsedMin + this.intervalMin;
+        return this.elapsedMin;
     }
 
     public Boolean hasExpired() {
+        // log.info("hasExpired: " + this.elapsedMin + " >= " + this.expiryMin);
         return this.elapsedMin >= this.expiryMin;
     }
 
@@ -49,12 +53,8 @@ public class TimerData implements Serializable {
         this.intervalMin = intervalMin;
     }
 
-    public String getDelayStr() {
-        return delayStr;
-    }
-
-    public void setDelayStr(String delayStr) {
-        this.delayStr = delayStr;
+    public String getIntervalStr() {
+        return "R/PT" + getIntervalMin() + "M";
     }
 
     public Long getElapsedMin() {
@@ -75,8 +75,8 @@ public class TimerData implements Serializable {
 
     @Override
     public String toString() {
-        return "TimerData [delayStr=" + delayStr + ", elapsedMin=" + elapsedMin + ", expiryMin=" + expiryMin
-                + ", intervalMin=" + intervalMin + "]";
+        return "TimerData [intervalStr=" + getIntervalStr() + ", elapsedMin=" + elapsedMin + ", expiryMin=" + expiryMin
+                + ", intervalMin=" + intervalMin + ", hasExpired=" + this.hasExpired() + "]";
     }
 
 }
