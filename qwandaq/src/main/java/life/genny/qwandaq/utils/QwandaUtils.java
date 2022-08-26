@@ -546,9 +546,6 @@ public class QwandaUtils {
 			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
 			.forEach((ea) -> {
 				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
-				attributeCode = StringUtils.removeStart(attributeCode,DefUtils.PREF_DEP);
-				attributeCode = StringUtils.removeStart(attributeCode,DefUtils.PREF_DFT);
-				attributeCode = StringUtils.removeStart(attributeCode,DefUtils.PREF_UNQ);
 
 				Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
 
@@ -556,15 +553,9 @@ public class QwandaUtils {
 					String questionCode = attributeCode;
 					questionCode = DefUtils.PREF_QUE + StringUtils.removeStart(StringUtils.removeStart(questionCode,
 															DefUtils.PREF_PRI), DefUtils.PREF_LNK);
-					Question childQues = null;
 
-					try {
-						Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
-						childQues = new Question(questionCode, attribute.getName(), attribute);
-					} catch (Exception ex) {
-						childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
-					}
-
+					Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
+					Question childQues = new Question(questionCode, attribute.getName(), attribute);
 					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
 
 					childAsks.add(childAsk);
@@ -579,28 +570,6 @@ public class QwandaUtils {
 					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
 
 					childAsks.add(childAsk);
-
-					if (baseAttrVal.getAttributeCode().startsWith(DefUtils.PREF_LNK)) {
-						if (baseAttrVal.getValueString() != null) {
-
-							if (baseAttrVal.getValueString().isEmpty()) {
-								BaseEntity link = beUtils.getBaseEntityByCode(baseAttrVal.getAttributeCode());
-								entityMessage.add(link);
-							} else {
-								String[] codes = BaseEntityUtils.cleanUpAttributeValue(baseAttrVal.getValueString())
-																.split(",");
-
-								for (String code : codes) {
-									BaseEntity link = beUtils.getBaseEntityByCode(code);
-									entityMessage.add(link);
-								}
-							}
-						}
-					}
-
-					if (defBE.containsEntityAttribute(DefUtils.PREF_SER + baseAttrVal.getAttributeCode())) {
-						searchUtils.performDropdownSearch(childAsk);
-					}
 				}
 			});
 
