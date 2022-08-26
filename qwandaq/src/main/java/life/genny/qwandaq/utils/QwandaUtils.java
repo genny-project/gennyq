@@ -529,12 +529,15 @@ public class QwandaUtils {
 		// grab def entity
 		BaseEntity defBE = defUtils.getDEF(baseEntity);
 
+		String sourceCode = userToken.getUserCode();
+		String targetCode = baseEntity.getCode();
+
 		// create GRP ask
 		Attribute questionAttribute = getAttribute(DefUtils.PREF_QQQ_QUE_GRP);
 		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
-				"Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+				"Edit " + targetCode + " : " + baseEntity.getName(),
 				questionAttribute);
-		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
+		Ask ask = new Ask(question, sourceCode, targetCode);
 
 		List<Ask> childAsks = new ArrayList<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
@@ -546,31 +549,16 @@ public class QwandaUtils {
 			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
 			.forEach((ea) -> {
 				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
+				Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-				Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
+				String questionCode = DefUtils.PREF_QUE
+						+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+						DefUtils.PREF_PRI), DefUtils.PREF_LNK);
 
-				if (!baseEA.isPresent()) {
-					String questionCode = attributeCode;
-					questionCode = DefUtils.PREF_QUE + StringUtils.removeStart(StringUtils.removeStart(questionCode,
-															DefUtils.PREF_PRI), DefUtils.PREF_LNK);
+				Question childQues = new Question(questionCode, attribute.getName(), attribute);
+				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-					Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
-					Question childQues = new Question(questionCode, attribute.getName(), attribute);
-					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
-
-					childAsks.add(childAsk);
-				} else {
-					EntityAttribute baseAttrVal = baseEA.get();
-					String questionCode = DefUtils.PREF_QUE
-							+ StringUtils.removeStart(StringUtils.removeStart(baseAttrVal.getAttributeCode(),
-														DefUtils.PREF_PRI), DefUtils.PREF_LNK);
-
-					Question childQues = new Question(questionCode, baseAttrVal.getAttribute().getName(),
-														baseEA.get().getAttribute());
-					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
-
-					childAsks.add(childAsk);
-				}
+				childAsks.add(childAsk);
 			});
 
 		// set child asks
@@ -699,4 +687,21 @@ public class QwandaUtils {
 		return true;
 	}
 
+
+	/**
+	 * Return attribute relied on base entity object and attribute code
+	 * @param baseEntity Base entity
+	 * @param attributeCode Attribute code
+	 * @return Return attribute object
+	 */
+	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode){
+		Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
+
+		if (baseEA.isPresent()) {
+			return baseEA.get().getAttribute();
+		}
+
+		Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
+		return attribute;
+	}
 }
