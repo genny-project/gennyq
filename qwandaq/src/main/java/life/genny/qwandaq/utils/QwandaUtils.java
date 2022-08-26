@@ -701,7 +701,7 @@ public class QwandaUtils {
 			return baseEA.get().getAttribute();
 		}
 
-		Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
+		Attribute attribute = getAttribute(attributeCode);
 		return attribute;
 	}
 }
