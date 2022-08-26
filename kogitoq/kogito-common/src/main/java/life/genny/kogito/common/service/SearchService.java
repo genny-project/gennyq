@@ -180,11 +180,11 @@ public class SearchService {
 	}
 
 	/**
-	 *  parse json string to answer and check sorting condition
+	 *  parse string to attribute json object
 	 * @param data json string
-	 * @return return anwser
+	 * @return return json object
 	 */
-	public Map getAttributeBySortAndSearch(String data){
+	public Map parseAttributeBySortAndSearch(String data){
 		try {
 			JsonObject eventJson = jsonb.fromJson(data, JsonObject.class);
 			JsonArray items = eventJson.getJsonArray("items");
@@ -219,18 +219,22 @@ public class SearchService {
 	}
 
 	/**
-	 * create new entity attribute by attribute code and sort by
-	 * @param attributeCode attribute code
-	 * @param sortBy sort by
-	 * @return new entity attribute
+	 * create new entity attribute by attribute code, name and value
+	 * @param attrCode Attribute code
+	 * @param attrName Attribute name
+	 * @param value Attribute value
+	 * @return return json object
 	 */
-	public EntityAttribute createEntityAttributeBySort(String attributeCode, String sortBy){
+	public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, String value){
 		EntityAttribute ea = null;
 		try {
-			BaseEntity base = beUtils.getBaseEntity(attributeCode);
-			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-			ea = new EntityAttribute(base, attribute, 1.0, attributeCode);
-			ea.setValueString(sortBy);
+			BaseEntity base = beUtils.getBaseEntity(attrCode);
+			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			ea = new EntityAttribute(base, attribute, 1.0, attrCode);
+			if(!attrName.isEmpty()) {
+				ea.setAttributeName(attrName);
+			}
+			ea.setValueString(value);
 			base.addAttribute(ea);
 		} catch(Exception ex){
 			log.error(ex);
