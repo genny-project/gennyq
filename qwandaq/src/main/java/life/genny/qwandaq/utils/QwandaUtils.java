@@ -639,113 +639,102 @@ public class QwandaUtils {
 		String json = jsonb.toJson(askMsg);
 		KafkaUtils.writeMsg("webcmds", json);
 	}
+/**
+         * Check the uniqueness of an answer
+         * 
+         * @param target        The target entity
+         * @param definition    The definition entity
+         * @param attributeCode The code of the attribute
 
-	/**
-	 * Check the uniqueness of an answer
-	 * 
-	 * @param target        The target entity
-	 * @param definition    The definition entity
-	 * @param attributeCode The code of the attribute
+         * @param value The value to check
+         * @return is duplicate bool
+         */
+        public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
-	 * @param value The value to check
-	 * @return is duplicate bool
-	 */
-	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
+                if (StringUtils.isBlank(value)) {
+                        return false;
+                }
 
-		if (StringUtils.isBlank(value)) {
-			return false;
-		}
+                // Check if attribute code exists as a UNQ for the DEF
+                String uniqueCode = String.format("UNQ_%s", attributeCode);
+                List<String> unqs = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, uniqueCode);
 
-		// Check if attribute code exists as a UNQ for the DEF
-		String uniqueCode = String.format("UNQ_%s", attributeCode);
-		List<String> unqs = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, uniqueCode);
+                if (unqs == null || unqs.isEmpty()) {
+                        log.infof("UNQ_%s Not present!", attributeCode);
+                        return false;
+                }
 
-		if (unqs == null || unqs.isEmpty()) {
-			log.infof("UNQ_%s Not present!", attributeCode);
-			return false;
-		}
+                BaseEntity originalTarget = beUtils.getBaseEntityByCode(definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3));
+                log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
+                log.info("Attribute " + uniqueCode + " must satisfy " + unqs.toString());
 
-		BaseEntity originalTarget = beUtils.getBaseEntityByCode(definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3));
-		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
-<<<<<<< HEAD
-		log.info("Attribute found for UNQ_" + attributeCode + ", Looking for duplicate using "
-				+ unique.get().getValue() + " and incoming value: " + value);
+                String prefix = definition.getValueAsString("PRI_PREFIX");
+                log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
+                SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
+                                .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
+                                .setPageStart(0)
+                                .setPageSize(1);
 
-		String uniqueIndexes = unique.get().getValue();
-		uniqueIndexes = beUtils.cleanUpAttributeValue(uniqueIndexes);
-		String[] uniqueArray = uniqueIndexes.split(",");
-=======
-		log.info("Attribute " + uniqueCode + " must satisfy " + unqs.toString());
->>>>>>> 10.1.0
+                searchEntity.setRealm(target.getRealm());
 
-		String prefix = definition.getValueAsString("PRI_PREFIX");
-		log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
-		SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
-				.setPageStart(0)
-				.setPageSize(1);
+                log.info("Checking all the existing target data");
+                for (EntityAttribute ea : target.getBaseEntityAttributes()) {
+                        log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
+                }
 
-		searchEntity.setRealm(target.getRealm());
+                log.infof("Looping through %s unique attribute", unqs.size());
 
-		log.info("Checking all the existing target data");
-		for (EntityAttribute ea : target.getBaseEntityAttributes()) {
-			log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
-		}
+                for (String unique : unqs) {
 
-		log.infof("Looping through %s unique attribute", unqs.size());
+                        if (!unique.equals(attributeCode)) {
+                                if (!target.containsEntityAttribute(unique)) {
+                                        value = originalTarget.getValueAsString(unique);
+                                } else {
+                                        value = target.getValueAsString(unique);
+                                }
+                        }
 
-		for (String unique : unqs) {
+                        if (value.contains("[") && value.contains("]"))
+                                value = beUtils.cleanUpAttributeValue(value);
 
-			if (!unique.equals(attributeCode)) {
-				if (!target.containsEntityAttribute(unique)) {
-					value = originalTarget.getValueAsString(unique);
-				} else {
-					value = target.getValueAsString(unique);
-				}
-			}
+                        log.info("Adding unique filter: " + unique + " like " + value);
+                        searchEntity.addFilter(unique, SearchEntity.StringFilter.LIKE, "%" + value + "%");
+                }
 
-			if (value.contains("[") && value.contains("]"))
-				value = BaseEntityUtils.cleanUpAttributeValue(value);
+                searchEntity.setRealm(userToken.getProductCode());
 
-			log.info("Adding unique filter: " + unique + " like " + value);
-			searchEntity.addFilter(unique, SearchEntity.StringFilter.LIKE, "%" + value + "%");
-		}
+                Long count = searchUtils.countBaseEntitys(searchEntity);
+                log.infof("Found %s entities", count);
+                if (count == 0)
+                        return false;
 
-		searchEntity.setRealm(userToken.getProductCode());
+                // not duplicate if it is targets code
+                List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
+                if (codes != null && !codes.isEmpty() && codes.get(0).equals(target.getCode()))
+                        return false;
 
-		Long count = searchUtils.countBaseEntitys(searchEntity);
-		log.infof("Found %s entities", count);
-		if (count == 0)
-			return false;
+                // if duplicate found then send back the baseentity with the conflicting
+                // attribute and feedback message to display
+                // QUE target code needs to be set
+                BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
+                Optional<EntityAttribute> optEa = target.findEntityAttribute(attributeCode);
+                if (optEa.isPresent()) {
+                        String feedback = "Error: This value already exists and must be unique.";
+                        EntityAttribute ea = optEa.get();
+                        ea.setFeedback(feedback);
+                        errorBE.addAttribute(ea);
+                        log.info("Added " + ea);
 
-		// not duplicate if it is targets code
-		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
-		if (codes != null && !codes.isEmpty() && codes.get(0).equals(target.getCode()))
-			return false;
+                        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
+                        msg.setToken(userToken.getToken());
+                        msg.setTag("Duplicate Error");
+                        msg.setReplace(false);
+                        msg.setMessage(feedback);
+                        KafkaUtils.writeMsg("webcmds", msg);
 
-		// if duplicate found then send back the baseentity with the conflicting
-		// attribute and feedback message to display
-		// QUE target code needs to be set
-		BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
-		Optional<EntityAttribute> optEa = target.findEntityAttribute(attributeCode);
-		if (optEa.isPresent()) {
-			String feedback = "Error: This value already exists and must be unique.";
-			EntityAttribute ea = optEa.get();
-			ea.setFeedback(feedback);
-			errorBE.addAttribute(ea);
-			log.info("Added " + ea);
+                        log.debug("Sent duplicate error message to frontend for " + target.getCode());
+                }
 
-			QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
-			msg.setToken(userToken.getToken());
-			msg.setTag("Duplicate Error");
-			msg.setReplace(false);
-			msg.setMessage(feedback);
-			KafkaUtils.writeMsg("webcmds", msg);
-
-			log.debug("Sent duplicate error message to frontend for " + target.getCode());
-		}
-
-		return true;
-	}
-
+                return true;
+        }
 }
