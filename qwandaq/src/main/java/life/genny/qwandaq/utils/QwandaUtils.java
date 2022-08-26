@@ -530,10 +530,8 @@ public class QwandaUtils {
 		BaseEntity defBE = defUtils.getDEF(baseEntity);
 
 		// create GRP ask
-		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
-		// Question question = new Question("QUE_EDIT_GRP", "Edit " +
-		// baseEntity.getCode() + " : " + baseEntity.getName(),
-		Question question = new Question("QUE_BASEENTITY_GRP",
+		Attribute questionAttribute = getAttribute(DefUtils.PREF_QQQ_QUE_GRP);
+		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
 				"Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
 				questionAttribute);
 		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
@@ -545,72 +543,69 @@ public class QwandaUtils {
 
 		// create a child ask for every valid atribute
 		defBE.getBaseEntityAttributes().stream()
-//		baseEntity.getBaseEntityAttributes().stream()
-//				.filter(ea -> defBE.containsEntityAttribute("ATT_" + ea.getAttributeCode()))
-				.forEach((ea) -> {
-					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(),"ATT_");
-					attributeCode = StringUtils.removeStart(attributeCode,"DEP_");
-					attributeCode = StringUtils.removeStart(attributeCode,"DFT_");
-					attributeCode = StringUtils.removeStart(attributeCode,"UNQ_");
+			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
+			.forEach((ea) -> {
+				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
+				attributeCode = StringUtils.removeStart(attributeCode,DefUtils.PREF_DEP);
+				attributeCode = StringUtils.removeStart(attributeCode,DefUtils.PREF_DFT);
+				attributeCode = StringUtils.removeStart(attributeCode,DefUtils.PREF_UNQ);
 
-					Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
+				Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
 
-					if (!baseEA.isPresent()) {
-						String questionCode = attributeCode;
-						questionCode = "QUE_" + StringUtils.removeStart(StringUtils.removeStart(questionCode, "PRI_"), "LNK_");
-						Question childQues = null;
+				if (!baseEA.isPresent()) {
+					String questionCode = attributeCode;
+					questionCode = DefUtils.PREF_QUE + StringUtils.removeStart(StringUtils.removeStart(questionCode,
+															DefUtils.PREF_PRI), DefUtils.PREF_LNK);
+					Question childQues = null;
 
-						try {
-							Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
-							childQues = new Question(questionCode, attribute.getName(), attribute);
-						} catch (Exception ex) {
-							childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
-						}
+					try {
+						Attribute attribute = databaseUtils.findAttributeByCode(userToken.getRealm(), attributeCode);
+						childQues = new Question(questionCode, attribute.getName(), attribute);
+					} catch (Exception ex) {
+						childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
+					}
 
-						Ask childAsk = new Ask(childQues, userToken.getUserCode(), attributeCode);
+					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
 
-						childAsks.add(childAsk);
-					} else {
-						EntityAttribute baseAttrVal = baseEA.get();
-						String questionCode = "QUE_"
-								+ StringUtils.removeStart(StringUtils.removeStart(baseAttrVal.getAttributeCode(), "PRI_"), "LNK_");
+					childAsks.add(childAsk);
+				} else {
+					EntityAttribute baseAttrVal = baseEA.get();
+					String questionCode = DefUtils.PREF_QUE
+							+ StringUtils.removeStart(StringUtils.removeStart(baseAttrVal.getAttributeCode(),
+														DefUtils.PREF_PRI), DefUtils.PREF_LNK);
 
-						Question childQues = new Question(questionCode, baseAttrVal.getAttribute().getName(), baseEA.get().getAttribute());
-						Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
+					Question childQues = new Question(questionCode, baseAttrVal.getAttribute().getName(),
+														baseEA.get().getAttribute());
+					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
 
-						childAsks.add(childAsk);
+					childAsks.add(childAsk);
 
-						if (baseAttrVal.getAttributeCode().startsWith("LNK_")) {
-							if (baseAttrVal.getValueString() != null) {
+					if (baseAttrVal.getAttributeCode().startsWith(DefUtils.PREF_LNK)) {
+						if (baseAttrVal.getValueString() != null) {
 
-								if (baseAttrVal.getValueString().isEmpty()) {
-									BaseEntity link = beUtils.getBaseEntityByCode(baseAttrVal.getAttributeCode());
+							if (baseAttrVal.getValueString().isEmpty()) {
+								BaseEntity link = beUtils.getBaseEntityByCode(baseAttrVal.getAttributeCode());
+								entityMessage.add(link);
+							} else {
+								String[] codes = BaseEntityUtils.cleanUpAttributeValue(baseAttrVal.getValueString())
+																.split(",");
+
+								for (String code : codes) {
+									BaseEntity link = beUtils.getBaseEntityByCode(code);
 									entityMessage.add(link);
-								} else {
-									String[] codes = BaseEntityUtils.cleanUpAttributeValue(baseAttrVal.getValueString()).split(",");
-
-									for (String code : codes) {
-										try {
-											BaseEntity link = beUtils.getBaseEntityByCode(code);
-											entityMessage.add(link);
-										} catch (Exception ex) {
-											log.error(ex);
-										}
-									}
 								}
 							}
 						}
-
-						if (defBE.containsEntityAttribute("SER_" + baseAttrVal.getAttributeCode())) {
-							searchUtils.performDropdownSearch(childAsk);
-						}
 					}
-				});
+
+					if (defBE.containsEntityAttribute(DefUtils.PREF_SER + baseAttrVal.getAttributeCode())) {
+						searchUtils.performDropdownSearch(childAsk);
+					}
+				}
+			});
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
-
-		// KafkaUtils.writeMsg("webdata", entityMessage);
 
 		return ask;
 	}
