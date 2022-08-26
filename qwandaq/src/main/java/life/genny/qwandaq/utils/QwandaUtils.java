@@ -358,9 +358,13 @@ public class QwandaUtils {
 		return true;
 	}
 
-	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
-		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
+  public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
 		Map<String, Ask> flatMapAsks = getAllAsksRecursively(ask);
+    return updateDependentAsks(ask, target, defBE, flatMapAsks);
+  }
+
+	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
+		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
 
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), "DEP_");

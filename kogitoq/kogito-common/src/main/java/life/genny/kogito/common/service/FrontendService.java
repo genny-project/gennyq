@@ -1,9 +1,9 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +15,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -23,13 +24,10 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessQuestions;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-
-import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -85,7 +83,7 @@ public class FrontendService {
 
 		// update ask target
 		BaseEntity processEntity = processData.getProcessEntity();
-		recursivelyUpdateAskTarget(ask, processEntity);
+		Map<String, Ask> flatMapOfAsks = recursivelyUpdateAskTarget(ask, processEntity);
 
 		// put targetCode in cache
 		// NOTE: This is mainly only necessary for initial dropdown items
@@ -98,7 +96,7 @@ public class FrontendService {
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		qwandaUtils.updateDependentAsks(ask, processEntity, defBE);
+		qwandaUtils.updateDependentAsks(ask, processEntity, defBE, flatMapOfAsks);
 
 		// send to user
 		QDataAskMessage msg = new QDataAskMessage(ask);
@@ -108,22 +106,30 @@ public class FrontendService {
 		KafkaUtils.writeMsg("webcmds", msg);
 	}
 
-	/** TODO: Consider returning a flatmap of asks here so we don't have to recurse again later on for other functions that would otherwise have to recurse through the asks (such as updating disabled)
+  public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
+    return recursivelyUpdateAskTarget(ask, target, new HashMap<String, Ask>());
+  }
+
+	/**
 	 * Recursively update the ask target.
 	 *
 	 * @param ask    The ask to traverse
 	 * @param target The target entity to set
+   * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and prevent further unnecessary recursion
 	 */
-	public void recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
+	public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target, Map<String, Ask> asks) {
 
 		ask.setTargetCode(target.getCode());
 
 		// recursively update children
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-				recursivelyUpdateAskTarget(child, target);
+        asks.put(child.getAttributeCode(), child);
+				asks = recursivelyUpdateAskTarget(child, target, asks);
 			}
 		}
+
+    return asks;
 	}
 
 
