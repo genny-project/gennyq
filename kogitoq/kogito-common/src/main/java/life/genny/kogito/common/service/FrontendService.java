@@ -21,7 +21,6 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -40,23 +39,15 @@ public class FrontendService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
-	UserToken userToken;
+	@Inject UserToken userToken;
 
-	@Inject
-	QwandaUtils qwandaUtils;
+	@Inject QwandaUtils qwandaUtils;
+	@Inject DatabaseUtils databaseUtils;
+	@Inject BaseEntityUtils beUtils;
+	@Inject DefUtils defUtils;
 
-	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	DefUtils defUtils;
-
-	@Inject
-	NavigationService navigationService;
+	@Inject NavigationService navigationService;
+	@Inject TaskService taskService;
 
 	/**
 	 * Control main content navigation using a pcm and a question
@@ -83,11 +74,7 @@ public class FrontendService {
 	public void sendAsks(String processJson) {
 
 		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
-
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		Ask ask = taskService.fetchAsk(processData);
 
 		// update ask target
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -138,8 +125,6 @@ public class FrontendService {
 		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
 
 		// grab all entityAttributes from the entity
 		Set<EntityAttribute> entityAttributes = ConcurrentHashMap
@@ -167,9 +152,7 @@ public class FrontendService {
 
 		// check cache first
 		qwandaUtils.storeProcessData(processData);
-
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		Ask ask = taskService.fetchAsk(processData);
 
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processEntity, ask.getQuestion().getCode());
@@ -189,7 +172,6 @@ public class FrontendService {
 
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
-		Attribute nameAttribute = qwandaUtils.getAttribute("PRI_NAME");
 
 		if (attribute.getCode().startsWith("LNK_")) {
 
@@ -204,27 +186,11 @@ public class FrontendService {
 						continue;
 					}
 					if ((code.startsWith("{startDate")) || (code.startsWith("endDate"))) {
-						log.error(
-								"BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
+						log.error("BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
 						continue;
 					}
-					BaseEntity selection = null;
-					try {
-						selection = beUtils.getBaseEntity(code);
-					} catch (ItemNotFoundException e) {
-						log.error(
-								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
-										+ attribute.getCode());
-						// throw new ItemNotFoundException(code);
-						continue;
-					}
-					if (selection == null) {
-						log.error(
-								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
-										+ attribute.getCode());
-						// throw new ItemNotFoundException(code);
-						continue;
-					}
+
+					BaseEntity selection = beUtils.getBaseEntity(code);
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
@@ -261,7 +227,7 @@ public class FrontendService {
 		}
 
 		// recursively run on children
-		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
 				recuresivelyFindAndSendDropdownItems(child, target, rootCode);
 			}

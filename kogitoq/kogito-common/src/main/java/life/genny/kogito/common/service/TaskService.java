@@ -34,23 +34,16 @@ public class TaskService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
-	UserToken userToken;
+	@Inject UserToken userToken;
 
-	@Inject
-	QwandaUtils qwandaUtils;
+	@Inject QwandaUtils qwandaUtils;
+	@Inject DatabaseUtils databaseUtils;
+	@Inject BaseEntityUtils beUtils;
+	@Inject DefUtils defUtils;
 
-	@Inject
-	DatabaseUtils databaseUtils;
+	@Inject NavigationService navigationService;
 
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	DefUtils defUtils;
-
-	@Inject
-	NavigationService navigationService;
+	public static String ASK_CACHE_KEY_FORMAT = "%s:%s";
 
 	/**
 	 * Get the user code of the current user.
@@ -58,6 +51,61 @@ public class TaskService {
 	 */
 	public String getCurrentUserCode() {
 		return userToken.getUserCode();
+	}
+
+	/**
+	 * Cache an ask for a processId and questionCode combination.
+	 * @param processData The processData to cache for
+	 * @param ask The ask to cache
+	 */
+	public void cacheAsks(ProcessData processData, Ask ask) {
+
+		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), processData.getQuestionCode());
+		CacheUtils.putObject(userToken.getProductCode(), key, ask);
+	}
+
+	/**
+	 * Fetch an ask from cache for a processId and questionCode combination.
+	 * @param processData The processData to fetch for
+	 * @return
+	 */
+	public Ask fetchAsk(ProcessData processData) {
+
+		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), processData.getQuestionCode());
+		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+
+		if (ask == null)
+			ask = generateAsks(processData);
+
+		return ask;
+	}
+
+	/**
+	 * Generate the asks and save them to the cache
+	 * @param processData The process data
+	 */
+	public Ask generateAsks(ProcessData processData) {
+
+		String questionCode = processData.getQuestionCode();
+		String sourceCode = processData.getSourceCode();
+		String targetCode = processData.getTargetCode();
+		String processId = processData.getProcessId();
+
+		BaseEntity source = beUtils.getBaseEntity(sourceCode);
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
+		log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
+
+		// fetch question from DB
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
+		Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
+		ask.addChildAsk(events);
+		qwandaUtils.recursivelySetProcessId(ask, processId);
+
+		// cache them for fast fetching
+		cacheAsks(processData, ask);
+
+		return ask;
 	}
 
 	/**
@@ -72,6 +120,15 @@ public class TaskService {
 	public String inputs(String questionCode, String sourceCode, String targetCode,
 			String pcmCode, String events, String processId) {
 
+		log.info("==========================================");
+		log.info("processId : " + processId);
+		log.info("questionCode : " + questionCode);
+		log.info("sourceCode : " + sourceCode);
+		log.info("targetCode : " + targetCode);
+		log.info("pcmCode : " + pcmCode);
+		log.info("events : " + events);
+		log.info("==========================================");
+
 		ProcessData processData = new ProcessData();
 		processData.setQuestionCode(questionCode);
 		processData.setSourceCode(sourceCode);
@@ -85,43 +142,6 @@ public class TaskService {
 		processData.setProcessEntityCode(processEntityCode);
 
 		return jsonb.toJson(processData);
-	}
-
-	/**
-	 * Generate the asks and save them to the cache
-	 * @param processJson The process data json
-	 */
-	public void generateAndCacheAsks(String processJson) {
-
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-
-		String questionCode = processData.getQuestionCode();
-		String sourceCode = processData.getSourceCode();
-		String targetCode = processData.getTargetCode();
-		String processId = processData.getProcessId();
-
-		log.info("==========================================");
-		log.info("processId : " + processId);
-		log.info("questionCode : " + questionCode);
-		log.info("sourceCode : " + sourceCode);
-		log.info("targetCode : " + targetCode);
-		log.info("pcmCode : " + processData.getPcmCode());
-		log.info("events : " + processData.getEvents());
-		log.info("==========================================");
-
-		BaseEntity source = beUtils.getBaseEntity(sourceCode);
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		log.info("Fetching asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-
-		// fetch question from DB
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-		Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
-		ask.addChildAsk(events);
-		qwandaUtils.recursivelySetProcessId(ask, processId);
-
-		String key = String.format("%s:%s", processId, questionCode);
-		CacheUtils.putObject(userToken.getProductCode(), key, ask);
 	}
 
 	/**
@@ -206,11 +226,7 @@ public class TaskService {
 	public String findAttributeCodes(String processJson) {
 
 		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
-
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		Ask ask = fetchAsk(processData);
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();

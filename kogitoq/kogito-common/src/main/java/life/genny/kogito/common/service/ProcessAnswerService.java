@@ -21,7 +21,6 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -33,20 +32,14 @@ public class ProcessAnswerService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
-	UserToken userToken;
+	@Inject UserToken userToken;
 
-	@Inject
-	QwandaUtils qwandaUtils;
+	@Inject QwandaUtils qwandaUtils;
+	@Inject BaseEntityUtils beUtils;
+	@Inject DefUtils defUtils;
 
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	DefUtils defUtils;
-
-	@Inject
-	FrontendService frontendService;
+	@Inject FrontendService frontendService;
+	@Inject TaskService taskService;
 
 	/**
 	 * Save incoming answer to the process baseentity.
@@ -58,7 +51,6 @@ public class ProcessAnswerService {
 	public String storeIncomingAnswer(String answerJson, String processJson) {
 
 		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		String processId = processData.getProcessId();
 		Answer answer = jsonb.fromJson(answerJson, Answer.class);
 
 		// ensure targetCode is correct
@@ -102,20 +94,15 @@ public class ProcessAnswerService {
 	public Boolean checkMandatory(String processJson) {
 
 		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		List<Answer> answers = processData.getAnswers();
-		String processId = processData.getProcessId();
-		String targetCode = processData.getTargetCode();
-		String questionCode = processData.getQuestionCode();
-
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		Ask ask = taskService.fetchAsk(processData);
 
 		// update ask target
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		frontendService.recursivelyUpdateAskTarget(ask, processEntity);
 
 		// find the submit ask
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, answers);
+		List<Answer> answers = processData.getAnswers();
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
 		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		QDataAskMessage msg = new QDataAskMessage(ask);
@@ -140,8 +127,6 @@ public class ProcessAnswerService {
 		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
 
 		// Check if attribute code exists as a UNQ for the DEF
 		List<EntityAttribute> uniqueAttributes = definition.findPrefixEntityAttributes("UNQ");
@@ -160,8 +145,7 @@ public class ProcessAnswerService {
 				acceptSubmission = false;
 		}
 
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		Ask ask = taskService.fetchAsk(processData);
 
 		// disable submit button if not unique
 		qwandaUtils.sendSubmit(ask, acceptSubmission);

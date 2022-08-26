@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_6H_EUO3hEDqc35xSKhDS7g" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_WB8foAcOEDubOYYCUJu4wQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_entityCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_definitionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
@@ -51,8 +51,8 @@
   <bpmn2:interface id="_1052A199-67F2-442C-A17A-B749284544A9_ServiceInterface" name="life.genny.kogito.common.service.BaseEntityService" implementationRef="life.genny.kogito.common.service.BaseEntityService">
     <bpmn2:operation id="_1052A199-67F2-442C-A17A-B749284544A9_ServiceOperation" name="updateKeycloak" implementationRef="updateKeycloak"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_6E058852-77A5-4170-88E6-E1678A2EFB0C" name="Default Collaboration">
-    <bpmn2:participant id="_5DD673C2-CD09-4F08-83D3-F5206ECE7BDF" name="Pool Participant" processRef="personLifecycle"/>
+  <bpmn2:collaboration id="_3B54A261-ED28-44ED-91A8-25D232610EDF" name="Default Collaboration">
+    <bpmn2:participant id="_5F38A1ED-3878-4E2B-AAF8-0886DE7C4E50" name="Pool Participant" processRef="personLifecycle"/>
   </bpmn2:collaboration>
   <bpmn2:process id="personLifecycle" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="PersonLifecycle" isExecutable="true" processType="Public">
     <bpmn2:property id="entityCode" itemSubjectRef="_entityCodeItem" name="entityCode"/>
@@ -321,13 +321,15 @@
       <bpmn2:outgoing>_F687EFBB-89C3-4D7E-BF13-6338DD933677</bpmn2:outgoing>
     </bpmn2:startEvent>
     <bpmn2:subProcess id="_5C09576B-2182-468F-92C0-159D93B898A4" triggeredByEvent="true">
-      <bpmn2:sequenceFlow id="_7AD15909-85DF-44D5-8DD7-61380E84663C" sourceRef="_90315D6F-93F3-448E-AB25-8BC0DCAC269A" targetRef="_D841AF16-F531-4EE4-9044-7C96A30E7B69"/>
+      <bpmn2:sequenceFlow id="_CD5EE0D4-7D56-4631-9E8A-4A41B9C84420" sourceRef="_90315D6F-93F3-448E-AB25-8BC0DCAC269A" targetRef="_37F06457-9B46-42E1-BD17-69040FE7B6B5"/>
       <bpmn2:sequenceFlow id="_404D2F12-708E-408D-BE61-5EF14324E2F2" sourceRef="_75C923A1-5BCC-4417-9B57-EF843A9DF9C4" targetRef="_90315D6F-93F3-448E-AB25-8BC0DCAC269A"/>
-      <bpmn2:sequenceFlow id="_EBE62DF5-CE52-4CA2-AC72-7607DA4BFF40" sourceRef="_D841AF16-F531-4EE4-9044-7C96A30E7B69" targetRef="_75C923A1-5BCC-4417-9B57-EF843A9DF9C4"/>
-      <bpmn2:sequenceFlow id="_8A46FCD2-338B-425B-B565-44E63DAB5945" sourceRef="_D5DA39A1-57E6-4495-B7A5-92ED3B237221" targetRef="_D841AF16-F531-4EE4-9044-7C96A30E7B69"/>
+      <bpmn2:sequenceFlow id="_8A46FCD2-338B-425B-B565-44E63DAB5945" sourceRef="_D5DA39A1-57E6-4495-B7A5-92ED3B237221" targetRef="_75C923A1-5BCC-4417-9B57-EF843A9DF9C4"/>
+      <bpmn2:endEvent id="_37F06457-9B46-42E1-BD17-69040FE7B6B5">
+        <bpmn2:incoming>_CD5EE0D4-7D56-4631-9E8A-4A41B9C84420</bpmn2:incoming>
+      </bpmn2:endEvent>
       <bpmn2:intermediateCatchEvent id="_90315D6F-93F3-448E-AB25-8BC0DCAC269A">
         <bpmn2:incoming>_404D2F12-708E-408D-BE61-5EF14324E2F2</bpmn2:incoming>
-        <bpmn2:outgoing>_7AD15909-85DF-44D5-8DD7-61380E84663C</bpmn2:outgoing>
+        <bpmn2:outgoing>_CD5EE0D4-7D56-4631-9E8A-4A41B9C84420</bpmn2:outgoing>
         <bpmn2:dataOutput id="_90315D6F-93F3-448E-AB25-8BC0DCAC269A_eventMessageOutputX" drools:dtype="life.genny.qwandaq.message.QEventMessage" itemSubjectRef="__90315D6F-93F3-448E-AB25-8BC0DCAC269A_eventMessageOutputXItem" name="eventMessage"/>
         <bpmn2:dataOutputAssociation>
           <bpmn2:sourceRef>_90315D6F-93F3-448E-AB25-8BC0DCAC269A_eventMessageOutputX</bpmn2:sourceRef>
@@ -338,18 +340,13 @@
         </bpmn2:outputSet>
         <bpmn2:signalEventDefinition signalRef="_1306111536"/>
       </bpmn2:intermediateCatchEvent>
-      <bpmn2:exclusiveGateway id="_D841AF16-F531-4EE4-9044-7C96A30E7B69" gatewayDirection="Converging">
-        <bpmn2:incoming>_8A46FCD2-338B-425B-B565-44E63DAB5945</bpmn2:incoming>
-        <bpmn2:incoming>_7AD15909-85DF-44D5-8DD7-61380E84663C</bpmn2:incoming>
-        <bpmn2:outgoing>_EBE62DF5-CE52-4CA2-AC72-7607DA4BFF40</bpmn2:outgoing>
-      </bpmn2:exclusiveGateway>
       <bpmn2:scriptTask id="_75C923A1-5BCC-4417-9B57-EF843A9DF9C4" name="Summary" scriptFormat="http://www.java.com/java">
         <bpmn2:extensionElements>
           <drools:metaData name="elementname">
             <drools:metaValue><![CDATA[Summary]]></drools:metaValue>
           </drools:metaData>
         </bpmn2:extensionElements>
-        <bpmn2:incoming>_EBE62DF5-CE52-4CA2-AC72-7607DA4BFF40</bpmn2:incoming>
+        <bpmn2:incoming>_8A46FCD2-338B-425B-B565-44E63DAB5945</bpmn2:incoming>
         <bpmn2:outgoing>_404D2F12-708E-408D-BE61-5EF14324E2F2</bpmn2:outgoing>
         <bpmn2:script>summary = eventMessage.getData().getParentCode();
 kcontext.setVariable("summary", summary);
@@ -377,36 +374,31 @@ System.out.println("Summary Updated to " + summary);</bpmn2:script>
   <bpmndi:BPMNDiagram>
     <bpmndi:BPMNPlane bpmnElement="personLifecycle">
       <bpmndi:BPMNShape id="shape__5C09576B-2182-468F-92C0-159D93B898A4" bpmnElement="_5C09576B-2182-468F-92C0-159D93B898A4" isExpanded="true">
-        <dc:Bounds height="317" width="658" x="180" y="469"/>
+        <dc:Bounds height="170" width="714" x="226" y="466"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__D5DA39A1-57E6-4495-B7A5-92ED3B237221" bpmnElement="_D5DA39A1-57E6-4495-B7A5-92ED3B237221">
-        <dc:Bounds height="56" width="56" x="227.5" y="524"/>
+        <dc:Bounds height="56" width="56" x="273.5" y="521"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__75C923A1-5BCC-4417-9B57-EF843A9DF9C4" bpmnElement="_75C923A1-5BCC-4417-9B57-EF843A9DF9C4">
-        <dc:Bounds height="102" width="154" x="599" y="501"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="shape__D841AF16-F531-4EE4-9044-7C96A30E7B69" bpmnElement="_D841AF16-F531-4EE4-9044-7C96A30E7B69">
-        <dc:Bounds height="56" width="56" x="429" y="523.5"/>
+        <dc:Bounds height="102" width="154" x="414" y="498"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__90315D6F-93F3-448E-AB25-8BC0DCAC269A" bpmnElement="_90315D6F-93F3-448E-AB25-8BC0DCAC269A">
-        <dc:Bounds height="56" width="56" x="429" y="668"/>
+        <dc:Bounds height="56" width="56" x="660" y="521"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="edge_shape__D5DA39A1-57E6-4495-B7A5-92ED3B237221_to_shape__D841AF16-F531-4EE4-9044-7C96A30E7B69" bpmnElement="_8A46FCD2-338B-425B-B565-44E63DAB5945">
-        <di:waypoint x="255.5" y="552"/>
-        <di:waypoint x="457" y="551.5"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__D841AF16-F531-4EE4-9044-7C96A30E7B69_to_shape__75C923A1-5BCC-4417-9B57-EF843A9DF9C4" bpmnElement="_EBE62DF5-CE52-4CA2-AC72-7607DA4BFF40">
-        <di:waypoint x="457" y="551.5"/>
-        <di:waypoint x="676" y="552"/>
+      <bpmndi:BPMNShape id="shape__37F06457-9B46-42E1-BD17-69040FE7B6B5" bpmnElement="_37F06457-9B46-42E1-BD17-69040FE7B6B5">
+        <dc:Bounds height="56" width="56" x="796" y="521"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_shape__D5DA39A1-57E6-4495-B7A5-92ED3B237221_to_shape__75C923A1-5BCC-4417-9B57-EF843A9DF9C4" bpmnElement="_8A46FCD2-338B-425B-B565-44E63DAB5945">
+        <di:waypoint x="301.5" y="549"/>
+        <di:waypoint x="491" y="549"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__75C923A1-5BCC-4417-9B57-EF843A9DF9C4_to_shape__90315D6F-93F3-448E-AB25-8BC0DCAC269A" bpmnElement="_404D2F12-708E-408D-BE61-5EF14324E2F2">
-        <di:waypoint x="676" y="552"/>
-        <di:waypoint x="675.9999994282391" y="696.0000000593416"/>
-        <di:waypoint x="457" y="696"/>
+        <di:waypoint x="491" y="549"/>
+        <di:waypoint x="688" y="549"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__90315D6F-93F3-448E-AB25-8BC0DCAC269A_to_shape__D841AF16-F531-4EE4-9044-7C96A30E7B69" bpmnElement="_7AD15909-85DF-44D5-8DD7-61380E84663C">
-        <di:waypoint x="457" y="696"/>
-        <di:waypoint x="457" y="551.5"/>
+      <bpmndi:BPMNEdge id="edge_shape__90315D6F-93F3-448E-AB25-8BC0DCAC269A_to_shape__37F06457-9B46-42E1-BD17-69040FE7B6B5" bpmnElement="_CD5EE0D4-7D56-4631-9E8A-4A41B9C84420">
+        <di:waypoint x="688" y="549"/>
+        <di:waypoint x="824" y="549"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="shape__E1331957-46A1-4113-8820-5C001CC17C03" bpmnElement="_E1331957-46A1-4113-8820-5C001CC17C03">
         <dc:Bounds height="56" width="56" x="267" y="275"/>
@@ -604,7 +596,7 @@ System.out.println("Summary Updated to " + summary);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_6H_EUO3hEDqc35xSKhDS7g</bpmn2:source>
-    <bpmn2:target>_6H_EUO3hEDqc35xSKhDS7g</bpmn2:target>
+    <bpmn2:source>_WB8foAcOEDubOYYCUJu4wQ</bpmn2:source>
+    <bpmn2:target>_WB8foAcOEDubOYYCUJu4wQ</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

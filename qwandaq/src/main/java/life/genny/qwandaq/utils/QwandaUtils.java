@@ -337,45 +337,69 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Check if all Ask mandatory fields are answered for a list of asks
-	 * @param ask The ask to check
-	 * @param answers The list of answers to check against
+	 * Check if all Ask mandatory fields are answered for a BaseEntity.
+	 *
+	 * @param ask        The ask to check
+	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(Ask ask, List<Answer> answers) {
+	public Boolean mandatoryFieldsAreAnswered(Ask ask, BaseEntity baseEntity) {
 
-		log.infof("Checking %s mandatorys against %s answers", ask.getQuestionCode(), answers.size());
+		log.info("Checking " + ask.getQuestionCode() + " mandatorys against " + baseEntity.getCode());
 
 		// find all the mandatory booleans
-		Set<Ask> set = recursivelyFillFlatSet(new HashSet<Ask>(), ask);
+		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<String, Boolean>(), ask);
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
-		for (Ask a : set) {
+		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 
-			String value = null;
+			String attributeCode = ea.getAttributeCode();
+			Boolean mandatory = map.get(attributeCode);
 
-			if (a.isMandatory()) {
-				// try find value in answers
-				for (Answer answer : answers) {
-					if (answer.getAttributeCode().equals(a.getAttributeCode())) {
-						value = answer.getValue();
-					}
-				}
-
-				// if any are both blank and mandatory, then task is not complete
-				if (StringUtils.isBlank(value)) {
-					answered = false;
-				}
+			if (mandatory == null) {
+				continue;
 			}
 
-			String resultLine = String.format("%s : %s : %s", (a.isMandatory() ? "[M]" : "[O]"), a.getAttributeCode(), value);
+			String value = ea.getAsString();
+
+			// if any are both blank and mandatory, then task is not complete
+			if (mandatory && StringUtils.isBlank(value)) {
+				answered = false;
+			}
+
+			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + ea.getAttributeCode() + " : " + value;
 			log.info("===> " + resultLine);
 		}
 
 		log.info("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
 
 		return answered;
+	}
+
+	/**
+	 * Fill the mandatory map using recursion.
+	 *
+	 * @param map The map to fill
+	 * @param ask The ask to traverse
+	 * @return The filled map
+	 */
+	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
+
+		// add current ask attribute code to map
+		map.put(ask.getAttributeCode(), ask.getMandatory());
+
+		// ensure child asks is not null
+		if (ask.getChildAsks() == null) {
+			return map;
+		}
+
+		// recursively add child ask attribute codes
+		for (Ask child : ask.getChildAsks()) {
+			map = recursivelyFillMandatoryMap(map, child);
+		}
+
+		return map;
 	}
 
 	/**
@@ -386,8 +410,17 @@ public class QwandaUtils {
 	 */
 	public Set<Ask> recursivelyFillFlatSet(Set<Ask> set, Ask ask) {
 
+		String code = ask.getAttributeCode();
 		// add current ask attribute code to map
-		set.add(ask);
+		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
+			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
+		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
+			log.debugf("Attribute %s in exclude list", code);
+		} else if (ask.getReadonly()) {
+			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+		} else {
+			set.add(ask);
+		}
 
 		// ensure child asks is not null
 		if (ask.getChildAsks() == null) {
