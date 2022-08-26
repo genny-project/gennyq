@@ -63,12 +63,10 @@ public class S2SData implements Serializable {
         this.token = token;
     }
 
-    /**
-     * @return String
-     */
     @Override
     public String toString() {
-        return "S2SData [questionCode=" + questionCode + "]";
+        return "S2SData [cancel=" + cancel + ", events=" + events + ", pcmCode=" + pcmCode + ", questionCode="
+                + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + "]";
     }
 
     public Boolean getCancel() {

@@ -576,7 +576,10 @@ public class QwandaUtils {
 
 		// create GRP ask
 		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
-		Question question = new Question("QUE_EDIT_GRP", "Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+		// Question question = new Question("QUE_EDIT_GRP", "Edit " +
+		// baseEntity.getCode() + " : " + baseEntity.getName(),
+		Question question = new Question("QUE_BASEENTITY_GRP",
+				"Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
 				questionAttribute);
 		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
 
@@ -604,8 +607,12 @@ public class QwandaUtils {
 							String[] codes = beUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
 
 							for (String code : codes) {
-								BaseEntity link = beUtils.getBaseEntityByCode(code);
-								entityMessage.add(link);
+								try {
+									BaseEntity link = beUtils.getBaseEntityByCode(code);
+									entityMessage.add(link);
+								} catch (Exception ex) {
+									log.error(ex);
+								}
 							}
 						}
 					}
@@ -618,7 +625,7 @@ public class QwandaUtils {
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
-		KafkaUtils.writeMsg("webdata", entityMessage);
+		// KafkaUtils.writeMsg("webdata", entityMessage);
 
 		return ask;
 	}
@@ -645,7 +652,6 @@ public class QwandaUtils {
          * @param target        The target entity
          * @param definition    The definition entity
          * @param attributeCode The code of the attribute
-
          * @param value The value to check
          * @return is duplicate bool
          */
@@ -696,7 +702,6 @@ public class QwandaUtils {
 
                         if (value.contains("[") && value.contains("]"))
                                 value = beUtils.cleanUpAttributeValue(value);
-
                         log.info("Adding unique filter: " + unique + " like " + value);
                         searchEntity.addFilter(unique, SearchEntity.StringFilter.LIKE, "%" + value + "%");
                 }

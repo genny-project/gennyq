@@ -27,8 +27,8 @@ import life.genny.qwandaq.graphql.ProcessQuestions;
 @ApplicationScoped
 public class GraphQLUtils {
 
-    private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-    private static Jsonb jsonb = JsonbBuilder.create();
+	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+	private static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
 	UserToken userToken;
@@ -41,7 +41,7 @@ public class GraphQLUtils {
 	 * @param value The value the field must equal
 	 * @return The process id
 	 */
-    public String fetchProcessId(String table, String field, String value) {
+	public String fetchProcessId(String table, String field, String value) {
 
 		return fetchProcessId(table, Map.of(field, value));
 	}
@@ -49,11 +49,11 @@ public class GraphQLUtils {
 	/**
 	 * Fetch the Process Id of from a GraphQL table using a query.
 	 *
-	 * @param table The Table to query
+	 * @param table    The Table to query
 	 * @param queryMap A map of key-value pairs used in the query
 	 * @return The process id
 	 */
-    public String fetchProcessId(String table, Map<String, String> queryMap) {
+	public String fetchProcessId(String table, Map<String, String> queryMap) {
 
 		JsonArray array = queryTable(table, queryMap, "id");
 
@@ -67,31 +67,31 @@ public class GraphQLUtils {
 		}
 
 		return array.getJsonObject(0).getString("id");
-    }
+	}
 
 	/**
 	 * Query a table in the GraphQL data-index.
 	 *
-	 * @param table The table to query from
-	 * @param field The field to query
-	 * @param value The value for the query to match
+	 * @param table   The table to query from
+	 * @param field   The field to query
+	 * @param value   The value for the query to match
 	 * @param returns The fields to return
 	 * @return A JsonArray of process instance variable objects
 	 */
-    public JsonArray queryTable(String table, String field, String value, String... returns) {
+	public JsonArray queryTable(String table, String field, String value, String... returns) {
 
-        return queryTable(table, Map.of(field, value), returns);
-    }
+		return queryTable(table, Map.of(field, value), returns);
+	}
 
 	/**
 	 * Query a table in the GraphQL data-index.
 	 *
-	 * @param table The table to query from
+	 * @param table    The table to query from
 	 * @param queryMap A map of key-value pairs used in the query
-	 * @param returns The fields to return
+	 * @param returns  The fields to return
 	 * @return A JsonArray of process instance variable objects
 	 */
-    public JsonArray queryTable(String table, Map<String, String> queryMap, String... returns) {
+	public JsonArray queryTable(String table, Map<String, String> queryMap, String... returns) {
 
 		String body = performGraphQLQuery(table, queryMap, returns);
 		log.debug("GraphQL Response Body: " + body);
@@ -103,9 +103,17 @@ public class GraphQLUtils {
 			log.error("No data field found in: " + body);
 			return null;
 		}
-		if (dataObj.containsKey(table))
-			return dataObj.getJsonArray(table);
+		if (dataObj.containsKey(table)) {
+			JsonArray retArray = null;
+			try {
+				retArray = dataObj.getJsonArray(table);
+				return retArray;
+			} catch (Exception e) {
+				log.error("No " + table + " field found in: " + body + " with queryMap_> " + queryMap);
+				return null;
+			}
 
+		}
 		log.warnf("No table %s found in %s", table, body);
 		return null;
 	}
@@ -113,32 +121,32 @@ public class GraphQLUtils {
 	/**
 	 * Perform a Query on table in the GraphQL data-index.
 	 *
-	 * @param table The table to query from
+	 * @param table    The table to query from
 	 * @param queryMap A map of key-value pairs used in the query
-	 * @param returns The fields to return
+	 * @param returns  The fields to return
 	 * @return The response body
 	 */
-    public String performGraphQLQuery(String table, Map<String, String> queryMap, String... returns) {
+	public String performGraphQLQuery(String table, Map<String, String> queryMap, String... returns) {
 
 		// setup fields to query on
 		String queryFields = queryMap.entrySet().stream()
-			.map(e -> String.format("%s : { equal: \"%s\" }", e.getKey(), e.getValue()))
-			.collect(Collectors.joining(", "));
+				.map(e -> String.format("%s : { equal: \"%s\" }", e.getKey(), e.getValue()))
+				.collect(Collectors.joining(", "));
 
 		// create full query string
-        String query = String.format("query { %s ( where: { %s }){ %s }}", 
+		String query = String.format("query { %s ( where: { %s }){ %s }}",
 				table, queryFields, String.join(" ", returns));
 
 		log.info("GraphQL Query: " + query);
 
-        String uri = GennySettings.dataIndexUrl() + "/graphql";
-        HttpResponse<String> response = HttpUtils.post(uri, query, "application/GraphQL", userToken);
+		String uri = GennySettings.dataIndexUrl() + "/graphql";
+		HttpResponse<String> response = HttpUtils.post(uri, query, "application/GraphQL", userToken);
 
-        return response.body();
-    }
+		return response.body();
+	}
 
 	/**
-	 * Fetch the targetCode stored in the processInstance 
+	 * Fetch the targetCode stored in the processInstance
 	 * for the given processId.
 	 *
 	 * @param processId The processId to check
@@ -149,7 +157,7 @@ public class GraphQLUtils {
 		log.info("Fetching targetCode for processId : " + processId);
 
 		// check in cache first
-		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId+":TARGET_CODE", String.class);
+		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId + ":TARGET_CODE", String.class);
 		if (targetCode != null) {
 			return targetCode;
 		}
@@ -159,21 +167,22 @@ public class GraphQLUtils {
 
 		// grab the targetCode from process questions variables
 		targetCode = variables.getString("targetCode");
-		CacheUtils.putObject(userToken.getProductCode(), processId+":TARGET_CODE", targetCode);
+		CacheUtils.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
 
 		return targetCode;
 	}
 
 	/**
-	 * Fetch the targetCode stored in the processInstance 
+	 * Fetch the targetCode stored in the processInstance
 	 * for the given processId.
+	 * 
 	 * @param processId The id of the process to fetch for
 	 * @return The process data
 	 */
 	public ProcessQuestions fetchProcessData(String processId) {
 
 		log.info("Fetching processBE for processId : " + processId);
-		String key = String.format("%s:PROCESS_DATA", processId); 
+		String key = String.format("%s:PROCESS_DATA", processId);
 
 		// check cache first
 		ProcessQuestions processData = CacheUtils.getObject(userToken.getProductCode(), key, ProcessQuestions.class);
