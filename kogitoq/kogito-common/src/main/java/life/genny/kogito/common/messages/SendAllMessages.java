@@ -59,28 +59,8 @@ public class SendAllMessages extends MessageSendingStrategy {
 
                 // Determine the recipientBECode
                 String recipientLnkValue = message.getValueAsString("PRI_RECIPIENT_LNK");
-                if (recipientLnkValue != null) {
-                    // check the various formats to get the recipientBECode
-                    if (recipientLnkValue.startsWith("SELF")) { // The coreBE is the recipient
-                        ctxMap.put("RECIPIENT", coreBE.getCode());
-                        recipientBECode = coreBE.getCode();
-                    } else if (recipientLnkValue.startsWith("PER_")) {
-                        ctxMap.put("RECIPIENT", recipientLnkValue);
-                        recipientBECode = recipientLnkValue;
-                    } else {
-                        // check if it is a LNK path (of the coreBE)
-                        // "LNK_INTERN"
-                        if (recipientLnkValue.startsWith("LNK_")) {
-                            String[] splitStr = recipientLnkValue.split(":");
-                            Integer numPathItems = splitStr.length;
-                            BaseEntity lnkBe = coreBE; // seed
-                            for (int index = 0; index < numPathItems; index++) {
-                                lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, splitStr[index]);
-                            }
-                            ctxMap.put("RECIPIENT", lnkBe.getCode());
-                            recipientBECode = lnkBe.getCode();
-                        }
-                    }
+                if(recipientLnkValue != null) {
+                    recipientBECode = determineRecipientLnkValue(recipientLnkValue, ctxMap);
                 } else {
                     log.error("NO PRI_RECIPIENT_LNK present");
                     continue;
@@ -89,29 +69,13 @@ public class SendAllMessages extends MessageSendingStrategy {
                 // Determine the sender
                 String senderLnkValue = message.getValueAsString("PRI_SENDER_LNK");
                 if (senderLnkValue != null) {
-                    // check the various formats to get the senderBECode
-                    if (senderLnkValue.startsWith("USER")) { // The user is the sender
-                        ctxMap.put("SENDER", userToken.getUserCode());
-                    } else if (senderLnkValue.startsWith("PER_")) {
-                        ctxMap.put("SENDER", senderLnkValue);
-                    } else {
-                        // check if it is a LNK path (of the coreBE)
-                        // "LNK_INTERN"
-                        if (senderLnkValue.startsWith("LNK_")) {
-                            String[] splitStr = senderLnkValue.split(":");
-                            Integer numPathItems = splitStr.length;
-                            BaseEntity lnkBe = coreBE; // seed
-                            for (int index = 0; index < numPathItems; index++) {
-                                lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, splitStr[index]);
-                            }
-                            ctxMap.put("SENDER", lnkBe.getCode());
-                        }
-                    }
+                    ctxMap = determineSender(senderLnkValue, ctxMap);
                 } else {
                     log.error("NO PRI_SENDER_LNK present");
                     continue;
                 }
-                // Now extract all the contexts from the core baseentity LNKs
+
+                // Extract all the contexts from the core baseEntity LNKs
                 List<EntityAttribute> lnkEAs = coreBE.findPrefixEntityAttributes("LNK");
                 String contextMapStr = "";
                 for (EntityAttribute ea : lnkEAs) {
@@ -130,5 +94,59 @@ public class SendAllMessages extends MessageSendingStrategy {
         } else {
             log.warn("No messages found for milestoneCode " + milestoneCode);
         }
+    }
+
+    private String determineRecipientLnkValue(String recipientLnkValue, Map<String, String> ctxMap) {
+        String recipientBECode = null;
+
+        if (recipientLnkValue != null) {
+            // check the various formats to get the recipientBECode
+            if (recipientLnkValue.startsWith("SELF")) { // The coreBE is the recipient
+                ctxMap.put("RECIPIENT", coreBE.getCode());
+                recipientBECode = coreBE.getCode();
+            } else if (recipientLnkValue.startsWith("PER_")) {
+                ctxMap.put("RECIPIENT", recipientLnkValue);
+                recipientBECode = recipientLnkValue;
+            } else {
+                // check if it is a LNK path (of the coreBE)
+                // "LNK_INTERN"
+                if (recipientLnkValue.startsWith("LNK_")) {
+                    String[] splitStr = recipientLnkValue.split(":");
+                    Integer numPathItems = splitStr.length;
+                    BaseEntity lnkBe = coreBE; // seed
+                    for (int index = 0; index < numPathItems; index++) {
+                        lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, splitStr[index]);
+                    }
+                    ctxMap.put("RECIPIENT", lnkBe.getCode());
+                    recipientBECode = lnkBe.getCode();
+                }
+            }
+        }
+
+        return recipientBECode;
+    }
+
+    private Map<String, String> determineSender(String senderLnkValue, Map<String, String> ctxMap) {
+        if (senderLnkValue != null) {
+            // check the various formats to get the senderBECode
+            if (senderLnkValue.startsWith("USER")) { // The user is the sender
+                ctxMap.put("SENDER", userToken.getUserCode());
+            } else if (senderLnkValue.startsWith("PER_")) {
+                ctxMap.put("SENDER", senderLnkValue);
+            } else {
+                // check if it is a LNK path (of the coreBE)
+                // "LNK_INTERN"
+                if (senderLnkValue.startsWith("LNK_")) {
+                    String[] splitStr = senderLnkValue.split(":");
+                    BaseEntity lnkBe = coreBE; // seed
+                    for (String s : splitStr) {
+                        lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, s);
+                    }
+                    ctxMap.put("SENDER", lnkBe.getCode());
+                }
+            }
+        }
+
+        return ctxMap;
     }
 }
