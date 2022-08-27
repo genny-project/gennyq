@@ -35,17 +35,17 @@ public class SendMessage extends MessageSendingStrategy{
 
     @Override
     public void sendMessage() {
-        log.info("templateCode : " + this.templateCode);
-        log.info("recipientBE (found BaseEntity): " + (this.recipientBE != null ? this.recipientBE.getCode() : "null"));
-        log.info("ctxMap : " + (this.ctxMap != null ? jsonb.toJson(this.ctxMap) : "null"));
+        log.info("templateCode : " + templateCode);
+        log.info("recipientBE (found BaseEntity): " + (recipientBE != null ? recipientBE.getCode() : "null"));
+        log.info("ctxMap : " + (ctxMap != null ? jsonb.toJson(ctxMap) : "null"));
 
-        QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(this.templateCode);
+        QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(templateCode);
 
-        if (this.ctxMap != null) {
-            msgBuilder.setMessageContextMap(this.ctxMap);
+        if (ctxMap != null) {
+            msgBuilder.setMessageContextMap(ctxMap);
         }
 
-        msgBuilder.addRecipient(this.recipientBE)
+        msgBuilder.addRecipient(recipientBE)
                 .setUtils(beUtils)
                 .setToken(userToken)
                 .send();

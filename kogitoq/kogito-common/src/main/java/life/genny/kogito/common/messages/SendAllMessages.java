@@ -34,7 +34,6 @@ public class SendAllMessages extends MessageSendingStrategy {
         this.productCode = this.coreBE.getRealm();
     }
 
-    //TODO This functions needs to be redone.
     @Override
     public void sendMessage() {
         SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES",
@@ -77,22 +76,21 @@ public class SendAllMessages extends MessageSendingStrategy {
 
                 // Extract all the contexts from the core baseEntity LNKs
                 List<EntityAttribute> lnkEAs = coreBE.findPrefixEntityAttributes("LNK");
-                String contextMapStr = "";
+                StringBuilder contextMapStr = new StringBuilder();
                 for (EntityAttribute ea : lnkEAs) {
                     String aliasCode = ea.getAttributeCode().substring("LNK_".length());
                     String aliasValue = ea.getAsString();
                     aliasValue = aliasValue.replace("\"", "").replace("[", "").replace("]", "");
-                    contextMapStr += aliasCode + "=" + aliasValue + ",";
+                    contextMapStr.append(aliasCode).append("=").append(aliasValue).append(",");
                     ctxMap.put(aliasCode, aliasValue);
                 }
 
-                log.info("Sending Message " + message.getCode() + " to " + recipientBECode + " with ctx="
-                        + contextMapStr);
+                log.info("Sending Message " + message.getCode() + " to " + recipientBECode + " with ctx=" + contextMapStr);
 
                 new SendMessage(message.getCode(), recipientBECode, ctxMap).sendMessage();
             }
         } else {
-            log.warn("No messages found for milestoneCode " + milestoneCode);
+            log.warn("No messages found for milestoneCode -> " + milestoneCode);
         }
     }
 
