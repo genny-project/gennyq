@@ -12,7 +12,7 @@ public class TimerData implements Serializable {
 
     private Long intervalMin = DEFAULT_TIMER_INTERVAL_MIN; //
     private Long elapsedMin = 0L;
-    private Long expiryMin = 3L;// 7L * 24L * 60L; // 7 days
+    private Long expiryMin = 10L;// 7L * 24L * 60L; // 7 days
 
     // kcontext.setVariable("timerMinutes",0);
     // kcontext.setVariable("delayMinutes",2);
