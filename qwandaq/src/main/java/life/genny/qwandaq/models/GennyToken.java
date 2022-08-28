@@ -52,16 +52,17 @@ public class GennyToken implements Serializable {
 	public Set<String> userRoles = new HashSet<String>();
 
 	/**
-	* Constructor. Default.
+	 * Constructor. Default.
 	 */
-	public GennyToken() { }
+	public GennyToken() {
+	}
 
 	/**
-	* Constructor.
-	* Create a GennyToken from a code and jwt string.
-	*
-	* @param code The code and userCode to set
-	* @param token The jwt string
+	 * Constructor.
+	 * Create a GennyToken from a code and jwt string.
+	 *
+	 * @param code  The code and userCode to set
+	 * @param token The jwt string
 	 */
 	public GennyToken(final String code, final String token) {
 
@@ -73,10 +74,10 @@ public class GennyToken implements Serializable {
 	}
 
 	/**
-	* Constructor.
-	* Create a GennyToken from a jwt string.
-	*
-	* @param token The jwt string
+	 * Constructor.
+	 * Create a GennyToken from a jwt string.
+	 *
+	 * @param token The jwt string
 	 */
 	public GennyToken(final String token) {
 		init(token);
@@ -119,10 +120,10 @@ public class GennyToken implements Serializable {
 		String azp = getString("azp");
 
 		// If azp is alyson then it must be internmatch
-		// NOTE: solution would be to eliminate any internmatch 
+		// NOTE: solution would be to eliminate any internmatch
 		// tokens using this client id.
-		if ("alyson".equals(azp)) {
-			//log.warn("alyson clientid detected.");
+		if (("alyson".equals(azp)) || ("backend".equals(azp))) {
+			// log.warn("alyson clientid detected.");
 			azp = "internmatch";
 		}
 
@@ -199,7 +200,6 @@ public class GennyToken implements Serializable {
 	public String getUserUUID() {
 		return userUUID;
 	}
-
 
 	public void setUserRoles(Set<String> userRoles) {
 		this.userRoles = userRoles;
@@ -434,7 +434,12 @@ public class GennyToken implements Serializable {
 	 */
 	@JsonbTransient
 	public LocalDateTime getAuthDateTime() {
-		Long auth_timestamp = ((Number) adecodedTokenMap.get("auth_time")).longValue();
+		Long auth_timestamp = null;
+		try {
+			auth_timestamp = ((Number) adecodedTokenMap.get("auth_time")).longValue();
+		} catch (Exception e) {
+			auth_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue(); // this is the 'issued at' timestamp
+		}
 		LocalDateTime authTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(auth_timestamp),
 				TimeZone.getDefault().toZoneId());
 		return authTime;
@@ -585,7 +590,7 @@ public class GennyToken implements Serializable {
 	public JsonObject getDecodedToken(final String bearerToken) {
 
 		final String[] chunks = bearerToken.split("\\.");
-		if(chunks.length < 2 || StringUtils.isBlank(bearerToken)) {
+		if (chunks.length < 2 || StringUtils.isBlank(bearerToken)) {
 			log.error("Invalid Bearer Token!");
 			log.error("Bearer: [" + bearerToken + "]");
 		}
