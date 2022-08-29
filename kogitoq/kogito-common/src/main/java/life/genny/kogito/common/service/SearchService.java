@@ -179,39 +179,13 @@ public class SearchService {
 		return bucketCodes;
 	}
 
-	/**
-	 *  parse string to attribute json object
-	 * @param data json string
-	 * @return return json object
-	 */
-	public Map parseAttributeBySortAndSearch(String data){
-		try {
-			JsonObject eventJson = jsonb.fromJson(data, JsonObject.class);
-			JsonArray items = eventJson.getJsonArray("items");
-			Map<String, String> map = new HashMap<>();
-
-			for (JsonValue item : items) {
-				JsonObject jsonObject = item.asJsonObject();
-
-				map.put("attributeCode",jsonObject.getString("attributeCode"));
-				map.put("targetCode",jsonObject.getString("targetCode"));
-				map.put("value", jsonObject.getString("value"));
-				map.put("token", eventJson.getString("token"));
-
-				return map;
-			}
-		} catch (Exception ex) {
-			log.error(ex);
-		}
-		return null;
-	}
 
 	/**
 	 * Send search message to front-end
 	 * @param token Token
 	 * @param searchBE Search base entity from cache
 	 */
-	public void setMessageBySearchEntity(SearchEntity searchBE) {
+	public void sendMessageBySearchEntity(SearchEntity searchBE) {
 		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
 		searchBeMsg.setToken(userToken.getToken());
 		searchBeMsg.setDestination("webcmds");
@@ -225,7 +199,7 @@ public class SearchService {
 	 * @param value Attribute value
 	 * @return return json object
 	 */
-	public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, String value){
+	public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, Object value){
 		EntityAttribute ea = null;
 		try {
 			BaseEntity base = beUtils.getBaseEntity(attrCode);
@@ -234,7 +208,13 @@ public class SearchService {
 			if(!attrName.isEmpty()) {
 				ea.setAttributeName(attrName);
 			}
-			ea.setValueString(value);
+			if(value instanceof String) {
+				ea.setValueString(value.toString());
+			}
+			if(value instanceof Integer) {
+				ea.setValueInteger((Integer) value);
+			}
+
 			base.addAttribute(ea);
 		} catch(Exception ex){
 			log.error(ex);
