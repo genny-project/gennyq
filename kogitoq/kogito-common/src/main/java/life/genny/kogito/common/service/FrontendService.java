@@ -121,7 +121,7 @@ public class FrontendService {
 	 *
 	 * @param ask    The ask to traverse
 	 * @param target The target entity to set
-   * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and prevent further unnecessary recursion
+   	 * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and prevent further unnecessary recursion
 	 */
 	public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target, Map<String, Ask> asks) {
 
@@ -130,12 +130,12 @@ public class FrontendService {
 		// recursively update children
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-        asks.put(child.getAttributeCode(), child);
+        		asks.put(child.getAttributeCode(), child);
 				asks = recursivelyUpdateAskTarget(child, target, asks);
 			}
 		}
 
-    return asks;
+    	return asks;
 	}
 
 	/**
