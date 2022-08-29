@@ -2,6 +2,8 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class S2SData implements Serializable {
 
     public enum EAbortReason {
@@ -93,14 +95,17 @@ public class S2SData implements Serializable {
         this.abortReason = abortReason;
     }
 
+	@JsonIgnore
     public Boolean isAborted() {
         return !abortReason.equals(EAbortReason.NONE);
     }
 
+	@JsonIgnore
     public Boolean isCanceled() {
         return abortReason.equals(EAbortReason.CANCEL);
     }
 
+	@JsonIgnore
     public Boolean isExpired() {
         return abortReason.equals(EAbortReason.TIMEOUT);
     }

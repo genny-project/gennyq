@@ -5,8 +5,10 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.entity.BaseEntity;
 import org.apache.commons.lang3.text.WordUtils;
 
 ruleflow-group 'Inference'
@@ -27,16 +29,17 @@ when
 	answer: Answer( attributeCode == "PRI_FIRSTNAME" )
 	beUtils : BaseEntityUtils()
 	userToken : UserToken()
+	qwandaUtils : QwandaUtils()
 then
 	System.out.println("InferFirstName fired!");
 	String firstName = answer.getValue().toLowerCase().trim();
 	firstName = WordUtils.capitalize(firstName);
 
 	String processId = answer.getProcessId();
-	String productCode = userToken.getProductCode();
-	ProcessQuestions processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessQuestions.class);
+	ProcessData processData = qwandaUtils.fetchProcessData(processId); 
+	BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-	String lastName = processVariables.getProcessEntity().getValue("PRI_LASTNAME", null);
+	String lastName = processEntity.getValue("PRI_LASTNAME", null);
 	if (lastName == null)
 		return;
 
@@ -53,16 +56,17 @@ when
 	answer: Answer( attributeCode == "PRI_LASTNAME" )
 	beUtils : BaseEntityUtils()
 	userToken : UserToken()
+	qwandaUtils : QwandaUtils()
 then
 	System.out.println("InferLastName fired!");
 	String lastName = answer.getValue().toLowerCase().trim();
 	lastName = WordUtils.capitalize(lastName);
 
 	String processId = answer.getProcessId();
-	String productCode = userToken.getProductCode();
-	ProcessQuestions processVariables = CacheUtils.getObject(productCode, processId+":PROCESS_DATA", ProcessQuestions.class);
+	ProcessData processData = qwandaUtils.fetchProcessData(processId); 
+	BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-	String firstName = processVariables.getProcessEntity().getValue("PRI_FIRSTNAME", null);
+	String firstName = processEntity.getValue("PRI_FIRSTNAME", null);
 	if (firstName == null)
 		return;
 

@@ -172,6 +172,8 @@ public class Answer {
 	@Column(name = "sourcecode", updatable = true, nullable = true)
 	private String sourceCode;
 
+	private String code;
+
 	/**
 	 * Store the Expired boolean value of the attribute for the baseEntity
 	 */
@@ -548,6 +550,7 @@ public class Answer {
 	 * @return Date
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public Date getCreatedDate() {
 		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
 		return out;
@@ -557,6 +560,7 @@ public class Answer {
 	 * @return Date
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public Date getUpdatedDate() {
 		final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
 		return out;
@@ -802,6 +806,8 @@ public class Answer {
 	/**
 	 * @return String
 	 */
+	@JsonbTransient
+	@JsonIgnore
 	public String getUniqueCode() {
 		return getSourceCode() + ":" + getTargetCode() + ":" + getAttributeCode();
 	}
@@ -851,4 +857,13 @@ public class Answer {
 	public Boolean isRefused() {
 		return this.refused;
 	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
 }
