@@ -2,15 +2,10 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -215,6 +210,42 @@ public class SearchService {
 				ea.setValueInteger((Integer) value);
 			}
 
+			base.addAttribute(ea);
+		} catch(Exception ex){
+			log.error(ex);
+		}
+		return ea;
+	}
+
+	/**
+	 * Send search message to front-end
+	 * @param token Token
+	 * @param searchBE Search base entity from cache
+	 */
+	public void setMessageBySearchEntity(SearchEntity searchBE) {
+		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
+		searchBeMsg.setToken(userToken.getToken());
+		searchBeMsg.setDestination("webcmds");
+		KafkaUtils.writeMsg("search_events", searchBeMsg);
+	}
+
+	/**
+	 * create new entity attribute by attribute code, name and value
+	 * @param attrCode Attribute code
+	 * @param attrName Attribute name
+	 * @param value Attribute value
+	 * @return return json object
+	 */
+	public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, String value){
+		EntityAttribute ea = null;
+		try {
+			BaseEntity base = beUtils.getBaseEntity(attrCode);
+			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			ea = new EntityAttribute(base, attribute, 1.0, attrCode);
+			if(!attrName.isEmpty()) {
+				ea.setAttributeName(attrName);
+			}
+			ea.setValueString(value);
 			base.addAttribute(ea);
 		} catch(Exception ex){
 			log.error(ex);
