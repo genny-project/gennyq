@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -52,6 +53,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
  *
  */
 @Path("/")
+@ApplicationScoped
 public class Bridge {
 
 	private static final Logger log = Logger.getLogger(Bridge.class);

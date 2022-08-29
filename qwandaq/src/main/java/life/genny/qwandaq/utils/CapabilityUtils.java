@@ -567,6 +567,7 @@ public class CapabilityUtils {
 
 	/**
 	 * Set the redirect code for a role.
+	 * @param productCode The product code
 	 * @param role The role to set the redirect for
 	 * @param redirectCode The code to set as redirect
 	 */

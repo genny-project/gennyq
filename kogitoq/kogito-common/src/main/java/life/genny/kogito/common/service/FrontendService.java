@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -24,7 +25,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -61,6 +62,19 @@ public class FrontendService {
 	NavigationService navigationService;
 
 	/**
+	 * Control main content navigation using a pcm and a question
+	 */
+	public void navigateContent(String processJson) {
+
+		log.info("Navigating to form...");
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
+		String pcmCode = processData.getPcmCode();
+		String questionCode = processData.getQuestionCode();
+
+		navigationService.navigateContent(pcmCode, questionCode);
+	}
+
+	/**
 	 * Get asks using a question code, for a given source and target.
 	 *
 	 * @param questionCode The question code used to fetch asks
@@ -71,27 +85,19 @@ public class FrontendService {
 	 */
 	public void sendAsks(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 
 		String key = String.format("%s:%s", processId, questionCode);
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
-		String sourceCode = processData.getSourceCode();
-		String targetCode = processData.getTargetCode();
-
 		// update ask target
-		BaseEntity processEntity = processData.getProcessEntity();
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		Map<String, Ask> flatMapOfAsks = recursivelyUpdateAskTarget(ask, processEntity);
 
-		// put targetCode in cache
-		// NOTE: This is mainly only necessary for initial dropdown items
-		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
-		CacheUtils.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
-
 		// check mandatories and update submit
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processData.getAnswers());
 		log.info("Mandatory fields are " + (answered ? "answered" : "not answered"));
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
@@ -132,20 +138,6 @@ public class FrontendService {
     return asks;
 	}
 
-
-	/**
-	 * Control main content navigation using a pcm and a question
-	 */
-	public void navigateContent(String processJson) {
-
-		log.info("Navigating to form...");
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		String pcmCode = processData.getPcmCode();
-		String questionCode = processData.getQuestionCode();
-
-		navigationService.navigateContent(pcmCode, questionCode);
-	}
-
 	/**
 	 * Send a baseentity after filtering the entity attributes
 	 * based on the questions in the ask message.
@@ -157,8 +149,8 @@ public class FrontendService {
 	 */
 	public void sendBaseEntitys(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		BaseEntity processEntity = processData.getProcessEntity();
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
@@ -188,11 +180,9 @@ public class FrontendService {
 		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
 
 		// check cache first
-		String key = String.format("%s:PROCESS_DATA", processId);
-		CacheUtils.putObject(userToken.getProductCode(), key, processData);
-		log.infof("processData cached to %s", key);
+		qwandaUtils.storeProcessData(processData);
 
-		key = String.format("%s:%s", processId, questionCode);
+		String key = String.format("%s:%s", processId, questionCode);
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
 		// handle initial dropdown selections
@@ -299,7 +289,7 @@ public class FrontendService {
 	 */
 	public void sendDropdownItems(String processJson) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
+		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 

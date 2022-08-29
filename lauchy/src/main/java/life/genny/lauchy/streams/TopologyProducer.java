@@ -35,7 +35,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -227,7 +227,7 @@ public class TopologyProducer {
 		}
 
 		// fetch process data from graphql
-		ProcessQuestions processData = gqlUtils.fetchProcessData(processId);
+		ProcessData processData = gqlUtils.fetchProcessData(processId);
 		log.debug("Returned processData for (pid=" + processId + ")=" + processData);
 		if (processData == null) {
 			log.error("Could not find process instance variables for processId [" + processId + "]");
@@ -235,7 +235,7 @@ public class TopologyProducer {
 		}
 
 		// check target is same
-		BaseEntity target = processData.getProcessEntity();
+		BaseEntity target = qwandaUtils.generateProcessEntity(processData);
 		if (!target.getCode().equals(answer.getTargetCode())) {
 			log.warn("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
 			return blacklist();

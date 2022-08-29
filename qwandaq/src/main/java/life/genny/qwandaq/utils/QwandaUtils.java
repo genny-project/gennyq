@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +32,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -384,38 +386,39 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Check if all Ask mandatory fields are answered for a BaseEntity.
-	 *
-	 * @param ask        The ask to check
-	 * @param baseEntity The BaseEntity to check against
+	 * Check if all Ask mandatory fields are answered for a list of asks
+	 * @param ask The ask to check
+	 * @param answers The list of answers to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(Ask ask, BaseEntity baseEntity) {
+	public Boolean mandatoryFieldsAreAnswered(Ask ask, List<Answer> answers) {
 
-		log.info("Checking " + ask.getQuestionCode() + " mandatorys against " + baseEntity.getCode());
+		log.infof("Checking %s mandatorys against %s answers", ask.getQuestionCode(), answers.size());
 
 		// find all the mandatory booleans
-		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<String, Boolean>(), ask);
+		Set<Ask> set = recursivelyFillFlatSet(new HashSet<Ask>(), ask);
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
-		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
+		for (Ask a : set) {
 
-			String attributeCode = ea.getAttributeCode();
-			Boolean mandatory = map.get(attributeCode);
+			String value = null;
 
-			if (mandatory == null) {
-				continue;
+			if (a.isMandatory()) {
+				// try find value in answers
+				for (Answer answer : answers) {
+					if (answer.getAttributeCode().equals(a.getAttributeCode())) {
+						value = answer.getValue();
+					}
+				}
+
+				// if any are both blank and mandatory, then task is not complete
+				if (StringUtils.isBlank(value)) {
+					answered = false;
+				}
 			}
 
-			String value = ea.getAsString();
-
-			// if any are both blank and mandatory, then task is not complete
-			if (mandatory && StringUtils.isBlank(value)) {
-				answered = false;
-			}
-
-			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + ea.getAttributeCode() + " : " + value;
+			String resultLine = String.format("%s : %s : %s", (a.isMandatory() ? "[M]" : "[O]"), a.getAttributeCode(), value);
 			log.info("===> " + resultLine);
 		}
 
@@ -425,28 +428,27 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Fill the mandatory map using recursion.
-	 *
-	 * @param map The map to fill
+	 * Fill the flat set of asks using recursion.
+	 * @param set The set to fill
 	 * @param ask The ask to traverse
-	 * @return The filled map
+	 * @return The filled set
 	 */
-	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
+	public Set<Ask> recursivelyFillFlatSet(Set<Ask> set, Ask ask) {
 
 		// add current ask attribute code to map
-		map.put(ask.getAttributeCode(), ask.getMandatory());
+		set.add(ask);
 
 		// ensure child asks is not null
 		if (ask.getChildAsks() == null) {
-			return map;
+			return set;
 		}
 
 		// recursively add child ask attribute codes
 		for (Ask child : ask.getChildAsks()) {
-			map = recursivelyFillMandatoryMap(map, child);
+			set = recursivelyFillFlatSet(set, child);
 		}
 
-		return map;
+		return set;
 	}
 
 	/**
@@ -492,6 +494,90 @@ public class QwandaUtils {
 		KafkaUtils.writeMsg("webcmds", msg);
 
 		return enable;
+	}
+
+	/**
+	 * Save process data to cache.
+	 * @param processData The data to save
+	 */
+	public void storeProcessData(ProcessData processData) {
+
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:PROCESS_DATA", processData.getProcessId()); 
+
+		CacheUtils.putObject(productCode, key, processData);
+		log.infof("ProcessData cached to %s", key);
+	}
+
+	/**
+	 * clear process data from cache.
+	 * @param processId The id of the data to clear
+	 */
+	public void clearProcessData(String processId) {
+
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:PROCESS_DATA", processId); 
+
+		CacheUtils.removeEntry(productCode, key);
+		log.infof("ProcessData removed from cache: %s", key);
+	}
+
+	/**
+	 * Fetch process data from cache.
+	 * @param processId The id of the data to fetch
+	 * @return The saved data
+	 */
+	public ProcessData fetchProcessData(String processId) {
+		
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:PROCESS_DATA", processId); 
+
+		return CacheUtils.getObject(productCode, key, ProcessData.class);
+	}
+
+	/**
+	 * Setup the process entity used to store task data.
+	 *
+	 * @param processData The process data
+	 * @return The updated process entity
+	 */
+	public BaseEntity generateProcessEntity(ProcessData processData) {
+
+		String targetCode = processData.getTargetCode();
+		List<String> attributeCodes = processData.getAttributeCodes();
+
+		// init entity and force the realm
+		log.info("Creating Process Entity " + processData.getProcessEntityCode() + "...");
+		BaseEntity processEntity = new BaseEntity(processData.getProcessEntityCode(), "QuestionBE");
+		processEntity.setRealm(userToken.getProductCode());
+
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
+		log.info("Found " + attributeCodes.size() + " active attributes in asks");
+
+		// add an entityAttribute to process entity for each attribute
+		for (String code : attributeCodes) {
+
+			// check for existing attribute in target
+			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
+
+				// otherwise create new attribute
+				Attribute attribute = getAttribute(code);
+				Object value = null;
+				// default toggles to false
+				String className = attribute.getDataType().getClassName();
+				if (className.contains("Boolean") || className.contains("bool"))
+					value = false;
+
+				return new EntityAttribute(processEntity, attribute, 1.0, value);
+			});
+
+			processEntity.addAttribute(ea);
+		}
+
+		log.info("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
+
+		return processEntity;
 	}
 
 	/**
