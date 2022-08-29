@@ -22,12 +22,12 @@ public class SendAllMessages extends MessageSendingStrategy {
     private String milestoneCode;
     private BaseEntity coreBE;
 
-    private static final String SBE_MILESTONE_MESSAGES = "SBE_MILESTONE_MESSAGES";
-    private static final String NAME = "Fetch All Messages associated with milestone Code";
-    private static final String PRI_CODE = "SBE_MILESTONE_MESSAGES";
-    private static final String PRI_MILESTONE = "SBE_MILESTONE_MESSAGES";
-    private static final String PRI_RECIPIENT_LNK = "PRI_RECIPIENT_LNK";
-    private static final String PRI_SENDER_LNK = "PRI_SENDER_LNK";
+    public static final String SBE_MILESTONE_MESSAGES = "SBE_MILESTONE_MESSAGES";
+    public static final String NAME = "Fetch All Messages associated with milestone Code";
+    public static final String PRI_CODE = "SBE_MILESTONE_MESSAGES";
+    public static final String PRI_MILESTONE = "SBE_MILESTONE_MESSAGES";
+    public static final String PRI_RECIPIENT_LNK = "PRI_RECIPIENT_LNK";
+    public static final String PRI_SENDER_LNK = "PRI_SENDER_LNK";
     public SendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
         this.productCode = productCode;
         this.milestoneCode = milestoneCode;
