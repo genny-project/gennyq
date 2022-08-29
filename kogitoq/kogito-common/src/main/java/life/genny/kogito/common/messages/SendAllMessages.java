@@ -33,6 +33,8 @@ public class SendAllMessages extends MessageSendingStrategy {
     public static final String PRI_SENDER_LNK = "PRI_SENDER_LNK";
     public static final String RECIPIENT = "RECIPIENT";
     public static final String SENDER = "SENDER";
+    public static final String SELF = "SELF";
+    public static final String USER = "USER";
     public SendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
         this.productCode = productCode;
         this.milestoneCode = milestoneCode;
@@ -103,7 +105,7 @@ public class SendAllMessages extends MessageSendingStrategy {
     private void determineRecipientLnkValueAndUpdateMap(String recipientLnkValue) {
         if (recipientLnkValue != null) {
             // check the various formats to get the recipientBECode
-            if (recipientLnkValue.startsWith("SELF")) { // The coreBE is the recipient
+            if (recipientLnkValue.startsWith(SELF)) { // The coreBE is the recipient
                 ctxMap.put(RECIPIENT, coreBE.getCode());
                 recipientBECode = coreBE.getCode();
             } else if (recipientLnkValue.startsWith("PER_")) {
@@ -128,7 +130,7 @@ public class SendAllMessages extends MessageSendingStrategy {
     private void determineSenderAndUpdateMap(String senderLnkValue) {
         if (senderLnkValue != null) {
             // check the various formats to get the senderBECode
-            if (senderLnkValue.startsWith("USER")) { // The user is the sender
+            if (senderLnkValue.startsWith(USER)) { // The user is the sender
                 ctxMap.put(SENDER, userToken.getUserCode());
             } else if (senderLnkValue.startsWith("PER_")) {
                 ctxMap.put(SENDER, senderLnkValue);
