@@ -172,6 +172,8 @@ public class Answer {
 	@Column(name = "sourcecode", updatable = true, nullable = true)
 	private String sourceCode;
 
+	private String code;
+
 	/**
 	 * Store the Expired boolean value of the attribute for the baseEntity
 	 */
@@ -851,4 +853,13 @@ public class Answer {
 	public Boolean isRefused() {
 		return this.refused;
 	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
 }

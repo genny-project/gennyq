@@ -124,25 +124,25 @@ public class ProcessAnswerService {
 	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
 
 		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
 
-		// Check if attribute code exists as a UNQ for the DEF
-		List<EntityAttribute> uniqueAttributes = definition.findPrefixEntityAttributes("UNQ");
-		log.info("Found " + uniqueAttributes.size() + " UNQ attributes");
-		
-		for (EntityAttribute uniqueAttribute : uniqueAttributes) {
-			// Convert to non def attribute Code
-			final String attributeCode = StringUtils.removeStart(uniqueAttribute.getAttributeCode(), "UNQ_");
-			log.info("Checking UNQ attribute " + attributeCode);
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-			String uniqueValue = answers.stream()
-				.filter(a -> a.getAttributeCode().equals(attributeCode))
-				.findFirst().get().getValue();
+		// send error for last answer in the list
+		// NOTE: This should be reconsidered
+		Answer answer = answers.get(answers.size()-1);
+		String attributeCode = answer.getAttributeCode();
 
-			if (qwandaUtils.isDuplicate(target, definition, attributeCode, uniqueValue))
-				acceptSubmission = false;
+		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
+			String feedback = "Error: This value already exists and must be unique.";
+
+			String parentCode = processData.getQuestionCode();
+			String questionCode = answer.getCode();
+
+			qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
+			acceptSubmission = false;
 		}
 
 		Ask ask = taskService.fetchAsk(processData);

@@ -81,7 +81,7 @@ public class FrontendService {
 		recursivelyUpdateAskTarget(ask, processEntity);
 
 		// check mandatories and update submit
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processData.getAnswers());
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
 		log.info("Mandatory fields are " + (answered ? "answered" : "not answered"));
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
