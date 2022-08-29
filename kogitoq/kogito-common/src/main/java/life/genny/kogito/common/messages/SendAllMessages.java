@@ -26,7 +26,8 @@ public class SendAllMessages extends MessageSendingStrategy {
     private static final String NAME = "Fetch All Messages associated with milestone Code";
     private static final String PRI_CODE = "SBE_MILESTONE_MESSAGES";
     private static final String PRI_MILESTONE = "SBE_MILESTONE_MESSAGES";
-
+    private static final String PRI_RECIPIENT_LNK = "PRI_RECIPIENT_LNK";
+    private static final String PRI_SENDER_LNK = "PRI_SENDER_LNK";
     public SendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
         this.productCode = productCode;
         this.milestoneCode = milestoneCode;
@@ -58,23 +59,23 @@ public class SendAllMessages extends MessageSendingStrategy {
                 BaseEntity message = beUtils.getBaseEntityByCode(messageCode);
                 // Construct a contextMap
                 Map<String, String> ctxMap = new HashMap<>();
-                String recipientBECode = null;
+                String recipientBECode;
 
                 // Determine the recipientBECode
-                String recipientLnkValue = message.getValueAsString("PRI_RECIPIENT_LNK");
+                String recipientLnkValue = message.getValueAsString(PRI_RECIPIENT_LNK);
                 if(recipientLnkValue != null) {
                     recipientBECode = determineRecipientLnkValue(recipientLnkValue, ctxMap);
                 } else {
-                    log.error("NO PRI_RECIPIENT_LNK present");
+                    log.error("NO " + PRI_RECIPIENT_LNK + " present");
                     continue;
                 }
 
                 // Determine the sender
-                String senderLnkValue = message.getValueAsString("PRI_SENDER_LNK");
+                String senderLnkValue = message.getValueAsString(PRI_SENDER_LNK);
                 if (senderLnkValue != null) {
                     ctxMap = determineSender(senderLnkValue, ctxMap);
                 } else {
-                    log.error("NO PRI_SENDER_LNK present");
+                    log.error("NO " + PRI_SENDER_LNK + " present");
                     continue;
                 }
 
