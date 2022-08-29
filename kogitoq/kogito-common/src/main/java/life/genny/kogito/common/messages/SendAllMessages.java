@@ -115,10 +115,9 @@ public class SendAllMessages extends MessageSendingStrategy {
                 // "LNK_INTERN"
                 if (recipientLnkValue.startsWith("LNK_")) {
                     String[] splitStr = recipientLnkValue.split(":");
-                    Integer numPathItems = splitStr.length;
                     BaseEntity lnkBe = coreBE; // seed
-                    for (int index = 0; index < numPathItems; index++) {
-                        lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, splitStr[index]);
+                    for (String s : splitStr) {
+                        lnkBe = beUtils.getBaseEntityFromLinkAttribute(lnkBe, s);
                     }
                     ctxMap.put("RECIPIENT", lnkBe.getCode());
                     recipientBECode = lnkBe.getCode();
