@@ -218,18 +218,6 @@ public class SearchService {
 	}
 
 	/**
-	 * Send search message to front-end
-	 * @param token Token
-	 * @param searchBE Search base entity from cache
-	 */
-	public void setMessageBySearchEntity(SearchEntity searchBE) {
-		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
-		searchBeMsg.setToken(userToken.getToken());
-		searchBeMsg.setDestination("webcmds");
-		KafkaUtils.writeMsg("search_events", searchBeMsg);
-	}
-
-	/**
 	 * create new entity attribute by attribute code, name and value
 	 * @param attrCode Attribute code
 	 * @param attrName Attribute name
