@@ -550,6 +550,7 @@ public class Answer {
 	 * @return Date
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public Date getCreatedDate() {
 		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
 		return out;
@@ -559,6 +560,7 @@ public class Answer {
 	 * @return Date
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public Date getUpdatedDate() {
 		final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
 		return out;
@@ -804,6 +806,8 @@ public class Answer {
 	/**
 	 * @return String
 	 */
+	@JsonbTransient
+	@JsonIgnore
 	public String getUniqueCode() {
 		return getSourceCode() + ":" + getTargetCode() + ":" + getAttributeCode();
 	}

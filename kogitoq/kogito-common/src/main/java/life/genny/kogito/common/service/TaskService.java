@@ -117,7 +117,7 @@ public class TaskService {
 	 * @param pcmCode      The code eof the PCM to use
 	 * @return The processData json
 	 */
-	public String inputs(String questionCode, String sourceCode, String targetCode,
+	public ProcessData inputs(String questionCode, String sourceCode, String targetCode,
 			String pcmCode, String events, String processId) {
 
 		log.info("==========================================");
@@ -141,7 +141,7 @@ public class TaskService {
 		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
@@ -203,9 +203,8 @@ public class TaskService {
 	 * @param targetCode The code of the target entity
 	 * @return The DEF
 	 */
-	public String getDefinitionCode(String processJson) {
+	public ProcessData getDefinitionCode(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String targetCode = processData.getTargetCode();
 
 		// Find the DEF
@@ -215,17 +214,16 @@ public class TaskService {
 
 		processData.setDefinitionCode(definition.getCode());
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
 	 * Find the involved attribute codes.
-	 * @param processJson The process data json
+	 * @param processData The process data json
 	 * @return process json
 	 */
-	public String findAttributeCodes(String processJson) {
+	public ProcessData findAttributeCodes(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		Ask ask = fetchAsk(processData);
 
 		// find all allowed attribute codes
@@ -233,7 +231,7 @@ public class TaskService {
 		attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
 		processData.setAttributeCodes(Arrays.asList(attributeCodes.toArray(new String[attributeCodes.size()])));
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 }

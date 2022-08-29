@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import org.jboss.logging.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class TimerData implements Serializable {
 
     static final Long DEFAULT_TIMER_INTERVAL_MIN = 1L;
@@ -41,6 +43,7 @@ public class TimerData implements Serializable {
         return this.elapsedMin >= this.expiryMin;
     }
 
+	@JsonIgnore
     public Boolean isMilestone() {
         return false;
     }
@@ -53,6 +56,7 @@ public class TimerData implements Serializable {
         this.intervalMin = intervalMin;
     }
 
+	@JsonIgnore
     public String getIntervalStr() {
         return "R/PT" + getIntervalMin() + "M";
     }

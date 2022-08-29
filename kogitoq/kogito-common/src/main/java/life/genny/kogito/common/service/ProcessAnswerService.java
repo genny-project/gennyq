@@ -8,13 +8,11 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -48,40 +46,36 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processJson) {
-
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		Answer answer = jsonb.fromJson(answerJson, Answer.class);
+	public ProcessData storeIncomingAnswer(Answer answer, ProcessData processData) {
 
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processData.getProcessEntityCode())) {
 			log.warn("Bad targetCode in answer!");
-			return jsonb.toJson(processData);
+			return processData;
 		}
 
 		// check if the answer is valid for the target
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		if (!defUtils.answerValidForDEF(definition, answer)) {
 			log.error("Bad incoming answer... Not saving!");
-			return jsonb.toJson(processData);
+			return processData;
 		}
 
 		processData.getAnswers().add(answer);
 		qwandaUtils.storeProcessData(processData);
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
-	 * @param processJson
+	 * @param processData
 	 * @return
 	 */
-	public String deleteStoredAnswers(String processJson) {
+	public ProcessData deleteStoredAnswers(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		processData.setAnswers(new ArrayList<>());
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
@@ -91,9 +85,8 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity storing the answer data
 	 * @return Boolean representing whether all mandatory questions have been answered
 	 */
-	public Boolean checkMandatory(String processJson) {
+	public Boolean checkMandatory(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		Ask ask = taskService.fetchAsk(processData);
 
 		// update ask target
@@ -121,9 +114,8 @@ public class ProcessAnswerService {
 	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
-	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
+	public Boolean checkUniqueness(ProcessData processData, Boolean acceptSubmission) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
 
@@ -158,9 +150,8 @@ public class ProcessAnswerService {
 	 * @param targetCode The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
-	public void saveAllAnswers(String processJson) {
+	public void saveAllAnswers(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String targetCode = processData.getTargetCode();
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 

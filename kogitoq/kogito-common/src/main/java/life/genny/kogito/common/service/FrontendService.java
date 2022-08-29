@@ -52,10 +52,9 @@ public class FrontendService {
 	/**
 	 * Control main content navigation using a pcm and a question
 	 */
-	public void navigateContent(String processJson) {
+	public void navigateContent(ProcessData processData) {
 
 		log.info("Navigating to form...");
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String pcmCode = processData.getPcmCode();
 		String questionCode = processData.getQuestionCode();
 
@@ -71,9 +70,8 @@ public class FrontendService {
 	 * @param processId    The processId to set in the asks
 	 * @return The ask message
 	 */
-	public void sendAsks(String processJson) {
+	public void sendAsks(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		Ask ask = taskService.fetchAsk(processData);
 
 		// update ask target
@@ -120,9 +118,8 @@ public class FrontendService {
 	 * @param processId The process id to use for the baseentity cache
 	 * @param defCode   . The type of processBE (to save calculating it again)
 	 */
-	public void sendBaseEntitys(String processJson) {
+	public void sendBaseEntitys(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
 
@@ -239,9 +236,8 @@ public class FrontendService {
 	 *
 	 * @param askMsgJson The ask message to send
 	 */
-	public void sendDropdownItems(String processJson) {
+	public void sendDropdownItems(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 

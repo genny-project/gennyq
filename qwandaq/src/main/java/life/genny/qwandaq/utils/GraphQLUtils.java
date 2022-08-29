@@ -199,7 +199,7 @@ public class GraphQLUtils {
 
 		// grab json and deserialise
 		JsonObject variables = jsonb.fromJson(array.getJsonObject(0).getString("variables"), JsonObject.class);
-		String processJson = variables.getString("processJson");
+		String processJson = variables.getJsonObject("processData").toString();
 		processData = jsonb.fromJson(processJson, ProcessData.class);
 
 		// cache the object for quicker retrieval
