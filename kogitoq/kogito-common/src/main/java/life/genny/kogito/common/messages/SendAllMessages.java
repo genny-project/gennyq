@@ -22,6 +22,11 @@ public class SendAllMessages extends MessageSendingStrategy {
     private String milestoneCode;
     private BaseEntity coreBE;
 
+    private static final String SBE_MILESTONE_MESSAGES = "SBE_MILESTONE_MESSAGES";
+    private static final String NAME = "Fetch All Messages associated with milestone Code";
+    private static final String PRI_CODE = "SBE_MILESTONE_MESSAGES";
+    private static final String PRI_MILESTONE = "SBE_MILESTONE_MESSAGES";
+
     public SendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
         this.productCode = productCode;
         this.milestoneCode = milestoneCode;
@@ -36,10 +41,9 @@ public class SendAllMessages extends MessageSendingStrategy {
 
     @Override
     public void sendMessage() {
-        SearchEntity searchEntity = new SearchEntity("SBE_MILESTONE_MESSAGES",
-                "Fetch All Messages associated with milestone Code")
-                .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "MSG_%")
-                .addFilter("PRI_MILESTONE", SearchEntity.StringFilter.LIKE, "%\"" + milestoneCode.toUpperCase() + "\"%")
+        SearchEntity searchEntity = new SearchEntity(SBE_MILESTONE_MESSAGES, NAME)
+                .addFilter(PRI_CODE, SearchEntity.StringFilter.LIKE, "MSG_%")
+                .addFilter(PRI_MILESTONE, SearchEntity.StringFilter.LIKE, "%\"" + milestoneCode.toUpperCase() + "\"%")
                 .setPageStart(0)
                 .setPageSize(100);
 
