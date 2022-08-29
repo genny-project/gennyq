@@ -27,8 +27,8 @@ public class SendAllMessages extends MessageSendingStrategy {
 
     public static final String SBE_MILESTONE_MESSAGES = "SBE_MILESTONE_MESSAGES";
     public static final String NAME = "Fetch All Messages associated with milestone Code";
-    public static final String PRI_CODE = "SBE_MILESTONE_MESSAGES";
-    public static final String PRI_MILESTONE = "SBE_MILESTONE_MESSAGES";
+    public static final String PRI_CODE = "PRI_CODE";
+    public static final String PRI_MILESTONE = "PRI_MILESTONE";
     public static final String PRI_RECIPIENT_LNK = "PRI_RECIPIENT_LNK";
     public static final String PRI_SENDER_LNK = "PRI_SENDER_LNK";
     public static final String RECIPIENT = "RECIPIENT";
