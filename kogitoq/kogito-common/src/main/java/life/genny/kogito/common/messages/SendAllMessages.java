@@ -54,12 +54,13 @@ public class SendAllMessages extends MessageSendingStrategy {
 
         if (messageCodes != null) {
             log.info("messages : " + messageCodes.size());
-            for (String messageCode : messageCodes) {
+            messageCodes.parallelStream().forEach((messageCode) -> {
                 log.info("messageCode : " + messageCode);
                 BaseEntity message = beUtils.getBaseEntityByCode(messageCode);
                 // Construct a contextMap
-                Map<String, String> ctxMap = new HashMap<>();
-                String recipientBECode;
+                final Map<String, String> ctxMap = new HashMap<>();
+                Map<String, String> senderCtxMap = null;
+                String recipientBECode = null;
 
                 // Determine the recipientBECode
                 String recipientLnkValue = message.getValueAsString(PRI_RECIPIENT_LNK);
@@ -67,33 +68,32 @@ public class SendAllMessages extends MessageSendingStrategy {
                     recipientBECode = determineRecipientLnkValue(recipientLnkValue, ctxMap);
                 } else {
                     log.error("NO " + PRI_RECIPIENT_LNK + " present");
-                    continue;
-                }
-
-                // Determine the sender
-                String senderLnkValue = message.getValueAsString(PRI_SENDER_LNK);
-                if (senderLnkValue != null) {
-                    ctxMap = determineSender(senderLnkValue, ctxMap);
-                } else {
-                    log.error("NO " + PRI_SENDER_LNK + " present");
-                    continue;
                 }
 
                 // Extract all the contexts from the core baseEntity LNKs
                 List<EntityAttribute> lnkEAs = coreBE.findPrefixEntityAttributes("LNK");
                 StringBuilder contextMapStr = new StringBuilder();
-                for (EntityAttribute ea : lnkEAs) {
+
+                lnkEAs.parallelStream().forEach((ea) -> {
                     String aliasCode = ea.getAttributeCode().substring("LNK_".length());
                     String aliasValue = ea.getAsString();
                     aliasValue = aliasValue.replace("\"", "").replace("[", "").replace("]", "");
                     contextMapStr.append(aliasCode).append("=").append(aliasValue).append(",");
                     ctxMap.put(aliasCode, aliasValue);
+                });
+
+                // Determine the sender
+                String senderLnkValue = message.getValueAsString(PRI_SENDER_LNK);
+                if (senderLnkValue != null) {
+                    senderCtxMap = determineSender(senderLnkValue, ctxMap);
+                } else {
+                    log.error("NO " + PRI_SENDER_LNK + " present");
                 }
 
                 log.info("Sending Message " + message.getCode() + " to " + recipientBECode + " with ctx=" + contextMapStr);
 
-                new SendMessage(message.getCode(), recipientBECode, ctxMap).sendMessage();
-            }
+                new SendMessage(message.getCode(), recipientBECode, senderCtxMap).sendMessage();
+            });
         } else {
             log.warn("No messages found for milestoneCode -> " + milestoneCode);
         }
