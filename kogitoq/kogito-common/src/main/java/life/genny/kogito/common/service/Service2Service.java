@@ -10,9 +10,15 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.S2SData;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.serviceq.intf.GennyScopeInit;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A Service class used for communication with other kogito services.
@@ -30,17 +36,53 @@ public class Service2Service {
 	UserToken userToken;
 
 	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
 	GennyScopeInit scope;
 
 	/**
 	 * Add a token to a S2SData message for sending.
 	 *
 	 * @param data The S2SData object
-	 * @return The  updated data object
+	 * @return The updated data object
 	 */
 	public S2SData addToken(S2SData data) {
-		data.setToken(userToken.getToken());
-		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+		if (userToken == null) {
+			// We need to fetch the latest token for the sourceUser
+			log.info(data.getSourceCode() + ": No token found, fetching latest token");
+			BaseEntity userBE = beUtils.getBaseEntityByCode(data.getSourceCode());
+			BaseEntity project = beUtils.getBaseEntityByCode(userBE.getRealm());
+			log.info("Fetching impersonated token for " + userBE.getCode() + " in " + project.getCode());
+
+			String userTokenStr = KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project);
+			userToken = new UserToken(userTokenStr);
+			log.info("generated userToken " + userToken);
+			data.setToken(userToken.getToken());
+			log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+
+		} else {
+			try {
+				String username = userToken.getUsername();
+				log.debug("username is " + username); // flush out timer based npe
+			} catch (NullPointerException npe) {
+				String userTokenStr = KeycloakUtils.getImpersonatedToken(serviceToken, data.getSourceCode());
+				if (StringUtils.isBlank(userTokenStr)) {
+					log.error("Could not get impersonated token for " + data.getSourceCode());
+				}
+				userToken = new UserToken(userTokenStr);
+			}
+			data.setToken(userToken.getToken());
+			log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+		}
+
+		if (data.isAborted()) {
+			log.info("Sending aborted message " + data.getAbortReason());
+			return data;
+		}
 		return data;
 	}
 
@@ -68,14 +110,14 @@ public class Service2Service {
 	public void sendItemComplete(String definitionCode, String entityCode) {
 
 		JsonObject json = Json.createObjectBuilder()
-			.add("event_type", "LIFECYCLE")
-			.add("msg_type", "EVT_MSG")
-			.add("token", userToken.getToken())
-			.add("data", Json.createObjectBuilder()
-				.add("code", "ITEM_COMPLETE")
-				.add("parentCode", definitionCode)
-				.add("targetCode", entityCode))
-			.build();
+				.add("event_type", "LIFECYCLE")
+				.add("msg_type", "EVT_MSG")
+				.add("token", userToken.getToken())
+				.add("data", Json.createObjectBuilder()
+						.add("code", "ITEM_COMPLETE")
+						.add("parentCode", definitionCode)
+						.add("targetCode", entityCode))
+				.build();
 
 		KafkaUtils.writeMsg("genny_events", json.toString());
 	}
@@ -86,14 +128,14 @@ public class Service2Service {
 	public void updateSummary(String personCode, String summaryCode) {
 
 		JsonObject json = Json.createObjectBuilder()
-			.add("event_type", "LIFECYCLE")
-			.add("msg_type", "EVT_MSG")
-			.add("token", userToken.getToken())
-			.add("data", Json.createObjectBuilder()
-				.add("code", "UPDATE_SUMMARY")
-				.add("parentCode", summaryCode)
-				.add("targetCode", personCode))
-			.build();
+				.add("event_type", "LIFECYCLE")
+				.add("msg_type", "EVT_MSG")
+				.add("token", userToken.getToken())
+				.add("data", Json.createObjectBuilder()
+						.add("code", "UPDATE_SUMMARY")
+						.add("parentCode", summaryCode)
+						.add("targetCode", personCode))
+				.build();
 
 		log.info("Sending summary update -> " + personCode + " : " + summaryCode);
 

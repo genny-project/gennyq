@@ -26,6 +26,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
@@ -55,6 +56,11 @@ public class BaseEntityUtils {
 	QwandaUtils qwandaUtils;
 
 	public BaseEntityUtils() {
+	}
+
+	public BaseEntityUtils(ServiceToken serviceToken) {
+		this.serviceToken = serviceToken;
+		this.userToken = new UserToken(serviceToken.getToken());
 	}
 
 	/**
@@ -174,6 +180,9 @@ public class BaseEntityUtils {
 		// check in database if not in cache
 		if (entity == null) {
 			try {
+				if (databaseUtils == null) {
+					log.error("databaseUtils is null");
+				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode + " but "
 						+ (entity == null ? "not found in db" : "found in db"));

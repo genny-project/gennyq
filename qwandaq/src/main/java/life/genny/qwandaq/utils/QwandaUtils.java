@@ -660,14 +660,15 @@ public class QwandaUtils {
 		// grab def entity
 		BaseEntity defBE = defUtils.getDEF(baseEntity);
 
+		String sourceCode = userToken.getUserCode();
+		String targetCode = baseEntity.getCode();
+
 		// create GRP ask
-		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
-		// Question question = new Question("QUE_EDIT_GRP", "Edit " +
-		// baseEntity.getCode() + " : " + baseEntity.getName(),
-		Question question = new Question("QUE_BASEENTITY_GRP",
-				"Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+		Attribute questionAttribute = getAttribute(DefUtils.PREF_QQQ_QUE_GRP);
+		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
+				"Edit " + targetCode + " : " + baseEntity.getName(),
 				questionAttribute);
-		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
+		Ask ask = new Ask(question, sourceCode, targetCode);
 
 		List<Ask> childAsks = new ArrayList<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
@@ -675,43 +676,24 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid atribute
-		baseEntity.getBaseEntityAttributes().stream()
-				.filter(ea -> defBE.containsEntityAttribute("ATT_" + ea.getAttributeCode()))
-				.forEach((ea) -> {
+		defBE.getBaseEntityAttributes().stream()
+			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
+			.forEach((ea) -> {
+				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
+				Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-					String questionCode = "QUE_"
-							+ StringUtils.removeStart(StringUtils.removeStart(ea.getAttributeCode(), "PRI_"), "LNK_");
+				String questionCode = DefUtils.PREF_QUE
+						+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+						DefUtils.PREF_PRI), DefUtils.PREF_LNK);
 
-					Question childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
-					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
+				Question childQues = new Question(questionCode, attribute.getName(), attribute);
+				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-					childAsks.add(childAsk);
-
-					if (ea.getAttributeCode().startsWith("LNK_")) {
-						if (ea.getValueString() != null) {
-
-							String[] codes = BaseEntityUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
-
-							for (String code : codes) {
-								try {
-									BaseEntity link = beUtils.getBaseEntityByCode(code);
-									entityMessage.add(link);
-								} catch (Exception ex) {
-									log.error(ex);
-								}
-							}
-						}
-					}
-
-					if (defBE.containsEntityAttribute("SER_" + ea.getAttributeCode())) {
-						searchUtils.performDropdownSearch(childAsk);
-					}
-				});
+				childAsks.add(childAsk);
+			});
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
-
-		// KafkaUtils.writeMsg("webdata", entityMessage);
 
 		return ask;
 	}
@@ -841,4 +823,21 @@ public class QwandaUtils {
 		log.info("Sent error message to frontend : " + json.toString());
 	}
 
+
+	/**
+	 * Return attribute relied on base entity object and attribute code
+	 * @param baseEntity Base entity
+	 * @param attributeCode Attribute code
+	 * @return Return attribute object
+	 */
+	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode){
+		Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
+
+		if (baseEA.isPresent()) {
+			return baseEA.get().getAttribute();
+		}
+
+		Attribute attribute = getAttribute(attributeCode);
+		return attribute;
+	}
 }
