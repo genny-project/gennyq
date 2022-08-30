@@ -100,6 +100,8 @@ public class SendAllMessages extends MessageSendingStrategy {
         } else {
             log.warn("No messages found for milestoneCode -> " + milestoneCode);
         }
+
+        ctxMap.clear();
     }
 
     private void determineRecipientLnkValueAndUpdateMap(String recipientLnkValue) {
