@@ -6,7 +6,7 @@
   <bpmn2:itemDefinition id="__90B5C348-3E8B-48A6-88FD-77275A0819A4_templateCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__90B5C348-3E8B-48A6-88FD-77275A0819A4_recipientBeCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__90B5C348-3E8B-48A6-88FD-77275A0819A4_ctxMapInputXItem" structureRef="java.util.Map"/>
-  <bpmn2:interface id="_90B5C348-3E8B-48A6-88FD-77275A0819A4_ServiceInterface" name="life.genny.kogito.common.service.SendMessageService" implementationRef="life.genny.kogito.common.service.SendMessageService">
+  <bpmn2:interface id="_90B5C348-3E8B-48A6-88FD-77275A0819A4_ServiceInterface" name="life.genny.kogito.common.messages.SendMessageService" implementationRef="life.genny.kogito.common.messages.SendMessageService">
     <bpmn2:operation id="_90B5C348-3E8B-48A6-88FD-77275A0819A4_ServiceOperation" name="sendMessage" implementationRef="sendMessage"/>
   </bpmn2:interface>
   <bpmn2:collaboration id="_DA9075F9-F1BA-4862-BD9A-6319EDBCF5B1" name="Default Collaboration">
@@ -46,7 +46,7 @@
       </bpmn2:extensionElements>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_9FB6DA1F-15C0-4ADD-8D43-F3B2953A6585" sourceRef="_321CE5F6-80DE-48BD-93F4-41E832A810FF" targetRef="_90B5C348-3E8B-48A6-88FD-77275A0819A4"/>
-    <bpmn2:serviceTask id="_90B5C348-3E8B-48A6-88FD-77275A0819A4" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.SendMessageService" drools:serviceoperation="sendMessage" name="Send Message" implementation="Java" operationRef="_90B5C348-3E8B-48A6-88FD-77275A0819A4_ServiceOperation">
+    <bpmn2:serviceTask id="_90B5C348-3E8B-48A6-88FD-77275A0819A4" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.messages.SendMessageService" drools:serviceoperation="sendMessage" name="Send Message" implementation="Java" operationRef="_90B5C348-3E8B-48A6-88FD-77275A0819A4_ServiceOperation">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
           <drools:metaValue><![CDATA[Send Message]]></drools:metaValue>
