@@ -36,6 +36,7 @@
 			"jdk.compiler/com.sun.tools.javac.model",
 			"jdk.compiler/com.sun.tools.javac.util"
 		],
-		"java.configuration.updateBuildConfiguration": "automatic"
+		"java.configuration.updateBuildConfiguration": "automatic",
+		"java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx2G -Xms100m"
 	}
 }

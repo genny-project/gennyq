@@ -6,6 +6,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
 
 import org.jboss.logging.Logger;
 
@@ -43,6 +44,9 @@ public class Service2Service {
 
 	@Inject
 	GennyScopeInit scope;
+
+	@Inject
+	EntityManager entityManager;
 
 	/**
 	 * Add a token to a S2SData message for sending.
@@ -93,7 +97,12 @@ public class Service2Service {
 	 */
 	public void initialiseScope(S2SData data) {
 		log.info(data.toString());
+		if (data.isAborted()) {
+			log.info("Handle aborted message " + data.getAbortReason());
+			userToken = new UserToken(data.getToken());
+		}
 		scope.init(jsonb.toJson(data));
+
 		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 	}
 

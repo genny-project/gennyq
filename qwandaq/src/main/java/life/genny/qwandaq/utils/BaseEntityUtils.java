@@ -10,14 +10,21 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
+import javax.persistence.Persistence;
+import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
+import io.quarkus.hibernate.orm.PersistenceUnit;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -38,6 +45,7 @@ import life.genny.qwandaq.models.UserToken;
  * @author Jasper Robison
  */
 @ApplicationScoped
+@ActivateRequestContext
 public class BaseEntityUtils {
 
 	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
@@ -54,6 +62,13 @@ public class BaseEntityUtils {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Inject
+	EntityManagerFactory emf;
+
+	@Inject
+	// @PersistenceUnit("genny")
+	EntityManager entityManager;
 
 	public BaseEntityUtils() {
 	}
@@ -182,6 +197,24 @@ public class BaseEntityUtils {
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
+					// Arc.container().requestContext().activate();
+					Arc.container().instance(DatabaseUtils.class);
+					// databaseUtils = new DatabaseUtils();
+					EntityManagerFactory factory = Persistence.createEntityManagerFactory("genny");
+					entityManager = factory.createEntityManager();
+					// entityManager =
+					// Persistence.createEntityManagerFactory("genny").createEntityManager();
+					if (entityManager == null) {
+						log.error("entityManager is null");
+					}
+					if (databaseUtils == null) {
+						log.error("databaseUtils is still null");
+						databaseUtils = new DatabaseUtils();
+
+						databaseUtils.setEntityManager(entityManager);
+					} else {
+						databaseUtils.setEntityManager(entityManager);
+					}
 				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode + " but "

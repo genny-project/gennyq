@@ -124,6 +124,7 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	 * Constructor.
 	 */
 	public CoreEntity() {
+		autocreateCreated();
 	}
 
 	/**
