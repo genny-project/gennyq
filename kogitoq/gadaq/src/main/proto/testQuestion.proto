@@ -55,15 +55,17 @@ message TestQuestion {
 message TimerData { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 elapsedMin = 1; 
+	optional TimerEvent currentMilestone = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated TimerEvent events = 2; 
+	optional int64 elapsedMin = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryMin = 3; 
+	repeated TimerEvent events = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryTimeStamp = 4; 
+	optional int64 expiryMin = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 intervalMin = 5; 
+	optional int64 expiryTimeStamp = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 intervalMin = 6; 
 }
 /* @Indexed */ 
 message TimerEvent { 
