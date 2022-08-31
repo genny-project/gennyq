@@ -149,22 +149,25 @@ message ProcessQuestions {
  @VariableInfo(tags="") */ 
 	optional ProcessData processData = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input") */ 
-	optional string questionCode = 10; 
+ @VariableInfo(tags="") */ 
+	optional string productCode = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
-	optional string sourceCode = 11; 
+	optional string questionCode = 11; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string sourceCode = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string status = 12; 
+	optional string status = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
-	optional string targetCode = 13; 
+	optional string targetCode = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string userCode = 14; 
+	optional string userCode = 15; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 15; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 16; 
 }
 /* @Indexed */ 
 message S2SData { 
@@ -176,15 +179,17 @@ message S2SData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string pcmCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 4; 
+	optional string productCode = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 5; 
+	optional string questionCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 6; 
+	optional string sourceCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional TimerData timerData = 7; 
+	optional string targetCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 8; 
+	optional TimerData timerData = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 9; 
 }
 /* @Indexed */ 
 message TimerData { 

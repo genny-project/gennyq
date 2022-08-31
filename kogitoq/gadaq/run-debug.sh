@@ -68,6 +68,6 @@ echo "kogito service $GENNY_KOGITO_SERVICE_URL"
 mkdir -p ../kogito-common/src/main/proto
 cp ../kogito-common/target/classes/META-INF/resources/persistence/protobuf/* ../kogito-common/src/main/proto/
 cp target/classes/META-INF/resources/persistence/protobuf/* src/main/proto/
-
+echo "GADAQ PORT = ${port}"
 ./mvnw clean  quarkus:dev -Ddebug=${GADAQ_DEBUG_PORT} -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 
