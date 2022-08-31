@@ -20,11 +20,6 @@
                 <quarkus-plugin.version>2.10.4.Final</quarkus-plugin.version>
         </properties>
 
-	<properties>
-		<quarkus.platform.version>2.11.2.Final</quarkus.platform.version>
-		<quarkus-plugin.version>2.11.2.Final</quarkus-plugin.version>
-	</properties>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
