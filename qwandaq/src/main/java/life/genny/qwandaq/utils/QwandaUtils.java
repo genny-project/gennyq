@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
@@ -33,6 +35,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -386,45 +389,69 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Check if all Ask mandatory fields are answered for a list of asks
-	 * @param ask The ask to check
-	 * @param answers The list of answers to check against
+	 * Check if all Ask mandatory fields are answered for a BaseEntity.
+	 *
+	 * @param ask        The ask to check
+	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(Ask ask, List<Answer> answers) {
+	public Boolean mandatoryFieldsAreAnswered(Ask ask, BaseEntity baseEntity) {
 
-		log.infof("Checking %s mandatorys against %s answers", ask.getQuestionCode(), answers.size());
+		log.info("Checking " + ask.getQuestionCode() + " mandatorys against " + baseEntity.getCode());
 
 		// find all the mandatory booleans
-		Set<Ask> set = recursivelyFillFlatSet(new HashSet<Ask>(), ask);
+		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<String, Boolean>(), ask);
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
-		for (Ask a : set) {
+		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 
-			String value = null;
+			String attributeCode = ea.getAttributeCode();
+			Boolean mandatory = map.get(attributeCode);
 
-			if (a.isMandatory()) {
-				// try find value in answers
-				for (Answer answer : answers) {
-					if (answer.getAttributeCode().equals(a.getAttributeCode())) {
-						value = answer.getValue();
-					}
-				}
-
-				// if any are both blank and mandatory, then task is not complete
-				if (StringUtils.isBlank(value)) {
-					answered = false;
-				}
+			if (mandatory == null) {
+				continue;
 			}
 
-			String resultLine = String.format("%s : %s : %s", (a.isMandatory() ? "[M]" : "[O]"), a.getAttributeCode(), value);
+			String value = ea.getAsString();
+
+			// if any are both blank and mandatory, then task is not complete
+			if (mandatory && StringUtils.isBlank(value)) {
+				answered = false;
+			}
+
+			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + ea.getAttributeCode() + " : " + value;
 			log.info("===> " + resultLine);
 		}
 
 		log.info("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
 
 		return answered;
+	}
+
+	/**
+	 * Fill the mandatory map using recursion.
+	 *
+	 * @param map The map to fill
+	 * @param ask The ask to traverse
+	 * @return The filled map
+	 */
+	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
+
+		// add current ask attribute code to map
+		map.put(ask.getAttributeCode(), ask.getMandatory());
+
+		// ensure child asks is not null
+		if (ask.getChildAsks() == null) {
+			return map;
+		}
+
+		// recursively add child ask attribute codes
+		for (Ask child : ask.getChildAsks()) {
+			map = recursivelyFillMandatoryMap(map, child);
+		}
+
+		return map;
 	}
 
 	/**
@@ -435,8 +462,17 @@ public class QwandaUtils {
 	 */
 	public Set<Ask> recursivelyFillFlatSet(Set<Ask> set, Ask ask) {
 
+		String code = ask.getAttributeCode();
 		// add current ask attribute code to map
-		set.add(ask);
+		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
+			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
+		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
+			log.debugf("Attribute %s in exclude list", code);
+		} else if (ask.getReadonly()) {
+			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+		} else {
+			set.add(ask);
+		}
 
 		// ensure child asks is not null
 		if (ask.getChildAsks() == null) {
@@ -544,15 +580,14 @@ public class QwandaUtils {
 	public BaseEntity generateProcessEntity(ProcessData processData) {
 
 		String targetCode = processData.getTargetCode();
-		List<String> attributeCodes = processData.getAttributeCodes();
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
 		// init entity and force the realm
 		log.info("Creating Process Entity " + processData.getProcessEntityCode() + "...");
 		BaseEntity processEntity = new BaseEntity(processData.getProcessEntityCode(), "QuestionBE");
 		processEntity.setRealm(userToken.getProductCode());
 
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
+		List<String> attributeCodes = processData.getAttributeCodes();
 		log.info("Found " + attributeCodes.size() + " active attributes in asks");
 
 		// add an entityAttribute to process entity for each attribute
@@ -574,6 +609,16 @@ public class QwandaUtils {
 
 			processEntity.addAttribute(ea);
 		}
+
+		// now apply all incoming answers
+		processData.getAnswers().stream().forEach(answer -> {
+			// ensure the attribute is set
+			String attributeCode = answer.getAttributeCode();
+			Attribute attribute = getAttribute(attributeCode);
+			answer.setAttribute(attribute);
+			// add answer to entity
+			processEntity.addAnswer(answer);
+		});
 
 		log.info("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
 
@@ -664,14 +709,15 @@ public class QwandaUtils {
 		// grab def entity
 		BaseEntity defBE = defUtils.getDEF(baseEntity);
 
+		String sourceCode = userToken.getUserCode();
+		String targetCode = baseEntity.getCode();
+
 		// create GRP ask
-		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
-		// Question question = new Question("QUE_EDIT_GRP", "Edit " +
-		// baseEntity.getCode() + " : " + baseEntity.getName(),
-		Question question = new Question("QUE_BASEENTITY_GRP",
-				"Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+		Attribute questionAttribute = getAttribute(DefUtils.PREF_QQQ_QUE_GRP);
+		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
+				"Edit " + targetCode + " : " + baseEntity.getName(),
 				questionAttribute);
-		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
+		Ask ask = new Ask(question, sourceCode, targetCode);
 
 		List<Ask> childAsks = new ArrayList<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
@@ -679,16 +725,20 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid atribute
-		baseEntity.getBaseEntityAttributes().stream()
-				.filter(ea -> defBE.containsEntityAttribute("ATT_" + ea.getAttributeCode()))
-				.forEach((ea) -> {
+		defBE.getBaseEntityAttributes().stream()
+			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
+			.forEach((ea) -> {
+				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
+				Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-					String questionCode = "QUE_"
-							+ StringUtils.removeStart(StringUtils.removeStart(ea.getAttributeCode(), "PRI_"), "LNK_");
+				String questionCode = DefUtils.PREF_QUE
+						+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+						DefUtils.PREF_PRI), DefUtils.PREF_LNK);
 
-					Question childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
-					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
+				Question childQues = new Question(questionCode, attribute.getName(), attribute);
+				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
+<<<<<<< HEAD
 					childAsks.add(childAsk);
 
 					if (ea.getAttributeCode().startsWith("LNK_")) {
@@ -711,11 +761,13 @@ public class QwandaUtils {
 						searchUtils.performDropdownSearch(childAsk);
 					}
 				});
+=======
+				childAsks.add(childAsk);
+			});
+>>>>>>> origin/10.1.0-answer-list
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
-
-		// KafkaUtils.writeMsg("webdata", entityMessage);
 
 		return ask;
 	}
@@ -747,6 +799,7 @@ public class QwandaUtils {
          */
         public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
+<<<<<<< HEAD
                 if (StringUtils.isBlank(value)) {
                         return false;
                 }
@@ -832,4 +885,131 @@ public class QwandaUtils {
 
                 return true;
         }
+=======
+	/**
+	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * @param definition The definition to check against
+	 * @param answer An incoming answer
+	 * @param targets The target entities to check, usually processEntity and original target
+	 * @return Boolean
+	 */
+	public Boolean isDuplicate(BaseEntity definition, Answer answer, BaseEntity... targets) {
+
+		// Check if attribute code exists as a UNQ for the DEF
+		List<EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
+		log.info("Found " + uniques.size() + " UNQ attributes");
+
+		String prefix = definition.getValueAsString("PRI_PREFIX");
+
+		for (EntityAttribute entityAttribute : uniques) {
+			// fetch list of unique code combo
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, 
+					entityAttribute.getAttribute().getCode());
+
+			// skip if no value found
+			if (codes == null)
+				continue;
+
+			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
+					.setPageStart(0)
+					.setPageSize(1);
+
+			// ensure we are not counting any of our targets
+			for (BaseEntity target : targets) {
+				log.info("adding not equal " + target.getCode());
+				searchEntity.addAnd("PRI_CODE", SearchEntity.StringFilter.NOT_EQUAL, target.getCode());
+			}
+
+			for (String code : codes) {
+
+				String value = null;
+				if (answer != null && answer.getAttributeCode().equals(code)) {
+					value = answer.getValue();
+				}
+
+				if (value == null) {
+					// get the first value in array of target
+					for (BaseEntity target : targets) {
+
+						log.info("TARGET = " + target.getCode() + ", EMAIL = " + target.getValueAsString("PRI_EMAIL"));
+
+						if (target.containsEntityAttribute(code)) {
+							value = target.getValueAsString(code);
+							if (value.isEmpty())
+								value = null;
+							if (value != null)
+								break;
+						}
+					}
+				}
+
+
+				// value has not yet been answered, not a duplicate
+				if (value == null)
+					return false;
+
+				// clean it up if it is a code
+				if (value.contains("[") && value.contains("]"))
+					value = BaseEntityUtils.cleanUpAttributeValue(value);
+
+				log.info("Adding unique filter: " + code + " like " + value);
+				searchEntity.addFilter(code, SearchEntity.StringFilter.LIKE, "%" + value + "%");
+			}
+
+			// set realm and count results
+			searchEntity.setRealm(userToken.getProductCode());
+			Long count = searchUtils.countBaseEntitys(searchEntity);
+			log.infof("Found %s entities", count);
+			if (count != 0)
+				return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Send a baseentity with a feedback message to be displayed.
+	 * @param parentCode The parentCode of the question group
+	 * @param questionCode The questionCode of the bad answer
+	 * @param attributeCode The attributeCode of the bad answer
+	 * @param feedback The feedback to provide the user
+	 */
+	public void sendAttributeErrorMessage(String parentCode, String questionCode, String attributeCode, String feedback) {
+
+		// send a special FIELDMSG
+		JsonObject json = Json.createObjectBuilder()
+			.add("token", userToken.getToken())
+			.add("cmd_type", "FIELDMSG")
+			.add("msg_type", "CMD_MSG")
+			.add("code", parentCode)
+			.add("attributeCode", attributeCode)
+			.add("questionCode", questionCode)
+			.add("message", Json.createObjectBuilder()
+				.add("value", "This field must be unique and not have already been selected")
+			).build();
+
+		// send to commands topic
+		KafkaUtils.writeMsg("webcmds", json.toString());
+		log.info("Sent error message to frontend : " + json.toString());
+	}
+
+
+	/**
+	 * Return attribute relied on base entity object and attribute code
+	 * @param baseEntity Base entity
+	 * @param attributeCode Attribute code
+	 * @return Return attribute object
+	 */
+	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode){
+		Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
+
+		if (baseEA.isPresent()) {
+			return baseEA.get().getAttribute();
+		}
+
+		Attribute attribute = getAttribute(attributeCode);
+		return attribute;
+	}
+>>>>>>> origin/10.1.0-answer-list
 }

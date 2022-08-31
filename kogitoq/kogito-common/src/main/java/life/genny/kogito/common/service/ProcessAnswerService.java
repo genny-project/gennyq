@@ -8,20 +8,17 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -33,20 +30,14 @@ public class ProcessAnswerService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
-	UserToken userToken;
+	@Inject UserToken userToken;
 
-	@Inject
-	QwandaUtils qwandaUtils;
+	@Inject QwandaUtils qwandaUtils;
+	@Inject BaseEntityUtils beUtils;
+	@Inject DefUtils defUtils;
 
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	DefUtils defUtils;
-
-	@Inject
-	FrontendService frontendService;
+	@Inject FrontendService frontendService;
+	@Inject TaskService taskService;
 
 	/**
 	 * Save incoming answer to the process baseentity.
@@ -55,41 +46,36 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity to store the answer data
 	 * @return The updated process baseentity
 	 */
-	public String storeIncomingAnswer(String answerJson, String processJson) {
-
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		String processId = processData.getProcessId();
-		Answer answer = jsonb.fromJson(answerJson, Answer.class);
+	public ProcessData storeIncomingAnswer(Answer answer, ProcessData processData) {
 
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processData.getProcessEntityCode())) {
 			log.warn("Bad targetCode in answer!");
-			return jsonb.toJson(processData);
+			return processData;
 		}
 
 		// check if the answer is valid for the target
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		if (!defUtils.answerValidForDEF(definition, answer)) {
 			log.error("Bad incoming answer... Not saving!");
-			return jsonb.toJson(processData);
+			return processData;
 		}
 
 		processData.getAnswers().add(answer);
 		qwandaUtils.storeProcessData(processData);
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
-	 * @param processJson
+	 * @param processData
 	 * @return
 	 */
-	public String deleteStoredAnswers(String processJson) {
+	public ProcessData deleteStoredAnswers(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		processData.setAnswers(new ArrayList<>());
 
-		return jsonb.toJson(processData);
+		return processData;
 	}
 
 	/**
@@ -99,23 +85,17 @@ public class ProcessAnswerService {
 	 * @param processBEJson The process entity storing the answer data
 	 * @return Boolean representing whether all mandatory questions have been answered
 	 */
-	public Boolean checkMandatory(String processJson) {
+	public Boolean checkMandatory(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		List<Answer> answers = processData.getAnswers();
-		String processId = processData.getProcessId();
-		String targetCode = processData.getTargetCode();
-		String questionCode = processData.getQuestionCode();
-
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		Ask ask = taskService.fetchAsk(processData);
 
 		// update ask target
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		frontendService.recursivelyUpdateAskTarget(ask, processEntity);
 
 		// find the submit ask
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, answers);
+		List<Answer> answers = processData.getAnswers();
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
 		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		QDataAskMessage msg = new QDataAskMessage(ask);
@@ -134,34 +114,30 @@ public class ProcessAnswerService {
 	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
-	public Boolean checkUniqueness(String processJson, Boolean acceptSubmission) {
+	public Boolean checkUniqueness(ProcessData processData, Boolean acceptSubmission) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
-		BaseEntity target = beUtils.getBaseEntity(processData.getTargetCode());
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
 
-		// Check if attribute code exists as a UNQ for the DEF
-		List<EntityAttribute> uniqueAttributes = definition.findPrefixEntityAttributes("UNQ");
-		log.info("Found " + uniqueAttributes.size() + " UNQ attributes");
-		
-		for (EntityAttribute uniqueAttribute : uniqueAttributes) {
-			// Convert to non def attribute Code
-			final String attributeCode = StringUtils.removeStart(uniqueAttribute.getAttributeCode(), "UNQ_");
-			log.info("Checking UNQ attribute " + attributeCode);
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-			String uniqueValue = answers.stream()
-				.filter(a -> a.getAttributeCode().equals(attributeCode))
-				.findFirst().get().getValue();
+		// send error for last answer in the list
+		// NOTE: This should be reconsidered
+		Answer answer = answers.get(answers.size()-1);
+		String attributeCode = answer.getAttributeCode();
 
-			if (qwandaUtils.isDuplicate(target, definition, attributeCode, uniqueValue))
-				acceptSubmission = false;
+		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
+			String feedback = "Error: This value already exists and must be unique.";
+
+			String parentCode = processData.getQuestionCode();
+			String questionCode = answer.getCode();
+
+			qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
+			acceptSubmission = false;
 		}
 
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		Ask ask = taskService.fetchAsk(processData);
 
 		// disable submit button if not unique
 		qwandaUtils.sendSubmit(ask, acceptSubmission);
@@ -174,9 +150,8 @@ public class ProcessAnswerService {
 	 * @param targetCode The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
-	public void saveAllAnswers(String processJson) {
+	public void saveAllAnswers(ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		String targetCode = processData.getTargetCode();
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 

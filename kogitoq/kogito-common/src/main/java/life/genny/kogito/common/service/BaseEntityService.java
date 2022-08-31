@@ -1,7 +1,6 @@
 package life.genny.kogito.common.service;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -15,7 +14,6 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -204,9 +202,8 @@ public class BaseEntityService {
 	/**
 	 * Merge a process entity into another entity
 	 */
-	public void mergeFromProcessEntity(String entityCode, String processJson) {
+	public void mergeFromProcessEntity(String entityCode, ProcessData processData) {
 
-		ProcessData processData = jsonb.fromJson(processJson, ProcessData.class);
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 

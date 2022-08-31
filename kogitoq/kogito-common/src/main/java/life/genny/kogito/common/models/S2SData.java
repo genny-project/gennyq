@@ -2,7 +2,15 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class S2SData implements Serializable {
+
+    public enum EAbortReason {
+        NONE,
+        CANCEL,
+        TIMEOUT,
+    }
 
     private String questionCode;
     private String targetCode;
@@ -10,7 +18,8 @@ public class S2SData implements Serializable {
     private String pcmCode;
     private String events;
     private String token;
-    private Boolean cancel = false;
+    private TimerData timerData;
+    private EAbortReason abortReason = EAbortReason.NONE;
 
     public S2SData() {
     }
@@ -63,21 +72,62 @@ public class S2SData implements Serializable {
         this.token = token;
     }
 
+    public TimerData getTimerData() {
+        return timerData;
+    }
+
+    public void setTimerData(TimerData timerData) {
+        this.timerData = timerData;
+    }
+
     @Override
     public String toString() {
-        return "S2SData [cancel=" + cancel + ", events=" + events + ", pcmCode=" + pcmCode + ", questionCode="
-                + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + "]";
+        return "S2SData [abortReason=" + abortReason + ", events=" + events + ", pcmCode=" + pcmCode + ", questionCode="
+                + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + ", timerData="
+                + timerData + "]";
     }
 
-    public Boolean getCancel() {
-        return cancel;
+    public EAbortReason getAbortReason() {
+        return abortReason;
     }
 
-    public Boolean isCancel() {
-        return cancel;
+    public void setAbortReason(EAbortReason abortReason) {
+        this.abortReason = abortReason;
     }
 
-    public void setCancel(Boolean cancel) {
-        this.cancel = cancel;
+	@JsonIgnore
+    public Boolean isAborted() {
+        return !abortReason.equals(EAbortReason.NONE);
+    }
+
+	@JsonIgnore
+    public Boolean isCanceled() {
+        return abortReason.equals(EAbortReason.CANCEL);
+    }
+
+	@JsonIgnore
+    public Boolean isExpired() {
+        return abortReason.equals(EAbortReason.TIMEOUT);
+    }
+
+    public Boolean setCancel() {
+        // This method makes it easier within kogito to set a state to avoid enum
+        Boolean oldState = getAbortReason().equals(EAbortReason.CANCEL);
+        setAbortReason(EAbortReason.CANCEL);
+        return oldState;
+    }
+
+    public Boolean setExpired() {
+        // This method makes it easier within kogito to set a state to avoid enum
+        Boolean oldState = getAbortReason().equals(EAbortReason.TIMEOUT);
+        setAbortReason(EAbortReason.TIMEOUT);
+        return oldState;
+    }
+
+    public Boolean setNone() {
+        // This method makes it easier within kogito to set a state to avoid enum
+        Boolean oldState = getAbortReason().equals(EAbortReason.NONE);
+        setAbortReason(EAbortReason.NONE);
+        return oldState;
     }
 }

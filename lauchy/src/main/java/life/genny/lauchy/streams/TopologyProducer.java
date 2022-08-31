@@ -181,7 +181,7 @@ public class TopologyProducer {
 
 		try {
 			for (Answer answer : msg.getItems()) {
-				if (!validateAnswer(data, answer))
+				if (!validateAnswer(answer))
 					break;
 
 				return true;
@@ -199,10 +199,12 @@ public class TopologyProducer {
 	 * @param answer the answer to validate
 	 * @return Boolean representing whether the answer is valid
 	 */
-	public Boolean validateAnswer(String data, Answer answer) {
+	public Boolean validateAnswer(Answer answer) {
 
 		// TODO: check questionCode by fetching from Questions
 		// TODO: check askID by fetching from Tasks
+
+		String attributeCode = answer.getAttributeCode();
 
 		// check that user is the source of message
 		if (!(userToken.getUserCode()).equals(answer.getSourceCode())) {
@@ -234,6 +236,11 @@ public class TopologyProducer {
 			return false;
 		}
 
+		if (!processData.getAttributeCodes().contains(attributeCode)) {
+			log.error("AttributeCode " + attributeCode + " does not existing");
+			return blacklist();
+		}
+
 		// check target is same
 		BaseEntity target = qwandaUtils.generateProcessEntity(processData);
 		if (!target.getCode().equals(answer.getTargetCode())) {
@@ -241,16 +248,12 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
-		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		log.infof("Definition %s found for target %s", defBE.getCode(), answer.getTargetCode());
+		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+		log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
-		String attributeCode = answer.getAttributeCode();
-		Optional<EntityAttribute> fieldAttribute = target.findEntityAttribute(attributeCode);
-		if (fieldAttribute.isEmpty()) {
-			log.errorf("AttributeCode %s is not present", attributeCode);
-			return blacklist();
-		}
+		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
+<<<<<<< HEAD
 		// check duplicate attributes
 		String questionCode = processData.getQuestionCode();
 		String key = String.format("%s:%s", processId, questionCode);
@@ -259,61 +262,34 @@ public class TopologyProducer {
 		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
 			log.error("Duplicate answer detected for target " + answer.getTargetCode());
 			qwandaUtils.sendSubmit(ask, false);
+=======
+		if (definition.findEntityAttribute("UNQ_"+attributeCode).isPresent()) {
+			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
+				log.error("Duplicate answer detected for target " + answer.getTargetCode());
+				String feedback = "Error: This value already exists and must be unique.";
+>>>>>>> origin/10.1.0-answer-list
 
-			JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
-			JsonArray items = dataJson.getJsonArray("items");
+				String parentCode = processData.getQuestionCode();
+				String questionCode = answer.getCode();
 
-			// dumbly loop through items until matching answer. This is ugly
-			String code = "";
-			for (int i = 0; i < items.size(); i++) {
-				JsonObject item = items.getJsonObject(i);
-				log.info("item:" + item.toString());
-				if (item.getString("attributeCode").equals(answer.getAttributeCode())) {
-					code = item.getString("code");
-					break;
-				}
+				qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
+				return false;
 			}
-
-			log.info(dataJson.toString());
-
-			// send a special FIELDMSG
-			String cmd_type = "FIELDMSG";
-			String attrCode = answer.getAttributeCode();
-			JsonObject errorMsgJson = Json.createObjectBuilder()
-					.add("cmd_type", cmd_type)
-					.add("msg_type", "CMD_MSG")
-					.add("code", code)
-					.add("attributeCode", attrCode)
-					.add("questionCode", questionCode)
-					.add("message", Json.createObjectBuilder()
-							.add("value", "This field must be unique and not have already been selected ")
-							.build())
-					.add("token", userToken.getToken())
-					.build();
-			log.info("errorMsg:" + errorMsgJson.toString());
-			KafkaUtils.writeMsg("webcmds", errorMsgJson.toString());
-
-			return false;
 		}
 
 		// TODO: The attribute should be retrieved from askMessage
-		Attribute attribute = qwandaUtils.getAttribute(answer.getAttributeCode());
+		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 
 		// check attribute code is allowed by target DEF
-		if (!defBE.containsEntityAttribute("ATT_" + answer.getAttributeCode())) {
-			log.error("AttributeCode " + answer.getAttributeCode() + " not allowed for " + defBE.getCode());
-			return blacklist();
-		}
-
-		if (!jsonb.toJson(ask).contains(answer.getAttributeCode())) {
-			log.error("AttributeCode " + answer.getAttributeCode() + " does not existing");
+		if (!definition.containsEntityAttribute("ATT_" + attributeCode)) {
+			log.error("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
 			return blacklist();
 		}
 
 		temporaryBucketSearchHandler(answer, target, attribute);
 
 		// handleBucketSearch(ans)
-		if ("PRI_ABN".equals(answer.getAttributeCode())) {
+		if ("PRI_ABN".equals(attributeCode)) {
 
 			if (isValidABN(answer.getValue())) {
 				return true;
@@ -322,7 +298,7 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
-		if ("PRI_CREDITCARD".equals(answer.getAttributeCode())) {
+		if ("PRI_CREDITCARD".equals(attributeCode)) {
 
 			if (isValidCreditCard(answer.getValue())) {
 				return true;
@@ -334,7 +310,7 @@ public class TopologyProducer {
 		// check if answer is null
 		if (answer.getValue() == null) {
 			log.warnf("Received a null answer value from: %s, for: %s", userToken.getUserCode(),
-					answer.getAttributeCode());
+					attributeCode);
 			return true;
 		}
 
