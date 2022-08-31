@@ -3,6 +3,7 @@ package life.genny.kogito.common.service;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -10,6 +11,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.message.QCmdMessage;
+import life.genny.qwandaq.message.QSearchMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -25,6 +27,7 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.constants.GennyConstants;
 
 @ApplicationScoped
 public class SearchService {
@@ -47,6 +50,11 @@ public class SearchService {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	public static enum SearchOptions {
+		PAGINATION,
+		SEARCH
+	}
 
 	/**
 	 * Perform a Detail View search.
@@ -146,15 +154,15 @@ public class SearchService {
 	 * @param bucketCodes The list of bucket codes
 	 */
 	public void sendBucketCodes(List<String> bucketCodes) {
-		QCmdMessage msgProcess = new QCmdMessage("DISPLAY","PROCESS");
+		QCmdMessage msgProcess = new QCmdMessage(GennyConstants.BUCKET_DISPLAY,GennyConstants.BUCKET_PROCESS);
 		msgProcess.setToken(userToken.getToken());
-		KafkaUtils.writeMsg("webcmds", msgProcess);
+		KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgProcess);
 
-		QCmdMessage msgCodes = new QCmdMessage("BUCKET_CODES","BUCKET_CODES");
+		QCmdMessage msgCodes = new QCmdMessage(GennyConstants.BUCKET_CODES,GennyConstants.BUCKET_CODES);
 		msgCodes.setToken(userToken.getToken());
-		msgCodes.setSourceCode("BUCKET_CODES");
+		msgCodes.setSourceCode(GennyConstants.BUCKET_CODES);
 		msgCodes.setTargetCodes(bucketCodes);
-		KafkaUtils.writeMsg("webcmds", msgCodes);
+		KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgCodes);
 	}
 
 	/**
@@ -171,5 +179,120 @@ public class SearchService {
 		});
 
 		return bucketCodes;
+	}
+
+
+	/**
+	 * Send search message to front-end
+	 * @param token Token
+	 * @param searchBE Search base entity from cache
+	 */
+	public void sendMessageBySearchEntity(SearchEntity searchBE) {
+		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
+		searchBeMsg.setToken(userToken.getToken());
+		searchBeMsg.setDestination(GennyConstants.EVENT_WEBCMDS);
+		KafkaUtils.writeMsg(GennyConstants.EVENT_SEARCH, searchBeMsg);
+	}
+
+	/**
+	 * create new entity attribute by attribute code, name and value
+	 * @param attrCode Attribute code
+	 * @param attrName Attribute name
+	 * @param value Attribute value
+	 * @return return json object
+	 */
+	public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, Object value){
+		EntityAttribute ea = null;
+		try {
+			BaseEntity base = beUtils.getBaseEntity(attrCode);
+			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			ea = new EntityAttribute(base, attribute, 1.0, attrCode);
+			if(!attrName.isEmpty()) {
+				ea.setAttributeName(attrName);
+			}
+			if(value instanceof String) {
+				ea.setValueString(value.toString());
+			}
+			if(value instanceof Integer) {
+				ea.setValueInteger((Integer) value);
+			}
+
+			base.addAttribute(ea);
+		} catch(Exception ex){
+			log.error(ex);
+		}
+		return ea;
+	}
+
+	/**
+	 * handle sorting, searching in the table
+	 * @param attrCode Attribute code
+	 * @param attrName Attribute name
+	 * @param value  Value String
+	 * @param targetCode Target code
+	 */
+	public void handleSortAndSearch(String code, String attrName,String value, String targetCode, SearchOptions ops) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
+
+		if(ops.equals(SearchOptions.SEARCH)) {
+			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, attrName, value);
+
+			if (ea != null && attrName.isBlank()) { //sorting
+				searchBE.removeAttribute(code);
+				searchBE.addAttribute(ea);
+			}
+
+			if (!attrName.isBlank()) { //searching text
+				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+			}
+
+		}else if(ops.equals(SearchOptions.PAGINATION)) { //pagination
+			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(GennyConstants.PAGINATION_INDEX);
+			Integer pageSize = searchBE.getPageSize(0);
+			Integer indexVal = 0;
+			Integer pagePos = 0;
+
+			if(aeIndex.isPresent() && pageSize !=null) {
+				if(code.equalsIgnoreCase(GennyConstants.PAGINATION_NEXT)) {
+					indexVal = aeIndex.get().getValueInteger() + 1;
+				} else if (code.equalsIgnoreCase(GennyConstants.PAGINATION_PREV)) {
+					indexVal = aeIndex.get().getValueInteger() - 1;
+				}
+
+				pagePos = (indexVal - 1) * pageSize;
+			}
+			searchBE.setPageStart(pagePos);
+			searchBE.setPageIndex(indexVal);
+		}
+		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
+
+		sendMessageBySearchEntity(searchBE);
+		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
+	}
+
+
+	/**
+	 * Handle search text in bucket page
+	 * @param code Message code
+	 * @param name Message name
+	 * @param value Search text
+	 * @param targetCodes List of target codes
+	 */
+	public void handleBucketSearch(String code, String name,String value, List<String> targetCodes) {
+		sendBucketCodes(targetCodes);
+
+		for(String targetCode : targetCodes) {
+			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
+			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
+
+			if (!name.isBlank()) { //searching text
+				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+			}
+
+			CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
+
+			sendMessageBySearchEntity(searchBE);
+			sendSearchPCM(GennyConstants.PCM_PROCESS, targetCode);
+		}
 	}
 }

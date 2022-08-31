@@ -829,7 +829,11 @@ public class QwandaUtils {
 
 				// clean it up if it is a code
 				if (value.contains("[") && value.contains("]"))
+<<<<<<< HEAD
 					value = beUtils.cleanUpAttributeValue(value);
+=======
+					value = BaseEntityUtils.cleanUpAttributeValue(value);
+>>>>>>> 10.1.0
 
 				log.info("Adding unique filter: " + code + " like " + value);
 				searchEntity.addFilter(code, SearchEntity.StringFilter.LIKE, "%" + value + "%");
