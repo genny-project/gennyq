@@ -5,9 +5,14 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+
+import javax.json.bind.annotation.JsonbTransient;
+
 import java.time.ZoneOffset;
 
 import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class TimerEvent implements Serializable {
 
@@ -101,22 +106,30 @@ public class TimerEvent implements Serializable {
         this.statusCode = statusCode;
     }
 
+	@JsonbTransient
+	@JsonIgnore
     public String getDateTimeUTC() {
         return ZonedDateTime.ofInstant(
                 Instant.ofEpochSecond(timeStamp),
                 ZoneId.of("UTC")).toString();
     }
 
+	@JsonbTransient
+	@JsonIgnore
     public String getDateTime(final String timezoneId) {
         return ZonedDateTime.ofInstant(
                 Instant.ofEpochSecond(timeStamp),
                 ZoneId.of(timezoneId)).toString();
     }
 
+	@JsonbTransient
+	@JsonIgnore
     public String getDateTime(final Long epochSeconds) {
         return LocalDateTime.ofEpochSecond(epochSeconds, 0, ZoneOffset.UTC).toString();
     }
 
+	@JsonbTransient
+	@JsonIgnore
     public Long getNow() {
         return LocalDateTime.now().atZone(
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
