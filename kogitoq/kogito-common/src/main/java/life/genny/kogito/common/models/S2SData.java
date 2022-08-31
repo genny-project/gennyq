@@ -12,6 +12,7 @@ public class S2SData implements Serializable {
         TIMEOUT,
     }
 
+    private String productCode;
     private String questionCode;
     private String targetCode;
     private String sourceCode;
@@ -80,9 +81,18 @@ public class S2SData implements Serializable {
         this.timerData = timerData;
     }
 
+    public String getProductCode() {
+        return productCode;
+    }
+
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
+    }
+
     @Override
     public String toString() {
-        return "S2SData [abortReason=" + abortReason + ", events=" + events + ", pcmCode=" + pcmCode + ", questionCode="
+        return "S2SData (" + getProductCode() + ") [abortReason=" + abortReason + ", events=" + events + ", pcmCode="
+                + pcmCode + ", questionCode="
                 + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + ", timerData="
                 + timerData + "]";
     }
@@ -95,17 +105,17 @@ public class S2SData implements Serializable {
         this.abortReason = abortReason;
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public Boolean isAborted() {
         return !abortReason.equals(EAbortReason.NONE);
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public Boolean isCanceled() {
         return abortReason.equals(EAbortReason.CANCEL);
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public Boolean isExpired() {
         return abortReason.equals(EAbortReason.TIMEOUT);
     }
@@ -130,4 +140,5 @@ public class S2SData implements Serializable {
         setAbortReason(EAbortReason.NONE);
         return oldState;
     }
+
 }

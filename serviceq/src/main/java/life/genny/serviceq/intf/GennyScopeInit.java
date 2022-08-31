@@ -73,7 +73,7 @@ public class GennyScopeInit {
 			// init GennyToken from token string
 			userToken.init(token);
 			log.debug("Token Initialized: " + userToken);
-			beUtils.init(token);
+			beUtils.setUserToken(userToken);
 
 		} catch (Exception e) {
 			log.error("Error initializing token from data: " + data);
