@@ -30,9 +30,7 @@ public class TimerData implements Serializable {
     private Long expiryMin = 3L;// 7L * 24L * 60L; // 7 days
     private Long expiryTimeStamp = 12448167224L; // This must be set during init, default to 20th June 2364
 
-    // private PriorityQueue<TimerEvent> events = new
-    // PriorityQueue<>(PRIORITY_QUEUE_INITIAL_SIZE,
-    // new TimerEventComparator());
+    private TimerEvent currentMilestone = null;
 
     private List<TimerEvent> events = new ArrayList<>(PRIORITY_QUEUE_INITIAL_SIZE);
 
@@ -62,7 +60,7 @@ public class TimerData implements Serializable {
         return currentTimeStampUTC >= this.expiryTimeStamp;
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public Boolean isMilestone() {
         // Get current UTC date time
         Long currentTimeStampUTC = getNow();
@@ -78,17 +76,31 @@ public class TimerData implements Serializable {
         return false;
     }
 
-    public TimerEvent nextMilestone() {
+    public TimerEvent updateMilestone() {
         if ((this.events != null) && (this.events.size() > 0)) {
             this.events.remove(0);
         }
         if ((this.events != null) && (this.events.size() > 0)) {
+            this.currentMilestone = this.events.get(0);
             return this.events.get(0);
+        } else {
+            this.currentMilestone = null;
         }
         return null;
     }
 
-    public TimerEvent getNextTimerEvent() {
+    @JsonIgnore
+    public TimerEvent getCurrentMilestone() {
+        return this.currentMilestone;
+    }
+
+    @JsonIgnore
+    public void setCurrentMilestone(TimerEvent currentMilestone) {
+        this.currentMilestone = currentMilestone;
+    }
+
+    @JsonIgnore
+    public TimerEvent getNextMilestone() {
         if ((this.events != null) && (this.events.size() > 0)) {
             return this.events.get(0);
         }
@@ -103,7 +115,7 @@ public class TimerData implements Serializable {
         this.intervalMin = intervalMin;
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public String getIntervalStr() {
         return "R/PT" + getIntervalMin() + "M";
     }
@@ -160,6 +172,7 @@ public class TimerData implements Serializable {
         }
 
         Collections.sort(this.events, new TimerEventComparator());
+        this.currentMilestone = this.getNextMilestone();
     }
 
 	@JsonbTransient
@@ -172,7 +185,9 @@ public class TimerData implements Serializable {
     @Override
     public String toString() {
         return "TimerData [intervalStr=" + getIntervalStr() + ", elapsedMin=" + elapsedMin + ", expiryMin=" + expiryMin
-                + ", intervalMin=" + intervalMin + ", hasExpired=" + this.hasExpired() + ", events=" + events + "]";
+                + ",timerExpiry=" + expiryTimeStamp
+                + ", intervalMin=" + intervalMin + ", hasExpired=" + this.hasExpired() + ", currentMilestone="
+                + getCurrentMilestone() + ",events=" + events + "]";
     }
 
     class TimerEventComparator implements Comparator<TimerEvent> {
