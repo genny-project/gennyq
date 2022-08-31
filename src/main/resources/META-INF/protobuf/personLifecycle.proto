@@ -232,31 +232,17 @@ message QEventMessage {
 message S2SData { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional EAbortReason abortReason = 1; 
+	optional string events = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string events = 2; 
+	optional string pcmCode = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string pcmCode = 3; 
+	optional string questionCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 4; 
+	optional string sourceCode = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 5; 
+	optional string targetCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 6; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional TimerData timerData = 7; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 8; 
-}
-/* @Indexed */ 
-message TimerData { 
-	option java_package = "life.genny.kogito.common.models";
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 elapsedMin = 1; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryMin = 2; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 intervalMin = 3; 
+	optional string token = 6; 
 }
 /* @Indexed */ 
 message Validation { 
@@ -289,12 +275,6 @@ message Validation {
 	optional string realm = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional kogito.Serializable updated = 14[(kogito_java_class) = "java.time.LocalDateTime"]; 
-}
-enum EAbortReason { 
-	option java_package = "life.genny.kogito.common.models.S2SData";
-	CANCEL = 0;
-	TIMEOUT = 2;
-	NONE = 1;
 }
 enum EEntityStatus { 
 	option java_package = "life.genny.qwandaq";
