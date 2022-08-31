@@ -83,10 +83,10 @@ public class Service2Service {
 			log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 		}
 
-		if (data.isAborted()) {
-			log.info("Sending aborted message " + data.getAbortReason());
-			return data;
-		}
+		// if (data.isAborted()) {
+		// 	log.info("Sending aborted message " + data.getAbortReason());
+		// 	return data;
+		// }
 		return data;
 	}
 
@@ -97,10 +97,10 @@ public class Service2Service {
 	 */
 	public void initialiseScope(S2SData data) {
 		log.info(data.toString());
-		if (data.isAborted()) {
-			log.info("Handle aborted message " + data.getAbortReason());
-			userToken = new UserToken(data.getToken());
-		}
+		// if (data.isAborted()) {
+		// 	log.info("Handle aborted message " + data.getAbortReason());
+		// 	userToken = new UserToken(data.getToken());
+		// }
 		scope.init(jsonb.toJson(data));
 
 		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());

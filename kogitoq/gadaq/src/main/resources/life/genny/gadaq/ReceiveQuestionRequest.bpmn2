@@ -21,8 +21,6 @@
   <bpmn2:itemDefinition id="_D28E8E34-67B9-4459-9CA3-80C230612756" structureRef=""/>
   <bpmn2:itemDefinition id="_C49A37B7-4642-482B-9134-6DD7002BC9B9" structureRef=""/>
   <bpmn2:itemDefinition id="__AC12C7E3-434A-424B-B220-5C9CA5382BCC_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:itemDefinition id="__36C22626-601C-4362-8679-C175698C763C_eventInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:itemDefinition id="abort_process_questionsType" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_questionCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_targetCodeInputXItem" structureRef="String"/>
@@ -339,7 +337,7 @@ System.out.println("Set Abort Reason to Expired");
           <drools:metaValue><![CDATA[Submitted]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>_5A9C1A15-B5AF-430E-AF29-77041298B1F3</bpmn2:incoming>
+      <bpmn2:incoming>_1DF0CD7B-6676-4AD7-A717-45D06A3F54DB</bpmn2:incoming>
       <bpmn2:dataInput id="_9F4D91BB-FD35-44EA-86E0-292A01137A71_eventsInputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__9F4D91BB-FD35-44EA-86E0-292A01137A71_eventsInputXItem" name="events"/>
       <bpmn2:dataInputAssociation>
         <bpmn2:sourceRef>data</bpmn2:sourceRef>
@@ -356,8 +354,8 @@ System.out.println("Set Abort Reason to Expired");
           <drools:metaValue><![CDATA[Add Token]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>_1DAFF0ED-0E2E-4DCF-9937-715563325100</bpmn2:incoming>
-      <bpmn2:outgoing>_25D73BF4-701D-439C-95C1-5068F8629F0E</bpmn2:outgoing>
+      <bpmn2:incoming>_E3EBFC1C-E2C7-4A8C-BD68-2F12E6E46FFA</bpmn2:incoming>
+      <bpmn2:outgoing>_1DF0CD7B-6676-4AD7-A717-45D06A3F54DB</bpmn2:outgoing>
       <bpmn2:ioSpecification>
         <bpmn2:dataInput id="_5E941DE0-7695-414D-AFBC-1940672ECDBC_dataInputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__5E941DE0-7695-414D-AFBC-1940672ECDBC_dataInputXItem" name="data"/>
         <bpmn2:dataOutput id="_5E941DE0-7695-414D-AFBC-1940672ECDBC_dataOutputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__5E941DE0-7695-414D-AFBC-1940672ECDBC_dataOutputXItem" name="data"/>
@@ -458,7 +456,7 @@ System.out.println("Set Abort Reason to Expired");
           <drools:metaValue><![CDATA[Scope Init]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>_399565CF-E9E7-49B2-8871-57B48902B246</bpmn2:incoming>
+      <bpmn2:incoming>_0E619AC8-C3A9-40DC-85CB-ACDCF20E3F92</bpmn2:incoming>
       <bpmn2:outgoing>_5098684C-954E-46E8-A0A5-9E81A54A16BA</bpmn2:outgoing>
       <bpmn2:ioSpecification>
         <bpmn2:dataInput id="_AC12C7E3-434A-424B-B220-5C9CA5382BCC_dataInputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__AC12C7E3-434A-424B-B220-5C9CA5382BCC_dataInputXItem" name="data"/>
@@ -511,23 +509,9 @@ kcontext.setVariable("pcmCode", pcmCode);
 kcontext.setVariable("events", events);
 kcontext.setVariable("productCode",productCode);</bpmn2:script>
     </bpmn2:scriptTask>
-    <bpmn2:boundaryEvent id="_CF147BB4-4D29-4C2E-AC81-BD6CFEE91194" drools:dockerinfo="50.717948717948715^73|" drools:boundaryca="false" name="Timers" attachedToRef="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F" cancelActivity="false">
-      <bpmn2:extensionElements>
-        <drools:metaData name="elementname">
-          <drools:metaValue><![CDATA[Timers]]></drools:metaValue>
-        </drools:metaData>
-      </bpmn2:extensionElements>
-      <bpmn2:outgoing>_9321E577-A90A-4074-B5DE-6E618666FA31</bpmn2:outgoing>
-      <bpmn2:timerEventDefinition>
-        <bpmn2:timeCycle xsi:type="bpmn2:tFormalExpression" language="none">R/PT1M</bpmn2:timeCycle>
-      </bpmn2:timerEventDefinition>
-    </bpmn2:boundaryEvent>
   </bpmn2:process>
   <bpmndi:BPMNDiagram>
     <bpmndi:BPMNPlane bpmnElement="receiveQuestionRequest">
-      <bpmndi:BPMNShape id="shape__CF147BB4-4D29-4C2E-AC81-BD6CFEE91194" bpmnElement="_CF147BB4-4D29-4C2E-AC81-BD6CFEE91194">
-        <dc:Bounds height="56" width="56" x="824.2179487179487" y="183.00639755936524"/>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC" bpmnElement="_DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC">
         <dc:Bounds height="102" width="154" x="546" y="109"/>
       </bpmndi:BPMNShape>
@@ -536,9 +520,6 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__AC12C7E3-434A-424B-B220-5C9CA5382BCC" bpmnElement="_AC12C7E3-434A-424B-B220-5C9CA5382BCC">
         <dc:Bounds height="104" width="123" x="374.5" y="106"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="shape__36C22626-601C-4362-8679-C175698C763C" bpmnElement="_36C22626-601C-4362-8679-C175698C763C">
-        <dc:Bounds height="56" width="56" x="1355" y="294.12799999999993"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__7F29E255-83EA-4D3A-B92B-1A792AECDD0F" bpmnElement="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F">
         <dc:Bounds height="101" width="217" x="773.5" y="110.00639755936524"/>
@@ -597,7 +578,7 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <di:waypoint x="623" y="160"/>
         <di:waypoint x="773.5" y="160.50639755936524"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_to_shape__AA89502E-F1DC-4D1E-B528-6BC4B583007D" bpmnElement="_0E619AC8-C3A9-40DC-85CB-ACDCF20E3F92">
+      <bpmndi:BPMNEdge id="edge_shape__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_to_shape__AC12C7E3-434A-424B-B220-5C9CA5382BCC" bpmnElement="_0E619AC8-C3A9-40DC-85CB-ACDCF20E3F92">
         <di:waypoint x="82" y="160"/>
         <di:waypoint x="171" y="160"/>
       </bpmndi:BPMNEdge>
@@ -605,25 +586,12 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <di:waypoint x="248" y="160"/>
         <di:waypoint x="374.5" y="158"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__D620A71D-6745-44D9-9C6D-657B8F82C9FD_to_shape__36C22626-601C-4362-8679-C175698C763C" bpmnElement="_096327D3-5F00-4B06-B8CE-011B57D2FC12">
-        <di:waypoint x="1282" y="160"/>
-        <di:waypoint x="1281.9999999991953" y="322.12799999999993"/>
-        <di:waypoint x="1355" y="322.12799999999993"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_to_shape__92850423-C6A9-48F8-B96A-2FDE9CDD7B46" bpmnElement="_E3EBFC1C-E2C7-4A8C-BD68-2F12E6E46FFA">
+      <bpmndi:BPMNEdge id="edge_shape__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_to_shape__5E941DE0-7695-414D-AFBC-1940672ECDBC" bpmnElement="_E3EBFC1C-E2C7-4A8C-BD68-2F12E6E46FFA">
         <di:waypoint x="882" y="160.50639755936524"/>
-        <di:waypoint x="1020" y="160"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__92850423-C6A9-48F8-B96A-2FDE9CDD7B46_to_shape__5E941DE0-7695-414D-AFBC-1940672ECDBC" bpmnElement="_1DAFF0ED-0E2E-4DCF-9937-715563325100">
-        <di:waypoint x="1048" y="160"/>
         <di:waypoint x="1104.5" y="160"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__5E941DE0-7695-414D-AFBC-1940672ECDBC_to_shape__D620A71D-6745-44D9-9C6D-657B8F82C9FD" bpmnElement="_25D73BF4-701D-439C-95C1-5068F8629F0E">
+      <bpmndi:BPMNEdge id="edge_shape__5E941DE0-7695-414D-AFBC-1940672ECDBC_to_shape__9F4D91BB-FD35-44EA-86E0-292A01137A71" bpmnElement="_1DF0CD7B-6676-4AD7-A717-45D06A3F54DB">
         <di:waypoint x="1160" y="160"/>
-        <di:waypoint x="1254" y="160"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__D620A71D-6745-44D9-9C6D-657B8F82C9FD_to_shape__9F4D91BB-FD35-44EA-86E0-292A01137A71" bpmnElement="_5A9C1A15-B5AF-430E-AF29-77041298B1F3">
-        <di:waypoint x="1282" y="160"/>
         <di:waypoint x="1354.782070532695" y="160"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__413AF7A9-908A-47A9-BAA2-AE97BEEFEC19_to_shape__58DF78B6-FE26-4BDF-B820-E8C98FD0EE4C" bpmnElement="_2E55CD6F-3CEB-4976-B88F-EEAC5E8B8A5A">

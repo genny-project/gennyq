@@ -36,7 +36,6 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -72,9 +71,6 @@ public class InternalConsumer {
 
 	@Inject
 	CapabilityUtils capabilityUtils;
-
-	@Inject
-	GraphQLUtils gqlUtils;
 
 	@Inject
 	SearchUtils searchUtils;
@@ -131,7 +127,7 @@ public class InternalConsumer {
 		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
-			ProcessData processData = gqlUtils.fetchProcessData(processId);
+			ProcessData processData = qwandaUtils.fetchProcessData(processId);
 			if (processData == null) {
 				log.error("Process data not found for processId: " + processId);
 				return;
@@ -284,7 +280,7 @@ public class InternalConsumer {
 								}
 								log.info("Adding BE DTT filter");
 
-								if (logic != null && logic.equals("AND")) {
+								if ("AND".equals(logic)) {
 									searchBE.addAnd(attributeCode, stringFilter, val);
 								} else if (logic != null && logic.equals("OR")) {
 									searchBE.addOr(attributeCode, stringFilter, val);

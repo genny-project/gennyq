@@ -374,11 +374,13 @@ public class BaseEntityUtils {
 	 * Hope this makes our code look a little
 	 * nicer :)
 	 * <p>
+	 * 
+	 * TODO: Consider moving this to CommonUtils
 	 *
 	 * @param value The value to clean
 	 * @return A clean string
 	 */
-	public static String cleanUpAttributeValue(String value) {
+	public String cleanUpAttributeValue(String value) {
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
 	}

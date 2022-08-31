@@ -31,7 +31,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.io.Serializable;
+
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -81,7 +81,7 @@ import com.querydsl.core.annotations.QueryExclude;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 
 @RegisterForReflection
-public class Question extends CodedEntity implements Serializable {
+public class Question extends CodedEntity {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 

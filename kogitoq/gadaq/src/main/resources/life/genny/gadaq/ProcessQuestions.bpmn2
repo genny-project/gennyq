@@ -1065,7 +1065,8 @@ kcontext.setVariable("status", "COMPLETE");
         </bpmn2:extensionElements>
         <bpmn2:incoming>_5F40D4D4-170E-4E1C-8C4C-F8AD1EE21AD7</bpmn2:incoming>
         <bpmn2:outgoing>_35C4070C-CAA2-43DB-A19E-4612E22DB7B8</bpmn2:outgoing>
-        <bpmn2:script>System.out.println("Cancel detected in processQuestions");
+        <bpmn2:script>/*
+System.out.println("Cancel detected in processQuestions");
 if (data!=null) {
     System.out.println("data is not null:"+data);
     data.setCancel();
@@ -1073,7 +1074,8 @@ if (data!=null) {
 } else {
    System.out.println("data IS null:");
  
-}</bpmn2:script>
+}
+*/</bpmn2:script>
       </bpmn2:scriptTask>
       <bpmn2:endEvent id="_B974CC91-BB30-4C37-AF62-9B0871CDFBDF">
         <bpmn2:incoming>_26B6516D-8073-4422-98A2-3868994EEB79</bpmn2:incoming>

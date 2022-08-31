@@ -394,7 +394,7 @@ public class SearchUtils {
 			String calBe = be.getValueAsString(attributeCode);
 
 			if (calBe != null && !calBe.isBlank()) {
-				String calVal = BaseEntityUtils.cleanUpAttributeValue(calBe);
+				String calVal = beUtils.cleanUpAttributeValue(calBe);
 				String[] codeArr = calVal.split(",");
 
 				for (String code : codeArr) {
