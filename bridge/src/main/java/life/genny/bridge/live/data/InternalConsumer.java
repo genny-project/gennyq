@@ -4,6 +4,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import life.genny.bridge.blacklisting.BlackListInfo;
@@ -25,6 +26,7 @@ import org.jboss.logging.Logger;
  *
  * @author hello@gada.io
  */
+@ApplicationScoped
 public class InternalConsumer {
 
 	private static final Logger log = Logger.getLogger(InternalConsumer.class);
@@ -111,9 +113,6 @@ public class InternalConsumer {
 	 */
 	public void handleIncomingMessage(String arg) {
 
-		// String jsonAttribute = (String) CacheUtils.readCache("internmatch", "attributes");
-
-		// log.debug("Outgoing Payload jsonAttribute = " + jsonAttribute);
 		log.debug("Outgoing Payload = " + arg);
 
 		String incoming = arg;

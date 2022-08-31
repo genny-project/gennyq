@@ -1,5 +1,6 @@
 package life.genny.qwandaq.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -52,16 +53,17 @@ public class GennyToken implements Serializable {
 	public Set<String> userRoles = new HashSet<String>();
 
 	/**
-	* Constructor. Default.
+	 * Constructor. Default.
 	 */
-	public GennyToken() { }
+	public GennyToken() {
+	}
 
 	/**
-	* Constructor.
-	* Create a GennyToken from a code and jwt string.
-	*
-	* @param code The code and userCode to set
-	* @param token The jwt string
+	 * Constructor.
+	 * Create a GennyToken from a code and jwt string.
+	 *
+	 * @param code  The code and userCode to set
+	 * @param token The jwt string
 	 */
 	public GennyToken(final String code, final String token) {
 
@@ -73,10 +75,10 @@ public class GennyToken implements Serializable {
 	}
 
 	/**
-	* Constructor.
-	* Create a GennyToken from a jwt string.
-	*
-	* @param token The jwt string
+	 * Constructor.
+	 * Create a GennyToken from a jwt string.
+	 *
+	 * @param token The jwt string
 	 */
 	public GennyToken(final String token) {
 		init(token);
@@ -119,10 +121,10 @@ public class GennyToken implements Serializable {
 		String azp = getString("azp");
 
 		// If azp is alyson then it must be internmatch
-		// NOTE: solution would be to eliminate any internmatch 
+		// NOTE: solution would be to eliminate any internmatch
 		// tokens using this client id.
-		if ("alyson".equals(azp)) {
-			//log.warn("alyson clientid detected.");
+		if (("alyson".equals(azp)) || ("backend".equals(azp))) {
+			// log.warn("alyson clientid detected.");
 			azp = "internmatch";
 		}
 
@@ -200,7 +202,6 @@ public class GennyToken implements Serializable {
 		return userUUID;
 	}
 
-
 	public void setUserRoles(Set<String> userRoles) {
 		this.userRoles = userRoles;
 	}
@@ -261,6 +262,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getSessionCode() {
 		return getString("session_state");
 	}
@@ -269,6 +271,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getUsername() {
 		return getString("preferred_username");
 	}
@@ -277,6 +280,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getKeycloakUrl() {
 		String fullUrl = getString("iss");
 		URI uri;
@@ -296,6 +300,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getClientCode() {
 		return getString("aud");
 	}
@@ -304,6 +309,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getEmail() {
 		return getString("email");
 	}
@@ -319,6 +325,7 @@ public class GennyToken implements Serializable {
 	 * @return String the token jti field
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getJTI() {
 		return getString("jti");
 	}
@@ -327,6 +334,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getUuid() {
 		String uuid = null;
 
@@ -352,6 +360,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getString(final String key) {
 		return (String) adecodedTokenMap.get(key);
 	}
@@ -433,8 +442,14 @@ public class GennyToken implements Serializable {
 	 * @return LocalDateTime
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public LocalDateTime getAuthDateTime() {
-		Long auth_timestamp = ((Number) adecodedTokenMap.get("auth_time")).longValue();
+		Long auth_timestamp = null;
+		try {
+			auth_timestamp = ((Number) adecodedTokenMap.get("auth_time")).longValue();
+		} catch (Exception e) {
+			auth_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue(); // this is the 'issued at' timestamp
+		}
 		LocalDateTime authTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(auth_timestamp),
 				TimeZone.getDefault().toZoneId());
 		return authTime;
@@ -444,6 +459,7 @@ public class GennyToken implements Serializable {
 	 * @return LocalDateTime
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public LocalDateTime getExpiryDateTime() {
 		Long exp_timestamp = ((Number) adecodedTokenMap.get("exp")).longValue();
 		LocalDateTime expTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(exp_timestamp),
@@ -455,6 +471,7 @@ public class GennyToken implements Serializable {
 	 * @return OffsetDateTime
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public OffsetDateTime getExpiryDateTimeInUTC() {
 
 		Long exp_timestamp = ((Number) adecodedTokenMap.get("exp")).longValue();
@@ -470,6 +487,7 @@ public class GennyToken implements Serializable {
 	 * @return Integer
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public Integer getSecondsUntilExpiry() {
 
 		OffsetDateTime expiry = getExpiryDateTimeInUTC();
@@ -482,6 +500,7 @@ public class GennyToken implements Serializable {
 	 * @return LocalDateTime the JWT Issue datetime object
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public LocalDateTime getiatDateTime() {
 		Long iat_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue();
 		LocalDateTime iatTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(iat_timestamp),
@@ -493,6 +512,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getEmailUserCode() {
 		String username = (String) adecodedTokenMap.get("preferred_username");
 		String normalisedUsername = getNormalisedUsername(username);
@@ -505,6 +525,7 @@ public class GennyToken implements Serializable {
 	 * @return String
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getNormalisedUsername(final String rawUsername) {
 		if (rawUsername == null) {
 			return null;
@@ -536,6 +557,7 @@ public class GennyToken implements Serializable {
 	 * @return the realm and usercode concatenated
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public String getRealmUserCode() {
 		return getRealm() + "+" + getUserCode();
 	}
@@ -545,6 +567,7 @@ public class GennyToken implements Serializable {
 	 * @return Map&lt;String, Object&gt;
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public Map<String, Object> getJsonMap(final String json) {
 		final JsonObject jsonObj = getDecodedToken(json);
 		return getJsonMap(jsonObj);
@@ -555,6 +578,7 @@ public class GennyToken implements Serializable {
 	 * @return Map&lt;String, Object&gt;
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public static Map<String, Object> getJsonMap(final JsonObject jsonObj) {
 		final String json = jsonObj.toString();
 		Map<String, Object> map = new HashMap<String, Object>();
@@ -582,10 +606,11 @@ public class GennyToken implements Serializable {
 	 * @return JsonObject
 	 */
 	@JsonbTransient
+	@JsonIgnore
 	public JsonObject getDecodedToken(final String bearerToken) {
 
 		final String[] chunks = bearerToken.split("\\.");
-		if(chunks.length < 2 || StringUtils.isBlank(bearerToken)) {
+		if (chunks.length < 2 || StringUtils.isBlank(bearerToken)) {
 			log.error("Invalid Bearer Token!");
 			log.error("Bearer: [" + bearerToken + "]");
 		}

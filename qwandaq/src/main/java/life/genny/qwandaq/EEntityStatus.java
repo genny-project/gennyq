@@ -29,12 +29,11 @@ public enum EEntityStatus {
 	public void setStatus(Integer status) {
 		this.status = status;
 	}
-  
 
 	public static EEntityStatus valueOf(Integer value)
 	{
 		for (EEntityStatus enumValue : EEntityStatus.values()) {
-			if (enumValue.getStatus().equals(value)) {
+			if (value.equals(enumValue.ordinal())) {
 				return enumValue;
 			}
 

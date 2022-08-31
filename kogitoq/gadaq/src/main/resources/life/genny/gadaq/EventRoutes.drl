@@ -147,9 +147,34 @@ then
 	retract(msg);
 end
 
+rule RouteGenericEditItem
+salience 5000
+when
+	msg: QEventMessage( data.code == "ACT_EDIT" && data.parentCode matches "SBE_.*" )
+	kogitoUtils : KogitoUtils()
+	userToken: UserToken()
+	kogitoUtils : KogitoUtils()
+	beUtils: BaseEntityUtils()
+	defUtils:	DefUtils()
+	qwandaUtils: QwandaUtils()
+then
+
+System.out.println("Incoming parent code = " + msg.getData().getParentCode());
+
+	JsonObject payload = Json.createObjectBuilder()
+		.add("questionCode", "QUE_BASEENTITY_GRP")
+		.add("userCode", userToken.getUserCode())
+		.add("sourceCode", userToken.getUserCode())
+		.add("targetCode", msg.getData().getTargetCode())
+		.build();
+
+	kogitoUtils.triggerWorkflow(SELF,"testQuestion", payload);
+	retract(msg);
+end
+
 rule RouteEditItem
 when
-	msg: QEventMessage( data.code == "ACT_EDIT" )
+	msg: QEventMessage( data.code == "ACT_EDIT"  && !data.parentCode matches "SBE_.*" )
 	kogitoUtils : KogitoUtils()
 then
 	kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);

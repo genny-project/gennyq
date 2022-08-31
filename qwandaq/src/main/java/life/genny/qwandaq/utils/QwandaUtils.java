@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,6 +14,8 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
@@ -31,6 +34,8 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -401,6 +406,39 @@ public class QwandaUtils {
 	}
 
 	/**
+	 * Fill the flat set of asks using recursion.
+	 * @param set The set to fill
+	 * @param ask The ask to traverse
+	 * @return The filled set
+	 */
+	public Set<Ask> recursivelyFillFlatSet(Set<Ask> set, Ask ask) {
+
+		String code = ask.getAttributeCode();
+		// add current ask attribute code to map
+		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
+			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
+		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
+			log.debugf("Attribute %s in exclude list", code);
+		} else if (ask.getReadonly()) {
+			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+		} else {
+			set.add(ask);
+		}
+
+		// ensure child asks is not null
+		if (ask.getChildAsks() == null) {
+			return set;
+		}
+
+		// recursively add child ask attribute codes
+		for (Ask child : ask.getChildAsks()) {
+			set = recursivelyFillFlatSet(set, child);
+		}
+
+		return set;
+	}
+
+	/**
 	 * Find the submit ask using recursion.
 	 *
 	 * @param ask      The ask to traverse
@@ -443,6 +481,99 @@ public class QwandaUtils {
 		KafkaUtils.writeMsg("webcmds", msg);
 
 		return enable;
+	}
+
+	/**
+	 * Save process data to cache.
+	 * @param processData The data to save
+	 */
+	public void storeProcessData(ProcessData processData) {
+
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:PROCESS_DATA", processData.getProcessId()); 
+
+		CacheUtils.putObject(productCode, key, processData);
+		log.infof("ProcessData cached to %s", key);
+	}
+
+	/**
+	 * clear process data from cache.
+	 * @param processId The id of the data to clear
+	 */
+	public void clearProcessData(String processId) {
+
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:PROCESS_DATA", processId); 
+
+		CacheUtils.removeEntry(productCode, key);
+		log.infof("ProcessData removed from cache: %s", key);
+	}
+
+	/**
+	 * Fetch process data from cache.
+	 * @param processId The id of the data to fetch
+	 * @return The saved data
+	 */
+	public ProcessData fetchProcessData(String processId) {
+		
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:PROCESS_DATA", processId); 
+
+		return CacheUtils.getObject(productCode, key, ProcessData.class);
+	}
+
+	/**
+	 * Setup the process entity used to store task data.
+	 *
+	 * @param processData The process data
+	 * @return The updated process entity
+	 */
+	public BaseEntity generateProcessEntity(ProcessData processData) {
+
+		String targetCode = processData.getTargetCode();
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
+		// init entity and force the realm
+		log.info("Creating Process Entity " + processData.getProcessEntityCode() + "...");
+		BaseEntity processEntity = new BaseEntity(processData.getProcessEntityCode(), "QuestionBE");
+		processEntity.setRealm(userToken.getProductCode());
+
+		List<String> attributeCodes = processData.getAttributeCodes();
+		log.info("Found " + attributeCodes.size() + " active attributes in asks");
+
+		// add an entityAttribute to process entity for each attribute
+		for (String code : attributeCodes) {
+
+			// check for existing attribute in target
+			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
+
+				// otherwise create new attribute
+				Attribute attribute = getAttribute(code);
+				Object value = null;
+				// default toggles to false
+				String className = attribute.getDataType().getClassName();
+				if (className.contains("Boolean") || className.contains("bool"))
+					value = false;
+
+				return new EntityAttribute(processEntity, attribute, 1.0, value);
+			});
+
+			processEntity.addAttribute(ea);
+		}
+
+		// now apply all incoming answers
+		processData.getAnswers().stream().forEach(answer -> {
+			// ensure the attribute is set
+			String attributeCode = answer.getAttributeCode();
+			Attribute attribute = getAttribute(attributeCode);
+			answer.setAttribute(attribute);
+			// add answer to entity
+			processEntity.addAnswer(answer);
+		});
+
+		log.info("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
+
+		return processEntity;
 	}
 
 	/**
@@ -529,14 +660,15 @@ public class QwandaUtils {
 		// grab def entity
 		BaseEntity defBE = defUtils.getDEF(baseEntity);
 
+		String sourceCode = userToken.getUserCode();
+		String targetCode = baseEntity.getCode();
+
 		// create GRP ask
-		Attribute questionAttribute = getAttribute("QQQ_QUESTION_GROUP");
-		// Question question = new Question("QUE_EDIT_GRP", "Edit " +
-		// baseEntity.getCode() + " : " + baseEntity.getName(),
-		Question question = new Question("QUE_BASEENTITY_GRP",
-				"Edit " + baseEntity.getCode() + " : " + baseEntity.getName(),
+		Attribute questionAttribute = getAttribute(DefUtils.PREF_QQQ_QUE_GRP);
+		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
+				"Edit " + targetCode + " : " + baseEntity.getName(),
 				questionAttribute);
-		Ask ask = new Ask(question, userToken.getUserCode(), baseEntity.getCode());
+		Ask ask = new Ask(question, sourceCode, targetCode);
 
 		List<Ask> childAsks = new ArrayList<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
@@ -544,43 +676,24 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid atribute
-		baseEntity.getBaseEntityAttributes().stream()
-				.filter(ea -> defBE.containsEntityAttribute("ATT_" + ea.getAttributeCode()))
-				.forEach((ea) -> {
+		defBE.getBaseEntityAttributes().stream()
+			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
+			.forEach((ea) -> {
+				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
+				Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-					String questionCode = "QUE_"
-							+ StringUtils.removeStart(StringUtils.removeStart(ea.getAttributeCode(), "PRI_"), "LNK_");
+				String questionCode = DefUtils.PREF_QUE
+						+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+						DefUtils.PREF_PRI), DefUtils.PREF_LNK);
 
-					Question childQues = new Question(questionCode, ea.getAttribute().getName(), ea.getAttribute());
-					Ask childAsk = new Ask(childQues, userToken.getUserCode(), baseEntity.getCode());
+				Question childQues = new Question(questionCode, attribute.getName(), attribute);
+				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-					childAsks.add(childAsk);
-
-					if (ea.getAttributeCode().startsWith("LNK_")) {
-						if (ea.getValueString() != null) {
-
-							String[] codes = BaseEntityUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
-
-							for (String code : codes) {
-								try {
-									BaseEntity link = beUtils.getBaseEntityByCode(code);
-									entityMessage.add(link);
-								} catch (Exception ex) {
-									log.error(ex);
-								}
-							}
-						}
-					}
-
-					if (defBE.containsEntityAttribute("SER_" + ea.getAttributeCode())) {
-						searchUtils.performDropdownSearch(childAsk);
-					}
-				});
+				childAsks.add(childAsk);
+			});
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
-
-		// KafkaUtils.writeMsg("webdata", entityMessage);
 
 		return ask;
 	}
@@ -603,106 +716,128 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Check the uniqueness of an answer
-	 * 
-	 * @param target        The target entity
-	 * @param definition    The definition entity
-	 * @param attributeCode The code of the attribute
-	 * 
-	 * @param value         The value to check
-	 * @return is duplicate bool
+	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * @param definition The definition to check against
+	 * @param answer An incoming answer
+	 * @param targets The target entities to check, usually processEntity and original target
+	 * @return Boolean
 	 */
-	public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
-
-		if (StringUtils.isBlank(value)) {
-			return false;
-		}
+	public Boolean isDuplicate(BaseEntity definition, Answer answer, BaseEntity... targets) {
 
 		// Check if attribute code exists as a UNQ for the DEF
-		String uniqueCode = String.format("UNQ_%s", attributeCode);
-		List<String> unqs = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, uniqueCode);
-
-		if (unqs == null || unqs.isEmpty()) {
-			log.infof("UNQ_%s Not present!", attributeCode);
-			return false;
-		}
-
-		BaseEntity originalTarget = beUtils
-				.getBaseEntityByCode(definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3));
-		log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
-		log.info("Attribute " + uniqueCode + " must satisfy " + unqs.toString());
-		log.info("Value " + value);
+		List<EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
+		log.info("Found " + uniques.size() + " UNQ attributes");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
-		log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
-		SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
-				.setPageStart(0)
-				.setPageSize(1);
 
-		searchEntity.setRealm(target.getRealm());
+		for (EntityAttribute entityAttribute : uniques) {
+			// fetch list of unique code combo
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, 
+					entityAttribute.getAttribute().getCode());
 
-		log.info("Checking all the existing target data");
-		for (EntityAttribute ea : target.getBaseEntityAttributes()) {
-			log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
-		}
+			// skip if no value found
+			if (codes == null)
+				continue;
 
-		log.infof("Looping through %s unique attribute", unqs.size());
-		String originalValue = value;
-		for (String unique : unqs) {
+			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
+					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
+					.setPageStart(0)
+					.setPageSize(1);
 
-			if (!unique.equals(attributeCode)) { // This unique is not matching the incoming attributeCode
-				if (!target.containsEntityAttribute(unique)) {
-					value = originalTarget.getValueAsString(unique); // fetch from the original
-				} else {
-					value = target.getValueAsString(unique); // else fetch from the working processBE
-				}
-			} else {
-				value = originalValue;
+			// ensure we are not counting any of our targets
+			for (BaseEntity target : targets) {
+				log.info("adding not equal " + target.getCode());
+				searchEntity.addAnd("PRI_CODE", SearchEntity.StringFilter.NOT_EQUAL, target.getCode());
 			}
 
-			if (value.contains("[") && value.contains("]"))
-				value = BaseEntityUtils.cleanUpAttributeValue(value);
+			for (String code : codes) {
 
-			log.info("Adding unique filter: " + unique + " like " + value);
-			searchEntity.addFilter(unique, SearchEntity.StringFilter.LIKE, "%" + value + "%");
+				String value = null;
+				if (answer != null && answer.getAttributeCode().equals(code)) {
+					value = answer.getValue();
+				}
+
+				if (value == null) {
+					// get the first value in array of target
+					for (BaseEntity target : targets) {
+
+						log.info("TARGET = " + target.getCode() + ", EMAIL = " + target.getValueAsString("PRI_EMAIL"));
+
+						if (target.containsEntityAttribute(code)) {
+							value = target.getValueAsString(code);
+							if (value.isEmpty())
+								value = null;
+							if (value != null)
+								break;
+						}
+					}
+				}
+
+
+				// value has not yet been answered, not a duplicate
+				if (value == null)
+					return false;
+
+				// clean it up if it is a code
+				if (value.contains("[") && value.contains("]"))
+					value = BaseEntityUtils.cleanUpAttributeValue(value);
+
+				log.info("Adding unique filter: " + code + " like " + value);
+				searchEntity.addFilter(code, SearchEntity.StringFilter.LIKE, "%" + value + "%");
+			}
+
+			// set realm and count results
+			searchEntity.setRealm(userToken.getProductCode());
+			Long count = searchUtils.countBaseEntitys(searchEntity);
+			log.infof("Found %s entities", count);
+			if (count != 0)
+				return true;
 		}
 
-		searchEntity.setRealm(userToken.getProductCode());
-
-		Long count = searchUtils.countBaseEntitys(searchEntity);
-		log.infof("Found %s entities", count);
-		if (count == 0)
-			return false;
-
-		// not duplicate if it is targets code
-		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
-		if (codes != null && !codes.isEmpty() && codes.get(0).equals(target.getCode()))
-			return false;
-
-		// if duplicate found then send back the baseentity with the conflicting
-		// attribute and feedback message to display
-		// QUE target code needs to be set
-		BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
-		Optional<EntityAttribute> optEa = target.findEntityAttribute(attributeCode);
-		if (optEa.isPresent()) {
-			String feedback = "Error: This value already exists and must be unique.";
-			EntityAttribute ea = optEa.get();
-			ea.setFeedback(feedback);
-			errorBE.addAttribute(ea);
-			log.info("Added " + ea);
-
-			QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
-			msg.setToken(userToken.getToken());
-			msg.setTag("Duplicate Error");
-			msg.setReplace(false);
-			msg.setMessage(feedback);
-			KafkaUtils.writeMsg("webcmds", msg);
-
-			log.debug("Sent duplicate error message to frontend for " + target.getCode());
-		}
-
-		return true;
+		return false;
 	}
 
+	/**
+	 * Send a baseentity with a feedback message to be displayed.
+	 * @param parentCode The parentCode of the question group
+	 * @param questionCode The questionCode of the bad answer
+	 * @param attributeCode The attributeCode of the bad answer
+	 * @param feedback The feedback to provide the user
+	 */
+	public void sendAttributeErrorMessage(String parentCode, String questionCode, String attributeCode, String feedback) {
+
+		// send a special FIELDMSG
+		JsonObject json = Json.createObjectBuilder()
+			.add("token", userToken.getToken())
+			.add("cmd_type", "FIELDMSG")
+			.add("msg_type", "CMD_MSG")
+			.add("code", parentCode)
+			.add("attributeCode", attributeCode)
+			.add("questionCode", questionCode)
+			.add("message", Json.createObjectBuilder()
+				.add("value", "This field must be unique and not have already been selected")
+			).build();
+
+		// send to commands topic
+		KafkaUtils.writeMsg("webcmds", json.toString());
+		log.info("Sent error message to frontend : " + json.toString());
+	}
+
+
+	/**
+	 * Return attribute relied on base entity object and attribute code
+	 * @param baseEntity Base entity
+	 * @param attributeCode Attribute code
+	 * @return Return attribute object
+	 */
+	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode){
+		Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
+
+		if (baseEA.isPresent()) {
+			return baseEA.get().getAttribute();
+		}
+
+		Attribute attribute = getAttribute(attributeCode);
+		return attribute;
+	}
 }

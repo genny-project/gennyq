@@ -1,9 +1,7 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +13,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -22,14 +21,10 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.graphql.ProcessQuestions;
+import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-
-import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -44,23 +39,27 @@ public class FrontendService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
-	UserToken userToken;
+	@Inject UserToken userToken;
 
-	@Inject
-	QwandaUtils qwandaUtils;
+	@Inject QwandaUtils qwandaUtils;
+	@Inject DatabaseUtils databaseUtils;
+	@Inject BaseEntityUtils beUtils;
+	@Inject DefUtils defUtils;
 
-	@Inject
-	DatabaseUtils databaseUtils;
+	@Inject NavigationService navigationService;
+	@Inject TaskService taskService;
 
-	@Inject
-	BaseEntityUtils beUtils;
+	/**
+	 * Control main content navigation using a pcm and a question
+	 */
+	public void navigateContent(ProcessData processData) {
 
-	@Inject
-	DefUtils defUtils;
+		log.info("Navigating to form...");
+		String pcmCode = processData.getPcmCode();
+		String questionCode = processData.getQuestionCode();
 
-	@Inject
-	NavigationService navigationService;
+		navigationService.navigateContent(pcmCode, questionCode);
+	}
 
 	/**
 	 * Get asks using a question code, for a given source and target.
@@ -71,26 +70,13 @@ public class FrontendService {
 	 * @param processId    The processId to set in the asks
 	 * @return The ask message
 	 */
-	public void sendAsks(String processJson) {
+	public void sendAsks(ProcessData processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
-
-		String key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
-
-		String sourceCode = processData.getSourceCode();
-		String targetCode = processData.getTargetCode();
+		Ask ask = taskService.fetchAsk(processData);
 
 		// update ask target
-		BaseEntity processEntity = processData.getProcessEntity();
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		recursivelyUpdateAskTarget(ask, processEntity);
-
-		// put targetCode in cache
-		// NOTE: This is mainly only necessary for initial dropdown items
-		log.info("Caching targetCode " + processId + ":TARGET_CODE=" + targetCode);
-		CacheUtils.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
 
 		// check mandatories and update submit
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
@@ -123,20 +109,6 @@ public class FrontendService {
 		}
 	}
 
-
-	/**
-	 * Control main content navigation using a pcm and a question
-	 */
-	public void navigateContent(String processJson) {
-
-		log.info("Navigating to form...");
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		String pcmCode = processData.getPcmCode();
-		String questionCode = processData.getQuestionCode();
-
-		navigationService.navigateContent(pcmCode, questionCode);
-	}
-
 	/**
 	 * Send a baseentity after filtering the entity attributes
 	 * based on the questions in the ask message.
@@ -146,13 +118,10 @@ public class FrontendService {
 	 * @param processId The process id to use for the baseentity cache
 	 * @param defCode   . The type of processBE (to save calculating it again)
 	 */
-	public void sendBaseEntitys(String processJson) {
+	public void sendBaseEntitys(ProcessData processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
-		BaseEntity processEntity = processData.getProcessEntity();
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
-		String processId = processData.getProcessId();
-		String questionCode = processData.getQuestionCode();
 
 		// grab all entityAttributes from the entity
 		Set<EntityAttribute> entityAttributes = ConcurrentHashMap
@@ -179,12 +148,8 @@ public class FrontendService {
 		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
 
 		// check cache first
-		String key = String.format("%s:PROCESS_DATA", processId);
-		CacheUtils.putObject(userToken.getProductCode(), key, processData);
-		log.infof("processData cached to %s", key);
-
-		key = String.format("%s:%s", processId, questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		qwandaUtils.storeProcessData(processData);
+		Ask ask = taskService.fetchAsk(processData);
 
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processEntity, ask.getQuestion().getCode());
@@ -204,7 +169,6 @@ public class FrontendService {
 
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
-		Attribute nameAttribute = qwandaUtils.getAttribute("PRI_NAME");
 
 		if (attribute.getCode().startsWith("LNK_")) {
 
@@ -219,27 +183,11 @@ public class FrontendService {
 						continue;
 					}
 					if ((code.startsWith("{startDate")) || (code.startsWith("endDate"))) {
-						log.error(
-								"BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
+						log.error("BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
 						continue;
 					}
-					BaseEntity selection = null;
-					try {
-						selection = beUtils.getBaseEntity(code);
-					} catch (ItemNotFoundException e) {
-						log.error(
-								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
-										+ attribute.getCode());
-						// throw new ItemNotFoundException(code);
-						continue;
-					}
-					if (selection == null) {
-						log.error(
-								code + " IS NOT IN DATABASE , but present in target " + target.getCode() + " attribute "
-										+ attribute.getCode());
-						// throw new ItemNotFoundException(code);
-						continue;
-					}
+
+					BaseEntity selection = beUtils.getBaseEntity(code);
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
@@ -276,7 +224,7 @@ public class FrontendService {
 		}
 
 		// recursively run on children
-		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
 				recuresivelyFindAndSendDropdownItems(child, target, rootCode);
 			}
@@ -288,9 +236,8 @@ public class FrontendService {
 	 *
 	 * @param askMsgJson The ask message to send
 	 */
-	public void sendDropdownItems(String processJson) {
+	public void sendDropdownItems(ProcessData processData) {
 
-		ProcessQuestions processData = jsonb.fromJson(processJson, ProcessQuestions.class);
 		String processId = processData.getProcessId();
 		String questionCode = processData.getQuestionCode();
 

@@ -21,9 +21,12 @@ import javax.persistence.EntityManager;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.core.types.dsl.DateTimePath;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -42,6 +45,7 @@ import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
@@ -293,14 +297,14 @@ public class FyodorSearch {
 				andAttributes.stream()
 						.filter(x -> removePrefixFromCode(x.getAttributeCode(), "AND").equals(attributeCode))
 						.forEach(x -> {
-							log.info("AND " + attributeCode + " like " + x.getAsString());
-							entityCodeBuilder.and(baseEntity.code.like(x.getAsString()));
+							log.info("AND " + attributeCode + " " + x.getAttributeName() + " " + x.getAsString());
+							entityCodeBuilder.and(condition(baseEntity.code, x.getAttributeName(), x.getAsString()));
 						});
 				orAttributes.stream()
 						.filter(x -> removePrefixFromCode(x.getAttributeCode(), "OR").equals(attributeCode))
 						.forEach(x -> {
-							log.info("OR " + attributeCode + " like " + x.getAsString());
-							entityCodeBuilder.or(baseEntity.code.like(x.getAsString()));
+							log.info("OR " + attributeCode + " " + x.getAttributeName() + " " + x.getAsString());
+							entityCodeBuilder.or(condition(baseEntity.code, x.getAttributeName(), x.getAsString()));
 						});
 				builder.and(entityCodeBuilder);
 
@@ -634,6 +638,56 @@ public class FyodorSearch {
 		// Return codes and count
 		log.info("SQL = " + query.toString());
 		return result;
+	}
+
+	/**
+	 * Switch for finding the expression based on filter
+	 * @param field
+	 * @param filter
+	 * @param value
+	 * @return
+	 */
+	public BooleanExpression condition(StringPath field, String filter, String value) {
+
+		switch (filter) {
+			case "LIKE":
+				return field.like(value);
+			case "NOT LIKE":
+				return field.notLike(value);
+			case "_EQ_":
+				return field.eq(value);
+			case "_NOT__EQ_":
+				return field.ne(value);
+		}
+
+		throw new DebugException("No Case found for " + filter);
+	}
+
+	/**
+	 * Switch for finding the expression based on filter
+	 * @param field
+	 * @param filter
+	 * @param value
+	 * @return
+	 */
+	public BooleanExpression condition(NumberPath field, String filter, Number value) {
+	
+		switch (filter) {
+			case "=":
+				return field.eq(value);
+			case "!=":
+				return field.ne(value);
+			case ">":
+				return field.gt(value);
+			case "<":
+				return field.lt(value);
+			case ">=":
+				return field.goe(value);
+			case "<=":
+				return field.loe(value);
+		}
+
+		throw new DebugException("No Case found for " + filter);
 	}
 
 	public static Predicate getDateTimePredicate(EntityAttribute ea, DateTimePath path) {

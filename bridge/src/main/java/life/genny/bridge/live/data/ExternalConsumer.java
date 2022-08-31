@@ -43,6 +43,8 @@ public class ExternalConsumer {
 	@Inject RoleBasedPermission permissions;
 	@Inject BlackListInfo blacklist;
 	@Inject Service service;
+
+	@Inject InternalConsumer consumer;
 	
 	@ConfigProperty(name = "bridge.id", defaultValue = "false")
 	String bridgeId;
@@ -203,8 +205,8 @@ public class ExternalConsumer {
 			// publish message
 			KafkaUtils.writeMsg(topicName, payload);
 
-			// Now send back to the originating frontend so they know we got it.
-			// TODO
+			// send ack to originating frontend
+			consumer.handleIncomingMessage(payload);
 
 		} else if (msgType.equals("EVT_MSG")) {
 			if (!StringUtils.isEmpty(productCodes)) {
