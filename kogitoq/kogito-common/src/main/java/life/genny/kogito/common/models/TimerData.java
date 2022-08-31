@@ -103,10 +103,6 @@ public class TimerData implements Serializable {
         this.intervalMin = intervalMin;
     }
 
-<<<<<<< HEAD
-=======
-	@JsonbTransient
->>>>>>> 10.1.0
 	@JsonIgnore
     public String getIntervalStr() {
         return "R/PT" + getIntervalMin() + "M";

@@ -2,12 +2,10 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
-<<<<<<< HEAD
 
 import java.util.HashMap;
 import java.util.Map;
-=======
->>>>>>> 10.1.0
+
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,11 +80,7 @@ public class FrontendService {
 
 		// update ask target
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-<<<<<<< HEAD
 		Map<String, Ask> flatMapOfAsks = recursivelyUpdateAskTarget(ask, processEntity);
-=======
-		recursivelyUpdateAskTarget(ask, processEntity);
->>>>>>> 10.1.0
 
 		// check mandatories and update submit
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
@@ -127,12 +121,9 @@ public class FrontendService {
 			}
 		}
 
-<<<<<<< HEAD
     	return asks;
 	}
 
-=======
->>>>>>> 10.1.0
 	/**
 	 * Send a baseentity after filtering the entity attributes
 	 * based on the questions in the ask message.

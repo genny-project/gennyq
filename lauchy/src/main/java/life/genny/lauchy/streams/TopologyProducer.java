@@ -41,6 +41,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
@@ -130,21 +131,24 @@ public class TopologyProducer {
 		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_"))
 		.forEach(answer -> {
 			String processId = answer.getProcessId();
-			ProcessData processData = gqlUtils.fetchProcessData(processId); // TODO: Wondering if we can just get the processData from the first processId we get
+			ProcessData processData  = qwandaUtils.fetchProcessData(processId); // TODO: Wondering if we can just get the processData from the first processId we get
 			BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 
 			BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 			List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
 
 			for (EntityAttribute dep : dependentAsks) {
+				log.info("Dependent Ask: " + dep.getAttributeCode());
 				String key = String.format("%s:%s", processId, processData.getQuestionCode());
 				Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 				if(ask == null) {
 					continue;
 				}
 				String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
+				log.info("Dependencies: " + CommonUtils.getArrayString(dependencies, d -> d));
 
 				boolean depsAnswered = qwandaUtils.hasDepsAnswered(processEntity, dependencies);
+				log.info("All Deps answered: " + depsAnswered);
 				ask.setDisabled(!depsAnswered);
 				ask.setHidden(!depsAnswered);
 			}

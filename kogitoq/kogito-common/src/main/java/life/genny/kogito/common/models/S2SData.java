@@ -2,11 +2,6 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 
-<<<<<<< HEAD
-=======
-import javax.json.bind.annotation.JsonbTransient;
-
->>>>>>> 10.1.0
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class S2SData implements Serializable {
@@ -104,22 +99,6 @@ public class S2SData implements Serializable {
  //        this.abortReason = abortReason;
  //    }
 
-<<<<<<< HEAD
-	@JsonIgnore
-    public Boolean isAborted() {
-        return !abortReason.equals(EAbortReason.NONE);
-    }
-
-	@JsonIgnore
-    public Boolean isCanceled() {
-        return abortReason.equals(EAbortReason.CANCEL);
-    }
-
-	@JsonIgnore
-    public Boolean isExpired() {
-        return abortReason.equals(EAbortReason.TIMEOUT);
-    }
-=======
 	// @JsonIgnore
  //    public Boolean isAborted() {
  //        return !abortReason.equals(EAbortReason.NONE);
@@ -134,7 +113,6 @@ public class S2SData implements Serializable {
  //    public Boolean isExpired() {
  //        return abortReason.equals(EAbortReason.TIMEOUT);
  //    }
->>>>>>> 10.1.0
 
     // public Boolean setCancel() {
     //     // This method makes it easier within kogito to set a state to avoid enum
