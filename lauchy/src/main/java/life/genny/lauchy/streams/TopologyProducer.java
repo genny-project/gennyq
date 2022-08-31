@@ -130,10 +130,10 @@ public class TopologyProducer {
 		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_"))
 		.forEach(answer -> {
 			String processId = answer.getProcessId();
-			ProcessQuestions processData = gqlUtils.fetchProcessData(processId); // TODO: Wondering if we can just get the processData from the first processId we get
+			ProcessData processData = gqlUtils.fetchProcessData(processId); // TODO: Wondering if we can just get the processData from the first processId we get
 			BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 
-			BaseEntity processEntity = processData.getProcessEntity();
+			BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 			List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
 
 			for (EntityAttribute dep : dependentAsks) {
