@@ -11,6 +11,8 @@ import java.util.List;
 import java.time.ZoneId;
 import java.util.PriorityQueue;
 
+import javax.json.bind.annotation.JsonbTransient;
+
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -101,6 +103,7 @@ public class TimerData implements Serializable {
         this.intervalMin = intervalMin;
     }
 
+	@JsonbTransient
 	@JsonIgnore
     public String getIntervalStr() {
         return "R/PT" + getIntervalMin() + "M";
@@ -160,6 +163,8 @@ public class TimerData implements Serializable {
         Collections.sort(this.events, new TimerEventComparator());
     }
 
+	@JsonbTransient
+	@JsonIgnore
     public Long getNow() {
         return LocalDateTime.now().atZone(
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
