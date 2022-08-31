@@ -253,21 +253,10 @@ public class TopologyProducer {
 
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-<<<<<<< HEAD
-		// check duplicate attributes
-		String questionCode = processData.getQuestionCode();
-		String key = String.format("%s:%s", processId, questionCode);
-		log.info("KEY: " + key);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
-		if (qwandaUtils.isDuplicate(target, defBE, answer.getAttributeCode(), answer.getValue())) {
-			log.error("Duplicate answer detected for target " + answer.getTargetCode());
-			qwandaUtils.sendSubmit(ask, false);
-=======
 		if (definition.findEntityAttribute("UNQ_"+attributeCode).isPresent()) {
 			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
 				String feedback = "Error: This value already exists and must be unique.";
->>>>>>> origin/10.1.0-answer-list
 
 				String parentCode = processData.getQuestionCode();
 				String questionCode = answer.getCode();

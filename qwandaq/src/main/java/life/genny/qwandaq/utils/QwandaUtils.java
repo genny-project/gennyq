@@ -738,33 +738,8 @@ public class QwandaUtils {
 				Question childQues = new Question(questionCode, attribute.getName(), attribute);
 				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-<<<<<<< HEAD
-					childAsks.add(childAsk);
-
-					if (ea.getAttributeCode().startsWith("LNK_")) {
-						if (ea.getValueString() != null) {
-
-							String[] codes = beUtils.cleanUpAttributeValue(ea.getValueString()).split(",");
-
-							for (String code : codes) {
-								try {
-									BaseEntity link = beUtils.getBaseEntityByCode(code);
-									entityMessage.add(link);
-								} catch (Exception ex) {
-									log.error(ex);
-								}
-							}
-						}
-					}
-
-					if (defBE.containsEntityAttribute("SER_" + ea.getAttributeCode())) {
-						searchUtils.performDropdownSearch(childAsk);
-					}
-				});
-=======
 				childAsks.add(childAsk);
 			});
->>>>>>> origin/10.1.0-answer-list
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
@@ -788,104 +763,7 @@ public class QwandaUtils {
 		String json = jsonb.toJson(askMsg);
 		KafkaUtils.writeMsg("webcmds", json);
 	}
-/**
-         * Check the uniqueness of an answer
-         * 
-         * @param target        The target entity
-         * @param definition    The definition entity
-         * @param attributeCode The code of the attribute
-         * @param value The value to check
-         * @return is duplicate bool
-         */
-        public Boolean isDuplicate(BaseEntity target, BaseEntity definition, String attributeCode, String value) {
 
-<<<<<<< HEAD
-                if (StringUtils.isBlank(value)) {
-                        return false;
-                }
-
-                // Check if attribute code exists as a UNQ for the DEF
-                String uniqueCode = String.format("UNQ_%s", attributeCode);
-                List<String> unqs = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, uniqueCode);
-
-                if (unqs == null || unqs.isEmpty()) {
-                        log.infof("UNQ_%s Not present!", attributeCode);
-                        return false;
-                }
-
-                BaseEntity originalTarget = beUtils.getBaseEntityByCode(definition.getValueAsString("PRI_PREFIX") + target.getCode().substring(3));
-                log.info("Target: " + target.getCode() + ", Definition: " + definition.getCode());
-                log.info("Attribute " + uniqueCode + " must satisfy " + unqs.toString());
-
-                String prefix = definition.getValueAsString("PRI_PREFIX");
-                log.info("Looking for duplicates using prefix: " + prefix + " and realm " + target.getRealm());
-                SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-                                .addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
-                                .setPageStart(0)
-                                .setPageSize(1);
-
-                searchEntity.setRealm(target.getRealm());
-
-                log.info("Checking all the existing target data");
-                for (EntityAttribute ea : target.getBaseEntityAttributes()) {
-                        log.info(target.getCode() + ":" + ea.getAttributeCode() + ": " + ea.getAsString());
-                }
-
-                log.infof("Looping through %s unique attribute", unqs.size());
-
-                for (String unique : unqs) {
-
-                        if (!unique.equals(attributeCode)) {
-                                if (!target.containsEntityAttribute(unique)) {
-                                        value = originalTarget.getValueAsString(unique);
-                                } else {
-                                        value = target.getValueAsString(unique);
-                                }
-                        }
-
-                        if (value.contains("[") && value.contains("]"))
-                                value = beUtils.cleanUpAttributeValue(value);
-                        log.info("Adding unique filter: " + unique + " like " + value);
-                        searchEntity.addFilter(unique, SearchEntity.StringFilter.LIKE, "%" + value + "%");
-                }
-
-                searchEntity.setRealm(userToken.getProductCode());
-
-                Long count = searchUtils.countBaseEntitys(searchEntity);
-                log.infof("Found %s entities", count);
-                if (count == 0)
-                        return false;
-
-                // not duplicate if it is targets code
-                List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
-                if (codes != null && !codes.isEmpty() && codes.get(0).equals(target.getCode()))
-                        return false;
-
-                // if duplicate found then send back the baseentity with the conflicting
-                // attribute and feedback message to display
-                // QUE target code needs to be set
-                BaseEntity errorBE = new BaseEntity(target.getCode(), definition.getCode());
-                Optional<EntityAttribute> optEa = target.findEntityAttribute(attributeCode);
-                if (optEa.isPresent()) {
-                        String feedback = "Error: This value already exists and must be unique.";
-                        EntityAttribute ea = optEa.get();
-                        ea.setFeedback(feedback);
-                        errorBE.addAttribute(ea);
-                        log.info("Added " + ea);
-
-                        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(errorBE);
-                        msg.setToken(userToken.getToken());
-                        msg.setTag("Duplicate Error");
-                        msg.setReplace(false);
-                        msg.setMessage(feedback);
-                        KafkaUtils.writeMsg("webcmds", msg);
-
-                        log.debug("Sent duplicate error message to frontend for " + target.getCode());
-                }
-
-                return true;
-        }
-=======
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
 	 * @param definition The definition to check against
@@ -951,7 +829,7 @@ public class QwandaUtils {
 
 				// clean it up if it is a code
 				if (value.contains("[") && value.contains("]"))
-					value = BaseEntityUtils.cleanUpAttributeValue(value);
+					value = beUtils.cleanUpAttributeValue(value);
 
 				log.info("Adding unique filter: " + code + " like " + value);
 				searchEntity.addFilter(code, SearchEntity.StringFilter.LIKE, "%" + value + "%");
@@ -1011,5 +889,4 @@ public class QwandaUtils {
 		Attribute attribute = getAttribute(attributeCode);
 		return attribute;
 	}
->>>>>>> origin/10.1.0-answer-list
 }
