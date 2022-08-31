@@ -51,10 +51,6 @@ public class GennyScopeInit {
 	 * @param data The consumed message from kafka
 	 **/
 	public void init(String data) {
-		if (beUtils == null) {
-			log.error("NULL BE UTILS");
-			this.beUtils = new BaseEntityUtils();
-		}
 
 		if (databaseUtils == null) {
 			log.error("NULL DATABASE UTILS");
@@ -77,6 +73,7 @@ public class GennyScopeInit {
 			// init GennyToken from token string
 			userToken.init(token);
 			log.debug("Token Initialized: " + userToken);
+			beUtils.init(token);
 
 		} catch (Exception e) {
 			log.error("Error initializing token from data: " + data);
