@@ -22,6 +22,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -249,11 +250,11 @@ public class SearchService {
 
 		}else if(ops.equals(SearchOptions.PAGINATION)) { //pagination
 			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(Attribute.PRI_INDEX);
-			Integer pageSize = searchBE.getPageSize(0);
+			Integer pageSize = searchBE.getPageSize() != null ? searchBE.getPageSize() : GennySettings.defaultPageSize();
 			Integer indexVal = 0;
 			Integer pagePos = 0;
 
-			if(aeIndex.isPresent() && pageSize !=null) {
+			if(aeIndex.isPresent() && pageSize != null) {
 				if(code.equalsIgnoreCase(GennyConstants.PAGINATION_NEXT)) {
 					indexVal = aeIndex.get().getValueInteger() + 1;
 				} else if (code.equalsIgnoreCase(GennyConstants.PAGINATION_PREV)) {

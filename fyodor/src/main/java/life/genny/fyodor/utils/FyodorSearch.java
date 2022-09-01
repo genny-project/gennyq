@@ -239,14 +239,15 @@ public class FyodorSearch {
 		log.info("About to search (" + searchBE.getCode() + ")");
 
 		String realm = searchBE.getRealm();
-		Integer defaultPageSize = 20;
+
 		// Init necessary vars
 		QSearchBeResult result = null;
 		List<String> codes = new ArrayList<String>();
+
 		// Get page start and page size from SBE
-		Integer pageStart = searchBE.getPageStart(0);
-		Integer pageSize = searchBE.getPageSize(defaultPageSize);
-		// Integer pageSize = searchBE.getPageSize(defaultPageSize);
+		Integer defaultPageSize = 20;
+		Integer pageSize = searchBE.getPageSize() != null ? searchBE.getPageSize() : defaultPageSize;
+		Integer pageStart = searchBE.getPageStart() != null ? searchBE.getPageStart() : 0;
 
 		QBaseEntity baseEntity = new QBaseEntity("baseEntity");
 		JPAQuery<?> query = new JPAQuery<Void>(entityManager);

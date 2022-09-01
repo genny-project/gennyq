@@ -3,9 +3,6 @@ package life.genny.qwandaq.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
 
 import org.jboss.logging.Logger;
 
@@ -13,13 +10,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeBoolean;
-import life.genny.qwandaq.attribute.AttributeDate;
-import life.genny.qwandaq.attribute.AttributeDateTime;
-import life.genny.qwandaq.attribute.AttributeDouble;
-import life.genny.qwandaq.attribute.AttributeInteger;
-import life.genny.qwandaq.attribute.AttributeLong;
 import life.genny.qwandaq.attribute.AttributeText;
-import life.genny.qwandaq.attribute.AttributeTime;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.Filter;
@@ -36,242 +27,68 @@ public class SearchEntity extends BaseEntity {
 	private static final Logger log = Logger.getLogger(SearchEntity.class);
 
 	private static final long serialVersionUID = 1L;
-	public static final String DEFAULT_PAGETYPE = EPageType.DEFAULT.toString();
 
 	Double filterIndex = 1.0;
-	Double colIndex = 1.0;
+	Double columnIndex = 1.0;
 
 	Double actionIndex = 1.0;
 	Double searchActionIndex = 1.0;
 
 	Double sortIndex = 0.0;
 	Double flcIndex = 1.0;
-	Double groupIndex = 1.0;
-	Double searchIndex = 1.0;
-	Double combinedSearchIndex = 1.0;
-	Double aliasIndex = 1.0;
-	Map<String, Map<String, String>> formatters = new HashMap<>();
 
-	/* Constructor to create SearchEntity with code and name */
+	/**
+	 * Default constructor.
+	 */
 	public SearchEntity() { }
 
-	/* Constructor to create SearchEntity with code and name */
+	/**
+	 * Constructor.
+	 * @param code SearchEntity code
+	 * @param name SearchEntity name
+	 */
 	public SearchEntity(final String code, final String name) {
 		super(code, name);
 		setPageStart(0);
 		setPageSize(20);
 		setTitle(name);
-		setPageType(DEFAULT_PAGETYPE);
-	}
-
-	/* Constructor to create SearchEntity passing BaseEntity */
-	public SearchEntity(final BaseEntity be) {
-		super(be.getCode(), be.getName());
-		this.setCreated(be.getCreated());
-		this.setUpdated(be.getUpdated());
-		this.setBaseEntityAttributes(be.getBaseEntityAttributes());
 	}
 
 	/** 
 	 * This method allows to add the attributes to the SearchEntity that is required
-	 * in the result BaseEntities
-	 *
-	 * @param attributeCode the code of the column
-	 * @param columnName the name of the column
+	 * in the result BaseEntities.
+	 * @param code the code of the column
+	 * @param name the name of the column
 	 * @return SearchEntity
 	 */
-	public SearchEntity addColumn(final String attributeCode, final String columnName) {
-		AttributeText attributeColumn = new AttributeText("COL_" + attributeCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, colIndex);
-			ea.setIndex(colIndex.intValue());
-			colIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Column Initialisation");
-		}
+	public SearchEntity addColumn(final String code, final String name) {
+
+		Attribute attributeColumn = new Attribute("COL_" + code, name, new DataType(String.class));
+		addAttribute(attributeColumn, columnIndex);
+		columnIndex += 1.0;
+
 		return this;
 	}
 
 	/** 
 	 * This method allows to add the action attributes to the SearchEntity that is
 	 * required in the result BaseEntities
-	 *
-	 * @param attributeCode the code of the action
-	 * @param columnName the name of the action
+	 * @param code the code of the action
+	 * @param name the name of the action
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAction(final String attributeCode, final String columnName) {
-		return this.addAction(attributeCode, columnName, false);
-	}
+	public SearchEntity addAction(final String code, final String name) {
 
-	/** 
-	 * This method allows to add the action attributes to the SearchEntity that is
-	 * required in the result BaseEntities
-	 *
-	 * @param attributeCode the code of the action
-	 * @param columnName the name of the action
-	 * @param confirmationFlag the confirmation flag
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAction(final String attributeCode, final String columnName, Boolean confirmationFlag) {
-		AttributeText attributeColumn = new AttributeText("ACT_" + attributeCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, actionIndex);
-			ea.setIndex(actionIndex.intValue());
-			ea.setConfirmationFlag(confirmationFlag);
-			actionIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Column Initialisation");
-		}
-		return this;
-	}
-	
-	/** 
-	 * This method allows to add the action attributes to the SearchEntity that is
-	 * required in the result BaseEntities
-	 *
-	 * @param attributeCode the code of the default action
-	 * @param columnName the name of the default action
-	 * @return SearchEntity
-	 */
-	public SearchEntity addDefaultAction(final String attributeCode, final String columnName) {
-		AttributeText attributeColumn = new AttributeText("ACT_" + attributeCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, 0.0);
-			ea.setIndex(0);
-		} catch (BadDataException e) {
-			log.error("Bad Column Initialisation");
-		}
-		return this;
-	}
-	
-	/** 
-	 * This method allows to add the search action attributes to the SearchEntity
-	 * not each result BaseEntities
-	 *
-	 * @param attributeCode the code of the search action
-	 * @param columnName the name of the search action
-	 * @return SearchEntity
-	 */
-	public SearchEntity addSearchAction(final String attributeCode, final String columnName) {
-		AttributeText attributeColumn = new AttributeText("SCH_ACT_" + attributeCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, searchActionIndex);
-			ea.setIndex(searchActionIndex.intValue());
-			searchActionIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Column Initialisation");
-		}
-		return this;
-	}
-	
-	/** 
-	 * This method allows to add the default search action attributes to the
-	 * SearchEntity not each result BaseEntities
-	 *
-	 * @param attributeCode the code of the default search action
-	 * @param columnName the name of the default search action
-	 * @return SearchEntity
-	 */
-	public SearchEntity addDefaultSearchAction(final String attributeCode, final String columnName) {
-		AttributeText attributeColumn = new AttributeText("SCH_ACT_" + attributeCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, 0.0);
-			ea.setIndex(0);
-		} catch (BadDataException e) {
-			log.error("Bad Column Initialisation");
-		}
-		return this;
-	}
+		Attribute attributeColumn = new Attribute("ACT_" + code, name, new DataType(String.class));
+		addAttribute(attributeColumn, actionIndex);
+		actionIndex += 1.0;
 
-	
-	/** 
-	 * This method allows to add the row action attribute to the
-	 * each result BaseEntities
-	 *
-	 * @param attributeCode the code of the row action
-	 * @param columnName the name of the column
-	 * @return SearchEntity
-	 */
-	public SearchEntity addRowAction(final String attributeCode, final String columnName) {
-		AttributeText attributeColumn = new AttributeText("ROW_ACT_" + attributeCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, 0.0);
-			ea.setIndex(0);
-		} catch (BadDataException e) {
-			log.error("Bad Column Initialisation");
-		}
 		return this;
 	}
-
-	
-	/** 
-	 * This method allows to add the linked searchcodes to the SearchEntity as required
-	 *
-	 * @param searchCode the code of the search to link
-	 * @param columnName the name of the column
-	 * @return SearchEntity
-	 */
-	public SearchEntity addLinkedSearch(final String searchCode, final String columnName) {
-		AttributeText attributeColumn = new AttributeText(searchCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, searchIndex);
-			ea.setIndex(searchIndex.intValue());
-			searchIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Linked Search Initialisation");
-		}
-		return this;
-	}
-
-	
-	/** 
-	 * Add a Linked Search with an association code
-	 *
-	 * @param searchCode the code of the search to link
-	 * @param association the association attribute code
-	 * @param columnName the name of the column
-	 * @return SearchEntity
-	 */
-	public SearchEntity addLinkedSearch(final String searchCode, final String association, final String columnName) {
-		AttributeText attributeColumn = new AttributeText(searchCode+"."+association, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, searchIndex);
-			ea.setIndex(searchIndex.intValue());
-			searchIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Linked Search Initialisation");
-		}
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to add the combined searches to the SearchEntity.
-	 * This will combine the results with the two searches
-	 * NOTE: has only been implemented for counts so far
-	 *
-	 * @param searchCode the code of the search to combine
-	 * @param columnName the name of the column
-	 * @return SearchEntity
-	 */
-	public SearchEntity addCombinedSearch(final String searchCode, final String columnName) {
-		AttributeText attributeColumn = new AttributeText("CMB_"+searchCode, columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, searchIndex);
-			ea.setIndex(combinedSearchIndex.intValue());
-			combinedSearchIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Combined Search Initialisation");
-		}
-		return this;
-	}
-
 	
 	/** 
 	 * This method allows to add the associated attributes to the SearchEntity that
 	 * is required in the result BaseEntities
-	 *
 	 * @param attributeCode the code of the associated attribute
 	 * @param associatedLinkedBaseEntityCodeAttribute the the code of the attribute to fetch as a column
 	 * @param columnName the name of the column
@@ -281,16 +98,15 @@ public class SearchEntity extends BaseEntity {
 			final String columnName) {
 		AttributeText attributeColumn = new AttributeText("COL__" + attributeCode.toUpperCase()+"__"+associatedLinkedBaseEntityCodeAttribute.toUpperCase(), columnName);
 		try {
-			EntityAttribute ea = addAttribute(attributeColumn, colIndex);
+			EntityAttribute ea = addAttribute(attributeColumn, columnIndex);
 			ea.setValue(associatedLinkedBaseEntityCodeAttribute);
-			ea.setIndex(colIndex.intValue());
-			colIndex += 1.0;
+			ea.setIndex(columnIndex.intValue());
+			columnIndex += 1.0;
 		} catch (BadDataException e) {
 			log.error("Bad Associated Column Initialisation");
 		}
 		return this;
 	}
-
 	
 	/** 
 	 * This method allows nested associated columns
@@ -309,7 +125,6 @@ public class SearchEntity extends BaseEntity {
 	
 	/** 
 	 * This method allows double nested associated columns
-	 *
 	 * @param attributeCode the code of the associated attribute
 	 * @param nestedAttributeCode the code of the nested associated attribute
 	 * @param doubleNestedAttributeCode the code of the double nested associated attribute
@@ -326,96 +141,44 @@ public class SearchEntity extends BaseEntity {
 	/** 
 	 * This method allows to add sorting to the attributes of the search results It
 	 * can either sort in ascending or descending order
-	 *
-	 * @param attributeCode the code of the attribute to add a sort for
-	 * @param sortHelpText the help text for the sort
+	 * @param code the code of the attribute to add a sort for
+	 * @param name the help text for the sort
 	 * @param sort the type of sort
 	 * @return SearchEntity
 	 */
-	public SearchEntity addSort(final String attributeCode, final String sortHelpText, final Sort sort) {
-		AttributeText attributeSort = new AttributeText("SRT_" + attributeCode, sortHelpText);
-		try {
-			addAttribute(attributeSort, sortIndex, sort.toString());
-			sortIndex += 1.0;
+	public SearchEntity addSort(final String code, final String name, final Sort sort) {
 
-		} catch (BadDataException e) {
-			log.error("Bad Sort Initialisation");
-		}
+		Attribute attribute = new Attribute("SRT_" + code, name, new DataType(String.class));
+		addAttribute(attribute, sortIndex, sort.name());
+		sortIndex += 1.0;
 
 		return this;
 	}
 
 	/** 
-	 * @param attributeCode the code of the attribute to add a sort attribute for
+	 * @param code the code of the attribute to add a sort attribute for
 	 * @param name the name of the sort attribute
 	 * @return SearchEntity
 	 */
-	public SearchEntity addSortAttribute(final String attributeCode, final String name) {
-		AttributeText attributeSort = new AttributeText("ATTRSRT_" + attributeCode, name);
-		try {
-			addAttribute(attributeSort, 1.0);
-		} catch (BadDataException e) {
-			log.error("Bad Sort Initialisation");
-		}
+	public SearchEntity addSortAttribute(final String code, final String name) {
+
+		Attribute attributeSort = new Attribute("ATTRSRT_" + code, name, new DataType(String.class));
+		addAttribute(attributeSort, 1.0);
+
 		return this;
 	}
 
 	/**
 	* This Method allows specifying columns that can be further filtered on by the user
 	* @param attributeCode The code of the attribute
-	* @param fName The name given to the filter column
+	* @param name The name given to the filter column
 	* @return SearchEntity the updated search base entity
 	 */
-	public SearchEntity addFilterableColumn(final String attributeCode, final String fName) {
-		AttributeText attributeFLC = new AttributeText("FLC_" + attributeCode, fName);
-		try {
-			addAttribute(attributeFLC, flcIndex);
-			flcIndex += 1.0;
+	public SearchEntity addFilterableColumn(final String attributeCode, final String name) {
 
-		} catch (BadDataException e) {
-			log.error("Bad Filterable Column Initialisation");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to add grouping by a specific attribute. all BEs who's
-	 * value corresponding to this attribute will be grouped together.
-	 * NOTE: not implemented yet
-	 *
-	 * @param groupBy the group by code to set
-	 * @return SearchEntity
-	 */
-	public SearchEntity addGroupBy(final String groupBy) {
-		AttributeText attribute = new AttributeText("GPB_" + groupBy, "GroupBy");
-		try {
-			addAttribute(attribute, groupIndex, groupBy);
-			groupIndex += 1.0;
-
-		} catch (BadDataException e) {
-			log.error("Bad Group By Initialisation");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * @param attributeCode the attribute code to set an alias for
-	 * @param alias the alias to set for the attribute
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAlias(final String attributeCode, final String alias) {
-		AttributeText attribute = new AttributeText("ALS_" + attributeCode, alias);
-		try {
-			addAttribute(attribute, aliasIndex);
-			aliasIndex += 1.0;
-
-		} catch (BadDataException e) {
-			log.error("Bad Alias Initialisation");
-		}
+		Attribute attributeFLC = new Attribute("FLC_" + attributeCode, name, new DataType(String.class));
+		addAttribute(attributeFLC, flcIndex);
+		flcIndex += 1.0;
 
 		return this;
 	}
@@ -702,194 +465,114 @@ public class SearchEntity extends BaseEntity {
 		addAttribute(attribute, filterIndex, value);
 		filterIndex += 1.0;
 
-		return this;	}
+		return this;	
+	}
 
 	
 	/** 
-	 * Add a conditional attribute
-	 *
-	 * @param attributeCode the attribute to apply the condition to
+	 * Add a conditional attribute.
+	 * @param code the attribute to apply the condition to
 	 * @param condition the condition to apply
 	 * @return SearchEntity
 	 */
-	public SearchEntity addConditional(String attributeCode, String condition) {
+	public SearchEntity addConditional(String code, String condition) {
 
-		Optional<EntityAttribute> existing = findEntityAttribute("CND_"+attributeCode);
-		if (existing.isPresent()) {
-			existing.get().setValue(existing.get().getValue().toString() + ":::" + condition);
-		} else {
-			AttributeText attribute = new AttributeText("CND_"+attributeCode, "CND_"+attributeCode);
-			try {
-				addAttribute(attribute, 1.0, condition);
-				filterIndex += 1.0;
-			} catch (BadDataException e) {
-				log.error("Bad Conditional Initialisation");
-			}
-		}
+		String cnd = String.format("CND_%s", code);
+		Attribute attribute = new Attribute(cnd, cnd, new DataType(String.class));
+		addAttribute(attribute, 1.0, condition);
+
 		return this;
 	}
 
-	
 	/** 
 	 * Add a whitelist attribute
-	 *
-	 * @param attributeCode the attribute code to add to the whitelist
+	 * @param code the attribute code to add to the whitelist
 	 * @return SearchEntity
 	 */
-	public SearchEntity addWhitelist(String attributeCode) {
-		AttributeText attribute = new AttributeText("WTL_" + attributeCode, attributeCode);
+	public SearchEntity addWhitelist(String code) {
 
-		try {
-			addAttribute(attribute, filterIndex, attributeCode);
-		} catch (BadDataException e) {
-			log.error("Bad Whitelist Filter Initialisation");
-		}
+		Attribute attribute = new Attribute("WTL_" + code, code, new DataType(String.class));
+		addAttribute(attribute, 1.0, code);
 		
 		return this;
 	}
 
-	
 	/** 
 	 * Add a blacklist attribute
-	 *
-	 * @param attributeCode the attribute code to add to the blacklist
+	 * @param code the attribute code to add to the blacklist
 	 * @return SearchEntity
 	 */
-	public SearchEntity addBlacklist(String attributeCode) {
-		AttributeText attribute = new AttributeText("BKL_" + attributeCode, attributeCode);
+	public SearchEntity addBlacklist(String code) {
 
-		try {
-			addAttribute(attribute, filterIndex, attributeCode);
-		} catch (BadDataException e) {
-			log.error("Bad Whitelist Filter Initialisation");
-		}
+		Attribute attribute = new Attribute("BKL_" + code, code, new DataType(String.class));
+		addAttribute(attribute, 1.0, code);
 		
 		return this;
 	}
-	
-	/** 
-	 * This method allows to set the LinkWeight to the resulted BaseEntities to its
-	 * parent
-	 * 
-	 * @param value - value/linkWeight to be set
-	 * @return SearchEntity
-	 */
-	public SearchEntity setLinkWeight(final Double value) {
-		AttributeDouble attribute = new AttributeDouble("SCH_LINK_WEIGHT", "LinkWeight");
-		try {
-			addAttribute(attribute, 1.0, value);
-		} catch (BadDataException e) {
-			log.error("Bad String Filter Initialisation");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to set the filter based on the linkweight value of
-	 * BaseEntities to its parent
-	 * 
-	 * @param filter - type of the filter set to the linkWeight
-	 * @return SearchEntity
-	 */
-	public SearchEntity addFilterToLinkWeight(final Filter filter) {
-		AttributeText attribute = new AttributeText("SCH_LINK_FILTER", "LinkFilterByWeight");
-		try {
-			addAttribute(attribute, 1.0, filter.toString());
-		} catch (BadDataException e) {
-			log.error("Bad String Filter Initialisation");
-		}
-
-		return this;
-	}
-
 	
 	/** 
 	 * This method allows to set the title of the results data to be sent
-	 * 
-	 * @param title - The page Title
+	 * @param title The page title
 	 * @return SearchEntity
 	 */
 	public SearchEntity setTitle(final String title) {
-		AttributeText attributeTitle = new AttributeText("SCH_TITLE", "Title");
-		try {
-			addAttribute(attributeTitle, 5.0, title);
-		} catch (BadDataException e) {
-			log.error("Bad Title ");
-		}
+
+		Attribute attribute = new Attribute("SCH_TITLE", "Title", new DataType(String.class));
+		addAttribute(attribute, 5.0, title);
 
 		return this;
 	}
 
-		
+
 	/** 
 	 * This method allows to set the parentCode of the SearchEntity
-	 * 
 	 * @param parentCode the parent entity code
 	 * @return SearchEntity
 	 */
 	public SearchEntity setParentCode(final String parentCode) {
-		AttributeText attributeTitle = new AttributeText("SCH_PARENT_CODE", "Parent Code");
-		try {
-			addAttribute(attributeTitle, 1.0, parentCode);
-		} catch (BadDataException e) {
-			log.error("Bad Title ");
-		}
+
+		Attribute attribute = new Attribute("SCH_PARENT_CODE", "Parent Code", new DataType(String.class));
+		addAttribute(attribute, 1.0, parentCode);
 
 		return this;
 	}
-
 	
 	/** 
 	 * This method allows to set the start/begining number of the range(page) of the
 	 * results data to be sent
-	 * 
 	 * @param pageStart the start of the page number
 	 * @return SearchEntity
 	 */
 	public SearchEntity setPageStart(final Integer pageStart) {
-		AttributeInteger attributePageStart = new AttributeInteger("SCH_PAGE_START", "PageStart");
-		try {
-			addAttribute(attributePageStart, 3.0, pageStart);
-		} catch (BadDataException e) {
-			log.error("Bad Page Start ");
-		}
+
+		Attribute attribute = new Attribute("SCH_PAGE_START", "PageStart", new DataType(Integer.class));
+		addAttribute(attribute, 3.0, pageStart);
 
 		return this;
 	}
 
 	/** 
 	 * This method allows to set size of the selection allowed for a searchEntity
-	 * 
 	 * @param selectSize size of selection
 	 * @return SearchEntity
 	 */
 	public SearchEntity setSelectSize(final Integer selectSize) {
-		AttributeInteger attributeSelectSize = new AttributeInteger("SCH_SELECT_SIZE", "SelectSize");
-		try {
-			addAttribute(attributeSelectSize, 1.0, selectSize);
-		} catch (BadDataException e) {
-			log.error("Bad Page Start ");
-		}
+
+		Attribute attribute = new Attribute("SCH_SELECT_SIZE", "SelectSize", new DataType(Integer.class));
+		addAttribute(attribute, 1.0, selectSize);
 
 		return this;
 	}
 
 	/** 
-	 * This method allows to set the total number of the results (BaseEntites) to be
-	 * sent
-	 * 
+	 * This method allows to set the total number of the results (BaseEntites) to be sent
 	 * @param pageSize number of items to be sent in each page
 	 * @return SearchEntity
 	 */
 	public SearchEntity setPageSize(final Integer pageSize) {
-		AttributeInteger attributePageSize = new AttributeInteger("SCH_PAGE_SIZE", "PageSize");
-		try {
-			addAttribute(attributePageSize, 3.0, pageSize);
-		} catch (BadDataException e) {
-			log.error("Bad Page Size");
-		}
+
+		Attribute attribute = new Attribute("SCH_PAGE_SIZE", "PageSize", new DataType(Integer.class));
+		addAttribute(attribute, 1.0, pageSize);
 
 		return this;
 	}
@@ -897,17 +580,13 @@ public class SearchEntity extends BaseEntity {
 	/** 
 	 * This method allows to set the stakeholder/user code to the search. It will
 	 * search for the BaseEntites that the given user is stakeholder of.
-	 * 
-	 * @param stakeholderCode the userCode of the stakeHolder
+	 * @param stakeholder the userCode of the stakeHolder
 	 * @return SearchEntity
 	 */
-	public SearchEntity setStakeholder(final String stakeholderCode) {
-		AttributeText attribute = new AttributeText("SCH_STAKEHOLDER_CODE", "Stakeholder");
-		try {
-			addAttribute(attribute, 1.0, stakeholderCode);
-		} catch (BadDataException e) {
-			log.error("Bad Stakeholder");
-		}
+	public SearchEntity setStakeholder(final String stakeholder) {
+
+		Attribute attribute = new Attribute("SCH_STAKEHOLDER_CODE", "Stakeholder", new DataType(String.class));
+		addAttribute(attribute, 1.0, stakeholder);
 
 		return this;
 	}
@@ -916,17 +595,13 @@ public class SearchEntity extends BaseEntity {
 	 * This method allows to set the stakeholder/user code to the parent/source
 	 * Basentity involved in the search. It will search for the BaseEntites under
 	 * the give source BE that the given user is stakeholder of.
-	 * 
-	 * @param sourceStakeholderCode the userCode of the source stakeHolder
+	 * @param sourceStakeholder the userCode of the source stakeHolder
 	 * @return SearchEntity
 	 */
-	public SearchEntity setSourceStakeholder(final String sourceStakeholderCode) {
-		AttributeText attribute = new AttributeText("SCH_SOURCE_STAKEHOLDER_CODE", "SourceStakeholder");
-		try {
-			addAttribute(attribute, 1.0, sourceStakeholderCode);
-		} catch (BadDataException e) {
-			log.error("Bad Source Stakeholder");
-		}
+	public SearchEntity setSourceStakeholder(final String sourceStakeholder) {
+
+		Attribute attribute = new Attribute("SCH_SOURCE_STAKEHOLDER_CODE", "SourceStakeholder", new DataType(String.class));
+		addAttribute(attribute, 1.0, sourceStakeholder);
 
 		return this;
 	}
@@ -940,30 +615,23 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity setLinkCode(final String linkCode) {
-		AttributeText attribute = new AttributeText("SCH_LINK_CODE", "LinkCode");
-		try {
-			addAttribute(attribute, 1.0, linkCode);
-		} catch (BadDataException e) {
-			log.error("Bad Stakeholder");
-		}
+
+		Attribute attribute = new Attribute("SCH_LINK_CODE", "LinkCode", new DataType(String.class));
+		addAttribute(attribute, 1.0, linkCode);
 
 		return this;
 	}
 	
 	/** 
 	 * This method allows to set the link value the result of the search.
-	 * 
 	 * @param linkValue - linkValue of the sourceCode to the results (BaseEntities)
 	 * of the search
 	 * @return SearchEntity
 	 */
 	public SearchEntity setLinkValue(final String linkValue) {
-		AttributeText attribute = new AttributeText("SCH_LINK_VALUE", "LinkValue");
-		try {
-			addAttribute(attribute, 1.0, linkValue);
-		} catch (BadDataException e) {
-			log.error("Bad Link Value");
-		}
+
+		Attribute attribute = new Attribute("SCH_LINK_VALUE", "LinkValue", new DataType(String.class));
+		addAttribute(attribute, 1.0, linkValue);
 
 		return this;
 	}
@@ -973,12 +641,10 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity setSourceCode(final String sourceCode) {
-		AttributeText attribute = new AttributeText("SCH_SOURCE_CODE", "SourceCode");
-		try {
-			addAttribute(attribute, 1.0, sourceCode);
-		} catch (BadDataException e) {
-			log.error("Bad SourceCode");
-		}
+
+		Attribute attribute = new Attribute("SCH_SOURCE_CODE", "SourceCode", new DataType(String.class));
+		addAttribute(attribute, 1.0, sourceCode);
+
 		return this;
 	}
 	
@@ -987,224 +653,91 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity setTargetCode(final String targetCode) {
-		AttributeText attribute = new AttributeText("SCH_TARGET_CODE", "TargetCode");
-		try {
-			addAttribute(attribute, 1.0, targetCode);
-		} catch (BadDataException e) {
-			log.error("Bad Target Code");
-		}
 
-		return this;
-	}
-
-	
-	/** 
-	 * @param displayMode the displayMode to set
-	 * @return SearchEntity
-	 */
-	public SearchEntity setDisplayMode(final String displayMode) {
-		AttributeText attribute = new AttributeText("SCH_DISPLAY_MODE", "DisplayMode");
-		try {
-			addAttribute(attribute, 1.0, displayMode);
-		} catch (BadDataException e) {
-			log.error("Bad Display Mode");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * @param questionCode the questionCode to set
-	 * @return SearchEntity
-	 */
-	public SearchEntity setSearchQuestionCode(final String questionCode) {
-		AttributeText attribute = new AttributeText("SCH_QUESTION_CODE", "Question Code");
-		try {
-			addAttribute(attribute, 1.0, questionCode);
-		} catch (BadDataException e) {
-			log.error("Bad Question Code!");
-		}
-
-		return this;
-	}
-
-	/**
-	* Set the validation attribute.
-	* The search will then look to this attribute to find its validation state.
-	*
-	* @param validationAttribute the validation attribute code to set
-	* @return SearchEntity
-	 */
-	public SearchEntity setValidationAttribute(final String validationAttribute) {
-		AttributeText attribute = new AttributeText("SCH_VALIDATION_ATTRIBUTE", "ValidationAttribute");
-		try {
-			addAttribute(attribute, 1.0, validationAttribute);
-		} catch (BadDataException e) {
-			log.error("Bad Validation Attribute");
-		}
-
-		return this;
-	}
-
-	/**
-	* This method allows users to set the dropdown target.
-	* Used to pass information about the entity concerning a dropdown.
-	*
-	* @param dropdownTarget A code, or other information about the target
-	* entity of a dropdown.
-	* @return SearchEntity
-	 */
-	public SearchEntity setDropdownTarget(final String dropdownTarget) {
-		AttributeText attribute = new AttributeText("SCH_DROPDOWN_TARGET", "Dropdown Target");
-		try {
-			addAttribute(attribute, 1.0, dropdownTarget);
-		} catch (BadDataException e) {
-			log.error("Bad Dropdown Target");
-		}
+		Attribute attribute = new Attribute("SCH_TARGET_CODE", "TargetCode", new DataType(String.class));
+		addAttribute(attribute, 1.0, targetCode);
 
 		return this;
 	}
 
 	/** 
 	 * This method allows to set the wildcard of the results data to be sent
-	 * 
 	 * @param wildcard the widlcard
 	 * @return SearchEntity
 	 */
 	public SearchEntity setWildcard(String wildcard) {
 
-		AttributeText attributeWildcard = new AttributeText("SCH_WILDCARD", "Wildcard");
-		try {
-			addAttribute(attributeWildcard, 1.0, wildcard);
-		} catch (BadDataException e) {
-			log.error("Bad Wildcard!");
-		}
+		Attribute attribute = new Attribute("SCH_WILDCARD", "Wildcard", new DataType(String.class));
+		addAttribute(attribute, 1.0, wildcard);
 
 		return this;
 	}
 
 	/** 
 	 * This method allows to set the wildcard depth level for associated wildcards
-	 * 
 	 * @param depth the widlcard depth level
 	 * @return SearchEntity
 	 */
 	public SearchEntity setWildcardDepth(Integer depth) {
 
-		AttributeInteger attributeWildcard = new AttributeInteger("SCH_WILDCARD_DEPTH", "Wildcard");
-		try {
-			addAttribute(attributeWildcard, 1.0, depth);
-		} catch (BadDataException e) {
-			log.error("Bad Wildcard Depth!");
-		}
+		Attribute attribute = new Attribute("SCH_WILDCARD_DEPTH", "Wildcard", new DataType(Integer.class));
+		addAttribute(attribute, 1.0, depth);
 
 		return this;
 	}
 	
 	/** 
 	 * This method allows to set the status of the result BEs
-	 * 
 	 * @param status the search status to set
 	 * @return SearchEntity
 	 */
 	public SearchEntity setSearchStatus(EEntityStatus status) {
 
-		AttributeInteger attributeStatus = new AttributeInteger("SCH_STATUS", "Status");
-		try {
-			addAttribute(attributeStatus, 1.0, status.ordinal());
-		} catch (BadDataException e) {
-			log.error("Bad Search Status");
-		}
+		Attribute attribute = new Attribute("SCH_STATUS", "Status", new DataType(Integer.class));
+		addAttribute(attribute, 1.0, status.ordinal());
 
 		return this;
 	}
 	
 	/** 
-	 * This method allows to set the cachable of the result BEs for initial page
-	 * 
+	 * This method allows to set the cachable of the result BEs for initial page.
 	 * @param cachable true or false. true means cache the result for subsequent lookup
 	 * @return SearchEntity
 	 */
 	public SearchEntity setCachable(Boolean cachable) {
 
-		AttributeBoolean attributeCachable = new AttributeBoolean("SCH_CACHABLE", "Cachable");
-		try {
-			addAttribute(attributeCachable, 1.0, cachable);
-		} catch (BadDataException e) {
-			log.error("Bad Search cachable");
-		}
+		AttributeBoolean attribute = new AttributeBoolean("SCH_CACHABLE", "Cachable");
+		addAttribute(attribute, 1.0, cachable);
 		
 		return this;
 	}
 
 	/** 
-	 * This method allows to set the type of range data that the search relates to.
-	 * This is important for pagination that needs to page across data spans such as
-	 * Months, days, weeks, years, etc.
-	 * 
-	 * @param pageType the pageType to set
+	 * This method allows to set the total number of the results (BaseEntites) from the search.
+	 * @param totalResults the total results count to set
 	 * @return SearchEntity
 	 */
-	public SearchEntity setPageType(final String pageType) {
-		return setPageType(EPageType.valueOf(pageType));
-	}
+	public SearchEntity setTotalResults(final Integer totalResults) {
 
-	/** 
-	 * This method allows to set the type of range data that the search relates to.
-	 * This is important for pagination that needs to page across data spans such as
-	 * Months, days, weeks, years, etc.
-	 *
-	 * @param pageType the pageType to set
-	 * @return SearchEntity
-	 */
-	public SearchEntity setPageType(final EPageType pageType) {
-		AttributeText attributePageStart = new AttributeText("SCH_PAGE_TYPE", "PageType");
-		try {
-			addAttribute(attributePageStart, 3.0, pageType.toString());
-			if (!EPageType.DEFAULT.equals(pageType)) {
-				switch (pageType.getCategory()) {
-					case DATE:
-						// Now set a default PageIndexDate
-						AttributeDate pageDate = new AttributeDate("SCH_PAGE_DATE", "Page Date");
-						try {
-							addAttribute(pageDate, 1.0, LocalDateTime.now());
-						} catch (BadDataException e) {
-							log.error("Bad Wildcard ");
-						}
-
-						break;
-					case DATETIME:
-						// Now set a default PageIndexDate
-						AttributeDateTime pageDateTime = new AttributeDateTime("SCH_PAGE_DATETIME", "Page DateTime");
-						try {
-							addAttribute(pageDateTime, 1.0, LocalDateTime.now());
-						} catch (BadDataException e) {
-							log.error("Bad Wildcard ");
-						}
-
-						break;
-
-					case GROUP:
-						AttributeText pageText = new AttributeText("SCH_PAGE_TEXT", "Page Text");
-						try {
-							addAttribute(pageText, 1.0, "");
-						} catch (BadDataException e) {
-							log.error("Bad Wildcard ");
-						}
-
-						break;
-					default:
-				}
-			}
-		} catch (BadDataException e) {
-			log.error("Bad Page Start ");
-		}
+		Attribute attribute = new Attribute("PRI_TOTAL_RESULTS", "Total Results", new DataType(Integer.class));
+		addAttribute(attribute, 1.0, totalResults);
 
 		return this;
 	}
 
-	
+	/** 
+	 * This method allows to set the page index of the search
+	 * @param pageIndex the page index to set
+	 * @return SearchEntity
+	 */
+	public SearchEntity setPageIndex(final Integer pageIndex) {
+
+		Attribute attribute = new Attribute("PRI_INDEX", "Page Index", new DataType(Integer.class));
+		addAttribute(attribute, 3.0, pageIndex);
+
+		return this;
+	}
+
 	/** 
 	 * @return String
 	 */
@@ -1218,47 +751,51 @@ public class SearchEntity extends BaseEntity {
 		return "SearchEntity[ code = " + this.getCode() + "]";
 	}
 
-	
 	/** 
 	 * Get the page start
-	 *
-	 * @param defaultPageStart the default page start if nothing is found
 	 * @return Integer
 	 */
-	public Integer getPageStart(Integer defaultPageStart) {
-		Integer pageStart = getValue("SCH_PAGE_START", defaultPageStart);
-		return pageStart;
+	public Integer getPageStart() {
+		return getValue("SCH_PAGE_START", null);
 	}
-
 	
 	/** 
 	 * Get the page size
-	 *
-	 * @param defaultPageSize the default page size if nothing is found
 	 * @return Integer
 	 */
-	public Integer getPageSize(Integer defaultPageSize) {
-		Integer pageSize = getValue("SCH_PAGE_SIZE", defaultPageSize);
-		return pageSize;
+	public Integer getPageSize() {
+		return getValue("SCH_PAGE_SIZE", null);
 	}
 
 	
+	/** 
+	 * @param filterIndex the filter index to set
+	 */
+	public void setFilterIndex(Double filterIndex) {
+			this.filterIndex = filterIndex;
+	}
+
+	/** 
+	 * @return Double
+	 */
+	public Double getFilterIndex() {
+			return this.filterIndex;
+	}
+
 	/** 
 	 * @return Double
 	 */
 	public Double getColIndex() {
-		return colIndex;
+		return columnIndex;
 	}
 
-	
 	/** 
 	 * @param colIndex the column index to set
 	 */
 	public void setColIndex(Double colIndex) {
-		this.colIndex = colIndex;
+		this.columnIndex = colIndex;
 	}
 
-	
 	/** 
 	 * @return Double
 	 */
@@ -1266,7 +803,6 @@ public class SearchEntity extends BaseEntity {
 		return sortIndex;
 	}
 
-	
 	/** 
 	 * @param sortIndex the sort index to set
 	 */
@@ -1274,7 +810,6 @@ public class SearchEntity extends BaseEntity {
 		this.sortIndex = sortIndex;
 	}
 
-	
 	/** 
 	 * @return Double
 	 */
@@ -1282,7 +817,6 @@ public class SearchEntity extends BaseEntity {
 		return flcIndex;
 	}
 
-	
 	/** 
 	 * @param flcIndex the filter column index to set
 	 */
@@ -1290,7 +824,6 @@ public class SearchEntity extends BaseEntity {
 		this.flcIndex = flcIndex;
 	}
 
-	
 	/** 
 	 * @return Double
 	 */
@@ -1298,7 +831,6 @@ public class SearchEntity extends BaseEntity {
 		return actionIndex;
 	}
 
-	
 	/** 
 	 * @param actionIndex the action index to set
 	 */
@@ -1306,7 +838,6 @@ public class SearchEntity extends BaseEntity {
 		this.actionIndex = actionIndex;
 	}
 
-	
 	/** 
 	 * @return Double
 	 */
@@ -1314,7 +845,6 @@ public class SearchEntity extends BaseEntity {
 		return searchActionIndex;
 	}
 
-	
 	/** 
 	 * @param searchActionIndex the search action index to set
 	 */
@@ -1322,41 +852,8 @@ public class SearchEntity extends BaseEntity {
 		this.searchActionIndex = searchActionIndex;
 	}
 
-	
 	/** 
-	 * @return Double
-	 */
-	public Double getGroupIndex() {
-		return groupIndex;
-	}
-
-	
-	/** 
-	 * @param groupIndex the group index to set
-	 */
-	public void setGroupIndex(Double groupIndex) {
-		this.groupIndex = groupIndex;
-	}
-
-	
-	/** 
-	 * @return Double
-	 */
-	public Double getSearchIndex() {
-		return searchIndex;
-	}
-
-	
-	/** 
-	 * @param searchIndex the search index to set
-	 */
-	public void setSearchIndex(Double searchIndex) {
-		this.searchIndex = searchIndex;
-	}
-	
-	/** 
-	 * This method allows to remove the attributes from the SearchEntity
-	 *
+	 * This method allows to remove the attributes from the SearchEntity.
 	 * @param attributeCode the code of the column to remove
 	 * @return SearchEntity
 	 */
@@ -1365,42 +862,6 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 	
-	/** 
-	 * This method allows to set the total number of the results (BaseEntites) from
-	 * the search
-	 * 
-	 * @param totalResults the total results count to set
-	 * @return SearchEntity
-	 */
-	public SearchEntity setTotalResults(final Integer totalResults) {
-		AttributeInteger attributeTotalResults = new AttributeInteger("PRI_TOTAL_RESULTS", "Total Results");
-		try {
-			addAttribute(attributeTotalResults, 3.0, totalResults);
-		} catch (BadDataException e) {
-			log.error("Bad Total Results");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to set the page index of the search
-	 * 
-	 * @param pageIndex the page index to set
-	 * @return SearchEntity
-	 */
-	public SearchEntity setPageIndex(final Integer pageIndex) {
-		AttributeInteger attributePageIndex = new AttributeInteger("PRI_INDEX", "Page Index");
-		try {
-			addAttribute(attributePageIndex, 3.0, pageIndex);
-		} catch (BadDataException e) {
-			log.error("Bad Page Index");
-		}
-
-		return this;
-	}
-
 	/*
 	 * This method will update the column index.
 	 */
@@ -1427,7 +888,6 @@ public class SearchEntity extends BaseEntity {
 		setActionIndex(index.doubleValue());
 	}
 
-	
 	/** 
 	 * This method helps calculate the index of an OR filter
 	 * 
@@ -1448,7 +908,6 @@ public class SearchEntity extends BaseEntity {
 		return count;
 	}
 
-	
 	/** 
 	 * @return Double
 	 */
@@ -1466,33 +925,4 @@ public class SearchEntity extends BaseEntity {
 		return maxWeight;
 	}
 
-	
-	/** 
-	 * @param filterIndex the filter index to set
-	 */
-	public void setFilterIndex(Double filterIndex) {
-			this.filterIndex = filterIndex;
-	}
-
-	
-	/** 
-	 * @return Double
-	 */
-	public Double getFilterIndex() {
-			return this.filterIndex;
-	}
-
-	/*
-	 * This method helps you format the search data
-	 */
-	public SearchEntity addFormatter(final String attributeCode, String formatKey, String formatValue) {
-		Map<String, String> format = new HashMap<>();
-		format.put(formatKey, formatValue);
-		this.formatters.put(attributeCode, format);
-		return this;
-	}
-
-	public Map<String, Map<String, String>> getFormatters(){
-		return this.formatters;
-	}
 }
