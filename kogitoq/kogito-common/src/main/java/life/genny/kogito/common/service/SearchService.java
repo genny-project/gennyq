@@ -9,9 +9,15 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.swing.text.html.parser.Entity;
 
+import com.google.common.collect.Lists;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.entity.EntityEntity;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QSearchMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -70,6 +76,9 @@ public class SearchService {
 
 		searchUtils.searchTable(searchCode);
 		sendSearchPCM("PCM_TABLE", searchCode);
+
+		//filter
+		sendFilterGroup(searchCode);
 	}
 
 	/**
@@ -295,4 +304,96 @@ public class SearchService {
 			sendSearchPCM(GennyConstants.PCM_PROCESS, targetCode);
 		}
 	}
+
+
+	public Ask getFilterGroup(SearchEntity searchBE) {
+		Ask ask = new Ask();
+		ask.setName(GennyConstants.FILTERS);
+		ask.setTargetCode(searchBE.getCode());
+
+		Question question = new Question();
+		question.setCode(GennyConstants.QUE_FILTER_GRP + "_" + searchBE.getCode());
+		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+
+		ask.setQuestion(question);
+		ask.addChildAsk(getAddFilterGroup(searchBE));
+
+		return ask;
+	}
+
+	public Ask getAddFilterGroup(SearchEntity searchBE) {
+		Ask ask = new Ask();
+
+		ask.setTargetCode(searchBE.getCode());
+
+		Question question = new Question();
+		question.setCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+		ask.setQuestion(question);
+
+		Ask childAsk = new Ask();
+
+		Question childQuestion = new Question();
+		childQuestion.setCode(GennyConstants.QUE_FILTER_COLUMN);
+		childQuestion.setAttributeCode(GennyConstants.LNK_FILTER_COLUMN);
+		childAsk.setQuestion(childQuestion);
+
+
+		for(EntityEntity ee : searchBE.getLinks()) {
+			log.info(ee);
+		}
+
+		return ask;
+	}
+
+	public QDataBaseEntityMessage getFilterColum(SearchEntity searchBE) {
+		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
+
+		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		base.setLinkCode(GennyConstants.LNK_CORE);
+		base.setLinkValue(GennyConstants.LNK_ITEMS);
+
+		BaseEntity baseEntity = new BaseEntity();
+		List<EntityAttribute> entityAttributes = new ArrayList<>();
+
+		searchBE.getBaseEntityAttributes().stream().forEach(e-> {
+				baseEntity.setCode(e.getAttributeCode());
+
+				BaseEntity childBaseEntity = new BaseEntity();
+				childBaseEntity.setCode(e.getAttributeCode());
+
+				Attribute attribute = new Attribute();
+				attribute.setCode(e.getAttributeCode());
+				attribute.setName(e.getAttributeName());
+
+				entityAttributes.add(new EntityAttribute(childBaseEntity,attribute,1.0));
+		});
+
+		baseEntity.setBaseEntityAttributes(entityAttributes);
+		base.add(baseEntity);
+		return base;
+	}
+
+
+	public void sendFilterGroup(String targetCode) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
+
+		if(searchBE != null) {
+			Ask ask = getFilterGroup(searchBE);
+
+			QDataAskMessage msgFilter = new QDataAskMessage(ask);
+			msgFilter.setToken(userToken.getToken());
+			msgFilter.setTargetCode(targetCode);
+			msgFilter.setMessage(GennyConstants.FILTERS);
+			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilter);
+
+
+			QDataBaseEntityMessage msgAddFilter = getFilterColum(searchBE);
+			msgAddFilter.setToken(userToken.getToken());
+			msgAddFilter.setTargetCode(targetCode);
+			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
+		}
+
+	}
+
 }
