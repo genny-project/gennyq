@@ -12,14 +12,17 @@ public class S2SData implements Serializable {
         TIMEOUT,
     }
 
+    private String productCode;
     private String questionCode;
     private String targetCode;
     private String sourceCode;
     private String pcmCode;
     private String events;
     private String token;
-    private TimerData timerData;
-    private EAbortReason abortReason = EAbortReason.NONE;
+
+	// NOTE: This is removed temporarily because it is messing with data-index
+    // private TimerData timerData;
+    // private EAbortReason abortReason = EAbortReason.NONE;
 
     public S2SData() {
     }
@@ -72,17 +75,26 @@ public class S2SData implements Serializable {
         this.token = token;
     }
 
-    public TimerData getTimerData() {
-        return timerData;
+    // public TimerData getTimerData() {
+    //     return timerData;
+    // }
+
+    // public void setTimerData(TimerData timerData) {
+    //     this.timerData = timerData;
+    // }
+
+    public String getProductCode() {
+        return productCode;
     }
 
-    public void setTimerData(TimerData timerData) {
-        this.timerData = timerData;
+    public void setProductCode(String productCode) {
+        this.productCode = productCode;
     }
 
     @Override
     public String toString() {
-        return "S2SData [abortReason=" + abortReason + ", events=" + events + ", pcmCode=" + pcmCode + ", questionCode="
+        return "S2SData (" + getProductCode() + ") [abortReason=" + abortReason + ", events=" + events + ", pcmCode="
+                + pcmCode + ", questionCode="
                 + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + ", timerData="
                 + timerData + "]";
     }
@@ -95,17 +107,17 @@ public class S2SData implements Serializable {
         this.abortReason = abortReason;
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public Boolean isAborted() {
         return !abortReason.equals(EAbortReason.NONE);
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public Boolean isCanceled() {
         return abortReason.equals(EAbortReason.CANCEL);
     }
 
-	@JsonIgnore
+    @JsonIgnore
     public Boolean isExpired() {
         return abortReason.equals(EAbortReason.TIMEOUT);
     }
@@ -130,4 +142,5 @@ public class S2SData implements Serializable {
         setAbortReason(EAbortReason.NONE);
         return oldState;
     }
+
 }

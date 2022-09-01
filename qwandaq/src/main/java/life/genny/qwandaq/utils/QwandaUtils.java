@@ -35,6 +35,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -331,12 +332,61 @@ public class QwandaUtils {
 		}
 
 		// grab all child ask attribute codes
-		if ((ask.getChildAsks() != null) && (ask.getChildAsks().length > 0)) {
+		if (ask.hasChildren()) {
 			for (Ask childAsk : ask.getChildAsks()) {
 				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
 			}
 		}
 		return codes;
+	}
+
+	private Map<String, Ask> getAllAsksRecursively(Ask ask) {
+		return getAllAsksRecursively(ask, new HashMap<String, Ask>());
+	}
+
+	private Map<String, Ask> getAllAsksRecursively(Ask ask, Map<String, Ask> asks) {
+		if(ask.hasChildren()) {
+			for(Ask childAsk : ask.getChildAsks()) {
+				asks.put(childAsk.getAttributeCode(), childAsk);
+				asks = getAllAsksRecursively(childAsk, asks);
+			}
+		}
+		return asks;
+	}
+
+	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
+		target.getBaseEntityAttributes().stream().forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
+		for (String d : dependencies) {
+			if (!target.getValue(d).isPresent()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+  public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
+		Map<String, Ask> flatMapAsks = getAllAsksRecursively(ask);
+    return updateDependentAsks(ask, target, defBE, flatMapAsks);
+  }
+
+	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
+		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
+
+		for (EntityAttribute dep : dependentAsks) {
+			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), "DEP_");
+			Ask targetAsk = flatMapAsks.get(attributeCode);
+			if(targetAsk == null) {
+				continue;
+			}
+			
+			String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
+
+			boolean depsAnswered = hasDepsAnswered(target, dependencies);
+			targetAsk.setDisabled(!depsAnswered);
+			targetAsk.setHidden(!depsAnswered);
+		}
+		
+		return ask;
 	}
 
 	/**
@@ -478,7 +528,7 @@ public class QwandaUtils {
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
 		return enable;
 	}
@@ -646,7 +696,7 @@ public class QwandaUtils {
 	public void deleteSchedule(String code) {
 
 		String uri = GennySettings.shleemyServiceUrl() + "/api/schedule/code/" + code;
-		HttpUtils.delete(uri, userToken.getToken());
+		HttpUtils.delete(uri, userToken);
 	}
 
 	/**
@@ -712,7 +762,7 @@ public class QwandaUtils {
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		String json = jsonb.toJson(askMsg);
-		KafkaUtils.writeMsg("webcmds", json);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json);
 	}
 
 	/**
@@ -780,7 +830,7 @@ public class QwandaUtils {
 
 				// clean it up if it is a code
 				if (value.contains("[") && value.contains("]"))
-					value = BaseEntityUtils.cleanUpAttributeValue(value);
+					value = beUtils.cleanUpAttributeValue(value);
 
 				log.info("Adding unique filter: " + code + " like " + value);
 				searchEntity.addFilter(code, SearchEntity.StringFilter.LIKE, "%" + value + "%");
@@ -819,7 +869,7 @@ public class QwandaUtils {
 			).build();
 
 		// send to commands topic
-		KafkaUtils.writeMsg("webcmds", json.toString());
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
 		log.info("Sent error message to frontend : " + json.toString());
 	}
 

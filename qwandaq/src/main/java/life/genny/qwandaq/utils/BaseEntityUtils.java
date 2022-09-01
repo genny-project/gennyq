@@ -19,15 +19,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
-import io.quarkus.logging.Log;
-import io.quarkus.hibernate.orm.PersistenceUnit;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -37,7 +33,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -82,9 +77,18 @@ public class BaseEntityUtils {
 	public BaseEntityUtils() {
 	}
 
+	public BaseEntityUtils(ServiceToken serviceToken, UserToken userToken) {
+		this.serviceToken = serviceToken;
+		this.userToken = userToken;
+	}
+
 	public BaseEntityUtils(ServiceToken serviceToken) {
 		this.serviceToken = serviceToken;
 		this.userToken = new UserToken(serviceToken.getToken());
+	}
+
+	public void setUserToken(UserToken userToken) {
+		this.userToken = userToken;
 	}
 
 	/**
@@ -385,11 +389,13 @@ public class BaseEntityUtils {
 	 * Hope this makes our code look a little
 	 * nicer :)
 	 * <p>
+	 * 
+	 * TODO: Consider moving this to CommonUtils
 	 *
 	 * @param value The value to clean
 	 * @return A clean string
 	 */
-	public static String cleanUpAttributeValue(String value) {
+	public String cleanUpAttributeValue(String value) {
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
 	}

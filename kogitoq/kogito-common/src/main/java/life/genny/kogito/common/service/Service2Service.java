@@ -12,6 +12,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.S2SData;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -83,10 +84,10 @@ public class Service2Service {
 			log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 		}
 
-		if (data.isAborted()) {
-			log.info("Sending aborted message " + data.getAbortReason());
-			return data;
-		}
+		// if (data.isAborted()) {
+		// 	log.info("Sending aborted message " + data.getAbortReason());
+		// 	return data;
+		// }
 		return data;
 	}
 
@@ -97,10 +98,10 @@ public class Service2Service {
 	 */
 	public void initialiseScope(S2SData data) {
 		log.info(data.toString());
-		if (data.isAborted()) {
-			log.info("Handle aborted message " + data.getAbortReason());
-			userToken = new UserToken(data.getToken());
-		}
+		// if (data.isAborted()) {
+		// 	log.info("Handle aborted message " + data.getAbortReason());
+		// 	userToken = new UserToken(data.getToken());
+		// }
 		scope.init(jsonb.toJson(data));
 
 		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
@@ -128,7 +129,7 @@ public class Service2Service {
 						.add("targetCode", entityCode))
 				.build();
 
-		KafkaUtils.writeMsg("genny_events", json.toString());
+		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, json.toString());
 	}
 
 	/**
@@ -148,6 +149,6 @@ public class Service2Service {
 
 		log.info("Sending summary update -> " + personCode + " : " + summaryCode);
 
-		KafkaUtils.writeMsg("events", json.toString());
+		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
 	}
 }

@@ -16,6 +16,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.fyodor.utils.FyodorSearch;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -77,34 +78,12 @@ public class InternalConsumer {
 
         QBulkMessage bulkMsg = search.processSearchEntity(searchBE);
 
+		// publish results to destination channel
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, bulkMsg);
+		scope.destroy();
+
 		Instant end = Instant.now();
 		log.info("Finished! - Duration: " + Duration.between(start, end).toMillis() + " millSeconds.");
-
-		// TODO: Sort out this Nested Search
-
-		// // Perform Nested Searches
-		// List<EntityAttribute> nestedSearches = searchBE.findPrefixEntityAttributes("SBE_");
-
-		// for (EntityAttribute search : nestedSearches) {
-		// 	String[] fields = search.getAttributeCode().split("\\.");
-
-		// 	if (fields == null || fields.length < 2) {
-		// 		continue;
-		// 	}
-
-		// 	for (BaseEntity target : msg.getItems()) {
-		// 		searchTable(beUtils, fields[0], true, fields[1], target.getCode());
-		// 	}
-		// }
-
-		// check for null destination
-		if (msg.getDestination() == null) {
-			log.error("Destination is null! Not Sending results.");
-			return;
-		}
-
-		// publish results to destination channel
-		KafkaUtils.writeMsg(msg.getDestination(), bulkMsg);
-		scope.destroy();
 	}
+
 }

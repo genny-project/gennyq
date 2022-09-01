@@ -1,7 +1,10 @@
 package life.genny.lauchy.streams;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -9,8 +12,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -33,11 +34,13 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
@@ -103,6 +106,7 @@ public class TopologyProducer {
 				.filter((k, v) -> (v != null))
 				.mapValues((k, v) -> tidy(v))
 				.filter((k, v) -> validateData(v))
+				.mapValues((k, v) -> handleDependentDropdowns(v))
 				.peek((k, v) -> log.info("Forwarding valid message"))
 				.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
 
@@ -118,6 +122,40 @@ public class TopologyProducer {
 	public String stripToken(String data) {
 		JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
 		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
+	}
+
+	public String handleDependentDropdowns(String data) {
+		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
+
+		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_"))
+				.forEach(answer -> {
+					String processId = answer.getProcessId();
+					ProcessData processData = qwandaUtils.fetchProcessData(processId); // TODO: Wondering if we can just
+																						// get the processData from the
+																						// first processId we get
+					BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+
+					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+					List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
+
+					for (EntityAttribute dep : dependentAsks) {
+						log.info("Dependent Ask: " + dep.getAttributeCode());
+						String key = String.format("%s:%s", processId, processData.getQuestionCode());
+						Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+						if (ask == null) {
+							continue;
+						}
+						String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
+						log.info("Dependencies: " + CommonUtils.getArrayString(dependencies, d -> d));
+
+						boolean depsAnswered = qwandaUtils.hasDepsAnswered(processEntity, dependencies);
+						log.info("All Deps answered: " + depsAnswered);
+						ask.setDisabled(!depsAnswered);
+						ask.setHidden(!depsAnswered);
+					}
+				});
+
+		return data;
 	}
 
 	/**
@@ -142,7 +180,7 @@ public class TopologyProducer {
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
 		if (msg.getItems().length == 0) {
-			log.info("Detected a payload with empty items.. ignoring & proceding..");
+			log.warn("Detected a payload with empty items.. ignoring & proceding..");
 			return false;
 		}
 
@@ -181,7 +219,7 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
-		// check processId is no blank
+		// check processId is not blank
 		String processId = answer.getProcessId();
 		log.info("CHECK Integrity of processId [" + processId + "]");
 		if (StringUtils.isBlank(processId)) {
@@ -220,7 +258,7 @@ public class TopologyProducer {
 
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-		if (definition.findEntityAttribute("UNQ_"+attributeCode).isPresent()) {
+		if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
 			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
 				String feedback = "Error: This value already exists and must be unique.";
@@ -321,7 +359,7 @@ public class TopologyProducer {
 			return true;
 		}
 
-		KafkaUtils.writeMsg("blacklist", uuid);
+		KafkaUtils.writeMsg(KafkaTopic.BLACKLIST, uuid);
 		return false;
 	}
 
@@ -405,7 +443,7 @@ public class TopologyProducer {
 				responseMsg.setReturnCount(1L);
 				responseMsg.setToken(userToken.getToken());
 
-				KafkaUtils.writeMsg("webdata", responseMsg);
+				KafkaUtils.writeMsg(KafkaTopic.WEBDATA, responseMsg);
 				log.info("Detected cleared BKT_APPLICATIONS search from " + userToken.getEmailUserCode());
 
 			} catch (BadDataException e) {

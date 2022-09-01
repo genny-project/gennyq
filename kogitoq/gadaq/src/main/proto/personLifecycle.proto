@@ -6,6 +6,96 @@ option kogito_model = "PersonLifecycle";
 option kogito_id = "personLifecycle";
 
 /* @Indexed */ 
+message Answer { 
+	option java_package = "life.genny.qwandaq";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 askId = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional Attribute attribute = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string attributeCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional bool changeEvent = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string code = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional kogito.Serializable created = 6[(kogito_java_class) = "java.time.LocalDateTime"]; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string dataType = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional bool expired = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 id = 9; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional bool inferred = 10; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string processId = 11; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string realm = 12; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional bool refused = 13; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string sourceCode = 14; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string targetCode = 15; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional kogito.Serializable updated = 16[(kogito_java_class) = "java.time.LocalDateTime"]; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string value = 17; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional double weight = 18; 
+}
+/* @Indexed */ 
+message Attribute { 
+	option java_package = "life.genny.qwandaq.attribute";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional DataType dataType = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional bool defaultPrivacyFlag = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string defaultValue = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string description = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string help = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string icon = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string placeholder = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string code = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int32 index = 9; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional EEntityStatus status = 10; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional kogito.Serializable created = 11[(kogito_java_class) = "java.time.LocalDateTime"]; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 id = 12; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string name = 13; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string realm = 14; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional kogito.Serializable updated = 15[(kogito_java_class) = "java.time.LocalDateTime"]; 
+}
+/* @Indexed */ 
+message DataType { 
+	option java_package = "life.genny.qwandaq.datatype";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string className = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string component = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string dttCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string inputmask = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string typeName = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	repeated Validation validationList = 6; 
+}
+/* @Indexed */ 
 message MessageData { 
 	option java_package = "life.genny.qwandaq.message";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
@@ -35,7 +125,7 @@ message PersonLifecycle {
 	optional bool alreadyExisting = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string answerJson = 2; 
+	optional Answer answer = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
 	optional string askMessageJson = 3; 
@@ -67,10 +157,10 @@ message PersonLifecycle {
 	optional string pcmCode = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string processId = 13; 
+	optional ProcessData processData = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string processJson = 14; 
+	optional string processId = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
 	optional string questionCode = 15; 
@@ -85,6 +175,30 @@ message PersonLifecycle {
 	optional string targetCode = 18; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional org.kie.kogito.index.model.KogitoMetadata metadata = 19; 
+}
+/* @Indexed */ 
+message ProcessData { 
+	option java_package = "life.genny.qwandaq.graphql";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	repeated Answer answers = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	repeated string attributeCodes = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string definitionCode = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string events = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string pcmCode = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string processEntityCode = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string questionCode = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string sourceCode = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string processId = 9; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string targetCode = 10; 
 }
 /* @Indexed */ 
 message QEventMessage { 
@@ -124,29 +238,33 @@ message S2SData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string pcmCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 4; 
+	optional string productCode = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 5; 
+	optional string questionCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 6; 
+	optional string sourceCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional TimerData timerData = 7; 
+	optional string targetCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 8; 
+	optional TimerData timerData = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 9; 
 }
 /* @Indexed */ 
 message TimerData { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 elapsedMin = 1; 
+	optional TimerEvent currentMilestone = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated TimerEvent events = 2; 
+	optional int64 elapsedMin = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryMin = 3; 
+	repeated TimerEvent events = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryTimeStamp = 4; 
+	optional int64 expiryMin = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 intervalMin = 5; 
+	optional int64 expiryTimeStamp = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 intervalMin = 6; 
 }
 /* @Indexed */ 
 message TimerEvent { 
@@ -158,9 +276,52 @@ message TimerEvent {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string uniqueCode = 3; 
 }
+/* @Indexed */ 
+message Validation { 
+	option java_package = "life.genny.qwandaq.validation";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string errormsg = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional bool multiAllowed = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string options = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional bool recursiveGroup = 4; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string regex = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	repeated string selectionBaseEntityGroupList = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string code = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int32 index = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional EEntityStatus status = 9; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional kogito.Serializable created = 10[(kogito_java_class) = "java.time.LocalDateTime"]; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 id = 11; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string name = 12; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string realm = 13; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional kogito.Serializable updated = 14[(kogito_java_class) = "java.time.LocalDateTime"]; 
+}
 enum EAbortReason { 
 	option java_package = "life.genny.kogito.common.models.S2SData";
 	CANCEL = 0;
 	TIMEOUT = 2;
 	NONE = 1;
+}
+enum EEntityStatus { 
+	option java_package = "life.genny.qwandaq";
+	DISABLED = 3;
+	ACTIVE = 0;
+	PENDING_DELETE = 5;
+	TEST = 7;
+	TEMPORARY = 6;
+	ARCHIVED = 1;
+	PENDING = 4;
+	DELETED = 2;
 }

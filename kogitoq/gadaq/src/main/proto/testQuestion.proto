@@ -15,15 +15,17 @@ message S2SData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string pcmCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 4; 
+	optional string productCode = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 5; 
+	optional string questionCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 6; 
+	optional string sourceCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional TimerData timerData = 7; 
+	optional string targetCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 8; 
+	optional TimerData timerData = 8; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 9; 
 }
 /* @Indexed */ 
 message TestQuestion { 
@@ -55,15 +57,17 @@ message TestQuestion {
 message TimerData { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 elapsedMin = 1; 
+	optional TimerEvent currentMilestone = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated TimerEvent events = 2; 
+	optional int64 elapsedMin = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryMin = 3; 
+	repeated TimerEvent events = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryTimeStamp = 4; 
+	optional int64 expiryMin = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 intervalMin = 5; 
+	optional int64 expiryTimeStamp = 5; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 intervalMin = 6; 
 }
 /* @Indexed */ 
 message TimerEvent { 

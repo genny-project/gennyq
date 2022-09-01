@@ -36,6 +36,7 @@ import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.bridge.model.InitColors;
 import life.genny.bridge.model.InitProperties;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataB2BMessage;
 import life.genny.qwandaq.models.AttributeCodeValueString;
 import life.genny.qwandaq.models.GennyItem;
@@ -317,7 +318,7 @@ public class Bridge {
 		log.info("bridgeId=" + bridgeId);
 		log.info("dataMsgJson:" + dataMsgJson);
 
-		KafkaUtils.writeMsg("data", dataMsgJson);
+		KafkaUtils.writeMsg(KafkaTopic.DATA, dataMsgJson);
 
 		return Response.ok().build();
 	}
@@ -351,10 +352,9 @@ public class Bridge {
 		}
 
 		String dataMsgJsonStr = jsonb.toJson(dataMsg);
-		String jti = userToken.getJTI();
 		JsonObject dataMsgJson = new JsonObject(dataMsgJsonStr);
 
-		KafkaUtils.writeMsg("data", dataMsgJson);
+		KafkaUtils.writeMsg(KafkaTopic.DATA, dataMsgJson);
 
 		return Response.ok().build();
 	}

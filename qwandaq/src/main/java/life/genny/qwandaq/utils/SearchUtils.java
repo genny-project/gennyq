@@ -30,6 +30,7 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -298,8 +299,7 @@ public class SearchUtils {
 		// package and send search message to fyodor
 		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
 		searchBeMsg.setToken(userToken.getToken());
-		searchBeMsg.setDestination("webcmds");
-		KafkaUtils.writeMsg("search_events", searchBeMsg);
+		KafkaUtils.writeMsg(KafkaTopic.SEARCH_EVENTS, searchBeMsg);
 	}
 
 	/**
@@ -394,7 +394,7 @@ public class SearchUtils {
 			String calBe = be.getValueAsString(attributeCode);
 
 			if (calBe != null && !calBe.isBlank()) {
-				String calVal = BaseEntityUtils.cleanUpAttributeValue(calBe);
+				String calVal = beUtils.cleanUpAttributeValue(calBe);
 				String[] codeArr = calVal.split(",");
 
 				for (String code : codeArr) {
@@ -654,7 +654,7 @@ public class SearchUtils {
 				msg.setToken(userToken.getToken());
 				msg.setReplace(true);
 				msg.setParentCode(searchBE.getCode());
-				KafkaUtils.writeMsg("webcmds", msg);
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
 				// update and send the SearchEntity
 				// updateBaseEntity(searchBE, "PRI_TOTAL_RESULTS",
@@ -674,7 +674,7 @@ public class SearchUtils {
 				QDataBaseEntityMessage searchMsg = new QDataBaseEntityMessage(searchBE);
 				searchMsg.setToken(userToken.getToken());
 				searchMsg.setReplace(true);
-				KafkaUtils.writeMsg("webcmds", searchMsg);
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, searchMsg);
 			}
 		}
 
@@ -772,7 +772,7 @@ public class SearchUtils {
 
 		// publish to events for dropkick
 		msg.setToken(userToken.getToken());
-		KafkaUtils.writeMsg("events", msg);
+		KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
 	}
 
 }

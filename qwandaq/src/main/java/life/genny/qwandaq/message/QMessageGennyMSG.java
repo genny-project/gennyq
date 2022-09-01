@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -288,7 +289,7 @@ public class QMessageGennyMSG extends QMessage {
 				this.msg.addMessageType(QBaseMSGMessageType.DEFAULT);
 			}
 
-			KafkaUtils.writeMsg("messages", this.msg);
+			KafkaUtils.writeMsg(KafkaTopic.MESSAGES, this.msg);
 			return this.msg;
 		}
 

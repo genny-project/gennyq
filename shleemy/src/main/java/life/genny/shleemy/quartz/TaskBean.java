@@ -20,6 +20,7 @@ import org.quartz.*;
 import life.genny.shleemy.endpoints.ScheduleResource;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QScheduleMessage;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
@@ -148,8 +149,10 @@ public class TaskBean {
 		log.info("Sending " + sourceCode + ":" + code + ":" + gennyToken.getEmail() + " to " + channel + " for " 
 				+ gennyToken.getProductCode() + " at " + LocalDateTime.now() + ", jsonMessage:" + jsonMessage);
 
+		KafkaTopic topic = KafkaTopic.valueOf(channel.toUpperCase());
+
 		// send to channel specified by schedule message
-		KafkaUtils.writeMsg(channel, jsonMessage);
+		KafkaUtils.writeMsg(topic, jsonMessage);
 	}
 
 }
