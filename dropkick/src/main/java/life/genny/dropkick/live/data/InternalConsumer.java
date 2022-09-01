@@ -317,7 +317,7 @@ public class InternalConsumer {
 								filter = convertOperatorToFilter(filterStr);
 							}
 							log.info("Adding Other DTT filter");
-							searchBE.addFilterAsString(attributeCode, filter, val);
+							searchBE.addFilter(attributeCode, filter, val);
 						}
 					}
 				}

@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeBoolean;
 import life.genny.qwandaq.attribute.AttributeDate;
 import life.genny.qwandaq.attribute.AttributeDateTime;
@@ -20,6 +21,7 @@ import life.genny.qwandaq.attribute.AttributeLong;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.AttributeTime;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Sort;
 import life.genny.qwandaq.exception.runtime.BadDataException;
@@ -418,553 +420,289 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
-	
 	/*
 	 * This method allows to set the filter for the integer value in the search
-	 * 
-	 * @param attributeCode the attributeCode which holds integer value where we
-	 * apply the filter
+	 * @param attributeCode the attributeCode which holds integer value where we apply the filter
 	 * @param filter type of the filter
 	 * @param value filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filter, final Integer value) {
-		AttributeInteger attribute = new AttributeInteger(attributeCode, filter.toString());
+	public SearchEntity addFilter(final String code, final Filter filter, final Integer value) {
+		return addFilter(code, filter, value, Integer.class);
 
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Integer Filter Initialisation");
-		}
-
-		return this;
 	}
 
 	/**
 	 * This method allows to set the filter for the Long value in the search
-	 * 
-	 * @param attributeCode - the attributeCode which holds long value where we
-	 * apply the filter
+	 * @param attributeCode - the attributeCode which holds long value where we apply the filter
 	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
 	public SearchEntity addFilter(final String attributeCode, final Filter filter, final Long value) {
-		AttributeLong attribute = new AttributeLong(attributeCode, filter.toString());
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Long Filter Initialisation");
-		}
-
-		return this;
+		return addFilter(attributeCode, filter, value, Long.class);
 	}
 	
 	/**
 	 * This method allows to set the filter for the Double value in the search
 	 * 
-	 * @param attributeCode - the attributeCode which holds long value where we
+	 * @param code - the attributeCode which holds long value where we
 	 * apply the filter
 	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filter, final Double value) {
-		AttributeDouble attribute = new AttributeDouble(attributeCode, filter.toString());
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Double Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addFilter(final String code, final Filter filter, final Double value) {
+		return addFilter(code, filter, value, Double.class);
 	}
 
 	
 	/** 
-	 * This method allows to set the filter for the LocalDateTime value in the
-	 * search
-	 * 
-	 * @param attributeCode - the attributeCode which holds LocalDateTime value
-	 * where we apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * This method allows to set the filter for the LocalDateTime value in the search
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filter, final LocalDateTime value) {
-		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filter.toString());
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad DateTime Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addFilter(final String code, final Filter filter, final LocalDateTime value) {
+		return addFilter(code, filter, value, LocalDateTime.class);
 	}
 
 	
 	/** 
-	 * This method allows to set the filter for the LocalDate value in the
-	 * search
-	 * 
-	 * @param attributeCode - the attributeCode which holds LocalDate value
-	 * where we apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * This method allows to set the filter for the LocalDate value in the search
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filter, final LocalDate value) {
-		AttributeDate attribute = new AttributeDate(attributeCode, filter.toString());
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Date Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addFilter(final String code, final Filter filter, final LocalDate value) {
+		return addFilter(code, filter, value, LocalDate.class);
 	}
 
-	
 	/** 
-	 * This method allows to set the filter for the LocalDate value in the
-	 * search
-	 * 
-	 * @param attributeCode - the attributeCode which holds LocalDate value
-	 * where we apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * This method allows to set the filter for the LocalDate value in the search
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filter, final LocalTime value) {
-		AttributeTime attribute = new AttributeTime(attributeCode, filter.toString());
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Date Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addFilter(final String code, final Filter filter, final LocalTime value) {
+		return addFilter(code, filter, value, LocalTime.class);
 	}
 
-
-	
 	/** 
 	 * This method allows to set the filter for the Boolean value in the search
-	 * 
-	 * @param attributeCode - the attributeCode which holds Boolean value where we
-	 * apply the filter
-	 * @param value - filter against (search for) this value
+	 * @param code The attribute code which holds the searched value
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Boolean value) {
-		AttributeBoolean attribute = new AttributeBoolean(attributeCode, "=");
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Double Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addFilter(final String code, final Boolean value) {
+		return addFilter(code, Filter.EQUALS, value, Boolean.class);
 	}
 
-	
 	/**
 	 * This method allows to set the filter for the String value in the search
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * 
-	 * @param filter - type of the string filter
-	 * 
-	 * @param value - filter against (search for) this value
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filter, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
+	public SearchEntity addFilter(final String code, final Filter filter, final String value) {
+		return addFilter(code, filter, value, String.class);
+	}
 
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad String Filter Initialisation");
-		}
+	/**
+	 * This method allows to set the filter for the String value in the search
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @param c the class of the value
+	 * @return SearchEntity
+	 */
+	private SearchEntity addFilter(final String code, final Filter filter, final Object value, Class c) {
+
+		Attribute attribute = new Attribute(code, filter.name(), new DataType(c));
+		addAttribute(attribute, filterIndex, value);
+		filterIndex += 1.0;
 		
 		return this;
 	}
 
 	/** 
-	 * This method allows to set the filter for the LocalDate value in the
-	 * search
-	 * 
-	 * @param attributeCode - the attributeCode which holds LocalDate value
-	 * where we apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * Add an OR condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilterAsString(final String attributeCode, final Filter filter, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Filter As String Filter Initialisation");
-		}
-
-		return this;
-	}
-
-	/** 
-	 * This method allows to set an OR filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * 
-	 * @param filter - type of the filter
-	 * 
-	 * @param value - filter against (search for) this value
-	 * @return SearchEntity
-	 */
-    
-	public SearchEntity addOr(final String attributeCode, final Filter filter, final Integer value) {
-		AttributeInteger attribute = new AttributeInteger(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "OR") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("OR_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad OR Integer Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addOr(final String code, final Filter filter, final Integer value) {
+		return addOr(code, filter, value, Integer.class);
 	}
     
-	
 	/** 
-	 * This method allows to set an OR filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * Add an OR condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filter, final Long value) {
-		AttributeLong attribute = new AttributeLong(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "OR") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("OR_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad OR Long Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addOr(final String code, final Filter filter, final Long value) {
+		return addOr(code, filter, value, Long.class);
 	}
 
-	
 	/** 
-	 * This method allows to set an OR filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * Add an OR condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filter, final Double value) {
-		AttributeDouble attribute = new AttributeDouble(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "OR") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("OR_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad OR Double Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addOr(final String code, final Filter filter, final Double value) {
+		return addOr(code, filter, value, Double.class);
 	}
 
-	
 	/** 
-	 * This method allows to set an OR filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * Add an OR condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filter, final LocalDateTime value) {
-		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "OR") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("OR_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad OR LocalDateTime Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addOr(final String code, final Filter filter, final LocalDateTime value) {
+		return addOr(code, filter, value, LocalDateTime.class);
+	}
+	
+	/** 
+	 * Add an OR condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @return SearchEntity
+	 */
+	public SearchEntity addOr(final String code, final Filter filter, final LocalDate value) {
+		return addOr(code, filter, value, LocalDate.class);
 	}
 
-	
 	/** 
-	 * This method allows to set an OR filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * Add an OR condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filter, final LocalDate value) {
-		AttributeDate attribute = new AttributeDate(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "OR") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("OR_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad OR LocalDate Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addOr(final String code, final Filter filter, final String value) {
+		return addOr(code, filter, value, String.class);
 	}
 
-	
-	/** 
-	 * This method allows to set an OR filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the string filter
-	 * @param value - filter against (search for) this value
+	/**
+	 * Add an OR condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @param c The class of the value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filter, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "OR") + 1;
+	private SearchEntity addOr(final String code, final Filter filter, final Object value, Class c) {
 
+		Attribute attribute = new Attribute(code, filter.name(), new DataType(c));
+		Integer count = countOccurrences(code, "OR") + 1;
 		for (int i = 0; i < count; i++) {
 			attribute.setCode("OR_"+attribute.getCode());
 		}
 
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad OR String Filter Initialisation");
-		}
+		addAttribute(attribute, filterIndex, value);
+		filterIndex += 1.0;
 
 		return this;
 	}
     
-	
 	/** 
-	 * This method allows to set an AND filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * Add an AND condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filter, final Integer value) {
-		AttributeInteger attribute = new AttributeInteger(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "AND") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("AND_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad AND Integer Filter Initialisation");
-		}
-
-		return this;
+	public SearchEntity addAnd(final String code, final Filter filter, final Integer value) {
+		return addAnd(code, filter, value, Integer.class);
 	}
     
-	
 	/** 
-	 * This method allows to set an AND filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
+	 * Add an AND condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filter, final Long value) {
-		AttributeLong attribute = new AttributeLong(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "AND") + 1;
+	public SearchEntity addAnd(final String code, final Filter filter, final Long value) {
+		return addAnd(code, filter, value, Long.class);
+	}
 
+	/** 
+	 * Add an AND condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @return SearchEntity
+	 */
+	public SearchEntity addAnd(final String code, final Filter filter, final Double value) {
+		return addAnd(code, filter, value, Double.class);
+	}
+
+	/** 
+	 * Add an AND condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @return SearchEntity
+	 */
+	public SearchEntity addAnd(final String code, final Filter filter, final LocalDateTime value) {
+		return addAnd(code, filter, value, LocalDateTime.class);
+	}
+
+	/** 
+	 * Add an AND condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @return SearchEntity
+	 */
+	public SearchEntity addAnd(final String code, final Filter filter, final LocalDate value) {
+		return addAnd(code, filter, value, LocalDate.class);
+	}
+
+	/** 
+	 * Add an AND condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @return SearchEntity
+	 */
+	public SearchEntity addAnd(final String code, final Filter filter, final String value) {
+		return addAnd(code, filter, value, String.class);
+	}
+
+	/** 
+	 * Add an AND condition filter to a SearchEntity.
+	 * @param code The attribute code which holds the searched value
+	 * @param filter The filter condition
+	 * @param value Filter against this value
+	 * @param c The class of the value
+	 * @return SearchEntity
+	 */
+	private SearchEntity addAnd(final String code, final Filter filter, final Object value, Class c) {
+
+		Attribute attribute = new Attribute(code, filter.name(), new DataType(c));
+		Integer count = countOccurrences(code, "AND") + 1;
 		for (int i = 0; i < count; i++) {
 			attribute.setCode("AND_"+attribute.getCode());
 		}
 
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad AND Long Filter Initialisation");
-		}
+		addAttribute(attribute, filterIndex, value);
+		filterIndex += 1.0;
 
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to set an AND filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filter, final Double value) {
-		AttributeDouble attribute = new AttributeDouble(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "AND") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("AND_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad AND Double Filter Initialisation");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to set an AND filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filter, final LocalDateTime value) {
-		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "AND") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("AND_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad AND LocalDateTime Filter Initialisation");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to set an AND filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the filter
-	 * @param value - filter against (search for) this value
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filter, final LocalDate value) {
-		AttributeDate attribute = new AttributeDate(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "AND") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("AND_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad AND LocalDate Filter Initialisation");
-		}
-
-		return this;
-	}
-
-	
-	/** 
-	 * This method allows to set an AND filter for an attribute
-	 * 
-	 * @param attributeCode - the attributeCode which holds String value where we
-	 * apply the filter
-	 * @param filter - type of the string filter
-	 * @param value - filter against (search for) this value
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filter, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
-		Integer count = countOccurrences(attributeCode, "AND") + 1;
-
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("AND_"+attribute.getCode());
-		}
-
-		try {
-			addAttribute(attribute, filterIndex, value);
-			filterIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad AND String Filter Initialisation");
-		}
-
-		return this;
-	}
+		return this;	}
 
 	
 	/** 
