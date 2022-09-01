@@ -1,6 +1,6 @@
 package life.genny.qwandaq.entity.search;
 
-public enum Filter {
+public enum Operator {
 
 	LIKE,
 	NOT_LIKE,

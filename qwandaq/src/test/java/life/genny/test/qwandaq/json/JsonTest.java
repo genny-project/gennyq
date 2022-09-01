@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.entity.search.Sort;
 
 public class JsonTest {
@@ -30,7 +30,7 @@ public class JsonTest {
 	{
 		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
 		.addSort("PRI_NAME", "Created", Sort.ASC)
-		.addFilter("PRI_CODE", Filter.LIKE, "DEF_%")
+		.addFilter("PRI_CODE", Operator.LIKE, "DEF_%")
 		.addColumn("PRI_CODE", "Name")
 		.setPageStart(0).setPageSize(1000);
 

@@ -9,13 +9,11 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeBoolean;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.entity.search.Sort;
-import life.genny.qwandaq.exception.runtime.BadDataException;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
@@ -97,20 +95,17 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity addAssociatedColumn(final String attributeCode, final String associatedLinkedBaseEntityCodeAttribute,
 			final String columnName) {
 		AttributeText attributeColumn = new AttributeText("COL__" + attributeCode.toUpperCase()+"__"+associatedLinkedBaseEntityCodeAttribute.toUpperCase(), columnName);
-		try {
-			EntityAttribute ea = addAttribute(attributeColumn, columnIndex);
-			ea.setValue(associatedLinkedBaseEntityCodeAttribute);
-			ea.setIndex(columnIndex.intValue());
-			columnIndex += 1.0;
-		} catch (BadDataException e) {
-			log.error("Bad Associated Column Initialisation");
-		}
+
+		EntityAttribute ea = addAttribute(attributeColumn, columnIndex);
+		ea.setValue(associatedLinkedBaseEntityCodeAttribute);
+		ea.setIndex(columnIndex.intValue());
+		columnIndex += 1.0;
+
 		return this;
 	}
 	
 	/** 
 	 * This method allows nested associated columns
-	 *
 	 * @param attributeCode the code of the associated attribute
 	 * @param nestedAttributeCode the code of the nested associated attribute
 	 * @param associatedLinkedBaseEntityCodeAttribute the the code of the attribute to fetch as a column
@@ -190,20 +185,20 @@ public class SearchEntity extends BaseEntity {
 	 * @param value filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String code, final Filter filter, final Integer value) {
-		return addFilter(code, filter, value, Integer.class);
+	public SearchEntity addFilter(final String code, final Operator operator, final Integer value) {
+		return addFilter(code, operator, value, Integer.class);
 
 	}
 
 	/**
 	 * This method allows to set the filter for the Long value in the search
 	 * @param attributeCode - the attributeCode which holds long value where we apply the filter
-	 * @param filter - type of the filter
+	 * @param operator - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filter, final Long value) {
-		return addFilter(attributeCode, filter, value, Long.class);
+	public SearchEntity addFilter(final String attributeCode, final Operator operator, final Long value) {
+		return addFilter(attributeCode, operator, value, Long.class);
 	}
 	
 	/**
@@ -211,47 +206,47 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param code - the attributeCode which holds long value where we
 	 * apply the filter
-	 * @param filter - type of the filter
+	 * @param operator - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String code, final Filter filter, final Double value) {
-		return addFilter(code, filter, value, Double.class);
+	public SearchEntity addFilter(final String code, final Operator operator, final Double value) {
+		return addFilter(code, operator, value, Double.class);
 	}
 
 	
 	/** 
 	 * This method allows to set the filter for the LocalDateTime value in the search
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String code, final Filter filter, final LocalDateTime value) {
-		return addFilter(code, filter, value, LocalDateTime.class);
+	public SearchEntity addFilter(final String code, final Operator operator, final LocalDateTime value) {
+		return addFilter(code, operator, value, LocalDateTime.class);
 	}
 
 	
 	/** 
 	 * This method allows to set the filter for the LocalDate value in the search
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String code, final Filter filter, final LocalDate value) {
-		return addFilter(code, filter, value, LocalDate.class);
+	public SearchEntity addFilter(final String code, final Operator operator, final LocalDate value) {
+		return addFilter(code, operator, value, LocalDate.class);
 	}
 
 	/** 
 	 * This method allows to set the filter for the LocalDate value in the search
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String code, final Filter filter, final LocalTime value) {
-		return addFilter(code, filter, value, LocalTime.class);
+	public SearchEntity addFilter(final String code, final Operator operator, final LocalTime value) {
+		return addFilter(code, operator, value, LocalTime.class);
 	}
 
 	/** 
@@ -261,31 +256,31 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity addFilter(final String code, final Boolean value) {
-		return addFilter(code, Filter.EQUALS, value, Boolean.class);
+		return addFilter(code, Operator.EQUALS, value, Boolean.class);
 	}
 
 	/**
 	 * This method allows to set the filter for the String value in the search
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String code, final Filter filter, final String value) {
-		return addFilter(code, filter, value, String.class);
+	public SearchEntity addFilter(final String code, final Operator operator, final String value) {
+		return addFilter(code, operator, value, String.class);
 	}
 
 	/**
 	 * This method allows to set the filter for the String value in the search
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @param c the class of the value
 	 * @return SearchEntity
 	 */
-	private SearchEntity addFilter(final String code, final Filter filter, final Object value, Class c) {
+	private SearchEntity addFilter(final String code, final Operator operator, final Object value, Class c) {
 
-		Attribute attribute = new Attribute(code, filter.name(), new DataType(c));
+		Attribute attribute = new Attribute(code, operator.name(), new DataType(c));
 		addAttribute(attribute, filterIndex, value);
 		filterIndex += 1.0;
 		
@@ -295,80 +290,80 @@ public class SearchEntity extends BaseEntity {
 	/** 
 	 * Add an OR condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String code, final Filter filter, final Integer value) {
-		return addOr(code, filter, value, Integer.class);
+	public SearchEntity addOr(final String code, final Operator operator, final Integer value) {
+		return addOr(code, operator, value, Integer.class);
 	}
     
 	/** 
 	 * Add an OR condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String code, final Filter filter, final Long value) {
-		return addOr(code, filter, value, Long.class);
+	public SearchEntity addOr(final String code, final Operator operator, final Long value) {
+		return addOr(code, operator, value, Long.class);
 	}
 
 	/** 
 	 * Add an OR condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String code, final Filter filter, final Double value) {
-		return addOr(code, filter, value, Double.class);
+	public SearchEntity addOr(final String code, final Operator operator, final Double value) {
+		return addOr(code, operator, value, Double.class);
 	}
 
 	/** 
 	 * Add an OR condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String code, final Filter filter, final LocalDateTime value) {
-		return addOr(code, filter, value, LocalDateTime.class);
+	public SearchEntity addOr(final String code, final Operator operator, final LocalDateTime value) {
+		return addOr(code, operator, value, LocalDateTime.class);
 	}
 	
 	/** 
 	 * Add an OR condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String code, final Filter filter, final LocalDate value) {
-		return addOr(code, filter, value, LocalDate.class);
+	public SearchEntity addOr(final String code, final Operator operator, final LocalDate value) {
+		return addOr(code, operator, value, LocalDate.class);
 	}
 
 	/** 
 	 * Add an OR condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String code, final Filter filter, final String value) {
-		return addOr(code, filter, value, String.class);
+	public SearchEntity addOr(final String code, final Operator operator, final String value) {
+		return addOr(code, operator, value, String.class);
 	}
 
 	/**
 	 * Add an OR condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @param c The class of the value
 	 * @return SearchEntity
 	 */
-	private SearchEntity addOr(final String code, final Filter filter, final Object value, Class c) {
+	private SearchEntity addOr(final String code, final Operator operator, final Object value, Class c) {
 
-		Attribute attribute = new Attribute(code, filter.name(), new DataType(c));
+		Attribute attribute = new Attribute(code, operator.name(), new DataType(c));
 		Integer count = countOccurrences(code, "OR") + 1;
 		for (int i = 0; i < count; i++) {
 			attribute.setCode("OR_"+attribute.getCode());
@@ -383,80 +378,80 @@ public class SearchEntity extends BaseEntity {
 	/** 
 	 * Add an AND condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String code, final Filter filter, final Integer value) {
-		return addAnd(code, filter, value, Integer.class);
+	public SearchEntity addAnd(final String code, final Operator operator, final Integer value) {
+		return addAnd(code, operator, value, Integer.class);
 	}
     
 	/** 
 	 * Add an AND condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String code, final Filter filter, final Long value) {
-		return addAnd(code, filter, value, Long.class);
+	public SearchEntity addAnd(final String code, final Operator operator, final Long value) {
+		return addAnd(code, operator, value, Long.class);
 	}
 
 	/** 
 	 * Add an AND condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String code, final Filter filter, final Double value) {
-		return addAnd(code, filter, value, Double.class);
+	public SearchEntity addAnd(final String code, final Operator operator, final Double value) {
+		return addAnd(code, operator, value, Double.class);
 	}
 
 	/** 
 	 * Add an AND condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String code, final Filter filter, final LocalDateTime value) {
-		return addAnd(code, filter, value, LocalDateTime.class);
+	public SearchEntity addAnd(final String code, final Operator operator, final LocalDateTime value) {
+		return addAnd(code, operator, value, LocalDateTime.class);
 	}
 
 	/** 
 	 * Add an AND condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String code, final Filter filter, final LocalDate value) {
-		return addAnd(code, filter, value, LocalDate.class);
+	public SearchEntity addAnd(final String code, final Operator operator, final LocalDate value) {
+		return addAnd(code, operator, value, LocalDate.class);
 	}
 
 	/** 
 	 * Add an AND condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String code, final Filter filter, final String value) {
-		return addAnd(code, filter, value, String.class);
+	public SearchEntity addAnd(final String code, final Operator operator, final String value) {
+		return addAnd(code, operator, value, String.class);
 	}
 
 	/** 
 	 * Add an AND condition filter to a SearchEntity.
 	 * @param code The attribute code which holds the searched value
-	 * @param filter The filter condition
+	 * @param operator The filter condition
 	 * @param value Filter against this value
 	 * @param c The class of the value
 	 * @return SearchEntity
 	 */
-	private SearchEntity addAnd(final String code, final Filter filter, final Object value, Class c) {
+	private SearchEntity addAnd(final String code, final Operator operator, final Object value, Class c) {
 
-		Attribute attribute = new Attribute(code, filter.name(), new DataType(c));
+		Attribute attribute = new Attribute(code, operator.name(), new DataType(c));
 		Integer count = countOccurrences(code, "AND") + 1;
 		for (int i = 0; i < count; i++) {
 			attribute.setCode("AND_"+attribute.getCode());
@@ -467,7 +462,6 @@ public class SearchEntity extends BaseEntity {
 
 		return this;	
 	}
-
 	
 	/** 
 	 * Add a conditional attribute.
@@ -522,7 +516,6 @@ public class SearchEntity extends BaseEntity {
 
 		return this;
 	}
-
 
 	/** 
 	 * This method allows to set the parentCode of the SearchEntity
@@ -706,7 +699,7 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity setCachable(Boolean cachable) {
 
-		AttributeBoolean attribute = new AttributeBoolean("SCH_CACHABLE", "Cachable");
+		Attribute attribute = new Attribute("SCH_CACHABLE", "Cachable", new DataType(Boolean.class));
 		addAttribute(attribute, 1.0, cachable);
 		
 		return this;
@@ -896,6 +889,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return Integer
 	 */
 	public Integer countOccurrences(final String attributeCode, final String prefix) {
+
         Integer count = -1;
         for (EntityAttribute ea : this.getBaseEntityAttributes()) {
             if (ea.getAttributeCode().endsWith(attributeCode)) {

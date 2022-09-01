@@ -29,7 +29,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
@@ -509,7 +509,7 @@ public class SearchUtils {
 					// TODO: allow for regular filters too
 					// SearchEntity.StringFilter stringFilter =
 					// SearchEntity.convertOperatorToStringFilter(operator);
-					Filter filter = Filter.EQUALS;
+					Operator filter = Operator.EQUALS;
 					String mergedValue = MergeUtils.merge(value, ctxMap);
 					log.info("Adding filter: " + attributeCode + " "
 							+ filter.toString() + " " + mergedValue);
