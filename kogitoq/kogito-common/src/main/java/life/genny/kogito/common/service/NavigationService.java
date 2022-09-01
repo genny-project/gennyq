@@ -34,6 +34,7 @@ import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 
@@ -164,7 +165,7 @@ public class NavigationService {
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		log.info("Sending PCMs for " + questionCode);
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 
 		recursivelyPerformPcmSearches(pcm);
 	}
@@ -218,7 +219,7 @@ public class NavigationService {
 
 		log.info("Sending View Event -> " + code + " : " + targetCode);
 
-		KafkaUtils.writeMsg("events", json.toString());
+		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
 	}
 
 	/**
@@ -233,12 +234,7 @@ public class NavigationService {
 
 		if (pcm == null) {
 			log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
-			pcm = beUtils.getBaseEntityByCode(userToken.getProductCode(), pcmCode);
-		}
-
-		if (pcm == null) {
-			log.error("Couldn't find PCM with code " + pcmCode);
-			throw new NullPointerException("Couldn't find PCM with code " + pcmCode);
+			pcm = beUtils.getBaseEntity(pcmCode);
 		}
 
 		log.info("Found PCM " + pcm);
@@ -261,7 +257,7 @@ public class NavigationService {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcm);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 
 		CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
 	}
@@ -272,7 +268,7 @@ public class NavigationService {
 				+ "\",\"parentCode\":\"QUE_SIDEBAR_GRP\",\"code\":\"QUE_TAB_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
 				+ userToken.getToken() + "\"}";
 
-		KafkaUtils.writeMsg("events", eventJson);
+		KafkaUtils.writeMsg(KafkaTopic.EVENTS, eventJson);
 	}
 
 	/**

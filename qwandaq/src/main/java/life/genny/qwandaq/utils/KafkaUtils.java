@@ -8,7 +8,8 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.runtime.NotInitializedException;
-import life.genny.qwandaq.intf.KafkaInterface;
+import life.genny.qwandaq.kafka.KafkaInterface;
+import life.genny.qwandaq.kafka.KafkaTopic;
 
 /*
  * A static utility class used for standard 
@@ -33,26 +34,26 @@ public class KafkaUtils implements Serializable {
 	}
 
 	/**
-	 * Write an Object to a kafka channel as a payload
+	 * Write an Object to a kafka topic as a payload
 	 *
-	 * @param channel the channel to send to
+	 * @param topic the topic to send to
 	 * @param payload the payload to send
 	 */
-	public static void writeMsg(String channel, Object payload) {
+	public static void writeMsg(KafkaTopic topic, Object payload) {
 
-		writeMsg(channel, jsonb.toJson(payload));
+		writeMsg(topic, jsonb.toJson(payload));
 	}
 
 	/**
-	 * Write a String to a kafka channel as a payload.
-	 * @param channel the channel to send to
+	 * Write a String to a kafka topic as a payload.
+	 * @param topic the topic to send to
 	 * @param payload the payload to send
 	 */
-	public static void writeMsg(String channel, String payload) {
+	public static void writeMsg(KafkaTopic topic, String payload) {
 
 		// write to kafka channel through interface
 		checkInterface();
-		kafkaInterface.write(channel, payload);
+		kafkaInterface.write(topic, payload);
 	}
 
 	/**

@@ -20,6 +20,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -106,7 +107,7 @@ public class SummaryService {
 		msg.add(content);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 
 		// fetch and send the asks for the summary
 		BaseEntity user = beUtils.getUserBaseEntity();
@@ -115,7 +116,7 @@ public class SummaryService {
 		QDataAskMessage askMsg = new QDataAskMessage(ask);
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", askMsg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, askMsg);
 
 		recursivelySendSummaryData(pcm);
 	}
@@ -150,7 +151,7 @@ public class SummaryService {
 				QDataAskMessage askMsg = new QDataAskMessage(ask);
 				askMsg.setToken(userToken.getToken());
 				askMsg.setReplace(true);
-				KafkaUtils.writeMsg("webcmds", askMsg);
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, askMsg);
 			}
 		}
 	}
@@ -190,7 +191,7 @@ public class SummaryService {
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		msg.setParentCode(source);
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 }
 

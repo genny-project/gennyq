@@ -15,6 +15,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -101,7 +102,7 @@ public class ProcessAnswerService {
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
 		return answered;
 	}
@@ -124,6 +125,10 @@ public class ProcessAnswerService {
 
 		// send error for last answer in the list
 		// NOTE: This should be reconsidered
+
+		if (answers.isEmpty())
+			return acceptSubmission;
+
 		Answer answer = answers.get(answers.size()-1);
 		String attributeCode = answer.getAttributeCode();
 
@@ -181,7 +186,7 @@ public class ProcessAnswerService {
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	/**

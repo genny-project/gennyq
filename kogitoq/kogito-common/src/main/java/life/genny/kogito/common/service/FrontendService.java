@@ -26,6 +26,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -95,7 +96,7 @@ public class FrontendService {
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		msg.setTag("sendAsks");
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
   public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
@@ -169,7 +170,7 @@ public class FrontendService {
 		// handle initial dropdown selections
 		recuresivelyFindAndSendDropdownItems(ask, processEntity, ask.getQuestion().getCode());
 
-		KafkaUtils.writeMsg("webcmds", jsonb.toJson(msg));
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, jsonb.toJson(msg));
 	}
 
 	/**
@@ -215,7 +216,7 @@ public class FrontendService {
 					selectionMsg.setToken(userToken.getToken());
 					selectionMsg.setReplace(true);
 					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
-					KafkaUtils.writeMsg("webdata", selectionMsg);
+					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
 				} else {
 					log.info("No selection items found for " + attribute.getCode());
 				}
@@ -235,7 +236,7 @@ public class FrontendService {
 					.add("token", userToken.getToken())
 					.build();
 
-			KafkaUtils.writeMsg("events", json.toString());
+			KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
 		}
 
 		// recursively run on children
@@ -264,7 +265,7 @@ public class FrontendService {
 		recursivelyHandleDropdownAttributes(ask, target, msg);
 		msg.setTag("SendDropDownItems");
 
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	/**

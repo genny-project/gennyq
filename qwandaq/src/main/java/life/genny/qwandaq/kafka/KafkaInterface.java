@@ -1,4 +1,4 @@
-package life.genny.qwandaq.intf;
+package life.genny.qwandaq.kafka;
 
 import org.jboss.logging.Logger;
 
@@ -14,10 +14,10 @@ public interface KafkaInterface {
 	/**
 	* A Dummy write method.
 	*
-	* @param channel the channel to write to
+	* @param topic the kafka topic to write to
 	* @param payload the payload to write
 	 */
-	public default void write(String channel, String payload) {
+	public default void write(KafkaTopic topic, String payload) {
 		log.error("No KafkaInterface set up... not writing Message!!!");
 	}
 }

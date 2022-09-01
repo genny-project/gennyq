@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -96,7 +97,7 @@ when
 	defUtils : DefUtils()
 then
 	System.out.println("Forwarding Event Message..."+msg.getData().getCode());
-	KafkaUtils.writeMsg("genny_events", msg);
+	KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
 	retract(msg);
 end
 
@@ -215,7 +216,7 @@ when
 	msg: QEventMessage()
 then
 	System.out.println("Forwarding Event Message...");
-	KafkaUtils.writeMsg("genny_events", msg);
+	KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
 	retract(msg);
 end
 
