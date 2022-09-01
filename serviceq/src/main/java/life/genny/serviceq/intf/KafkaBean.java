@@ -12,7 +12,8 @@ import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
 import org.eclipse.microprofile.reactive.messaging.Message;
 
 import life.genny.qwandaq.session.bridge.BridgeSwitch;
-import life.genny.qwandaq.intf.KafkaInterface;
+import life.genny.qwandaq.kafka.KafkaInterface;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -34,12 +35,12 @@ public class KafkaBean implements KafkaInterface {
 	/**
 	* Write a string payload to a kafka channel.
 	*
-	* @param channel
+	* @param topic
 	* @param payload
 	 */
-	public void write(String channel, String payload) { 
+	public void write(KafkaTopic topic, String payload) { 
 
-		if (channel == null)
+		if (topic == null)
 			throw new NullParameterException("channel");
 		if (payload == null)
 			throw new NullParameterException("payload");
@@ -55,7 +56,7 @@ public class KafkaBean implements KafkaInterface {
 		OutgoingKafkaRecordMetadata<String> metadata = OutgoingKafkaRecordMetadata.<String>builder()
 					.build();
 
-		if ("webcmds".equals(channel) || "webdata".equals(channel)) {
+		if (topic == KafkaTopic.WEBCMDS || topic == KafkaTopic.WEBDATA) {
 
 			String bridgeId = BridgeSwitch.get(userToken);
 
@@ -68,7 +69,7 @@ public class KafkaBean implements KafkaInterface {
 				log.debug("Sending to " + bridgeId);
 
 				metadata = OutgoingKafkaRecordMetadata.<String>builder()
-					.withTopic(bridgeId + "-" + channel)
+					.withTopic(bridgeId + "-" + topic.toValidTopicName())
 					.build();
 			} else {
 				log.error("No alternative Bridge ID found!");
@@ -76,48 +77,48 @@ public class KafkaBean implements KafkaInterface {
 		}
 
 		// channel switch
-		switch (channel) {
-			case "events":
+		switch (topic) {
+			case EVENTS:
 				producer.getToEvents().send(payload);
 				break;
-			case "valid_events":
+			case VALID_EVENTS:
 				producer.getToValidEvents().send(payload);
 				break;
-			case "genny_events":
+			case GENNY_EVENTS:
 				producer.getToGennyEvents().send(payload);
 				break;
-			case "genny_data":
+			case GENNY_DATA:
 				producer.getToGennyData().send(payload);
 				break;
-			case "search_events":
+			case SEARCH_EVENTS:
 				producer.getToSearchEvents().send(payload);
 				break;
-			case "data":
+			case DATA:
 				producer.getToData().send(payload);
 				break;
-			case "valid_data":
+			case VALID_DATA:
 				producer.getToValidData().send(payload);
 				break;
-			case "search_data":
+			case SEARCH_DATA:
 				producer.getToSearchData().send(payload);
 				break;
-			case "messages":
+			case MESSAGES:
 				producer.getToMessages().send(payload);
 				break;
-			case "schedule":
+			case SCHEDULE:
 				producer.getToSchedule().send(payload);
 				break;
-			case "blacklist":
+			case BLACKLIST:
 				producer.getToBlacklist().send(payload);
 				break;
-			case "webcmds":
+			case WEBCMDS:
 				producer.getToWebCmds().send(Message.of(payload).addMetadata(metadata));
 				break;
-			case "webdata":
+			case WEBDATA:
 				producer.getToWebData().send(Message.of(payload).addMetadata(metadata));
 				break;
 			default:
-				log.error("Producer unable to write to channel " + channel);
+				log.error("Producer unable to write to channel " + topic);
 				break;
 		}
 	}

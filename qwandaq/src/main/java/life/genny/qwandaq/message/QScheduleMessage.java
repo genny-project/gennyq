@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.PanacheLocalDateTimeAdapter;
-
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.GennyToken;
 
@@ -408,7 +408,7 @@ public class QScheduleMessage extends PanacheEntity {
 			}
 
 			// send to shleemy
-			KafkaUtils.writeMsg("schedule", this.msg);
+			KafkaUtils.writeMsg(KafkaTopic.SCHEDULE, this.msg);
 			return this.msg;
 		}
 

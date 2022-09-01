@@ -21,6 +21,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -77,7 +78,7 @@ public class InternalConsumer {
 		// pass it on to the next stage of inference pipeline
 		QDataAnswerMessage msg = new QDataAnswerMessage(answers);
 		msg.setToken(userToken.getToken());
-		KafkaUtils.writeMsg("genny_data", msg);
+		KafkaUtils.writeMsg(KafkaTopic.GENNY_DATA, msg);
 
 		scope.destroy();
 		// log duration
