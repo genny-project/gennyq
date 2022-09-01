@@ -1,6 +1,5 @@
 package life.genny.lauchy.streams;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -9,8 +8,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -26,18 +23,16 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
@@ -321,7 +316,7 @@ public class TopologyProducer {
 			return true;
 		}
 
-		KafkaUtils.writeMsg("blacklist", uuid);
+		KafkaUtils.writeMsg(KafkaTopic.BLACKLIST, uuid);
 		return false;
 	}
 
@@ -405,7 +400,7 @@ public class TopologyProducer {
 				responseMsg.setReturnCount(1L);
 				responseMsg.setToken(userToken.getToken());
 
-				KafkaUtils.writeMsg("webdata", responseMsg);
+				KafkaUtils.writeMsg(KafkaTopic.WEBDATA, responseMsg);
 				log.info("Detected cleared BKT_APPLICATIONS search from " + userToken.getEmailUserCode());
 
 			} catch (BadDataException e) {

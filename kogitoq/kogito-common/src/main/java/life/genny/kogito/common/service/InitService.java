@@ -15,6 +15,7 @@ import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -76,7 +77,7 @@ public class InitService {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(project);
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("PROJECT");
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	/**
@@ -93,7 +94,7 @@ public class InitService {
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("USER");
 
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	/**
@@ -114,7 +115,7 @@ public class InitService {
 			// set token and send
 			msg.setToken(userToken.getToken());
 			msg.setAliasCode("ATTRIBUTE_MESSAGE_" + (currentPage + 1) + "_OF_" + (TOTAL_PAGES + 1));
-			KafkaUtils.writeMsg("webdata", msg);
+			KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 		}
 	}
 
@@ -163,7 +164,7 @@ public class InitService {
 			askMsg.add(ask);
 		}
 
-		KafkaUtils.writeMsg("webdata", askMsg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, askMsg);
 
 		// configure msg and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
@@ -171,7 +172,7 @@ public class InitService {
 		msg.setReplace(true);
 		msg.setAliasCode("PCM_INIT_MESSAGE");
 
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	/**
@@ -187,7 +188,7 @@ public class InitService {
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 
-		KafkaUtils.writeMsg("webdata", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 }

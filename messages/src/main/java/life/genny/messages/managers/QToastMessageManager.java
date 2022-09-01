@@ -7,6 +7,7 @@ import javax.enterprise.context.ApplicationScoped;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -62,7 +63,7 @@ public class QToastMessageManager extends QMessageProvider {
 		msg.setSend(true);
 
 		// send to frontend
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
 }

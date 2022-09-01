@@ -16,7 +16,4 @@ public final class GennyConstants {
     public static final String BUCKET_DISPLAY = "DISPLAY";
     public static final String BUCKET_PROCESS = "PROCESS";
 
-    public static final String EVENT_WEBCMDS = "webcmds";
-    public static final String EVENT_SEARCH = "search_events";
-
 }

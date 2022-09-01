@@ -35,6 +35,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -478,7 +479,7 @@ public class QwandaUtils {
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
 		return enable;
 	}
@@ -712,7 +713,7 @@ public class QwandaUtils {
 		askMsg.setToken(userToken.getToken());
 		askMsg.setReplace(true);
 		String json = jsonb.toJson(askMsg);
-		KafkaUtils.writeMsg("webcmds", json);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json);
 	}
 
 	/**
@@ -819,7 +820,7 @@ public class QwandaUtils {
 			).build();
 
 		// send to commands topic
-		KafkaUtils.writeMsg("webcmds", json.toString());
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
 		log.info("Sent error message to frontend : " + json.toString());
 	}
 

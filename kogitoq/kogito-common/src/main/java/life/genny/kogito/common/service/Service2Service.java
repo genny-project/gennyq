@@ -12,6 +12,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.S2SData;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -128,7 +129,7 @@ public class Service2Service {
 						.add("targetCode", entityCode))
 				.build();
 
-		KafkaUtils.writeMsg("genny_events", json.toString());
+		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, json.toString());
 	}
 
 	/**
@@ -148,6 +149,6 @@ public class Service2Service {
 
 		log.info("Sending summary update -> " + personCode + " : " + summaryCode);
 
-		KafkaUtils.writeMsg("events", json.toString());
+		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
 	}
 }

@@ -17,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import life.genny.bridge.blacklisting.BlackListInfo;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
 import life.genny.qwandaq.session.bridge.BridgeSwitch;
@@ -193,39 +194,35 @@ public class ExternalConsumer {
 
 		String msgType = body.getString("msg_type");
 		String productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES");
-		String topicName = "";
+		KafkaTopic topic = null;
 		String payload = body.toString();
 
 		if (msgType.equals("DATA_MSG")) {
 			if (!StringUtils.isEmpty(productCodes)) {
-				topicName = "data";
+				topic = KafkaTopic.DATA;
 			} else {
-				topicName = "genny_data";
+				topic = KafkaTopic.GENNY_DATA;
 			}
 			// publish message
-			KafkaUtils.writeMsg(topicName, payload);
+			KafkaUtils.writeMsg(topic, payload);
 
 			// send ack to originating frontend
 			consumer.handleIncomingMessage(payload);
 
 		} else if (msgType.equals("EVT_MSG")) {
 			if (!StringUtils.isEmpty(productCodes)) {
-				topicName = "events";
+				topic = KafkaTopic.EVENTS;
 			} else {
-				topicName = "genny_events";
+				topic = KafkaTopic.GENNY_EVENTS;
 			}
 			// publish message
-			KafkaUtils.writeMsg(topicName, payload);
+			KafkaUtils.writeMsg(topic, payload);
 		}
-
-		
-		
-		
 
 		// remove token from log for security purposes
 		body.remove("token");
 		payload = body.toString();
-		log.info("Sent payload "+payload+" from user " + gennyToken.getUserCode() + " to topic "+topicName);
+		log.info("Sent payload "+payload+" from user " + gennyToken.getUserCode() + " to topic "+topic);
 	}
 
 	/**

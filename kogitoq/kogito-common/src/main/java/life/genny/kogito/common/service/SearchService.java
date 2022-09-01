@@ -19,6 +19,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -125,7 +126,7 @@ public class SearchService {
 		msg.add(pcm);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-		KafkaUtils.writeMsg("webcmds", msg);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
 	/**
@@ -156,13 +157,13 @@ public class SearchService {
 	public void sendBucketCodes(List<String> bucketCodes) {
 		QCmdMessage msgProcess = new QCmdMessage(GennyConstants.BUCKET_DISPLAY,GennyConstants.BUCKET_PROCESS);
 		msgProcess.setToken(userToken.getToken());
-		KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgProcess);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgProcess);
 
 		QCmdMessage msgCodes = new QCmdMessage(GennyConstants.BUCKET_CODES,GennyConstants.BUCKET_CODES);
 		msgCodes.setToken(userToken.getToken());
 		msgCodes.setSourceCode(GennyConstants.BUCKET_CODES);
 		msgCodes.setTargetCodes(bucketCodes);
-		KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgCodes);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgCodes);
 	}
 
 	/**
@@ -190,8 +191,7 @@ public class SearchService {
 	public void sendMessageBySearchEntity(SearchEntity searchBE) {
 		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
 		searchBeMsg.setToken(userToken.getToken());
-		searchBeMsg.setDestination(GennyConstants.EVENT_WEBCMDS);
-		KafkaUtils.writeMsg(GennyConstants.EVENT_SEARCH, searchBeMsg);
+		KafkaUtils.writeMsg(KafkaTopic.SEARCH_EVENTS, searchBeMsg);
 	}
 
 	/**
