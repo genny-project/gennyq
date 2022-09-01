@@ -6,6 +6,8 @@ import java.time.ZoneOffset;
 
 import org.infinispan.protostream.MessageMarshaller;
 
+import life.genny.qwandaq.EEntityStatus;
+
 public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity> {
 
 	@Override
@@ -29,7 +31,7 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		}
 		be.setName(reader.readString("name"));
 		be.setRealm(reader.readString("realm"));
-		be.setStatus(EEntityStatus.valueOf(reader.readInt("status")));
+		be.setStatus(reader.readInt("status"));
 		Long updatedLong = reader.readLong("updated");
 		if (updatedLong != null) {
 			be.setUpdated(LocalDateTime.ofEpochSecond(updatedLong / 1000, 0, ZoneOffset.UTC));

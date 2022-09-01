@@ -236,14 +236,14 @@ public class BaseEntityUtils {
 			}
 		} else {
 			entity = (BaseEntity) baseEntitySerializable.toCoreEntity();
-			Log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
+			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
 			if (bundleAttributes) {
 				Map<String, EntityAttribute> attributeMap = entity.getAttributeMap();
 				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
 				EntityAttribute ea = null;
 				attributeMap.put(bea.getAttributeCode(), ea);
 				});
-				Log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
+				log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
 			}
 		}
 
