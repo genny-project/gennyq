@@ -306,7 +306,12 @@ public class SearchService {
 	}
 
 
-	public Ask getFilterGroup(SearchEntity searchBE) {
+	/**
+	 * Return ask with filter group content
+	 * @param searchBE Search Base Entity
+	 * @return Ask
+	 */
+	public Ask getFilterGroupBySearchBE(SearchEntity searchBE) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
 		ask.setTargetCode(searchBE.getCode());
@@ -316,12 +321,17 @@ public class SearchService {
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 
 		ask.setQuestion(question);
-		ask.addChildAsk(getAddFilterGroup(searchBE));
+		ask.addChildAsk(getAddFilterGroupBySearchBE(searchBE));
 
 		return ask;
 	}
 
-	public Ask getAddFilterGroup(SearchEntity searchBE) {
+	/**
+	 * Return ask with add filter group content
+	 * @param searchBE Search Base entity
+	 * @return Ask
+	 */
+	public Ask getAddFilterGroupBySearchBE(SearchEntity searchBE) {
 		Ask ask = new Ask();
 
 		ask.setTargetCode(searchBE.getCode());
@@ -346,7 +356,12 @@ public class SearchService {
 		return ask;
 	}
 
-	public QDataBaseEntityMessage getFilterColum(SearchEntity searchBE) {
+	/**
+	 * Return Message of filter column
+	 * @param searchBE Search Base Entity
+	 * @return Message of Filter column
+	 */
+	public QDataBaseEntityMessage getFilterColumBySearchBE(SearchEntity searchBE) {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
 		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
@@ -356,30 +371,26 @@ public class SearchService {
 		BaseEntity baseEntity = new BaseEntity();
 		List<EntityAttribute> entityAttributes = new ArrayList<>();
 
-		searchBE.getBaseEntityAttributes().stream().forEach(e-> {
-				baseEntity.setCode(e.getAttributeCode());
-
-				BaseEntity childBaseEntity = new BaseEntity();
-				childBaseEntity.setCode(e.getAttributeCode());
-
-				Attribute attribute = new Attribute();
-				attribute.setCode(e.getAttributeCode());
-				attribute.setName(e.getAttributeName());
-
-				entityAttributes.add(new EntityAttribute(childBaseEntity,attribute,1.0));
-		});
+		searchBE.getBaseEntityAttributes().stream()
+				.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL_PREFIX))
+				.forEach(e-> {
+					entityAttributes.add(e);
+				});
 
 		baseEntity.setBaseEntityAttributes(entityAttributes);
 		base.add(baseEntity);
 		return base;
 	}
 
-
+	/**
+	 * Send filter group and filter column for filter function
+	 * @param targetCode Target code
+	 */
 	public void sendFilterGroup(String targetCode) {
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
 
 		if(searchBE != null) {
-			Ask ask = getFilterGroup(searchBE);
+			Ask ask = getFilterGroupBySearchBE(searchBE);
 
 			QDataAskMessage msgFilter = new QDataAskMessage(ask);
 			msgFilter.setToken(userToken.getToken());
@@ -388,7 +399,7 @@ public class SearchService {
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilter);
 
 
-			QDataBaseEntityMessage msgAddFilter = getFilterColum(searchBE);
+			QDataBaseEntityMessage msgAddFilter = getFilterColumBySearchBE(searchBE);
 			msgAddFilter.setToken(userToken.getToken());
 			msgAddFilter.setTargetCode(targetCode);
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);

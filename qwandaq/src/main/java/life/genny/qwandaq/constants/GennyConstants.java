@@ -38,6 +38,7 @@ public final class GennyConstants {
     //Filter
     public static final String  FILTERS = "Filters";
     public static final String  SEL_FILTER_COLUMN = "SEL_FILTER_COLUMN_";
+    public static final String  FILTER_COL_PREFIX = "FLC_";
 
 
 
