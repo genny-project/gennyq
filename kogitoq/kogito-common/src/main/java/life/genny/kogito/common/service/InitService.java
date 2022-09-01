@@ -13,8 +13,10 @@ import org.jboss.logging.Logger;
 import life.genny.kogito.common.utils.KogitoUtils;
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -131,7 +133,7 @@ public class InitService {
 
 		// get pcms using search
 		SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PCM_%")
+				.addFilter(Attribute.PRI_CODE, Filter.LIKE, "PCM_%")
 				.addColumn("*", "All Columns");
 
 		searchBE.setRealm(productCode);

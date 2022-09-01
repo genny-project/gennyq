@@ -27,9 +27,9 @@ public class JsonTest {
 	public void searchEntityTest()
 	{
 		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
-		.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
-		.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "DEF_%")
-		.addColumn("PRI_CODE", "Name")
+		.addSort(Attribute.PRI_NAME, "Created", Sort.ASC)
+		.addFilter(Attribute.PRI_CODE, Filter.LIKE, "DEF_%")
+		.addColumn(Attribute.PRI_CODE, "Name")
 		.setPageStart(0).setPageSize(1000);
 
 		searchEntity.setRealm("genny");

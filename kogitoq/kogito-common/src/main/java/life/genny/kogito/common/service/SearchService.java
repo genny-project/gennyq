@@ -19,6 +19,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -89,7 +90,7 @@ public class SearchService {
 		log.info("Sending Detail View :: " + searchCode);
 
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), searchCode, SearchEntity.class);
-		searchEntity.addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, targetCode);
+		searchEntity.addFilter("PRI_CODE", Filter.EQUALS, targetCode);
 
 		// perform the search
 		searchUtils.searchTable(searchEntity);
@@ -243,11 +244,11 @@ public class SearchService {
 			}
 
 			if (!attrName.isBlank()) { //searching text
-				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+				searchBE.addFilter(code, Filter.LIKE, value);
 			}
 
 		}else if(ops.equals(SearchOptions.PAGINATION)) { //pagination
-			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(GennyConstants.PAGINATION_INDEX);
+			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(Attribute.PRI_INDEX);
 			Integer pageSize = searchBE.getPageSize(0);
 			Integer indexVal = 0;
 			Integer pagePos = 0;
@@ -286,7 +287,7 @@ public class SearchService {
 			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
 
 			if (!name.isBlank()) { //searching text
-				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+				searchBE.addFilter(code, Filter.LIKE, value);
 			}
 
 			CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);

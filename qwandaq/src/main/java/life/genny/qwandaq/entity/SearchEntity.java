@@ -20,6 +20,8 @@ import life.genny.qwandaq.attribute.AttributeLong;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.AttributeTime;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Sort;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
 /* 
@@ -47,239 +49,6 @@ public class SearchEntity extends BaseEntity {
 	Double combinedSearchIndex = 1.0;
 	Double aliasIndex = 1.0;
 	Map<String, Map<String, String>> formatters = new HashMap<>();
-
-	/*
-	 * Enum used to sort the search results in either ascending or 
-	 * descending order.
-	 */
-	public enum Sort {
-		ASC {
-			public String toString() {
-				return "ASC";
-			}
-		},
-		DESC {
-			public String toString() {
-				return "DESC";
-			}
-		}
-	}
-
-	/*
-	 * Enum used to determine the operator of a string filter 
-	 * added to the SearchEntity.
-	 */
-	public enum StringFilter {
-		EQUAL {
-			public String toString() {
-				return SearchEntity.convertToSaveable("=");
-			}
-		},
-		NOT_EQUAL {
-			public String toString() {
-				return SearchEntity.convertToSaveable("!=");
-			}
-		},
-		LIKE {
-			public String toString() {
-				return "LIKE";
-			}
-		},
-		NOT_LIKE {
-			public String toString() {
-				return "NOT LIKE";
-			}
-		},
-		RLIKE {
-			public String toString() {
-				return "RLIKE";
-			}
-		},
-		NOT_RLIKE {
-			public String toString() {
-				return "NOT RLIKE";
-			}
-		},
-		REGEXP {
-			public String toString() {
-				return "REGEXP";
-			}
-		},
-		NOT_REGEXP {
-			public String toString() {
-				return "NOT REGEXP";
-			}
-		}
-
-	}
-
-	/*
-	 * Enum used to determine the operator of a standard filter 
-	 * added to the SearchEntity.
-	 */
-	public enum Filter {
-		EQUALS {
-			public String toString() {
-				return SearchEntity.convertToSaveable("=");
-			}
-		},
-		NOT_EQUALS {
-			public String toString() {
-				return SearchEntity.convertToSaveable("!=");
-			}
-		},
-		GREATER_THAN {
-			public String toString() {
-				return SearchEntity.convertToSaveable(">");
-			}
-		},
-		GREATER_THAN_AND_EQUAL {
-			public String toString() {
-				return SearchEntity.convertToSaveable(">=");
-			}
-		},
-		LESS_THAN_AND_EQUAL {
-			public String toString() {
-				return SearchEntity.convertToSaveable("<=");
-			}
-		},
-		LESS_THAN {
-			public String toString() {
-				return SearchEntity.convertToSaveable("<");
-			}
-		},
-		BIT_MASK_POSITIVE {
-			public String toString() {
-				return SearchEntity.convertToSaveable("&+");
-			}
-		},
-		BIT_MASK_ZERO {
-			public String toString() {
-				return SearchEntity.convertToSaveable("&0");
-			}
-		}
-	}
-	
-	/** 
-	 * @param operator the operator to convert
-	 * @return Filter
-	 */
-	static public SearchEntity.Filter convertOperatorToFilter(final String operator) {
-
-		switch (operator) {
-			case ">": 
-				return SearchEntity.Filter.GREATER_THAN;
-			case "<": 
-				return SearchEntity.Filter.LESS_THAN;
-			case ">=": 
-				return SearchEntity.Filter.GREATER_THAN_AND_EQUAL;
-			case "<=": 
-				return SearchEntity.Filter.LESS_THAN_AND_EQUAL;
-			case "<>":
-			case "!=": 
-				return SearchEntity.Filter.NOT_EQUALS;
-			default:
-				return SearchEntity.Filter.EQUALS;
-		}
-	}
-	
-	/** 
-	 * @param operator the operator to convert
-	 * @return StringFilter
-	 */
-	static public SearchEntity.StringFilter convertOperatorToStringFilter(final String operator) {
-
-		SearchEntity.StringFilter ret = null;
-		switch (operator) {
-			case "REGEXP": ret =  SearchEntity.StringFilter.REGEXP; break;
-			case "NOT REGEXP": ret =  SearchEntity.StringFilter.NOT_REGEXP; break;
-			case "RLIKE": ret =  SearchEntity.StringFilter.RLIKE; break;
-			case "NOT RLIKE": ret =  SearchEntity.StringFilter.NOT_RLIKE; break;
-			case "LIKE": ret =  SearchEntity.StringFilter.LIKE; break;
-			case "NOT LIKE": ret =  SearchEntity.StringFilter.NOT_LIKE; break;
-			case "<>":
-			case "!=": ret =  SearchEntity.StringFilter.NOT_EQUAL;break;
-			default:
-					   ret = SearchEntity.StringFilter.EQUAL;
-		}
-
-		return ret;
-	}
-	
-	public void convertBEToSaveable() {
-		for (EntityAttribute ea : this.getBaseEntityAttributes()) {
-			if (!((ea.getAttributeCode().startsWith("COL_")) || (ea.getAttributeCode().startsWith("CAL_"))
-					|| (ea.getAttributeCode().startsWith("SCH_")))) {
-				String name = ea.getAttributeName();
-				name = name.replaceAll(">", "_GT_");
-				name = name.replaceAll("<", "_LT_");
-				name = name.replaceAll(">=", "_GTE_");
-				name = name.replaceAll("<=", "_LTE_");
-				name = name.replaceAll("=", "_EQ_");
-				name = name.replaceAll("&", "_AMP_");
-				name = name.replaceAll("+", "_PLUS_");
-				name = name.replaceAll("-", "_MINUS_");
-				name = name.replaceAll("&+", "_BPLUS_");
-				name = name.replaceAll("&0", "_BZERO_");
-				ea.setAttributeName(name);
-			}
-		}
-	}
-
-	public void convertBEFromSaveable() {
-		for (EntityAttribute ea : this.getBaseEntityAttributes()) {
-			if (!((ea.getAttributeCode().startsWith("COL_")) || (ea.getAttributeCode().startsWith("CAL_"))
-					|| (ea.getAttributeCode().startsWith("SCH_")))) {
-				String name = ea.getAttributeName();
-				name = name.replaceAll("_GT_", ">");
-				name = name.replaceAll("_GTE_", ">=");
-				name = name.replaceAll("_LT_", "<");
-				name = name.replaceAll("_LTE_", "<=");
-				name = name.replaceAll("_EQ_", "=");
-				name = name.replaceAll("_AMP_", "&");
-				name = name.replaceAll("_PLUS_", "+");
-				name = name.replaceAll("_MINUS_", "-");
-				name = name.replaceAll("_BPLUS_", "&+");
-				name = name.replaceAll("_BZERO_", "&0");
-				ea.setAttributeName(name);
-			}
-		}
-	}
-
-	/** 
-	 * @param value the value to convert
-	 * @return String
-	 */
-	public static String convertToSaveable(String value) {
-		String name = value.replaceAll("\\>", "_GT_");
-		name = name.replaceAll("\\<", "_LT_");
-		name = name.replaceAll("\\=", "_EQ_");
-		name = name.replaceAll("\\&", "_AMP_");
-		name = name.replaceAll("\\+", "_PLUS_");
-		name = name.replaceAll("\\-", "_MINUS_");
-		name = name.replaceAll("\\!", "_NOT_");
-		return name;
-	}
-	
-	/** 
-	 * @param value the value to convert
-	 * @return String
-	 */
-	public static String convertFromSaveable(String value) {
-		if (value != null) {
-			String name = value;
-			name = name.replaceAll("_GT_", ">");
-			name = name.replaceAll("_LT_", "<");
-			name = name.replaceAll("_EQ_", "=");
-			name = name.replaceAll("_AMP_", "&");
-			name = name.replaceAll("_PLUS_", "+");
-			name = name.replaceAll("_MINUS_", "-");
-			name = name.replaceAll("_NOT_", "!");
-			return name;
-		} else {
-			return null;
-		}
-	}
 
 	/* Constructor to create SearchEntity with code and name */
 	public SearchEntity() { }
@@ -558,13 +327,13 @@ public class SearchEntity extends BaseEntity {
 	 *
 	 * @param attributeCode the code of the attribute to add a sort for
 	 * @param sortHelpText the help text for the sort
-	 * @param sortType the type of sort
+	 * @param sort the type of sort
 	 * @return SearchEntity
 	 */
-	public SearchEntity addSort(final String attributeCode, final String sortHelpText, final Sort sortType) {
+	public SearchEntity addSort(final String attributeCode, final String sortHelpText, final Sort sort) {
 		AttributeText attributeSort = new AttributeText("SRT_" + attributeCode, sortHelpText);
 		try {
-			addAttribute(attributeSort, sortIndex, sortType.toString());
+			addAttribute(attributeSort, sortIndex, sort.toString());
 			sortIndex += 1.0;
 
 		} catch (BadDataException e) {
@@ -655,12 +424,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode the attributeCode which holds integer value where we
 	 * apply the filter
-	 * @param filterType type of the filter
+	 * @param filter type of the filter
 	 * @param value filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filterType, final Integer value) {
-		AttributeInteger attribute = new AttributeInteger(attributeCode, filterType.toString());
+	public SearchEntity addFilter(final String attributeCode, final Filter filter, final Integer value) {
+		AttributeInteger attribute = new AttributeInteger(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -677,12 +446,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds long value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filterType, final Long value) {
-		AttributeLong attribute = new AttributeLong(attributeCode, filterType.toString());
+	public SearchEntity addFilter(final String attributeCode, final Filter filter, final Long value) {
+		AttributeLong attribute = new AttributeLong(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -699,12 +468,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds long value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filterType, final Double value) {
-		AttributeDouble attribute = new AttributeDouble(attributeCode, filterType.toString());
+	public SearchEntity addFilter(final String attributeCode, final Filter filter, final Double value) {
+		AttributeDouble attribute = new AttributeDouble(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -723,12 +492,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds LocalDateTime value
 	 * where we apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filterType, final LocalDateTime value) {
-		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filterType.toString());
+	public SearchEntity addFilter(final String attributeCode, final Filter filter, final LocalDateTime value) {
+		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -747,12 +516,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds LocalDate value
 	 * where we apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filterType, final LocalDate value) {
-		AttributeDate attribute = new AttributeDate(attributeCode, filterType.toString());
+	public SearchEntity addFilter(final String attributeCode, final Filter filter, final LocalDate value) {
+		AttributeDate attribute = new AttributeDate(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -771,12 +540,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds LocalDate value
 	 * where we apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final Filter filterType, final LocalTime value) {
-		AttributeTime attribute = new AttributeTime(attributeCode, filterType.toString());
+	public SearchEntity addFilter(final String attributeCode, final Filter filter, final LocalTime value) {
+		AttributeTime attribute = new AttributeTime(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -818,13 +587,13 @@ public class SearchEntity extends BaseEntity {
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
 	 * 
-	 * @param filterType - type of the string filter
+	 * @param filter - type of the string filter
 	 * 
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilter(final String attributeCode, final StringFilter filterType, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filterType.toString());
+	public SearchEntity addFilter(final String attributeCode, final Filter filter, final String value) {
+		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -842,12 +611,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds LocalDate value
 	 * where we apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilterAsString(final String attributeCode, final Filter filterType, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filterType.toString());
+	public SearchEntity addFilterAsString(final String attributeCode, final Filter filter, final String value) {
+		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
 
 		try {
 			addAttribute(attribute, filterIndex, value);
@@ -865,14 +634,14 @@ public class SearchEntity extends BaseEntity {
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
 	 * 
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * 
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
     
-	public SearchEntity addOr(final String attributeCode, final Filter filterType, final Integer value) {
-		AttributeInteger attribute = new AttributeInteger(attributeCode, filterType.toString());
+	public SearchEntity addOr(final String attributeCode, final Filter filter, final Integer value) {
+		AttributeInteger attribute = new AttributeInteger(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "OR") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -895,12 +664,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filterType, final Long value) {
-		AttributeLong attribute = new AttributeLong(attributeCode, filterType.toString());
+	public SearchEntity addOr(final String attributeCode, final Filter filter, final Long value) {
+		AttributeLong attribute = new AttributeLong(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "OR") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -923,12 +692,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filterType, final Double value) {
-		AttributeDouble attribute = new AttributeDouble(attributeCode, filterType.toString());
+	public SearchEntity addOr(final String attributeCode, final Filter filter, final Double value) {
+		AttributeDouble attribute = new AttributeDouble(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "OR") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -951,12 +720,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filterType, final LocalDateTime value) {
-		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filterType.toString());
+	public SearchEntity addOr(final String attributeCode, final Filter filter, final LocalDateTime value) {
+		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "OR") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -979,12 +748,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final Filter filterType, final LocalDate value) {
-		AttributeDate attribute = new AttributeDate(attributeCode, filterType.toString());
+	public SearchEntity addOr(final String attributeCode, final Filter filter, final LocalDate value) {
+		AttributeDate attribute = new AttributeDate(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "OR") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1007,12 +776,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the string filter
+	 * @param filter - type of the string filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addOr(final String attributeCode, final StringFilter filterType, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filterType.toString());
+	public SearchEntity addOr(final String attributeCode, final Filter filter, final String value) {
+		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "OR") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1035,12 +804,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filterType, final Integer value) {
-		AttributeInteger attribute = new AttributeInteger(attributeCode, filterType.toString());
+	public SearchEntity addAnd(final String attributeCode, final Filter filter, final Integer value) {
+		AttributeInteger attribute = new AttributeInteger(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "AND") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1063,12 +832,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filterType, final Long value) {
-		AttributeLong attribute = new AttributeLong(attributeCode, filterType.toString());
+	public SearchEntity addAnd(final String attributeCode, final Filter filter, final Long value) {
+		AttributeLong attribute = new AttributeLong(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "AND") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1091,12 +860,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filterType, final Double value) {
-		AttributeDouble attribute = new AttributeDouble(attributeCode, filterType.toString());
+	public SearchEntity addAnd(final String attributeCode, final Filter filter, final Double value) {
+		AttributeDouble attribute = new AttributeDouble(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "AND") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1119,12 +888,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filterType, final LocalDateTime value) {
-		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filterType.toString());
+	public SearchEntity addAnd(final String attributeCode, final Filter filter, final LocalDateTime value) {
+		AttributeDateTime attribute = new AttributeDateTime(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "AND") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1147,12 +916,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the filter
+	 * @param filter - type of the filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final Filter filterType, final LocalDate value) {
-		AttributeDate attribute = new AttributeDate(attributeCode, filterType.toString());
+	public SearchEntity addAnd(final String attributeCode, final Filter filter, final LocalDate value) {
+		AttributeDate attribute = new AttributeDate(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "AND") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1175,12 +944,12 @@ public class SearchEntity extends BaseEntity {
 	 * 
 	 * @param attributeCode - the attributeCode which holds String value where we
 	 * apply the filter
-	 * @param filterType - type of the string filter
+	 * @param filter - type of the string filter
 	 * @param value - filter against (search for) this value
 	 * @return SearchEntity
 	 */
-	public SearchEntity addAnd(final String attributeCode, final StringFilter filterType, final String value) {
-		AttributeText attribute = new AttributeText(attributeCode, filterType.toString());
+	public SearchEntity addAnd(final String attributeCode, final Filter filter, final String value) {
+		AttributeText attribute = new AttributeText(attributeCode, filter.toString());
 		Integer count = countOccurrences(attributeCode, "AND") + 1;
 
 		for (int i = 0; i < count; i++) {
@@ -1283,13 +1052,13 @@ public class SearchEntity extends BaseEntity {
 	 * This method allows to set the filter based on the linkweight value of
 	 * BaseEntities to its parent
 	 * 
-	 * @param filterType - type of the filter set to the linkWeight
+	 * @param filter - type of the filter set to the linkWeight
 	 * @return SearchEntity
 	 */
-	public SearchEntity addFilterToLinkWeight(final Filter filterType) {
+	public SearchEntity addFilterToLinkWeight(final Filter filter) {
 		AttributeText attribute = new AttributeText("SCH_LINK_FILTER", "LinkFilterByWeight");
 		try {
-			addAttribute(attribute, 1.0, filterType.toString());
+			addAttribute(attribute, 1.0, filter.toString());
 		} catch (BadDataException e) {
 			log.error("Bad String Filter Initialisation");
 		}

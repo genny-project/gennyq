@@ -21,6 +21,8 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Sort;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
@@ -77,8 +79,8 @@ public class DefUtils {
 	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
-				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "DEF_%")
+				.addSort("PRI_NAME", "Created", Sort.ASC)
+				.addFilter("PRI_CODE", Filter.LIKE, "DEF_%")
 				.setPageStart(0)
 				.setPageSize(10000);
 

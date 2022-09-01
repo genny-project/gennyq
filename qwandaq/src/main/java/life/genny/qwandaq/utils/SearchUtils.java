@@ -29,6 +29,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
@@ -319,40 +320,8 @@ public class SearchUtils {
 		facts.put("userToken", userToken);
 		facts.put("searchBE", searchBE);
 
-		Map<String, Object> results = null;
-		// Map<String, Object> results = new RuleFlowGroupWorkItemHandler()
-		// 		.executeRules(
-		// 				beUtils,
-		// 				facts,
-		// 				"SearchFilters",
-		// 				"SearchUtils:getUserFilters");
+		// TODO: get the filters
 
-		if (results != null) {
-
-			Object obj = results.get("payload");
-
-			if (obj instanceof QBulkMessage) {
-				QBulkMessage bulkMsg = (QBulkMessage) results.get("payload");
-
-				// Check if bulkMsg not empty
-				if (bulkMsg.getMessages().length > 0) {
-
-					// Get the first QDataBaseEntityMessage from bulkMsg
-					QDataBaseEntityMessage msg = bulkMsg.getMessages()[0];
-
-					// Check if msg is not empty
-					if (!msg.getItems().isEmpty()) {
-
-						// Extract the baseEntityAttributes from the first BaseEntity
-						Set<EntityAttribute> filtersSet = msg.getItems().get(0).getBaseEntityAttributes();
-						filters.addAll(filtersSet);
-					}
-				}
-			}
-		} else {
-			log.error("results are null");
-			filters = new ArrayList<EntityAttribute>();
-		}
 		return filters;
 	}
 
@@ -483,7 +452,7 @@ public class SearchUtils {
 
 		// convert to entity list
 		log.info("dropdownValue = " + dropdownValue);
-		String cleanCode = beUtils.cleanUpAttributeValue(dropdownValue);
+		String cleanCode = BaseEntityUtils.cleanUpAttributeValue(dropdownValue);
 		BaseEntity target = beUtils.getBaseEntityByCode(cleanCode);
 
 		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_" + productCode.toUpperCase());
@@ -540,11 +509,11 @@ public class SearchUtils {
 					// TODO: allow for regular filters too
 					// SearchEntity.StringFilter stringFilter =
 					// SearchEntity.convertOperatorToStringFilter(operator);
-					SearchEntity.StringFilter stringFilter = SearchEntity.StringFilter.EQUAL;
+					Filter filter = Filter.EQUALS;
 					String mergedValue = MergeUtils.merge(value, ctxMap);
 					log.info("Adding filter: " + attributeCode + " "
-							+ stringFilter.toString() + " " + mergedValue);
-					baseSearch.addFilter(attributeCode, stringFilter, mergedValue);
+							+ filter.toString() + " " + mergedValue);
+					baseSearch.addFilter(attributeCode, filter, mergedValue);
 				}
 			}
 

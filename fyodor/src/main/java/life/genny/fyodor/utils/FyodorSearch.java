@@ -44,6 +44,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.message.QBulkMessage;
@@ -687,12 +688,13 @@ public class FyodorSearch {
 	}
 
 	public static Predicate getDateTimePredicate(EntityAttribute ea, DateTimePath path) {
-		String condition = SearchEntity.convertFromSaveable(ea.getAttributeName());
+
+		Filter filter = Filter.valueOf(ea.getAttributeName());
 		LocalDateTime dateTime = ea.getValueDateTime();
 
 		if (dateTime == null) {
 			LocalDate date = ea.getValueDate();
-			log.info(ea.getAttributeCode() + " " + condition + " " + date);
+			log.info(ea.getAttributeCode() + " " + filter + " " + date);
 
 			// Convert Date into two DateTime boundaries
 			LocalDateTime lowerBound = date.atStartOfDay();
@@ -700,27 +702,27 @@ public class FyodorSearch {
 			LocalDateTime upperBound = lowerBound.plusDays(1);
 			log.info("upperBound = " + upperBound);
 
-			if (condition.equals(">")) {
+			if (filter == Filter.GREATER_THAN) {
 				return path.after(upperBound);
-			} else if (condition.equals(">=")) {
+			} else if (filter == Filter.GREATER_THAN_OR_EQUAL) {
 				return path.after(lowerBound);
-			} else if (condition.equals("<")) {
+			} else if (filter == Filter.LESS_THAN) {
 				return path.before(lowerBound);
-			} else if (condition.equals("<=")) {
+			} else if (filter == Filter.LESS_THAN_OR_EQUAL) {
 				return path.before(upperBound);
-			} else if (condition.equals("!=")) {
+			} else if (filter == Filter.NOT_EQUALS) {
 				return path.notBetween(lowerBound, upperBound);
 			} else {
 				return path.between(lowerBound, upperBound);
 			}
 		}
-		log.info(ea.getAttributeCode() + " " + condition + " " + dateTime);
+		log.info(ea.getAttributeCode() + " " + filter + " " + dateTime);
 
-		if (condition.equals(">=") || condition.equals(">")) {
+		if (filter == Filter.GREATER_THAN_OR_EQUAL || filter == Filter.GREATER_THAN) {
 			return path.after(dateTime);
-		} else if (condition.equals("<=") || condition.equals("<")) {
+		} else if (filter == Filter.LESS_THAN_OR_EQUAL || filter == Filter.LESS_THAN) {
 			return path.before(dateTime);
-		} else if (condition.equals("!=")) {
+		} else if (filter == Filter.NOT_EQUALS) {
 			return path.ne(dateTime);
 		}
 		// Default to equals
@@ -737,25 +739,25 @@ public class FyodorSearch {
 	public static Predicate getAttributeSearchColumn(EntityAttribute ea, QEntityAttribute entityAttribute) {
 
 		String attributeFilterValue = ea.getAsString();
-		String condition = SearchEntity.convertFromSaveable(ea.getAttributeName());
-		log.info(ea.getAttributeCode() + " " + condition + " " + attributeFilterValue);
+		Filter filter = Filter.valueOf(ea.getAttributeName());
+		log.info(ea.getAttributeCode() + " " + filter + " " + attributeFilterValue);
 
 		String valueString = "";
 		if (ea.getValueString() != null) {
 			valueString = ea.getValueString();
 		}
 		// Null check on condition and default to equals valuestring
-		if (condition == null) {
+		if (filter == null) {
 			log.error("SQL condition is NULL, " + "EntityAttribute baseEntityCode is:" + ea.getBaseEntityCode()
 					+ ", attributeCode is: " + ea.getAttributeCode());
 			// LIKE
-		} else if (condition.equals("LIKE")) {
+		} else if (filter == Filter.LIKE) {
 			return entityAttribute.valueString.like(valueString);
 			// NOT LIKE
-		} else if (condition.equals("NOT LIKE")) {
+		} else if (filter == Filter.NOT_LIKE) {
 			return entityAttribute.valueString.notLike(valueString);
 			// EQUALS
-		} else if (condition.equals("=")) {
+		} else if (filter == Filter.EQUALS) {
 			if (ea.getValueBoolean() != null) {
 				return entityAttribute.valueBoolean.eq(ea.getValueBoolean());
 			} else if (ea.getValueDouble() != null) {
@@ -772,7 +774,7 @@ public class FyodorSearch {
 				return entityAttribute.valueString.eq(valueString);
 			}
 			// NOT EQUALS
-		} else if (condition.equals("!=")) {
+		} else if (filter == Filter.NOT_EQUALS) {
 			if (ea.getValueBoolean() != null) {
 				return entityAttribute.valueBoolean.ne(ea.getValueBoolean());
 			} else if (ea.getValueDouble() != null) {
@@ -789,7 +791,7 @@ public class FyodorSearch {
 				return entityAttribute.valueString.ne(valueString);
 			}
 			// GREATER THAN OR EQUAL TO
-		} else if (condition.equals(">=")) {
+		} else if (filter == Filter.GREATER_THAN_OR_EQUAL) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.goe(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {
@@ -802,7 +804,7 @@ public class FyodorSearch {
 				return entityAttribute.valueDateTime.goe(ea.getValueDateTime());
 			}
 			// LESS THAN OR EQUAL TO
-		} else if (condition.equals("<=")) {
+		} else if (filter == Filter.LESS_THAN_OR_EQUAL) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.loe(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {
@@ -815,7 +817,7 @@ public class FyodorSearch {
 				return entityAttribute.valueDateTime.loe(ea.getValueDateTime());
 			}
 			// GREATER THAN
-		} else if (condition.equals(">")) {
+		} else if (filter == Filter.GREATER_THAN) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.gt(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {
@@ -828,7 +830,7 @@ public class FyodorSearch {
 				return entityAttribute.valueDateTime.after(ea.getValueDateTime());
 			}
 			// LESS THAN
-		} else if (condition.equals("<")) {
+		} else if (filter == Filter.LESS_THAN) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.lt(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {
@@ -1112,9 +1114,9 @@ public class FyodorSearch {
 					if (i == (calFields.length - 2)) {
 						associateEa = associatedBe.findEntityAttribute(linkBeCode);
 
-						if (associateEa != null && (associateEa.isPresent() || ("PRI_NAME".equals(linkBeCode)))) {
+						if (associateEa != null && (associateEa.isPresent() || (Attribute.PRI_NAME.equals(linkBeCode)))) {
 							String linkedValue = null;
-							if ("PRI_NAME".equals(linkBeCode)) {
+							if (Attribute.PRI_NAME.equals(linkBeCode)) {
 								linkedValue = associatedBe.getName();
 							} else {
 								linkedValue = associatedBe.getValueAsString(linkBeCode);
