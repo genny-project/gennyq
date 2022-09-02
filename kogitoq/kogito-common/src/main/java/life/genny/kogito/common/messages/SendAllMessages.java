@@ -10,6 +10,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.utils.SearchUtils;
 
@@ -49,8 +50,8 @@ public class SendAllMessages extends MessageSendingStrategy {
     @Override
     public void sendMessage() {
         SearchEntity searchEntity = new SearchEntity(SBE_MILESTONE_MESSAGES, NAME)
-                .addFilter(Attribute.PRI_CODE, Operator.LIKE, "MSG_%")
-                .addFilter(PRI_MILESTONE, Operator.LIKE, "%\"" + milestoneCode.toUpperCase() + "\"%")
+                .add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "MSG_%"))
+                .add(new Filter(PRI_MILESTONE, Operator.LIKE, "%\"" + milestoneCode.toUpperCase() + "\"%"))
                 .setPageStart(0)
                 .setPageSize(100);
 

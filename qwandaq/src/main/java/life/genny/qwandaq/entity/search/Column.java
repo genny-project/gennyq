@@ -1,16 +1,16 @@
 package life.genny.qwandaq.entity.search;
 
 /**
- * Sort
+ * Column
  */
-public class Sort {
+public class Column {
 
 	private String code;
-	private Ord order;
+	private String name;
 
-	public Sort(String code, Ord order) {
+	public Column(String code, String name) {
 		this.code = code;
-		this.order = order;
+		this.name = name;
 	}
 
 	public String getCode() {
@@ -21,12 +21,12 @@ public class Sort {
 		this.code = code;
 	}
 
-	public Ord getOrder() {
-		return order;
+	public String getName() {
+		return name;
 	}
 
-	public void setOrder(Ord order) {
-		this.order = order;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 }

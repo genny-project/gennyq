@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Column;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Operator;
+import life.genny.qwandaq.entity.search.Ord;
 import life.genny.qwandaq.entity.search.Sort;
 
 public class JsonTest {
@@ -29,10 +32,10 @@ public class JsonTest {
 	public void searchEntityTest()
 	{
 		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
-		.addSort("PRI_NAME", "Created", Sort.ASC)
-		.addFilter("PRI_CODE", Operator.LIKE, "DEF_%")
-		.addColumn("PRI_CODE", "Name")
-		.setPageStart(0).setPageSize(1000);
+			.add(new Sort("PRI_NAME", Ord.ASC))
+			.add(new Filter("PRI_CODE", Operator.LIKE, "DEF_%"))
+			.add(new Column("PRI_CODE", "Name"))
+			.setPageStart(0).setPageSize(1000);
 
 		searchEntity.setRealm("genny");
 		assert(searchEntity.equals(serializeDeserialize(searchEntity, BaseEntity.class)));

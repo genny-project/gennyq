@@ -27,7 +27,10 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Column;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Operator;
+import life.genny.qwandaq.entity.search.Ord;
 import life.genny.qwandaq.entity.search.Sort;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -168,8 +171,8 @@ public class InternalConsumer {
 		Boolean searchingOnLinks = false;
 
 		SearchEntity searchBE = new SearchEntity("SBE_DROPDOWN", " Search")
-				.addColumn(Attribute.PRI_CODE, "Code")
-				.addColumn(Attribute.PRI_NAME, "Name");
+				.add(new Column(Attribute.PRI_CODE, "Code"))
+				.add(new Column(Attribute.PRI_NAME, "Name"));
 
 		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
 
@@ -288,11 +291,11 @@ public class InternalConsumer {
 								log.info("Adding BE DTT filter");
 
 								if (logic != null && logic.equals("AND")) {
-									searchBE.addAnd(attributeCode, operator, val);
+									searchBE.and(new Filter(attributeCode, operator, val));
 								} else if (logic != null && logic.equals("OR")) {
-									searchBE.addOr(attributeCode, operator, val);
+									searchBE.or(new Filter(attributeCode, operator, val));
 								} else {
-									searchBE.addFilter(attributeCode, operator, val);
+									searchBE.add(new Filter(attributeCode, operator, val));
 								}
 
 							}
@@ -305,11 +308,11 @@ public class InternalConsumer {
 							log.info("Adding string DTT filter");
 
 							if (logic != null && logic.equals("AND")) {
-								searchBE.addAnd(attributeCode, operator, val);
+								searchBE.and(new Filter(attributeCode, operator, val));
 							} else if (logic != null && logic.equals("OR")) {
-								searchBE.addOr(attributeCode, operator, val);
+								searchBE.or(new Filter(attributeCode, operator, val));
 							} else {
-								searchBE.addFilter(attributeCode, operator, val);
+								searchBE.add(new Filter(attributeCode, operator, val));
 							}
 						} else {
 							Operator operator = Operator.EQUALS;
@@ -317,7 +320,7 @@ public class InternalConsumer {
 								operator = convertOperatorToOperator(filterStr);
 							}
 							log.info("Adding Other DTT filter");
-							searchBE.addFilter(attributeCode, operator, val);
+							searchBE.add(new Filter(attributeCode, operator, val));
 						}
 					}
 				}
@@ -329,8 +332,8 @@ public class InternalConsumer {
 				}
 				if (sortBy != null) {
 					String order = json.getString("order");
-					Sort sortOrder = order.equals("DESC") ? Sort.DESC : Sort.ASC;
-					searchBE.addSort(sortBy, sortBy, sortOrder);
+					Ord ord = order.equals("DESC") ? Ord.DESC : Ord.ASC;
+					searchBE.add(new Sort(sortBy, ord));
 				}
 
 			} catch (Exception e) {
@@ -345,12 +348,12 @@ public class InternalConsumer {
 		Boolean hasSort = searchBE.getBaseEntityAttributes().stream()
 				.anyMatch(item -> item.getAttributeCode().startsWith("SRT_"));
 		if (!hasSort && !searchingOnLinks) {
-			searchBE.addSort(Attribute.PRI_NAME, "Name", Sort.ASC);
+			searchBE.add(new Sort(Attribute.PRI_NAME, Ord.ASC));
 		}
 
 		// Filter by name wildcard provided by user
-		searchBE.addFilter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%")
-				.addOr(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%");
+		searchBE.add(new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"))
+				.or(new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%"));
 
 		searchBE.setRealm(userToken.getProductCode());
 		searchBE.setPageStart(pageStart);

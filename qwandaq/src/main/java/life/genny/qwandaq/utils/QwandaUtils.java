@@ -31,6 +31,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -742,14 +743,14 @@ public class QwandaUtils {
 				continue;
 
 			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-					.addFilter("PRI_CODE", Operator.LIKE, prefix + "_%")
+					.add(new Filter("PRI_CODE", Operator.LIKE, prefix + "_%"))
 					.setPageStart(0)
 					.setPageSize(1);
 
 			// ensure we are not counting any of our targets
 			for (BaseEntity target : targets) {
 				log.info("adding not equal " + target.getCode());
-				searchEntity.addAnd("PRI_CODE", Operator.NOT_EQUALS, target.getCode());
+				searchEntity.and(new Filter("PRI_CODE", Operator.NOT_EQUALS, target.getCode()));
 			}
 
 			for (String code : codes) {
@@ -785,7 +786,7 @@ public class QwandaUtils {
 					value = BaseEntityUtils.cleanUpAttributeValue(value);
 
 				log.info("Adding unique filter: " + code + " like " + value);
-				searchEntity.addFilter(code, Operator.LIKE, "%" + value + "%");
+				searchEntity.add(new Filter(code, Operator.LIKE, "%" + value + "%"));
 			}
 
 			// set realm and count results
