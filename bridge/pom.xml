@@ -15,9 +15,6 @@
 
 	<name>Bridge</name>
 	<description>A Bridge between Frontend and the Backend.</description>
-        <properties>
-            <quarkus.platform.version>2.10.4.Final</quarkus.platform.version>
-        </properties>
 
 	<dependencyManagement>
 		<dependencies>
