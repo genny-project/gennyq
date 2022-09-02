@@ -252,7 +252,7 @@ public class KeycloakUtils {
         log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
-        log.info("encodedPostRequest:[" + str + "]");
+        //log.info("encodedPostRequest:[" + str + "]");
         JsonObject json = jsonb.fromJson(str, JsonObject.class);
         String token = json.getString("access_token");
 
@@ -296,7 +296,7 @@ public class KeycloakUtils {
                 response += line;
             }
             if (conn.getResponseCode() == HttpsURLConnection.HTTP_OK) {
-                log.info("Successful Token Request!");
+                log.debug("Successful Token Request!");
                 return response;
             } else {
                 log.error("Bad Token Request: " + conn.getResponseCode() + " " + conn.getResponseMessage());

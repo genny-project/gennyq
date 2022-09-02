@@ -83,10 +83,8 @@ public class TimerData implements Serializable {
         if ((this.events != null) && (this.events.size() > 0)) {
             this.currentMilestone = this.events.get(0);
             return this.events.get(0);
-        } else {
-            this.currentMilestone = null;
         }
-        return null;
+        return this.currentMilestone; // stay with this existing final milestone
     }
 
     @JsonIgnore
@@ -175,8 +173,8 @@ public class TimerData implements Serializable {
         this.currentMilestone = this.getNextMilestone();
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public Long getNow() {
         return LocalDateTime.now().atZone(
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
