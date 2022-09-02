@@ -71,7 +71,7 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity add(Sort sort) {
 
 		Attribute attribute = new Attribute("SRT_" + sort.getCode(), sort.getCode(), new DataType(String.class));
-		addAttribute(attribute, sortIndex, sort.getOrder());
+		addAttribute(attribute, sortIndex, sort.getOrder().name());
 		sortIndex += 1.0;
 
 		return this;
