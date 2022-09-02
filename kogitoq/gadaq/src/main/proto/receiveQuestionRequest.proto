@@ -149,22 +149,19 @@ message ReceiveQuestionRequest {
  @VariableInfo(tags="") */ 
 	optional ProcessData processData = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input") */ 
-	optional string productCode = 10; 
+ @VariableInfo(tags="") */ 
+	optional string questionCode = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string questionCode = 11; 
+	optional string sourceCode = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string sourceCode = 12; 
+	optional string targetCode = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string targetCode = 13; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="") */ 
-	optional TimerData timerData = 14; 
+	optional TimerData timerData = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 15; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 14; 
 }
 /* @Indexed */ 
 message S2SData { 

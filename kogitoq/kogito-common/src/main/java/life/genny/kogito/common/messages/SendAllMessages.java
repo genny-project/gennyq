@@ -12,6 +12,8 @@ import life.genny.qwandaq.utils.SearchUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
+
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +52,10 @@ public class SendAllMessages extends MessageSendingStrategy {
     }
 
     public SendAllMessages(String milestoneCode, String coreBeCode) {
+        beUtils = Arc.container().select(BaseEntityUtils.class).get();
+        userToken = Arc.container().select(UserToken.class).get();
+        searchUtils = Arc.container().select(SearchUtils.class).get();
+
         this.milestoneCode = milestoneCode;
         this.coreBE = beUtils.getBaseEntity(userToken.getProductCode(), coreBeCode);
         this.productCode = this.coreBE.getRealm();

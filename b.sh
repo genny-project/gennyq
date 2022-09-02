@@ -4,12 +4,12 @@ cd qwandaq;
 mvn clean install -U
 cd ../serviceq;
 mvn clean install -U
-cd kogitoq/kogito-common
+cd ../kogitoq/kogito-common
 mvn clean install -U
 cd ../gadaq
 mvn clean package -U -DskipTests=true
 ./build-docker.sh
-cd ../bridge
+cd ../../bridge
 mvn clean package -U -DskipTests=true
 ./build-docker.sh
 cd ../lauchy
