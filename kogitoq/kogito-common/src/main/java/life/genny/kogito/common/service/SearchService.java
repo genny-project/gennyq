@@ -19,7 +19,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
@@ -91,7 +91,7 @@ public class SearchService {
 		log.info("Sending Detail View :: " + searchCode);
 
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), searchCode, SearchEntity.class);
-		searchEntity.addFilter("PRI_CODE", Filter.EQUALS, targetCode);
+		searchEntity.addFilter("PRI_CODE", Operator.EQUALS, targetCode);
 
 		// perform the search
 		searchUtils.searchTable(searchEntity);
@@ -245,7 +245,7 @@ public class SearchService {
 			}
 
 			if (!attrName.isBlank()) { //searching text
-				searchBE.addFilter(code, Filter.LIKE, value);
+				searchBE.addFilter(code, Operator.LIKE, value);
 			}
 
 		}else if(ops.equals(SearchOptions.PAGINATION)) { //pagination
@@ -288,7 +288,7 @@ public class SearchService {
 			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
 
 			if (!name.isBlank()) { //searching text
-				searchBE.addFilter(code, Filter.LIKE, value);
+				searchBE.addFilter(code, Operator.LIKE, value);
 			}
 
 			CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);

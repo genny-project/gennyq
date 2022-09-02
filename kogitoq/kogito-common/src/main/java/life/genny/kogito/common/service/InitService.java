@@ -16,7 +16,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -133,7 +133,7 @@ public class InitService {
 
 		// get pcms using search
 		SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
-				.addFilter(Attribute.PRI_CODE, Filter.LIKE, "PCM_%")
+				.addFilter(Attribute.PRI_CODE, Operator.LIKE, "PCM_%")
 				.addColumn("*", "All Columns");
 
 		searchBE.setRealm(productCode);

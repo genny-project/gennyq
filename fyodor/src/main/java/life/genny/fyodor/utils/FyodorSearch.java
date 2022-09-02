@@ -44,7 +44,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.message.QBulkMessage;
@@ -295,14 +295,16 @@ public class FyodorSearch {
 				andAttributes.stream()
 						.filter(x -> removePrefixFromCode(x.getAttributeCode(), "AND").equals(attributeCode))
 						.forEach(x -> {
-							log.info("AND " + attributeCode + " " + x.getAttributeName() + " " + x.getAsString());
-							entityCodeBuilder.and(condition(baseEntity.code, x.getAttributeName(), x.getAsString()));
+							Operator operator = Operator.valueOf(x.getAttributeName());
+							log.info("AND " + attributeCode + " " + operator + " " + x.getAsString());
+							entityCodeBuilder.and(condition(baseEntity.code, operator, x.getAsString()));
 						});
 				orAttributes.stream()
 						.filter(x -> removePrefixFromCode(x.getAttributeCode(), "OR").equals(attributeCode))
 						.forEach(x -> {
-							log.info("OR " + attributeCode + " " + x.getAttributeName() + " " + x.getAsString());
-							entityCodeBuilder.or(condition(baseEntity.code, x.getAttributeName(), x.getAsString()));
+							Operator operator = Operator.valueOf(x.getAttributeName());
+							log.info("OR " + attributeCode + " " + operator + " " + x.getAsString());
+							entityCodeBuilder.or(condition(baseEntity.code, operator, x.getAsString()));
 						});
 				builder.and(entityCodeBuilder);
 
@@ -641,61 +643,61 @@ public class FyodorSearch {
 	/**
 	 * Switch for finding the expression based on filter
 	 * @param field
-	 * @param filter
+	 * @param operator
 	 * @param value
 	 * @return
 	 */
-	public BooleanExpression condition(StringPath field, String filter, String value) {
+	public BooleanExpression condition(StringPath field, Operator operator, String value) {
 
-		switch (filter) {
-			case "LIKE":
+		switch (operator) {
+			case LIKE:
 				return field.like(value);
-			case "NOT LIKE":
+			case NOT_LIKE:
 				return field.notLike(value);
-			case "_EQ_":
+			case EQUALS:
 				return field.eq(value);
-			case "_NOT__EQ_":
+			case NOT_EQUALS:
 				return field.ne(value);
+			default:
+				throw new DebugException("Invalid String operator " + operator);
 		}
-
-		throw new DebugException("No Case found for " + filter);
 	}
 
 	/**
 	 * Switch for finding the expression based on filter
 	 * @param field
-	 * @param filter
+	 * @param operator
 	 * @param value
 	 * @return
 	 */
-	public BooleanExpression condition(NumberPath field, String filter, Number value) {
+	public BooleanExpression condition(NumberPath field, Operator operator, Number value) {
 	
-		switch (filter) {
-			case "=":
+		switch (operator) {
+			case EQUALS:
 				return field.eq(value);
-			case "!=":
+			case NOT_EQUALS:
 				return field.ne(value);
-			case ">":
+			case GREATER_THAN:
 				return field.gt(value);
-			case "<":
+			case LESS_THAN:
 				return field.lt(value);
-			case ">=":
+			case GREATER_THAN_OR_EQUAL:
 				return field.goe(value);
-			case "<=":
+			case LESS_THAN_OR_EQUAL:
 				return field.loe(value);
+			default:
+				throw new DebugException("Invalid Number Case " + operator);
 		}
-
-		throw new DebugException("No Case found for " + filter);
 	}
 
 	public static Predicate getDateTimePredicate(EntityAttribute ea, DateTimePath path) {
 
-		Filter filter = Filter.valueOf(ea.getAttributeName());
+		Operator operator = Operator.valueOf(ea.getAttributeName());
 		LocalDateTime dateTime = ea.getValueDateTime();
 
 		if (dateTime == null) {
 			LocalDate date = ea.getValueDate();
-			log.info(ea.getAttributeCode() + " " + filter + " " + date);
+			log.info(ea.getAttributeCode() + " " + operator + " " + date);
 
 			// Convert Date into two DateTime boundaries
 			LocalDateTime lowerBound = date.atStartOfDay();
@@ -703,27 +705,27 @@ public class FyodorSearch {
 			LocalDateTime upperBound = lowerBound.plusDays(1);
 			log.info("upperBound = " + upperBound);
 
-			if (filter == Filter.GREATER_THAN) {
+			if (operator == Operator.GREATER_THAN) {
 				return path.after(upperBound);
-			} else if (filter == Filter.GREATER_THAN_OR_EQUAL) {
+			} else if (operator == Operator.GREATER_THAN_OR_EQUAL) {
 				return path.after(lowerBound);
-			} else if (filter == Filter.LESS_THAN) {
+			} else if (operator == Operator.LESS_THAN) {
 				return path.before(lowerBound);
-			} else if (filter == Filter.LESS_THAN_OR_EQUAL) {
+			} else if (operator == Operator.LESS_THAN_OR_EQUAL) {
 				return path.before(upperBound);
-			} else if (filter == Filter.NOT_EQUALS) {
+			} else if (operator == Operator.NOT_EQUALS) {
 				return path.notBetween(lowerBound, upperBound);
 			} else {
 				return path.between(lowerBound, upperBound);
 			}
 		}
-		log.info(ea.getAttributeCode() + " " + filter + " " + dateTime);
+		log.info(ea.getAttributeCode() + " " + operator + " " + dateTime);
 
-		if (filter == Filter.GREATER_THAN_OR_EQUAL || filter == Filter.GREATER_THAN) {
+		if (operator == Operator.GREATER_THAN_OR_EQUAL || operator == Operator.GREATER_THAN) {
 			return path.after(dateTime);
-		} else if (filter == Filter.LESS_THAN_OR_EQUAL || filter == Filter.LESS_THAN) {
+		} else if (operator == Operator.LESS_THAN_OR_EQUAL || operator == Operator.LESS_THAN) {
 			return path.before(dateTime);
-		} else if (filter == Filter.NOT_EQUALS) {
+		} else if (operator == Operator.NOT_EQUALS) {
 			return path.ne(dateTime);
 		}
 		// Default to equals
@@ -740,25 +742,25 @@ public class FyodorSearch {
 	public static Predicate getAttributeSearchColumn(EntityAttribute ea, QEntityAttribute entityAttribute) {
 
 		String attributeFilterValue = ea.getAsString();
-		Filter filter = Filter.valueOf(ea.getAttributeName());
-		log.info(ea.getAttributeCode() + " " + filter + " " + attributeFilterValue);
+		Operator operator = Operator.valueOf(ea.getAttributeName());
+		log.info(ea.getAttributeCode() + " " + operator + " " + attributeFilterValue);
 
 		String valueString = "";
 		if (ea.getValueString() != null) {
 			valueString = ea.getValueString();
 		}
 		// Null check on condition and default to equals valuestring
-		if (filter == null) {
+		if (operator == null) {
 			log.error("SQL condition is NULL, " + "EntityAttribute baseEntityCode is:" + ea.getBaseEntityCode()
 					+ ", attributeCode is: " + ea.getAttributeCode());
 			// LIKE
-		} else if (filter == Filter.LIKE) {
+		} else if (operator == Operator.LIKE) {
 			return entityAttribute.valueString.like(valueString);
 			// NOT LIKE
-		} else if (filter == Filter.NOT_LIKE) {
+		} else if (operator == Operator.NOT_LIKE) {
 			return entityAttribute.valueString.notLike(valueString);
 			// EQUALS
-		} else if (filter == Filter.EQUALS) {
+		} else if (operator == Operator.EQUALS) {
 			if (ea.getValueBoolean() != null) {
 				return entityAttribute.valueBoolean.eq(ea.getValueBoolean());
 			} else if (ea.getValueDouble() != null) {
@@ -775,7 +777,7 @@ public class FyodorSearch {
 				return entityAttribute.valueString.eq(valueString);
 			}
 			// NOT EQUALS
-		} else if (filter == Filter.NOT_EQUALS) {
+		} else if (operator == Operator.NOT_EQUALS) {
 			if (ea.getValueBoolean() != null) {
 				return entityAttribute.valueBoolean.ne(ea.getValueBoolean());
 			} else if (ea.getValueDouble() != null) {
@@ -792,7 +794,7 @@ public class FyodorSearch {
 				return entityAttribute.valueString.ne(valueString);
 			}
 			// GREATER THAN OR EQUAL TO
-		} else if (filter == Filter.GREATER_THAN_OR_EQUAL) {
+		} else if (operator == Operator.GREATER_THAN_OR_EQUAL) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.goe(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {
@@ -805,7 +807,7 @@ public class FyodorSearch {
 				return entityAttribute.valueDateTime.goe(ea.getValueDateTime());
 			}
 			// LESS THAN OR EQUAL TO
-		} else if (filter == Filter.LESS_THAN_OR_EQUAL) {
+		} else if (operator == Operator.LESS_THAN_OR_EQUAL) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.loe(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {
@@ -818,7 +820,7 @@ public class FyodorSearch {
 				return entityAttribute.valueDateTime.loe(ea.getValueDateTime());
 			}
 			// GREATER THAN
-		} else if (filter == Filter.GREATER_THAN) {
+		} else if (operator == Operator.GREATER_THAN) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.gt(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {
@@ -831,7 +833,7 @@ public class FyodorSearch {
 				return entityAttribute.valueDateTime.after(ea.getValueDateTime());
 			}
 			// LESS THAN
-		} else if (filter == Filter.LESS_THAN) {
+		} else if (operator == Operator.LESS_THAN) {
 			if (ea.getValueDouble() != null) {
 				return entityAttribute.valueDouble.lt(ea.getValueDouble());
 			} else if (ea.getValueInteger() != null) {

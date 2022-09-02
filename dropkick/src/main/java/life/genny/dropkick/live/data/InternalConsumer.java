@@ -27,7 +27,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Filter;
+import life.genny.qwandaq.entity.search.Operator;
 import life.genny.qwandaq.entity.search.Sort;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -281,43 +281,43 @@ public class InternalConsumer {
 							} else {
 								// This is a DTT_LINK style that has class = baseentity --> Baseentity_Attribute
 								// TODO equals?
-								Filter filter = Filter.LIKE;
+								Operator operator = Operator.LIKE;
 								if (filterStr != null) {
-									filter = convertOperatorToFilter(filterStr);
+									operator = convertOperatorToOperator(filterStr);
 								}
 								log.info("Adding BE DTT filter");
 
 								if (logic != null && logic.equals("AND")) {
-									searchBE.addAnd(attributeCode, filter, val);
+									searchBE.addAnd(attributeCode, operator, val);
 								} else if (logic != null && logic.equals("OR")) {
-									searchBE.addOr(attributeCode, filter, val);
+									searchBE.addOr(attributeCode, operator, val);
 								} else {
-									searchBE.addFilter(attributeCode, filter, val);
+									searchBE.addFilter(attributeCode, operator, val);
 								}
 
 							}
 
 						} else if (dataType.getClassName().equals("java.lang.String")) {
-							Filter filter = Filter.LIKE;
+							Operator operator = Operator.LIKE;
 							if (filterStr != null) {
-								filter = convertOperatorToFilter(filterStr);
+								operator = convertOperatorToOperator(filterStr);
 							}
 							log.info("Adding string DTT filter");
 
 							if (logic != null && logic.equals("AND")) {
-								searchBE.addAnd(attributeCode, filter, val);
+								searchBE.addAnd(attributeCode, operator, val);
 							} else if (logic != null && logic.equals("OR")) {
-								searchBE.addOr(attributeCode, filter, val);
+								searchBE.addOr(attributeCode, operator, val);
 							} else {
-								searchBE.addFilter(attributeCode, filter, val);
+								searchBE.addFilter(attributeCode, operator, val);
 							}
 						} else {
-							Filter filter = Filter.EQUALS;
+							Operator operator = Operator.EQUALS;
 							if (filterStr != null) {
-								filter = convertOperatorToFilter(filterStr);
+								operator = convertOperatorToOperator(filterStr);
 							}
 							log.info("Adding Other DTT filter");
-							searchBE.addFilter(attributeCode, filter, val);
+							searchBE.addFilter(attributeCode, operator, val);
 						}
 					}
 				}
@@ -349,8 +349,8 @@ public class InternalConsumer {
 		}
 
 		// Filter by name wildcard provided by user
-		searchBE.addFilter(Attribute.PRI_NAME, Filter.LIKE, searchText + "%")
-				.addOr(Attribute.PRI_NAME, Filter.LIKE, "% " + searchText + "%");
+		searchBE.addFilter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%")
+				.addOr(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%");
 
 		searchBE.setRealm(userToken.getProductCode());
 		searchBE.setPageStart(pageStart);
@@ -411,25 +411,25 @@ public class InternalConsumer {
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
-	public Filter convertOperatorToFilter(String operator) {
+	public Operator convertOperatorToOperator(String operator) {
 		
 		switch (operator) {
 			case "LIKE":
-				return Filter.LIKE;
+				return Operator.LIKE;
 			case "NOT_LIKE":
-				return Filter.NOT_LIKE;
+				return Operator.NOT_LIKE;
 			case "=":
-				return Filter.EQUALS;
+				return Operator.EQUALS;
 			case "!=":
-				return Filter.NOT_EQUALS;
+				return Operator.NOT_EQUALS;
 			case ">":
-				return Filter.NOT_EQUALS;
+				return Operator.NOT_EQUALS;
 			case "<":
-				return Filter.LESS_THAN;
+				return Operator.LESS_THAN;
 			case ">=":
-				return Filter.GREATER_THAN_OR_EQUAL;
+				return Operator.GREATER_THAN_OR_EQUAL;
 			case "<=":
-				return Filter.LESS_THAN_OR_EQUAL;
+				return Operator.LESS_THAN_OR_EQUAL;
 			default:
 				throw new DebugException("Invalid operator: " + operator);
 		}
