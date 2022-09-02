@@ -1,5 +1,8 @@
 package life.genny.qwandaq.entity;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -9,6 +12,7 @@ import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.Action;
+import life.genny.qwandaq.entity.search.AssociatedColumn;
 import life.genny.qwandaq.entity.search.Column;
 import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Sort;
@@ -59,6 +63,21 @@ public class SearchEntity extends BaseEntity {
 
 		Attribute attributeColumn = new Attribute("COL_" + column.getCode(), column.getName(), new DataType(String.class));
 		addAttribute(attributeColumn, columnIndex);
+		columnIndex += 1.0;
+
+		return this;
+	}
+
+	/**
+	 * Add an associated entity column to the search results
+	 * @param associatedColumn AssociatedColumn object
+	 * @return SearchEntity
+	 */
+	public SearchEntity add(AssociatedColumn associatedColumn) {
+
+		Attribute attribute = new Attribute(associatedColumn.getCode(), associatedColumn.getName(), 
+			new DataType(String.class));
+		addAttribute(attribute, columnIndex);
 		columnIndex += 1.0;
 
 		return this;
@@ -145,54 +164,6 @@ public class SearchEntity extends BaseEntity {
 		filterIndex += 1.0;
 
 		return this;	
-	}
-	
-	/** 
-	 * This method allows to add the associated attributes to the SearchEntity that
-	 * is required in the result BaseEntities
-	 * @param attributeCode the code of the associated attribute
-	 * @param associatedLinkedBaseEntityCodeAttribute the the code of the attribute to fetch as a column
-	 * @param columnName the name of the column
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAssociatedColumn(final String attributeCode, final String associatedLinkedBaseEntityCodeAttribute,
-			final String columnName) {
-		AttributeText attributeColumn = new AttributeText("COL__" + attributeCode.toUpperCase()+"__"+associatedLinkedBaseEntityCodeAttribute.toUpperCase(), columnName);
-
-		EntityAttribute ea = addAttribute(attributeColumn, columnIndex);
-		ea.setValue(associatedLinkedBaseEntityCodeAttribute);
-		ea.setIndex(columnIndex.intValue());
-		columnIndex += 1.0;
-
-		return this;
-	}
-	
-	/** 
-	 * This method allows nested associated columns
-	 * @param attributeCode the code of the associated attribute
-	 * @param nestedAttributeCode the code of the nested associated attribute
-	 * @param associatedLinkedBaseEntityCodeAttribute the the code of the attribute to fetch as a column
-	 * @param columnName the name of the column
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAssociatedColumn(final String attributeCode, String nestedAttributeCode,
-			final String associatedLinkedBaseEntityCodeAttribute, final String columnName) {
-		return addAssociatedColumn(attributeCode + "__" + nestedAttributeCode, associatedLinkedBaseEntityCodeAttribute, columnName);
-	}
-
-	
-	/** 
-	 * This method allows double nested associated columns
-	 * @param attributeCode the code of the associated attribute
-	 * @param nestedAttributeCode the code of the nested associated attribute
-	 * @param doubleNestedAttributeCode the code of the double nested associated attribute
-	 * @param associatedLinkedBaseEntityCodeAttribute the the code of the attribute to fetch as a column
-	 * @param columnName the name of the column
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAssociatedColumn(final String attributeCode, String nestedAttributeCode, String doubleNestedAttributeCode,
-			final String associatedLinkedBaseEntityCodeAttribute, final String columnName) {
-		return addAssociatedColumn(attributeCode + "__" + nestedAttributeCode + "__" + doubleNestedAttributeCode, associatedLinkedBaseEntityCodeAttribute, columnName);
 	}
 
 	/** 

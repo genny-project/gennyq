@@ -10,7 +10,7 @@ public class Column extends Trait {
 	}
 
 	public Column(String code, String name) {
-		super(code, name);
+		super();
 	}
 
 }
