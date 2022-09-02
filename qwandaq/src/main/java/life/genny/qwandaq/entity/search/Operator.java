@@ -1,7 +1,6 @@
 package life.genny.qwandaq.entity.search;
 
 public enum Operator {
-
 	LIKE,
 	NOT_LIKE,
 	EQUALS,
@@ -14,5 +13,4 @@ public enum Operator {
 	NOT_REGEX,
 	CONTAINS,
 	NOT_CONTAINS,
-
 }

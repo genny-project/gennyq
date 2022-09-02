@@ -3,25 +3,17 @@ package life.genny.qwandaq.entity.search;
 /**
  * Sort
  */
-public class Sort {
+public class Sort extends Trait {
 
-	private String code;
 	private Ord order;
 
 	public Sort() {
+		super();
 	}
 
 	public Sort(String code, Ord order) {
-		this.code = code;
+		super(code, code);
 		this.order = order;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
 	}
 
 	public Ord getOrder() {

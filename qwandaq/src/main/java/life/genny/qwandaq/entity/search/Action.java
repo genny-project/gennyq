@@ -3,33 +3,14 @@ package life.genny.qwandaq.entity.search;
 /**
  * Action
  */
-public class Action {
-
-	private String code;
-	private String name;
+public class Action extends Trait {
 
 	public Action() {
+		super();
 	}
 
 	public Action(String code, String name) {
-		this.code = code;
-		this.name = name;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+		super(code, name);
 	}
 
 }

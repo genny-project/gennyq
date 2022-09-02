@@ -3,33 +3,14 @@ package life.genny.qwandaq.entity.search;
 /**
  * Column
  */
-public class Column {
-
-	private String code;
-	private String name;
+public class Column extends Trait {
 
 	public Column() {
+		super();
 	}
 
 	public Column(String code, String name) {
-		this.code = code;
-		this.name = name;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+		super(code, name);
 	}
 
 }

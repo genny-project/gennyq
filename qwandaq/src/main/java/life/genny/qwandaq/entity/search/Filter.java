@@ -11,15 +11,15 @@ import life.genny.qwandaq.entity.search.Successor.Operation;
 /**
  * Filter
  */
-public class Filter {
+public class Filter extends Trait {
 
-	private String code;
 	private Operator operator;
 	private Object value;
 	private Class c;
 	private List<Successor> successors = new ArrayList<>();
 
 	public Filter() {
+		super();
 	}
 
 	public Filter(String code, Operator operator, String value) {
@@ -55,18 +55,10 @@ public class Filter {
 	}
 
 	private Filter(String code, Operator operator, Object value, Class c) {
-		this.code = code;
+		super(code, code);
 		this.operator = operator;
 		this.value = value;
 		this.c = c;
-	}
-
-	public String getCode() {
-		return code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
 	}
 
 	public Operator getOperator() {
