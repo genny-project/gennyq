@@ -8,6 +8,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.search.Action;
 import life.genny.qwandaq.entity.search.Column;
 import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Sort;
@@ -78,6 +79,20 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	/**
+	 * Add an Action to each search result
+	 * @param action
+	 * @return SearchEntity
+	 */
+	public SearchEntity add(Action action) {
+
+		Attribute attribute = new Attribute("ACT_" + action.getCode(), action.getName(), new DataType(String.class));
+		addAttribute(attribute, actionIndex);
+		actionIndex += 1.0;
+
+		return this;
+	}
+
+	/**
 	 * Add a search filter
 	 * @param filter Filter object
 	 * @return SearchEntity
@@ -130,23 +145,6 @@ public class SearchEntity extends BaseEntity {
 		filterIndex += 1.0;
 
 		return this;	
-	}
-	
-
-	/** 
-	 * This method allows to add the action attributes to the SearchEntity that is
-	 * required in the result BaseEntities
-	 * @param code the code of the action
-	 * @param name the name of the action
-	 * @return SearchEntity
-	 */
-	public SearchEntity addAction(final String code, final String name) {
-
-		Attribute attributeColumn = new Attribute("ACT_" + code, name, new DataType(String.class));
-		addAttribute(attributeColumn, actionIndex);
-		actionIndex += 1.0;
-
-		return this;
 	}
 	
 	/** 

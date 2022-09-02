@@ -3,6 +3,10 @@ package life.genny.qwandaq.entity.search;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import life.genny.qwandaq.entity.search.Successor.Operation;
 
 /**
  * Filter
@@ -13,6 +17,10 @@ public class Filter {
 	private Operator operator;
 	private Object value;
 	private Class c;
+	private List<Successor> successors = new ArrayList<>();
+
+	public Filter() {
+	}
 
 	public Filter(String code, Operator operator, String value) {
 		this(code, operator, value, String.class);
@@ -84,4 +92,23 @@ public class Filter {
 	public void setC(Class c) {
 		this.c = c;
 	}
+
+	public List<Successor> getSuccessors() {
+		return successors;
+	}
+
+	public void setSuccessors(List<Successor> successors) {
+		this.successors = successors;
+	}
+
+	public Filter and(Filter filter) {
+		this.successors.add(new Successor(filter, Operation.AND));
+		return this;
+	}
+
+	public Filter or(Filter filter) {
+		this.successors.add(new Successor(filter, Operation.OR));
+		return this;
+	}
+
 }

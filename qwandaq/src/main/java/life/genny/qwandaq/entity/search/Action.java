@@ -1,17 +1,17 @@
 package life.genny.qwandaq.entity.search;
 
 /**
- * Column
+ * Action
  */
-public class Column {
+public class Action {
 
 	private String code;
 	private String name;
 
-	public Column() {
+	public Action() {
 	}
 
-	public Column(String code, String name) {
+	public Action(String code, String name) {
 		this.code = code;
 		this.name = name;
 	}

@@ -8,6 +8,9 @@ public class Sort {
 	private String code;
 	private Ord order;
 
+	public Sort() {
+	}
+
 	public Sort(String code, Ord order) {
 		this.code = code;
 		this.order = order;
