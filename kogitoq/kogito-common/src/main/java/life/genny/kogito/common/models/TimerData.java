@@ -29,6 +29,7 @@ public class TimerData implements Serializable {
     private Long elapsedMin = 0L;
     private Long expiryMin = 3L;// 7L * 24L * 60L; // 7 days
     private Long expiryTimeStamp = 12448167224L; // This must be set during init, default to 20th June 2364
+    private Boolean expired = false;
 
     private TimerEvent currentMilestone = null;
 
@@ -57,7 +58,8 @@ public class TimerData implements Serializable {
 
     public Boolean hasExpired() {
         Long currentTimeStampUTC = getNow();
-        return currentTimeStampUTC >= this.expiryTimeStamp;
+        expired = expired || currentTimeStampUTC >= this.expiryTimeStamp;
+        return expired;
     }
 
     @JsonIgnore
@@ -154,6 +156,18 @@ public class TimerData implements Serializable {
         add(new TimerEvent(timerEventString));
     }
 
+    public Boolean getExpired() {
+        return expired;
+    }
+
+    public Boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(Boolean expired) {
+        this.expired = expired;
+    }
+
     public void add(TimerEvent timerEvent) {
         // check if the same eventCode is already in the queue. If so then replace
         Iterator<TimerEvent> itr = this.events.iterator();
@@ -200,4 +214,5 @@ public class TimerData implements Serializable {
             return 0;
         }
     }
+
 }
