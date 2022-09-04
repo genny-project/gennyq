@@ -28,6 +28,10 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.entity.EntityEntity;
+import life.genny.qwandaq.message.QDataAskMessage;
 
 @ApplicationScoped
 public class SearchService {
@@ -53,7 +57,8 @@ public class SearchService {
 
 	public static enum SearchOptions {
 		PAGINATION,
-		SEARCH
+		SEARCH,
+		FILTER
 	}
 
 	/**
@@ -295,4 +300,114 @@ public class SearchService {
 			sendSearchPCM(GennyConstants.PCM_PROCESS, targetCode);
 		}
 	}
+
+
+	/**
+	 * Return ask with filter group content
+	 * @param searchBE Search Base Entity
+	 * @return Ask
+	 */
+	public Ask getFilterGroupBySearchBE(SearchEntity searchBE) {
+		Ask ask = new Ask();
+		ask.setName(GennyConstants.FILTERS);
+		ask.setTargetCode(searchBE.getCode() +  userToken.getJTI().toUpperCase());
+
+		String fCode = GennyConstants.QUE_FILTER_GRP + "_" + searchBE.getCode() +  userToken.getJTI().toUpperCase();
+		Question question = new Question();
+		question.setCode(fCode);
+		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+
+		ask.setQuestion(question);
+		ask.addChildAsk(getAddFilterGroupBySearchBE(searchBE));
+
+		return ask;
+	}
+
+	/**
+	 * Return ask with add filter group content
+	 * @param searchBE Search Base entity
+	 * @return Ask
+	 */
+	public Ask getAddFilterGroupBySearchBE(SearchEntity searchBE) {
+		Ask ask = new Ask();
+
+		ask.setTargetCode(searchBE.getCode());
+
+		Question question = new Question();
+		question.setCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+		ask.setQuestion(question);
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(userToken.getProductCode(),GennyConstants.QUE_ADD_FILTER_GRP);
+		log.info(baseEntity);
+
+		BaseEntity baseDef = defUtils.getDEF(baseEntity);
+		log.info(baseDef);
+
+		return ask;
+	}
+
+	/**
+	 * Return Message of filter column
+	 * @param searchBE Search Base Entity
+	 * @return Message of Filter column
+	 */
+	public QDataBaseEntityMessage getFilterColumBySearchBE(SearchEntity searchBE) {
+		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
+
+		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		base.setLinkCode(GennyConstants.LNK_CORE);
+		base.setLinkValue(GennyConstants.LNK_ITEMS);
+
+		BaseEntity baseEntity = new BaseEntity();
+
+		List<EntityAttribute> entityAttributes = new ArrayList<>();
+
+		searchBE.getBaseEntityAttributes().stream()
+				.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
+				.forEach(e-> {
+					EntityAttribute ea = new EntityAttribute();
+
+					ea.setAttributeName(e.getAttributeName());
+					ea.setAttributeCode(e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,""));
+
+					String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + e.getAttributeName();
+					ea.setBaseEntityCode(baseCode);
+					baseEntity.setCode(baseCode);
+
+					entityAttributes.add(ea);
+				});
+
+		baseEntity.setBaseEntityAttributes(entityAttributes);
+		base.add(baseEntity);
+		return base;
+	}
+
+	/**
+	 * Send filter group and filter column for filter function
+	 * @param targetCode Target code
+	 */
+	public void sendFilterGroup(String targetCode) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
+
+		if(searchBE != null) {
+			String filterTargetCode = targetCode + "_" + userToken.getJTI().toUpperCase();
+
+			Ask ask = getFilterGroupBySearchBE(searchBE);
+
+			QDataAskMessage msgFilter = new QDataAskMessage(ask);
+			msgFilter.setToken(userToken.getToken());
+			msgFilter.setTargetCode(filterTargetCode);
+			msgFilter.setMessage(GennyConstants.FILTERS);
+			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilter);
+
+
+			QDataBaseEntityMessage msgAddFilter = getFilterColumBySearchBE(searchBE);
+			msgAddFilter.setToken(userToken.getToken());
+			msgAddFilter.setTargetCode(filterTargetCode);
+			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
+		}
+
+	}
+
 }
