@@ -22,13 +22,16 @@ public class TimerData implements Serializable {
     static final Long DEFAULT_TIMER_INTERVAL_MIN = 1L;
     static final Long OFFSET_EXPIRY_SECONDS = 60L;// 24L * 60L * 60L; // Add a day
     static final Integer PRIORITY_QUEUE_INITIAL_SIZE = 3;
+    static final Long DEFAULT_TIMER_EXPIRY_SECONDS = 12448167224L; // This must be set during init, default to 20th June
+                                                                   // 2364
 
     static final Logger log = Logger.getLogger(TimerData.class);
 
     private Long intervalMin = DEFAULT_TIMER_INTERVAL_MIN; //
     private Long elapsedMin = 0L;
     private Long expiryMin = 3L;// 7L * 24L * 60L; // 7 days
-    private Long expiryTimeStamp = 12448167224L; // This must be set during init, default to 20th June 2364
+    private Long expiryTimeStamp = DEFAULT_TIMER_EXPIRY_SECONDS; // This must be set during init, default to 20th June
+                                                                 // 2364
     private Boolean expired = false;
 
     private TimerEvent currentMilestone = null;
@@ -58,7 +61,10 @@ public class TimerData implements Serializable {
 
     public Boolean hasExpired() {
         Long currentTimeStampUTC = getNow();
-        expired = expired || currentTimeStampUTC >= this.expiryTimeStamp;
+        expired = expired || (currentTimeStampUTC >= this.expiryTimeStamp);
+        log.debug("hasExpired->" + expired + " ,currentTimeStampUTC=" + currentTimeStampUTC + " ,expiryTimeStamp="
+                + this.expiryTimeStamp);
+
         return expired;
     }
 
@@ -80,10 +86,10 @@ public class TimerData implements Serializable {
 
     public TimerEvent updateMilestone() {
         if ((this.events != null) && (this.events.size() > 0)) {
+            this.currentMilestone = this.events.get(0);
             this.events.remove(0);
         }
         if ((this.events != null) && (this.events.size() > 0)) {
-            this.currentMilestone = this.events.get(0);
             return this.events.get(0);
         }
         return this.currentMilestone; // stay with this existing final milestone
@@ -179,6 +185,11 @@ public class TimerData implements Serializable {
         }
         this.events.add(timerEvent);
         // Now push the expiryTime to always be later than the last event
+        if (this.expiryTimeStamp.equals(DEFAULT_TIMER_EXPIRY_SECONDS)) {
+            // This means that we need to seed the expiryTimestamp because a timer event has
+            // been added
+            this.expiryTimeStamp = timerEvent.getTimeStamp() + OFFSET_EXPIRY_SECONDS;
+        }
         if (timerEvent.getTimeStamp() > this.expiryTimeStamp) {
             this.expiryTimeStamp = timerEvent.getTimeStamp() + OFFSET_EXPIRY_SECONDS;
         }

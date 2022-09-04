@@ -63,11 +63,13 @@ message TimerData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	repeated TimerEvent events = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryMin = 4; 
+	optional bool expired = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryTimeStamp = 5; 
+	optional int64 expiryMin = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 intervalMin = 6; 
+	optional int64 expiryTimeStamp = 6; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional int64 intervalMin = 7; 
 }
 /* @Indexed */ 
 message TimerEvent { 
@@ -81,7 +83,7 @@ message TimerEvent {
 }
 enum EAbortReason { 
 	option java_package = "life.genny.kogito.common.models.S2SData";
-	CANCEL = 0;
+	CANCEL = 1;
 	TIMEOUT = 2;
-	NONE = 1;
+	NONE = 0;
 }
