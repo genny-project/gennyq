@@ -3,8 +3,6 @@ package life.genny.qwandaq.entity.search;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import life.genny.qwandaq.entity.search.Successor.Operation;
 
@@ -16,7 +14,8 @@ public class Filter extends Trait {
 	private Operator operator;
 	private Object value;
 	private Class c;
-	private List<Successor> successors = new ArrayList<>();
+	private Successor successor;
+	private Capability capability;
 
 	public Filter() {
 		super();
@@ -85,21 +84,34 @@ public class Filter extends Trait {
 		this.c = c;
 	}
 
-	public List<Successor> getSuccessors() {
-		return successors;
+	public Successor getSuccessor() {
+		return successor;
 	}
 
-	public void setSuccessors(List<Successor> successors) {
-		this.successors = successors;
+	public void setSuccessor(Successor successor) {
+		this.successor = successor;
+	}
+
+	public Boolean hasSuccessor() {
+		return (this.successor == null ? false : true);
+	}
+
+	public Boolean hasCapability() {
+		return (this.capability == null ? false : true);
 	}
 
 	public Filter and(Filter filter) {
-		this.successors.add(new Successor(filter, Operation.AND));
+		this.successor = new Successor(filter, Operation.AND);
 		return this;
 	}
 
 	public Filter or(Filter filter) {
-		this.successors.add(new Successor(filter, Operation.OR));
+		this.successor = new Successor(filter, Operation.OR);
+		return this;
+	}
+
+	public Filter add(Capability capability) {
+		this.capability = capability;
 		return this;
 	}
 

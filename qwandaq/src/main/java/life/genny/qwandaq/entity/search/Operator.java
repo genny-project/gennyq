@@ -13,4 +13,6 @@ public enum Operator {
 	NOT_REGEX,
 	CONTAINS,
 	NOT_CONTAINS,
+	STARTS_WITH,
+	NOT_STARTS_WITH
 }

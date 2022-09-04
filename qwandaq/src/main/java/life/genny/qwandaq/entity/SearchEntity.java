@@ -1,14 +1,13 @@
 package life.genny.qwandaq.entity;
 
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.Action;
@@ -37,6 +36,11 @@ public class SearchEntity extends BaseEntity {
 	Double sortIndex = 0.0;
 	Double flcIndex = 1.0;
 
+	private List<Filter> filters = new ArrayList<>();
+	private List<Sort> sorts = new ArrayList<>();
+	private List<Column> columns = new ArrayList<>();
+	private List<Action> actions = new ArrayList<>();
+
 	/**
 	 * Default constructor.
 	 */
@@ -54,6 +58,7 @@ public class SearchEntity extends BaseEntity {
 		setTitle(name);
 	}
 
+
 	/**
 	 * Add an column to the search results
 	 * @param column Column object
@@ -64,6 +69,8 @@ public class SearchEntity extends BaseEntity {
 		Attribute attributeColumn = new Attribute("COL_" + column.getCode(), column.getName(), new DataType(String.class));
 		addAttribute(attributeColumn, columnIndex);
 		columnIndex += 1.0;
+
+		columns.add(column);
 
 		return this;
 	}
@@ -94,6 +101,8 @@ public class SearchEntity extends BaseEntity {
 		addAttribute(attribute, sortIndex, sort.getOrder().name());
 		sortIndex += 1.0;
 
+		sorts.add(sort);
+
 		return this;
 	}
 
@@ -107,6 +116,8 @@ public class SearchEntity extends BaseEntity {
 		Attribute attribute = new Attribute("ACT_" + action.getCode(), action.getName(), new DataType(String.class));
 		addAttribute(attribute, actionIndex);
 		actionIndex += 1.0;
+
+		actions.add(action);
 
 		return this;
 	}
@@ -122,6 +133,8 @@ public class SearchEntity extends BaseEntity {
 			new DataType(filter.getC()));
 		addAttribute(attribute, filterIndex, filter.getValue());
 		filterIndex += 1.0;
+
+		filters.add(filter);
 		
 		return this;
 	}
@@ -648,6 +661,62 @@ public class SearchEntity extends BaseEntity {
 			}
 		}
 		return maxWeight;
+	}
+
+	public static Logger getLog() {
+		return log;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public Double getColumnIndex() {
+		return columnIndex;
+	}
+
+	public void setColumnIndex(Double columnIndex) {
+		this.columnIndex = columnIndex;
+	}
+
+	public Double getFlcIndex() {
+		return flcIndex;
+	}
+
+	public void setFlcIndex(Double flcIndex) {
+		this.flcIndex = flcIndex;
+	}
+
+	public List<Filter> getFilters() {
+		return filters;
+	}
+
+	public void setFilters(List<Filter> filters) {
+		this.filters = filters;
+	}
+
+	public List<Sort> getSorts() {
+		return sorts;
+	}
+
+	public void setSorts(List<Sort> sorts) {
+		this.sorts = sorts;
+	}
+
+	public List<Column> getColumns() {
+		return columns;
+	}
+
+	public void setColumns(List<Column> columns) {
+		this.columns = columns;
+	}
+
+	public List<Action> getActions() {
+		return actions;
+	}
+
+	public void setActions(List<Action> actions) {
+		this.actions = actions;
 	}
 
 }
