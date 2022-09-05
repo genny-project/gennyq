@@ -293,5 +293,4 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 		return name != null && !"".equals(name.trim());
 	}
 
-	public abstract CoreEntitySerializable getCoreEntitySerializable();
 }

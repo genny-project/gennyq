@@ -2,7 +2,7 @@ package life.genny.qwandaq.serialization;
 
 import java.io.Serializable;
 
-import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 
 /*
  * Interface for the representation of any entity in the cache
@@ -10,5 +10,5 @@ import life.genny.qwandaq.CoreEntity;
  * @author Varun Shastry
  */
 public interface CoreEntitySerializable extends Serializable {
-    CoreEntity toCoreEntity();
+    CoreEntityPersistable toPersistableCoreEntity();
 }

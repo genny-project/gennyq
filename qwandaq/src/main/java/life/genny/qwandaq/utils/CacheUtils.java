@@ -21,6 +21,7 @@ import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
@@ -176,7 +177,7 @@ public class CacheUtils {
 	* @param entity The CoreEntity to save
 	* @return The CoreEntity being saved
 	 */
-	public static boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
+	public static boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntityPersistable entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 

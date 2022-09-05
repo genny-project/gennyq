@@ -12,6 +12,7 @@ import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 
@@ -295,7 +296,7 @@ public class BaseEntityAttribute implements CoreEntitySerializable {
 	}
 
 	@Override
-	public CoreEntity toCoreEntity() {
+	public CoreEntityPersistable toPersistableCoreEntity() {
 		EntityAttribute ea = new EntityAttribute();
 		ea.setRealm(getRealm());
 		ea.setBaseEntityCode(getBaseEntityCode());

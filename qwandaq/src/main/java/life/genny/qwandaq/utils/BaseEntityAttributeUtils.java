@@ -71,7 +71,7 @@ public class BaseEntityAttributeUtils {
 	 * @return The corresponding EntityAttribute, or null if not found.
 	 */
     public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
-        return (EntityAttribute) getBaseEntityAttribute(productCode, baseEntityCode, attributeCode).toCoreEntity();
+        return (EntityAttribute) getBaseEntityAttribute(productCode, baseEntityCode, attributeCode).toPersistableCoreEntity();
     }
 
     /**
@@ -87,7 +87,7 @@ public class BaseEntityAttributeUtils {
         List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
         attributeCodes.parallelStream().forEach(attributeCode -> baseEntityAttributes
                 .add((EntityAttribute) getBaseEntityAttribute(productCode, baseEntityCode, attributeCode)
-                        .toCoreEntity()));
+                        .toPersistableCoreEntity()));
         return baseEntityAttributes;
     }
 
@@ -102,7 +102,7 @@ public class BaseEntityAttributeUtils {
         List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
         getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
                 .forEach(baseEntityAttribute -> baseEntityAttributes
-                        .add((EntityAttribute) baseEntityAttribute.toCoreEntity()));
+                        .add((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
         return baseEntityAttributes;
     }
 }

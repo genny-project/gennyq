@@ -625,10 +625,4 @@ public class Question extends CodedEntity {
 		this.icon = icon;
 	}
 
-	@Override
-	public CoreEntitySerializable getCoreEntitySerializable() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

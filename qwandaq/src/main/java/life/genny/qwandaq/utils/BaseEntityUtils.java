@@ -235,7 +235,7 @@ public class BaseEntityUtils {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}
 		} else {
-			entity = (BaseEntity) baseEntitySerializable.toCoreEntity();
+			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
 			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
 			if (bundleAttributes) {
 				Map<String, EntityAttribute> attributeMap = entity.getAttributeMap();

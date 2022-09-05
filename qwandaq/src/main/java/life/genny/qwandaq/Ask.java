@@ -663,11 +663,4 @@ public class Ask extends CoreEntity {
 
 		setChildAsks(children);
 	}
-
-	@Override
-	public CoreEntitySerializable getCoreEntitySerializable() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

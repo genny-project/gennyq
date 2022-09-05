@@ -295,10 +295,4 @@ public class Attribute extends CodedEntity implements Serializable {
 		return checkId ? (other.getId() == getId()) : true;
 	}
 
-	@Override
-	public CoreEntitySerializable getCoreEntitySerializable() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

@@ -302,9 +302,4 @@ public class Validation extends CodedEntity implements Serializable {
 		return DEFAULT_CODE_PREFIX;
 	}
 
-	@Override
-	public CoreEntitySerializable getCoreEntitySerializable() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 }

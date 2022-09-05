@@ -25,6 +25,7 @@ import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
@@ -173,7 +174,7 @@ public class GennyCache {
 	* @param value The entity
 	* @return True if the entity is successfully inserted into cache, False otherwise
 	 */
-	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntity value) {
+	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
@@ -182,13 +183,13 @@ public class GennyCache {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
 		try {
-			CoreEntitySerializable coreEntitySerializable = null;
+			CoreEntitySerializable serializableCoreEntity = null;
 			if(value != null) {
-				coreEntitySerializable = value.getCoreEntitySerializable();
+				serializableCoreEntity = value.toSerializableCoreEntity();
 			} else {
 				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
 			}
-			cache.put(key, coreEntitySerializable);
+			cache.put(key, serializableCoreEntity);
 		} catch (Exception e) {
 			log.error("Exception when inserting entity into cache: " + e.getStackTrace());
 			return false;

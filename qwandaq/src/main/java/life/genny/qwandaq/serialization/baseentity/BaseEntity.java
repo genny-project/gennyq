@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 /*
@@ -110,7 +111,7 @@ public class BaseEntity implements CoreEntitySerializable {
 	}
 
 	@Override
-	public CoreEntity toCoreEntity() {
+	public CoreEntityPersistable toPersistableCoreEntity() {
 		life.genny.qwandaq.entity.BaseEntity baseEntity = new life.genny.qwandaq.entity.BaseEntity();
 		baseEntity.setCode(getCode());
 		baseEntity.setCreated(getCreated());

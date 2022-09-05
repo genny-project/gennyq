@@ -51,6 +51,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
@@ -70,7 +71,7 @@ import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute extends CodedEntity implements java.io.Serializable, Comparable<Object> {
+public class EntityAttribute implements CoreEntityPersistable, Comparable<Object> {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
@@ -1320,7 +1321,7 @@ public class EntityAttribute extends CodedEntity implements java.io.Serializable
 	}
 
 	@Override
-	public CoreEntitySerializable getCoreEntitySerializable() {
+	public CoreEntitySerializable toSerializableCoreEntity() {
 		BaseEntityAttribute bea = new BaseEntityAttribute();
 		bea.setRealm(getRealm());
 		bea.setBaseEntityCode(getBaseEntityCode());

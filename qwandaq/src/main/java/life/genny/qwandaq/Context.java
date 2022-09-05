@@ -268,14 +268,4 @@ public class Context extends CoreEntity implements Serializable {
 		return "Context [entity=" + entity + ", weight=" + weight + ", contextCode=" + contextCode + ", dataType="
 				+ dataType + ", visualControlType=" + visualControlType + "]";
 	}
-
-	@Override
-	public CoreEntitySerializable getCoreEntitySerializable() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	
-
-
 }
