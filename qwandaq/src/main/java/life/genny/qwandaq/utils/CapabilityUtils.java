@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import javax.json.JsonArray;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -487,7 +488,14 @@ public class CapabilityUtils {
 	}
 
 	public static CapabilityMode[] getCapModesFromString(String modeString) {
-		JsonArray array = jsonb.fromJson(modeString, JsonArray.class);
+		
+		JsonArray array = null;
+		try {
+			array = jsonb.fromJson(modeString, JsonArray.class);
+		} catch(JsonbException e) {
+			log.error("Could not deserialize modeString: " + modeString);
+			return null;
+		}
 		CapabilityMode[] modes = new CapabilityMode[array.size()];
 
 		for (int i = 0; i < array.size(); i++) {

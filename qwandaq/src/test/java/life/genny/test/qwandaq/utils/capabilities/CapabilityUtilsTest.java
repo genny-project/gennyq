@@ -8,28 +8,35 @@ import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.utils.CapabilityUtils;
-
-import life.genny.test.utils.JUnitTester;
+import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.suite.TestCase;
-import life.genny.test.utils.suite.TestBuilder;
+
+import static life.genny.test.utils.suite.TestCase.Builder;
+import static life.genny.test.utils.suite.TestCase.Input;
+import static life.genny.test.utils.suite.TestCase.Expected;
 
 import static life.genny.qwandaq.datatype.CapabilityMode.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 
 public class CapabilityUtilsTest {
 
 
-    //@Test
+    @Test
     public void cleanCapabilityCodeTest() {
-        TestBuilder<String, String> builder = new TestBuilder<String, String>();
-        JUnitTester<String, String> tester = builder.getTester(CapabilityUtilsTest.class);
+        Builder<String, String> builder = new Builder<String, String>();
 
+        FITestCallback<Input<String>, Expected<String>> testFunction = (Input<String> input) -> {
+            return new Expected<String>(CapabilityUtils.cleanCapabilityCode(input.input));
+        };
+        
         List<TestCase<String, String>> tests = new ArrayList<>();
         tests.add(
             builder.setName("Clean Cap 1")
                     .setInput("OWN_APPLE")
                     .setExpected("PRM_OWN_APPLE")
-                    .setTestFunction(CapabilityUtils::cleanCapabilityCode)
+                    .setTest(testFunction)
                     .build()
         );
         
@@ -37,67 +44,77 @@ public class CapabilityUtilsTest {
             builder.setName("Clean Cap 2")
                     .setInput("oWn_ApplE")
                     .setExpected("PRM_OWN_APPLE")
-                    .setTestFunction(CapabilityUtils::cleanCapabilityCode)
+                    .setTest(testFunction)
                     .build()
         );
 
-        tester.testCases("Clean Capability Code", tests);
+        for(TestCase<String, String> test : tests) {
+            assertEquals(test.getExpected(), test.test());
+        }
 
     }
 
-    //@Test
+    @Test
     public void getCapModeArrayTest() {
-        TestBuilder<String, CapabilityMode[]> builder = new TestBuilder<String, CapabilityMode[]>();
-        JUnitTester<String, CapabilityMode[]> tester = builder.getTester(CapabilityUtilsTest.class);
+        Builder<String, CapabilityMode[]> builder = new Builder<String, CapabilityMode[]>();
         
-        CapabilityMode[] expected1 = {EDIT};
         List<TestCase<String, CapabilityMode[]>> tests = new ArrayList<>();
+
+        FITestCallback<Input<String>, Expected<CapabilityMode[]>> testFunction = (Input<String> input) -> {
+            return new Expected<CapabilityMode[]>(CapabilityUtils.getCapModesFromString(input.input));
+        };
+        
         tests.add(
             builder.setName("Create Cap Mode 1")
                 .setInput("EDIT")
-                .setExpected(expected1)
-                .setTestFunction(CapabilityUtils::getCapModesFromString)
+                .setExpected(null)
+                .setTest(testFunction)
                 .build()
         );
     
         // TODO: Need to figure out a better way to do this
-        CapabilityMode[] expected2 = {VIEW, ADD};
         tests.add(
             builder.setName("Create Cap Mode 2")
                 .setInput("[\"VIEW\",\"ADD\"]")
-                .setExpected(expected2)
-                .setTestFunction(CapabilityUtils::getCapModesFromString)
+                .setExpected(new CapabilityMode[] {VIEW, ADD})
+                .setTest(testFunction)
                 .build()
         );
 
-        tester.testCases("Deserialize CapabilityMode[] String", tests);
+        for(TestCase<String, CapabilityMode[]> test : tests) {
+            assertArrayEquals(test.getExpected(), test.test());
+        }
     }
 
-    //@Test
+    @Test
     public void getCapModeStringTest() {
-        TestBuilder<CapabilityMode[], String> builder = new TestBuilder<CapabilityMode[], String>();
-        JUnitTester<CapabilityMode[], String    > tester = builder.getTester(CapabilityUtilsTest.class);
+        Builder<CapabilityMode[], String> builder = new Builder<CapabilityMode[], String>();
         
         List<TestCase<CapabilityMode[], String>> tests = new ArrayList<>();
-        CapabilityMode[] input1 = {EDIT};
+
+        FITestCallback<Input<CapabilityMode[]>, Expected<String>> testFunction = (input) -> {
+            return new Expected<String>(CapabilityUtils.getModeString(input.input));
+        };
+
         tests.add(
             builder.setName("Serialise CapabilityMode[] array 1")
-                .setInput(input1)
+                .setInput(new CapabilityMode[] {EDIT})
                 .setExpected("[\"EDIT\"]")
-                .setTestFunction(CapabilityUtils::getModeString)
+                .setTest(testFunction)
                 .build()
         );
     
         // TODO: Need to figure out a better way to do this
-        CapabilityMode[] input2 = {VIEW, ADD};
         tests.add(
             builder.setName("Serialise CapabilityMode[] array 2")
-                .setInput(input2)
+                .setInput(new CapabilityMode[] {VIEW, ADD})
                 .setExpected("[\"VIEW\",\"ADD\"]")
-                .setTestFunction(CapabilityUtils::getModeString)
+                .setTest(testFunction)
                 .build()
         );
 
-        tester.testCases("Serialize CapabilityMode[] array", tests);
+        for(TestCase<CapabilityMode[], String> test : tests) {
+            assertEquals(test.getExpected(), test.test());
+        }
     }
 }
