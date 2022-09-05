@@ -53,6 +53,95 @@ public class SearchEntity extends BaseEntity {
 		setTitle(name);
 	}
 
+	/* (non-Javadoc)
+	 * @see life.genny.qwandaq.CoreEntity#setRealm(java.lang.String)
+	 */
+	public SearchEntity setRealm(final String realm) {
+		super.setRealm(realm);
+		return this;
+	}
+
+	public static Logger getLog() {
+		return log;
+	}
+
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
+
+	public Double getColumnIndex() {
+		return columnIndex;
+	}
+
+	public void setColumnIndex(Double columnIndex) {
+		this.columnIndex = columnIndex;
+	}
+
+	public Double getFlcIndex() {
+		return flcIndex;
+	}
+
+	public void setFlcIndex(Double flcIndex) {
+		this.flcIndex = flcIndex;
+	}
+
+	public void setFilterIndex(Double filterIndex) {
+			this.filterIndex = filterIndex;
+	}
+
+	public Double getFilterIndex() {
+			return this.filterIndex;
+	}
+
+	public Double getColIndex() {
+		return columnIndex;
+	}
+
+	public void setColIndex(Double colIndex) {
+		this.columnIndex = colIndex;
+	}
+
+	public Double getSortIndex() {
+		return sortIndex;
+	}
+
+	public void setSortIndex(Double sortIndex) {
+		this.sortIndex = sortIndex;
+	}
+
+	public Double getFLCIndex() {
+		return flcIndex;
+	}
+
+	public void setFLCIndex(Double flcIndex) {
+		this.flcIndex = flcIndex;
+	}
+
+	public Double getActionIndex() {
+		return actionIndex;
+	}
+
+	public void setActionIndex(Double actionIndex) {
+		this.actionIndex = actionIndex;
+	}
+
+	public Double getSearchActionIndex() {
+		return searchActionIndex;
+	}
+
+	public void setSearchActionIndex(Double searchActionIndex) {
+		this.searchActionIndex = searchActionIndex;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "SearchEntity[ code = " + this.getCode() + "]";
+	}
 
 	/**
 	 * Add an column to the search results
@@ -463,19 +552,6 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	/** 
-	 * @return String
-	 */
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "SearchEntity[ code = " + this.getCode() + "]";
-	}
-
-	/** 
 	 * Get the page start
 	 * @return Integer
 	 */
@@ -490,92 +566,7 @@ public class SearchEntity extends BaseEntity {
 	public Integer getPageSize() {
 		return getValue("SCH_PAGE_SIZE", null);
 	}
-
 	
-	/** 
-	 * @param filterIndex the filter index to set
-	 */
-	public void setFilterIndex(Double filterIndex) {
-			this.filterIndex = filterIndex;
-	}
-
-	/** 
-	 * @return Double
-	 */
-	public Double getFilterIndex() {
-			return this.filterIndex;
-	}
-
-	/** 
-	 * @return Double
-	 */
-	public Double getColIndex() {
-		return columnIndex;
-	}
-
-	/** 
-	 * @param colIndex the column index to set
-	 */
-	public void setColIndex(Double colIndex) {
-		this.columnIndex = colIndex;
-	}
-
-	/** 
-	 * @return Double
-	 */
-	public Double getSortIndex() {
-		return sortIndex;
-	}
-
-	/** 
-	 * @param sortIndex the sort index to set
-	 */
-	public void setSortIndex(Double sortIndex) {
-		this.sortIndex = sortIndex;
-	}
-
-	/** 
-	 * @return Double
-	 */
-	public Double getFLCIndex() {
-		return flcIndex;
-	}
-
-	/** 
-	 * @param flcIndex the filter column index to set
-	 */
-	public void setFLCIndex(Double flcIndex) {
-		this.flcIndex = flcIndex;
-	}
-
-	/** 
-	 * @return Double
-	 */
-	public Double getActionIndex() {
-		return actionIndex;
-	}
-
-	/** 
-	 * @param actionIndex the action index to set
-	 */
-	public void setActionIndex(Double actionIndex) {
-		this.actionIndex = actionIndex;
-	}
-
-	/** 
-	 * @return Double
-	 */
-	public Double getSearchActionIndex() {
-		return searchActionIndex;
-	}
-
-	/** 
-	 * @param searchActionIndex the search action index to set
-	 */
-	public void setSearchActionIndex(Double searchActionIndex) {
-		this.searchActionIndex = searchActionIndex;
-	}
-
 	/** 
 	 * This method allows to remove the attributes from the SearchEntity.
 	 * @param attributeCode the code of the column to remove
@@ -648,30 +639,6 @@ public class SearchEntity extends BaseEntity {
 			}
 		}
 		return maxWeight;
-	}
-
-	public static Logger getLog() {
-		return log;
-	}
-
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-
-	public Double getColumnIndex() {
-		return columnIndex;
-	}
-
-	public void setColumnIndex(Double columnIndex) {
-		this.columnIndex = columnIndex;
-	}
-
-	public Double getFlcIndex() {
-		return flcIndex;
-	}
-
-	public void setFlcIndex(Double flcIndex) {
-		this.flcIndex = flcIndex;
 	}
 
 }
