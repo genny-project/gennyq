@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.search.Successor.Operation;
 
 /**
  * Filter
  */
+@RegisterForReflection
 public class Filter extends Trait {
 
 	private Operator operator;

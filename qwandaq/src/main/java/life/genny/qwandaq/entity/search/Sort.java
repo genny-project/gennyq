@@ -1,8 +1,11 @@
 package life.genny.qwandaq.entity.search;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Sort
  */
+@RegisterForReflection
 public class Sort extends Trait {
 
 	private Ord order;

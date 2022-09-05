@@ -1,8 +1,11 @@
 package life.genny.qwandaq.entity.search;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Column
  */
+@RegisterForReflection
 public class Column extends Trait {
 
 	public Column() {

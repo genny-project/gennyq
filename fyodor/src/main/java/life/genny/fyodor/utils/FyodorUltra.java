@@ -1,6 +1,5 @@
 package life.genny.fyodor.utils;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,20 +17,26 @@ import org.jboss.logging.Logger;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.ComparableExpressionBase;
 import com.querydsl.core.types.dsl.DateTimePath;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.core.types.dsl.SimpleExpression;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.jpa.impl.JPAQuery;
 
+import io.smallrye.mutiny.tuples.Tuple2;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.QEntityAttribute;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.Filter;
 import life.genny.qwandaq.entity.search.Operator;
+import life.genny.qwandaq.entity.search.Ord;
+import life.genny.qwandaq.entity.search.Sort;
 import life.genny.qwandaq.entity.search.Successor;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
-import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -60,54 +65,127 @@ public class FyodorUltra {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	/**
-	 * Perform a safe search using named parameters to
-	 * protect from SQL Injection.
-	 * @param searchEntity      SearchEntity used to search.
-	 * @param countOnly     Only perform a count.
-	 * @param fetchEntities Fetch Entities, or only codes.
-	 * @return Search Result Object.
+	 * Fetch an array of BaseEntities using a SearchEntity.
+	 * @param searchEntity
+	 * @return
 	 */
-	public QSearchBeResult findBySearch25(final SearchEntity searchEntity, Boolean countOnly, Boolean fetchEntities) {
+	public Tuple2<List<BaseEntity>, Long> findBaseEntities(SearchEntity searchEntity) {
+
+		QBaseEntity baseEntity = new QBaseEntity("baseEntity");
+		JPAQuery<QBaseEntity> query = createQuery26(baseEntity, searchEntity);
+
+		List<BaseEntity> entities = query.select(QBaseEntity.baseEntity).distinct().fetch();
+		long count = query.fetchCount();
+
+		List<String> allowed = getSearchColumnFilterArray(searchEntity);
+
+		Boolean columnWildcard = searchEntity.findEntityAttribute("COL_*").isPresent();
+
+		// apply filter
+		for (int i = 0; i < entities.size(); i++) {
+
+			BaseEntity be = entities.get(i);
+
+			be = beUtils.addNonLiteralAttributes(be);
+			if (!columnWildcard) {
+				be = beUtils.privacyFilter(be, allowed);
+			}
+
+			be.setIndex(i);
+		}
+
+		return Tuple2.of(entities, count);
+	}
+
+	/**
+	 * Fetch an array of BaseEntity codes using a SearchEntity.
+	 * @param searchEntity
+	 * @return
+	 */
+	public Tuple2<List<String>, Long> findBaseEntityCodes(SearchEntity searchEntity) {
+
+		QBaseEntity baseEntity = new QBaseEntity("baseEntity");
+		JPAQuery<QBaseEntity> query = createQuery26(baseEntity, searchEntity);
+
+		List<String> codes = query.select(baseEntity.code).distinct().fetch();
+		long count = query.fetchCount();
+
+		return Tuple2.of(codes, count);
+	}
+
+	/**
+	 * Count the number of BaseEntities using a SearchEntity.
+	 * @param searchEntity
+	 * @return
+	 */
+	public Long countBaseEntities(SearchEntity searchEntity) {
+
+		QBaseEntity baseEntity = new QBaseEntity("baseEntity");
+		JPAQuery<QBaseEntity> query = createQuery26(baseEntity, searchEntity);
+
+		// Fetch only the count
+		return query.select(baseEntity.code).distinct().fetchCount();
+	}
+
+	/**
+	 * Create a query from a search entity.
+	 * @param baseEntity QBaseEntity object
+	 * @param searchEntity SearchEntity representing the search
+	 * @return JPAQuery object
+	 */
+	private JPAQuery<QBaseEntity> createQuery26(QBaseEntity baseEntity, SearchEntity searchEntity) {
 
 		log.info("About to search (" + searchEntity.getCode() + ")");
 
-		// Init necessary vars
-		QSearchBeResult result = null;
+		JPAQuery<QBaseEntity> query = new JPAQuery<QBaseEntity>(entityManager);
+		query.from(baseEntity);
+
+		// Ensure only Entities from our realm are returned
+		String realm = searchEntity.getRealm();
+		log.info("realm is " + realm);
+		BooleanBuilder builder = new BooleanBuilder();
+		builder.and(baseEntity.realm.eq(realm));
+
+		Map<String, QEntityAttribute> map = new HashMap<>();
+
+		List<Filter> filters = new ArrayList<>();
+		List<Sort> sorts = new ArrayList<>();
+
+		// handle filters
+		filters.stream().forEach(filter -> {
+			builder.and(buildFilterExpression(map, filter));
+		});
+
+		// handle filter joins
+		map.forEach((code, join) -> {
+			query.leftJoin(join)
+					.on(join.pk.baseEntity.id.eq(baseEntity.id)
+					.and(join.attributeCode.eq(code)));
+		});
+
+		// handle sorts
+		sorts.stream().forEach(sort -> {
+			buildSortExpression(query, baseEntity, sort);
+		});
 
 		// Get page start and page size from SBE
 		Integer defaultPageSize = 20;
 		Integer pageSize = searchEntity.getPageSize() != null ? searchEntity.getPageSize() : defaultPageSize;
 		Integer pageStart = searchEntity.getPageStart() != null ? searchEntity.getPageStart() : 0;
 
-		QBaseEntity baseEntity = new QBaseEntity("baseEntity");
-		JPAQuery<?> query = new JPAQuery<Void>(entityManager);
-		query.from(baseEntity);
+		// Add all builder conditions to query
+		query.where(builder);
+		// Set page start and page size, then fetch codes
+		query.offset(pageStart).limit(pageSize);
 
-		BooleanBuilder builder = new BooleanBuilder();
-
-		// Ensure only Entities from our realm are returned
-		String realm = searchEntity.getRealm();
-		log.info("realm is " + realm);
-		builder.and(baseEntity.realm.eq(realm));
-
-		Map<String, QEntityAttribute> map = new HashMap<>();
-
-		searchEntity.getFilters().stream().forEach(filter -> {
-			builder.and(buildFilterExpression(map, filter));
-		});
-
-		map.forEach((code, join) -> {
-			query.leftJoin(join)
-					.on(join.pk.baseEntity.id.eq(baseEntity.id)
-							.and(join.attributeCode.eq(code)));
-		});
-
-		searchEntity.getSorts().stream().forEach(sort -> {
-		});
-
-		return result;
+		return query;
 	}
 
+	/**
+	 * @param map
+	 * @param filter
+	 * @return
+	 */
 	public BooleanExpression buildFilterExpression(Map<String, QEntityAttribute> map, Filter filter) {
 
 		String code = filter.getCode();
@@ -134,6 +212,11 @@ public class FyodorUltra {
 		return expression;
 	}
 
+	/**
+	 * @param entityAttribute
+	 * @param filter
+	 * @return
+	 */
 	public BooleanExpression findBooleanExpression(QEntityAttribute entityAttribute, Filter filter) {
 		
 		// TODO: This maybe should come from the attribute
@@ -159,7 +242,7 @@ public class FyodorUltra {
 		Operator operator = filter.getOperator();
 		Object value = filter.getValue();
 
-		// TODO: BEWARE!!! this could cause issues
+		// TODO: BEWARE!!! this is probably wrong
 		if (simpleExpression instanceof StringPath)
 			return string((StringPath) simpleExpression, operator, (String) value);
 		else if (simpleExpression instanceof NumberPath)
@@ -242,6 +325,110 @@ public class FyodorUltra {
 			default:
 				throw new QueryBuilderException("Invalid Number Case " + operator);
 		}
+	}
+
+	/**
+	 * @param query
+	 * @param baseEntity
+	 * @param sort
+	 */
+	public void buildSortExpression(JPAQuery<?> query, QBaseEntity baseEntity, Sort sort) {
+
+		String code = sort.getCode();
+		Ord order = sort.getOrder();
+
+		QEntityAttribute join = new QEntityAttribute("SORT_" + code);
+		query.leftJoin(join)
+				.on(join.pk.baseEntity.id.eq(baseEntity.id)
+				.and(join.attributeCode.eq(code)));
+
+		ComparableExpressionBase column = null;
+		// Use ID because there is no index on created, and this gives same result
+		if (code.startsWith("PRI_CREATED"))
+			column = baseEntity.id;
+		else if (code.startsWith("PRI_UPDATED"))
+			column = baseEntity.updated;
+		else if (code.equals("PRI_CODE"))
+			column = baseEntity.code;
+		else if (code.equals("PRI_NAME"))
+			column = baseEntity.name;
+		else {
+			// Use Attribute Code to find the datatype, and thus the DB field to sort on
+			Attribute attr = qwandaUtils.getAttribute(code);
+			String dtt = attr.getDataType().getClassName();
+			column = getPathFromDatatype(dtt, join);
+		}
+
+		if (order == Ord.ASC)
+			query.orderBy(column.asc());
+		else if (order == Ord.DESC)
+			query.orderBy(column.desc());
+		else
+			throw new QueryBuilderException("Invalid sort order " + order + " for code " + code);
+	}
+
+	/**
+	 * Find the value column based off of the attribute datatype
+	 *
+	 * @param dtt
+	 * @param entityAttribute
+	 * @return
+	 */
+	public static ComparableExpressionBase getPathFromDatatype(String dtt, QEntityAttribute entityAttribute) {
+
+		if (dtt.equals("Text")) {
+			return entityAttribute.valueString;
+		} else if (dtt.equals("java.lang.String") || dtt.equals("String")) {
+			return entityAttribute.valueString;
+		} else if (dtt.equals("java.lang.Boolean") || dtt.equals("Boolean")) {
+			return entityAttribute.valueBoolean;
+		} else if (dtt.equals("java.lang.Double") || dtt.equals("Double")) {
+			return entityAttribute.valueDouble;
+		} else if (dtt.equals("java.lang.Integer") || dtt.equals("Integer")) {
+			return entityAttribute.valueInteger;
+		} else if (dtt.equals("java.lang.Long") || dtt.equals("Long")) {
+			return entityAttribute.valueLong;
+		} else if (dtt.equals("java.time.LocalDateTime") || dtt.equals("LocalDateTime")) {
+			return entityAttribute.valueDateTime;
+		} else if (dtt.equals("java.time.LocalDate") || dtt.equals("LocalDate")) {
+			return entityAttribute.valueDate;
+		} else if (dtt.equals("java.time.LocalTime") || dtt.equals("LocalTime")) {
+			return entityAttribute.valueTime;
+		}
+
+		log.warn("Unable to read datatype");
+		return entityAttribute.valueString;
+	}
+
+	/**
+	 * @param searchEntity
+	 * @return
+	 */
+	public static List<String> getSearchColumnFilterArray(SearchEntity searchEntity) {
+
+		// TODO: refactor this
+
+		List<String> attributeFilter = new ArrayList<String>();
+		List<String> assocAttributeFilter = new ArrayList<String>();
+
+		for (EntityAttribute ea : searchEntity.getBaseEntityAttributes()) {
+			String attributeCode = ea.getAttributeCode();
+			if (attributeCode.startsWith("COL_") || attributeCode.startsWith("CAL_")) {
+				if (attributeCode.equals("COL_PRI_ADDRESS_FULL")) {
+					attributeFilter.add("PRI_ADDRESS_LATITUDE");
+					attributeFilter.add("PRI_ADDRESS_LONGITUDE");
+				}
+				if (attributeCode.startsWith("COL__")) {
+					String[] splitCode = attributeCode.substring("COL__".length()).split("__");
+					assocAttributeFilter.add(splitCode[0]);
+				} else {
+					attributeFilter.add(attributeCode.substring("COL_".length()));
+				}
+			}
+		}
+		attributeFilter.addAll(assocAttributeFilter);
+
+		return attributeFilter;
 	}
 
 }

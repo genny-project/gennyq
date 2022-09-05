@@ -1,8 +1,11 @@
 package life.genny.qwandaq.entity.search;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Action
  */
+@RegisterForReflection
 public class Action extends Trait {
 
 	public Action() {

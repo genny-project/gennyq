@@ -1,8 +1,11 @@
 package life.genny.qwandaq.entity.search;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Successor
  */
+@RegisterForReflection
 public class Successor {
 
 	public enum Operation {

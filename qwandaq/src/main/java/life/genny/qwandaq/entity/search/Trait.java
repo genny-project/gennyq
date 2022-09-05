@@ -1,8 +1,11 @@
 package life.genny.qwandaq.entity.search;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Trait
  */
+@RegisterForReflection
 public class Trait {
 
 	private String code;

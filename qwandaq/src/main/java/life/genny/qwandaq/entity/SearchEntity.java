@@ -27,19 +27,14 @@ public class SearchEntity extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	Double filterIndex = 1.0;
-	Double columnIndex = 1.0;
+	private Double filterIndex = 1.0;
+	private Double columnIndex = 1.0;
 
-	Double actionIndex = 1.0;
-	Double searchActionIndex = 1.0;
+	private Double actionIndex = 1.0;
+	private Double searchActionIndex = 1.0;
 
-	Double sortIndex = 0.0;
-	Double flcIndex = 1.0;
-
-	private List<Filter> filters = new ArrayList<>();
-	private List<Sort> sorts = new ArrayList<>();
-	private List<Column> columns = new ArrayList<>();
-	private List<Action> actions = new ArrayList<>();
+	private Double sortIndex = 0.0;
+	private Double flcIndex = 1.0;
 
 	/**
 	 * Default constructor.
@@ -70,8 +65,6 @@ public class SearchEntity extends BaseEntity {
 		addAttribute(attributeColumn, columnIndex);
 		columnIndex += 1.0;
 
-		columns.add(column);
-
 		return this;
 	}
 
@@ -101,8 +94,6 @@ public class SearchEntity extends BaseEntity {
 		addAttribute(attribute, sortIndex, sort.getOrder().name());
 		sortIndex += 1.0;
 
-		sorts.add(sort);
-
 		return this;
 	}
 
@@ -116,8 +107,6 @@ public class SearchEntity extends BaseEntity {
 		Attribute attribute = new Attribute("ACT_" + action.getCode(), action.getName(), new DataType(String.class));
 		addAttribute(attribute, actionIndex);
 		actionIndex += 1.0;
-
-		actions.add(action);
 
 		return this;
 	}
@@ -134,8 +123,6 @@ public class SearchEntity extends BaseEntity {
 		addAttribute(attribute, filterIndex, filter.getValue());
 		filterIndex += 1.0;
 
-		filters.add(filter);
-		
 		return this;
 	}
 
@@ -685,38 +672,6 @@ public class SearchEntity extends BaseEntity {
 
 	public void setFlcIndex(Double flcIndex) {
 		this.flcIndex = flcIndex;
-	}
-
-	public List<Filter> getFilters() {
-		return filters;
-	}
-
-	public void setFilters(List<Filter> filters) {
-		this.filters = filters;
-	}
-
-	public List<Sort> getSorts() {
-		return sorts;
-	}
-
-	public void setSorts(List<Sort> sorts) {
-		this.sorts = sorts;
-	}
-
-	public List<Column> getColumns() {
-		return columns;
-	}
-
-	public void setColumns(List<Column> columns) {
-		this.columns = columns;
-	}
-
-	public List<Action> getActions() {
-		return actions;
-	}
-
-	public void setActions(List<Action> actions) {
-		this.actions = actions;
 	}
 
 }

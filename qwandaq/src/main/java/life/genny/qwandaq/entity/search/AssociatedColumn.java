@@ -3,9 +3,12 @@ package life.genny.qwandaq.entity.search;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * AssociatedColumn
  */
+@RegisterForReflection
 public class AssociatedColumn extends Trait {
 
 	public AssociatedColumn() {
