@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -310,15 +311,20 @@ public class SearchService {
 	public Ask getFilterGroupBySearchBE(SearchEntity searchBE) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
-		ask.setTargetCode(searchBE.getCode() +  userToken.getJTI().toUpperCase());
+		String  targetCode = searchBE.getCode() +  "_" + userToken.getJTI().toUpperCase();
+		ask.setTargetCode(targetCode);
 
-		String fCode = GennyConstants.QUE_FILTER_GRP + "_" + searchBE.getCode() +  userToken.getJTI().toUpperCase();
+		String filterCode = GennyConstants.QUE_FILTER_GRP + "_" + targetCode;
 		Question question = new Question();
-		question.setCode(fCode);
+		question.setCode(filterCode);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 
 		ask.setQuestion(question);
-		ask.addChildAsk(getAddFilterGroupBySearchBE(searchBE));
+		Ask addFilterAsk = getAddFilterGroupBySearchBE(searchBE);
+		ask.addChildAsk(addFilterAsk);
+
+		Ask existFilterAsk = getExistingFilterGroupBySearchBE(searchBE);
+		ask.addChildAsk(existFilterAsk);
 
 		return ask;
 	}
@@ -329,21 +335,35 @@ public class SearchService {
 	 * @return Ask
 	 */
 	public Ask getAddFilterGroupBySearchBE(SearchEntity searchBE) {
-		Ask ask = new Ask();
+		String sourceCode = userToken.getUserCode();
+		String targetCode = searchBE.getCode() +  "_" + userToken.getJTI().toUpperCase();
+		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
+		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
 
-		ask.setTargetCode(searchBE.getCode());
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
+		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode("QUE_SUBMIT", source, target);
+		ask.addChildAsk(askSubmit);
+
+		return ask;
+	}
+
+	/**
+	 * Construct exist filter group object
+	 * @param searchBE Search Base Entity
+	 * @return return existing filter group object
+	 */
+	public Ask getExistingFilterGroupBySearchBE(SearchEntity searchBE) {
+		Ask ask = new Ask();
+		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
+		String  targetCode = searchBE.getCode() +  "_" + userToken.getJTI().toUpperCase();
+		ask.setSourceCode(userToken.getUserCode());
+		ask.setTargetCode(targetCode);
 
 		Question question = new Question();
-		question.setCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		question.setCode(GennyConstants.FILTER_QUE_EXIST);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+
 		ask.setQuestion(question);
-
-		BaseEntity baseEntity = beUtils.getBaseEntity(userToken.getProductCode(),GennyConstants.QUE_ADD_FILTER_GRP);
-		log.info(baseEntity);
-
-		BaseEntity baseDef = defUtils.getDEF(baseEntity);
-		log.info(baseDef);
-
 		return ask;
 	}
 
@@ -358,28 +378,31 @@ public class SearchService {
 		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setQuestionCode(GennyConstants.QUE_FILTER_COLUMN);
 
 		BaseEntity baseEntity = new BaseEntity();
-
 		List<EntityAttribute> entityAttributes = new ArrayList<>();
 
 		searchBE.getBaseEntityAttributes().stream()
-				.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
-				.forEach(e-> {
-					EntityAttribute ea = new EntityAttribute();
+			.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
+			.forEach(e-> {
+				EntityAttribute ea = new EntityAttribute();
+				String attrCode = e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,"");
+				ea.setAttributeName(e.getAttributeName());
+				ea.setAttributeCode(attrCode);
 
-					ea.setAttributeName(e.getAttributeName());
-					ea.setAttributeCode(e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,""));
+				String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + attrCode;
+				ea.setBaseEntityCode(baseCode);
+				ea.setValueString(e.getAttributeName());
 
-					String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + e.getAttributeName();
-					ea.setBaseEntityCode(baseCode);
-					baseEntity.setCode(baseCode);
+				baseEntity.setCode(baseCode);
+				baseEntity.setName(e.getAttributeName());
+				entityAttributes.add(ea);
 
-					entityAttributes.add(ea);
-				});
+				baseEntity.setBaseEntityAttributes(entityAttributes);
+				base.add(baseEntity);
+			});
 
-		baseEntity.setBaseEntityAttributes(entityAttributes);
-		base.add(baseEntity);
 		return base;
 	}
 
@@ -395,16 +418,17 @@ public class SearchService {
 
 			Ask ask = getFilterGroupBySearchBE(searchBE);
 
-			QDataAskMessage msgFilter = new QDataAskMessage(ask);
-			msgFilter.setToken(userToken.getToken());
-			msgFilter.setTargetCode(filterTargetCode);
-			msgFilter.setMessage(GennyConstants.FILTERS);
-			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilter);
+			QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
+			msgFilterGrp.setToken(userToken.getToken());
+			msgFilterGrp.setTargetCode(filterTargetCode);
+			msgFilterGrp.setMessage(GennyConstants.FILTERS);
+			msgFilterGrp.setTag(GennyConstants.FILTERS);
+			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilterGrp);
 
 
 			QDataBaseEntityMessage msgAddFilter = getFilterColumBySearchBE(searchBE);
 			msgAddFilter.setToken(userToken.getToken());
-			msgAddFilter.setTargetCode(filterTargetCode);
+			msgAddFilter.setTag("Name");
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
 		}
 

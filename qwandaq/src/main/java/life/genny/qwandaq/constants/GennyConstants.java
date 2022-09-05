@@ -31,6 +31,7 @@ public final class GennyConstants {
     //Filter
     public static final String  FILTERS = "Filters";
     public static final String  FILTER_QUE_EXIST = "QUE_EXISTING_FILTERS_GRP";
+    public static final String  FILTER_QUE_EXIST_NAME = "Existing Filters";
     public static final String  FILTER_SEL = "SEL_FILTER_COLUMN_";
     public static final String  FILTER_COL = "FLC_";
 
