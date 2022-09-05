@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -74,7 +73,11 @@ public class CapabilityUtils {
 	@Inject
 	BaseEntityUtils beUtils;
 
+	private final BaseEntity roleDef;
+
 	public CapabilityUtils() {
+		// Should only need to find this once.
+		roleDef = beUtils.getBaseEntity("DEF_ROLE");
 	}
 
 	/**
@@ -93,9 +96,13 @@ public class CapabilityUtils {
 		Set<CapabilityMode> set = new HashSet<>(Arrays.asList(modes));
 
 		CacheUtils.putObject(productCode, key, set);
-		log.infof("[^] Cached in %s -> %s:%s", productCode, target.getCode(), code);
+		log.debugf("[^] Cached in %s -> %s:%s", productCode, target.getCode(), code);
 	}
 
+	public BaseEntity createRole(String roleCode, String roleName) {
+		roleCode = cleanRoleCode(roleCode);
+		return beUtils.create(roleDef, roleName, roleCode);
+	}
 
 	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
@@ -105,12 +112,13 @@ public class CapabilityUtils {
 			CapabilityMode[] modes = getCapModesFromString(permissionEA.getValue());
 			ret = addCapabilityToBaseEntity(ret, permission.getCode(), modes);
 		}
+		
 		return ret;
 	}
 
-	public Attribute addCapability(final String rawCapabilityCode, final String name) {
+	public Attribute createCapability(final String rawCapabilityCode, final String name) {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		log.info("Setting Capability : " + cleanCapabilityCode + " : " + name);
+		log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
 		
 		Attribute attribute = qwandaUtils.getAttribute(cleanCapabilityCode);
 
@@ -128,49 +136,14 @@ public class CapabilityUtils {
 		// Ensure the capability is well defined
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		// Check the user token has required capabilities
-		if (!hasCapability(cleanCapabilityCode, modes)) {
+		if (!hasCapability(cleanCapabilityCode, true, modes)) {
 			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + cleanCapabilityCode
 					+ " TO BASE ENTITITY: " + targetBe.getCode());
 			return targetBe;
 		}
 
-		updateCachedRoleSet(targetBe.getCode(), cleanCapabilityCode, modes);
+		saveCapability(targetBe.getCode(), cleanCapabilityCode, modes);
 		return targetBe;
-	}
-
-	/**
-	 * Get a set of capability modes for a target and capability combination.
-	 * @param target The target entity
-	 * @param capabilityCode The capability code
-	 * @return An array of CapabilityModes
-	 */
-	private Set<CapabilityMode> getCapabilitiesFromCache(final String targetCode, 
-			final String capabilityCode) throws RoleException {
-
-		String productCode = userToken.getProductCode();
-		String key = String.format("%s:%s", targetCode, capabilityCode);
-
-		Set<CapabilityMode> modes = CacheUtils.getObject(productCode, key, HashSet.class);
-		if (modes == null)
-			throw new RoleException("Nothing present for capability combination: " + key);
-
-		return modes;
-	}
-
-	/**
-	 * @param role
-	 * @param capabilityCode
-	 * @param mode
-	 */
-	private String updateCachedRoleSet(final String roleCode, final String cleanCapabilityCode,
-			final CapabilityMode... modes) {
-		String productCode = userToken.getProductCode();
-		String key = getCacheKey(roleCode, cleanCapabilityCode);
-		String modesString = getModeString(modes);
-
-		log.info("updateCachedRoleSet test:: " + key);
-		// if no cache then create
-		return CacheUtils.writeCache(productCode, key, modesString);
 	}
 
 	/**
@@ -182,83 +155,27 @@ public class CapabilityUtils {
 	 * @return whether or not the token can manipulate all the supplied modes for
 	 *         the supplied capabilityCode
 	 */
-	public boolean hasCapability(final String rawCapabilityCode, final CapabilityMode... checkModes) {
+	public boolean hasCapability(final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
+
+		// 1. Check override
+
 		// allow keycloak admin and devcs to do anything
-		if (userToken.hasRole("admin", "dev")) {
+		if (shouldOverride()) {
 			return true;
 		}
-		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+
+		// 2. Check user capabilities
 		BaseEntity user = beUtils.getUserBaseEntity();
-		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
-
-		// Make a list for the modes that have been found in the user's various roles
-		// TODO: Potentially change this to a system that matches from multiple roles
-		// instead of a single role
-		// List<CapabilityMode> foundModes = new ArrayList<>();
-
-		for (String code : codes) {
-			try {
-				Set<CapabilityMode> modes = getCapabilitiesFromCache(code, cleanCapabilityCode);
-				for (CapabilityMode checkMode : checkModes) {
-					if (!modes.contains(checkMode))
-						return false;
-				}
-			} catch (RoleException e) {
-				log.debug(e.getMessage());
-				return false;
-			}
-		}
-
-		// TODO: Implement user checking
-		Set<EntityAttribute> entityAttributes = user.getBaseEntityAttributes();
-		for(EntityAttribute eAttribute : entityAttributes) {
-			if(!eAttribute.getAttributeCode().startsWith(CAP_CODE_PREFIX))
-				continue;
-		}
-
-		// Since we are iterating through an array of modes to check, the above impl
-		// will have returned false if any of them were missing
-		return true;
-	}
-
-	private boolean shouldOverride() {
-		// allow keycloak admin and devcs to do anything
-		return (userToken.hasRole("admin", "dev") || ("service".equals(userToken.getUsername())));
-	}
-
-	public boolean hasCapabilityThroughRoles(String rawCapabilityCode, CapabilityMode mode) {
-		if(shouldOverride())
+		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		if(entityHasCapability(user.getCode(), cleanCapabilityCode, hasAll, checkModes)) {
 			return true;
-
-		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		BaseEntity user = beUtils.getUserBaseEntity();
-		if(user == null) {
-			log.error("Null user detected for token with uuid: " + userToken.getUuid());
-			log.error("Token: " + userToken.getToken());
-			return false;
 		}
-		JsonArray roles = jsonb.fromJson(user.getValueAsString(LNK_ROLE_CODE), JsonArray.class);
 
-		BaseEntity currentRole;
-		for(int i = 0; i < roles.size(); i++) {
-			String roleCode = roles.getString(i);
-			currentRole = beUtils.getBaseEntityByCode(roleCode);
-			if(currentRole == null) {
-				log.error("Could not find role when looking at PRI IS for base entity " + user.getCode() + ": " + roleCode);
-				continue;
-			}
+		// 3. Check user role capabilities
+		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
 
-			Optional<EntityAttribute> optEa = currentRole.findEntityAttribute(cleanCapabilityCode);
-			if(!optEa.isPresent())
-				continue;
-			EntityAttribute ea = optEa.get();
-			String modes = ea.getValueString();
-			if(StringUtils.isBlank(modes)) {
-				log.error("Dumb Capability detected! Role: " + roleCode + " has capability " + cleanCapabilityCode + " but not modes attached!");
-				continue;
-			}
-
-			if(modes.contains(mode.name()))
+		for (String code : roleCodes) {
+			if(entityHasCapability(code, cleanCapabilityCode, hasAll, checkModes))
 				return true;
 		}
 
@@ -275,6 +192,7 @@ public class CapabilityUtils {
 	 * @param mode The mode of the capability.
 	 * @return Boolean True if the user has the capability, False otherwise.
 	 */
+	@Deprecated
 	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
 		log.info("Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
 		if(shouldOverride())
@@ -288,17 +206,13 @@ public class CapabilityUtils {
 		}
 		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
 
-		if(priIsAttributes.size() == 0) {
-			log.error("Could not find any PRI_IS attributes for base entity: " + user.getCode());
-			return false;
-		}
-
 		return priIsAttributes.stream().anyMatch((EntityAttribute priIsAttribute) -> {
 			String priIsCode = priIsAttribute.getAttributeCode();
 			String roleCode = ROLE_BE_PREFIX + priIsCode.substring(PRI_IS_PREFIX.length());
 			log.debug("[!] Scanning Role: " + roleCode);
 			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
 			if(roleBe == null) {
+				log.error("Could not find role: " + roleCode);
 				return false;
 			}
 
@@ -307,6 +221,71 @@ public class CapabilityUtils {
 				return false;
 			return modeString.contains(mode.name());
 		});
+	}
+
+	/**
+	 * Get a set of capability modes for a target and capability combination.
+	 * @param target The target entity
+	 * @param capabilityCode The capability code
+	 * @return An array of CapabilityModes
+	 */
+	private Set<CapabilityMode> getEntityCapability(final String targetCode, 
+			final String capabilityCode) throws RoleException {
+
+		String productCode = userToken.getProductCode();
+		String key = String.format("%s:%s", targetCode, capabilityCode);
+		
+		Set<CapabilityMode> modes = CacheUtils.getObject(productCode, key, HashSet.class);
+		if (modes == null)
+			throw new RoleException("Nothing present for capability combination: " + key);
+
+		return modes;
+	}
+
+	/**
+	 * @param role
+	 * @param capabilityCode
+	 * @param mode
+	 */
+	private String saveCapability(final String beCode, final String cleanCapabilityCode,
+			final CapabilityMode... modes) {
+		String productCode = userToken.getProductCode();
+		String key = getCacheKey(beCode, cleanCapabilityCode);
+		String modesString = getModeString(modes);
+
+		return CacheUtils.writeCache(productCode, key, modesString);
+	}
+
+	private boolean entityHasCapability(final String targetCode, final String cleanCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
+		Set<CapabilityMode> modes = null;
+		try {
+			modes = getEntityCapability(targetCode, cleanCapabilityCode);
+		} catch (RoleException e) {
+			log.debug(e.getMessage());
+			return false;
+		}
+
+		// Two separate loops so we don't check hasAll over and over again
+		if(hasAll) {
+			for (CapabilityMode checkMode : checkModes) {
+				boolean hasMode = modes.contains(checkMode);
+				if(!hasMode)
+					return false;
+			}
+		} else {
+			for (CapabilityMode checkMode : checkModes) {
+				boolean hasMode = modes.contains(checkMode);
+				if(hasMode)
+					return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean shouldOverride() {
+		// allow keycloak admin and devcs to do anything
+		return (userToken.hasRole("admin", "dev") || ("service".equals(userToken.getUsername())));
 	}
 
 	// TODO: Rewrite
@@ -511,25 +490,35 @@ public class CapabilityUtils {
 			cleanCapabilityCode = CAP_CODE_PREFIX + cleanCapabilityCode;
 		}
 
-		String[] components = cleanCapabilityCode.split("_");
+		// String[] components = cleanCapabilityCode.split("_");
+
 		// Should be of the form PRM_<OWN/OTHER>_<CODE>
 		/*
 		 * 1. PRM
 		 * 2. OWN or OTHER
 		 * 3. CODE
 		 */
-		if (components.length < 3) {
-			log.warn("Capability Code: " + rawCapabilityCode + " missing OWN/OTHER declaration.");
-		} else {
-			Boolean affectsOwn = "OWN".equals(components[1]);
-			Boolean affectsOther = "OTHER".equals(components[1]);
+		// if (components.length < 3) {
+		// 	log.warn("Capability Code: " + rawCapabilityCode + " missing OWN/OTHER declaration.");
+		// } else {
+		// 	Boolean affectsOwn = "OWN".equals(components[1]);
+		// 	Boolean affectsOther = "OTHER".equals(components[1]);
 
-			if (!affectsOwn && !affectsOther) {
-				log.warn("Capability Code: " + rawCapabilityCode + " has malformed OWN/OTHER declaration.");
-			}
-		}
+		// 	if (!affectsOwn && !affectsOther) {
+		// 		log.warn("Capability Code: " + rawCapabilityCode + " has malformed OWN/OTHER declaration.");
+		// 	}
+		// }
 
 		return cleanCapabilityCode;
+	}
+
+	public static String cleanRoleCode(final String rawRoleCode) {
+		String cleanRoleCode = rawRoleCode.toUpperCase();
+		if (!cleanRoleCode.startsWith(ROLE_BE_PREFIX)) {
+			cleanRoleCode = ROLE_BE_PREFIX + cleanRoleCode;
+		}
+
+		return cleanRoleCode;
 	}
 
 	/**

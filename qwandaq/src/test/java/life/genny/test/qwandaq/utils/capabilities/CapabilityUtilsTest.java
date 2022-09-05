@@ -67,7 +67,7 @@ public class CapabilityUtilsTest {
         tests.add(
             builder.setName("Create Cap Mode 1")
                 .setInput("EDIT")
-                .setExpected(null)
+                .setExpected(new CapabilityMode[] {EDIT})
                 .setTest(testFunction)
                 .build()
         );
