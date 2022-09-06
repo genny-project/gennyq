@@ -1,35 +1,5 @@
 package life.genny.bridge.endpoints;
 
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.annotation.security.RolesAllowed;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
-
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import life.genny.bridge.blacklisting.BlackListInfo;
@@ -44,6 +14,24 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+import javax.annotation.security.RolesAllowed;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Bridge ---Endpoints consisting in providing model data from the model
@@ -255,16 +243,13 @@ public class Bridge {
 
 		log.info("B2B Get received..");
 
-		List<GennyItem> gennyItems = new ArrayList<GennyItem>();
+		List<GennyItem> gennyItems = new ArrayList<>();
 
 		// go through query parameters and add them to a GennyItem
 		GennyItem gennyItem = new GennyItem();
 		MultivaluedMap<String, String> paramMap = uriInfo.getQueryParameters();
 
-		Iterator<String> it = paramMap.keySet().iterator();
-
-		while (it.hasNext()) {
-			String key = (String) it.next();
+		for (String key : paramMap.keySet()) {
 			key = key.trim();
 			String value = paramMap.getFirst(key); // assume a single key
 			value = value.trim();
@@ -273,9 +258,9 @@ public class Bridge {
 				continue;
 			}
 			try {
-				value = URLDecoder.decode(value, "UTF-8");
+				value = URLDecoder.decode(value, StandardCharsets.UTF_8);
 			} catch (Exception e) {
-
+				log.error(e.getMessage(), e);
 			}
 			log.info("key:" + key + "-->" + value);
 
@@ -306,7 +291,7 @@ public class Bridge {
 		dataMsg.setToken(userToken.getToken());
 		dataMsg.setAliasCode("STATELESS");
 
-		Jsonb jsonb = JsonbBuilder.create();
+//		Jsonb jsonb = JsonbBuilder.create();
 		// String dataMsgJson = jsonb.toJson(dataMsg);
 		String dataMsgJsonStr = jsonb.toJson(dataMsg);
 		String jti = userToken.getJTI();
@@ -337,7 +322,7 @@ public class Bridge {
 
 		log.info("B2B POST received..");
 
-		Jsonb jsonb = JsonbBuilder.create();
+//		Jsonb jsonb = JsonbBuilder.create();
 		dataMsg.setToken(userToken.getToken());
 		dataMsg.setAliasCode("STATELESS");
 

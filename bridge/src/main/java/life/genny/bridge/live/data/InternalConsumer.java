@@ -3,10 +3,6 @@ package life.genny.bridge.live.data;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.bridge.model.grpc.Item;
 import life.genny.qwandaq.models.GennyToken;
@@ -17,6 +13,11 @@ import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import java.util.UUID;
 
 
 /**

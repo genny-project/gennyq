@@ -1,10 +1,11 @@
 package life.genny.bridge.blacklisting;
 
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.enterprise.context.ApplicationScoped;
-import org.jboss.logging.Logger;
 
 /**
  * BlackListInfo --- Handle rules and conditions sent from different sources
@@ -55,10 +56,7 @@ public class BlackListInfo {
             return;
         }
 
-        boolean hasDelete = false;
-        if(protocol.startsWith("-") && !protocol.subSequence(1, 2).equals("-")){
-            hasDelete = true;
-        }
+        boolean hasDelete = protocol.startsWith("-") && !protocol.subSequence(1, 2).equals("-");
 
         try {
             if (hasDelete) {

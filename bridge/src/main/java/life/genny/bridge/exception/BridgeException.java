@@ -18,7 +18,7 @@ public class BridgeException extends Exception {
 
     public BridgeException(String code, String message) {
         super(message);
-        this.setCode(code);
+        this.code = code;
     }
 
     public BridgeException(String code, String message, Throwable cause) {

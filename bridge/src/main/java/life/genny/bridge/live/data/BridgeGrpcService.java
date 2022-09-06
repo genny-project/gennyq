@@ -1,29 +1,26 @@
 package life.genny.bridge.live.data;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.TimeoutException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.vertx.core.json.JsonObject;
 import life.genny.bridge.model.grpc.Empty;
 import life.genny.bridge.model.grpc.Item;
 import life.genny.bridge.model.grpc.Stream;
-import life.genny.qwandaq.session.bridge.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
+import life.genny.qwandaq.session.bridge.BridgeSwitch;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Implementation of {@link Stream} that handles GRPC communication
@@ -48,13 +45,13 @@ public class BridgeGrpcService implements Stream {
     /**
      * Duration to wait before a timeout is fired
      */
-    private Duration timeout = Duration.ofSeconds(15);
+    private final Duration timeout = Duration.ofSeconds(15);
 
     /**
      * Stores a map between jti and
      * a broadcast processor
      */
-    private static Map<String, BroadcastProcessor<Item>> processors = new HashMap<>();
+    private static final Map<String, BroadcastProcessor<Item>> processors = new HashMap<>();
 
 
     /**
@@ -176,8 +173,7 @@ public class BridgeGrpcService implements Stream {
      * @return
      */
     private KeycloakTokenPayload getPayload(Item request) {
-        KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(request.getToken());
-        return payload;
+        return KeycloakTokenPayload.decodeToken(request.getToken());
     }
 
 }
