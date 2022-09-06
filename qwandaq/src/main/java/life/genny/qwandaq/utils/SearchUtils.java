@@ -857,25 +857,40 @@ public class SearchUtils {
 		List<EntityAttribute> entityAttributes = new ArrayList<>();
 
 		searchBE.getBaseEntityAttributes().stream()
-				.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
-				.forEach(e-> {
-					EntityAttribute ea = new EntityAttribute();
-					String attrCode = e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,"");
-					ea.setAttributeName(e.getAttributeName());
-					ea.setAttributeCode(attrCode);
+			.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
+			.forEach(e-> {
+				EntityAttribute ea = new EntityAttribute();
+				String attrCode = e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,"");
+				ea.setAttributeName(e.getAttributeName());
+				ea.setAttributeCode(attrCode);
 
-					String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + attrCode;
-					ea.setBaseEntityCode(baseCode);
-					ea.setValueString(e.getAttributeName());
+				String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + attrCode;
+				ea.setBaseEntityCode(baseCode);
+				ea.setValueString(e.getAttributeName());
 
-					baseEntity.setCode(baseCode);
-					baseEntity.setName(e.getAttributeName());
-					entityAttributes.add(ea);
+				baseEntity.setCode(baseCode);
+				baseEntity.setName(e.getAttributeName());
+				entityAttributes.add(ea);
 
-					baseEntity.setBaseEntityAttributes(entityAttributes);
-					base.add(baseEntity);
-				});
+				baseEntity.setBaseEntityAttributes(entityAttributes);
+				base.add(baseEntity);
+			});
 
 		return base;
 	}
+
+	/**
+	 * Return ask with filter option
+	 * @param sbeCode Search Base Entity Code
+	 * @return Ask
+	 */
+	public Ask getFilterOptionBySBECode(String sbeCode) {
+		String sourceCode = userToken.getUserCode();
+		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
+		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
+
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_FILTER_OPTION, source, target);
+		return ask;
+	}
+
 }

@@ -326,13 +326,35 @@ public class SearchService {
 			msgAddFilter.setTag("Name");
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
 		}
-
 	}
 
+	/**
+	 * Send filter option
+	 * @param sbeCode SBE code
+	 */
+	public void sendFilterOption(String sbeCode) {
+		Ask ask = searchUtils.getFilterOptionBySBECode(sbeCode);
+
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setTargetCode(sbeCode);
+		msg.setMessage(GennyConstants.FILTERS);
+		msg.setTag(GennyConstants.FILTERS);
+		KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msg);
+	}
+
+	/**
+	 *
+	 * @return Filter Parameters in the application scope
+	 */
 	public Map<String, String> getFilterParams() {
 		return filterParams;
 	}
 
+	/**
+	 * Set Filter Pamameters in application scope
+	 * @param filterParams
+	 */
 	public void setFilterParams(Map<String, String> filterParams) {
 		this.filterParams = filterParams;
 	}
