@@ -136,7 +136,7 @@ public class InitService {
 		// get pcms using search
 		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
 				.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "PCM_%"))
-				.add(new Column("*", "All Columns"))
+				.setAllColumns(true)
 				.setPageSize(1000)
 				.setRealm(productCode);
 

@@ -1,5 +1,8 @@
 package life.genny.qwandaq.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -34,6 +37,10 @@ public class SearchEntity extends BaseEntity {
 
 	private Double sortIndex = 0.0;
 	private Double flcIndex = 1.0;
+
+	private List<Filter> filters = new ArrayList<>();
+	private List<Sort> sorts = new ArrayList<>();
+	private Boolean allColumns = false;
 
 	/**
 	 * Default constructor.
@@ -132,6 +139,31 @@ public class SearchEntity extends BaseEntity {
 		this.searchActionIndex = searchActionIndex;
 	}
 
+	public List<Filter> getFilters() {
+		return filters;
+	}
+
+	public void setFilters(List<Filter> filters) {
+		this.filters = filters;
+	}
+
+	public List<Sort> getSorts() {
+		return sorts;
+	}
+
+	public void setSorts(List<Sort> sorts) {
+		this.sorts = sorts;
+	}
+
+	public Boolean getAllColumns() {
+		return allColumns;
+	}
+
+	public SearchEntity setAllColumns(Boolean allColumns) {
+		this.allColumns = allColumns;
+		return this;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -178,10 +210,11 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity add(Sort sort) {
 
-		Attribute attribute = new Attribute("SRT_" + sort.getCode(), sort.getCode(), new DataType(String.class));
-		addAttribute(attribute, sortIndex, sort.getOrder().name());
-		sortIndex += 1.0;
+		// Attribute attribute = new Attribute("SRT_" + sort.getCode(), sort.getCode(), new DataType(String.class));
+		// addAttribute(attribute, sortIndex, sort.getOrder().name());
+		// sortIndex += 1.0;
 
+		sorts.add(sort);
 		return this;
 	}
 
@@ -206,11 +239,12 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity add(Filter filter) {
 
-		Attribute attribute = new Attribute(filter.getCode(), filter.getOperator().name(), 
-			new DataType(filter.getC()));
-		addAttribute(attribute, filterIndex, filter.getValue());
-		filterIndex += 1.0;
+		// Attribute attribute = new Attribute(filter.getCode(), filter.getOperator().name(), 
+		// 	new DataType(filter.getC()));
+		// addAttribute(attribute, filterIndex, filter.getValue());
+		// filterIndex += 1.0;
 
+		filters.add(filter);
 		return this;
 	}
 

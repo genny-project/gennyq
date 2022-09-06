@@ -18,13 +18,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
-import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
-import io.quarkus.hibernate.orm.PersistenceUnit;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -33,7 +31,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
@@ -197,13 +194,9 @@ public class BaseEntityUtils {
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
-					// Arc.container().requestContext().activate();
 					Arc.container().instance(DatabaseUtils.class);
-					// databaseUtils = new DatabaseUtils();
 					EntityManagerFactory factory = Persistence.createEntityManagerFactory("genny");
 					entityManager = factory.createEntityManager();
-					// entityManager =
-					// Persistence.createEntityManagerFactory("genny").createEntityManager();
 					if (entityManager == null) {
 						log.error("entityManager is null");
 					}
@@ -217,7 +210,7 @@ public class BaseEntityUtils {
 					}
 				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode + " but "
+				log.debug(code + " not in cache for product " + productCode + ", "
 						+ (entity == null ? "not found in db" : "found in db"));
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());

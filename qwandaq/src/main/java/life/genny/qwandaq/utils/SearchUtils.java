@@ -72,14 +72,14 @@ public class SearchUtils {
 	 * Call the Fyodor API to fetch a list of {@link BaseEntity}
 	 * objects using a {@link SearchEntity} object.
 	 *
-	 * @param searchBE A {@link SearchEntity} object used to determine the results
+	 * @param searchEntity A {@link SearchEntity} object used to determine the results
 	 * @return A list of {@link BaseEntity} objects
 	 */
-	public List<BaseEntity> searchBaseEntitys(SearchEntity searchBE) {
+	public List<BaseEntity> searchBaseEntitys(SearchEntity searchEntity) {
 
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
-		String json = jsonb.toJson(searchBE);
+		String json = jsonb.toJson(searchEntity);
 		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		if (response == null) {
@@ -109,14 +109,14 @@ public class SearchUtils {
 	 * Call the Fyodor API to fetch a list of codes 
 	 * associated with result entities.
 	 *
-	 * @param searchBE A {@link SearchEntity} object used to determine the results
+	 * @param searchEntity A {@link SearchEntity} object used to determine the results
 	 * @return A list of code strings
 	 */
-	public List<String> searchBaseEntityCodes(SearchEntity searchBE) {
+	public List<String> searchBaseEntityCodes(SearchEntity searchEntity) {
 
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search";
-		String json = jsonb.toJson(searchBE);
+		String json = jsonb.toJson(searchEntity);
 		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		if (response == null) {
@@ -135,7 +135,6 @@ public class SearchUtils {
 			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
 			return Arrays.asList(results.getCodes());
 		} catch (Exception e) {
-			log.error(e.getMessage());
 			e.printStackTrace();
 		}
 
@@ -146,14 +145,14 @@ public class SearchUtils {
 	 * Call the Fyodor API to fetch a count of {@link BaseEntity}
 	 * objects using a {@link SearchEntity} object.
 	 *
-	 * @param searchBE A {@link SearchEntity} object used to determine the results
+	 * @param searchEntity A {@link SearchEntity} object used to determine the results
 	 * @return A count of items
 	 */
-	public Long countBaseEntitys(SearchEntity searchBE) {
+	public Long countBaseEntitys(SearchEntity searchEntity) {
 
 		// build uri, serialize payload and fetch data from fyodor
 		String uri = GennySettings.fyodorServiceUrl() + "/api/search/count";
-		String json = jsonb.toJson(searchBE);
+		String json = jsonb.toJson(searchEntity);
 		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
 		if (response == null) {

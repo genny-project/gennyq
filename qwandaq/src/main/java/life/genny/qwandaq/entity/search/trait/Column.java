@@ -13,7 +13,7 @@ public class Column extends Trait {
 	}
 
 	public Column(String code, String name) {
-		super();
+		super(code, name);
 	}
 
 }

@@ -1,5 +1,7 @@
 package life.genny.fyodor.endpoints;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -14,13 +16,18 @@ import javax.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.FyodorSearch;
+import life.genny.fyodor.utils.FyodorUltra;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.HttpUtils;
 
 /**
  * Search - Endpoints providing classic Genny Search functionality
@@ -43,7 +50,7 @@ public class Search {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	FyodorSearch search;
+	FyodorUltra search;
 
 	@Inject
 	UserToken userToken;
@@ -71,8 +78,16 @@ public class Search {
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
+		log.info("PRODUCT CODE ===== " + userToken.getProductCode());
+
 		// Process search
-		QSearchBeResult results = search.findBySearch25(searchEntity, false, false);
+		Tuple2<List<String>, Long> tpl = null;
+		try {
+			tpl = search.search27(searchEntity);
+		} catch (ItemNotFoundException e) {
+			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
+		}
+		QSearchBeResult results = new QSearchBeResult(tpl.getItem1(), tpl.getItem2());
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);
@@ -99,7 +114,13 @@ public class Search {
 		}
 
 		// Process search
-		QSearchBeResult results = search.findBySearch25(searchEntity, false, true);
+		Tuple2<List<BaseEntity>, Long> tpl = null;
+		try {
+			tpl = search.fetch27(searchEntity);
+		} catch (ItemNotFoundException e) {
+			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
+		}
+		QSearchBeResult results = new QSearchBeResult(tpl.getItem1().toArray(BaseEntity[]::new), tpl.getItem2());
 		log.info("Found " + results.getTotal() + " results!");
 
 		String json = jsonb.toJson(results);
@@ -123,7 +144,15 @@ public class Search {
 			log.error("Bad or no header token in Search POST provided");
 			return "0";
 		}
-		Long count = search.performCount(searchEntity);
+
+		Tuple2<List<String>, Long> tpl = null;
+		try {
+			tpl = search.search27(searchEntity);
+		} catch (ItemNotFoundException e) {
+			return HttpUtils.error(e.getMessage());
+		}
+
+		Long count = tpl.getItem2();
 		log.infof("Found %s entities", count);
 
 		return ""+count;

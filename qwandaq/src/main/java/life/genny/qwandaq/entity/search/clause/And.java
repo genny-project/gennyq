@@ -6,11 +6,11 @@ package life.genny.qwandaq.entity.search.clause;
 public class And extends Clause {
 
 	public And() {
-		super();
+		super(ClauseType.AND);
 	}
 
 	public And(ClauseArgument a, ClauseArgument b) {
-		super(a, b);
+		super(a, b, ClauseType.AND);
 	}
 
 }

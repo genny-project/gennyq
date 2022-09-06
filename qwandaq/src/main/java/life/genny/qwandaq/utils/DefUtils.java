@@ -80,15 +80,16 @@ public class DefUtils {
 	@Deprecated
 	public void initializeDefPrefixs(String productCode) {
 
-		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
+		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
 				.add(new Sort("PRI_NAME", Ord.ASC))
 				.add(new Filter("PRI_CODE", Operator.LIKE, "DEF_%"))
 				.setPageStart(0)
 				.setPageSize(10000);
 
-		searchBE.setRealm(productCode);
+		log.info("########  PRODUCT CODE ===== " + productCode);
+		searchEntity.setRealm(productCode);
 
-		List<String> codes = searchUtils.searchBaseEntityCodes(searchBE);
+		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
 
 		if (codes == null) {
 			log.error("Could not fetch DEF codes!");

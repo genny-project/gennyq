@@ -108,8 +108,21 @@ public class QwandaUtils {
 	 * @return Attribute
 	 */
 	public Attribute getAttribute(final String attributeCode) {
-
 		String productCode = userToken.getProductCode();
+		return getAttribute(attributeCode, productCode);
+	}
+
+	/**
+	 * Get an attribute from the in memory attribute map. If productCode not found,
+	 * it
+	 * will try to fetch attributes from the DB.
+	 *
+	 * @param attributeCode the code of the attribute to get
+	 * @param productCode the product code
+	 * @return Attribute
+	 */
+	public Attribute getAttribute(final String attributeCode, final String productCode) {
+
 		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
 
 		if (attribute == null) {

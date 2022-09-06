@@ -4,8 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import javax.json.bind.annotation.JsonbTransient;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.search.clause.ClauseArgument;
+import life.genny.qwandaq.exception.runtime.DebugException;
 
 /**
  * Filter
@@ -15,8 +18,11 @@ public class Filter extends Trait implements ClauseArgument {
 
 	private Operator operator;
 	private Object value;
-	private Class c;
 	private Capability capability;
+
+	@JsonbTransient 
+	private Class<?> c;
+	private String className;
 
 	public Filter() {
 		super();
@@ -54,11 +60,12 @@ public class Filter extends Trait implements ClauseArgument {
 		this(code, operator, value, LocalTime.class);
 	}
 
-	private Filter(String code, Operator operator, Object value, Class c) {
+	private Filter(String code, Operator operator, Object value, Class<?> c) {
 		super(code, code);
 		this.operator = operator;
 		this.value = value;
 		this.c = c;
+		this.className = c.getName();
 	}
 
 	public Operator getOperator() {
@@ -77,14 +84,6 @@ public class Filter extends Trait implements ClauseArgument {
 		this.value = value;
 	}
 
-	public Class getC() {
-		return c;
-	}
-
-	public void setC(Class c) {
-		this.c = c;
-	}
-
 	public Boolean hasCapability() {
 		return (this.capability == null ? false : true);
 	}
@@ -92,6 +91,39 @@ public class Filter extends Trait implements ClauseArgument {
 	public Filter add(Capability capability) {
 		this.capability = capability;
 		return this;
+	}
+
+	public Capability getCapability() {
+		return capability;
+	}
+
+	public void setCapability(Capability capability) {
+		this.capability = capability;
+	}
+
+	public Class<?> getC() {
+
+		if (c == null) {
+			try {
+				this.c = Class.forName(className);
+			} catch (ClassNotFoundException e) {
+				throw new DebugException(e.getMessage());
+			}
+		}
+
+		return c;
+	}
+
+	public void setC(Class<?> c) {
+		this.c = c;
+	}
+
+	public String getClassName() {
+		return className;
+	}
+
+	public void setClassName(String className) {
+		this.className = className;
 	}
 
 }
