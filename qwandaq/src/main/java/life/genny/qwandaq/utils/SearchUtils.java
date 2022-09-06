@@ -20,6 +20,8 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.constants.GennyConstants;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -775,4 +777,105 @@ public class SearchUtils {
 		KafkaUtils.writeMsg("events", msg);
 	}
 
+	/**
+	 * Return ask with filter group content
+	 * @param sbeCode Search Base Entity Code
+	 * @return Ask
+	 */
+	public Ask getFilterGroupBySearchBE(String sbeCode) {
+		Ask ask = new Ask();
+		ask.setName(GennyConstants.FILTERS);
+		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		ask.setTargetCode(targetCode);
+
+		String filterCode = GennyConstants.QUE_FILTER_GRP + "_" + targetCode;
+		Question question = new Question();
+		question.setCode(filterCode);
+		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+
+		ask.setQuestion(question);
+		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode);
+		ask.addChildAsk(addFilterAsk);
+
+		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode);
+		ask.addChildAsk(existFilterAsk);
+
+		return ask;
+	}
+
+	/**
+	 * Return ask with add filter group content
+	 * @param sbeCode Search Base Entity Code
+	 * @return Ask
+	 */
+	public Ask getAddFilterGroupBySearchBE(String sbeCode) {
+		String sourceCode = userToken.getUserCode();
+		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
+		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
+
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
+		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_SUBMIT, source, target);
+		ask.addChildAsk(askSubmit);
+
+		return ask;
+	}
+
+	/**
+	 * Construct exist filter group object
+	 * @param sbeCode Search Base Entity Code
+	 * @return return existing filter group object
+	 */
+	public Ask getExistingFilterGroupBySearchBE(String sbeCode) {
+		Ask ask = new Ask();
+		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
+		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		ask.setSourceCode(userToken.getUserCode());
+		ask.setTargetCode(targetCode);
+
+		Question question = new Question();
+		question.setCode(GennyConstants.FILTER_QUE_EXIST);
+		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+
+		ask.setQuestion(question);
+		return ask;
+	}
+
+	/**
+	 * Return Message of filter column
+	 * @param searchBE Search Base Entity
+	 * @return Message of Filter column
+	 */
+	public QDataBaseEntityMessage getFilterColumBySearchBE(SearchEntity searchBE) {
+		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
+
+		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		base.setLinkCode(GennyConstants.LNK_CORE);
+		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setQuestionCode(GennyConstants.QUE_FILTER_COLUMN);
+
+		BaseEntity baseEntity = new BaseEntity();
+		List<EntityAttribute> entityAttributes = new ArrayList<>();
+
+		searchBE.getBaseEntityAttributes().stream()
+				.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
+				.forEach(e-> {
+					EntityAttribute ea = new EntityAttribute();
+					String attrCode = e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,"");
+					ea.setAttributeName(e.getAttributeName());
+					ea.setAttributeCode(attrCode);
+
+					String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + attrCode;
+					ea.setBaseEntityCode(baseCode);
+					ea.setValueString(e.getAttributeName());
+
+					baseEntity.setCode(baseCode);
+					baseEntity.setName(e.getAttributeName());
+					entityAttributes.add(ea);
+
+					baseEntity.setBaseEntityAttributes(entityAttributes);
+					base.add(baseEntity);
+				});
+
+		return base;
+	}
 }

@@ -1,10 +1,7 @@
 package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -61,6 +58,8 @@ public class SearchService {
 		SEARCH,
 		FILTER
 	}
+
+	private Map<String, String> filterParams = new HashMap<>();
 
 	/**
 	 * Perform a Detail View search.
@@ -302,121 +301,17 @@ public class SearchService {
 		}
 	}
 
-
-	/**
-	 * Return ask with filter group content
-	 * @param searchBE Search Base Entity
-	 * @return Ask
-	 */
-	public Ask getFilterGroupBySearchBE(SearchEntity searchBE) {
-		Ask ask = new Ask();
-		ask.setName(GennyConstants.FILTERS);
-		String  targetCode = searchBE.getCode() +  "_" + userToken.getJTI().toUpperCase();
-		ask.setTargetCode(targetCode);
-
-		String filterCode = GennyConstants.QUE_FILTER_GRP + "_" + targetCode;
-		Question question = new Question();
-		question.setCode(filterCode);
-		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
-
-		ask.setQuestion(question);
-		Ask addFilterAsk = getAddFilterGroupBySearchBE(searchBE);
-		ask.addChildAsk(addFilterAsk);
-
-		Ask existFilterAsk = getExistingFilterGroupBySearchBE(searchBE);
-		ask.addChildAsk(existFilterAsk);
-
-		return ask;
-	}
-
-	/**
-	 * Return ask with add filter group content
-	 * @param searchBE Search Base entity
-	 * @return Ask
-	 */
-	public Ask getAddFilterGroupBySearchBE(SearchEntity searchBE) {
-		String sourceCode = userToken.getUserCode();
-		String targetCode = searchBE.getCode() +  "_" + userToken.getJTI().toUpperCase();
-		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
-
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
-		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode("QUE_SUBMIT", source, target);
-		ask.addChildAsk(askSubmit);
-
-		return ask;
-	}
-
-	/**
-	 * Construct exist filter group object
-	 * @param searchBE Search Base Entity
-	 * @return return existing filter group object
-	 */
-	public Ask getExistingFilterGroupBySearchBE(SearchEntity searchBE) {
-		Ask ask = new Ask();
-		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
-		String  targetCode = searchBE.getCode() +  "_" + userToken.getJTI().toUpperCase();
-		ask.setSourceCode(userToken.getUserCode());
-		ask.setTargetCode(targetCode);
-
-		Question question = new Question();
-		question.setCode(GennyConstants.FILTER_QUE_EXIST);
-		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
-
-		ask.setQuestion(question);
-		return ask;
-	}
-
-	/**
-	 * Return Message of filter column
-	 * @param searchBE Search Base Entity
-	 * @return Message of Filter column
-	 */
-	public QDataBaseEntityMessage getFilterColumBySearchBE(SearchEntity searchBE) {
-		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
-
-		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
-		base.setLinkCode(GennyConstants.LNK_CORE);
-		base.setLinkValue(GennyConstants.LNK_ITEMS);
-		base.setQuestionCode(GennyConstants.QUE_FILTER_COLUMN);
-
-		BaseEntity baseEntity = new BaseEntity();
-		List<EntityAttribute> entityAttributes = new ArrayList<>();
-
-		searchBE.getBaseEntityAttributes().stream()
-			.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
-			.forEach(e-> {
-				EntityAttribute ea = new EntityAttribute();
-				String attrCode = e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,"");
-				ea.setAttributeName(e.getAttributeName());
-				ea.setAttributeCode(attrCode);
-
-				String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + attrCode;
-				ea.setBaseEntityCode(baseCode);
-				ea.setValueString(e.getAttributeName());
-
-				baseEntity.setCode(baseCode);
-				baseEntity.setName(e.getAttributeName());
-				entityAttributes.add(ea);
-
-				baseEntity.setBaseEntityAttributes(entityAttributes);
-				base.add(baseEntity);
-			});
-
-		return base;
-	}
-
 	/**
 	 * Send filter group and filter column for filter function
-	 * @param targetCode Target code
+	 * @param sbeCode SBE code
 	 */
-	public void sendFilterGroup(String targetCode) {
-		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
+	public void sendFilterGroup(String sbeCode) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
 		if(searchBE != null) {
-			String filterTargetCode = targetCode + "_" + userToken.getJTI().toUpperCase();
+			String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
 
-			Ask ask = getFilterGroupBySearchBE(searchBE);
+			Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode);
 
 			QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
 			msgFilterGrp.setToken(userToken.getToken());
@@ -426,7 +321,7 @@ public class SearchService {
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilterGrp);
 
 
-			QDataBaseEntityMessage msgAddFilter = getFilterColumBySearchBE(searchBE);
+			QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
 			msgAddFilter.setToken(userToken.getToken());
 			msgAddFilter.setTag("Name");
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
@@ -434,4 +329,11 @@ public class SearchService {
 
 	}
 
+	public Map<String, String> getFilterParams() {
+		return filterParams;
+	}
+
+	public void setFilterParams(Map<String, String> filterParams) {
+		this.filterParams = filterParams;
+	}
 }

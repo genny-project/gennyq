@@ -22,6 +22,9 @@ public final class GennyConstants {
     public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
 
     public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
+    public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
+    public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
+    public static final String QUE_SUBMIT = "QUE_SUBMIT";
 
     //Link
     public static final String LNK_FILTER_COLUMN= "LNK_FILTER_COLUMN";
