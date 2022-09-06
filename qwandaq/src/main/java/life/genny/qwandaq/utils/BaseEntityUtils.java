@@ -4,9 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -37,6 +39,7 @@ import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
 
 /**
  * A non-static utility class used for standard
@@ -207,6 +210,7 @@ public class BaseEntityUtils {
 		
 		// check in database if not in cache
 		if (baseEntitySerializable == null) {
+			log.info("$$$$$$$$$$ check in database if not in cache. key: " + key);
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
@@ -231,6 +235,18 @@ public class BaseEntityUtils {
 				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
+				if (entity != null) {
+					log.info("Adding BE to cache..");
+					CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, entity);
+					if (bundleAttributes) {
+						log.info("Adding BEAs to cache..");
+						entity.getBaseEntityAttributes().forEach(attribute -> {
+							BaseEntityAttributeKey attributeKey = new BaseEntityAttributeKey(productCode,
+									attribute.getBaseEntityCode(), attribute.getAttributeCode());
+							CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, attributeKey, attribute);
+						});
+					}
+				}
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}
@@ -238,10 +254,12 @@ public class BaseEntityUtils {
 			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
 			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
 			if (bundleAttributes) {
-				Map<String, EntityAttribute> attributeMap = entity.getAttributeMap();
+				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
+				Map<String, EntityAttribute> attributeMap = new HashMap<>();
+				entity.setAttributeMap(attributeMap);
 				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
-				EntityAttribute ea = null;
-				attributeMap.put(bea.getAttributeCode(), ea);
+					attributes.add(bea);
+					attributeMap.put(bea.getAttributeCode(), bea);
 				});
 				log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
 			}

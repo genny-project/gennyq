@@ -70,6 +70,6 @@ public class BaseEntityAttributeKey implements CoreEntityKey {
 
 	@Override
 	public String getEntityCode() {
-		return getComponents()[1];
+		return baseEntityCode + getDelimiter() + attributeCode;
 	}
 }

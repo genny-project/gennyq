@@ -90,23 +90,25 @@ public class BaseEntityAttributeMessageMarshaller implements MessageMarshaller<B
 		writer.writeBoolean("privacyFlag", bea.getPrivacyFlag());
 		writer.writeBoolean("readonly", bea.getReadonly());
 		LocalDateTime updated = bea.getUpdated();
-		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
+		Long updatedLong = updated != null ? updated.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeLong("updated", updatedLong);
 		writer.writeBoolean("valueBoolean", bea.getValueBoolean());
 		LocalDate valueDate = bea.getValueDate();
-		Long valueDateLong = created != null ? valueDate.atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000 : null;
+		Long valueDateLong = valueDate != null ? valueDate.atStartOfDay().toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeLong("valueDate", valueDateLong);
 		LocalDateTime valueDateTime = bea.getValueDateTime();
-		Long valueDateTimeLong = created != null ? valueDateTime.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
-		writer.writeLong("updated", valueDateTimeLong);
+		Long valueDateTimeLong = valueDateTime != null ? valueDateTime.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeDouble("valueDouble", bea.getValueDouble());
 		writer.writeInt("valueInteger", bea.getValueInteger());
 		writer.writeLong("valueLong", bea.getValueLong());
 		Money money = bea.getMoney();
-		String currency = money.getCurrency().toString();
-		String amount = money.getNumber().toString();
 		StringBuilder moneyJson = new StringBuilder();
-		moneyJson.append("{\"currency\":\"").append(currency).append("\", \"amount\":\"").append(amount).append("\"}");
+		if (money != null) {
+			String currency = money.getCurrency().toString();
+			String amount = money.getNumber().toString();
+			moneyJson.append("{\"currency\":\"").append(currency).append("\", \"amount\":\"").append(amount)
+					.append("\"}");
+		}
 		writer.writeString("money", moneyJson.toString());
 		writer.writeString("valueString", bea.getValueString());
 		/*

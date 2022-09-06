@@ -186,12 +186,14 @@ public class GennyCache {
 			CoreEntitySerializable serializableCoreEntity = null;
 			if(value != null) {
 				serializableCoreEntity = value.toSerializableCoreEntity();
+				cache.put(key, serializableCoreEntity);
 			} else {
 				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
 			}
-			cache.put(key, serializableCoreEntity);
 		} catch (Exception e) {
-			log.error("Exception when inserting entity into cache: " + e.getStackTrace());
+			log.error("Exception when inserting entity into cache: " + e.getMessage());
+			log.error(e.getStackTrace());
+			e.printStackTrace();
 			return false;
 		}
 		return true;

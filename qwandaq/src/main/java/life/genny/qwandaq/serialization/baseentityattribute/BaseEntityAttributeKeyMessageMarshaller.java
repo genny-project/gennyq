@@ -19,16 +19,16 @@ public class BaseEntityAttributeKeyMessageMarshaller implements MessageMarshalle
 	@Override
 	public BaseEntityAttributeKey readFrom(ProtoStreamReader reader) throws IOException {
 		String productCode = reader.readString("realm");
-		String baseEntityCode = reader.readString("baseentitycode");
-		String attributeCode = reader.readString("attributecode");
+		String baseEntityCode = reader.readString("baseEntityCode");
+		String attributeCode = reader.readString("attributeCode");
 		return new BaseEntityAttributeKey(productCode, baseEntityCode, attributeCode);
 	}
 
 	@Override
 	public void writeTo(ProtoStreamWriter writer, BaseEntityAttributeKey beak) throws IOException {
 		writer.writeString("realm", beak.getRealm());
-		writer.writeString("baseentitycode", beak.getBaseEntityCode());
-		writer.writeString("attributecode", beak.getAttributeCode());
+		writer.writeString("baseEntityCode", beak.getBaseEntityCode());
+		writer.writeString("attributeCode", beak.getAttributeCode());
 	}
 
 }
