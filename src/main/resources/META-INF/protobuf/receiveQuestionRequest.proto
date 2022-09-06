@@ -177,8 +177,6 @@ message S2SData {
 	optional string token = 6; 
 }
 /* @Indexed */ 
-<<<<<<< HEAD
-=======
 message TimerData { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
@@ -201,10 +199,8 @@ message TimerEvent {
 	optional int64 timeStamp = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string uniqueCode = 3; 
->>>>>>> 10.1.0
 }
 /* @Indexed */ 
->>>>>>> 10.1.0-timers2
 message Validation { 
 	option java_package = "life.genny.qwandaq.validation";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
