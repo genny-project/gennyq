@@ -1,9 +1,12 @@
 package life.genny.kogito.common.messages;
 
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.UserToken;
+
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.Map;
@@ -14,6 +17,9 @@ public class SendMessageService {
 	private static final Logger log = Logger.getLogger(SendMessageService.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	UserToken userToken;
 
 	/**
 	 * Send a genny message.
@@ -45,6 +51,23 @@ public class SendMessageService {
 	 */
 	public void sendMessage(String templateCode, BaseEntity recipientBE, Map<String, String> ctxMap) {
 		new SendMessage(templateCode, recipientBE, ctxMap).sendMessage();
+	}
+
+	/**
+	 * Send all genny messages for a given milestone code and coreBE code but check
+	 * Injects.
+	 * 
+	 * @param milestoneCode The workflow location to send messages for
+	 *
+	 * @param coreBEcode    The core BaseEntity code for which all Contexts can be
+	 *                      derived.
+	 */
+	public void sendAllMessagesCodeNullCheck(String milestoneCode, String coreBeCode) {
+		if (userToken == null) {
+			log.error("NULL USER TOKEN - Aborting Sending Messages");
+			return;
+		}
+		new SendAllMessages(milestoneCode, coreBeCode).sendMessage();
 	}
 
 	/**

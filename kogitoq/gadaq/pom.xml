@@ -10,7 +10,7 @@
   <artifactId>gadaq</artifactId>
   <name>GadaQ Kogito Service</name>
   <properties>
-		<jandex.version>1.0.7</jandex.version>
+	<jandex.version>1.0.7</jandex.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -82,7 +82,7 @@
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-				<version>${jandex.version}</version>
+		<version>${jandex.version}</version>
         <executions>
           <execution>
             <id>make-index</id>
