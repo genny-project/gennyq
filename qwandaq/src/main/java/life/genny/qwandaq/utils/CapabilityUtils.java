@@ -1,8 +1,10 @@
 package life.genny.qwandaq.utils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -88,6 +90,9 @@ public class CapabilityUtils {
 		if(capability == null) {
 			throw new NullParameterException("Missing Capability in updateCapability");
 		}
+
+		target.addAttribute(capability, 0.0, getModeString(modes));
+
 		// Save to cache
 		String key = getCacheKey(target.getCode(), capability.getCode());
 
@@ -169,16 +174,36 @@ public class CapabilityUtils {
 		// 2. Check user capabilities
 		BaseEntity user = beUtils.getUserBaseEntity();
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		if(entityHasCapability(user.getCode(), cleanCapabilityCode, hasAll, checkModes)) {
-			return true;
+
+		try {
+			if(entityHasCapabilityCached(user.getCode(), cleanCapabilityCode, hasAll, checkModes)) {
+				return true;
+			}
+		} catch(RoleException re) {
+			log.error(re.getMessage());
 		}
 
 		// 3. Check user role capabilities
 		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
 
-		for (String code : roleCodes) {
-			if(entityHasCapability(code, cleanCapabilityCode, hasAll, checkModes))
-				return true;
+		try {
+			for (String code : roleCodes) {
+				// check cache first
+				if(entityHasCapabilityCached(code, cleanCapabilityCode, hasAll, checkModes))
+					return true;
+
+				// now check db
+				BaseEntity role = beUtils.getBaseEntity(code);
+				if(role == null) {
+					log.error("Role: " + code + " does not exist in the database!");
+					continue;
+				}
+
+				if(entityHasCapability(role, cleanCapabilityCode, hasAll, checkModes))
+					return true;
+			}
+		} catch(RoleException re) {
+			log.error(re.getMessage());
 		}
 
 		return false;
@@ -327,12 +352,19 @@ public class CapabilityUtils {
 	public static CapabilityMode[] getCapModesFromString(String modeString) {
 		
 		JsonArray array = null;
-		try {
-			array = jsonb.fromJson(modeString, JsonArray.class);
-		} catch(JsonbException e) {
-			log.error("Could not deserialize modeString: " + modeString);
-			return null;
+		if(modeString.startsWith("[")) {
+			try {
+				array = jsonb.fromJson(modeString, JsonArray.class);
+			} catch(JsonbException e) {
+				log.error("Could not deserialize CapabilityMode array modeString: " + modeString);
+				return null;
+			}
+		} else {
+			CapabilityMode mode = CapabilityMode.valueOf(modeString);
+			return new CapabilityMode[] { mode };
+
 		}
+
 		CapabilityMode[] modes = new CapabilityMode[array.size()];
 
 		for (int i = 0; i < array.size(); i++) {
@@ -361,12 +393,40 @@ public class CapabilityUtils {
 	}
 
 	/**
+	 * Check base entity object for capability
+	 * @param target
+	 * @param capabilityCode
+	 * @return
+	 * @throws RoleException if no capability configuration is found for the base entity
+	 */
+	private Set<CapabilityMode> getEntityCapability(final BaseEntity target, final String capabilityCode) throws RoleException {
+		RoleException re = new RoleException("BaseEntity: " + target.getCode() + "does not have capability in memory: " + capabilityCode);
+		
+		Optional<EntityAttribute> optBeCapability = target.findEntityAttribute(capabilityCode);
+		if(optBeCapability.isPresent()) {
+			EntityAttribute beCapability = optBeCapability.get();
+			if(beCapability.getValueString() == null) {
+				throw re;
+			}
+
+			String modeString = beCapability.getValueString();
+
+			// get set from string. Not the fastest but it'll do
+			Set<CapabilityMode> modes = new HashSet<>();
+			Collections.addAll(modes, getCapModesFromString(modeString));
+			return modes;
+		} else {
+			throw re;
+		}
+	}
+
+	/**
 	 * Get a set of capability modes for a target and capability combination.
 	 * @param target The target entity
 	 * @param capabilityCode The capability code
 	 * @return An array of CapabilityModes
 	 */
-	private Set<CapabilityMode> getEntityCapability(final String targetCode, 
+	private Set<CapabilityMode> getEntityCapabilityFromCache(final String targetCode, 
 			final String capabilityCode) throws RoleException {
 
 		String productCode = userToken.getProductCode();
@@ -393,14 +453,43 @@ public class CapabilityUtils {
 		return CacheUtils.writeCache(productCode, key, modesString);
 	}
 
-	private boolean entityHasCapability(final String targetCode, final String cleanCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
-		Set<CapabilityMode> modes = null;
-		try {
-			modes = getEntityCapability(targetCode, cleanCapabilityCode);
-		} catch (RoleException e) {
-			log.debug(e.getMessage());
-			return false;
+	private boolean entityHasCapability(final BaseEntity target, final String cleanCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) 
+		throws RoleException{
+		RoleException re = new RoleException("BaseEntity: " + target.getCode() + "does not have capability in database: " + cleanCapabilityCode);
+		
+		Optional<EntityAttribute> optBeCapability = target.findEntityAttribute(cleanCapabilityCode);
+		if(optBeCapability.isPresent()) {
+			EntityAttribute beCapability = optBeCapability.get();
+			if(beCapability.getValueString() == null) {
+				throw re;
+			}
+
+			String modeString = beCapability.getValueString().toUpperCase();
+
+
+			if(hasAll) {
+				for (CapabilityMode checkMode : checkModes) {
+					boolean hasMode = modeString.contains(checkMode.name());
+					if(!hasMode)
+						return false;
+				}
+				return true;
+			} else {
+				for (CapabilityMode checkMode : checkModes) {
+					boolean hasMode = modeString.contains(checkMode.name());
+					if(hasMode)
+						return true;
+				}
+				return false;
+			}
+		} else {
+			throw re;
 		}
+	}
+
+	private boolean entityHasCapabilityCached(final String targetCode, final String cleanCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) 
+		throws RoleException {
+		Set<CapabilityMode> modes = getEntityCapabilityFromCache(targetCode, cleanCapabilityCode);
 
 		// Two separate loops so we don't check hasAll over and over again
 		if(hasAll) {
@@ -409,15 +498,15 @@ public class CapabilityUtils {
 				if(!hasMode)
 					return false;
 			}
+			return true;
 		} else {
 			for (CapabilityMode checkMode : checkModes) {
 				boolean hasMode = modes.contains(checkMode);
 				if(hasMode)
 					return true;
 			}
+			return false;
 		}
-
-		return false;
 	}
 
 	/**

@@ -33,7 +33,7 @@ public class TestCase<I, E> {
     // TODO: Elaborate on this to string
     @Override
     public String toString() {
-        return "Test [" + name + "]";
+        return "Test [" + (name != null ? name : "Unnamed Test") + "]";
     }
 
 
@@ -59,7 +59,7 @@ public class TestCase<I, E> {
         private Input<I> input;
         private Expected<E> expected;
 
-        private  String name;
+        private String name;
         private FITestCallback<Input<I>, Expected<E>> testCallback;
         
         public Builder<I, E> setInput(I input) {

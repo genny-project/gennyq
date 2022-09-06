@@ -4,6 +4,7 @@ package life.genny.test.qwandaq.utils.capabilities;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.datatype.CapabilityMode;
@@ -21,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 
 public class CapabilityUtilsTest {
+
+	static final Logger log = Logger.getLogger(CapabilityUtils.class);
 
 
     @Test
@@ -82,6 +85,7 @@ public class CapabilityUtilsTest {
         );
 
         for(TestCase<String, CapabilityMode[]> test : tests) {
+            log.info(test.name);
             assertArrayEquals(test.getExpected(), test.test());
         }
     }

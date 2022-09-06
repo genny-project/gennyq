@@ -103,6 +103,15 @@ public class CommonUtils {
         return result;
     }
 
+    public static <T> boolean arrayContains(T[] array, T object) {
+        for(T obj : array) {
+            if(obj.equals(object))
+                return true;
+        }
+
+        return false;
+    }
+
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
