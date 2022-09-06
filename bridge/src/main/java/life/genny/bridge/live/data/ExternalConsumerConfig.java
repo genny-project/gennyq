@@ -119,9 +119,7 @@ public class ExternalConsumerConfig {
         SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
         sockJSHandler.bridge(setBridgeOptions(), handler::handleConnectionTypes);
         environment.filter(d -> !d.equals("prod"))
-                .ifPresent(d -> {
-                    router.route().handler(cors());
-                });
+                .ifPresent(d -> router.route().handler(cors()));
         router.route("/frontend/*").handler(cors());
         router.route("/frontend/*").handler(sockJSHandler);
     }

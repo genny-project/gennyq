@@ -182,7 +182,6 @@ public class ExternalConsumer {
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
 		// JsonObject nonTokenBody = (JsonObject) body.remove("token");
 
-
 		log.info("Incoming Payload = %s".formatted(body));
 
 		if (body == null || body.getString("msg_type") == null) {
