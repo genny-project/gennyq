@@ -276,6 +276,7 @@ message Validation {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional kogito.Serializable updated = 14[(kogito_java_class) = "java.time.LocalDateTime"]; 
 }
+
 enum EEntityStatus { 
 	option java_package = "life.genny.qwandaq";
 	DISABLED = 3;

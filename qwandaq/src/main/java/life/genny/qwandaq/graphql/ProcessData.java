@@ -5,6 +5,10 @@ import java.util.List;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.Answer;
 
+/**
+ * TODO: We need to document this
+ * @author Jasper Robison
+ */
 @RegisterForReflection
 public class ProcessData extends ProcessInstanceVariables {
 

@@ -3,10 +3,16 @@ package life.genny.kogito.common.messages;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
+
+import io.quarkus.arc.Arc;
 
 import javax.inject.Inject;
 import java.util.HashMap;
@@ -17,6 +23,9 @@ public class SendAllMessages extends MessageSendingStrategy {
 
     @Inject
     SearchUtils searchUtils;
+
+    @Inject
+    ServiceToken serviceToken;
 
     private final String productCode;
     private final String milestoneCode;
@@ -35,6 +44,7 @@ public class SendAllMessages extends MessageSendingStrategy {
     public static final String SENDER = "SENDER";
     public static final String SELF = "SELF";
     public static final String USER = "USER";
+
     public SendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
         this.productCode = productCode;
         this.milestoneCode = milestoneCode;
@@ -42,6 +52,10 @@ public class SendAllMessages extends MessageSendingStrategy {
     }
 
     public SendAllMessages(String milestoneCode, String coreBeCode) {
+        beUtils = Arc.container().select(BaseEntityUtils.class).get();
+        userToken = Arc.container().select(UserToken.class).get();
+        searchUtils = Arc.container().select(SearchUtils.class).get();
+
         this.milestoneCode = milestoneCode;
         this.coreBE = beUtils.getBaseEntity(userToken.getProductCode(), coreBeCode);
         this.productCode = this.coreBE.getRealm();
@@ -67,7 +81,7 @@ public class SendAllMessages extends MessageSendingStrategy {
 
                 // Determine the recipientBECode
                 String recipientLnkValue = message.getValueAsString(PRI_RECIPIENT_LNK);
-                if(recipientLnkValue != null) {
+                if (recipientLnkValue != null) {
                     determineRecipientLnkValueAndUpdateMap(recipientLnkValue);
                 } else {
                     log.error("NO " + PRI_RECIPIENT_LNK + " present");
@@ -93,7 +107,8 @@ public class SendAllMessages extends MessageSendingStrategy {
                     log.error("NO " + PRI_SENDER_LNK + " present");
                 }
 
-                log.info("Sending Message " + message.getCode() + " to " + recipientBECode + " with ctx=" + contextMapStr);
+                log.info("Sending Message " + message.getCode() + " to " + recipientBECode + " with ctx="
+                        + contextMapStr);
 
                 new SendMessage(message.getCode(), recipientBECode, ctxMap).sendMessage();
             });

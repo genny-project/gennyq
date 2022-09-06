@@ -2,6 +2,10 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,12 +81,15 @@ public class FrontendService {
 
 		// update ask target
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		recursivelyUpdateAskTarget(ask, processEntity);
+		Map<String, Ask> flatMapOfAsks = recursivelyUpdateAskTarget(ask, processEntity);
 
 		// check mandatories and update submit
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
 		log.info("Mandatory fields are " + (answered ? "answered" : "not answered"));
 		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+
+		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+		qwandaUtils.updateDependentAsks(ask, processEntity, defBE, flatMapOfAsks);
 
 		// send to user
 		QDataAskMessage msg = new QDataAskMessage(ask);
@@ -92,22 +99,30 @@ public class FrontendService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
+  public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
+    return recursivelyUpdateAskTarget(ask, target, new HashMap<String, Ask>());
+  }
+
 	/**
 	 * Recursively update the ask target.
 	 *
 	 * @param ask    The ask to traverse
 	 * @param target The target entity to set
+   	 * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and prevent further unnecessary recursion
 	 */
-	public void recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
+	public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target, Map<String, Ask> asks) {
 
 		ask.setTargetCode(target.getCode());
 
 		// recursively update children
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-				recursivelyUpdateAskTarget(child, target);
+        		asks.put(child.getAttributeCode(), child);
+				asks = recursivelyUpdateAskTarget(child, target, asks);
 			}
 		}
+
+    	return asks;
 	}
 
 	/**
