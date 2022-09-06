@@ -29,6 +29,13 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.entity.EntityEntity;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import java.util.Map;
+import java.util.HashMap;
 
 @ApplicationScoped
 public class SearchService {
@@ -54,8 +61,11 @@ public class SearchService {
 
 	public static enum SearchOptions {
 		PAGINATION,
-		SEARCH
+		SEARCH,
+		FILTER
 	}
+
+	private Map<String, String> filterParams = new HashMap<>();
 
 	/**
 	 * Perform a Detail View search.
@@ -294,5 +304,63 @@ public class SearchService {
 			sendMessageBySearchEntity(searchBE);
 			sendSearchPCM(GennyConstants.PCM_PROCESS, targetCode);
 		}
+	}
+
+	/**
+	 * Send filter group and filter column for filter function
+	 * @param sbeCode SBE code
+	 */
+	public void sendFilterGroup(String sbeCode) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
+
+		if(searchBE != null) {
+			String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
+
+			Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode);
+
+			QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
+			msgFilterGrp.setToken(userToken.getToken());
+			msgFilterGrp.setTargetCode(filterTargetCode);
+			msgFilterGrp.setMessage(GennyConstants.FILTERS);
+			msgFilterGrp.setTag(GennyConstants.FILTERS);
+			KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
+
+
+			QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
+			msgAddFilter.setToken(userToken.getToken());
+			msgAddFilter.setTag("Name");
+			KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgAddFilter);
+		}
+	}
+
+	/**
+	 * Send filter option
+	 * @param sbeCode SBE code
+	 */
+	public void sendFilterOption(String sbeCode) {
+		Ask ask = searchUtils.getFilterOptionBySBECode(sbeCode);
+
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setTargetCode(sbeCode);
+		msg.setMessage(GennyConstants.FILTERS);
+		msg.setTag(GennyConstants.FILTERS);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
+	/**
+	 *
+	 * @return Filter Parameters in the application scope
+	 */
+	public Map<String, String> getFilterParams() {
+		return filterParams;
+	}
+
+	/**
+	 * Set Filter Pamameters in application scope
+	 * @param filterParams
+	 */
+	public void setFilterParams(Map<String, String> filterParams) {
+		this.filterParams = filterParams;
 	}
 }
