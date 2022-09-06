@@ -2,6 +2,7 @@ package life.genny.fyodor.utils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +12,18 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.management.Query;
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 import org.jboss.logging.Logger;
 
@@ -31,11 +43,13 @@ import life.genny.qwandaq.attribute.QEntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Filter;
-import life.genny.qwandaq.entity.search.Operator;
-import life.genny.qwandaq.entity.search.Ord;
-import life.genny.qwandaq.entity.search.Sort;
-import life.genny.qwandaq.entity.search.Successor;
+import life.genny.qwandaq.entity.search.clause.And;
+import life.genny.qwandaq.entity.search.clause.ClauseArgument;
+import life.genny.qwandaq.entity.search.clause.Or;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.trait.Ord;
+import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -127,6 +141,160 @@ public class FyodorUltra {
 		return query.select(baseEntity.code).distinct().fetchCount();
 	}
 
+	public void search27(SearchEntity searchEntity) {
+		
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		CriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+		Root<BaseEntity> baseEntity = query.from(BaseEntity.class);
+		query.select(baseEntity.get("code")).distinct(true);
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		Map<String, Root<EntityAttribute>> map = new HashMap<>();
+
+		List<ClauseArgument> filters = new ArrayList<>();
+		// handle filters
+		filters.stream().forEach(filter -> {
+			findClausePredicate(query, map, filter);
+		});
+
+		// query.where(predicate);
+
+		List<Tuple> tupleResult = entityManager.createQuery(query).getResultList();
+	}
+
+	public Predicate findClausePredicate(CriteriaQuery<Tuple> query, Map<String, Root<EntityAttribute>> map, ClauseArgument clauseArgument) {
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		Class clauseClass = clauseArgument.getClass();
+
+		if (clauseClass == And.class) {
+			And and = (And) clauseArgument;
+			Predicate predicateA = findClausePredicate(query, map, and.getA());
+			Predicate predicateB = findClausePredicate(query, map, and.getB());
+			return cb.and(predicateA, predicateB);
+
+		} else if (clauseClass == Or.class) {
+			Or or = (Or) clauseArgument;
+			Predicate predicateA = findClausePredicate(query, map, or.getA());
+			Predicate predicateB = findClausePredicate(query, map, or.getB());
+			return cb.or(predicateA, predicateB);
+
+		} else if (clauseClass == Filter.class) {
+
+			Filter filter = (Filter) clauseArgument;
+			String code = filter.getCode();
+
+			// add to map if not already there
+			if (!map.containsKey(code))
+			map.put(code, query.from(EntityAttribute.class));
+
+			Root<EntityAttribute> entityAttribute = map.get(code);
+
+			// TODO: return correct operator
+			return findFilterPredicate(entityAttribute, filter);
+
+		} else {
+			throw new QueryBuilderException("Invalid clauseArgument class " + clauseClass);
+		}
+	}
+
+	public Expression<?> findExpression(Root<EntityAttribute> entityAttribute, Filter filter) {
+		
+		// TODO: This maybe should come from the attribute
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		cb.like(entityAttribute.get("valueString"), "");
+
+		Class<?> c = filter.getC();
+
+		if (c == String.class)
+			return entityAttribute.<String>get("valueString");
+		else if (c == Integer.class)
+			return entityAttribute.<Integer>get("valueInteger");
+		else if (c == Long.class)
+			return entityAttribute.<Long>get("valueLong");
+		else if (c == Double.class)
+			return entityAttribute.<Double>get("valueDouble");
+		else if (c == LocalDate.class)
+			return entityAttribute.get("valueDate");
+		else if (c == LocalDateTime.class)
+			return entityAttribute.get("valueDateTime");
+		else
+			throw new QueryBuilderException("Invalid path for class " + c);
+	}
+
+	@SuppressWarnings("unchecked")
+	public Predicate findFilterPredicate(Root<EntityAttribute> entityAttribute, Filter filter) {
+
+		Class<?> c = filter.getC();
+		if (isChronoClass(c))
+			return findChronoPredicate(entityAttribute, filter);
+
+		Expression<?> expression = findExpression(entityAttribute, filter);
+
+		Operator operator = filter.getOperator();
+		Object value = filter.getValue();
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		switch (operator) {
+			case LIKE:
+				return cb.like((Expression<String>) expression, String.class.cast(value));
+			case NOT_LIKE:
+				return cb.notLike((Expression<String>) expression, String.class.cast(value));
+			case EQUALS:
+				return cb.equal(expression, value);
+			case NOT_EQUALS:
+				return cb.notEqual(expression, value);
+			case GREATER_THAN:
+				return cb.gt((Expression<Number>) expression, Number.class.cast(value));
+			case LESS_THAN:
+				return cb.lt((Expression<Number>) expression, Number.class.cast(value));
+			case GREATER_THAN_OR_EQUAL:
+				return cb.ge((Expression<Number>) expression, Number.class.cast(value));
+			case LESS_THAN_OR_EQUAL:
+				return cb.le((Expression<Number>) expression, Number.class.cast(value));
+			default:
+				throw new QueryBuilderException("Invalid Operator: " + operator);
+		}
+	}
+
+	public Predicate findChronoPredicate(Root<EntityAttribute> entityAttribute, Filter filter) {
+
+		Class<?> c = filter.getC();
+
+		Operator operator = filter.getOperator();
+		Object value = filter.getValue();
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		Expression<?> expression = findExpression(entityAttribute, filter);
+
+		switch (operator) {
+			case EQUALS:
+				return cb.equal(expression, value);
+			case NOT_EQUALS:
+				return cb.notEqual(expression, value);
+			case GREATER_THAN:
+				return cb.greaterThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+			case LESS_THAN:
+				return cb.lt((Expression<Number>) expression, Number.class.cast(value));
+			case GREATER_THAN_OR_EQUAL:
+				return cb.ge((Expression<Number>) expression, Number.class.cast(value));
+			case LESS_THAN_OR_EQUAL:
+				return cb.le((Expression<Number>) expression, Number.class.cast(value));
+			default:
+				throw new QueryBuilderException("Invalid Chrono Operator: " + operator);
+		}
+
+	}
+
+	public Boolean isChronoClass(Class<?> c) {
+		return (c == LocalDateTime.class || c == LocalDate.class || c == LocalTime.class);
+	}
+
 	/**
 	 * Create a query from a search entity.
 	 * @param baseEntity QBaseEntity object
@@ -197,17 +365,17 @@ public class FyodorUltra {
 		QEntityAttribute entityAttribute = map.get(code);
 		BooleanExpression expression = findBooleanExpression(entityAttribute, filter);
 
-		if (filter.hasSuccessor()) {
-			Successor successor = filter.getSuccessor();
-			BooleanExpression successorExpression = buildFilterExpression(map, successor.getFilter());
+		// if (filter.hasSuccessor()) {
+		// 	Successor successor = filter.getSuccessor();
+		// 	BooleanExpression successorExpression = buildFilterExpression(map, successor.getFilter());
 
-			if (successor.getOperation() == Successor.Operation.AND)
-				expression.and(successorExpression);
-			else if (successor.getOperation() == Successor.Operation.OR)
-				expression.or(successorExpression);
-			else
-				throw new QueryBuilderException("Invalid successor Operation " + successor.getOperation());
-		}
+		// 	if (successor.getOperation() == Successor.Operation.AND)
+		// 		expression.and(successorExpression);
+		// 	else if (successor.getOperation() == Successor.Operation.OR)
+		// 		expression.or(successorExpression);
+		// 	else
+		// 		throw new QueryBuilderException("Invalid successor Operation " + successor.getOperation());
+		// }
 		
 		return expression;
 	}

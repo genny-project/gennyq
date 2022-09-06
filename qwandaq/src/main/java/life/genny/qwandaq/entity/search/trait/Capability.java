@@ -1,4 +1,4 @@
-package life.genny.qwandaq.entity.search;
+package life.genny.qwandaq.entity.search.trait;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 

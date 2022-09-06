@@ -44,7 +44,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.QBaseEntity;
 import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Operator;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.message.QBulkMessage;

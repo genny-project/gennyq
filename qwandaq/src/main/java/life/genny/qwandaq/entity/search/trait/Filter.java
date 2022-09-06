@@ -1,22 +1,21 @@
-package life.genny.qwandaq.entity.search;
+package life.genny.qwandaq.entity.search.trait;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.entity.search.Successor.Operation;
+import life.genny.qwandaq.entity.search.clause.ClauseArgument;
 
 /**
  * Filter
  */
 @RegisterForReflection
-public class Filter extends Trait {
+public class Filter extends Trait implements ClauseArgument {
 
 	private Operator operator;
 	private Object value;
 	private Class c;
-	private Successor successor;
 	private Capability capability;
 
 	public Filter() {
@@ -86,30 +85,8 @@ public class Filter extends Trait {
 		this.c = c;
 	}
 
-	public Successor getSuccessor() {
-		return successor;
-	}
-
-	public void setSuccessor(Successor successor) {
-		this.successor = successor;
-	}
-
-	public Boolean hasSuccessor() {
-		return (this.successor == null ? false : true);
-	}
-
 	public Boolean hasCapability() {
 		return (this.capability == null ? false : true);
-	}
-
-	public Filter and(Filter filter) {
-		this.successor = new Successor(filter, Operation.AND);
-		return this;
-	}
-
-	public Filter or(Filter filter) {
-		this.successor = new Successor(filter, Operation.OR);
-		return this;
 	}
 
 	public Filter add(Capability capability) {

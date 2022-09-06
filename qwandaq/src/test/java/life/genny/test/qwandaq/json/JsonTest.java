@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.Column;
-import life.genny.qwandaq.entity.search.Filter;
-import life.genny.qwandaq.entity.search.Operator;
-import life.genny.qwandaq.entity.search.Ord;
-import life.genny.qwandaq.entity.search.Sort;
+import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.trait.Ord;
+import life.genny.qwandaq.entity.search.trait.Sort;
 
 public class JsonTest {
 

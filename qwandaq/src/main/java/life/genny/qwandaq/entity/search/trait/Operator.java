@@ -1,4 +1,4 @@
-package life.genny.qwandaq.entity.search;
+package life.genny.qwandaq.entity.search.trait;
 
 public enum Operator {
 	LIKE,

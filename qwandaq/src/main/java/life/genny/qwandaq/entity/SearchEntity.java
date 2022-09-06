@@ -1,8 +1,5 @@
 package life.genny.qwandaq.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -10,11 +7,13 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.search.Action;
-import life.genny.qwandaq.entity.search.AssociatedColumn;
-import life.genny.qwandaq.entity.search.Column;
-import life.genny.qwandaq.entity.search.Filter;
-import life.genny.qwandaq.entity.search.Sort;
+import life.genny.qwandaq.entity.search.clause.And;
+import life.genny.qwandaq.entity.search.clause.Or;
+import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
+import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Sort;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
@@ -150,8 +149,8 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity add(Column column) {
 
-		Attribute attributeColumn = new Attribute("COL_" + column.getCode(), column.getName(), new DataType(String.class));
-		addAttribute(attributeColumn, columnIndex);
+		Attribute attribute = new Attribute("COL_" + column.getCode(), column.getName(), new DataType(String.class));
+		addAttribute(attribute, columnIndex);
 		columnIndex += 1.0;
 
 		return this;
@@ -211,6 +210,30 @@ public class SearchEntity extends BaseEntity {
 			new DataType(filter.getC()));
 		addAttribute(attribute, filterIndex, filter.getValue());
 		filterIndex += 1.0;
+
+		return this;
+	}
+
+	/**
+	 * Add an And clause
+	 * @param and And clause
+	 * @return SearchEntity
+	 */
+	public SearchEntity add(And and) {
+
+		// TODO: handle this
+
+		return this;
+	}
+
+	/**
+	 * Add an Or clause
+	 * @param or Or clause
+	 * @return SearchEntity
+	 */
+	public SearchEntity add(Or or) {
+
+		// TODO: handle this
 
 		return this;
 	}
