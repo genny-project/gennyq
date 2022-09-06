@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
