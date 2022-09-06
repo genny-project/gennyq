@@ -29,7 +29,9 @@ buildNumber.properties
 # IntelliJ 
 *.iml
 *idea/
-.DS_Store
+**.DS_Store
 /*.project
 /*.factorypath
 /*.classpath
+.env
+.mvn
