@@ -85,18 +85,11 @@ public class FyodorUltra {
 
 			BaseEntity be = beUtils.getBaseEntity(codes.get(i));
 			be.setIndex(i);
-			if (i == 0) {
-				log.info(jsonb.toJson(be));
-			}
 			be = beUtils.addNonLiteralAttributes(be);
 			if (!searchEntity.getAllColumns()) {
 				be = beUtils.privacyFilter(be, allowed);
 			}
 			entities.add(be);
-			if (i == 0) {
-				log.info("===============");
-				log.info(jsonb.toJson(be));
-			}
 		}
 
 		return Tuple2.of(entities, count);
