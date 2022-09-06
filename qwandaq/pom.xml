@@ -5,7 +5,7 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>gennyq</artifactId>
-    <version>10.1.0</version>
+    <version>10.2.0</version>
   </parent>
 
   <artifactId>qwandaq</artifactId>
@@ -21,27 +21,6 @@
       <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
     </license>
   </licenses>
-
-  <developers>
-    <developer>
-      <name>Jasper Robison</name>
-      <email>jasper.robison@gada.io</email>
-      <organization>GADA Technology</organization>
-      <organizationUrl>https://gada.io</organizationUrl>
-    </developer>
-    <developer>
-      <name>Adam Crow</name>
-      <email>adam.crow@gada.io</email>
-      <organization>GADA Technology</organization>
-      <organizationUrl>https://gada.io</organizationUrl>
-    </developer>
-    <developer>
-      <name>Bryn Meachem</name>
-      <email>bryn.meahem@gada.io</email>
-      <organization>GADA Technology</organization>
-      <organizationUrl>https://gada.io</organizationUrl>
-    </developer>
-  </developers>
 
   <scm>
     <connection>scm:git:git://github.com/genny-project/{project.artifactId}.git</connection>
