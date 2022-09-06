@@ -45,7 +45,7 @@ import com.querydsl.core.annotations.QueryExclude;
  * <p>
  * AttributeTime represent the major way of specifying the Time data type about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author      Adam Crow

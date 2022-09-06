@@ -16,4 +16,20 @@ public final class GennyConstants {
     public static final String BUCKET_DISPLAY = "DISPLAY";
     public static final String BUCKET_PROCESS = "PROCESS";
 
+
+    // ================================== CAPABILITY CONSTANTS =============================================
+	// Capability Attribute Prefix
+	public static final String CAP_CODE_PREFIX = "PRM_";
+	public static final String ROLE_BE_PREFIX = "ROL_";
+
+	public static final String PRI_IS_PREFIX = "PRI_IS_";
+
+	// TODO: Confirm we want DEFs to have capabilities as well
+	public static final String[] ACCEPTED_CAP_PREFIXES = { ROLE_BE_PREFIX, "PER_", "DEF_" };
+
+	public static final String LNK_ROLE_CODE = "LNK_ROLE";
+	public static final String LNK_DEF_CODE = "LNK_DEF";
+
+    // =====================================================================================================
+
 }

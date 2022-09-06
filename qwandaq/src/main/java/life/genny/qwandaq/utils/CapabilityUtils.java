@@ -26,6 +26,12 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
+
+import static life.genny.qwandaq.constants.GennyConstants.LNK_ROLE_CODE;
+import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
+import static life.genny.qwandaq.constants.GennyConstants.PRI_IS_PREFIX;
+import static life.genny.qwandaq.constants.GennyConstants.ROLE_BE_PREFIX;
+
 /*
  * A non-static utility class for managing roles and capabilities.
  * 
@@ -38,18 +44,6 @@ public class CapabilityUtils {
 	protected static final Logger log = Logger.getLogger(CapabilityUtils.class);
 	
 	static Jsonb jsonb = JsonbBuilder.create();
-
-	// Capability Attribute Prefix
-	public static final String CAP_CODE_PREFIX = "PRM_";
-	public static final String ROLE_BE_PREFIX = "ROL_";
-
-	public static final String PRI_IS_PREFIX = "PRI_IS_";
-
-	// TODO: Confirm we want DEFs to have capabilities as well
-	public static final String[] ACCEPTED_CAP_PREFIXES = { ROLE_BE_PREFIX, "PER_", "DEF_" };
-
-	public static final String LNK_ROLE_CODE = "LNK_ROLE";
-	public static final String LNK_DEF_CODE = "LNK_DEF";
 
 	@Inject
 	UserToken userToken;
@@ -73,6 +67,13 @@ public class CapabilityUtils {
 		roleDef = beUtils.getBaseEntity("DEF_ROLE");
 	}
 
+  public void updateCapability(String productCode, BaseEntity target, String rawCapabilityCode, final CapabilityMode... modes) {
+    // find attrbute
+    String ccCode = cleanCapabilityCode(rawCapabilityCode);
+    Attribute attribute = dbUtils.findAttributeByCode(productCode, ccCode);
+    updateCapability(productCode, target, attribute ,modes);
+  }
+
 	/**
 	 * Add a capability to a BaseEntity.
 	 * @param productCode The product code
@@ -80,11 +81,15 @@ public class CapabilityUtils {
 	 * @param capabilityCode The capability code
 	 * @param modes The modes to set
 	 */
-	public void updateCapabilityCache(String productCode, BaseEntity target, final String capabilityCode,
+	public void updateCapability(String productCode, BaseEntity target, final Attribute capability,
 			final CapabilityMode... modes) {
 
-		String code = cleanCapabilityCode(capabilityCode);
-		String key = getCacheKey(target.getCode(), code);
+		// Update base entity
+		if(capability == null) {
+			throw new NullParameterException("Missing Capability in updateCapability");
+		}
+		// Save to cache
+		String key = getCacheKey(target.getCode(), capability.getCode());
 
 		Set<CapabilityMode> set = new HashSet<>(Arrays.asList(modes));
 
@@ -110,12 +115,17 @@ public class CapabilityUtils {
 	}
 
 	public Attribute createCapability(final String rawCapabilityCode, final String name) {
-		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
+		return createCapability(rawCapabilityCode, name, false);
+	}
+
+	public Attribute createCapability(final String rawCapabilityCode, final String name, boolean cleanedCode) {
+		String cleanCapabilityCode = cleanedCode ? rawCapabilityCode : cleanCapabilityCode(rawCapabilityCode);
+		
 		
 		Attribute attribute = qwandaUtils.getAttribute(cleanCapabilityCode);
 
 		if (attribute == null) {
+			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
 			attribute = new AttributeText(cleanCapabilityCode, name);
 			qwandaUtils.saveAttribute(attribute);
 		}

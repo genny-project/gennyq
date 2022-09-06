@@ -46,7 +46,7 @@ import com.querydsl.core.annotations.QueryExclude;
  * <p>
  * AttributeDate represent the major way of specifying the Money data type about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author      Adam Crow

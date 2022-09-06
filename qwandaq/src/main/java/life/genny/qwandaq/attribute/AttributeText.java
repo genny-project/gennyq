@@ -44,7 +44,7 @@ import com.querydsl.core.annotations.QueryExclude;
  * <p>
  * AttributeText represent the major way of specifying the Text data type about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author      Adam Crow

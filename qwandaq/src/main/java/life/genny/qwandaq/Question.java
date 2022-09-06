@@ -59,7 +59,7 @@ import com.querydsl.core.annotations.QueryExclude;
  * Questions represent the major way of retrieving facts about a target from
  * sources. Each question is associated with an attribute which represents a
  * distinct fact about a target.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow
