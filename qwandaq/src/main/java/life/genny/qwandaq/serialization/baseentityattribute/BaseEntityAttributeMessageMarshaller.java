@@ -102,14 +102,16 @@ public class BaseEntityAttributeMessageMarshaller implements MessageMarshaller<B
 		writer.writeInt("valueInteger", bea.getValueInteger());
 		writer.writeLong("valueLong", bea.getValueLong());
 		Money money = bea.getMoney();
-		StringBuilder moneyJson = new StringBuilder();
+		String moneyStr = null;
 		if (money != null) {
+			StringBuilder moneyJson = new StringBuilder();
 			String currency = money.getCurrency().toString();
 			String amount = money.getNumber().toString();
 			moneyJson.append("{\"currency\":\"").append(currency).append("\", \"amount\":\"").append(amount)
 					.append("\"}");
+			moneyStr = moneyJson.toString();
 		}
-		writer.writeString("money", moneyJson.toString());
+		writer.writeString("money", moneyStr);
 		writer.writeString("valueString", bea.getValueString());
 		/*
 		 * LocalTime valueTime = bea.getValueTime(); Long valueTimeLong = created !=

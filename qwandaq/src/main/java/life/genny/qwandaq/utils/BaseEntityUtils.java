@@ -253,7 +253,7 @@ public class BaseEntityUtils {
 		} else {
 			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
 			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
-			if (bundleAttributes) {
+			/*if (bundleAttributes) {
 				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
 				Map<String, EntityAttribute> attributeMap = new HashMap<>();
 				entity.setAttributeMap(attributeMap);
@@ -262,7 +262,7 @@ public class BaseEntityUtils {
 					attributeMap.put(bea.getAttributeCode(), bea);
 				});
 				log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
-			}
+			}*/
 		}
 
 		return entity;
