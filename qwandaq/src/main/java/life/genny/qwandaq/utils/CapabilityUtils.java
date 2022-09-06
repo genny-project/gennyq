@@ -1,12 +1,9 @@
 package life.genny.qwandaq.utils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -21,15 +18,13 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.Allowed;
+
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -55,8 +50,6 @@ public class CapabilityUtils {
 
 	public static final String LNK_ROLE_CODE = "LNK_ROLE";
 	public static final String LNK_DEF_CODE = "LNK_DEF";
-
-	List<Attribute> capabilityManifest = new ArrayList<Attribute>();
 
 	@Inject
 	UserToken userToken;
@@ -91,12 +84,12 @@ public class CapabilityUtils {
 			final CapabilityMode... modes) {
 
 		String code = cleanCapabilityCode(capabilityCode);
-		String key = String.format("%s:%s", target.getCode(), code);
+		String key = getCacheKey(target.getCode(), code);
 
 		Set<CapabilityMode> set = new HashSet<>(Arrays.asList(modes));
 
 		CacheUtils.putObject(productCode, key, set);
-		log.debugf("[^] Cached in %s -> %s:%s", productCode, target.getCode(), code);
+		log.debugf("[^] Cached in %s -> %s:%s", productCode, key);
 	}
 
 	public BaseEntity createRole(String roleCode, String roleName) {
@@ -126,8 +119,7 @@ public class CapabilityUtils {
 			attribute = new AttributeText(cleanCapabilityCode, name);
 			qwandaUtils.saveAttribute(attribute);
 		}
-
-		capabilityManifest.add(attribute);
+		
 		return attribute;
 	}
 
@@ -223,6 +215,141 @@ public class CapabilityUtils {
 		});
 	}
 
+	/*
+	 * @param condition the condition to check
+	 * @return Boolean
+	 */
+	public Boolean conditionMet(String condition) {
+
+		if (condition == null) {
+			log.error("condition is NULL!");
+			return false;
+		}
+
+		log.debug("Testing condition with value: " + condition);
+		String[] conditionArray = condition.split(":");
+
+		String capability = conditionArray[0];
+		String mode = conditionArray[1];
+
+		// check for NOT operator
+		Boolean not = capability.startsWith("!");
+		capability = not ? capability.substring(1) : capability;
+
+		// check for Capability
+		Boolean hasCap = hasCapability(capability, false, CapabilityMode.getMode(mode)) || hasCapabilityThroughPriIs(capability, CapabilityMode.getMode(mode));
+
+		// XNOR operator
+		return hasCap ^ not;
+	}
+
+	/**
+	 * Get a redirect code for user based on their roles.
+	 * @return The redirect code
+	 * @throws RoleException If no roles are found for the user, or 
+	 * 		none of roles found have any associated redirect code
+	 */
+	public String getUserRoleRedirectCode() throws RoleException {
+		
+		// grab user role codes
+		BaseEntity user = beUtils.getUserBaseEntity();
+		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
+
+		if (roles == null || roles.isEmpty())
+			throw new RoleException(String.format("No roles found for user %s", user.getCode()));
+
+		log.info(roles.toString());
+
+		// TODO: return redirect for roles based on priority
+		for (String role : roles) {
+			try {
+				// return first found redirect
+				return getRoleRedirectCode(role);
+			} catch (RoleException e) {
+				log.debug(e.getMessage());
+			}
+		}
+
+		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+	}
+
+
+	/**
+	 * Set the redirect code for a role.
+	 * @param productCode The product code
+	 * @param role The role to set the redirect for
+	 * @param redirectCode The code to set as redirect
+	 */
+	public void setRoleRedirect(String productCode, BaseEntity role, String redirectCode) {
+		 
+		CacheUtils.putObject(productCode, String.format("%s:REDIRECT", role.getCode()), redirectCode);
+	}
+
+	/**
+	 * Get the redirect code for a role.
+	 * @param roleCode The code of the role
+	 * @return The redirect code
+	 * @throws RoleException If no redirect is found for the role
+	 */
+	public String getRoleRedirectCode(String roleCode) throws RoleException {
+		
+		if (roleCode == null)
+			throw new NullParameterException(roleCode);
+
+		String product = userToken.getProductCode();
+		String key = roleCode.concat(":REDIRECT");
+
+		log.info(key);
+
+		// TODO: grab redirect for role
+		String redirectCode = CacheUtils.getObject(product, key, String.class);
+
+		if (redirectCode == null)
+			throw new RoleException("No redirect found in role ".concat(roleCode));
+
+		return redirectCode;
+	}
+	
+	public static String getModeString(CapabilityMode... modes) {
+		return CommonUtils.getArrayString(modes, (mode) -> mode.name());
+	}
+
+	public static CapabilityMode[] getCapModesFromString(String modeString) {
+		
+		JsonArray array = null;
+		try {
+			array = jsonb.fromJson(modeString, JsonArray.class);
+		} catch(JsonbException e) {
+			log.error("Could not deserialize modeString: " + modeString);
+			return null;
+		}
+		CapabilityMode[] modes = new CapabilityMode[array.size()];
+
+		for (int i = 0; i < array.size(); i++) {
+			modes[i] = CapabilityMode.valueOf(array.getString(i));
+		}
+
+		return modes;
+	}
+
+	public static String cleanCapabilityCode(final String rawCapabilityCode) {
+		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
+		if (!cleanCapabilityCode.startsWith(CAP_CODE_PREFIX)) {
+			cleanCapabilityCode = CAP_CODE_PREFIX + cleanCapabilityCode;
+		}
+
+		return cleanCapabilityCode;
+	}
+
+	public static String cleanRoleCode(final String rawRoleCode) {
+		String cleanRoleCode = rawRoleCode.toUpperCase();
+		if (!cleanRoleCode.startsWith(ROLE_BE_PREFIX)) {
+			cleanRoleCode = ROLE_BE_PREFIX + cleanRoleCode;
+		}
+
+		return cleanRoleCode;
+	}
+
 	/**
 	 * Get a set of capability modes for a target and capability combination.
 	 * @param target The target entity
@@ -233,11 +360,11 @@ public class CapabilityUtils {
 			final String capabilityCode) throws RoleException {
 
 		String productCode = userToken.getProductCode();
-		String key = String.format("%s:%s", targetCode, capabilityCode);
-		
+		String key = getCacheKey(targetCode, capabilityCode);
+
 		Set<CapabilityMode> modes = CacheUtils.getObject(productCode, key, HashSet.class);
 		if (modes == null)
-			throw new RoleException("Nothing present for capability combination: " + key);
+			throw new RoleException("Nothing present for capability combination: ".concat(key));
 
 		return modes;
 	}
@@ -283,318 +410,22 @@ public class CapabilityUtils {
 		return false;
 	}
 
-	private boolean shouldOverride() {
-		// allow keycloak admin and devcs to do anything
-		return (userToken.hasRole("admin", "dev") || ("service".equals(userToken.getUsername())));
-	}
-
-	// TODO: Rewrite
-	public void process() {
-		String productCode = userToken.getProductCode();
-
-		// Find all existing capabilities for a given product code
-		// remove all capabilities in the manifest
-
-		// Process the rest of the existing capabilities??
-			// remove existing capability 
-			// remove said capability from all roles that contain it
-			// update roles in database and cache
-		List<Attribute> existingCapability = dbUtils.findAttributesWithPrefix(productCode, CAP_CODE_PREFIX);
-
-		/* Remove any capabilities not in this forced list from roles */
-		existingCapability.removeAll(getCapabilityManifest());
-
-		/*
-		 * for every capability that exists that is not in the manifest , find all
-		 * entityAttributes
-		 */
-		for (Attribute toBeRemovedCapability : existingCapability) {
-			// Remove capability from db
-			String attributeCode = toBeRemovedCapability.getCode();
-			dbUtils.deleteAttribute(productCode, attributeCode);
-			/* update all the roles that use this attribute by reloading them into cache */
-			List<BaseEntity> cachedRoles = CacheUtils.getBaseEntitiesByPrefix(productCode, ROLE_BE_PREFIX);
-			if(cachedRoles.size() > 0) {
-				for (BaseEntity role : cachedRoles) {
-					String roleCode = role.getCode();
-					CacheUtils.removeEntry(productCode, getCacheKey(roleCode, attributeCode));
-					role.removeAttribute(toBeRemovedCapability.getCode());
-					/* Now update the db role to only have the attributes we want left */
-					BaseEntityKey beKey = new BaseEntityKey(productCode, role.getCode());
-					CacheUtils.saveEntity(productCode, beKey, role);
-				}
-			}
-		}
-	}
-
-	/**
-	 * @return the beUtils
-	 */
-	public BaseEntityUtils getBeUtils() {
-		return beUtils;
-	}
-
-	/**
-	 * @return the capabilityManifest
-	 */
-	public List<Attribute> getCapabilityManifest() {
-		return capabilityManifest;
-	}
-
-	/**
-	 * @param capabilityManifest the capabilityManifest to set
-	 */
-	public void setCapabilityManifest(List<Attribute> capabilityManifest) {
-		this.capabilityManifest = capabilityManifest;
-	}
-/**
-	 * @param condition the condition to check
-	 * @return Boolean
-	 */
-	public Boolean conditionMet(String condition) {
-
-		if (condition == null) {
-			log.error("condition is NULL!");
-			return false;
-		}
-
-		log.info("Testing condition with value: " + condition);
-		String[] conditionArray = condition.split(":");
-
-		String capability = conditionArray[0];
-		String mode = conditionArray[1];
-
-		// check for NOT operator
-		Boolean not = capability.startsWith("!");
-		capability = not ? capability.substring(1) : capability;
-
-		// check for Capability
-		Boolean hasCap = hasCapabilityThroughPriIs(capability, CapabilityMode.getMode(mode));
-
-		// XNOR operator
-		return hasCap ^ not;
-	}
-	
-	@Override
-	public String toString() {
-		return "CapabilityUtils [" + (capabilityManifest != null ? "capabilityManifest=" + capabilityManifest : "")
-				+ "]";
-	}
-
-	/**
-	 * @param user User BaseEntity to generate alloweds for (TODO: Migrate this)
-	 * @return a list of alloweds ready to be inserted into the kieSessions
-	 */
-	public List<Allowed> generateAlloweds(BaseEntity user) {
-		String productCode = userToken.getProductCode();
-		List<Allowed> allowables = new CopyOnWriteArrayList<Allowed>();
-
-		// Look for user capabilities
-		List<EntityAttribute> capabilities = user.findPrefixEntityAttributes(CAP_CODE_PREFIX);
-		for (EntityAttribute capability : capabilities) {
-			String modeString = capability.getValueString();
-			if (modeString != null) {
-				CapabilityMode[] modes = getCapModesFromString(modeString);
-				String cleanCapabilityCode = cleanCapabilityCode(capability.getAttributeCode());
-				allowables.add(new Allowed(cleanCapabilityCode, modes));
-			}
-		}
-
-		Optional<EntityAttribute> LNK_ROLEOpt = user.findEntityAttribute(LNK_ROLE_CODE);
-
-		JsonArray roleCodesArray = null;
-
-		if (LNK_ROLEOpt.isPresent()) {
-			roleCodesArray = jsonb.fromJson(LNK_ROLEOpt.get().getValueString(), JsonArray.class);
-		} else {
-			roleCodesArray = jsonb.fromJson("[]", JsonArray.class);
-			log.info("Could not find " + LNK_ROLE_CODE + " in user: " + user.getCode());
-		}
-
-		// Add keycloak roles
-		// for (String role : userToken.getUserRoles()) {
-		// roleCodesArray.add(role);
-		// }
-
-		for (int i = 0; i < roleCodesArray.size(); i++) {
-			String roleBECode = roleCodesArray.getString(i);
-
-			BaseEntityKey beKey = new BaseEntityKey(productCode, roleBECode);
-			BaseEntity roleBE = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
-			if (roleBE == null) {
-				log.info("facts: could not find roleBe: " + roleBECode + " in cache: " + userToken.getProductCode());
-				continue;
-			}
-
-			// Go through all the entity
-			capabilities = roleBE.findPrefixEntityAttributes(CAP_CODE_PREFIX);
-			for (EntityAttribute ea : capabilities) {
-				String modeString = null;
-				Boolean ignore = false;
-
-				String cleanCapabilityCode = cleanCapabilityCode(ea.getAttributeCode());
-				try {
-					Object val = ea.getValue();
-					if (val instanceof Boolean) {
-						log.error("capability attributeCode=" + cleanCapabilityCode + " is BOOLEAN??????");
-						ignore = true;
-					} else {
-						modeString = ea.getValue();
-					}
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				if (!ignore) {
-					CapabilityMode[] modes = getCapModesFromString(modeString);
-					allowables.add(new Allowed(cleanCapabilityCode, modes));
-				}
-
-			}
-		}
-
-		/* now force the keycloak ones */
-		for (String role : userToken.getUserRoles()) {
-			allowables.add(
-					new Allowed(role.toUpperCase(), CapabilityMode.VIEW));
-		}
-
-		return allowables;
-	}
-
-	public static String getModeString(CapabilityMode... modes) {
-		return CommonUtils.getArrayString(modes, (mode) -> mode.name());
-	}
-
-	public static CapabilityMode[] getCapModesFromString(String modeString) {
-		
-		JsonArray array = null;
-		try {
-			array = jsonb.fromJson(modeString, JsonArray.class);
-		} catch(JsonbException e) {
-			log.error("Could not deserialize modeString: " + modeString);
-			return null;
-		}
-		CapabilityMode[] modes = new CapabilityMode[array.size()];
-
-		for (int i = 0; i < array.size(); i++) {
-			modes[i] = CapabilityMode.valueOf(array.getString(i));
-		}
-
-		return modes;
-	}
-
-	public static String cleanCapabilityCode(final String rawCapabilityCode) {
-		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
-		if (!cleanCapabilityCode.startsWith(CAP_CODE_PREFIX)) {
-			cleanCapabilityCode = CAP_CODE_PREFIX + cleanCapabilityCode;
-		}
-
-		// String[] components = cleanCapabilityCode.split("_");
-
-		// Should be of the form PRM_<OWN/OTHER>_<CODE>
-		/*
-		 * 1. PRM
-		 * 2. OWN or OTHER
-		 * 3. CODE
-		 */
-		// if (components.length < 3) {
-		// 	log.warn("Capability Code: " + rawCapabilityCode + " missing OWN/OTHER declaration.");
-		// } else {
-		// 	Boolean affectsOwn = "OWN".equals(components[1]);
-		// 	Boolean affectsOther = "OTHER".equals(components[1]);
-
-		// 	if (!affectsOwn && !affectsOther) {
-		// 		log.warn("Capability Code: " + rawCapabilityCode + " has malformed OWN/OTHER declaration.");
-		// 	}
-		// }
-
-		return cleanCapabilityCode;
-	}
-
-	public static String cleanRoleCode(final String rawRoleCode) {
-		String cleanRoleCode = rawRoleCode.toUpperCase();
-		if (!cleanRoleCode.startsWith(ROLE_BE_PREFIX)) {
-			cleanRoleCode = ROLE_BE_PREFIX + cleanRoleCode;
-		}
-
-		return cleanRoleCode;
-	}
-
 	/**
 	 * Construct a cache key for fetching capabilities
 	 * @param roleCode
 	 * @param capCode
 	 * @return
 	 */
-	private static String getCacheKey(String roleCode, String capCode) {
-		return roleCode + ":" + capCode;
-	}
-
-	/**
-	 * Get a redirect code for user based on their roles.
-	 * @return The redirect code
-	 * @throws RoleException If no roles are found for the user, or 
-	 * 		none of roles found have any associated redirect code
-	 */
-	public String getUserRoleRedirectCode() throws RoleException {
-		
-		// grab user role codes
-		BaseEntity user = beUtils.getUserBaseEntity();
-		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, "LNK_ROLE");
-
-		if (roles == null || roles.isEmpty())
-			throw new RoleException(String.format("No roles found for user %s", user.getCode()));
-
-		log.info(roles.toString());
-
-		// TODO: return redirect for roles based on priority
-		for (String role : roles) {
-			try {
-				// return first found redirect
-				return getRoleRedirectCode(role);
-			} catch (RoleException e) {
-				log.debug(e.getMessage());
-			}
-		}
-
-		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+	private static String getCacheKey(String targetCode, String capCode) {
+		return new StringBuilder(30)
+					.append(targetCode)
+					.append(":")
+					.append(capCode).toString();
 	}
 
 
-	/**
-	 * Set the redirect code for a role.
-	 * @param productCode The product code
-	 * @param role The role to set the redirect for
-	 * @param redirectCode The code to set as redirect
-	 */
-	public void setRoleRedirect(String productCode, BaseEntity role, String redirectCode) {
-		 
-		CacheUtils.putObject(productCode, String.format("%s:REDIRECT", role.getCode()), redirectCode);
-	}
-
-	/**
-	 * Get the redirect code for a role.
-	 * @param roleCode The code of the role
-	 * @return The redirect code
-	 * @throws RoleException If no redirect is found for the role
-	 */
-	public String getRoleRedirectCode(String roleCode) throws RoleException {
-		
-		if (roleCode == null)
-			throw new NullParameterException(roleCode);
-
-		String product = userToken.getProductCode();
-		String key = String.format("%s:REDIRECT", roleCode);
-
-		log.info(key);
-
-		// TODO: grab redirect for role
-		String redirectCode = CacheUtils.getObject(product, key, String.class);
-
-		if (redirectCode == null)
-			throw new RoleException(String.format("No redirect found in role %s", roleCode));
-
-		return redirectCode;
+	private boolean shouldOverride() {
+		// allow keycloak admin and devcs to do anything
+		return (userToken.hasRole("admin", "dev") || ("service".equals(userToken.getUsername())));
 	}
 }
