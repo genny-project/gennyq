@@ -761,7 +761,7 @@ public class QwandaUtils {
 			// ensure we are not counting any of our targets
 			for (BaseEntity target : targets) {
 				log.info("adding not equal " + target.getCode());
-				searchEntity.and(new Filter("PRI_CODE", Operator.NOT_EQUALS, target.getCode()));
+				searchEntity.add(new Filter("PRI_CODE", Operator.NOT_EQUALS, target.getCode()));
 			}
 
 			for (String code : codes) {

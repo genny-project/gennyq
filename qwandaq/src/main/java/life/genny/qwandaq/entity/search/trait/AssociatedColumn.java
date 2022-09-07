@@ -11,6 +11,9 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class AssociatedColumn extends Trait {
 
+	public static final String PREFIX = "COL__";
+	public static final String DELIMITER = "__";
+
 	public AssociatedColumn() {
 		super();
 	}

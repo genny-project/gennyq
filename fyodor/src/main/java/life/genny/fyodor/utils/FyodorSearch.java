@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -121,7 +123,7 @@ public class FyodorSearch {
 		}
 
 		// Find Allowed Columns
-		List<String> allowed = getSearchColumnFilterArray(searchBE);
+		Set<String> allowed = getSearchColumnFilterArray(searchBE);
 		// Used to disable the column privacy
 		EntityAttribute columnWildcard = searchBE.findEntityAttribute("COL_*").orElse(null);
 
@@ -606,7 +608,7 @@ public class FyodorSearch {
 				List<BaseEntity> entities = query.select(QBaseEntity.baseEntity).distinct().fetch();
 				long count = query.fetchCount();
 
-				List<String> allowed = getSearchColumnFilterArray(searchBE);
+				Set<String> allowed = getSearchColumnFilterArray(searchBE);
 				BaseEntity[] beArray = new BaseEntity[entities.size()];
 
 				Boolean columnWildcard = searchBE.findEntityAttribute("COL_*").isPresent();
@@ -1044,8 +1046,8 @@ public class FyodorSearch {
 		return formatted;
 	}
 
-	public static List<String> getSearchColumnFilterArray(SearchEntity searchBE) {
-		List<String> attributeFilter = new ArrayList<String>();
+	public static Set<String> getSearchColumnFilterArray(SearchEntity searchBE) {
+		Set<String> attributeFilter = new HashSet<String>();
 		List<String> assocAttributeFilter = new ArrayList<String>();
 
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {

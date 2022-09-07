@@ -8,6 +8,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class Sort extends Trait {
 
+	public static final String PREFIX = "SRT_";
+
 	private Ord order;
 
 	public Sort() {

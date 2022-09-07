@@ -8,6 +8,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class Action extends Trait {
 
+	public static final String PREFIX = "ACT_";
+
 	public Action() {
 		super();
 	}

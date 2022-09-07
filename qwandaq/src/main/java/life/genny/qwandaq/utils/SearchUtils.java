@@ -291,10 +291,6 @@ public class SearchUtils {
 				"LAST-SEARCH:" + searchEntity.getCode(),
 				searchEntity);
 
-		// ensure column and action indexes are accurate
-		searchEntity.updateColumnIndex();
-		searchEntity.updateActionIndex();
-
 		// package and send search message to fyodor
 		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
 		searchBeMsg.setToken(userToken.getToken());

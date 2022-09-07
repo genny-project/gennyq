@@ -3,10 +3,9 @@ package life.genny.qwandaq.entity.search.clause;
 /**
  * Clause
  */
-public abstract class Clause implements ClauseArgument {
+public abstract class Clause extends ClauseArgument {
 
-	ClauseArgument a;
-	ClauseArgument b;
+	ClauseArgument a, b;
 	
 	protected ClauseType type;
 

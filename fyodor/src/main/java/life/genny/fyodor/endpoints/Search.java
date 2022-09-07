@@ -83,7 +83,7 @@ public class Search {
 		// Process search
 		Tuple2<List<String>, Long> tpl = null;
 		try {
-			tpl = search.search27(searchEntity);
+			tpl = search.search26(searchEntity);
 		} catch (ItemNotFoundException e) {
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
@@ -147,7 +147,7 @@ public class Search {
 
 		Tuple2<List<String>, Long> tpl = null;
 		try {
-			tpl = search.search27(searchEntity);
+			tpl = search.search26(searchEntity);
 		} catch (ItemNotFoundException e) {
 			return HttpUtils.error(e.getMessage());
 		}

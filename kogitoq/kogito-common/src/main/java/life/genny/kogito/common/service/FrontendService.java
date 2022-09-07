@@ -192,7 +192,7 @@ public class FrontendService {
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
-					selection = beUtils.privacyFilter(selection, Collections.singletonList("PRI_NAME"));
+					selection = beUtils.privacyFilter(selection, Collections.singleton("PRI_NAME"));
 					selectionMsg.add(selection);
 				}
 

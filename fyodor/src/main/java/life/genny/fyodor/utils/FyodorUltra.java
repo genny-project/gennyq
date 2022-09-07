@@ -5,7 +5,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -21,10 +24,12 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.smallrye.mutiny.tuples.Tuple2;
 import life.genny.fyodor.models.JoinMap;
+import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
@@ -33,6 +38,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.Clause;
 import life.genny.qwandaq.entity.search.clause.Clause.ClauseType;
 import life.genny.qwandaq.entity.search.clause.ClauseArgument;
+import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
@@ -73,11 +79,12 @@ public class FyodorUltra {
 	 */
 	public Tuple2<List<BaseEntity>, Long> fetch27(SearchEntity searchEntity) {
 
-		Tuple2<List<String>, Long> results = search27(searchEntity);
+		// find codes and total
+		Tuple2<List<String>, Long> results = search26(searchEntity);
 		List<String> codes = results.getItem1();
 		Long count = results.getItem2();
 
-		List<String> allowed = getSearchColumnFilterArray(searchEntity);
+		Set<String> allowed = getSearchColumnFilterArray(searchEntity);
 
 		// apply filter
 		List<BaseEntity> entities = new ArrayList<>();
@@ -99,7 +106,7 @@ public class FyodorUltra {
 	 * @param searchEntity
 	 * @return
 	 */
-	public Tuple2<List<String>, Long> search27(SearchEntity searchEntity) {
+	public Tuple2<List<String>, Long> search26(SearchEntity searchEntity) {
 
 		// setup query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -111,8 +118,8 @@ public class FyodorUltra {
 
 		// find filter by predicates
 		List<Predicate> predicates = new ArrayList<>();
-		searchEntity.getFilters().stream().forEach(filter -> {
-			predicates.add(findClausePredicate(baseEntity, map, filter));
+		searchEntity.getClauseArguments().stream().forEach(arg -> {
+			predicates.add(findClausePredicate(baseEntity, map, arg));
 		});
 
 		// find orders
@@ -132,14 +139,12 @@ public class FyodorUltra {
 		query.where(predicates.toArray(Predicate[]::new));
 		query.orderBy(orders.toArray(Order[]::new));
 
-		// // Get page start and page size
+		// page start and page size
 		Integer defaultPageSize = 20;
 		Integer pageSize = searchEntity.getPageSize() != null ? searchEntity.getPageSize() : defaultPageSize;
 		Integer pageStart = searchEntity.getPageStart() != null ? searchEntity.getPageStart() : 0;
 
-		// // Set page start and page size, then fetch codes
-		// query.offset(pageStart).limit(pageSize);
-
+		// perform main query
 		List<Tuple> tuples = entityManager
 				.createQuery(query)
 				.setFirstResult(pageStart)
@@ -172,6 +177,7 @@ public class FyodorUltra {
 
 		if (clauseArgument instanceof Clause) {
 
+			// find predicate for each clause argument
 			Clause clause = (Clause) clauseArgument;
 			Predicate predicateA = findClausePredicate(baseEntity, map, clause.getA());
 			Predicate predicateB = findClausePredicate(baseEntity, map, clause.getB());
@@ -217,6 +223,10 @@ public class FyodorUltra {
 				return cb.like((Expression<String>) expression, String.class.cast(value));
 			case NOT_LIKE:
 				return cb.notLike((Expression<String>) expression, String.class.cast(value));
+			case CONTAINS:
+				return cb.like((Expression<String>) expression, "\""+String.class.cast(value)+"\"");
+			case NOT_CONTAINS:
+				return cb.notLike((Expression<String>) expression, "\""+String.class.cast(value)+"\"");
 			case EQUALS:
 				return cb.equal(expression, value);
 			case NOT_EQUALS:
@@ -316,6 +326,7 @@ public class FyodorUltra {
 			expression = findExpression(baseEntity, map, code, map.getProductCode());
 		}
 
+		// select order type
 		if (order == Ord.ASC)
 			return cb.asc(expression);
 		else if (order == Ord.DESC)
@@ -384,27 +395,75 @@ public class FyodorUltra {
 	 * @param searchEntity
 	 * @return
 	 */
-	public static List<String> getSearchColumnFilterArray(SearchEntity searchEntity) {
+	public static Set<String> getSearchColumnFilterArray(SearchEntity searchEntity) {
 
-		// TODO: refactor this
+		Set<String> columns = searchEntity.getBaseEntityAttributes().stream()
+			.filter(ea -> ea.getAttributeCode().startsWith(Column.PREFIX))
+			.map(ea -> ea.getAttributeCode())
+			.map(code -> (String) StringUtils.removeStart(code, Column.PREFIX))
+			.collect(Collectors.toSet());
 
-		List<String> attributeFilter = new ArrayList<String>();
-		List<String> assocAttributeFilter = new ArrayList<String>();
+		return columns;
+	}
 
-		for (EntityAttribute ea : searchEntity.getBaseEntityAttributes()) {
-			String attributeCode = ea.getAttributeCode();
-			if (attributeCode.startsWith("COL_")) {
-				if (attributeCode.startsWith("COL__")) {
-					String[] splitCode = attributeCode.substring("COL__".length()).split("__");
-					assocAttributeFilter.add(splitCode[0]);
-				} else {
-					attributeFilter.add(attributeCode.substring("COL_".length()));
-				}
-			}
+	/**
+	 * @param entity
+	 * @param code
+	 * @return
+	 */
+	public Answer getAssociatedColumnValue(BaseEntity entity, String code) {
+
+		code = StringUtils.removeStart(code, "COL__");
+
+		// recursively find value
+		Answer answer = getRecursiveColumnLink(entity, code);
+		if (answer == null)
+			return null;
+
+		// update attribute code for frontend
+		answer.getAttribute().setCode("_"+code);
+
+		return answer;
+	}
+
+	/**
+	 * @param entity
+	 * @param code
+	 * @return
+	 */
+	public Answer getRecursiveColumnLink(BaseEntity entity, String code) {
+
+		// split code to find next attribute in line
+		String[] array = code.split("__");
+		String attributeCode = array[0];
+		code = Stream.of(array).skip(1).collect(Collectors.joining());
+
+		// recursion
+		if (array.length > 1) {
+			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
+			return getRecursiveColumnLink(entity, code);
 		}
-		attributeFilter.addAll(assocAttributeFilter);
 
-		return attributeFilter;
+		// find value
+		String value;
+		if (Attribute.PRI_NAME.equals(attributeCode))
+			value = entity.getName();
+		if (Attribute.PRI_CODE.equals(attributeCode))
+			value = entity.getCode();
+		else {
+			Optional<EntityAttribute> ea = entity.findEntityAttribute(attributeCode);
+			if (ea.isPresent())
+				value = ea.get().getAsString();
+			else
+				return null;
+		}
+
+		// create answer
+		Answer answer = new Answer(entity.getCode(), entity.getCode(), attributeCode, value);
+		Attribute attribute = qwandaUtils.getAttribute(code);
+		answer.setAttribute(attribute);
+
+		return answer;
 	}
 
 }

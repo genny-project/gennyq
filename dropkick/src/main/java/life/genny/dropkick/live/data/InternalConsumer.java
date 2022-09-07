@@ -11,10 +11,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -24,27 +24,23 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
@@ -109,7 +105,6 @@ public class InternalConsumer {
 		// deserialise message
 		JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
 	
-
 		if (!jsonStr.getString("event_type").equals("DD")) {
 			return; // TODO: This should not get here?
 		}
@@ -137,7 +132,7 @@ public class InternalConsumer {
 		BaseEntity defBE = null;
 
 		if (!StringUtils.isBlank(processId)) {
-			ProcessData processData = gqlUtils.fetchProcessData(processId);
+			ProcessData processData = qwandaUtils.fetchProcessData(processId);
 			if (processData == null) {
 				log.error("Process data not found for processId: " + processId);
 				return;
@@ -152,290 +147,66 @@ public class InternalConsumer {
 		log.info("Target DEF is " + defBE.getCode() + " : " + defBE.getName());
 		log.info("Attribute is " + attrCode);
 
-		// Because it is a drop down event we will search the DEF for the search
-		// attribute
-		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attrCode);
+		String searchAttributeCode = new StringBuilder("SER_").append(attrCode).toString();
+		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute(searchAttributeCode);
 		if (searchAttribute.isEmpty()) {
-			throw new ItemNotFoundException(String.format("%s -> %s", defBE.getCode(), "SER_"+attrCode));
+			throw new ItemNotFoundException(String.format("%s -> %s", defBE.getCode(), searchAttributeCode));
 		}
 
-		String searchValue = searchAttribute.get().getValueString();
-		log.info("Search Attribute Value = " + searchValue);
-
-		JsonObject searchValueJson = jsonb.fromJson(searchValue, JsonObject.class);
-		log.info("SearchValueJson = " + searchValueJson);
-
-		Integer pageStart = 0;
-		Integer pageSize = searchValueJson.containsKey("dropdownSize") ? searchValueJson.getInt("dropdownSize")
-				: GennySettings.defaultDropDownPageSize();
-		Boolean searchingOnLinks = false;
-
-		SearchEntity searchBE = new SearchEntity("SBE_DROPDOWN", " Search")
-				.add(new Column(Attribute.PRI_CODE, "Code"))
-				.add(new Column(Attribute.PRI_NAME, "Name"));
-
+		// init context map
 		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
-
-		if (source != null) {
+		if (source != null)
 			ctxMap.put("SOURCE", source);
-		}
-		if (target != null) {
+		if (target != null)
 			ctxMap.put("TARGET", target);
-		}
 
-		JsonArray jsonParms = searchValueJson.getJsonArray("parms");
-		int size = jsonParms.size();
-
-		for (int i = 0; i < size; i++) {
-
-			JsonObject json = null;
-
-			try {
-
-				json = jsonParms.getJsonObject(i);
-
-				// conditionals
-				Boolean conditionsAreMet = true;
-				if (json.containsKey("conditions")) {
-					JsonArray conditions = json.getJsonArray("conditions");
-					for (Object cond : conditions) {
-						if (!capabilityUtils.conditionMet(cond.toString().replaceAll("\"", ""))) {
-							conditionsAreMet = false;
-						}
-					}
-				}
-
-				if (conditionsAreMet) {
-
-					String attributeCode = json.getString("attributeCode");
-
-					// Filters
-					if (attributeCode != null) {
-
-						Attribute att = qwandaUtils.getAttribute(attributeCode);
-
-						String val = json.getString("value");
-
-						String logic = null;
-						if (json.containsKey("logic")) {
-							logic = json.getString("logic");
-						}
-
-						String filterStr = null;
-						if (val.contains(":")) {
-							String[] valSplit = val.split(":");
-							filterStr = valSplit[0];
-							val = valSplit[1];
-						}
-
-						DataType dataType = att.getDataType();
-
-						if (dataType.getClassName().equals("life.genny.qwanda.entity.BaseEntity")) {
-
-							// These represent EntityEntity
-							if (attributeCode.equals("LNK_CORE") || attributeCode.equals("LNK_IND")) {
-
-								log.info("Adding CORE/IND DTT filter");
-								// This is used for the sort defaults
-								searchingOnLinks = true;
-
-								// For using the search source and target and merge any data
-								String paramSourceCode = null;
-								if (json.containsKey("sourceCode")) {
-									paramSourceCode = json.getString("sourceCode");
-
-									// These will return True by default if source or target are null
-									if (!MergeUtils.contextsArePresent(paramSourceCode, ctxMap)) {
-										throw new DebugException(
-												String.format("A Parent value is missing for %s, Not sending dropdown results", paramSourceCode));
-									}
-
-									paramSourceCode = MergeUtils.merge(paramSourceCode, ctxMap);
-								}
-
-								String paramTargetCode = null;
-								if (json.containsKey("targetCode")) {
-									paramTargetCode = json.getString("targetCode");
-
-									if (!MergeUtils.contextsArePresent(paramTargetCode, ctxMap)) {
-										throw new DebugException(
-												String.format("A Parent value is missing for %s, Not sending dropdown results", paramTargetCode));
-									}
-
-									paramTargetCode = MergeUtils.merge(paramTargetCode, ctxMap);
-								}
-
-								log.info("attributeCode = " + json.getString("attributeCode"));
-								log.info("val = " + val);
-								log.info("link paramSourceCode = " + paramSourceCode);
-								log.info("link paramTargetCode = " + paramTargetCode);
-
-								// Set Source and Target if found it parameter
-								if (paramSourceCode != null) {
-									searchBE.setSourceCode(paramSourceCode);
-								}
-								if (paramTargetCode != null) {
-									searchBE.setTargetCode(paramTargetCode);
-								}
-
-								// Set LinkCode and LinkValue
-								searchBE.setLinkCode(att.getCode());
-								searchBE.setLinkValue(val);
-							} else {
-								// This is a DTT_LINK style that has class = baseentity --> Baseentity_Attribute
-								// TODO equals?
-								Operator operator = Operator.LIKE;
-								if (filterStr != null) {
-									operator = convertOperatorToOperator(filterStr);
-								}
-								log.info("Adding BE DTT filter");
-
-								if (logic != null && logic.equals("AND")) {
-									searchBE.and(new Filter(attributeCode, operator, val));
-								} else if (logic != null && logic.equals("OR")) {
-									searchBE.or(new Filter(attributeCode, operator, val));
-								} else {
-									searchBE.add(new Filter(attributeCode, operator, val));
-								}
-
-							}
-
-						} else if (dataType.getClassName().equals("java.lang.String")) {
-							Operator operator = Operator.LIKE;
-							if (filterStr != null) {
-								operator = convertOperatorToOperator(filterStr);
-							}
-							log.info("Adding string DTT filter");
-
-							if (logic != null && logic.equals("AND")) {
-								searchBE.and(new Filter(attributeCode, operator, val));
-							} else if (logic != null && logic.equals("OR")) {
-								searchBE.or(new Filter(attributeCode, operator, val));
-							} else {
-								searchBE.add(new Filter(attributeCode, operator, val));
-							}
-						} else {
-							Operator operator = Operator.EQUALS;
-							if (filterStr != null) {
-								operator = convertOperatorToOperator(filterStr);
-							}
-							log.info("Adding Other DTT filter");
-							searchBE.add(new Filter(attributeCode, operator, val));
-						}
-					}
-				}
-
-				// sorts
-				String sortBy = null;
-				if (json.containsKey("sortBy")) {
-					sortBy = json.getString("sortBy");
-				}
-				if (sortBy != null) {
-					String order = json.getString("order");
-					Ord ord = order.equals("DESC") ? Ord.DESC : Ord.ASC;
-					searchBE.add(new Sort(sortBy, ord));
-				}
-
-			} catch (Exception e) {
-				log.error(e);
-				log.error("DROPDOWN :Bad Json Value ---> " + json.toString());
-				continue;
-			}
-		}
-
-		// default to sorting by name if no sorts were specified and if not searching
-		// for EntityEntitys
-		Boolean hasSort = searchBE.getBaseEntityAttributes().stream()
-				.anyMatch(item -> item.getAttributeCode().startsWith("SRT_"));
-		if (!hasSort && !searchingOnLinks) {
-			searchBE.add(new Sort(Attribute.PRI_NAME, Ord.ASC));
-		}
+		// grab search entity
+		String productCode = userToken.getProductCode();
+		String key = new StringBuilder("SBE_").append(searchAttributeCode).toString();
+		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
 
 		// Filter by name wildcard provided by user
-		searchBE.add(new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"))
-				.or(new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%"));
+		searchEntity.add(new Or(
+				new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
+				new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")
+			));
 
-		searchBE.setRealm(userToken.getProductCode());
-		searchBE.setPageStart(pageStart);
-		searchBE.setPageSize(pageSize);
+		searchEntity.setRealm(userToken.getProductCode());
+		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
 
-		// Capability Based Conditional Filters
-		// searchBE = SearchUtils.evaluateConditionalFilters(beUtils, searchBE);
+		// Perform search and evaluate columns
+		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
 
-		// Merge required attribute values
-		// NOTE: This should correct any wrong datatypes too
+		if (results == null)
+			throw new DebugException("Dropdown search returned null");
 
-		// TODO Hack to get around baseentityUtils thinking that processBE is cached.
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(results);
+		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
-		searchBE = defUtils.mergeFilterValueVariables(searchBE, ctxMap);
-		if (searchBE != null) {
+		for (BaseEntity item : msg.getItems()) {
+			String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
+				item.getValueAsString(Attribute.PRI_NAME));
 
-			// Perform search and evaluate columns
-			List<BaseEntity> results = searchUtils.searchBaseEntitys(searchBE);
-			QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
-
-			if (results == null)
-				throw new DebugException("Dropdown search returned null");
-
-			if (results.isEmpty())
-				log.info("DROPDOWN : NO RESULTS");
-
-			msg = new QDataBaseEntityMessage(results);
-			log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
-
-			for (BaseEntity item : msg.getItems()) {
-				String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
-						item.getValueAsString(Attribute.PRI_NAME));
-
-				if (item.getValueAsString(Attribute.PRI_NAME) == null)
-					log.warn(logStr);
-				else
-					log.info(logStr);
-			}
-
-			// Set all required message fields and return msg
-			msg.setParentCode(parentCode);
-			msg.setQuestionCode(questionCode);
-			msg.setToken(userToken.getToken());
-			msg.setLinkCode("LNK_CORE");
-			msg.setLinkValue("ITEMS");
-			msg.setReplace(true);
-			msg.setShouldDeleteLinkedBaseEntities(false);
-			KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
-
-		} else {
-			log.error("DROPDOWN : SearchBE is null");
-			//throw new DebugException("searchBE is null");
+			if (item.getValueAsString(Attribute.PRI_NAME) == null)
+				log.warn(logStr);
+			else
+				log.info(logStr);
 		}
+
+		// Set all required message fields and return msg
+		msg.setParentCode(parentCode);
+		msg.setQuestionCode(questionCode);
+		msg.setToken(userToken.getToken());
+		msg.setLinkCode("LNK_CORE");
+		msg.setLinkValue("ITEMS");
+		msg.setReplace(true);
+		msg.setShouldDeleteLinkedBaseEntities(false);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 
 		// log duration
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
-
-	public Operator convertOperatorToOperator(String operator) {
-		
-		switch (operator) {
-			case "LIKE":
-				return Operator.LIKE;
-			case "NOT_LIKE":
-				return Operator.NOT_LIKE;
-			case "=":
-				return Operator.EQUALS;
-			case "!=":
-				return Operator.NOT_EQUALS;
-			case ">":
-				return Operator.NOT_EQUALS;
-			case "<":
-				return Operator.LESS_THAN;
-			case ">=":
-				return Operator.GREATER_THAN_OR_EQUAL;
-			case "<=":
-				return Operator.LESS_THAN_OR_EQUAL;
-			default:
-				throw new DebugException("Invalid operator: " + operator);
-		}
 	}
 
 }

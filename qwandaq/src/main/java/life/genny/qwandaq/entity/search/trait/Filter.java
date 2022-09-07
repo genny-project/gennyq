@@ -14,7 +14,7 @@ import life.genny.qwandaq.exception.runtime.DebugException;
  * Filter
  */
 @RegisterForReflection
-public class Filter extends Trait implements ClauseArgument {
+public class Filter extends ClauseArgument {
 
 	private Operator operator;
 	private Object value;

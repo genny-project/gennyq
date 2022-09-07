@@ -8,6 +8,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class Column extends Trait {
 
+	public static final String PREFIX = "COL_";
+
 	public Column() {
 		super();
 	}

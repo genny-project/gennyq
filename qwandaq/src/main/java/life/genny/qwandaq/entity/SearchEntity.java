@@ -2,15 +2,16 @@ package life.genny.qwandaq.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.And;
+import life.genny.qwandaq.entity.search.clause.ClauseArgument;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
@@ -29,17 +30,10 @@ public class SearchEntity extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	private Double filterIndex = 1.0;
-	private Double columnIndex = 1.0;
-
-	private Double actionIndex = 1.0;
-	private Double searchActionIndex = 1.0;
-
-	private Double sortIndex = 0.0;
-	private Double flcIndex = 1.0;
-
-	private List<Filter> filters = new ArrayList<>();
+	private List<ClauseArgument> clauseArguments = new ArrayList<>();
 	private List<Sort> sorts = new ArrayList<>();
+	private List<Column> columns = new ArrayList<>();
+	private List<Action> actions = new ArrayList<>();
 	private Boolean allColumns = false;
 
 	/**
@@ -75,76 +69,12 @@ public class SearchEntity extends BaseEntity {
 		return serialVersionUID;
 	}
 
-	public Double getColumnIndex() {
-		return columnIndex;
+	public List<ClauseArgument> getClauseArguments() {
+		return clauseArguments;
 	}
 
-	public void setColumnIndex(Double columnIndex) {
-		this.columnIndex = columnIndex;
-	}
-
-	public Double getFlcIndex() {
-		return flcIndex;
-	}
-
-	public void setFlcIndex(Double flcIndex) {
-		this.flcIndex = flcIndex;
-	}
-
-	public void setFilterIndex(Double filterIndex) {
-			this.filterIndex = filterIndex;
-	}
-
-	public Double getFilterIndex() {
-			return this.filterIndex;
-	}
-
-	public Double getColIndex() {
-		return columnIndex;
-	}
-
-	public void setColIndex(Double colIndex) {
-		this.columnIndex = colIndex;
-	}
-
-	public Double getSortIndex() {
-		return sortIndex;
-	}
-
-	public void setSortIndex(Double sortIndex) {
-		this.sortIndex = sortIndex;
-	}
-
-	public Double getFLCIndex() {
-		return flcIndex;
-	}
-
-	public void setFLCIndex(Double flcIndex) {
-		this.flcIndex = flcIndex;
-	}
-
-	public Double getActionIndex() {
-		return actionIndex;
-	}
-
-	public void setActionIndex(Double actionIndex) {
-		this.actionIndex = actionIndex;
-	}
-
-	public Double getSearchActionIndex() {
-		return searchActionIndex;
-	}
-
-	public void setSearchActionIndex(Double searchActionIndex) {
-		this.searchActionIndex = searchActionIndex;
-	}
-
-	public List<Filter> getFilters() {
-		return filters;
-	}
-
-	public void setFilters(List<Filter> filters) {
-		this.filters = filters;
+	public void setClauseArguments(List<ClauseArgument> clauseArguments) {
+		this.clauseArguments = clauseArguments;
 	}
 
 	public List<Sort> getSorts() {
@@ -153,6 +83,22 @@ public class SearchEntity extends BaseEntity {
 
 	public void setSorts(List<Sort> sorts) {
 		this.sorts = sorts;
+	}
+
+	public List<Column> getColumns() {
+		return columns;
+	}
+
+	public void setColumns(List<Column> columns) {
+		this.columns = columns;
+	}
+
+	public List<Action> getActions() {
+		return actions;
+	}
+
+	public void setActions(List<Action> actions) {
+		this.actions = actions;
 	}
 
 	public Boolean getAllColumns() {
@@ -180,11 +126,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(Column column) {
-
-		Attribute attribute = new Attribute("COL_" + column.getCode(), column.getName(), new DataType(String.class));
-		addAttribute(attribute, columnIndex);
-		columnIndex += 1.0;
-
+		this.columns.add(column);
 		return this;
 	}
 
@@ -194,12 +136,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(AssociatedColumn associatedColumn) {
-
-		Attribute attribute = new Attribute(associatedColumn.getCode(), associatedColumn.getName(), 
-			new DataType(String.class));
-		addAttribute(attribute, columnIndex);
-		columnIndex += 1.0;
-
+		// this.columns.add(associatedColumn);
 		return this;
 	}
 
@@ -209,11 +146,6 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(Sort sort) {
-
-		// Attribute attribute = new Attribute("SRT_" + sort.getCode(), sort.getCode(), new DataType(String.class));
-		// addAttribute(attribute, sortIndex, sort.getOrder().name());
-		// sortIndex += 1.0;
-
 		sorts.add(sort);
 		return this;
 	}
@@ -224,11 +156,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(Action action) {
-
-		Attribute attribute = new Attribute("ACT_" + action.getCode(), action.getName(), new DataType(String.class));
-		addAttribute(attribute, actionIndex);
-		actionIndex += 1.0;
-
+		this.actions.add(action);
 		return this;
 	}
 
@@ -238,13 +166,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(Filter filter) {
-
-		// Attribute attribute = new Attribute(filter.getCode(), filter.getOperator().name(), 
-		// 	new DataType(filter.getC()));
-		// addAttribute(attribute, filterIndex, filter.getValue());
-		// filterIndex += 1.0;
-
-		filters.add(filter);
+		clauseArguments.add(filter);
 		return this;
 	}
 
@@ -254,9 +176,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(And and) {
-
-		// TODO: handle this
-
+		clauseArguments.add(and);
 		return this;
 	}
 
@@ -266,50 +186,8 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(Or or) {
-
-		// TODO: handle this
-
+		clauseArguments.add(or);
 		return this;
-	}
-
-	/**
-	 * Add an OR condition search filter.
-	 * @param filter Filter object
-	 * @return SearchEntity
-	 */
-	public SearchEntity or(Filter filter) {
-
-		Attribute attribute = new Attribute(filter.getCode(), filter.getOperator().name(), 
-			new DataType(filter.getC()));
-		Integer count = countOccurrences(filter.getCode(), "OR") + 1;
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("OR_"+attribute.getCode());
-		}
-
-		addAttribute(attribute, filterIndex, filter.getValue());
-		filterIndex += 1.0;
-
-		return this;
-	}
-    
-	/**
-	 * Add an AND condition search filter.
-	 * @param filter Filter object
-	 * @return SearchEntity
-	 */
-	public SearchEntity and(Filter filter) {
-
-		Attribute attribute = new Attribute(filter.getCode(), filter.getOperator().name(), 
-			new DataType(filter.getC()));
-		Integer count = countOccurrences(filter.getCode(), "AND") + 1;
-		for (int i = 0; i < count; i++) {
-			attribute.setCode("AND_"+attribute.getCode());
-		}
-
-		addAttribute(attribute, filterIndex, filter.getValue());
-		filterIndex += 1.0;
-
-		return this;	
 	}
 
 	/** 
@@ -321,21 +199,6 @@ public class SearchEntity extends BaseEntity {
 
 		Attribute attributeSort = new Attribute("ATTRSRT_" + code, name, new DataType(String.class));
 		addAttribute(attributeSort, 1.0);
-
-		return this;
-	}
-
-	/**
-	* This Method allows specifying columns that can be further filtered on by the user
-	* @param attributeCode The code of the attribute
-	* @param name The name given to the filter column
-	* @return SearchEntity the updated search base entity
-	 */
-	public SearchEntity addFilterableColumn(final String attributeCode, final String name) {
-
-		Attribute attributeFLC = new Attribute("FLC_" + attributeCode, name, new DataType(String.class));
-		addAttribute(attributeFLC, flcIndex);
-		flcIndex += 1.0;
 
 		return this;
 	}
@@ -634,68 +497,30 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 	
-	/*
-	 * This method will update the column index.
-	 */
-	public void updateColumnIndex() {
-		Integer index = 1;
-		for (EntityAttribute ea : this.getBaseEntityAttributes()) {
-			if (ea.getAttributeCode().startsWith("COL_")) {
-				index++;
-			}
-		}
-		setColIndex(index.doubleValue());
+	public SearchEntity convertToSaveable() {
+		
+		return this;
 	}
 
-	/*
-	 * This method will update the action index.
-	 */
-	public void updateActionIndex() {
-		Integer index = 1;
-		for (EntityAttribute ea : this.getBaseEntityAttributes()) {
-			if (ea.getAttributeCode().startsWith("ACT_")) {
-				index++;
-			}
-		}
-		setActionIndex(index.doubleValue());
-	}
+	public SearchEntity convertToSendable() {
 
-	/** 
-	 * This method helps calculate the index of an OR filter
-	 * 
-	 * @param attributeCode - the attributeCode for which to count
-	 * @param prefix - prefix to count occurences of
-	 * @return Integer
-	 */
-	public Integer countOccurrences(final String attributeCode, final String prefix) {
+		// add action attributes
+		IntStream.range(0, this.columns.size())
+			.forEach(i -> {
+				Column column = columns.get(i);
+				Attribute attribute = new Attribute(Column.PREFIX + column.getCode(), column.getName(), new DataType(String.class));
+				this.addAttribute(attribute, Double.valueOf(i));
+			});
 
-        Integer count = -1;
-        for (EntityAttribute ea : this.getBaseEntityAttributes()) {
-            if (ea.getAttributeCode().endsWith(attributeCode)) {
-                Integer occurs = ( ea.getAttributeCode().split(prefix+"_", -1).length ) - 1;
-                if (occurs > count) {
-                    count = occurs;
-                }
-            }
-        }
-		return count;
-	}
+		// add action attributes
+		IntStream.range(0, this.actions.size())
+			.forEach(i -> {
+				Action action = actions.get(i);
+				Attribute attribute = new Attribute(Column.PREFIX + action.getCode(), action.getName(), new DataType(String.class));
+				this.addAttribute(attribute, Double.valueOf(i));
+			});
 
-	/** 
-	 * @return Double
-	 */
-	public Double getMaximumFilterWeight() {
-
-		Double maxWeight = 0.0;
-		for (EntityAttribute ea : getBaseEntityAttributes()) {
-			if (ea.getAttributeCode().startsWith("PRI_") || ea.getAttributeCode().startsWith("LNK_") ||
-				ea.getAttributeCode().startsWith("AND_") || ea.getAttributeCode().startsWith("OR_")) {
-				if (ea.getWeight() > maxWeight) {
-					maxWeight = ea.getWeight();
-				}
-			}
-		}
-		return maxWeight;
+		return this;
 	}
 
 }
