@@ -205,6 +205,13 @@ public class TimerData implements Serializable {
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
     }
 
+    @JsonbTransient
+    @JsonIgnore
+    public String getNowUTC() {
+        return LocalDateTime.now().atZone(
+                ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toString();
+    }
+
     @Override
     public String toString() {
         return "TimerData [intervalStr=" + getIntervalStr() + ", elapsedMin=" + elapsedMin + ", expiryMin=" + expiryMin
