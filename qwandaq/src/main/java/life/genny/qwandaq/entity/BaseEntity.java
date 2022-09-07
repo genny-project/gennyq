@@ -326,11 +326,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return boolean
 	 */
 	public boolean containsTarget(final String targetCode, final String linkAttributeCode) {
-		boolean ret = getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
+		return getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
 				&& (ti.getLink().getTargetCode().equals(targetCode))));
-
-		// Check if this code exists in the baseEntityAttributes
-		return ret;
 	}
 
 	/**

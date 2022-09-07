@@ -279,8 +279,7 @@ public class GennyToken implements Serializable {
 			Integer port = uri.getPort();
 			return proto + "://" + domain + ":" + port;
 		} catch (URISyntaxException e) {
-//			e.printStackTrace();
-			log.error(e.getMessage(), e);
+			e.printStackTrace();
 		}
 		return "http://keycloak.genny.life";
 	}

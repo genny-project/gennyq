@@ -102,7 +102,7 @@ public class MergeUtils {
 	public static Object wordMerge(String mergeText, Map<String, Object> entitymap) {
 
 		if (mergeText == null || mergeText.isEmpty()) {
-			return DEFAULT;	
+			return DEFAULT;
 		}
 
 		// we split the text to merge into 2 components: BE.PRI... becomes [BE, PRI...]
@@ -110,8 +110,8 @@ public class MergeUtils {
 		String keyCode = entityArr[0];
 		log.debug("looking for key in map: " + keyCode);
 
-		if ((entityArr.length == 0))
-			return DEFAULT;
+//		if ((entityArr.length == 0))
+//			return DEFAULT;
 
 		if (!entitymap.containsKey(keyCode)) {
 			return DEFAULT;
@@ -138,7 +138,7 @@ public class MergeUtils {
 			log.info("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 
 			Matcher matchFormat = null;
-			if (entityArr != null && entityArr.length > 2) {
+			if (entityArr.length > 2) {
 				matchFormat = FORMAT_PATTERN_VARIABLE.matcher(entityArr[2]);
 			}
 
