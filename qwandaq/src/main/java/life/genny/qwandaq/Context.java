@@ -20,31 +20,17 @@
 
 package life.genny.qwandaq;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.querydsl.core.annotations.QueryExclude;
+import life.genny.qwandaq.entity.BaseEntity;
+import org.apache.commons.lang3.builder.CompareToBuilder;
 
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Index;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-import life.genny.qwandaq.entity.BaseEntity;
-
-import com.querydsl.core.annotations.QueryExclude;
+import java.io.Serializable;
 
 
 /**
@@ -62,7 +48,7 @@ import com.querydsl.core.annotations.QueryExclude;
  * Contexts represent the major way of supplying info about a question that
  * permits a source to make a full decision. Contexts are also used in message
  * merging.
- * <p>
+ * </p>
  *
  *
  * @author Adam Crow

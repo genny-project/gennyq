@@ -1,11 +1,12 @@
 package life.genny.qwandaq.datatype;
 
+import org.jboss.logging.Logger;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.jboss.logging.Logger;
 
 public class Allowed implements Serializable {
 	protected static final Logger log = Logger.getLogger(Allowed.class);
@@ -27,31 +28,29 @@ public class Allowed implements Serializable {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (!(obj instanceof Allowed))
+		if (obj instanceof Allowed other) {
+//		Allowed other = (Allowed) obj;
+			return Objects.equals(code, other.code) && modes.equals(other.modes);
+		} else
 			return false;
-		Allowed other = (Allowed) obj;
-		return Objects.equals(code, other.code) && modes.equals(other.modes);
 	}
 	
 	public static boolean isValidCode(String capCode) {
-		if(!capCode.startsWith(CAP_CODE_PREFIX))
-			return false;
+		return capCode.startsWith(CAP_CODE_PREFIX);
 		// String[] components = capCode.split("_");
 		// if(components.length < 3) {
 		// 	log.error("Missing OWN or OTHER in " + capCode);
 		// 	return false;
 		// }
-
-		return true;
 	}
 
 	private String getModesAsString() {
-		return modes.stream().map((mode) -> mode.name()).collect(Collectors.joining(","));
+		return modes.stream().map(Enum::name).collect(Collectors.joining(","));
 	}
 
 	@Override
 	public String toString() {
-		return "Allowed [" + (code != null ? "code=" + code + ", " : "") + (modes.size() > 0 ? "modes=" + getModesAsString() : "") + "]";
+		return "Allowed [" + (code != null ? "code=" + code + ", " : "") + (!modes.isEmpty() ? "modes=" + getModesAsString() : "") + "]";
 	}
 
 	@Override

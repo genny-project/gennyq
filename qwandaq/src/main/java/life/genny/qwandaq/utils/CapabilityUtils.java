@@ -1,23 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonArray;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -30,6 +12,16 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -248,7 +240,7 @@ public class CapabilityUtils {
 			}
 
 			Optional<EntityAttribute> optEa = currentRole.findEntityAttribute(cleanCapabilityCode);
-			if(!optEa.isPresent())
+			if (optEa.isEmpty())
 				continue;
 			EntityAttribute ea = optEa.get();
 			String modes = ea.getValueString();
@@ -287,7 +279,7 @@ public class CapabilityUtils {
 		}
 		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
 
-		if(priIsAttributes.size() == 0) {
+		if (priIsAttributes.isEmpty()) {
 			log.error("Could not find any PRI_IS attributes for base entity: " + user.getCode());
 			return false;
 		}
@@ -334,7 +326,7 @@ public class CapabilityUtils {
 			dbUtils.deleteAttribute(productCode, attributeCode);
 			/* update all the roles that use this attribute by reloading them into cache */
 			List<BaseEntity> cachedRoles = CacheUtils.getBaseEntitiesByPrefix(productCode, ROLE_BE_PREFIX);
-			if(cachedRoles.size() > 0) {
+			if (!cachedRoles.isEmpty()) {
 				for (BaseEntity role : cachedRoles) {
 					String roleCode = role.getCode();
 					CacheUtils.removeEntry(productCode, getCacheKey(roleCode, attributeCode));
@@ -483,7 +475,7 @@ public class CapabilityUtils {
 	}
 
 	public static String getModeString(CapabilityMode... modes) {
-		return CommonUtils.getArrayString(modes, (mode) -> mode.name());
+		return CommonUtils.getArrayString(modes, Enum::name);
 	}
 
 	public static CapabilityMode[] getCapModesFromString(String modeString) {
@@ -513,8 +505,8 @@ public class CapabilityUtils {
 		if (components.length < 3) {
 			log.warn("Capability Code: " + rawCapabilityCode + " missing OWN/OTHER declaration.");
 		} else {
-			Boolean affectsOwn = "OWN".equals(components[1]);
-			Boolean affectsOther = "OTHER".equals(components[1]);
+			boolean affectsOwn = "OWN".equals(components[1]);
+			boolean affectsOther = "OTHER".equals(components[1]);
 
 			if (!affectsOwn && !affectsOther) {
 				log.warn("Capability Code: " + rawCapabilityCode + " has malformed OWN/OTHER declaration.");
@@ -561,7 +553,7 @@ public class CapabilityUtils {
 			}
 		}
 
-		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+		throw new RoleException(String.format("No redirect in roles %s", roles));
 	}
 
 

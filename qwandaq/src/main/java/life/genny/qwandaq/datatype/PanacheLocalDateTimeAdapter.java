@@ -1,16 +1,15 @@
 package life.genny.qwandaq.datatype;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+import javax.json.Json;
+import javax.json.JsonValue;
+import javax.json.bind.adapter.JsonbAdapter;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-
-import javax.json.Json;
-import javax.json.JsonValue;
-import javax.json.bind.adapter.JsonbAdapter;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public class PanacheLocalDateTimeAdapter implements JsonbAdapter<LocalDateTime, JsonValue> {
@@ -48,9 +47,7 @@ public class PanacheLocalDateTimeAdapter implements JsonbAdapter<LocalDateTime, 
 		String str = obj.toString();
 		str = str.substring(0,str.length()-1);
 		String value = str.substring(1);
-		LocalDateTime ret = dateFormatter.parse(value, LocalDateTime::from);
-
-		return ret;
+        return dateFormatter.parse(value, LocalDateTime::from);
 	}
 
 
@@ -63,7 +60,6 @@ public class PanacheLocalDateTimeAdapter implements JsonbAdapter<LocalDateTime, 
 
 		TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(dateTimeStr);
 		Instant i = Instant.from(ta);
-		LocalDateTime dt  = LocalDateTime.ofInstant(i, zoneOffset);
-		return dt;
+        return LocalDateTime.ofInstant(i, zoneOffset);
 	}
 }

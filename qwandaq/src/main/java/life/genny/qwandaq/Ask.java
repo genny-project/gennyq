@@ -16,37 +16,22 @@
 
 package life.genny.qwandaq;
 
-import java.util.Arrays;
-import java.util.concurrent.CopyOnWriteArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.querydsl.core.annotations.QueryExclude;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import org.apache.commons.lang3.builder.CompareToBuilder;
 
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Index;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.validation.Valid;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.querydsl.core.annotations.QueryExclude;
-
-import life.genny.qwandaq.exception.runtime.BadDataException;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
+import java.util.Arrays;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
@@ -66,9 +51,9 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
  * Asks represent the major way of retrieving facts (answers) about a target
  * from sources. Each ask is associated with an question which represents one or
  * more distinct fact about a target.
- * <p>
- * 
- * 
+ * </p>
+ *
+ *
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -150,9 +135,9 @@ public class Ask extends CoreEntity {
 	 */
 	public Ask(final Question aQuestion) {
 		super(aQuestion.getName());
-		setQuestion(aQuestion);
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
-		this.disabled = false;
+        setQuestion(aQuestion);
+        contextList = new ContextList(new CopyOnWriteArrayList<>());
+        this.disabled = false;
 		this.hidden = false;
 	}
 
@@ -169,9 +154,9 @@ public class Ask extends CoreEntity {
 
 		this.sourceCode = aSourceCode;
 		this.targetCode = aTargetCode;
-		this.attributeCode = aAttributeCode;
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
-		this.disabled = false;
+        this.attributeCode = aAttributeCode;
+        contextList = new ContextList(new CopyOnWriteArrayList<>());
+        this.disabled = false;
 		this.hidden = false;
 		this.readonly = false;
 	}
@@ -249,9 +234,9 @@ public class Ask extends CoreEntity {
 
 		this.sourceCode = aSourceCode;
 		this.targetCode = aTargetCode;
-		this.attributeCode = aQuestion.getAttributeCode();
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
-		this.mandatory = aMandatory;
+        this.attributeCode = aQuestion.getAttributeCode();
+        contextList = new ContextList(new CopyOnWriteArrayList<>());
+        this.mandatory = aMandatory;
 		this.weight = weight;
 		this.disabled = disabled;
 		this.hidden = hidden;

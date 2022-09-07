@@ -207,5 +207,4 @@ public abstract class AbstractAmountFactory<T extends MonetaryAmount> implements
         return ConvertBigDecimal.of(num);
     }
 
-
 }

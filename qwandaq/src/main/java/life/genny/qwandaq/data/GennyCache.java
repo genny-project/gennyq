@@ -1,17 +1,9 @@
 package life.genny.qwandaq.data;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-
+import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -24,10 +16,10 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.CoreEntity;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * A remote cache management class for accessing realm caches.
@@ -40,9 +32,9 @@ public class GennyCache {
 
 	static final Logger log = Logger.getLogger(GennyCache.class);
 
-	Set<String> realms = new HashSet<String>();
+    private final Set<String> realms = new HashSet<>();
 
-	private Map<String, RemoteCache> caches = new HashMap<>();
+    private final Map<String, RemoteCache> caches = new HashMap<>();
 
 	private RemoteCacheManager remoteCacheManager;
 
@@ -78,7 +70,7 @@ public class GennyCache {
 		}
 
 		// create cache manager
-		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
+        getAllSerializationContextInitializers().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
 		remoteCacheManager = new RemoteCacheManager(config);
 		remoteCacheManager.getConfiguration().marshallerClass();

@@ -18,11 +18,13 @@ package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.querydsl.core.annotations.QueryExclude;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
+import org.jboss.logging.Logger;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.*;
@@ -31,16 +33,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.querydsl.core.annotations.QueryExclude;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -59,9 +54,9 @@ import com.querydsl.core.annotations.QueryExclude;
  * Questions represent the major way of retrieving facts about a target from
  * sources. Each question is associated with an attribute which represents a
  * distinct fact about a target.
- * <p>
- * 
- * 
+ * </p>
+ *
+ *
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -258,7 +253,7 @@ public class Question extends CodedEntity {
 
 		// Assume the list of Questions represents the order
 		Double sortPriority = 10.0;
-		this.setChildQuestions(new HashSet<QuestionQuestion>(0));
+        this.setChildQuestions(new HashSet<>(0));
 
 		for (Question childQuestion : childQuestions) {
 			QuestionQuestion qq = new QuestionQuestion(this, childQuestion, sortPriority);
@@ -429,8 +424,8 @@ public class Question extends CodedEntity {
 	 * @param childQuestions the childQuestions to set
 	 */
 	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
-		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);;
-	}
+        this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
+    }
 
 	/**
 	 * addChildQuestion This adds an child Question with default weight of 0.0 to

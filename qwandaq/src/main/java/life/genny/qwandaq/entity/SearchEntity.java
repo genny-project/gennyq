@@ -1,26 +1,17 @@
 package life.genny.qwandaq.entity;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.attribute.*;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import org.jboss.logging.Logger;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.attribute.AttributeBoolean;
-import life.genny.qwandaq.attribute.AttributeDate;
-import life.genny.qwandaq.attribute.AttributeDateTime;
-import life.genny.qwandaq.attribute.AttributeDouble;
-import life.genny.qwandaq.attribute.AttributeInteger;
-import life.genny.qwandaq.attribute.AttributeLong;
-import life.genny.qwandaq.attribute.AttributeText;
-import life.genny.qwandaq.attribute.AttributeTime;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.exception.runtime.BadDataException;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
@@ -1657,7 +1648,7 @@ public class SearchEntity extends BaseEntity {
 			addAttribute(attributePageStart, 3.0, pageType.toString());
 			if (!EPageType.DEFAULT.equals(pageType)) {
 				switch (pageType.getCategory()) {
-					case DATE:
+					case DATE -> {
 						// Now set a default PageIndexDate
 						AttributeDate pageDate = new AttributeDate("SCH_PAGE_DATE", "Page Date");
 						try {
@@ -1665,9 +1656,8 @@ public class SearchEntity extends BaseEntity {
 						} catch (BadDataException e) {
 							log.error("Bad Wildcard ");
 						}
-
-						break;
-					case DATETIME:
+					}
+					case DATETIME -> {
 						// Now set a default PageIndexDate
 						AttributeDateTime pageDateTime = new AttributeDateTime("SCH_PAGE_DATETIME", "Page DateTime");
 						try {
@@ -1675,19 +1665,15 @@ public class SearchEntity extends BaseEntity {
 						} catch (BadDataException e) {
 							log.error("Bad Wildcard ");
 						}
-
-						break;
-
-					case GROUP:
+					}
+					case GROUP -> {
 						AttributeText pageText = new AttributeText("SCH_PAGE_TEXT", "Page Text");
 						try {
 							addAttribute(pageText, 1.0, "");
 						} catch (BadDataException e) {
 							log.error("Bad Wildcard ");
 						}
-
-						break;
-					default:
+					}
 				}
 			}
 		} catch (BadDataException e) {

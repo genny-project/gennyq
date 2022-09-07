@@ -20,23 +20,17 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.querydsl.core.annotations.QueryExclude;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import com.querydsl.core.annotations.QueryExclude;
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * AttributeList represents a set of Attributes in the Qwanda library.
@@ -59,24 +53,26 @@ public class AttributeList implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 *A fieldlist that stores the attributes for this object.
-	 */
-	@JsonIgnore
-	@XmlTransient
-	@ManyToMany( cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-	@JoinColumn(name = "base_id", referencedColumnName = "id")
-	private List<Attribute> attributeList = new CopyOnWriteArrayList<Attribute>();
+    /**
+     * A fieldlist that stores the attributes for this object.
+     */
+    @JsonIgnore
+    @XmlTransient
+    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "base_id", referencedColumnName = "id")
+    private List<Attribute> attributeList = new CopyOnWriteArrayList<Attribute>();
 
-	/**
-	* Constructor
-	*
-	* @param attributes the attributes to set
-	 */
-	public AttributeList(List<Attribute> attributes) 
-	{
-		this.attributeList = attributes;
-	}
+    public AttributeList() {
+    }
+
+    /**
+     * Constructor
+     *
+     * @param attributes the attributes to set
+     */
+    public AttributeList(List<Attribute> attributes) {
+        this.attributeList = attributes;
+    }
 
 	/**
 	 * @return the attributeList
