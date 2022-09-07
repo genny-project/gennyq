@@ -639,6 +639,10 @@ public class Ask extends CoreEntity {
 		return newAsk;
 	}
 
+	public boolean hasChildren() {
+		return (this.getChildAsks() != null) && (this.getChildAsks().length > 0);
+	}
+
 	/**
 	* Add a child to childAsks
 	*

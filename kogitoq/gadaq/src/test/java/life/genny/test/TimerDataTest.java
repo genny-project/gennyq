@@ -58,9 +58,9 @@ public class TimerDataTest {
                 log.info(currentTimeStampUTC + " , elapsed:" + timerData.getElapsedMin() + ", isMilestone is "
                         + (timerData.isMilestone() ? "TRUE" : "FALSE")
                         + ",isExpired is " + (timerData.hasExpired() ? "TRUE" : "FALSE") + ", "
-                        + timerData.getNextTimerEvent());
+                        + timerData.getNextMilestone());
 
-                timerData.nextMilestone();
+                timerData.updateMilestone();
                 log.info("");
             }
             try {

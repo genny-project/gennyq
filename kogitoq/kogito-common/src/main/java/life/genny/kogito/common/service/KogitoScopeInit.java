@@ -13,6 +13,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.S2SData;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -56,40 +57,36 @@ public class KogitoScopeInit {
 			log.error("Null data received at Kogito Scope Init");
 			return;
 		}
-		if (beUtils == null) {
-			log.error("NULL BE UTILS");
-			this.beUtils = new BaseEntityUtils(serviceToken);
-		}
+
 		Arc.container().requestContext().activate();
-		this.beUtils = new BaseEntityUtils(serviceToken);
-		// We need to fetch the latest token for the sourceUser
-		log.info("sourceCode=" + data.getSourceCode());
-		log.info("serviceToken=" + serviceToken);
+		String productCode = data.getProductCode();
 
 		String userTokenStr = KeycloakUtils.getImpersonatedToken(serviceToken, data.getSourceCode());
 		if (StringUtils.isBlank(userTokenStr)) {
 			log.error("Could not get impersonated token for " + data.getSourceCode());
 		}
-		userToken = new UserToken(userTokenStr);
-		log.info("generated userToken " + userToken);
-		data.setToken(userToken.getToken());
-		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 
-		// activate request scope and fetch UserToken
-
+		data.setToken(userTokenStr);
 		try {
 
-			String token = data.getToken();
-
 			// init GennyToken from token string
-			userToken = new UserToken(token);
-			userToken.init(token);
+			// userToken = Arc.container().instance(UserToken.class);
+			userToken.init(userTokenStr);
+
+			// userToken.setProductCode(productCode);
+
+			// beUtils = Arc.container().instance(BaseEntityUtils.class);
+			beUtils = new BaseEntityUtils(serviceToken, userToken);
+
 			log.debug("Token Initialized: " + userToken);
 
 		} catch (Exception e) {
 			log.error("Error initializing token from data: " + data);
 			e.printStackTrace();
 		}
+
+		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+
 	}
 
 	/**
