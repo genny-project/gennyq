@@ -33,10 +33,11 @@ public class KogitoService {
 	 * @param workflowCode
 	 * @param processId
 	 */
-	public Response deleteProcess(final String workflowCode, final String processId) {
+	public void deleteProcess(final String workflowCode, final String processId) {
 
 		final String url = "http://localhost:8080/" + workflowCode + "/" + processId;
 		log.debug("Deleting process " + url);
+		log.debug("token=" + serviceToken.getToken());
 
 		HttpClient client = HttpClient.newHttpClient();
 		HttpRequest request = HttpRequest.newBuilder()
@@ -53,7 +54,8 @@ public class KogitoService {
 		} catch (IOException | InterruptedException e) {
 			log.error(e.getLocalizedMessage());
 		}
-		return response.statusCode() == 200 ? Response.ok().build() : Response.serverError().build();
+		// return response.statusCode() == 200 ? Response.ok().build() :
+		// Response.serverError().build();
 	}
 
 }
