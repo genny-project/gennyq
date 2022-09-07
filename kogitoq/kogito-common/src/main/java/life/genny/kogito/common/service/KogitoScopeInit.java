@@ -108,7 +108,7 @@ public class KogitoScopeInit {
 	 */
 	public void deleteProcess(String workflowCode, String processId) {
 		log.info("Deleting process " + processId + " for workflow " + workflowCode);
-		Response response = kogitoService.deleteProcess(workflowCode, processId);
-		log.info("Response from kogito: " + response);
+		kogitoService.deleteProcess(workflowCode, processId);
+
 	}
 }
