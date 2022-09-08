@@ -10,13 +10,21 @@ import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.Search;
+import org.infinispan.query.dsl.Query;
+import org.infinispan.query.dsl.QueryFactory;
+import org.infinispan.query.dsl.QueryResult;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 /*
@@ -157,7 +165,7 @@ public class CacheUtils {
 	* @param key The key they item is saved against
 	* @return The CoreEntity returned
 	 */
-	public static CoreEntity getEntity(String cacheName, CoreEntityKey key) {
+	public static CoreEntitySerializable getEntity(String cacheName, CoreEntityKey key) {
 		return cache.getEntityFromCache(cacheName, key);
 	}
 
@@ -169,7 +177,7 @@ public class CacheUtils {
 	* @param entity The CoreEntity to save
 	* @return The CoreEntity being saved
 	 */
-	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
+	public static boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntityPersistable entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 
@@ -208,5 +216,39 @@ public class CacheUtils {
 	public static List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
 		return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
 		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
+	}
+
+	/**
+	 * Get a list of {@link BaseEntity}s to from cache by prefix.
+	 * @param productCode - Product Code to retrieve from
+	 * @param prefix - Prefix of the Core Entity code to use
+	 * @return a list of base entities with matching prefixes
+	 * 
+	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
+	 */
+	public static List<BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCache(GennyConstants.CACHE_NAME_BASEENTITY));
+		Query<BaseEntity> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm : '" + productCode
+						+ "' and code like '" + prefix + "%'");
+		QueryResult<BaseEntity> queryResult = query.execute();
+		return queryResult.list();
+	}
+
+	/**
+	 * Get a list of {@link BaseEntityAttribute}s to from cache for a BaseEntity.
+	 * @param productCode - Product Code / Cache to retrieve from
+	 * @param baseEntityCode - Prefix of the Core Entity code to use
+	 * @return a list of base entities with matching prefixes
+	 * 
+	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
+	 */
+	public static List<BaseEntityAttribute> getBaseEntityAttributesForBaseEntityUsingIckle(String productCode, String baseEntityCode) {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE));
+		Query<BaseEntityAttribute> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
+						+ "' and baseEntityCode : '" + baseEntityCode + "'");
+		QueryResult<BaseEntityAttribute> queryResult = query.execute();
+		return queryResult.list();
 	}
 }

@@ -43,6 +43,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 import com.querydsl.core.annotations.QueryExclude;
 
@@ -267,8 +268,4 @@ public class Context extends CoreEntity implements Serializable {
 		return "Context [entity=" + entity + ", weight=" + weight + ", contextCode=" + contextCode + ", dataType="
 				+ dataType + ", visualControlType=" + visualControlType + "]";
 	}
-
-	
-
-
 }

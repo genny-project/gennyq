@@ -50,8 +50,12 @@ import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
@@ -67,7 +71,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute implements java.io.Serializable, Comparable<Object> {
+public class EntityAttribute implements CoreEntityPersistable, Comparable<Object> {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
@@ -1314,6 +1318,34 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	public void setConfirmationFlag(Boolean confirmationFlag) {
 		this.confirmationFlag = confirmationFlag;
+	}
+
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		BaseEntityAttribute bea = new BaseEntityAttribute();
+		bea.setRealm(getRealm());
+		bea.setBaseEntityCode(getBaseEntityCode());
+		bea.setAttributeCode(getAttributeCode());
+		bea.setCreated(getCreated());
+		bea.setInferred(getInferred());
+		bea.setPrivacyFlag(getPrivacyFlag());
+		bea.setReadonly(getReadonly());
+		bea.setUpdated(getUpdated());
+		bea.setValueBoolean(getValueBoolean());
+		bea.setValueDate(getValueDate());
+		bea.setValueDateTime(getValueDateTime());
+		bea.setValueDouble(getValueDouble());
+		bea.setValueInteger(getValueInteger());
+		bea.setValueLong(getValueLong());
+		bea.setMoney(getValueMoney());
+		bea.setValueString(getValueString());
+		bea.setUpdated(getUpdated());
+		bea.setWeight(getWeight());
+		bea.setAttributeId(getAttribute().getId());
+		bea.setBaseEntityId(getPk().getBaseEntity().getId());
+		// bea.setIcon(geticon);
+		bea.setConfirmationFlag(getConfirmationFlag());
+		return bea;
 	}
 
 }

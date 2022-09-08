@@ -44,10 +44,10 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.querydsl.core.annotations.QueryExclude;
 
-import life.genny.qwandaq.exception.runtime.BadDataException;
-
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
  * object is refered to as a means of requesting information from a source about
@@ -663,5 +663,4 @@ public class Ask extends CoreEntity {
 
 		setChildAsks(children);
 	}
-
 }

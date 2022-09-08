@@ -4,8 +4,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,6 +29,7 @@ import io.quarkus.arc.Arc;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
@@ -33,6 +37,9 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
 
 /**
  * A non-static utility class used for standard
@@ -59,6 +66,9 @@ public class BaseEntityUtils {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Inject
+	BaseEntityAttributeUtils beaUtils;
 
 	@Inject
 	EntityManagerFactory emf;
@@ -174,14 +184,17 @@ public class BaseEntityUtils {
 	 *
 	 * @param productCode The productCode to use
 	 * @param code        The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
+	 * @return The corresponding BaseEntity bundled with BaseEntityAttributes, or null if not found.
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
+		return getBaseEntityByCode(productCode, code, true);
+	}
 
-		if (productCode == null)
+	private BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
+		if (productCode == null) 
 			throw new NullParameterException("productCode");
-		if (code == null)
+		if (code == null) 
 			throw new NullParameterException("code");
 		if (StringUtils.isBlank(productCode))
 			throw new DebugException("productCode is empty");
@@ -189,17 +202,15 @@ public class BaseEntityUtils {
 			throw new DebugException("code is empty");
 
 		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(productCode, code);
-		// BaseEntity entity = (BaseEntity)
-		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-
-		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
-		// updates are working.
+		BaseEntityKey key = new BaseEntityKey(productCode, code);
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils
+				.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+	
 		BaseEntity entity = null;
-		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-
+		
 		// check in database if not in cache
-		if (entity == null) {
+		if (baseEntitySerializable == null) {
+			log.info("$$$$$$$$$$ check in database if not in cache. key: " + key);
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
@@ -223,14 +234,35 @@ public class BaseEntityUtils {
 					}
 				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				if (entity == null) {
-					log.debug(code + " not in cache for product " + productCode + " but "
-							+ (entity == null ? "not found in db" : "found in db"));
+				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
+				if (entity != null) {
+					log.info("Adding BE to cache..");
+					CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, entity);
+					if (bundleAttributes) {
+						log.info("Adding BEAs to cache..");
+						entity.getBaseEntityAttributes().forEach(attribute -> {
+							BaseEntityAttributeKey attributeKey = new BaseEntityAttributeKey(productCode,
+									attribute.getBaseEntityCode(), attribute.getAttributeCode());
+							CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, attributeKey, attribute);
+						});
+					}
 				}
-				
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}
+		} else {
+			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
+			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
+			/*if (bundleAttributes) {
+				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
+				Map<String, EntityAttribute> attributeMap = new HashMap<>();
+				entity.setAttributeMap(attributeMap);
+				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
+					attributes.add(bea);
+					attributeMap.put(bea.getAttributeCode(), bea);
+				});
+				log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
+			}*/
 		}
 
 		return entity;
@@ -257,14 +289,12 @@ public class BaseEntityUtils {
 			}
 		}
 
-		databaseUtils.saveBaseEntity(baseEntity);
-		CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
+		// databaseUtils.saveBaseEntity(baseEntity);
+		// CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
 
-		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),
-		// baseEntity.getCode());
-		// return (BaseEntity)
-		// CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
-		return baseEntity;
+		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		boolean savedSuccssfully = CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		return savedSuccssfully ? baseEntity : null;
 	}
 
 	/**

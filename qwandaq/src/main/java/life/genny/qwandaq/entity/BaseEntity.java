@@ -53,6 +53,8 @@ import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
@@ -102,7 +104,7 @@ import org.jboss.logging.Logger;
 @Cacheable
 @RegisterForReflection
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+public class BaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -1150,6 +1152,20 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			attributeMap = null;
 		}
 
+	}
+
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = new life.genny.qwandaq.serialization.baseentity.BaseEntity();
+		baseEntitySerializable.setCode(getCode());
+		baseEntitySerializable.setCreated(getCreated());
+		// baseEntitySerializable.setDtype();
+		baseEntitySerializable.setId(getId());
+		baseEntitySerializable.setName(getName());
+		baseEntitySerializable.setRealm(getRealm());
+		baseEntitySerializable.setStatus(getStatus().ordinal());
+		baseEntitySerializable.setUpdated(getUpdated());
+		return baseEntitySerializable;
 	}
 
 }
