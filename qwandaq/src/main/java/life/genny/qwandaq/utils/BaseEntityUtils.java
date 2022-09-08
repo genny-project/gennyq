@@ -223,8 +223,11 @@ public class BaseEntityUtils {
 					}
 				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode + " but "
-						+ (entity == null ? "not found in db" : "found in db"));
+				if (entity == null) {
+					log.debug(code + " not in cache for product " + productCode + " but "
+							+ (entity == null ? "not found in db" : "found in db"));
+				}
+				
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
 			}
