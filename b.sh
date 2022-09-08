@@ -12,6 +12,7 @@ mvn clean package -U -DskipTests=true
 cd ../../bridge
 mvn clean package -U -DskipTests=true
 ./build-docker.sh
+docker pull gennyproject/bridge:latest
 cd ../lauchy
 mvn clean package -U -DskipTests=true
 ./build-docker.sh

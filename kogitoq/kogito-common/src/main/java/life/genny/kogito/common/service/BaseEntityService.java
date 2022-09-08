@@ -230,19 +230,26 @@ public class BaseEntityService {
 	public void updateBaseEntity(String baseEntityCode, String attributeCode, String value) {
 
 		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
+		BaseEntity defBe = defUtils.getDEF(be);
 
-		if (attributeCode.startsWith("LNK_")) {
-			// Check if value is in JsonArray format , otherwise wrap it..
-			if (value != null) {
-				if (!value.startsWith("[")) {
-					value = "[\"" + value + "\"]";
+		Optional<EntityAttribute> defEAttribute = defBe.findEntityAttribute("ATT_" + attributeCode);
+		if (defEAttribute.isPresent()) {
+
+			if (attributeCode.startsWith("LNK_")) {
+				// Check if value is in JsonArray format , otherwise wrap it..
+				if (value != null) {
+					if (!value.startsWith("[")) {
+						value = "[\"" + value + "\"]";
+					}
 				}
 			}
+
+			be = beUtils.addValue(be, attributeCode, value);
+
+			beUtils.updateBaseEntity(be);
+		} else {
+			log.error("This attribute is not defined in " + defBe.getCode() + " for the attribute: " + attributeCode);
 		}
-
-		be = beUtils.addValue(be, attributeCode, value);
-
-		beUtils.updateBaseEntity(be);
 	}
 
 	/**

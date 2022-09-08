@@ -164,12 +164,12 @@ message Validation {
 }
 enum EEntityStatus { 
 	option java_package = "life.genny.qwandaq";
-	DISABLED = 3;
+	DISABLED = 4;
 	ACTIVE = 0;
-	PENDING_DELETE = 5;
-	TEST = 7;
-	TEMPORARY = 6;
-	ARCHIVED = 1;
-	PENDING = 4;
-	DELETED = 2;
+	PENDING_DELETE = 6;
+	TEST = 1;
+	TEMPORARY = 2;
+	ARCHIVED = 5;
+	PENDING = 3;
+	DELETED = 7;
 }
