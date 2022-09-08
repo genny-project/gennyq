@@ -16,24 +16,18 @@
 
 package life.genny.qwandaq;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import com.querydsl.core.annotations.QueryExclude;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-
-import com.querydsl.core.annotations.QueryExclude;
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 /**
@@ -58,16 +52,16 @@ public class AnswerList implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  /**
-   * A fieldlist that stores the answers for this object.
-   */
-  // @JsonIgnore
-  @XmlTransient
+    /**
+     * A fieldlist that stores the answers for this object.
+     */
+    // @JsonIgnore
+    @XmlTransient
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @Fetch(value = FetchMode.SUBSELECT)
-  @JoinColumn(name = "answerlist_id", referencedColumnName = "id")
-  private List<AnswerLink> answerList = new CopyOnWriteArrayList<AnswerLink>();
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Fetch(value = FetchMode.SUBSELECT)
+    @JoinColumn(name = "answerlist_id", referencedColumnName = "id")
+    private List<AnswerLink> answerList = new CopyOnWriteArrayList<>();
 
   /**
    * Constructor.

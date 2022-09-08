@@ -1,12 +1,12 @@
 package life.genny.qwandaq.security.keycloak;
 
 import io.vertx.core.json.JsonObject;
-import java.util.Set;
-import java.util.stream.Collectors;
 import life.genny.qwandaq.utils.HttpUtils;
-
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jose4j.base64url.Base64;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * KeycloakTokenPayload --- The bearer token will be base64 encoded with a header body and signature
@@ -52,8 +52,8 @@ public class KeycloakTokenPayload {
     this.sid = payload.getClaim("sid");
     this.acr = payload.getClaim("acr");
     this.roles =
-        new JsonObject(payload.getClaim("realm_access").toString())
-            .getJsonArray("roles").stream().map(d -> d.toString()).collect(Collectors.toSet());
+            new JsonObject(payload.getClaim("realm_access").toString())
+                    .getJsonArray("roles").stream().map(Object::toString).collect(Collectors.toSet());
 
     this.azp = payload.getClaim("azp");
     this.scope = payload.getClaim("scope");

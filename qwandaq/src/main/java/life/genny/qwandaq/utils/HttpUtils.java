@@ -1,25 +1,25 @@
 package life.genny.qwandaq.utils;
 
+import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
+import org.jboss.logging.Logger;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
+import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.net.http.HttpResponse;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import org.jboss.logging.Logger;
-
-import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 /**
  * A Static utility class for standard HTTP requests.
@@ -54,10 +54,10 @@ public class HttpUtils {
 	 */
 	public static void logHeaders(FILogCallback level, HttpHeaders headers) {
 		Map<String, List<String>> headerMap = headers.map();
-		headerMap.keySet().stream().forEach((key) -> {
+		headerMap.keySet().forEach((key) -> {
 			List<String> values = headerMap.get(key);
 			String valueString = values.stream()
-			.collect(Collectors.joining(", ", "[", "]"));
+					.collect(Collectors.joining(", ", "[", "]"));
 
 			level.log(key + ": " + valueString);
 		});

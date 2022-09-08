@@ -1,24 +1,23 @@
 package life.genny.qwandaq.attribute;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import life.genny.qwandaq.entity.BaseEntity;
+
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import life.genny.qwandaq.entity.BaseEntity;
-
 @Embeddable
 public class EntityAttributeId implements java.io.Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@ManyToOne ( )
-	//	@JsonBackReference(value="entityAttribute")
-	@JsonManagedReference(value="entityAttribute")
-	@JsonIgnoreProperties("baseEntityAttributes")
+    @ManyToOne()
+    //	@JsonBackReference(value="entityAttribute")
+    @JsonManagedReference(value = "entityAttribute")
+    @JsonIgnoreProperties("baseEntityAttributes")
 	@JsonbTransient
 	public BaseEntity baseEntity;
 
@@ -88,17 +87,14 @@ public class EntityAttributeId implements java.io.Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		EntityAttributeId other = (EntityAttributeId) obj;
-		if (attribute == null) {
-			if (other.attribute != null)
-				return false;
-		} else if (!attribute.equals(other.attribute))
-			return false;
-		if (baseEntity == null) {
-			if (other.baseEntity != null)
-				return false;
-		} else if (!baseEntity.equals(other.baseEntity))
-			return false;
-		return true;
+        if (attribute == null) {
+            if (other.attribute != null)
+                return false;
+        } else if (!attribute.equals(other.attribute))
+            return false;
+        if (baseEntity == null) {
+            return other.baseEntity == null;
+        } else return baseEntity.equals(other.baseEntity);
 	}
 
 }

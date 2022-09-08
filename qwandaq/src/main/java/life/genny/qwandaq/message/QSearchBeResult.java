@@ -1,15 +1,12 @@
 package life.genny.qwandaq.message;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
-
+import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.entity.BaseEntity;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.stream.Stream;
 
 @RegisterForReflection
 public class QSearchBeResult implements Serializable {
@@ -33,8 +30,8 @@ public class QSearchBeResult implements Serializable {
 	}
 
 	public QSearchBeResult(BaseEntity[] entities, Long total) {
-		this.codes = Stream.of(entities).map(x -> x.getCode()).collect(Collectors.toList()).toArray(String[]::new);
-		this.entities = entities;
+        this.codes = Stream.of(entities).map(CodedEntity::getCode).toList().toArray(String[]::new);
+        this.entities = entities;
 		this.total = total;
 	}
 

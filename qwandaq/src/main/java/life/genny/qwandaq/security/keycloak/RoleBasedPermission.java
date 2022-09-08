@@ -1,15 +1,13 @@
 package life.genny.qwandaq.security.keycloak;
 
-import java.util.Arrays;
+import life.genny.qwandaq.models.GennyToken;
+import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.jboss.logging.Logger;
-
-import life.genny.qwandaq.models.GennyToken;
+import java.util.Arrays;
 
 /**
  * RoleBasedPermission --- This class is composed with Authentication 
@@ -47,11 +45,11 @@ public class RoleBasedPermission {
 			e.printStackTrace();
 		}
 
-        return Arrays.asList(roles).stream()
-            .filter(gennyToken.getUserRoles()::contains)
-            .map(d -> true)
-            .findAny()
-            .orElse(false);
+        return Arrays.stream(roles)
+                .filter(gennyToken.getUserRoles()::contains)
+                .map(d -> true)
+                .findAny()
+                .orElse(false);
     }
 
 }

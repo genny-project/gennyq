@@ -1,28 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
@@ -36,12 +13,25 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -185,7 +175,7 @@ public class QwandaUtils {
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);
 
-				if (attributeList.size() > 0) {
+				if (!attributeList.isEmpty()) {
 					log.debug("Start AttributeID:"
 							+ attributeList.get(0).getId() + ", End AttributeID:"
 							+ attributeList.get(attributeList.size() - 1).getId());
@@ -341,7 +331,7 @@ public class QwandaUtils {
 	}
 
 	private Map<String, Ask> getAllAsksRecursively(Ask ask) {
-		return getAllAsksRecursively(ask, new HashMap<String, Ask>());
+		return getAllAsksRecursively(ask, new HashMap<>());
 	}
 
 	private Map<String, Ask> getAllAsksRecursively(Ask ask, Map<String, Ask> asks) {
@@ -355,9 +345,9 @@ public class QwandaUtils {
 	}
 
 	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
-		target.getBaseEntityAttributes().stream().forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
+		target.getBaseEntityAttributes().forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
 		for (String d : dependencies) {
-			if (!target.getValue(d).isPresent()) {
+			if (target.getValue(d).isEmpty()) {
 				return false;
 			}
 		}
@@ -401,7 +391,7 @@ public class QwandaUtils {
 		log.info("Checking " + ask.getQuestionCode() + " mandatorys against " + baseEntity.getCode());
 
 		// find all the mandatory booleans
-		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<String, Boolean>(), ask);
+		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<>(), ask);
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
@@ -612,7 +602,7 @@ public class QwandaUtils {
 		}
 
 		// now apply all incoming answers
-		processData.getAnswers().stream().forEach(answer -> {
+		processData.getAnswers().forEach(answer -> {
 			// ensure the attribute is set
 			String attributeCode = answer.getAttributeCode();
 			Attribute attribute = getAttribute(attributeCode);
@@ -634,9 +624,9 @@ public class QwandaUtils {
 	 */
 	public BaseEntity saveAnswer(Answer answer) {
 
-		List<BaseEntity> targets = saveAnswers(Arrays.asList(answer));
+		List<BaseEntity> targets = saveAnswers(Collections.singletonList(answer));
 
-		if (targets != null && targets.size() > 0) {
+		if (targets != null && !targets.isEmpty()) {
 			return targets.get(0);
 		}
 
@@ -657,17 +647,17 @@ public class QwandaUtils {
 		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()
 				.collect(Collectors.groupingBy(Answer::getTargetCode));
 
-		for (String targetCode : answersPerTargetCodeMap.keySet()) {
+		for (Map.Entry<String, List<Answer>> targetCode : answersPerTargetCodeMap.entrySet()) {
 
 			// fetch target and target DEF
-			BaseEntity target = beUtils.getBaseEntity(targetCode);
+			BaseEntity target = beUtils.getBaseEntity(targetCode.getKey());
 			BaseEntity defBE = defUtils.getDEF(target);
 
 			// filter Non-valid answers using def
-			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
+			List<Answer> group = targetCode.getValue();
 			List<Answer> validAnswers = group.stream()
 					.filter(item -> defUtils.answerValidForDEF(defBE, item))
-					.collect(Collectors.toList());
+					.toList();
 
 			// update target using valid answers
 			for (Answer answer : validAnswers) {
@@ -727,17 +717,17 @@ public class QwandaUtils {
 
 		// create a child ask for every valid atribute
 		defBE.getBaseEntityAttributes().stream()
-			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
-			.forEach((ea) -> {
-				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
-				Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
+				.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
+				.forEach(ea -> {
+					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
+					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-				String questionCode = DefUtils.PREF_QUE
-						+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-						DefUtils.PREF_PRI), DefUtils.PREF_LNK);
+					String questionCode = DefUtils.PREF_QUE
+							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+							DefUtils.PREF_PRI), DefUtils.PREF_LNK);
 
-				Question childQues = new Question(questionCode, attribute.getName(), attribute);
-				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
+					Question childQues = new Question(questionCode, attribute.getName(), attribute);
+					Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
 				childAsks.add(childAsk);
 			});
@@ -870,7 +860,7 @@ public class QwandaUtils {
 
 		// send to commands topic
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
-		log.info("Sent error message to frontend : " + json.toString());
+		log.info("Sent error message to frontend : " + json);
 	}
 
 

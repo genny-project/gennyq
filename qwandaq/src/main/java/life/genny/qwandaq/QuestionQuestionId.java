@@ -1,20 +1,16 @@
 package life.genny.qwandaq;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.querydsl.core.annotations.QueryExclude;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import javax.json.bind.annotation.JsonbTransient;
-
-import com.querydsl.core.annotations.QueryExclude;
 
 @Embeddable
 @QueryExclude
@@ -97,17 +93,17 @@ public class QuestionQuestionId implements java.io.Serializable {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof QuestionQuestionId)) {
-			return false;
-		}
-		QuestionQuestionId that = (QuestionQuestionId) obj;
-		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(sourceCode, that.sourceCode);
-		eb.append(targetCode, that.targetCode);
-		return eb.isEquals();
-	}
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof QuestionQuestionId that) {
+            EqualsBuilder eb = new EqualsBuilder();
+            eb.append(sourceCode, that.sourceCode);
+            eb.append(targetCode, that.targetCode);
+            return eb.isEquals();
+        } else {
+            return false;
+        }
+    }
 
 }

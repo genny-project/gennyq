@@ -43,18 +43,19 @@ public enum CapabilityMode {
 	private final String name;
 	private final Integer priority;
 
-	private CapabilityMode(String s,Integer p) {
-		name = s;
-		priority = p;
-	}
+	CapabilityMode(String s, Integer p) {
+        name = s;
+        priority = p;
+    }
 
 	public boolean equalsName(String otherName) {
 		return name.equals(otherName);
 	}
 
-	public String toString() {
-		return this.name;
-	}
+    @Override
+    public String toString() {
+        return this.name;
+    }
 	
 	public boolean greaterThan(CapabilityMode other)
 	{

@@ -1,36 +1,24 @@
 package life.genny.qwandaq.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.time.*;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
@@ -50,7 +38,7 @@ public class GennyToken implements Serializable {
 	public String[] allowedProducts;
 
 	public Map<String, Object> adecodedTokenMap = null;
-	public Set<String> userRoles = new HashSet<String>();
+	public Set<String> userRoles = new HashSet<>();
 
 	/**
 	 * Constructor. Default.
@@ -377,9 +365,8 @@ public class GennyToken implements Serializable {
 			if (m.find()) {
 				String[] roles = m.group(1).split(",");
 				for (String role : roles) {
-					userRoles.add((String) role.trim());
+					userRoles.add(role.trim());
 				}
-				;
 			}
 		}
 
@@ -444,15 +431,14 @@ public class GennyToken implements Serializable {
 	@JsonbTransient
 	@JsonIgnore
 	public LocalDateTime getAuthDateTime() {
-		Long auth_timestamp = null;
+		Long auth_timestamp;
 		try {
 			auth_timestamp = ((Number) adecodedTokenMap.get("auth_time")).longValue();
 		} catch (Exception e) {
 			auth_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue(); // this is the 'issued at' timestamp
 		}
-		LocalDateTime authTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(auth_timestamp),
+		return LocalDateTime.ofInstant(Instant.ofEpochSecond(auth_timestamp),
 				TimeZone.getDefault().toZoneId());
-		return authTime;
 	}
 
 	/**
@@ -462,9 +448,8 @@ public class GennyToken implements Serializable {
 	@JsonIgnore
 	public LocalDateTime getExpiryDateTime() {
 		Long exp_timestamp = ((Number) adecodedTokenMap.get("exp")).longValue();
-		LocalDateTime expTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(exp_timestamp),
+		return LocalDateTime.ofInstant(Instant.ofEpochSecond(exp_timestamp),
 				TimeZone.getDefault().toZoneId());
-		return expTime;
 	}
 
 	/**
@@ -503,9 +488,8 @@ public class GennyToken implements Serializable {
 	@JsonIgnore
 	public LocalDateTime getiatDateTime() {
 		Long iat_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue();
-		LocalDateTime iatTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(iat_timestamp),
+		return LocalDateTime.ofInstant(Instant.ofEpochSecond(iat_timestamp),
 				TimeZone.getDefault().toZoneId());
-		return iatTime;
 	}
 
 	/**
@@ -546,10 +530,7 @@ public class GennyToken implements Serializable {
 		if (getUserCode().equals(userCode)) {
 			return true;
 		}
-		if (getEmailUserCode().equals(userCode)) {
-			return true;
-		}
-		return false;
+		return getEmailUserCode().equals(userCode);
 
 	}
 
@@ -581,19 +562,15 @@ public class GennyToken implements Serializable {
 	@JsonIgnore
 	public static Map<String, Object> getJsonMap(final JsonObject jsonObj) {
 		final String json = jsonObj.toString();
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new HashMap<>();
 		try {
 			final ObjectMapper mapper = new ObjectMapper();
 			// convert JSON string to Map
-			final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {
+			final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<>() {
 			};
 
 			map = mapper.readValue(json, typeRef);
 
-		} catch (final JsonGenerationException e) {
-			e.printStackTrace();
-		} catch (final JsonMappingException e) {
-			e.printStackTrace();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}

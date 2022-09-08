@@ -1,6 +1,6 @@
 package org.javamoney.moneta.format;
 
-import static java.util.Objects.requireNonNull;
+import org.javamoney.moneta.function.MonetaryAmountProducer;
 
 import javax.money.CurrencyUnit;
 import javax.money.MonetaryAmount;
@@ -14,7 +14,7 @@ import java.text.DecimalFormat;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.javamoney.moneta.function.MonetaryAmountProducer;
+import static java.util.Objects.requireNonNull;
 
 /**
  * The implementation that uses the {@link DecimalFormat} as formatter.
@@ -160,8 +160,7 @@ public class MonetaryAmountDecimalFormat implements MonetaryAmountFormat {
         if (obj == this) {
             return true;
         }
-        if (MonetaryAmountDecimalFormat.class.isInstance(obj)) {
-            MonetaryAmountDecimalFormat other = MonetaryAmountDecimalFormat.class.cast(obj);
+        if (obj instanceof MonetaryAmountDecimalFormat other) {
             return Objects.equals(other.decimalFormat, decimalFormat) && Objects.equals(other.producer, producer)
                     && Objects.equals(other.currencyUnit, currencyUnit);
         }

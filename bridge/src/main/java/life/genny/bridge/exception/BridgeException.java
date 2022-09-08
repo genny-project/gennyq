@@ -1,12 +1,11 @@
 package life.genny.bridge.exception;
 
 /**
- * BridgeException --- Custom exception to identified in-house commun 
- * issues which were faced before, known issues or expected problems that 
- * can be documented 
+ * BridgeException --- Custom exception to identified in-house commun
+ * issues which were faced before, known issues or expected problems that
+ * can be documented
  *
- * @author    hello@gada.io
- *
+ * @author hello@gada.io
  */
 public class BridgeException extends Exception {
 
@@ -18,7 +17,7 @@ public class BridgeException extends Exception {
 
     public BridgeException(String code, String message) {
         super(message);
-        this.setCode(code);
+        this.code = code;
     }
 
     public BridgeException(String code, String message, Throwable cause) {

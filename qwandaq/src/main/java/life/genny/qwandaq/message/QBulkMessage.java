@@ -1,11 +1,12 @@
 package life.genny.qwandaq.message;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 
 
 @RegisterForReflection
@@ -140,13 +141,13 @@ public class QBulkMessage implements Serializable {
 	 * @param qMessage the ask message to add
 	 */
 	public void add(QDataAskMessage qMessage) {
-		if (qMessage.getItems().size() > 0) {
-			Set<QDataAskMessage> set = new HashSet<QDataAskMessage>(Arrays.asList(this.asks));
-			set.add(qMessage);
-			this.asks = new QDataAskMessage[set.size()];
-			set.toArray(this.asks);
-		}
-	}
+        if (!qMessage.getItems().isEmpty()) {
+            Set<QDataAskMessage> set = new HashSet<>(Arrays.asList(this.asks));
+            set.add(qMessage);
+            this.asks = new QDataAskMessage[set.size()];
+            set.toArray(this.asks);
+        }
+    }
 
 	/** 
 	 * @param qBulkMessage the bulk message to add

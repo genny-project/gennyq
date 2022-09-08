@@ -1,14 +1,12 @@
 package life.genny.qwandaq.utils;
 
-import java.util.List;
-import java.util.Map;
-
-import org.jboss.logging.Logger;
-
-import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
+import org.jboss.logging.Logger;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * A few Common Utils to use throughout Genny.

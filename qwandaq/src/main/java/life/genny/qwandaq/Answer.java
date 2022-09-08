@@ -16,30 +16,19 @@
 
 package life.genny.qwandaq;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.querydsl.core.annotations.QueryExclude;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Type;
 
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -47,19 +36,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.querydsl.core.annotations.QueryExclude;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Type;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 /**
  * Answer is the abstract base class for all answers managed in the Qwanda
@@ -73,9 +55,9 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
  * <p>
  * Answers represent the manner in which facts about a target from sources are
  * stored. Each Answer is associated with an attribute.
- * <p>
- * 
- * 
+ * </p>
+ *
+ *
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%

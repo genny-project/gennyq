@@ -10,10 +10,10 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class InitColors {
 
-	private String primary;
-	private String secondary;
+    private String primary;
+    private String secondary;
 
-	public InitColors() {
+    public InitColors() {
     }
 
     public InitColors(String primary, String secondary) {

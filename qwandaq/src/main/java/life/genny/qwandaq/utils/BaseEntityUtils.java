@@ -1,27 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
@@ -33,6 +11,26 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
+import javax.persistence.Persistence;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * A non-static utility class used for standard
@@ -322,12 +320,10 @@ public class BaseEntityUtils {
 		if (attributeValue.isPresent()) {
 
 			Object value = attributeValue.get();
-			if (value == null)
+			if (value instanceof String sValue)
+				return cleanUpAttributeValue(sValue);
+			else
 				return null;
-			if (!(value instanceof String))
-				return null;
-
-			return cleanUpAttributeValue((String) value);
 		}
 
 		return null;
@@ -419,11 +415,8 @@ public class BaseEntityUtils {
 		}
 
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
-		if (ea.isPresent()) {
-			return ea.get().getObjectAsString();
-		}
+		return ea.map(EntityAttribute::getObjectAsString).orElse(null);
 
-		return null;
 	}
 
 	/**
@@ -499,12 +492,10 @@ public class BaseEntityUtils {
 	public List<BaseEntity> convertCodesToBaseEntityArray(String strArr) {
 
 		String[] arr = strArr.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "").split(",");
-		List<BaseEntity> entityList = Arrays.stream(arr)
+		return Arrays.stream(arr)
 				.filter(item -> !item.isEmpty())
-				.map(item -> (BaseEntity) getBaseEntityOrNull(item))
-				.collect(Collectors.toList());
-
-		return entityList;
+				.map(item -> getBaseEntityOrNull(item))
+				.toList();
 	}
 
 	/**

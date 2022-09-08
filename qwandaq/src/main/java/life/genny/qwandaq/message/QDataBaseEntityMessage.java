@@ -1,22 +1,22 @@
 package life.genny.qwandaq.message;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.WeightedItem;
 import life.genny.qwandaq.entity.BaseEntity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 @RegisterForReflection
 public class QDataBaseEntityMessage extends QDataMessage implements Comparable<QDataBaseEntityMessage> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private List<BaseEntity> items;
+    private List<BaseEntity> items;
 
-	private List<WeightedItem> weightedItems;
+    private List<WeightedItem> weightedItems;
 
 	private static final String DATATYPE_BASEENTITY = BaseEntity.class.getSimpleName();
 	private String parentCode;
@@ -40,23 +40,24 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 		 * c. items have the same code
 		 */
 
-		if (this.parentCode.equals(o.getParentCode()) == false)
-			return 0;
-		if (this.getItems().size() != o.getItems().size())
-			return 0;
+        if (!this.parentCode.equals(o.getParentCode()))
+            return 0;
+        if (this.getItems().size() != o.getItems().size())
+            return 0;
 
 		for (BaseEntity be : this.getItems()) {
 
-			Boolean found = false;
+            boolean found = false;
 			for (BaseEntity oBe : o.getItems()) {
 
-				if (oBe.getCode().equals(be.getCode())) {
-					found = true;
-				}
-			}
+                if (oBe.getCode().equals(be.getCode())) {
+                    found = true;
+                    break;
+                }
+            }
 
-			if (found == false)
-				return 0;
+            if (!Boolean.TRUE.equals(found))
+                return 0;
 		}
 
 		return 1;
@@ -216,16 +217,16 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	 * @param items the array of entities to set
 	 */
 	public void setItems(final BaseEntity[] items) {
-		this.items = Arrays.asList(items);
-		setReturnCount(new Long(items.length));
+        this.items = Arrays.asList(items);
+        setReturnCount(Long.valueOf(items.length));
 	}
 
 	/**
 	 * @param items the list of entities to set
 	 */
 	public void setItems(final List<BaseEntity> items) {
-		this.items = items;
-		setReturnCount(new Long(items.size()));
+        this.items = items;
+        setReturnCount(Long.valueOf(items.size()));
 	}
 
 	/**

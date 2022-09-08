@@ -1,27 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.core.Response;
-
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
@@ -31,15 +9,24 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.MessageData;
-import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QEventDropdownMessage;
-import life.genny.qwandaq.message.QSearchBeResult;
-import life.genny.qwandaq.message.QSearchMessage;
+import life.genny.qwandaq.message.*;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A utility class used for performing table
@@ -214,7 +201,7 @@ public class SearchUtils {
 							CapabilityMode.getMode(mode));
 
 					// XNOR operator
-					if (!(hasCap ^ not)) {
+					if (Objects.equals(hasCap, not)) {
 						shouldRemove.add(ea.getAttributeCode());
 					}
 				}
@@ -222,9 +209,7 @@ public class SearchUtils {
 		}
 
 		// remove unwanted attrs
-		shouldRemove.stream().forEach(item -> {
-			searchBE.removeAttribute(item);
-		});
+		shouldRemove.forEach(searchBE::removeAttribute);
 
 		return searchBE;
 	}
@@ -351,7 +336,7 @@ public class SearchUtils {
 			}
 		} else {
 			log.error("results are null");
-			filters = new ArrayList<EntityAttribute>();
+			filters = new ArrayList<>();
 		}
 		return filters;
 	}
@@ -461,9 +446,7 @@ public class SearchUtils {
 
 		searchEntity.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith("SBE_"))
-				.forEach(ea -> {
-					ea.setAttributeCode(ea.getAttributeCode() + "_" + userToken.getJTI().toUpperCase());
-				});
+				.forEach(ea -> ea.setAttributeCode(ea.getAttributeCode() + "_" + userToken.getJTI().toUpperCase()));
 
 		// put/update in the cache
 		CacheUtils.putObject(userToken.getProductCode(), searchEntity.getCode(), searchEntity);
@@ -529,7 +512,7 @@ public class SearchUtils {
 
 				JsonArray conditions = mutation.getJsonArray("conditions");
 
-				if (jsonConditionsMet(conditions, target)) {
+				if (Boolean.TRUE.equals(jsonConditionsMet(conditions, target))) {
 
 					log.info("Pre Conditions met for : " + conditions.toString());
 
@@ -543,7 +526,7 @@ public class SearchUtils {
 					SearchEntity.StringFilter stringFilter = SearchEntity.StringFilter.EQUAL;
 					String mergedValue = MergeUtils.merge(value, ctxMap);
 					log.info("Adding filter: " + attributeCode + " "
-							+ stringFilter.toString() + " " + mergedValue);
+							+ stringFilter + " " + mergedValue);
 					baseSearch.addFilter(attributeCode, stringFilter, mergedValue);
 				}
 			}
@@ -594,7 +577,7 @@ public class SearchUtils {
 									finalResultList.add(item);
 								}
 							} else {
-								log.info("Testing conditions: " + conditions.toString());
+								log.info("Testing conditions: " + conditions);
 								if (jsonConditionsMet(conditions, target) && jsonConditionMet(mutation, item)) {
 									log.info("Post condition met");
 									finalResultList.add(item);
@@ -743,9 +726,7 @@ public class SearchUtils {
 			}
 			log.info(ea.getValue().toString() + " = " + value);
 
-			if (!ea.getValue().toString().toUpperCase().equals(value.toUpperCase())) {
-				return false;
-			}
+			return ea.getValue().toString().equalsIgnoreCase(value);
 		}
 
 		return true;
