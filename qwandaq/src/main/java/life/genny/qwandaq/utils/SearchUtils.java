@@ -814,7 +814,12 @@ public class SearchUtils {
 		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
 
 		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
+		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		ask.setTargetCode(targetCode);
+
 		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_SUBMIT, source, target);
+		ask.setTargetCode(targetCode);
+
 		ask.addChildAsk(askSubmit);
 
 		return ask;
@@ -846,19 +851,21 @@ public class SearchUtils {
 	 * @return Message of Filter column
 	 */
 	public QDataBaseEntityMessage getFilterColumBySearchBE(SearchEntity searchBE) {
-		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
-		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
-		base.setLinkCode(GennyConstants.LNK_CORE);
-		base.setLinkValue(GennyConstants.LNK_ITEMS);
-		base.setQuestionCode(GennyConstants.QUE_FILTER_COLUMN);
+		msg.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		msg.setLinkCode(GennyConstants.LNK_CORE);
+		msg.setLinkValue(GennyConstants.LNK_ITEMS);
+		msg.setQuestionCode(GennyConstants.QUE_FILTER_COLUMN);
 
-		BaseEntity baseEntity = new BaseEntity();
-		List<EntityAttribute> entityAttributes = new ArrayList<>();
+		List<BaseEntity> baseEntities = new ArrayList<>();
 
 		searchBE.getBaseEntityAttributes().stream()
 			.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
 			.forEach(e-> {
+				BaseEntity baseEntity = new BaseEntity();
+				List<EntityAttribute> entityAttributes = new ArrayList<>();
+
 				EntityAttribute ea = new EntityAttribute();
 				String attrCode = e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL,"");
 				ea.setAttributeName(e.getAttributeName());
@@ -868,15 +875,18 @@ public class SearchUtils {
 				ea.setBaseEntityCode(baseCode);
 				ea.setValueString(e.getAttributeName());
 
-				baseEntity.setCode(baseCode);
-				baseEntity.setName(e.getAttributeName());
 				entityAttributes.add(ea);
 
+				baseEntity.setCode(baseCode);
+				baseEntity.setName(e.getAttributeName());
+
 				baseEntity.setBaseEntityAttributes(entityAttributes);
-				base.add(baseEntity);
+				baseEntities.add(baseEntity);
 			});
 
-		return base;
+		msg.setItems(baseEntities);
+
+		return msg;
 	}
 
 	/**

@@ -306,25 +306,28 @@ public class SearchService {
 	 * @param sbeCode SBE code
 	 */
 	public void sendFilterGroup(String sbeCode) {
-		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
+		try {
+			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
-		if (searchBE != null) {
-			String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
+			if (searchBE != null) {
+				String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
 
-			Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode);
-			QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
-			msgFilterGrp.setToken(userToken.getToken());
-			msgFilterGrp.setTargetCode(filterTargetCode);
-			msgFilterGrp.setMessage(GennyConstants.FILTERS);
-			msgFilterGrp.setTag(GennyConstants.FILTERS);
-			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilterGrp);
+				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode);
+				QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
+				msgFilterGrp.setToken(userToken.getToken());
+				msgFilterGrp.setTargetCode(filterTargetCode);
+				msgFilterGrp.setMessage(GennyConstants.FILTERS);
+				msgFilterGrp.setTag(GennyConstants.FILTERS);
+				KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilterGrp);
 
-			QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
-			msgAddFilter.setToken(userToken.getToken());
-			msgAddFilter.setTag("Name");
-			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
+				QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
+				msgAddFilter.setToken(userToken.getToken());
+				msgAddFilter.setTag("Name");
+				KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
+			}
+		}catch (Exception ex) {
+			log.error(ex);
 		}
-
 	}
 
 	/**
