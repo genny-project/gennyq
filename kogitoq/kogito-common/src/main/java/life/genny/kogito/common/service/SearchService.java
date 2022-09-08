@@ -308,11 +308,10 @@ public class SearchService {
 	public void sendFilterGroup(String sbeCode) {
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
-		if(searchBE != null) {
+		if (searchBE != null) {
 			String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
 
 			Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode);
-
 			QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
 			msgFilterGrp.setToken(userToken.getToken());
 			msgFilterGrp.setTargetCode(filterTargetCode);
@@ -320,26 +319,46 @@ public class SearchService {
 			msgFilterGrp.setTag(GennyConstants.FILTERS);
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgFilterGrp);
 
-
 			QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
 			msgAddFilter.setToken(userToken.getToken());
 			msgAddFilter.setTag("Name");
 			KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msgAddFilter);
 		}
+
 	}
 
 	/**
 	 * Send filter option
-	 * @param sbeCode SBE code
+	 * @param questionCode Question Code
+	 * @param sbeCode Search Base Entiy Code
 	 */
-	public void sendFilterOption(String sbeCode) {
-		Ask ask = searchUtils.getFilterOptionBySBECode(sbeCode);
+	public void sendFilterOption(String questionCode, String sbeCode) {
+		QDataBaseEntityMessage msg = searchUtils.getFilterOptionByEventCode(questionCode);
 
-		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
-		msg.setTargetCode(sbeCode);
+		msg.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		msg.setLinkCode(GennyConstants.LNK_CORE);
+		msg.setLinkValue(GennyConstants.LNK_ITEMS);
+		msg.setQuestionCode(questionCode);
+		KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msg);
+	}
+
+	/**
+	 * Send filter select box or text box value
+	 * @param eventCode Event Code
+	 */
+	public void sendFilterValue(String eventCode, String sbeCode, boolean selectedBox) {
+		QDataBaseEntityMessage msg = null;
+
+		if(selectedBox) {
+			msg = searchUtils.getFilterSelectBoxValueByCode(eventCode, sbeCode);
+		} else {
+			msg = searchUtils.getFilterTextBoxValueByCode(eventCode, sbeCode);
+		}
+
+		msg.setToken(userToken.getToken());
+		msg.setTargetCode(eventCode);
 		msg.setMessage(GennyConstants.FILTERS);
-		msg.setTag(GennyConstants.FILTERS);
 		KafkaUtils.writeMsg(GennyConstants.EVENT_WEBCMDS, msg);
 	}
 

@@ -20,11 +20,15 @@ public final class GennyConstants {
     public static final String QUE_QQQ_GROUP = "QQQ_QUESTION_GROUP";
     public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
     public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
-
     public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
     public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
     public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
     public static final String QUE_SUBMIT = "QUE_SUBMIT";
+    public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
+    public static final String QUE_FILTER_VALUE_STATE = "QUE_FILTER_VALUE_STATE";
+    public static final String QUE_FILTER_VALUE_INTERNSHIP_TYPE = "QUE_FILTER_VALUE_INTERNSHIP_TYPE";
+    public static final String QUE_FILTER_VALUE_ACADEMY = "QUE_FILTER_VALUE_ACADEMY";
+    public static final String QUE_FILTER_VALUE_DJP_HC = "QUE_FILTER_VALUE_DJP_HC";
 
     //Link
     public static final String LNK_FILTER_COLUMN= "LNK_FILTER_COLUMN";
@@ -37,6 +41,28 @@ public final class GennyConstants {
     public static final String  FILTER_QUE_EXIST_NAME = "Existing Filters";
     public static final String  FILTER_SEL = "SEL_FILTER_COLUMN_";
     public static final String  FILTER_COL = "FLC_";
+    public static final String  SEL_EQUAL_TO = "SEL_EQUAL_TO";
+    public static final String  SEL_NOT_EQUAL_TO = "SEL_NOT_EQUAL_TO";
+    public static final String  SEL_LIKE = "SEL_LIKE";
+    public static final String  SEL_NOT_LIKE = "SEL_NOT_LIKE";
+
+    //Filter columns
+    public static final String FILTER_DATE = "DATE";
+
+    //Filter academy
+    public static final String SEL_OA_WRP = "SEL_OA_WRP";
+    public static final String SEL_OA_WIL = "SEL_OA_WIL";
+    public static final String SEL_OA_CARRERBOX = "SEL_OA_CARRERBOX";
+    public static final String SEL_PROFESSIONAL_YEAR = "SEL_PROFESSIONAL_YEAR";
+    public static final String SEL_COURSE_CREDIT = "SEL_COURSE_CREDIT";
+    public static final String SEL_DIGITAL_JOBS = "SEL_DIGITAL_JOBS";
+
+    //Filter date
+    public static final String SEL_GREATER_THAN = "SEL_GREATER_THAN";
+    public static final String SEL_GREATER_THAN_OR_EQUAL_TO = "SEL_GREATER_THAN_OR_EQUAL_TO";
+    public static final String SEL_LESS_THAN = "SEL_LESS_THAN";
+    public static final String SEL_LESS_THAN_OR_EQUAL_TO = "SEL_LESS_THAN_OR_EQUAL_TO";
+
 
     //event
     public static final String EVENT_WEBCMDS = "webcmds";

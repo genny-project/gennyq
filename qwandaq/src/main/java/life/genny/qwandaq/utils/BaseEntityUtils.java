@@ -73,6 +73,10 @@ public class BaseEntityUtils {
 	public BaseEntityUtils() {
 	}
 
+	public void init(String code) {
+
+	}
+
 	public BaseEntityUtils(ServiceToken serviceToken) {
 		this.serviceToken = serviceToken;
 		this.userToken = new UserToken(serviceToken.getToken());

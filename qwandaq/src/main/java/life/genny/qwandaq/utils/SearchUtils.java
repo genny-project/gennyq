@@ -881,16 +881,132 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter option
-	 * @param sbeCode Search Base Entity Code
+	 * @param eventCode Event code
 	 * @return Ask
 	 */
-	public Ask getFilterOptionBySBECode(String sbeCode) {
+	public QDataBaseEntityMessage getFilterOptionByEventCode(String eventCode) {
+		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
+
+		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		base.setLinkCode(GennyConstants.LNK_CORE);
+		base.setLinkValue(GennyConstants.LNK_ITEMS);
+
+		if(eventCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LIKE));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_LIKE));
+		} else if(eventCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_COLUMN)) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LIKE));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_LIKE));
+		} else if(eventCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_COUNTRY)) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_VALUE_COUNTRY);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LIKE));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_LIKE));
+
+			//send value select values
+		} else if(eventCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_STATE)) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_VALUE_STATE);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LIKE));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_LIKE));
+		} else if(eventCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LIKE));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_LIKE));
+		} else if(eventCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_ACADEMY)) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_VALUE_ACADEMY);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_OA_WRP));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_OA_WIL));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_OA_CARRERBOX));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_PROFESSIONAL_YEAR));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_COURSE_CREDIT));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_DIGITAL_JOBS));
+		} else if(eventCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_VALUE_DJP_HC);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
+		} else if(eventCode.indexOf(GennyConstants.FILTER_DATE) > -1) {
+			base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
+
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN_OR_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LESS_THAN));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LESS_THAN_OR_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
+			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
+		}
+
+		return base;
+	}
+
+
+	/**
+	 * Return ask with filter select option values
+	 * @param eventCode Event code
+	 * @return Ask
+	 */
+	public QDataBaseEntityMessage getFilterSelectBoxValueByCode(String eventCode, String sbeCode) {
+		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
+
 		String sourceCode = userToken.getUserCode();
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
 		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
 
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_FILTER_OPTION, source, target);
-		return ask;
+		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		base.setLinkCode(GennyConstants.LNK_CORE);
+		base.setLinkValue(GennyConstants.LNK_ITEMS);
+
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(eventCode, source, target);
+		List<BaseEntity> items = new ArrayList<>();
+
+		if(ask.getChildAsks() !=null) {
+			Arrays.asList(ask.getChildAsks()).stream().forEach(e -> {
+				BaseEntity baseEntity = new BaseEntity();
+				baseEntity.setCode(e.getAttributeCode());
+				baseEntity.setName(e.getName());
+				items.add(baseEntity);
+				}
+			);
+		}
+
+		base.setItems(items);
+
+		return base;
 	}
 
+	/**
+	 * Return ask with filter select option values
+	 * @param eventCode Event code
+	 * @return Ask
+	 */
+	public QDataBaseEntityMessage getFilterTextBoxValueByCode(String eventCode, String sbeCode) {
+		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
+
+		String sourceCode = userToken.getUserCode();
+		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
+		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
+
+		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		base.setLinkCode(GennyConstants.LNK_CORE);
+		base.setLinkValue(GennyConstants.LNK_ITEMS);
+
+		return base;
+	}
 }
