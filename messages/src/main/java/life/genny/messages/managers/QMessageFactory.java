@@ -1,14 +1,13 @@
 package life.genny.messages.managers;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.utils.CommonUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 @ApplicationScoped
 public class QMessageFactory {
@@ -37,35 +36,23 @@ public class QMessageFactory {
 
 		QMessageProvider provider;
 
-		log.info("message type::"+messageType.toString());
+		log.info("message type::" + messageType.toString());
 
-		switch(messageType) {
-
-			case SMS:
-				provider = smsManager;
-				break;
-			case EMAIL:
-				provider = emailManager;
-				break;
-			case TOAST:
-				provider = toastManager;
-				break;
-			case SENDGRID:
-				provider = sendGridManager;
-				break;
-			case SLACK:
-				provider = slackManager;
-				break;
+		provider = switch (messageType) {
+			case SMS -> smsManager;
+			case EMAIL -> emailManager;
+			case TOAST -> toastManager;
+			case SENDGRID -> sendGridManager;
+			case SLACK -> slackManager;
 			// Default to Error Manager if no proper message is found
-			case DEFAULT:
-			default:
-				provider = errorManager;    
-		}
+//			case DEFAULT,
+			default -> errorManager;
+		};
 
-        if(provider == null) {
-            CommonUtils.logAndReturn(log::error, ANSIColour.RED + ">>>>>> Provider is NULL for entity: " + ", msgType: " + messageType.toString() + " <<<<<<<<<" + ANSIColour.RESET);
-            throw new NullParameterException("Provider for message type: " + messageType.toString());
-        }
+		if (provider == null) {
+			CommonUtils.logAndReturn(log::error, ANSIColour.RED + ">>>>>> Provider is NULL for entity: " + ", msgType: " + messageType + " <<<<<<<<<" + ANSIColour.RESET);
+			throw new NullParameterException("Provider for message type: " + messageType);
+		}
 
 		return provider;
 

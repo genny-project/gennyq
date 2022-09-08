@@ -1,37 +1,24 @@
 package life.genny.messages.process;
 
-import javax.inject.Inject;
-import java.util.*; // TODO: We should avoid wildcard imports if we can (mainly due to unforeseen class conflicts)
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-
-import org.jboss.logging.Logger;
-
-import org.eclipse.microprofile.context.ManagedExecutor;
-
-import life.genny.qwandaq.message.QBaseMSGMessageType;
-import life.genny.qwandaq.message.QMessageGennyMSG;
-
 import life.genny.messages.managers.QMessageFactory;
 import life.genny.messages.managers.QMessageProvider;
 import life.genny.messages.util.MsgUtils;
-
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-
+import life.genny.qwandaq.message.QBaseMSGMessageType;
+import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.*;
+import org.eclipse.microprofile.context.ManagedExecutor;
+import org.jboss.logging.Logger;
 
-// Utils imports
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
-import life.genny.qwandaq.utils.MergeUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import java.util.*;
 
 @ApplicationScoped
 public class MessageProcessor {
@@ -124,7 +111,7 @@ public class MessageProcessor {
         }
 
         // Create context map with BaseEntities
-        Map<String, Object> baseEntityContextMap = new HashMap<>();
+        Map<String, Object> baseEntityContextMap;
         baseEntityContextMap = createBaseEntityContextMap(message);
         baseEntityContextMap.put("PROJECT", projectBe);
 
@@ -144,7 +131,7 @@ public class MessageProcessor {
                 // Use default if told to do so
                 List<String> typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
                 try {
-					messageTypeList = typeList.stream().map(item -> QBaseMSGMessageType.valueOf(item)).collect(Collectors.toList());
+                    messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
 				} catch (Exception e) {
 					log.error(e.getLocalizedMessage());
                     return CommonUtils.logAndReturn(log::error, e);
@@ -197,7 +184,7 @@ public class MessageProcessor {
         }
 
         long duration = System.currentTimeMillis() - start;
-        return CommonUtils.logAndReturn(log::info, "FINISHED PROCESSING MESSAGE :: time taken = " + String.valueOf(duration) + "ms");
+        return CommonUtils.logAndReturn(log::info, "FINISHED PROCESSING MESSAGE :: time taken = " + duration + "ms");
     }
 
     private List<BaseEntity> getRecipientBeList(String[] recipientArr) {
@@ -256,7 +243,7 @@ public class MessageProcessor {
         for (QBaseMSGMessageType msgType : messageTypeList) {
             /* Get Message Provider */
             final QMessageProvider provider = messageFactory.getMessageProvider(msgType);
-            Boolean isUserUnsubscribed = false;
+            boolean isUserUnsubscribed = false;
 
             if (unsubscriptionBe != null) {
                 /* check if unsubscription list for the template code has the userCode */
@@ -290,7 +277,7 @@ public class MessageProcessor {
             String key = entry.getKey();
             String value = entry.getValue();
 
-            String logStr = "key: " + key + ", value: " + (key.toUpperCase().equals("PASSWORD") ? "REDACTED" : value);
+            String logStr = "key: " + key + ", value: " + (key.equalsIgnoreCase("PASSWORD") ? "REDACTED" : value);
             log.info(logStr);
 
             if ((value != null) && (value.length() > 4)) {
@@ -302,7 +289,7 @@ public class MessageProcessor {
                     log.info("Fetching contextCodeArray :: " + Arrays.toString(codeArr));
                     // Convert to BEs
                     BaseEntity[] beArray = Arrays.stream(codeArr)
-                            .map(itemCode -> (BaseEntity) beUtils.getBaseEntityByCode(itemCode))
+                            .map(itemCode -> beUtils.getBaseEntityByCode(itemCode))
                             .toArray(BaseEntity[]::new);
 
                     if (beArray.length == 1) {
