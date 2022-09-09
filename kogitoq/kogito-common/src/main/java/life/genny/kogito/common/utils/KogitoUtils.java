@@ -248,13 +248,11 @@ public class KogitoUtils {
 	 */ 
 	public String selectServiceURI(final UseService useService) {
 
-		switch (useService) {
-			case GADAQ:
-				return GennySettings.gadaqServiceUrl();
-			case SELF:
-			default:
-				return GennySettings.kogitoServiceUrl();
-		}
+		return switch (useService) {
+			case GADAQ -> GennySettings.gadaqServiceUrl();
+			case SELF -> GennySettings.kogitoServiceUrl();
+			default -> GennySettings.kogitoServiceUrl();
+		};
 	}
 
 	/**

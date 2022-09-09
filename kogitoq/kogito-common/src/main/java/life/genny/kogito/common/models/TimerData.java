@@ -176,9 +176,7 @@ public class TimerData implements Serializable {
 
     public void add(TimerEvent timerEvent) {
         // check if the same eventCode is already in the queue. If so then replace
-        Iterator<TimerEvent> itr = this.events.iterator();
-        while (itr.hasNext()) {
-            TimerEvent tv = (TimerEvent) itr.next();
+        for (TimerEvent tv : this.events) {
             if (tv.getUniqueCode().equals(timerEvent.getUniqueCode())) {
                 this.events.remove(tv);
             }
