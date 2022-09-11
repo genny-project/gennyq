@@ -36,6 +36,8 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import java.util.Map;
 import java.util.HashMap;
+import life.genny.qwandaq.entity.SearchEntity.StringFilter;
+import life.genny.qwandaq.entity.SearchEntity.Filter;
 
 @ApplicationScoped
 public class SearchService {
@@ -201,6 +203,7 @@ public class SearchService {
 	public void sendMessageBySearchEntity(SearchEntity searchBE) {
 		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
 		searchBeMsg.setToken(userToken.getToken());
+		searchBeMsg.setDestination(GennyConstants.EVENT_WEBCMDS);
 		KafkaUtils.writeMsg(KafkaTopic.SEARCH_EVENTS, searchBeMsg);
 	}
 
@@ -273,6 +276,18 @@ public class SearchService {
 			}
 			searchBE.setPageStart(pagePos);
 			searchBE.setPageIndex(indexVal);
+		} else if(ops.equals(SearchOptions.FILTER)) {
+			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, attrName, value);
+
+			if (ea != null && attrName.isBlank()) { //sorting
+				searchBE.removeAttribute(code);
+				searchBE.addAttribute(ea);
+			}
+
+			if (!attrName.isBlank()) { //searching text
+				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+			}
+
 		}
 		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
 
@@ -309,42 +324,60 @@ public class SearchService {
 	/**
 	 * Send filter group and filter column for filter function
 	 * @param sbeCode SBE code
+	 * @param suffixCode Suffix code
 	 */
-	public void sendFilterGroup(String sbeCode) {
-		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
+	public void sendFilterGroup(String sbeCode, String suffixCode) {
+		try {
+			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
-		if(searchBE != null) {
-			String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
+			if (searchBE != null) {
+				String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
 
-			Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode);
+				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode, suffixCode);
+				QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
+				msgFilterGrp.setToken(userToken.getToken());
+				msgFilterGrp.setTargetCode(filterTargetCode);
+				msgFilterGrp.setMessage(GennyConstants.FILTERS);
+				msgFilterGrp.setTag(GennyConstants.FILTERS);
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
 
-			QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
-			msgFilterGrp.setToken(userToken.getToken());
-			msgFilterGrp.setTargetCode(filterTargetCode);
-			msgFilterGrp.setMessage(GennyConstants.FILTERS);
-			msgFilterGrp.setTag(GennyConstants.FILTERS);
-			KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
-
-
-			QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
-			msgAddFilter.setToken(userToken.getToken());
-			msgAddFilter.setTag("Name");
-			KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgAddFilter);
+				QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
+				msgAddFilter.setToken(userToken.getToken());
+				msgAddFilter.setTag("Name");
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgAddFilter);
+			}
+		}catch (Exception ex) {
+			log.error(ex);
 		}
 	}
 
 	/**
 	 * Send filter option
-	 * @param sbeCode SBE code
+	 * @param questionCode Question Code
+	 * @param sbeCode Search Base Entiy Code
 	 */
-	public void sendFilterOption(String sbeCode) {
-		Ask ask = searchUtils.getFilterOptionBySBECode(sbeCode);
+	public void sendFilterOption(String questionCode, String sbeCode) {
+		QDataBaseEntityMessage msg = searchUtils.getFilterOptionByEventCode(questionCode);
 
-		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
-		msg.setTargetCode(sbeCode);
+		msg.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		msg.setLinkCode(GennyConstants.LNK_CORE);
+		msg.setLinkValue(GennyConstants.LNK_ITEMS);
+		msg.setQuestionCode(questionCode);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
+	/**
+	 * Send filter select box or text box value
+	 * @param eventCode Event Code
+	 */
+	public void sendFilterValue(String eventCode, String lnkCode, String lnkVal) {
+		QDataBaseEntityMessage msg = null;
+		msg = searchUtils.getFilterSelectBoxValueByCode(eventCode, lnkCode,lnkVal);
+
+		msg.setToken(userToken.getToken());
+		msg.setTargetCode(eventCode);
 		msg.setMessage(GennyConstants.FILTERS);
-		msg.setTag(GennyConstants.FILTERS);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
@@ -362,5 +395,24 @@ public class SearchService {
 	 */
 	public void setFilterParams(Map<String, String> filterParams) {
 		this.filterParams = filterParams;
+	}
+
+
+	/**
+	 * handle filter by string in the table
+	 * @param attrCode Attribute code
+	 * @param attrName StringFilter
+	 * @param value  Value String
+	 * @param targetCode Target code
+	 */
+	public void handleFilterByString(String attrCode, StringFilter operator ,String value, String targetCode) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
+
+		searchBE.addFilter(attrCode, operator, value);
+
+		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
+
+		sendMessageBySearchEntity(searchBE);
+		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
 	}
 }
