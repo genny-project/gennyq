@@ -30,6 +30,8 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.entity.EntityEntity;
 import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.entity.SearchEntity.StringFilter;
+import life.genny.qwandaq.entity.SearchEntity.Filter;
 
 @ApplicationScoped
 public class SearchService {
@@ -268,6 +270,18 @@ public class SearchService {
 			}
 			searchBE.setPageStart(pagePos);
 			searchBE.setPageIndex(indexVal);
+		} else if(ops.equals(SearchOptions.FILTER)) {
+			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, attrName, value);
+
+			if (ea != null && attrName.isBlank()) { //sorting
+				searchBE.removeAttribute(code);
+				searchBE.addAttribute(ea);
+			}
+
+			if (!attrName.isBlank()) { //searching text
+				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+			}
+
 		}
 		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
 
@@ -304,15 +318,16 @@ public class SearchService {
 	/**
 	 * Send filter group and filter column for filter function
 	 * @param sbeCode SBE code
+	 * @param suffixCode Suffix code
 	 */
-	public void sendFilterGroup(String sbeCode) {
+	public void sendFilterGroup(String sbeCode, String suffixCode) {
 		try {
 			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
 			if (searchBE != null) {
 				String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
 
-				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode);
+				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode, suffixCode);
 				QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
 				msgFilterGrp.setToken(userToken.getToken());
 				msgFilterGrp.setTargetCode(filterTargetCode);
@@ -350,14 +365,9 @@ public class SearchService {
 	 * Send filter select box or text box value
 	 * @param eventCode Event Code
 	 */
-	public void sendFilterValue(String eventCode, String sbeCode, boolean selectedBox) {
+	public void sendFilterValue(String eventCode, String lnkCode, String lnkVal) {
 		QDataBaseEntityMessage msg = null;
-
-		if(selectedBox) {
-			msg = searchUtils.getFilterSelectBoxValueByCode(eventCode, sbeCode);
-		} else {
-			msg = searchUtils.getFilterTextBoxValueByCode(eventCode, sbeCode);
-		}
+		msg = searchUtils.getFilterSelectBoxValueByCode(eventCode, lnkCode,lnkVal);
 
 		msg.setToken(userToken.getToken());
 		msg.setTargetCode(eventCode);
@@ -379,5 +389,24 @@ public class SearchService {
 	 */
 	public void setFilterParams(Map<String, String> filterParams) {
 		this.filterParams = filterParams;
+	}
+
+
+	/**
+	 * handle filter by string in the table
+	 * @param attrCode Attribute code
+	 * @param attrName StringFilter
+	 * @param value  Value String
+	 * @param targetCode Target code
+	 */
+	public void handleFilterByString(String attrCode, StringFilter operator ,String value, String targetCode) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
+
+		searchBE.addFilter(attrCode, operator, value);
+
+		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
+
+		sendMessageBySearchEntity(searchBE);
+		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
 	}
 }

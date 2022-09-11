@@ -782,7 +782,7 @@ public class SearchUtils {
 	 * @param sbeCode Search Base Entity Code
 	 * @return Ask
 	 */
-	public Ask getFilterGroupBySearchBE(String sbeCode) {
+	public Ask getFilterGroupBySearchBE(String sbeCode, String suffixCode) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
 		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
@@ -793,8 +793,9 @@ public class SearchUtils {
 		question.setCode(filterCode);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 
+		log.info("suffixCode: " + suffixCode);
 		ask.setQuestion(question);
-		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode);
+		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, suffixCode);
 		ask.addChildAsk(addFilterAsk);
 
 		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode);
@@ -808,12 +809,24 @@ public class SearchUtils {
 	 * @param sbeCode Search Base Entity Code
 	 * @return Ask
 	 */
-	public Ask getAddFilterGroupBySearchBE(String sbeCode) {
+	public Ask getAddFilterGroupBySearchBE(String sbeCode,String suffixCode) {
 		String sourceCode = userToken.getUserCode();
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
 		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
 
 		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
+		Arrays.asList(ask.getChildAsks()).stream().forEach( e-> {
+			if(e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_COLUMN)
+					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
+					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_SUBMIT)) {
+				e.setHidden(false);
+			} else if(!suffixCode.isEmpty() && e.getAttributeCode().indexOf(suffixCode) > -1) {
+				e.setHidden(false);
+			} else {
+				e.setHidden(true);
+			}
+		});
+
 		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
 		ask.setTargetCode(targetCode);
 
@@ -969,34 +982,26 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter select option values
-	 * @param eventCode Event code
+	 * @param questionCode Question code
 	 * @return Ask
 	 */
-	public QDataBaseEntityMessage getFilterSelectBoxValueByCode(String eventCode, String sbeCode) {
+	public QDataBaseEntityMessage getFilterSelectBoxValueByCode(String questionCode, String lnkCode,String lnkVal) {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
-
-		String sourceCode = userToken.getUserCode();
-		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
 
 		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setQuestionCode(questionCode);
 
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(eventCode, source, target);
-		List<BaseEntity> items = new ArrayList<>();
+		SearchEntity searchBE = new SearchEntity(GennyConstants.SBE_DROPDOWN, GennyConstants.SBE_DROPDOWN)
+				.addColumn(GennyConstants.PRI_CODE, GennyConstants.PRI_CODE_LABEL);
+		searchBE.setRealm(userToken.getProductCode());
+		searchBE.setLinkCode(lnkCode);
+		searchBE.setLinkValue(lnkVal);
+		searchBE.setPageStart(0).setPageSize(1000);
 
-		if(ask.getChildAsks() !=null) {
-			Arrays.asList(ask.getChildAsks()).stream().forEach(e -> {
-				BaseEntity baseEntity = new BaseEntity();
-				baseEntity.setCode(e.getAttributeCode());
-				baseEntity.setName(e.getName());
-				items.add(baseEntity);
-				}
-			);
-		}
-
-		base.setItems(items);
+		List<BaseEntity> baseEntities = searchBaseEntitys(searchBE);
+		base.setItems(baseEntities);
 
 		return base;
 	}
@@ -1016,6 +1021,20 @@ public class SearchUtils {
 		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
+
+		Ask ask = qwandaUtils.generateAskFromQuestionCode(eventCode, source, target);
+		List<BaseEntity> items = new ArrayList<>();
+		if(ask.getChildAsks() !=null) {
+			Arrays.asList(ask.getChildAsks()).stream().forEach(e -> {
+						BaseEntity baseEntity = new BaseEntity();
+						baseEntity.setCode(e.getAttributeCode());
+						baseEntity.setName(e.getName());
+						items.add(baseEntity);
+					}
+			);
+		}
+
+		base.setItems(items);
 
 		return base;
 	}

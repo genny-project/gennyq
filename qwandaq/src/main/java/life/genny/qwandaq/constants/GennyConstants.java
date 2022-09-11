@@ -9,7 +9,8 @@ public final class GennyConstants {
     public static final String PAGINATION_PREV="QUE_TABLE_PREVIOUS_BTN";
     public static final String PAGINATION_INDEX="PRI_INDEX";
     public static final String SEARCH_TEXT="PRI_SEARCH_TEXT";
-    public static final String SEARCH_NAME="PRI_NAME";
+    public static final String PRI_NAME="PRI_NAME";
+    public static final String PRI_CODE="PRI_CODE";
     public static final String PCM_TABLE = "PCM_TABLE";
     public static final String PCM_PROCESS = "PCM_PROCESS";
     public static final String BUCKET_CODES = "BUCKET_CODES";
@@ -63,6 +64,10 @@ public final class GennyConstants {
     public static final String SEL_LESS_THAN = "SEL_LESS_THAN";
     public static final String SEL_LESS_THAN_OR_EQUAL_TO = "SEL_LESS_THAN_OR_EQUAL_TO";
 
+    //Dropdown
+    public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
+    public static final String PRI_CODE_LABEL = "CODE";
+    public static final String PRI_NAME_LABEL = "NAME";
 
     //event
     public static final String EVENT_WEBCMDS = "webcmds";
