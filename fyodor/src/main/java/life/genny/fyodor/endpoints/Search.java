@@ -8,6 +8,7 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -18,10 +19,11 @@ import org.jboss.logging.Logger;
 
 import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.http.HttpServerRequest;
-import life.genny.fyodor.utils.FyodorSearch;
 import life.genny.fyodor.utils.FyodorUltra;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.ServiceToken;
@@ -50,7 +52,7 @@ public class Search {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	FyodorUltra search;
+	FyodorUltra fyodor;
 
 	@Inject
 	UserToken userToken;
@@ -78,12 +80,10 @@ public class Search {
 			return Response.status(Response.Status.BAD_REQUEST).build();
 		}
 
-		log.info("PRODUCT CODE ===== " + userToken.getProductCode());
-
 		// Process search
 		Tuple2<List<String>, Long> tpl = null;
 		try {
-			tpl = search.search26(searchEntity);
+			tpl = fyodor.search26(searchEntity);
 		} catch (ItemNotFoundException e) {
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
@@ -116,7 +116,7 @@ public class Search {
 		// Process search
 		Tuple2<List<BaseEntity>, Long> tpl = null;
 		try {
-			tpl = search.fetch27(searchEntity);
+			tpl = fyodor.fetch26(searchEntity);
 		} catch (ItemNotFoundException e) {
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
@@ -147,7 +147,7 @@ public class Search {
 
 		Tuple2<List<String>, Long> tpl = null;
 		try {
-			tpl = search.search26(searchEntity);
+			tpl = fyodor.search26(searchEntity);
 		} catch (ItemNotFoundException e) {
 			return HttpUtils.error(e.getMessage());
 		}
@@ -156,6 +156,37 @@ public class Search {
 		log.infof("Found %s entities", count);
 
 		return ""+count;
+	}
+
+	@POST
+	@Path("/api/wildcard/{wildcard}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response fetch(@PathParam("wildcard") String wildcard) {
+
+		log.info("Fetch POST received..");
+
+		if (userToken == null) {
+			log.error("Bad or no header token in Search POST provided");
+			return Response.status(Response.Status.BAD_REQUEST).build();
+		}
+
+		SearchEntity searchEntity = new SearchEntity("SBE_WILDCARD", "Wildcard")
+			.add(new Filter("PRI_CODE", Operator.LIKE, "PER_%"))
+			.setWildcard(wildcard)
+			.setPageSize(100)
+			.setRealm(userToken.getProductCode());
+
+		// Process search
+		Tuple2<List<BaseEntity>, Long> tpl = null;
+		try {
+			tpl = fyodor.fetch26(searchEntity);
+		} catch (ItemNotFoundException e) {
+			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
+		}
+		log.info("Found " + tpl.getItem2() + " results!");
+
+		String json = jsonb.toJson(tpl);
+		return Response.ok().entity(json).build();
 	}
 
 }

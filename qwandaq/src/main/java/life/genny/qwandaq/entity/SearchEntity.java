@@ -2,6 +2,8 @@ package life.genny.qwandaq.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.jboss.logging.Logger;
@@ -9,6 +11,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.ClauseArgument;
@@ -18,6 +21,7 @@ import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.exception.runtime.ClassBuildException;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
@@ -136,7 +140,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(AssociatedColumn associatedColumn) {
-		// this.columns.add(associatedColumn);
+		this.columns.add(associatedColumn);
 		return this;
 	}
 
@@ -166,7 +170,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(Filter filter) {
-		clauseArguments.add(filter);
+		this.clauseArguments.add(new ClauseArgument(filter));
 		return this;
 	}
 
@@ -176,7 +180,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(And and) {
-		clauseArguments.add(and);
+		this.clauseArguments.add(new ClauseArgument(and));
 		return this;
 	}
 
@@ -186,7 +190,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity add(Or or) {
-		clauseArguments.add(or);
+		this.clauseArguments.add(new ClauseArgument(or));
 		return this;
 	}
 
@@ -486,7 +490,27 @@ public class SearchEntity extends BaseEntity {
 	public Integer getPageSize() {
 		return getValue("SCH_PAGE_SIZE", null);
 	}
-	
+
+	public String getSourceCode() {
+		return getValue("SCH_SOURCE_CODE", null);
+	}
+
+	public String getTargetCode() {
+		return getValue("SCH_TARGET_CODE", null);
+	}
+
+	public String getLinkCode() {
+		return getValue("SCH_LINK_CODE", null);
+	}
+
+	public String getLinkValue() {
+		return getValue("SCH_LINK_VALUE", null);
+	}
+
+	public String getWildcard() {
+		return getValue("SCH_WILDCARD", null);
+	}
+
 	/** 
 	 * This method allows to remove the attributes from the SearchEntity.
 	 * @param attributeCode the code of the column to remove
@@ -496,12 +520,29 @@ public class SearchEntity extends BaseEntity {
 		removeAttribute("COL_" + attributeCode);
 		return this;
 	}
+
+	/**
+	 * Get the allowed column codes
+	 * @return Set
+	 */
+	public Set<String> allowedColumns() {
+		return this.columns.stream()
+			.map(c -> c.getCode())
+			.collect(Collectors.toSet());
+	}
 	
+	/**
+	 * Convert to a saveable entity
+	 * @return SearchEntity
+	 */
 	public SearchEntity convertToSaveable() {
-		
 		return this;
 	}
 
+	/**
+	 * Convert to a sendable entity
+	 * @return SearchEntity
+	 */
 	public SearchEntity convertToSendable() {
 
 		// add action attributes
@@ -509,15 +550,17 @@ public class SearchEntity extends BaseEntity {
 			.forEach(i -> {
 				Column column = columns.get(i);
 				Attribute attribute = new Attribute(Column.PREFIX + column.getCode(), column.getName(), new DataType(String.class));
-				this.addAttribute(attribute, Double.valueOf(i));
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+				ea.setIndex(i);
 			});
 
 		// add action attributes
 		IntStream.range(0, this.actions.size())
 			.forEach(i -> {
 				Action action = actions.get(i);
-				Attribute attribute = new Attribute(Column.PREFIX + action.getCode(), action.getName(), new DataType(String.class));
-				this.addAttribute(attribute, Double.valueOf(i));
+				Attribute attribute = new Attribute(Action.PREFIX + action.getCode(), action.getName(), new DataType(String.class));
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+				ea.setIndex(i);
 			});
 
 		return this;

@@ -41,7 +41,7 @@ public class GennyResponseException extends GennyRuntimeException {
         log.debug(token);
 		if (requestHeaders != null) {
 			log.debug("======== RESPONSE HEADERS ===========");
-			HttpUtils.logHeaders(log::debug, responseHeaders);
+			// HttpUtils.logHeaders(log::debug, responseHeaders);
 		}
 
         super.printStackTrace();

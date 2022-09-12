@@ -3,24 +3,14 @@ package life.genny.qwandaq.entity.search.clause;
 /**
  * Clause
  */
-public abstract class Clause extends ClauseArgument {
+public class Clause {
 
-	ClauseArgument a, b;
-	
-	protected ClauseType type;
-
-	public static enum ClauseType {
-		AND,
-		OR
-	}
+	private ClauseArgument a, b;
 
 	public Clause() {
 	}
 
-	public Clause(ClauseType type) {
-	}
-
-	public Clause(ClauseArgument a, ClauseArgument b, ClauseType type) {
+	public Clause(ClauseArgument a, ClauseArgument b) {
 		this.a = a;
 		this.b = b;
 	}
@@ -39,14 +29,6 @@ public abstract class Clause extends ClauseArgument {
 
 	public void setB(ClauseArgument b) {
 		this.b = b;
-	}
-
-	public ClauseType getType() {
-		return type;
-	}
-
-	public void setType(ClauseType type) {
-		this.type = type;
 	}
 
 }

@@ -6,11 +6,11 @@ package life.genny.qwandaq.entity.search.clause;
 public class Or extends Clause {
 
 	public Or() {
-		super(ClauseType.OR);
+		super();
 	}
 
 	public Or(ClauseArgument a, ClauseArgument b) {
-		super(a, b, ClauseType.OR);
+		super(a, b);
 	}
 	
 }

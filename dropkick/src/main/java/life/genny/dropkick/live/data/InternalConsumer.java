@@ -1,11 +1,10 @@
-package life.genny.dropkick.live.data;
+:ackage life.genny.dropkick.live.data;
 
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -23,10 +22,10 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.Or;
+import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.DebugException;
@@ -129,7 +128,7 @@ public class InternalConsumer {
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 
 		BaseEntity target = null;
-		BaseEntity defBE = null;
+		BaseEntity definition = null;
 
 		if (!StringUtils.isBlank(processId)) {
 			ProcessData processData = qwandaUtils.fetchProcessData(processId);
@@ -138,20 +137,31 @@ public class InternalConsumer {
 				return;
 			}
 			target = qwandaUtils.generateProcessEntity(processData);
-			defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+			definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		} else {
 			target = beUtils.getBaseEntity(targetCode);
-			defBE = defUtils.getDEF(target);
+			definition = defUtils.getDEF(target);
 		}
 
-		log.info("Target DEF is " + defBE.getCode() + " : " + defBE.getName());
+		log.info("Target DEF is " + definition.getCode() + " : " + definition.getName());
 		log.info("Attribute is " + attrCode);
 
+		// grab search entity
+		String productCode = userToken.getProductCode();
 		String searchAttributeCode = new StringBuilder("SER_").append(attrCode).toString();
-		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute(searchAttributeCode);
-		if (searchAttribute.isEmpty()) {
-			throw new ItemNotFoundException(String.format("%s -> %s", defBE.getCode(), searchAttributeCode));
-		}
+		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
+		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
+
+		if (searchEntity == null)
+			throw new ItemNotFoundException(key);
+
+		// Filter by name wildcard provided by user
+		searchEntity.add(new Or(
+				new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
+				new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")
+			));
+
+		searchEntity.add(new Column("PRI_NAME", "Name"));
 
 		// init context map
 		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
@@ -160,21 +170,11 @@ public class InternalConsumer {
 		if (target != null)
 			ctxMap.put("TARGET", target);
 
-		// grab search entity
-		String productCode = userToken.getProductCode();
-		String key = new StringBuilder("SBE_").append(searchAttributeCode).toString();
-		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
-
-		// Filter by name wildcard provided by user
-		searchEntity.add(new Or(
-				new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
-				new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")
-			));
-
 		searchEntity.setRealm(userToken.getProductCode());
 		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
 
 		// Perform search and evaluate columns
+		log.info(jsonb.toJson(searchEntity));
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
 
 		if (results == null)

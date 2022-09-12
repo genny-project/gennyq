@@ -9,9 +9,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * AssociatedColumn
  */
 @RegisterForReflection
-public class AssociatedColumn extends Trait {
+public class AssociatedColumn extends Column {
 
-	public static final String PREFIX = "COL__";
 	public static final String DELIMITER = "__";
 
 	public AssociatedColumn() {
@@ -19,12 +18,9 @@ public class AssociatedColumn extends Trait {
 	}
 
 	public AssociatedColumn(String... fields) {
-
 		super();
-		String code = String.format("COL_%s", 
-			Stream.of(fields).limit(fields.length-1).collect(Collectors.joining("__")));
+		String code = "_" + Stream.of(fields).limit(fields.length-1).collect(Collectors.joining(DELIMITER));
 		String name = fields[fields.length-1];
-
 		setCode(code);
 		setName(name);
 	}

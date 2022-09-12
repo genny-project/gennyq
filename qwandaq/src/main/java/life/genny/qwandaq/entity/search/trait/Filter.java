@@ -18,7 +18,6 @@ public class Filter extends ClauseArgument {
 
 	private Operator operator;
 	private Object value;
-	private Capability capability;
 
 	@JsonbTransient 
 	private Class<?> c;
@@ -84,22 +83,23 @@ public class Filter extends ClauseArgument {
 		this.value = value;
 	}
 
-	public Boolean hasCapability() {
-		return (this.capability == null ? false : true);
-	}
+	// public Boolean hasCapability() {
+	// 	return (this.capability == null ? false : true);
+	// }
 
-	public Filter add(Capability capability) {
-		this.capability = capability;
-		return this;
-	}
+	// public Filter add(Capability capability) {
+	// 	this.capability = capability;
+	// 	return this;
+	// }
 
-	public Capability getCapability() {
-		return capability;
-	}
+	// public Capability getCapability() {
+	// 	return capability;
+	// }
 
-	public void setCapability(Capability capability) {
-		this.capability = capability;
-	}
+	// public void setCapability(Capability capability) {
+	// 	this.capability = capability;
+	// }
+
 
 	public Class<?> getC() {
 
@@ -108,6 +108,8 @@ public class Filter extends ClauseArgument {
 				this.c = Class.forName(className);
 			} catch (ClassNotFoundException e) {
 				throw new DebugException(e.getMessage());
+			} catch (NullPointerException e) {
+				throw new DebugException("className is null for filter with code " + getCode());
 			}
 		}
 

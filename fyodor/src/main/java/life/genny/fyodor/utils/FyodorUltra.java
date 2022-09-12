@@ -14,12 +14,14 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbException;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -34,18 +36,23 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.EntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
-import life.genny.qwandaq.entity.search.clause.Clause.ClauseType;
 import life.genny.qwandaq.entity.search.clause.ClauseArgument;
+import life.genny.qwandaq.entity.search.clause.Or;
+import life.genny.qwandaq.entity.search.clause.Clause.ClauseType;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.JsonConf;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
@@ -70,21 +77,21 @@ public class FyodorUltra {
 	@Inject
 	BaseEntityUtils beUtils;
 
-	Jsonb jsonb = JsonbBuilder.create();
+	static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.
 	 * @param searchEntity
 	 * @return
 	 */
-	public Tuple2<List<BaseEntity>, Long> fetch27(SearchEntity searchEntity) {
+	public Tuple2<List<BaseEntity>, Long> fetch26(SearchEntity searchEntity) {
 
 		// find codes and total
 		Tuple2<List<String>, Long> results = search26(searchEntity);
 		List<String> codes = results.getItem1();
 		Long count = results.getItem2();
 
-		Set<String> allowed = getSearchColumnFilterArray(searchEntity);
+		Set<String> allowed = searchEntity.allowedColumns();
 
 		// apply filter
 		List<BaseEntity> entities = new ArrayList<>();
@@ -93,9 +100,22 @@ public class FyodorUltra {
 			BaseEntity be = beUtils.getBaseEntity(codes.get(i));
 			be.setIndex(i);
 			be = beUtils.addNonLiteralAttributes(be);
+
+			// handle associated columns
+			Set<String> associatedCodes = allowed.stream()
+				.filter(code -> code.startsWith("_"))
+				.collect(Collectors.toSet());
+
+			for (String code : associatedCodes) {
+				Answer ans = getAssociatedColumnValue(be, code);
+				if (ans != null)
+					be.addAnswer(ans);
+			}
+
 			if (!searchEntity.getAllColumns()) {
 				be = beUtils.privacyFilter(be, allowed);
 			}
+
 			entities.add(be);
 		}
 
@@ -107,6 +127,14 @@ public class FyodorUltra {
 	 * @return
 	 */
 	public Tuple2<List<String>, Long> search26(SearchEntity searchEntity) {
+
+		if (searchEntity == null)
+			throw new NullParameterException("searchEntity");
+
+		log.infof("Performing Search (%s)", searchEntity.getCode());
+
+		log.info(jsonb.toJson(searchEntity));
+		log.info("=========");
 
 		// setup query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -122,6 +150,14 @@ public class FyodorUltra {
 			predicates.add(findClausePredicate(baseEntity, map, arg));
 		});
 
+		// link search
+		predicates.addAll(findLinkPredicates(baseEntity, map, searchEntity));
+
+		// handle wildcard search
+		String wildcard = searchEntity.getWildcard();
+		if (wildcard != null)
+			predicates.add(findWildcardPredicate(baseEntity, map, wildcard));
+
 		// find orders
 		List<Order> orders = new ArrayList<>();
 		searchEntity.getSorts().stream().forEach(sort -> {
@@ -133,6 +169,16 @@ public class FyodorUltra {
 		map.getMap().forEach((code, join) -> {
 			predicates.add(cb.equal(join.get("realm"), realm));
 		});
+
+		// ensure link join realm is correct
+		Join<BaseEntity, EntityEntity> linkJoin = map.getLinkJoin();
+		if (linkJoin != null) {
+			predicates.add(cb.equal(linkJoin.get("realm"), realm));
+
+			// order by weight of link if no orders are set
+			if (orders.isEmpty())
+				orders.add(cb.asc(linkJoin.get("weight")));
+		}
 
 		// build query
 		query.multiselect(baseEntity.get("code")).distinct(true);
@@ -154,14 +200,13 @@ public class FyodorUltra {
 		List<String> codes = tuples.stream().map(t -> (String) t.get(0)).collect(Collectors.toList());
 
 		// perform count
-		// CriteriaQuery<Long> count = cb.createQuery(Long.class);
-		// count.select(cb.count(count.from(BaseEntity.class))).distinct(true);
+		CriteriaQuery<Long> count = cb.createQuery(Long.class);
+		count.select(cb.count(baseEntity)).distinct(true);
 		// count.where(predicates.toArray(Predicate[]::new));
 		// count.orderBy(orders.toArray(Order[]::new));
 		// Long total = entityManager.createQuery(count).getSingleResult();
-		Long total = 1L;
 
-		return Tuple2.of(codes, total);
+		return Tuple2.of(codes, Long.valueOf(codes.size()));
 	}
 
 	/**
@@ -174,38 +219,43 @@ public class FyodorUltra {
 	public Predicate findClausePredicate(Root<BaseEntity> baseEntity, JoinMap map, ClauseArgument clauseArgument) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		String json = jsonb.toJson(clauseArgument);
+		log.info(json);
 
-		if (clauseArgument instanceof Clause) {
+		Filter filter = clauseArgument.getFilter();
+		if (filter != null)
+			return findFilterPredicate(baseEntity, map, filter);
 
-			// find predicate for each clause argument
-			Clause clause = (Clause) clauseArgument;
-			Predicate predicateA = findClausePredicate(baseEntity, map, clause.getA());
-			Predicate predicateB = findClausePredicate(baseEntity, map, clause.getB());
+		And and = clauseArgument.getAnd();
+		And or = clauseArgument.getOr();
 
-			ClauseType type = clause.getType();
+		Clause clause = (and != null ? and : or);
 
-			switch (type) {
-				case AND:
-					return cb.and(predicateA, predicateB);
-				case OR:
-					return cb.or(predicateA, predicateB);
-				default:
-					throw new QueryBuilderException("Invalid ClauseType: " + type);
-			}
+		// find predicate for each clause argument
+		Predicate predicateA = findClausePredicate(baseEntity, map, clause.getA());
+		Predicate predicateB = findClausePredicate(baseEntity, map, clause.getB());
+
+		ClauseType type = clause.getType();
+
+		if (and != null)
+			return cb.and(predicateA, predicateB);
+		else if (or != null)
+			return cb.or(predicateA, predicateB);
+		else
+			throw new QueryBuilderException("Invalid ClauseArgument: " + clauseArgument);
 		}
-
-		Filter filter = (Filter) clauseArgument;
-		return findFilterPredicate(baseEntity, map, filter);
 	}
 
 	/**
 	 * @param baseEntity
 	 * @param map
 	 * @param filter
-	 * @return
+	 * @return Predicate
 	 */
 	@SuppressWarnings("unchecked")
 	public Predicate findFilterPredicate(Root<BaseEntity> baseEntity, JoinMap map, Filter filter) {
+
+		log.info(jsonb.toJson(filter));
 
 		Class<?> c = filter.getC();
 		if (isChronoClass(c))
@@ -254,10 +304,11 @@ public class FyodorUltra {
 
 		Expression<?> expression = findExpression(baseEntity, map, filter.getCode(), map.getProductCode());
 
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		Operator operator = filter.getOperator();
 		Object value = filter.getValue();
 		Class<?> c = filter.getC();
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		switch (operator) {
 			case EQUALS:
@@ -296,6 +347,68 @@ public class FyodorUltra {
 			default:
 				throw new QueryBuilderException("Invalid Chrono Operator: " + operator + ", class: " + c);
 		}
+	}
+
+	/**
+	 * @param baseEntity
+	 * @param map
+	 * @param searchEntity
+	 */
+	public List<Predicate> findLinkPredicates(Root<BaseEntity> baseEntity, JoinMap map, SearchEntity searchEntity) {
+
+		String sourceCode = searchEntity.getSourceCode();
+		String targetCode = searchEntity.getTargetCode();
+		String linkCode = searchEntity.getLinkCode();
+		String linkValue = searchEntity.getLinkValue();
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		if (sourceCode == null && targetCode == null && linkCode == null && linkValue == null)
+			return predicates;
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		Join<BaseEntity, EntityEntity> join = baseEntity.join("links", JoinType.LEFT);
+
+		// Only look in targetCode if both are null
+		if (sourceCode == null && targetCode == null)
+			join.on(cb.equal(baseEntity.get("code"), join.get("link").get("targetCode")));
+		else if (sourceCode != null) {
+			join.on(cb.and(
+				cb.equal(join.get("link").get("sourceCode"), sourceCode),
+				cb.equal(baseEntity.get("code"), join.get("link").get("targetCode"))
+			));
+		} else if (targetCode != null) {
+			join.on(cb.and(
+				cb.equal(join.get("link").get("targetCode"), targetCode),
+				cb.equal(baseEntity.get("code"), join.get("link").get("sourceCode"))
+			));
+		}
+
+		if (linkCode != null)
+			predicates.add(cb.equal(join.get("link").get("attributeCode"), linkCode));
+		if (linkValue != null)
+			predicates.add(cb.equal(join.get("link").get("linkValue"), linkValue));
+
+		map.setLinkJoin(join);
+
+		return predicates;
+	}
+
+	/**
+	 * @param baseEntity
+	 * @param map
+	 * @param wildcard
+	 * @return
+	 */
+	public Predicate findWildcardPredicate(Root<BaseEntity> baseEntity, JoinMap map, String wildcard) {
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		Join<BaseEntity, EntityAttribute> join = baseEntity.join("baseEntityAttributes", JoinType.LEFT);
+		join.on(cb.equal(baseEntity.get("id"), join.get("pk").get("baseEntity").get("id")));
+		map.getMap().put("WILDCARD", join);
+
+		return cb.like(join.get("valueString"), "%"+wildcard+"%");
 	}
 
 	/**
@@ -413,15 +526,16 @@ public class FyodorUltra {
 	 */
 	public Answer getAssociatedColumnValue(BaseEntity entity, String code) {
 
-		code = StringUtils.removeStart(code, "COL__");
+		String cleanCode = StringUtils.removeStart(code, "_");
 
 		// recursively find value
-		Answer answer = getRecursiveColumnLink(entity, code);
+		Answer answer = getRecursiveColumnLink(entity, cleanCode);
 		if (answer == null)
 			return null;
 
 		// update attribute code for frontend
-		answer.getAttribute().setCode("_"+code);
+		answer.setAttributeCode(code);
+		answer.getAttribute().setCode(code);
 
 		return answer;
 	}
@@ -433,10 +547,13 @@ public class FyodorUltra {
 	 */
 	public Answer getRecursiveColumnLink(BaseEntity entity, String code) {
 
+		if (entity == null)
+			return null;
+
 		// split code to find next attribute in line
 		String[] array = code.split("__");
 		String attributeCode = array[0];
-		code = Stream.of(array).skip(1).collect(Collectors.joining());
+		code = Stream.of(array).skip(1).collect(Collectors.joining("__"));
 
 		// recursion
 		if (array.length > 1) {
@@ -460,7 +577,8 @@ public class FyodorUltra {
 
 		// create answer
 		Answer answer = new Answer(entity.getCode(), entity.getCode(), attributeCode, value);
-		Attribute attribute = qwandaUtils.getAttribute(code);
+		log.info(code);
+		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 		answer.setAttribute(attribute);
 
 		return answer;

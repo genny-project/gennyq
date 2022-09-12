@@ -10,6 +10,7 @@ import javax.persistence.criteria.Root;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.EntityEntity;
 
 /**
  * JoinMap
@@ -17,6 +18,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 public class JoinMap {
 
 	private Map<String, Join<BaseEntity, EntityAttribute>> map = new HashMap<>();
+	private Join<BaseEntity, EntityEntity> linkJoin;
 	private String productCode;
 
 	public JoinMap() {
@@ -38,13 +40,23 @@ public class JoinMap {
 
 		// add to map if not already there
 		if (!map.containsKey(code)) {
-			System.out.println("Creating new join");
 			Join<BaseEntity, EntityAttribute> join = baseEntity.join("baseEntityAttributes", JoinType.LEFT);
-			join.on(cb.equal(baseEntity.get("id"), join.get("pk").get("baseEntity").get("id")));
+			join.on(cb.and(
+				cb.equal(baseEntity.get("id"), join.get("pk").get("baseEntity").get("id")),
+				cb.equal(join.get("pk").get("attribute").get("code"), code)
+			));
 			map.put(code, join);
 		}
 
 		return map.get(code);
+	}
+
+	public Join<BaseEntity, EntityEntity> getLinkJoin() {
+		return linkJoin;
+	}
+
+	public void setLinkJoin(Join<BaseEntity, EntityEntity> linkJoin) {
+		this.linkJoin = linkJoin;
 	}
 
 	public String getProductCode() {

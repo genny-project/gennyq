@@ -21,9 +21,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -47,7 +45,7 @@ public class InternalConsumer {
 	UserToken userToken;
 
 	@Inject
-	FyodorUltra search;
+	FyodorUltra fyodor;
 
     void onStart(@Observes StartupEvent ev) {
 
@@ -78,7 +76,10 @@ public class InternalConsumer {
 
 		log.info("Handling search " + searchEntity.getCode());
 
-		Tuple2<List<BaseEntity>, Long> tpl = search.fetch27(searchEntity);
+		Tuple2<List<BaseEntity>, Long> tpl = fyodor.fetch26(searchEntity);
+
+		// convert to sendable
+		searchEntity = searchEntity.convertToSendable();
 
 		// send search message
 		QDataBaseEntityMessage searchMessage = new QDataBaseEntityMessage(searchEntity);
