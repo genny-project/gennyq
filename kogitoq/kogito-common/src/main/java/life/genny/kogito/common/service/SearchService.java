@@ -366,7 +366,7 @@ public class SearchService {
 		msg.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
 		msg.setLinkCode(GennyConstants.LNK_CORE);
 		msg.setLinkValue(GennyConstants.LNK_ITEMS);
-		msg.setQuestionCode(questionCode);
+		msg.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
@@ -411,14 +411,16 @@ public class SearchService {
 	 * @param targetCode Target code
 	 */
 	public void handleFilterByString(String attrCode, StringFilter operator ,String value, String cleanSbeCode) {
-		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), cleanSbeCode, SearchEntity.class);
+		String newSbeCode = searchUtils.getSearchBaseEntityCodeByJTI(cleanSbeCode);
 
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), cleanSbeCode, SearchEntity.class);
 		searchBE.addFilter(attrCode, operator, value);
-		CacheUtils.putObject(userToken.getRealm(), cleanSbeCode, searchBE);
+
+		searchBE.setCode(newSbeCode);
+		CacheUtils.putObject(userToken.getRealm(), newSbeCode, searchBE);
 
 		String question =  attrCode;
-		String newSbeCode = searchUtils.getSearchBaseEntityCodeByJTI(cleanSbeCode);
-		sendFilterGroup(cleanSbeCode,question);
+		sendFilterGroup(newSbeCode,question);
 
 		sendMessageBySearchEntity(searchBE);
 		sendSearchPCM(GennyConstants.PCM_TABLE, newSbeCode);

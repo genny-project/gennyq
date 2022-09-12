@@ -30,6 +30,9 @@ public final class GennyConstants {
     public static final String QUE_FILTER_VALUE_INTERNSHIP_TYPE = "QUE_FILTER_VALUE_INTERNSHIP_TYPE";
     public static final String QUE_FILTER_VALUE_ACADEMY = "QUE_FILTER_VALUE_ACADEMY";
     public static final String QUE_FILTER_VALUE_DJP_HC = "QUE_FILTER_VALUE_DJP_HC";
+    public static final String QUE_FILTER_VALUE_DATE = "QUE_FILTER_VALUE_DATE";
+    public static final String QUE_FILTER_VALUE_DATETIME = "QUE_FILTER_VALUE_DATETIME";
+    public static final String QUE_FILTER_VALUE_TIME = "QUE_FILTER_VALUE_TIME";
 
     //Link
     public static final String LNK_FILTER_COLUMN= "LNK_FILTER_COLUMN";
