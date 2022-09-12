@@ -778,15 +778,20 @@ public class SearchUtils {
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
 	}
 
+	public String getSearchBaseEntityCodeByJTI(String sbeCode) {
+		String newSbeCode =  sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		return newSbeCode;
+	}
 	/**
 	 * Return ask with filter group content
 	 * @param sbeCode Search Base Entity Code
+	 * @param questionCode Question code
 	 * @return Ask
 	 */
-	public Ask getFilterGroupBySearchBE(String sbeCode, String suffixCode) {
+	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
-		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		String  targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
 		ask.setTargetCode(targetCode);
 
 		String filterCode = GennyConstants.QUE_FILTER_GRP + "_" + targetCode;
@@ -794,9 +799,8 @@ public class SearchUtils {
 		question.setCode(filterCode);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 
-		log.info("suffixCode: " + suffixCode);
 		ask.setQuestion(question);
-		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, suffixCode);
+		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
 		ask.addChildAsk(addFilterAsk);
 
 		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode);
@@ -808,9 +812,10 @@ public class SearchUtils {
 	/**
 	 * Return ask with add filter group content
 	 * @param sbeCode Search Base Entity Code
+	 * @param questionCode Question code
 	 * @return Ask
 	 */
-	public Ask getAddFilterGroupBySearchBE(String sbeCode,String suffixCode) {
+	public Ask getAddFilterGroupBySearchBE(String sbeCode,String questionCode) {
 		String sourceCode = userToken.getUserCode();
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
 		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
@@ -821,14 +826,14 @@ public class SearchUtils {
 					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
 					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_SUBMIT)) {
 				e.setHidden(false);
-			} else if(!suffixCode.isEmpty() && e.getAttributeCode().indexOf(suffixCode) > -1) {
+			} else if(e.getQuestionCode().equalsIgnoreCase(questionCode)) {
 				e.setHidden(false);
-			} else {
+			}else {
 				e.setHidden(true);
 			}
 		});
 
-		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		String  targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
 		ask.setTargetCode(targetCode);
 
 		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_SUBMIT, source, target);
@@ -839,6 +844,7 @@ public class SearchUtils {
 		return ask;
 	}
 
+
 	/**
 	 * Construct exist filter group object
 	 * @param sbeCode Search Base Entity Code
@@ -847,7 +853,7 @@ public class SearchUtils {
 	public Ask getExistingFilterGroupBySearchBE(String sbeCode) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
-		String  targetCode = sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		String  targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
 		ask.setSourceCode(userToken.getUserCode());
 		ask.setTargetCode(targetCode);
 

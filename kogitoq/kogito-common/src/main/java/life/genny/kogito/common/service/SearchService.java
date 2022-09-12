@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.HashMap;
 import life.genny.qwandaq.entity.SearchEntity.StringFilter;
 import life.genny.qwandaq.entity.SearchEntity.Filter;
+import java.time.LocalDateTime;
 
 @ApplicationScoped
 public class SearchService {
@@ -331,7 +332,7 @@ public class SearchService {
 			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
 			if (searchBE != null) {
-				String filterTargetCode = sbeCode + "_" + userToken.getJTI().toUpperCase();
+				String filterTargetCode = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
 
 				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode, suffixCode);
 				QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
@@ -339,11 +340,13 @@ public class SearchService {
 				msgFilterGrp.setTargetCode(filterTargetCode);
 				msgFilterGrp.setMessage(GennyConstants.FILTERS);
 				msgFilterGrp.setTag(GennyConstants.FILTERS);
+				msgFilterGrp.setReplace(true);
 				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
 
 				QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
 				msgAddFilter.setToken(userToken.getToken());
 				msgAddFilter.setTag("Name");
+				msgAddFilter.setReplace(true);
 				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgAddFilter);
 			}
 		}catch (Exception ex) {
@@ -364,6 +367,7 @@ public class SearchService {
 		msg.setLinkCode(GennyConstants.LNK_CORE);
 		msg.setLinkValue(GennyConstants.LNK_ITEMS);
 		msg.setQuestionCode(questionCode);
+		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
@@ -378,6 +382,7 @@ public class SearchService {
 		msg.setToken(userToken.getToken());
 		msg.setTargetCode(eventCode);
 		msg.setMessage(GennyConstants.FILTERS);
+		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
@@ -405,7 +410,28 @@ public class SearchService {
 	 * @param value  Value String
 	 * @param targetCode Target code
 	 */
-	public void handleFilterByString(String attrCode, StringFilter operator ,String value, String targetCode) {
+	public void handleFilterByString(String attrCode, StringFilter operator ,String value, String cleanSbeCode) {
+		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), cleanSbeCode, SearchEntity.class);
+
+		searchBE.addFilter(attrCode, operator, value);
+		CacheUtils.putObject(userToken.getRealm(), cleanSbeCode, searchBE);
+
+		String question =  attrCode;
+		String newSbeCode = searchUtils.getSearchBaseEntityCodeByJTI(cleanSbeCode);
+		sendFilterGroup(cleanSbeCode,question);
+
+		sendMessageBySearchEntity(searchBE);
+		sendSearchPCM(GennyConstants.PCM_TABLE, newSbeCode);
+	}
+
+	/**
+	 * Handle filter by date time in the table
+	 * @param attrCode Attribute code
+	 * @param operator Operator
+	 * @param value Filter value
+	 * @param targetCode Event target code
+	 */
+	public void handleFilterByDateTime(String attrCode, Filter operator ,LocalDateTime value, String targetCode) {
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
 
 		searchBE.addFilter(attrCode, operator, value);
@@ -415,4 +441,5 @@ public class SearchService {
 		sendMessageBySearchEntity(searchBE);
 		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
 	}
+
 }
