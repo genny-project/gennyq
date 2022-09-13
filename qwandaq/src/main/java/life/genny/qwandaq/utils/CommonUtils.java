@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -127,7 +128,7 @@ public class CommonUtils {
      * @param list - list to get stringified array of
      * @return a JSON style array of object
      */
-    public static <T> String getArrayString(List<T> list) {
+    public static <T> String getArrayString(Collection<T> list) {
         return getArrayString(list, (item) -> item.toString());
     }
 
@@ -152,7 +153,7 @@ public class CommonUtils {
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
-    public static <T> String getArrayString(List<T> list, FIGetStringCallBack<T> stringCallback) {
+    public static <T> String getArrayString(Collection<T> list, FIGetStringCallBack<T> stringCallback) {
         String result = "";
         for(T object : list) {
             result += "\"" + stringCallback.getString(object) + "\",";

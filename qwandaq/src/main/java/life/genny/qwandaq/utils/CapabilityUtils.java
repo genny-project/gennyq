@@ -1,10 +1,12 @@
 package life.genny.qwandaq.utils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -94,6 +96,7 @@ public class CapabilityUtils {
 		}
 
 		target.addAttribute(capability, 0.0, getModeString(modes));
+		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), modes);
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -103,15 +106,10 @@ public class CapabilityUtils {
 		roleCode = cleanRoleCode(roleCode);
 		try {
 			role = dbUtils.findBaseEntityByCode(productCode, roleCode);
-			log.info("Found be: " + role.getCode());
 		} catch(NoResultException e) {
-			log.info("Could not find role: " + roleCode);
-			log.info("Creating role: " + roleCode);
 			role = new BaseEntity(roleCode, roleName);
-			// role = beUtils.create(roleDef, roleName, roleCode);
 			role.setRealm(productCode);
 			beUtils.updateBaseEntity(role);
-			log.info("Created be: " + role.getCode());
 		}
 		
 		return role;
@@ -202,7 +200,7 @@ public class CapabilityUtils {
 
 		// 1. Check override
 
-		// allow keycloak admin and devcs to do anything
+		// allow keycloak admin and devs to do anything
 		if (shouldOverride()) {
 			return true;
 		}
@@ -211,36 +209,43 @@ public class CapabilityUtils {
 		BaseEntity user = beUtils.getUserBaseEntity();
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 
-		try {
-			if (entityHasCapabilityCached(userToken.getProductCode(), user.getCode(), cleanCapabilityCode, hasAll, checkModes)) {
-				return true;
-			}
-		} catch (RoleException re) {
-			log.error(re.getMessage());
+		if (entityHasCapabilityCached(userToken.getProductCode(), user.getCode(), cleanCapabilityCode, hasAll, checkModes)) {
+			return true;
 		}
+
+		if (entityHasCapability(user, cleanCapabilityCode, hasAll, checkModes))
+			return true;
 
 		// 3. Check user role capabilities
 		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
 
 		try {
 			for (String code : roleCodes) {
-				// check cache first
-				if (entityHasCapabilityCached(userToken.getProductCode(), code, cleanCapabilityCode, hasAll, checkModes))
-					return true;
-
-				// now check db
 				BaseEntity role = beUtils.getBaseEntity(code);
-				if (role == null) {
-					log.error("Role: " + code + " does not exist in the database!");
+				if(role == null) {
+					log.error("Could not find role: " + code);
 					continue;
 				}
-
-				if (entityHasCapability(role, cleanCapabilityCode, hasAll, checkModes))
+				if(roleHasCapability(role, rawCapabilityCode, hasAll, checkModes))
 					return true;
 			}
 		} catch (RoleException re) {
 			log.error(re.getMessage());
 		}
+
+		return false;
+	}
+
+	public boolean roleHasCapability(final BaseEntity role, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) 
+		throws RoleException {
+		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		final String code = role.getCode();
+		// check cache first
+		if (entityHasCapabilityCached(userToken.getProductCode(), code, cleanCapabilityCode, hasAll, checkModes))
+			return true;
+
+		if (entityHasCapability(role, cleanCapabilityCode, hasAll, checkModes))
+			return true;
 
 		return false;
 	}
@@ -258,7 +263,7 @@ public class CapabilityUtils {
 	 */
 	@Deprecated
 	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
-		log.info("Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
+		log.warn("[!] Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
 		if (shouldOverride())
 			return true;
 
@@ -273,7 +278,6 @@ public class CapabilityUtils {
 		return priIsAttributes.stream().anyMatch((EntityAttribute priIsAttribute) -> {
 			String priIsCode = priIsAttribute.getAttributeCode();
 			String roleCode = ROLE_BE_PREFIX + priIsCode.substring(PRI_IS_PREFIX.length());
-			log.debug("[!] Scanning Role: " + roleCode);
 			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
 			if (roleBe == null) {
 				log.error("Could not find role: " + roleCode);
@@ -333,8 +337,6 @@ public class CapabilityUtils {
 		if (roles == null || roles.isEmpty())
 			throw new RoleException(String.format("No roles found for user %s", user.getCode()));
 
-		log.info(roles.toString());
-
 		// TODO: return redirect for roles based on priority
 		for (String role : roles) {
 			try {
@@ -374,9 +376,7 @@ public class CapabilityUtils {
 
 		String product = userToken.getProductCode();
 		String key = roleCode.concat(":REDIRECT");
-
-		log.info(key);
-
+		
 		// TODO: grab redirect for role
 		String redirectCode = CacheUtils.getObject(product, key, String.class);
 
@@ -434,53 +434,20 @@ public class CapabilityUtils {
 	}
 
 	/**
-	 * Check base entity object for capability
-	 * 
-	 * @param target
-	 * @param capabilityCode
-	 * @return
-	 * @throws RoleException if no capability configuration is found for the base
-	 *                       entity
-	 */
-	private Set<CapabilityMode> getEntityCapability(final BaseEntity target, final String capabilityCode)
-			throws RoleException {
-		RoleException re = new RoleException(
-				"BaseEntity: " + target.getCode() + "does not have capability in memory: " + capabilityCode);
-
-		Optional<EntityAttribute> optBeCapability = target.findEntityAttribute(capabilityCode);
-		if (optBeCapability.isPresent()) {
-			EntityAttribute beCapability = optBeCapability.get();
-			if (beCapability.getValueString() == null) {
-				throw re;
-			}
-
-			String modeString = beCapability.getValueString();
-
-			// get set from string. Not the fastest but it'll do
-			Set<CapabilityMode> modes = new HashSet<>();
-			Collections.addAll(modes, getCapModesFromString(modeString));
-			return modes;
-		} else {
-			throw re;
-		}
-	}
-
-	/**
 	 * Get a set of capability modes for a target and capability combination.
 	 * 
 	 * @param target         The target entity
 	 * @param capabilityCode The capability code
 	 * @return An array of CapabilityModes
 	 */
-	private Set<CapabilityMode> getEntityCapabilityFromCache(final String productCode, final String targetCode,
+	private CapabilityMode[] getEntityCapabilityFromCache(final String productCode, final String targetCode,
 			final String capabilityCode) throws RoleException {
 
 		String key = getCacheKey(targetCode, capabilityCode);
 
-		Set<CapabilityMode> modes = CacheUtils.getObject(productCode, key, HashSet.class);
+		CapabilityMode[] modes = CacheUtils.getObject(productCode, key, CapabilityMode[].class);
 		if (modes == null)
 			throw new RoleException("Nothing present for capability combination: ".concat(key));
-
 		return modes;
 	}
 
@@ -498,7 +465,6 @@ public class CapabilityUtils {
 			}
 
 			String modeString = beCapability.getValueString().toUpperCase();
-
 			if (hasAll) {
 				for (CapabilityMode checkMode : checkModes) {
 					boolean hasMode = modeString.contains(checkMode.name());
@@ -520,9 +486,14 @@ public class CapabilityUtils {
 	}
 
 	private boolean entityHasCapabilityCached(final String productCode, final String targetCode, final String cleanCapabilityCode, boolean hasAll,
-			final CapabilityMode... checkModes)
-			throws RoleException {
-		Set<CapabilityMode> modes = getEntityCapabilityFromCache(productCode, targetCode, cleanCapabilityCode);
+			final CapabilityMode... checkModes) {
+		Set<CapabilityMode> modes;
+		try {
+			CapabilityMode[] modeArray = getEntityCapabilityFromCache(productCode, targetCode, cleanCapabilityCode);
+			modes = Arrays.asList(modeArray).stream().collect(Collectors.toSet());
+		} catch (RoleException e) {
+			return false;
+		}
 
 		// Two separate loops so we don't check hasAll over and over again
 		if (hasAll) {

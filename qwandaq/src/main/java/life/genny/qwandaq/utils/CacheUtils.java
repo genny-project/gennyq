@@ -75,7 +75,7 @@ public class CacheUtils {
 	 */
 	public static String writeCache(String realm, String key, String value) {
 
-		log.infof("realm: %s, key: %s", realm, key);
+		log.debugf("realm: %s, key: %s", realm, key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
 		remoteCache.put(key, value);
 
