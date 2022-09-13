@@ -450,7 +450,7 @@ public class DatabaseUtils {
 	@Transactional
 	public void saveBaseEntity(BaseEntity entity) {
 
-		log.info("Saving BaseEntity " + entity.getRealm() + ":" + entity.getCode());
+		log.debug("Saving BaseEntity " + entity.getRealm() + ":" + entity.getCode());
 		checkEntityManager();
 		BaseEntity existingEntity = null;
 		try {
@@ -463,11 +463,9 @@ public class DatabaseUtils {
 			entityManager.persist(entity);
 		} else {
 			if(entity.getId() == null) entity.setId(existingEntity.getId());
-			log.info("Merging entity" + entity.getId() + ": " + entity.getCode() + " in realm " + entity.getRealm());
-			log.info("With entity " + existingEntity.getId() + ": " + existingEntity.getCode() + " in realm " + existingEntity.getRealm());
 			entityManager.merge(entity);
 		}
-		log.info("Successfully saved BaseEntity " + entity.getCode());
+		log.debug("Successfully saved BaseEntity " + entity.getCode());
 	}
 
 	/**
