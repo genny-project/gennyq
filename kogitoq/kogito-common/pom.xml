@@ -5,23 +5,11 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>kogitoq</artifactId>
-    <version>10.1.0</version>
+    <version>10.2.0</version>
   </parent>
   <artifactId>kogito-common</artifactId>
   <name>Genny Kogito Dependencies</name>
   <properties>
-    <kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
-    <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
-    <kogito.bom.version>1.23.0.Final</kogito.bom.version>
-    <!-- kogito -->
-    <kogito.version>1.24.0.Final</kogito.version>
-    <kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
-    <kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
-    <kogito.bom.version>1.24.0.Final</kogito.bom.version>
-    <version.org.optaplanner>8.24.0.Final</version.org.optaplanner>
-    <!-- drools -->
-    <version.org.drools>8.24.0.Beta</version.org.drools>
-		<jandex.version>1.0.7</jandex.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -127,6 +115,7 @@
     <dependency>
       <groupId>org.kie.kogito</groupId>
       <artifactId>kogito-quarkus-test-utils</artifactId>
+      <version>${kogito.bom.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

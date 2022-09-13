@@ -398,7 +398,7 @@ public class KogitoUtils {
 			String status = variables.getString("status");
 
 			// return first active instance id
-			if (status.equals("ACTIVE"))
+			if ("ACTIVE".equals(status))
 				return object.getString("id");
 		}
 

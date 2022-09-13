@@ -385,19 +385,15 @@ public class DefUtils {
 
 					if (requiresMerging != null && requiresMerging) {
 						// update Map with latest baseentity
-						if (beUtils != null) {
-							ctxMap.keySet().forEach(key -> {
-								Object value = ctxMap.get(key);
-								if (value.getClass().equals(BaseEntity.class)) {
-									BaseEntity baseEntity = (BaseEntity) value;
-									if (baseEntity != null) {
-										ctxMap.put(key, beUtils.getBaseEntityByCode(baseEntity.getCode()));
-									} else {
-										log.error("Missing "+key+" data in ctxMap");
-									}
-								}
-							});
-						}
+						ctxMap.keySet().forEach(key -> {
+							Object value = ctxMap.get(key);
+							if (value.getClass().equals(BaseEntity.class)) {
+								BaseEntity baseEntity = (BaseEntity) value;
+								BaseEntity savedEntity = beUtils.getBaseEntityByCode(baseEntity.getCode());
+								if(savedEntity != null) baseEntity = savedEntity;
+								ctxMap.put(key, baseEntity);
+							}
+						});
 						// check if contexts are present
 						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper

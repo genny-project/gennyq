@@ -8,13 +8,14 @@
 	<parent>
 		<groupId>life.genny</groupId>
 		<artifactId>gennyq</artifactId>
-		<version>10.1.0</version>
+		<version>10.2.0</version>
 	</parent>
 
 	<artifactId>bridge</artifactId>
 
 	<name>Bridge</name>
 	<description>A Bridge between Frontend and the Backend.</description>
+
         <properties>
                 <quarkus.platform.version>2.10.4.Final</quarkus.platform.version>
                 <quarkus-plugin.version>2.10.4.Final</quarkus-plugin.version>

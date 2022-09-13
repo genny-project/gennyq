@@ -71,9 +71,18 @@ public class BaseEntityUtils {
 	public BaseEntityUtils() {
 	}
 
+	public BaseEntityUtils(ServiceToken serviceToken, UserToken userToken) {
+		this.serviceToken = serviceToken;
+		this.userToken = userToken;
+	}
+
 	public BaseEntityUtils(ServiceToken serviceToken) {
 		this.serviceToken = serviceToken;
 		this.userToken = new UserToken(serviceToken.getToken());
+	}
+
+	public void setUserToken(UserToken userToken) {
+		this.userToken = userToken;
 	}
 
 	/**
@@ -362,11 +371,13 @@ public class BaseEntityUtils {
 	 * Hope this makes our code look a little
 	 * nicer :)
 	 * <p>
+	 * 
+	 * TODO: Consider moving this to CommonUtils
 	 *
 	 * @param value The value to clean
 	 * @return A clean string
 	 */
-	public static String cleanUpAttributeValue(String value) {
+	public String cleanUpAttributeValue(String value) {
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
 	}

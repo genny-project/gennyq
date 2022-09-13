@@ -357,7 +357,7 @@ public class SearchUtils {
 			String calBe = be.getValueAsString(attributeCode);
 
 			if (calBe != null && !calBe.isBlank()) {
-				String calVal = BaseEntityUtils.cleanUpAttributeValue(calBe);
+				String calVal = beUtils.cleanUpAttributeValue(calBe);
 				String[] codeArr = calVal.split(",");
 
 				for (String code : codeArr) {
@@ -446,7 +446,7 @@ public class SearchUtils {
 
 		// convert to entity list
 		log.info("dropdownValue = " + dropdownValue);
-		String cleanCode = BaseEntityUtils.cleanUpAttributeValue(dropdownValue);
+		String cleanCode = beUtils.cleanUpAttributeValue(dropdownValue);
 		BaseEntity target = beUtils.getBaseEntityByCode(cleanCode);
 
 		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_" + productCode.toUpperCase());
