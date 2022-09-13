@@ -33,35 +33,35 @@ public class SearchCaching {
 		);
 		cacheDropdown("DEF_ADDRESS",
 			new SearchEntity("SBE_LNK_SELECT_COUNTRY", "Country Dropdown")
-				.setLinkCode("COUNTRY")
+				.setLinkValue("COUNTRY")
 		);
 
 		// DEF_PERSON
 		cacheDropdown("DEF_PERSON",
 			new SearchEntity("SBE_LNK_ALL_EMAILS", "All Emails Dropdown")
-				.setLinkCode("YES_NO")
+				.setLinkValue("YES_NO")
 		);
 		cacheDropdown("DEF_PERSON",
 			new SearchEntity("SBE_LNK_SEND_EMAIL", "Send Emails Dropdown")
-				.setLinkCode("YES_NO")
+				.setLinkValue("YES_NO")
 		);
 		cacheDropdown("DEF_PERSON",
 			new SearchEntity("SBE_LNK_GENDER_SELECT", "Select Gender Dropdown")
-				.setLinkCode("GENDER")
+				.setLinkValue("GENDER")
 		);
 
 		// DEF_COMPANY
 		cacheDropdown("DEF_COMPANY",
 			new SearchEntity("SBE_LNK_SPECIFY_ABN", "Specify ABN Dropdown")
-				.setLinkCode("YES_NO")
+				.setLinkValue("YES_NO")
 		);
 		cacheDropdown("DEF_COMPANY",
 			new SearchEntity("SBE_LNK_NUMBER_STAFF", "Number Staff Dropdown")
-				.setLinkCode("NO_OF_STAFF")
+				.setLinkValue("NO_OF_STAFF")
 		);
 		cacheDropdown("DEF_COMPANY",
 			new SearchEntity("SBE_LNK_COMPANY_INDUSTRY", "Company Industry Dropdown")
-				.setLinkCode("COMPANY_INDUSTRY")
+				.setLinkValue("COMPANY_INDUSTRY")
 		);
 
 		// DEF_TOOL
@@ -89,23 +89,23 @@ public class SearchCaching {
 		// DEF_REMOTE_SERVICE
 		cacheDropdown("DEF_REMOTE_SERVICE",
 			new SearchEntity("SBE_LNK_PREFERRED_CONTACT", "Preferred Contact Dropdown")
-				.setLinkCode("PREF_CONTACT")
+				.setLinkValue("PREF_CONTACT")
 		);
 
 		// DEF_SEARCH_ENTITY
 		cacheDropdown("DEF_SEARCH_ENTITY",
 			new SearchEntity("SBE_LNK_SELECT_COUNTRY", "Select Country Dropdown")
-				.setLinkCode("COUNTRY")
+				.setLinkValue("COUNTRY")
 		);
 		cacheDropdown("DEF_SEARCH_ENTITY",
 			new SearchEntity("SBE_LNK_STATE", "Select State Dropdown")
-				.setLinkCode("AUS_STATE")
+				.setLinkValue("AUS_STATE")
 		);
 
 		// DEF_BUILDING
 		cacheDropdown("DEF_BUILDING",
 			new SearchEntity("SBE_LNK_AREA_UNIT", "Area Unit Dropdown")
-				.setLinkCode("AREA_UNIT")
+				.setLinkValue("AREA_UNIT")
 		);
 	}
 

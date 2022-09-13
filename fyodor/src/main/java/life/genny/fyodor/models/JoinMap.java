@@ -18,7 +18,7 @@ import life.genny.qwandaq.entity.EntityEntity;
 public class JoinMap {
 
 	private Map<String, Join<BaseEntity, EntityAttribute>> map = new HashMap<>();
-	private Join<BaseEntity, EntityEntity> linkJoin;
+	private Root<EntityEntity> linkJoin;
 	private String productCode;
 
 	public JoinMap() {
@@ -41,21 +41,18 @@ public class JoinMap {
 		// add to map if not already there
 		if (!map.containsKey(code)) {
 			Join<BaseEntity, EntityAttribute> join = baseEntity.join("baseEntityAttributes", JoinType.LEFT);
-			join.on(cb.and(
-				cb.equal(baseEntity.get("id"), join.get("pk").get("baseEntity").get("id")),
-				cb.equal(join.get("pk").get("attribute").get("code"), code)
-			));
+			join.on(cb.equal(join.get("pk").get("attribute").get("code"), code));
 			map.put(code, join);
 		}
 
 		return map.get(code);
 	}
 
-	public Join<BaseEntity, EntityEntity> getLinkJoin() {
+	public Root<EntityEntity> getLinkJoin() {
 		return linkJoin;
 	}
 
-	public void setLinkJoin(Join<BaseEntity, EntityEntity> linkJoin) {
+	public void setLinkJoin(Root<EntityEntity> linkJoin) {
 		this.linkJoin = linkJoin;
 	}
 

@@ -162,15 +162,14 @@ public class InternalConsumer {
 		// init context map
 		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
 		if (source != null)
-		ctxMap.put("SOURCE", source);
+			ctxMap.put("SOURCE", source);
 		if (target != null)
-		ctxMap.put("TARGET", target);
+			ctxMap.put("TARGET", target);
 
 		searchEntity.setRealm(userToken.getProductCode());
 		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
 
 		// Perform search and evaluate columns
-		log.info(jsonb.toJson(searchEntity));
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
 
 		if (results == null)
@@ -184,9 +183,9 @@ public class InternalConsumer {
 				item.getValueAsString(Attribute.PRI_NAME));
 
 			if (item.getValueAsString(Attribute.PRI_NAME) == null)
-			log.warn(logStr);
+				log.warn(logStr);
 			else
-			log.info(logStr);
+				log.info(logStr);
 		}
 
 		// Set all required message fields and return msg

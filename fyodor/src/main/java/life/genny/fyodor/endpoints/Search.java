@@ -6,6 +6,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -158,7 +159,7 @@ public class Search {
 		return ""+count;
 	}
 
-	@POST
+	@GET
 	@Path("/api/wildcard/{wildcard}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetch(@PathParam("wildcard") String wildcard) {
@@ -174,7 +175,7 @@ public class Search {
 			.add(new Filter("PRI_CODE", Operator.LIKE, "PER_%"))
 			.setWildcard(wildcard)
 			.setPageSize(100)
-			.setRealm(userToken.getProductCode());
+			.setRealm("lojing");
 
 		// Process search
 		Tuple2<List<BaseEntity>, Long> tpl = null;
