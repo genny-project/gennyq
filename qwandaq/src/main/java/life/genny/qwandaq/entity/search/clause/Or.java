@@ -1,16 +1,19 @@
 package life.genny.qwandaq.entity.search.clause;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * Or
  */
-public class Or extends Clause implements ClauseArgument {
+@RegisterForReflection
+public class Or extends Clause {
 
-  public Or() {
-    super();
-  }
+	public Or() {
+		super();
+	}
 
-  public Or(ClauseArgument a, ClauseArgument b) {
-    super(a, b);
-  }
+	public Or(ClauseArgument a, ClauseArgument b) {
+		super(a, b);
+	}
 
 }

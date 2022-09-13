@@ -173,11 +173,14 @@ public class FyodorUltra {
     // ensure link join realm is correct
     Join<BaseEntity, EntityEntity> linkJoin = map.getLinkJoin();
     if (linkJoin != null) {
+		log.info("link join present");
       predicates.add(cb.equal(linkJoin.get("realm"), realm));
 
       // order by weight of link if no orders are set
-      if (orders.isEmpty())
+      if (orders.isEmpty()) {
+		log.info("no orders present");
         orders.add(cb.asc(linkJoin.get("weight")));
+		}
     }
 
     // build query
@@ -240,7 +243,7 @@ public class FyodorUltra {
     else if (or != null)
       return cb.or(predicateA, predicateB);
     else
-      throw new QueryBuilderException("Invalid ClauseArgument: " + clauseContainer);
+      throw new QueryBuilderException("Invalid ClauseContainer: " + clauseContainer);
   }
 
   /**
@@ -358,18 +361,24 @@ public class FyodorUltra {
     String linkCode = searchEntity.getLinkCode();
     String linkValue = searchEntity.getLinkValue();
 
+	log.info("sourceCode = " + sourceCode);
+	log.info("targetCode = " + targetCode);
+	log.info("linkCode = " + linkCode);
+	log.info("linkValue = " + linkValue);
+
     List<Predicate> predicates = new ArrayList<>();
 
     if (sourceCode == null && targetCode == null && linkCode == null && linkValue == null)
       return predicates;
 
     CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-    Join<BaseEntity, EntityEntity> join = baseEntity.join("links", JoinType.LEFT);
+    Join<BaseEntity, EntityEntity> join = baseEntity.join("links", JoinType.INNER);
 
     // Only look in targetCode if both are null
-    if (sourceCode == null && targetCode == null)
+    if (sourceCode == null && targetCode == null) {
+		log.info("source and target null");
       join.on(cb.equal(baseEntity.get("code"), join.get("link").get("targetCode")));
-    else if (sourceCode != null) {
+		} else if (sourceCode != null) {
       join.on(cb.and(
           cb.equal(join.get("link").get("sourceCode"), sourceCode),
           cb.equal(baseEntity.get("code"), join.get("link").get("targetCode"))));
@@ -379,9 +388,10 @@ public class FyodorUltra {
           cb.equal(baseEntity.get("code"), join.get("link").get("sourceCode"))));
     }
 
-    if (linkCode != null)
+    if (linkCode != null) {
+		log.info("adding link code");
       predicates.add(cb.equal(join.get("link").get("attributeCode"), linkCode));
-    if (linkValue != null)
+		} if (linkValue != null)
       predicates.add(cb.equal(join.get("link").get("linkValue"), linkValue));
 
     map.setLinkJoin(join);

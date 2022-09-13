@@ -1,49 +1,57 @@
 package life.genny.qwandaq.entity.search.clause;
 
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 
 /**
  * Clause
  */
-public class Clause {
+@RegisterForReflection
+public class Clause implements ClauseArgument {
 
-  private ClauseContainer a, b;
+	private static final Logger log = Logger.getLogger(SearchEntity.class);
 
-  public Clause() {
-  }
+	private ClauseContainer a, b;
 
-  public Clause(ClauseArgument a, ClauseArgument b) {
-    this.a = createContainer(a);
-    this.b = createContainer(b);
-  }
+	public Clause() {
+		log.info("Empty");
+	}
 
-  public ClauseContainer getA() {
-    return a;
-  }
+	public Clause(ClauseArgument a, ClauseArgument b) {
+		this.a = createContainer(a);
+		this.b = createContainer(b);
+	}
 
-  public void setA(ClauseContainer a) {
-    this.a = a;
-  }
+	public ClauseContainer getA() {
+		return a;
+	}
 
-  public ClauseContainer getB() {
-    return b;
-  }
+	public void setA(ClauseContainer a) {
+		this.a = a;
+	}
 
-  public void setB(ClauseContainer b) {
-    this.b = b;
-  }
+	public ClauseContainer getB() {
+		return b;
+	}
 
-  private ClauseContainer createContainer(ClauseArgument clauseArgument) {
+	public void setB(ClauseContainer b) {
+		this.b = b;
+	}
 
-    ClauseContainer container = new ClauseContainer();
-    if (clauseArgument instanceof And)
-      container.setAnd((And) clauseArgument);
-    if (clauseArgument instanceof And)
-      container.setOr((Or) clauseArgument);
-    if (clauseArgument instanceof And)
-      container.setFilter((Filter) clauseArgument);
+	private ClauseContainer createContainer(ClauseArgument clauseArgument) {
 
-    return container;
-  }
+		ClauseContainer container = new ClauseContainer();
+		if (clauseArgument instanceof And)
+			container.setAnd((And) clauseArgument);
+		if (clauseArgument instanceof Or)
+			container.setOr((Or) clauseArgument);
+		if (clauseArgument instanceof Filter)
+			container.setFilter((Filter) clauseArgument);
+
+		return container;
+	}
 
 }

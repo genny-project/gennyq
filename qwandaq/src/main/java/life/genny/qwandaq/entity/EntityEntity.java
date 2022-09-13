@@ -38,20 +38,11 @@ import org.hibernate.annotations.Type;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
-
-
-
-
-
-
-
 @Entity
 @Table(name = "baseentity_baseentity")
-
 @AssociationOverrides({
     @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))
 })
-
 @RegisterForReflection
 public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 
@@ -83,7 +74,6 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 */
 	public Link getLink() {
 		return link;
-
 	}
 
 	/**
@@ -121,19 +111,16 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateAdapter.class)
 	private LocalDate valueDate;
 
 	/**
 	 * Store the LocalTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalTimeAdapter.class)
 	private LocalTime valueTime;
 
 	@Column(name = "money", length = 128)

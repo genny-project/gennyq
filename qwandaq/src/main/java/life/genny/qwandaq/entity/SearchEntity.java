@@ -81,7 +81,7 @@ public class SearchEntity extends BaseEntity {
     return clauseContainers;
   }
 
-  public void getClauseContainers(List<ClauseContainer> clauseContainers) {
+  public void setClauseContainers(List<ClauseContainer> clauseContainers) {
     this.clauseContainers = clauseContainers;
   }
 

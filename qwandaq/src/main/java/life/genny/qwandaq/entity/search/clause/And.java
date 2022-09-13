@@ -1,9 +1,12 @@
 package life.genny.qwandaq.entity.search.clause;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 /**
  * And
  */
-public class And extends Clause implements ClauseArgument {
+@RegisterForReflection
+public class And extends Clause {
 
   public And() {
     super();

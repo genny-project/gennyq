@@ -1,10 +1,12 @@
 package life.genny.qwandaq.entity.search.clause;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.search.trait.Filter;
 
 /**
  * ClauseArgument
  */
+@RegisterForReflection
 public class ClauseContainer {
 
   private Filter filter;
