@@ -460,9 +460,13 @@ public class DatabaseUtils {
 			log.debugf("%s not found in database, creating new row...", entity.getCode());
 		}
 
+		log.info("pre-cond Entity Manager status: " + (entityManager != null ? entityManager : " null"));
 		if (existingEntity == null) {
 			entityManager.persist(entity);
 		} else {
+			log.info("Merging entity" + entity.getId() + ": " + entity.getCode() + " in realm " + entity.getRealm());
+			log.info("With entity " + existingEntity.getId() + ": " + existingEntity.getCode() + " in realm " + existingEntity.getRealm());
+			log.info("Entity Manager status: " + (entityManager != null ? entityManager : " null"));
 			entityManager.merge(entity);
 		}
 		log.info("Successfully saved BaseEntity " + entity.getCode());

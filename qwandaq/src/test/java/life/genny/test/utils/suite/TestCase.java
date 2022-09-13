@@ -36,8 +36,6 @@ public class TestCase<I, E> {
         return "Test [" + (name != null ? name : "Unnamed Test") + "]";
     }
 
-
-
     // Helper classes
     public static class Input<T> {
         public T input;

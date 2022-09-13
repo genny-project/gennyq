@@ -486,6 +486,14 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		} else {
 			this.getBaseEntityAttributes().add(entityAttribute);
 		}
+		return updateEntityAttributePk(entityAttribute, attribute);
+	}
+
+	private EntityAttribute updateEntityAttributePk(EntityAttribute entityAttribute, Attribute attribute) {
+		if(attribute.getCode().startsWith("CAP")) log.info("Updating baseentityAttribute: " + this.getCode() + ":" + entityAttribute.getAttributeCode());
+		entityAttribute.setBaseEntity(this);
+		entityAttribute.setAttribute(attribute);
+
 		return entityAttribute;
 	}
 

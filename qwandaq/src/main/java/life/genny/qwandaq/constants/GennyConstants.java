@@ -19,7 +19,7 @@ public final class GennyConstants {
 
     // ================================== CAPABILITY CONSTANTS =============================================
 	// Capability Attribute Prefix
-	public static final String CAP_CODE_PREFIX = "PRM_";
+	public static final String CAP_CODE_PREFIX = "CAP_";
 	public static final String ROLE_BE_PREFIX = "ROL_";
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
