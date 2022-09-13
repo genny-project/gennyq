@@ -1,9 +1,9 @@
-package life.genny.qwandaq.utils;
+package life.genny.qwandaq.utils.capabilities;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,6 +31,11 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 import static life.genny.qwandaq.constants.GennyConstants.LNK_ROLE_CODE;
 import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
@@ -376,7 +381,7 @@ public class CapabilityUtils {
 
 		String product = userToken.getProductCode();
 		String key = roleCode.concat(":REDIRECT");
-		
+
 		// TODO: grab redirect for role
 		String redirectCode = CacheUtils.getObject(product, key, String.class);
 
@@ -432,6 +437,25 @@ public class CapabilityUtils {
 
 		return cleanRoleCode;
 	}
+
+
+
+	public Map<String, Attribute> getMap(String productCode, String[][] attribData) {
+		Map<String, Attribute> capabilityMap = new HashMap<String, Attribute>();
+
+		Arrays.asList(attribData).stream()
+		// Map data to capability. If capability name/tag is missing then use the code with standard capitalisation
+		.map((String[] item) -> createCapability(productCode, item[0], (item[1] != null ? item[1] : normalizeCode(item[0]))))
+		// add each capability attribute to the capability map, stripping the CAP_ prefix to be used with the constants
+		.forEach((Attribute attr) -> capabilityMap.put(attr.getCode().substring(4), attr));
+		
+		return capabilityMap;
+	}
+
+	private String normalizeCode(String code) {
+		return code.substring(0, 1).toUpperCase() + code.substring(1).toLowerCase();
+	}
+
 
 	/**
 	 * Get a set of capability modes for a target and capability combination.

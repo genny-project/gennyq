@@ -77,12 +77,11 @@ public class QwandaUtils {
 	public QwandaUtils() {
 	}
 
-	// Deliberately package private!
-	Attribute saveAttribute(final Attribute attribute) {
+	public Attribute saveAttribute(final Attribute attribute) {
 		return saveAttribute(userToken.getProductCode(), attribute);
 	}
 	
-	Attribute saveAttribute(final String productCode, final Attribute attribute) {
+	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
 		if (existingAttrib != null) {
