@@ -982,35 +982,34 @@ public class SearchUtils {
 	}
 
 	/**
-	 * Return ask with filter select option values
-	 * @param eventCode Event code
-	 * @return Ask
+	 * Return Data Message of bucket select filter
+	 * @param queGrp Question group
+	 * @param queCode Question code
+	 * @param lnkCode Link code
+	 * @param lnkVal Link value
+	 * @return Data message of bucket select filter
 	 */
-	public QDataBaseEntityMessage getFilterTextBoxValueByCode(String eventCode, String sbeCode) {
+	public QDataBaseEntityMessage getBucketSelectFilter(String queGrp,String queCode, String lnkCode,String lnkVal) {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
-		String sourceCode = userToken.getUserCode();
-		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
-
-		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
+		base.setParentCode(queGrp);
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setQuestionCode(queCode);
 
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(eventCode, source, target);
-		List<BaseEntity> items = new ArrayList<>();
-		if(ask.getChildAsks() !=null) {
-			Arrays.asList(ask.getChildAsks()).stream().forEach(e -> {
-						BaseEntity baseEntity = new BaseEntity();
-						baseEntity.setCode(e.getAttributeCode());
-						baseEntity.setName(e.getName());
-						items.add(baseEntity);
-					}
-			);
-		}
+		SearchEntity searchBE = new SearchEntity(GennyConstants.SBE_DROPDOWN, GennyConstants.SBE_DROPDOWN)
+				.addColumn(GennyConstants.PRI_CODE, GennyConstants.PRI_CODE_LABEL);
+		searchBE.setRealm(userToken.getProductCode());
+		searchBE.setLinkCode(lnkCode);
+		searchBE.setLinkValue(lnkVal);
+		searchBE.setPageStart(0).setPageSize(1000);
 
-		base.setItems(items);
+		List<BaseEntity> baseEntities = searchBaseEntitys(searchBE);
+		base.setItems(baseEntities);
 
 		return base;
 	}
+
+
+
 }

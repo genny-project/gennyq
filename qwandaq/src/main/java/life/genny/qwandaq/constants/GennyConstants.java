@@ -79,4 +79,8 @@ public final class GennyConstants {
     //caching
     public static final String CACHING_SBE = "SBE_";
 
+    //bucket filter
+    public static final String QUE_BUCKET_INTERNS_GRP = "QUE_BUCKET_INTERNS_GRP";
+    public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
+
 }

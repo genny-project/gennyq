@@ -158,6 +158,8 @@ public class SearchService {
 				searchUtils.searchTable(e);
 				sendSearchPCM("PCM_PROCESS", e);
 			});
+
+			sendBucketSelectFilter(GennyConstants.QUE_BUCKET_INTERNS_GRP,GennyConstants.QUE_SELECT_INTERN);
 		}catch (Exception ex){
 			log.error(ex);
 		}
@@ -405,43 +407,59 @@ public class SearchService {
 
 	/**
 	 * handle filter by string in the table
+	 * @param que Question code
 	 * @param attrCode Attribute code
-	 * @param attrName StringFilter
+	 * @param oper StringFilter Operator
 	 * @param value  Value String
 	 * @param targetCode Target code
 	 */
-	public void handleFilterByString(String attrCode, StringFilter operator ,String value, String cleanSbeCode) {
+	public void handleFilterByString(String que,String attrCode, StringFilter oper,String value, String cleanSbeCode) {
 		String newSbeCode = searchUtils.getSearchBaseEntityCodeByJTI(cleanSbeCode);
 
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), cleanSbeCode, SearchEntity.class);
-		searchBE.addFilter(attrCode, operator, value);
+		searchBE.addFilter(attrCode, oper, value);
 
 		searchBE.setCode(newSbeCode);
-		CacheUtils.putObject(userToken.getRealm(), newSbeCode, searchBE);
+		CacheUtils.putObject(userToken.getRealm(), cleanSbeCode, searchBE);
 
-		String question =  attrCode;
-		sendFilterGroup(newSbeCode,question);
-
+		sendFilterGroup(newSbeCode,que);
 		sendMessageBySearchEntity(searchBE);
 		sendSearchPCM(GennyConstants.PCM_TABLE, newSbeCode);
 	}
 
 	/**
 	 * Handle filter by date time in the table
+	 * @param que Question code
 	 * @param attrCode Attribute code
 	 * @param operator Operator
 	 * @param value Filter value
 	 * @param targetCode Event target code
 	 */
-	public void handleFilterByDateTime(String attrCode, Filter operator ,LocalDateTime value, String targetCode) {
+	public void handleFilterByDateTime(String que,String attrCode, Filter oper,LocalDateTime value, String targetCode) {
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
 
-		searchBE.addFilter(attrCode, operator, value);
+		searchBE.addFilter(attrCode, oper, value);
 
 		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
 
 		sendMessageBySearchEntity(searchBE);
 		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
 	}
+
+	/**
+	 * Send message to bucket page with filter data
+	 * @param queGroup Question group
+	 * @param queCode Question code
+	 */
+	public void sendBucketSelectFilter(String queGroup,String queCode) {
+		QDataBaseEntityMessage msg = searchUtils.getBucketSelectFilter(queGroup,queCode,GennyConstants.LNK_CORE,"INTERNS");
+
+		msg.setToken(userToken.getToken());
+		msg.setParentCode(queGroup);
+		msg.setQuestionCode(queCode);
+		msg.setReplace(true);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
 
 }
