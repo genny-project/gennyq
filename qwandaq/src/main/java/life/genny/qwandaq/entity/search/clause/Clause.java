@@ -1,34 +1,49 @@
 package life.genny.qwandaq.entity.search.clause;
 
+import life.genny.qwandaq.entity.search.trait.Filter;
+
 /**
  * Clause
  */
 public class Clause {
 
-	private ClauseArgument a, b;
+  private ClauseContainer a, b;
 
-	public Clause() {
-	}
+  public Clause() {
+  }
 
-	public Clause(ClauseArgument a, ClauseArgument b) {
-		this.a = a;
-		this.b = b;
-	}
+  public Clause(ClauseArgument a, ClauseArgument b) {
+    this.a = createContainer(a);
+    this.b = createContainer(b);
+  }
 
-	public ClauseArgument getA() {
-		return a;
-	}
+  public ClauseContainer getA() {
+    return a;
+  }
 
-	public void setA(ClauseArgument a) {
-		this.a = a;
-	}
+  public void setA(ClauseContainer a) {
+    this.a = a;
+  }
 
-	public ClauseArgument getB() {
-		return b;
-	}
+  public ClauseContainer getB() {
+    return b;
+  }
 
-	public void setB(ClauseArgument b) {
-		this.b = b;
-	}
+  public void setB(ClauseContainer b) {
+    this.b = b;
+  }
+
+  private ClauseContainer createContainer(ClauseArgument clauseArgument) {
+
+    ClauseContainer container = new ClauseContainer();
+    if (clauseArgument instanceof And)
+      container.setAnd((And) clauseArgument);
+    if (clauseArgument instanceof And)
+      container.setOr((Or) clauseArgument);
+    if (clauseArgument instanceof And)
+      container.setFilter((Filter) clauseArgument);
+
+    return container;
+  }
 
 }

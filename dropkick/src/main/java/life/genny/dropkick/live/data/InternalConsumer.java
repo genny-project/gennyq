@@ -1,4 +1,4 @@
-:ackage life.genny.dropkick.live.data;
+package life.genny.dropkick.live.data;
 
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
@@ -48,165 +48,164 @@ import life.genny.serviceq.intf.GennyScopeInit;
 @ApplicationScoped
 public class InternalConsumer {
 
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
-	@ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
-	Integer defaultDropDownSize;
+  @ConfigProperty(name = "genny.default.dropdown.size", defaultValue = "25")
+  Integer defaultDropDownSize;
 
-	@Inject
-	GennyScopeInit scope;
+  @Inject
+  GennyScopeInit scope;
 
-	@Inject
-	Service service;
+  @Inject
+  Service service;
 
-	@Inject
-	UserToken userToken;
+  @Inject
+  UserToken userToken;
 
-	@Inject
-	DefUtils defUtils;
+  @Inject
+  DefUtils defUtils;
 
-	@Inject
-	QwandaUtils qwandaUtils;
+  @Inject
+  QwandaUtils qwandaUtils;
 
-	@Inject
-	BaseEntityUtils beUtils;
+  @Inject
+  BaseEntityUtils beUtils;
 
-	@Inject
-	CapabilityUtils capabilityUtils;
+  @Inject
+  CapabilityUtils capabilityUtils;
 
-	@Inject
-	GraphQLUtils gqlUtils;
+  @Inject
+  GraphQLUtils gqlUtils;
 
-	@Inject
-	SearchUtils searchUtils;
+  @Inject
+  SearchUtils searchUtils;
 
-	Jsonb jsonb = JsonbBuilder.create();
+  Jsonb jsonb = JsonbBuilder.create();
 
-	void onStart(@Observes StartupEvent ev) {
+  void onStart(@Observes StartupEvent ev) {
 
-		if (service.showValues()) {
-			log.info("Default dropdown size  : " + defaultDropDownSize);
-		}
+    if (service.showValues()) {
+      log.info("Default dropdown size  : " + defaultDropDownSize);
+    }
 
-		service.fullServiceInit(true);
-		log.info("[*] Finished Startup!");
-	}
+    service.fullServiceInit(true);
+    log.info("[*] Finished Startup!");
+  }
 
-	/**
-	 * Consume incoming answers for inference
-	 */
-	@Incoming("events")
-	@Blocking
-	public void getData(String event) {
+  /**
+   * Consume incoming answers for inference
+   */
+  @Incoming("events")
+  @Blocking
+  public void getData(String event) {
 
-		Instant start = Instant.now();
-		
-		// deserialise message
-		JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
-	
-		if (!jsonStr.getString("event_type").equals("DD")) {
-			return; // TODO: This should not get here?
-		}
+    Instant start = Instant.now();
 
-		// init scope and process msg
-		scope.init(event);
-		log.debug("Consumed message: " + event);
+    // deserialise message
+    JsonObject jsonStr = jsonb.fromJson(event, JsonObject.class);
 
-		JsonObject dataJson = jsonStr.getJsonObject("data");
+    if (!jsonStr.getString("event_type").equals("DD")) {
+      return; // TODO: This should not get here?
+    }
 
-		// grab necessarry info
-		String attrCode = jsonStr.getString("attributeCode");
-		String sourceCode = dataJson.getString("sourceCode");
-		String targetCode = dataJson.getString("targetCode");
-		String searchText = dataJson.getString("value");
-		String parentCode = dataJson.getString("parentCode");
-		String questionCode = dataJson.getString("questionCode");
-		String processId = dataJson.getString("processId");
+    // init scope and process msg
+    scope.init(event);
+    log.debug("Consumed message: " + event);
 
-		log.info(attrCode + ":" + parentCode + ":[" + searchText + "]");
+    JsonObject dataJson = jsonStr.getJsonObject("data");
 
-		BaseEntity source = beUtils.getBaseEntity(sourceCode);
+    // grab necessarry info
+    String attrCode = jsonStr.getString("attributeCode");
+    String sourceCode = dataJson.getString("sourceCode");
+    String targetCode = dataJson.getString("targetCode");
+    String searchText = dataJson.getString("value");
+    String parentCode = dataJson.getString("parentCode");
+    String questionCode = dataJson.getString("questionCode");
+    String processId = dataJson.getString("processId");
 
-		BaseEntity target = null;
-		BaseEntity definition = null;
+    log.info(attrCode + ":" + parentCode + ":[" + searchText + "]");
 
-		if (!StringUtils.isBlank(processId)) {
-			ProcessData processData = qwandaUtils.fetchProcessData(processId);
-			if (processData == null) {
-				log.error("Process data not found for processId: " + processId);
-				return;
-			}
-			target = qwandaUtils.generateProcessEntity(processData);
-			definition = beUtils.getBaseEntity(processData.getDefinitionCode());
-		} else {
-			target = beUtils.getBaseEntity(targetCode);
-			definition = defUtils.getDEF(target);
-		}
+    BaseEntity source = beUtils.getBaseEntity(sourceCode);
 
-		log.info("Target DEF is " + definition.getCode() + " : " + definition.getName());
-		log.info("Attribute is " + attrCode);
+    BaseEntity target = null;
+    BaseEntity definition = null;
 
-		// grab search entity
-		String productCode = userToken.getProductCode();
-		String searchAttributeCode = new StringBuilder("SER_").append(attrCode).toString();
-		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
-		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
+    if (!StringUtils.isBlank(processId)) {
+      ProcessData processData = qwandaUtils.fetchProcessData(processId);
+      if (processData == null) {
+        log.error("Process data not found for processId: " + processId);
+        return;
+      }
+      target = qwandaUtils.generateProcessEntity(processData);
+      definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+    } else {
+      target = beUtils.getBaseEntity(targetCode);
+      definition = defUtils.getDEF(target);
+    }
 
-		if (searchEntity == null)
-			throw new ItemNotFoundException(key);
+    log.info("Target DEF is " + definition.getCode() + " : " + definition.getName());
+    log.info("Attribute is " + attrCode);
 
-		// Filter by name wildcard provided by user
-		searchEntity.add(new Or(
-				new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
-				new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")
-			));
+    // grab search entity
+    String productCode = userToken.getProductCode();
+    String searchAttributeCode = new StringBuilder("SER_").append(attrCode).toString();
+    String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
+    SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
 
-		searchEntity.add(new Column("PRI_NAME", "Name"));
+    if (searchEntity == null)
+      throw new ItemNotFoundException(key);
 
-		// init context map
-		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
-		if (source != null)
-			ctxMap.put("SOURCE", source);
-		if (target != null)
-			ctxMap.put("TARGET", target);
+    // Filter by name wildcard provided by user
+    searchEntity.add(new Or(
+        new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
+        new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
 
-		searchEntity.setRealm(userToken.getProductCode());
-		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
+    searchEntity.add(new Column("PRI_NAME", "Name"));
 
-		// Perform search and evaluate columns
-		log.info(jsonb.toJson(searchEntity));
-		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
+    // init context map
+    Map<String, Object> ctxMap = new ConcurrentHashMap<>();
+    if (source != null)
+      ctxMap.put("SOURCE", source);
+    if (target != null)
+      ctxMap.put("TARGET", target);
 
-		if (results == null)
-			throw new DebugException("Dropdown search returned null");
+    searchEntity.setRealm(userToken.getProductCode());
+    searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
 
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(results);
-		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
+    // Perform search and evaluate columns
+    log.info(jsonb.toJson(searchEntity));
+    List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
 
-		for (BaseEntity item : msg.getItems()) {
-			String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
-				item.getValueAsString(Attribute.PRI_NAME));
+    if (results == null)
+      throw new DebugException("Dropdown search returned null");
 
-			if (item.getValueAsString(Attribute.PRI_NAME) == null)
-				log.warn(logStr);
-			else
-				log.info(logStr);
-		}
+    QDataBaseEntityMessage msg = new QDataBaseEntityMessage(results);
+    log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
-		// Set all required message fields and return msg
-		msg.setParentCode(parentCode);
-		msg.setQuestionCode(questionCode);
-		msg.setToken(userToken.getToken());
-		msg.setLinkCode("LNK_CORE");
-		msg.setLinkValue("ITEMS");
-		msg.setReplace(true);
-		msg.setShouldDeleteLinkedBaseEntities(false);
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+    for (BaseEntity item : msg.getItems()) {
+      String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
+          item.getValueAsString(Attribute.PRI_NAME));
 
-		// log duration
-		scope.destroy();
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
+      if (item.getValueAsString(Attribute.PRI_NAME) == null)
+        log.warn(logStr);
+      else
+        log.info(logStr);
+    }
+
+    // Set all required message fields and return msg
+    msg.setParentCode(parentCode);
+    msg.setQuestionCode(questionCode);
+    msg.setToken(userToken.getToken());
+    msg.setLinkCode("LNK_CORE");
+    msg.setLinkValue("ITEMS");
+    msg.setReplace(true);
+    msg.setShouldDeleteLinkedBaseEntities(false);
+    KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+
+    // log duration
+    scope.destroy();
+    Instant end = Instant.now();
+    log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+  }
 
 }
