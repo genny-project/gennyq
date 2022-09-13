@@ -94,6 +94,7 @@ public class QwandaUtils {
 		}
 
 		CacheUtils.putObject(productCode, attribute.getCode(), attribute);
+		attribute.setRealm(productCode);
 		databaseUtils.saveAttribute(attribute);
 
 		return CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);

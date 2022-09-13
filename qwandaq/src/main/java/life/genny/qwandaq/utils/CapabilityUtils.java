@@ -1,6 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -106,13 +105,15 @@ public class CapabilityUtils {
 			role = dbUtils.findBaseEntityByCode(productCode, roleCode);
 			log.info("Found be: " + role.getCode());
 		} catch(NoResultException e) {
+			log.info("Could not find role: " + roleCode);
+			log.info("Creating role: " + roleCode);
 			role = new BaseEntity(roleCode, roleName);
+			// role = beUtils.create(roleDef, roleName, roleCode);
 			role.setRealm(productCode);
-			dbUtils.saveBaseEntity(role);
+			beUtils.updateBaseEntity(role);
 			log.info("Created be: " + role.getCode());
 		}
 		
-		//beUtils.create(roleDef, roleName, roleCode);
 		return role;
 	}
 
@@ -140,7 +141,7 @@ public class CapabilityUtils {
 		try {
 			attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
 		} catch(ItemNotFoundException e) {
-			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new attribute");
+			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
 		}
 
 		if (attribute == null) {
@@ -154,11 +155,11 @@ public class CapabilityUtils {
 
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
 			final CapabilityMode... modes) {
-		// Check the user token has required capabilities
 		if(capabilityAttribute == null) {
 			throw new ItemNotFoundException(productCode, "Capability Attribute");
 		}
 
+		// Check the user token has required capabilities
 		if(!shouldOverride()) {
 			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
 					+ " TO BASE ENTITITY: " + targetBe.getCode());

@@ -38,7 +38,7 @@ public class CapabilityUtilsTest {
         tests.add(
             builder.setName("Clean Cap 1")
                     .setInput("OWN_APPLE")
-                    .setExpected("PRM_OWN_APPLE")
+                    .setExpected("CAP_OWN_APPLE")
                     .setTest(testFunction)
                     .build()
         );
@@ -46,7 +46,7 @@ public class CapabilityUtilsTest {
         tests.add(
             builder.setName("Clean Cap 2")
                     .setInput("oWn_ApplE")
-                    .setExpected("PRM_OWN_APPLE")
+                    .setExpected("CAP_OWN_APPLE")
                     .setTest(testFunction)
                     .build()
         );

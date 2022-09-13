@@ -240,10 +240,21 @@ public class BaseEntityUtils {
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
+		return updateBaseEntity(userToken.getProductCode(), baseEntity);
+	}
+
+	/**
+	 * Update a {@link BaseEntity} in the database and the cache.
+	 *
+	 * @param productCode The productCode to cache into
+	 * @param baseEntity The BaseEntity to update
+	 * @return the newly cached BaseEntity
+	 */
+	public BaseEntity updateBaseEntity(String productCode, BaseEntity baseEntity) {
 
 		// ensure for all entityAttribute that baseentity and attribute are not null
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
-
+			ea.setRealm(productCode);
 			if (ea.getPk().getBaseEntity() == null) {
 				ea.getPk().setBaseEntity(baseEntity);
 			}
@@ -254,8 +265,9 @@ public class BaseEntityUtils {
 			}
 		}
 
+		baseEntity.setRealm(productCode);
 		databaseUtils.saveBaseEntity(baseEntity);
-		CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
+		CacheUtils.putObject(productCode, baseEntity.getCode(), baseEntity);
 
 		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),
 		// baseEntity.getCode());
@@ -650,6 +662,8 @@ public class BaseEntityUtils {
 		// save to DB and cache
 		updateBaseEntity(item);
 
+		// TODO: Surely we don't have to fetch attribute from attribute code if the attribute
+		// is already stored in the entity attribute?
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
