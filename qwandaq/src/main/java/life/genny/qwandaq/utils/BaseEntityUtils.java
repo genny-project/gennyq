@@ -526,6 +526,8 @@ public class BaseEntityUtils {
 		return entity;
 	}
 
+	// We can parameterise this but there is no point if we aren't going to have any
+	// more NonLiteralAttributes than what is already here - Bryn
 	/**
 	 * Add all non literal attributes to the baseentity.
 	 * 
@@ -537,26 +539,21 @@ public class BaseEntityUtils {
 		// Handle Created and Updated attributes
 		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
-		// Ensure createdDate is not null
-		try {
-			created.setValueDateTime(entity.getCreated());
-		} catch (NullPointerException e) {
+
+		if(entity.getCreated() == null) {
 			log.error("NPE for PRI_CREATED. Generating created date");
 			entity.autocreateCreated();
-			created.setValueDateTime(entity.getCreated());
 		}
+		
+		// Ensure createdDate is not null
+		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
 
 		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
 		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
+
 		// Ensure createdDate is not null
-		try {
-			createdDate.setValueDate(entity.getCreated().toLocalDate());
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_CREATED_DATE. Generating created date");
-			entity.autocreateCreated();
-			createdDate.setValueDate(entity.getCreated().toLocalDate());
-		}
+		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
 
 		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
@@ -564,37 +561,25 @@ public class BaseEntityUtils {
 		try {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_UPDATED");
-		}
 
-		try {
 			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
 			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
 			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
 			entity.addAttribute(updatedDate);
 		} catch (NullPointerException e) {
-			log.error("NPE for PRI_UPDATED_DATE");
+			log.error("NPE for PRI_UPDATED");
 		}
 
-		try {
-			Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
-			EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
-			code.setValueString(entity.getCode());
-			entity.addAttribute(code);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_CODE");
-		}
+		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
+		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
+		code.setValueString(entity.getCode());
+		entity.addAttribute(code);
 
-		try {
-			Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
-			EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
-			name.setValueString(entity.getName());
-			entity.addAttribute(name);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_NAME");
-		}
-
+		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
+		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
+		name.setValueString(entity.getName());
+		entity.addAttribute(name);
+		
 		return entity;
 	}
 
