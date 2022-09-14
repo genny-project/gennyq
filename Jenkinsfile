@@ -4,6 +4,15 @@ pipeline {
         ansiColor('xterm')
     }
     stages {
+        stage('Add Config files') {
+            steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh "cat ./ports"
+                    sh ". ./ports"
+                    echo $DATAINDEX_PORT
+                }
+            }
+        }
         stage("Clone") {
             steps {
                 git branch: "${BRANCH_TO_BUILD}",
