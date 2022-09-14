@@ -11,6 +11,8 @@ public class Trait {
 	private String code;
 	private String name;
 
+	private Capability capability;
+
 	public Trait() {
 	}
 
@@ -33,6 +35,14 @@ public class Trait {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Capability getCapability() {
+		return capability;
+	}
+
+	public void setCapability(Capability capability) {
+		this.capability = capability;
 	}
 
 }

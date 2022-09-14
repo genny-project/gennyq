@@ -14,7 +14,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbException;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -41,7 +40,6 @@ import life.genny.qwandaq.entity.EntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
-import life.genny.qwandaq.entity.search.clause.ClauseArgument;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -80,11 +78,11 @@ public class FyodorUltra {
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
-   * Fetch an array of BaseEntities using a SearchEntity.
-   * 
-   * @param searchEntity
-   * @return
-   */
+	 * Fetch an array of BaseEntities using a SearchEntity.
+	 * 
+	 * @param searchEntity
+	 * @return
+	 */
 	public Tuple2<List<BaseEntity>, Long> fetch26(SearchEntity searchEntity) {
 
 		// find codes and total
@@ -104,18 +102,18 @@ public class FyodorUltra {
 
 			// handle associated columns
 			Set<String> associatedCodes = allowed.stream()
-			.filter(code -> code.startsWith("_"))
-			.collect(Collectors.toSet());
+					.filter(code -> code.startsWith("_"))
+					.collect(Collectors.toSet());
 
 			for (String code : associatedCodes) {
 				Answer ans = getAssociatedColumnValue(be, code);
+
 				if (ans != null)
-			be.addAnswer(ans);
+					be.addAnswer(ans);
 			}
 
-			if (!searchEntity.getAllColumns()) {
+			if (!searchEntity.getAllColumns())
 				be = beUtils.privacyFilter(be, allowed);
-			}
 
 			entities.add(be);
 		}
@@ -124,13 +122,13 @@ public class FyodorUltra {
 	}
 
 	/**
-   * @param searchEntity
-   * @return
-   */
+	 * @param searchEntity
+	 * @return
+	 */
 	public Tuple2<List<String>, Long> search26(SearchEntity searchEntity) {
 
 		if (searchEntity == null)
-		throw new NullParameterException("searchEntity");
+			throw new NullParameterException("searchEntity");
 
 		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
 
@@ -155,7 +153,7 @@ public class FyodorUltra {
 		// handle wildcard search
 		String wildcard = searchEntity.getWildcard();
 		if (wildcard != null)
-		predicates.add(findWildcardPredicate(baseEntity, map, wildcard));
+			predicates.add(findWildcardPredicate(baseEntity, map, wildcard));
 
 		// find orders
 		List<Order> orders = new ArrayList<>();
@@ -175,10 +173,14 @@ public class FyodorUltra {
 			predicates.add(cb.equal(linkJoin.get("realm"), realm));
 
 			// order by weight of link if no orders are set
-			if (orders.isEmpty()) {
+			if (orders.isEmpty())
 				orders.add(cb.asc(linkJoin.get("weight")));
-			}
 		}
+
+		// handle status (defaults to ACTIVE)
+		EEntityStatus status = searchEntity.getSearchStatus();
+		log.info("Search Status: [" + status.toString() + "]");
+		predicates.add(cb.le(baseEntity.get("status").as(Integer.class), status.ordinal()));
 
 		// build query
 		query.multiselect(baseEntity.get("code")).distinct(true);
@@ -190,36 +192,36 @@ public class FyodorUltra {
 		Integer pageSize = searchEntity.getPageSize() != null ? searchEntity.getPageSize() : defaultPageSize;
 		Integer pageStart = searchEntity.getPageStart() != null ? searchEntity.getPageStart() : 0;
 
-		// defaults to ACTIVE
-		EEntityStatus status = searchEntity.getSearchStatus();
-		log.info("Search Status: [" + status.toString() + "]");
-
 		// perform main query
 		List<Tuple> tuples = entityManager
-		.createQuery(query)
-		.setFirstResult(pageStart)
-		.setMaxResults(pageSize)
-		.getResultList();
+				.createQuery(query)
+				.setFirstResult(pageStart)
+				.setMaxResults(pageSize)
+				.getResultList();
 
 		List<String> codes = tuples.stream().map(t -> (String) t.get(0)).collect(Collectors.toList());
 
-		// perform count
+		// build count query
 		CriteriaQuery<Long> count = cb.createQuery(Long.class);
-		count.select(cb.count(baseEntity.get("code"))).distinct(true);
+		Root<BaseEntity> countBaseEntity = count.from(BaseEntity.class);
+
+		count.select(cb.count(countBaseEntity)).distinct(true);
 		count.where(predicates.toArray(Predicate[]::new));
 		count.orderBy(orders.toArray(Order[]::new));
+
+		// perform count
 		Long total = entityManager.createQuery(count).getSingleResult();
 
 		return Tuple2.of(codes, total);
 	}
 
 	/**
-   * @param query
-   * @param baseEntity
-   * @param map
-   * @param clauseContainer
-   * @return
-   */
+	 * @param query
+	 * @param baseEntity
+	 * @param map
+	 * @param clauseContainer
+	 * @return
+	 */
 	public Predicate findClausePredicate(Root<BaseEntity> baseEntity, JoinMap map, ClauseContainer clauseContainer) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -246,17 +248,17 @@ public class FyodorUltra {
 	}
 
 	/**
-   * @param baseEntity
-   * @param map
-   * @param filter
-   * @return Predicate
-   */
+	 * @param baseEntity
+	 * @param map
+	 * @param filter
+	 * @return Predicate
+	 */
 	@SuppressWarnings("unchecked")
 	public Predicate findFilterPredicate(Root<BaseEntity> baseEntity, JoinMap map, Filter filter) {
 
 		Class<?> c = filter.getC();
 		if (isChronoClass(c))
-		return findChronoPredicate(baseEntity, map, filter);
+			return findChronoPredicate(baseEntity, map, filter);
 
 		Expression<?> expression = findExpression(baseEntity, map, filter.getCode(), map.getProductCode());
 
@@ -267,36 +269,40 @@ public class FyodorUltra {
 
 		switch (operator) {
 			case LIKE:
-			return cb.like((Expression<String>) expression, String.class.cast(value));
+				return cb.like((Expression<String>) expression, String.class.cast(value));
 			case NOT_LIKE:
-			return cb.notLike((Expression<String>) expression, String.class.cast(value));
+				return cb.notLike((Expression<String>) expression, String.class.cast(value));
 			case CONTAINS:
-			return cb.like((Expression<String>) expression, "\"" + String.class.cast(value) + "\"");
+				return cb.like((Expression<String>) expression, "\"" + String.class.cast(value) + "\"");
 			case NOT_CONTAINS:
-			return cb.notLike((Expression<String>) expression, "\"" + String.class.cast(value) + "\"");
+				return cb.notLike((Expression<String>) expression, "\"" + String.class.cast(value) + "\"");
+			case STARTS_WITH:
+				return cb.like((Expression<String>) expression, String.class.cast(value) + "%");
+			case NOT_STARTS_WITH:
+				return cb.notLike((Expression<String>) expression, String.class.cast(value) + "%");
 			case EQUALS:
-			return cb.equal(expression, value);
+				return cb.equal(expression, value);
 			case NOT_EQUALS:
-			return cb.notEqual(expression, value);
+				return cb.notEqual(expression, value);
 			case GREATER_THAN:
-			return cb.gt((Expression<Number>) expression, Number.class.cast(value));
+				return cb.gt((Expression<Number>) expression, Number.class.cast(value));
 			case LESS_THAN:
-			return cb.lt((Expression<Number>) expression, Number.class.cast(value));
+				return cb.lt((Expression<Number>) expression, Number.class.cast(value));
 			case GREATER_THAN_OR_EQUAL:
-			return cb.ge((Expression<Number>) expression, Number.class.cast(value));
+				return cb.ge((Expression<Number>) expression, Number.class.cast(value));
 			case LESS_THAN_OR_EQUAL:
-			return cb.le((Expression<Number>) expression, Number.class.cast(value));
+				return cb.le((Expression<Number>) expression, Number.class.cast(value));
 			default:
-			throw new QueryBuilderException("Invalid Operator: " + operator);
+				throw new QueryBuilderException("Invalid Operator: " + operator);
 		}
 	}
 
 	/**
-* @param baseEntity
-   * @param map
-   * @param filter
-   * @return
-   */
+	 * @param baseEntity
+	 * @param map
+	 * @param filter
+	 * @return
+	 */
 	public Predicate findChronoPredicate(Root<BaseEntity> baseEntity, JoinMap map, Filter filter) {
 
 		Expression<?> expression = findExpression(baseEntity, map, filter.getCode(), map.getProductCode());
@@ -309,64 +315,60 @@ public class FyodorUltra {
 
 		switch (operator) {
 			case EQUALS:
-			return cb.equal(expression, value);
+				return cb.equal(expression, value);
 			case NOT_EQUALS:
-			return cb.notEqual(expression, value);
+				return cb.notEqual(expression, value);
 			case GREATER_THAN:
-			// TODO: Remove triple ifs (Bryn)
-			if (c == LocalDateTime.class)
-			return cb.greaterThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
-			if (c == LocalDate.class)
-			return cb.greaterThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
-			if (c == LocalTime.class)
-			return cb.greaterThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+				// TODO: Remove triple ifs (Bryn)
+				if (c == LocalDateTime.class)
+					return cb.greaterThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.greaterThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.greaterThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
 			case LESS_THAN:
-			if (c == LocalDateTime.class)
-			return cb.lessThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
-			if (c == LocalDate.class)
-			return cb.lessThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
-			if (c == LocalTime.class)
-			return cb.lessThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+				if (c == LocalDateTime.class)
+					return cb.lessThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.lessThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.lessThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
 			case GREATER_THAN_OR_EQUAL:
-			if (c == LocalDateTime.class)
-			return cb.greaterThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
-			if (c == LocalDate.class)
-			return cb.greaterThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
-			if (c == LocalTime.class)
-			return cb.greaterThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+				if (c == LocalDateTime.class)
+					return cb.greaterThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.greaterThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.greaterThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
 			case LESS_THAN_OR_EQUAL:
-			if (c == LocalDateTime.class)
-			return cb.lessThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
-			if (c == LocalDate.class)
-			return cb.lessThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
-			if (c == LocalTime.class)
-			return cb.lessThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+				if (c == LocalDateTime.class)
+					return cb.lessThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.lessThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.lessThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
 			default:
-			throw new QueryBuilderException("Invalid Chrono Operator: " + operator + ", class: " + c);
+				throw new QueryBuilderException("Invalid Chrono Operator: " + operator + ", class: " + c);
 		}
 	}
 
 	/**
-   * @param baseEntity
-   * @param map
-   * @param searchEntity
-   */
-	public List<Predicate> findLinkPredicates(CriteriaQuery<Tuple> query, Root<BaseEntity> baseEntity, JoinMap map, SearchEntity searchEntity) {
+	 * @param baseEntity
+	 * @param map
+	 * @param searchEntity
+	 */
+	public List<Predicate> findLinkPredicates(CriteriaQuery<Tuple> query, Root<BaseEntity> baseEntity, JoinMap map,
+			SearchEntity searchEntity) {
 
 		String sourceCode = searchEntity.getSourceCode();
 		String targetCode = searchEntity.getTargetCode();
 		String linkCode = searchEntity.getLinkCode();
 		String linkValue = searchEntity.getLinkValue();
 
-		log.info("sourceCode = " + sourceCode);
-		log.info("targetCode = " + targetCode);
-		log.info("linkCode = " + linkCode);
-		log.info("linkValue = " + linkValue);
-
 		List<Predicate> predicates = new ArrayList<>();
 
 		if (sourceCode == null && targetCode == null && linkCode == null && linkValue == null)
-		return predicates;
+			return predicates;
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		Root<EntityEntity> entityEntity = query.from(EntityEntity.class);
@@ -376,19 +378,19 @@ public class FyodorUltra {
 			predicates.add(cb.equal(baseEntity.get("code"), entityEntity.get("link").get("targetCode")));
 		} else if (sourceCode != null) {
 			predicates.add(cb.and(
-				cb.equal(entityEntity.get("link").get("sourceCode"), sourceCode),
-				cb.equal(baseEntity.get("code"), entityEntity.get("link").get("targetCode"))));
+					cb.equal(entityEntity.get("link").get("sourceCode"), sourceCode),
+					cb.equal(baseEntity.get("code"), entityEntity.get("link").get("targetCode"))));
 		} else if (targetCode != null) {
 			predicates.add(cb.and(
-				cb.equal(entityEntity.get("link").get("targetCode"), targetCode),
-				cb.equal(baseEntity.get("code"), entityEntity.get("link").get("sourceCode"))));
+					cb.equal(entityEntity.get("link").get("targetCode"), targetCode),
+					cb.equal(baseEntity.get("code"), entityEntity.get("link").get("sourceCode"))));
 		}
 
 		if (linkCode != null) {
-			log.info("adding link code");
 			predicates.add(cb.equal(entityEntity.get("link").get("attributeCode"), linkCode));
-		} if (linkValue != null)
-		predicates.add(cb.equal(entityEntity.get("link").get("linkValue"), linkValue));
+		}
+		if (linkValue != null)
+			predicates.add(cb.equal(entityEntity.get("link").get("linkValue"), linkValue));
 
 		map.setLinkJoin(entityEntity);
 
@@ -396,11 +398,11 @@ public class FyodorUltra {
 	}
 
 	/**
-   * @param baseEntity
-   * @param map
-   * @param wildcard
-   * @return
-   */
+	 * @param baseEntity
+	 * @param map
+	 * @param wildcard
+	 * @return
+	 */
 	public Predicate findWildcardPredicate(Root<BaseEntity> baseEntity, JoinMap map, String wildcard) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -413,11 +415,11 @@ public class FyodorUltra {
 	}
 
 	/**
-   * @param baseEntity
-   * @param map
-   * @param sort
-   * @return
-   */
+	 * @param baseEntity
+	 * @param map
+	 * @param sort
+	 * @return
+	 */
 	public Order findSortPredicate(Root<BaseEntity> baseEntity, JoinMap map, Sort sort) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -426,13 +428,13 @@ public class FyodorUltra {
 		Expression<?> expression = null;
 
 		if (code.startsWith("PRI_CREATED"))
-		expression = baseEntity.<LocalDateTime>get("created");
+			expression = baseEntity.<LocalDateTime>get("created");
 		else if (code.startsWith("PRI_UPDATED"))
-		expression = baseEntity.<LocalDateTime>get("updated");
+			expression = baseEntity.<LocalDateTime>get("updated");
 		else if (code.equals("PRI_CODE"))
-		expression = baseEntity.<String>get("code");
+			expression = baseEntity.<String>get("code");
 		else if (code.equals("PRI_NAME"))
-		expression = baseEntity.<String>get("name");
+			expression = baseEntity.<String>get("name");
 		else {
 			log.info("Sort code = " + code);
 			Join<BaseEntity, EntityAttribute> entityAttribute = map.get(cb, baseEntity, code);
@@ -442,30 +444,30 @@ public class FyodorUltra {
 
 		// select order type
 		if (order == Ord.ASC)
-		return cb.asc(expression);
+			return cb.asc(expression);
 		else if (order == Ord.DESC)
-		return cb.desc(expression);
+			return cb.desc(expression);
 		else
-		throw new QueryBuilderException("Invalid sort order " + order + " for code " + code);
+			throw new QueryBuilderException("Invalid sort order " + order + " for code " + code);
 	}
 
 	/**
-   * @param baseEntity
-   * @param map
-   * @param code
-   * @param productCode
-   * @return
-   */
+	 * @param baseEntity
+	 * @param map
+	 * @param code
+	 * @param productCode
+	 * @return
+	 */
 	public Expression<?> findExpression(Root<BaseEntity> baseEntity, JoinMap map, String code, String productCode) {
 
 		if (code.startsWith("PRI_CREATED"))
-		return baseEntity.<LocalDateTime>get("created");
+			return baseEntity.<LocalDateTime>get("created");
 		else if (code.startsWith("PRI_UPDATED"))
-		return baseEntity.<LocalDateTime>get("updated");
+			return baseEntity.<LocalDateTime>get("updated");
 		else if (code.equals("PRI_CODE"))
-		return baseEntity.<String>get("code");
+			return baseEntity.<String>get("code");
 		else if (code.equals("PRI_NAME"))
-		return baseEntity.<String>get("name");
+			return baseEntity.<String>get("name");
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		Join<BaseEntity, EntityAttribute> entityAttribute = map.get(cb, baseEntity, code);
@@ -476,29 +478,29 @@ public class FyodorUltra {
 		Class<?> c = null;
 		try {
 			if (className.contains("BaseEntity"))
-			c = String.class;
+				c = String.class;
 			else
-			c = Class.forName(dtt.getClassName());
+				c = Class.forName(dtt.getClassName());
 		} catch (Exception e) {
 			throw new DebugException("Could not form class from path: " + e.getMessage());
 		}
 
 		if (c == String.class)
-		return entityAttribute.<String>get("valueString");
+			return entityAttribute.<String>get("valueString");
 		else if (c == Integer.class)
-		return entityAttribute.<Integer>get("valueInteger");
+			return entityAttribute.<Integer>get("valueInteger");
 		else if (c == Long.class)
-		return entityAttribute.<Long>get("valueLong");
+			return entityAttribute.<Long>get("valueLong");
 		else if (c == Double.class)
-		return entityAttribute.<Double>get("valueDouble");
+			return entityAttribute.<Double>get("valueDouble");
 		else if (c == LocalDateTime.class)
-		return entityAttribute.get("valueDateTime");
+			return entityAttribute.get("valueDateTime");
 		else if (c == LocalDate.class)
-		return entityAttribute.get("valueDate");
+			return entityAttribute.get("valueDate");
 		else if (c == LocalTime.class)
-		return entityAttribute.get("valueTime");
+			return entityAttribute.get("valueTime");
 		else
-		throw new QueryBuilderException("Invalid path for class " + c);
+			throw new QueryBuilderException("Invalid path for class " + c);
 	}
 
 	public Boolean isChronoClass(Class<?> c) {
@@ -506,25 +508,25 @@ public class FyodorUltra {
 	}
 
 	/**
-   * @param searchEntity
-   * @return
-   */
+	 * @param searchEntity
+	 * @return
+	 */
 	public static Set<String> getSearchColumnFilterArray(SearchEntity searchEntity) {
 
 		Set<String> columns = searchEntity.getBaseEntityAttributes().stream()
-		.filter(ea -> ea.getAttributeCode().startsWith(Column.PREFIX))
-		.map(ea -> ea.getAttributeCode())
-		.map(code -> (String) StringUtils.removeStart(code, Column.PREFIX))
-		.collect(Collectors.toSet());
+				.filter(ea -> ea.getAttributeCode().startsWith(Column.PREFIX))
+				.map(ea -> ea.getAttributeCode())
+				.map(code -> (String) StringUtils.removeStart(code, Column.PREFIX))
+				.collect(Collectors.toSet());
 
 		return columns;
 	}
 
 	/**
-* @param entity
-   * @param code
-   * @return
-   */
+	 * @param entity
+	 * @param code
+	 * @return
+	 */
 	public Answer getAssociatedColumnValue(BaseEntity entity, String code) {
 
 		String cleanCode = StringUtils.removeStart(code, "_");
@@ -532,7 +534,7 @@ public class FyodorUltra {
 		// recursively find value
 		Answer answer = getRecursiveColumnLink(entity, cleanCode);
 		if (answer == null)
-		return null;
+			return null;
 
 		// update attribute code for frontend
 		answer.setAttributeCode(code);
@@ -542,17 +544,17 @@ public class FyodorUltra {
 	}
 
 	/**
-* @param entity
-* @param code
-* @return
-*/
+	 * @param entity
+	 * @param code
+	 * @return
+	 */
 	public Answer getRecursiveColumnLink(BaseEntity entity, String code) {
 
 		if (entity == null)
-		return null;
+			return null;
 
 		// split code to find next attribute in line
-	String[] array = code.split("__");
+		String[] array = code.split("__");
 		String attributeCode = array[0];
 		code = Stream.of(array).skip(1).collect(Collectors.joining("__"));
 
@@ -565,15 +567,15 @@ public class FyodorUltra {
 		// find value
 		String value;
 		if (Attribute.PRI_NAME.equals(attributeCode))
-		value = entity.getName();
+			value = entity.getName();
 		if (Attribute.PRI_CODE.equals(attributeCode))
-		value = entity.getCode();
+			value = entity.getCode();
 		else {
 			Optional<EntityAttribute> ea = entity.findEntityAttribute(attributeCode);
 			if (ea.isPresent())
-			value = ea.get().getAsString();
+				value = ea.get().getAsString();
 			else
-			return null;
+				return null;
 		}
 
 		// create answer
