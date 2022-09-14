@@ -58,21 +58,21 @@ public class Service2Service {
 	public S2SData addToken(S2SData data) {
 		if (userToken == null) {
 			// We need to fetch the latest token for the sourceUser
-			log.info(data.getSourceCode() + ": No token found, fetching latest token");
+			log.debug(data.getSourceCode() + ": No token found, fetching latest token");
 			BaseEntity userBE = beUtils.getBaseEntityByCode(data.getSourceCode());
 			BaseEntity project = beUtils.getBaseEntityByCode(userBE.getRealm());
-			log.info("Fetching impersonated token for " + userBE.getCode() + " in " + project.getCode());
+			log.debug("Fetching impersonated token for " + userBE.getCode() + " in " + project.getCode());
 
 			String userTokenStr = KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project);
 			userToken = new UserToken(userTokenStr);
-			log.info("generated userToken " + userToken);
+			//log.debug("generated userToken " + userToken);
 			data.setToken(userToken.getToken());
 			log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 
 		} else {
 			try {
 				String username = userToken.getUsername();
-				log.debug("username is " + username); // flush out timer based npe
+				//log.debug("username is " + username); // flush out timer based npe
 			} catch (NullPointerException npe) {
 				String userTokenStr = KeycloakUtils.getImpersonatedToken(serviceToken, data.getSourceCode());
 				if (StringUtils.isBlank(userTokenStr)) {
@@ -81,7 +81,7 @@ public class Service2Service {
 				userToken = new UserToken(userTokenStr);
 			}
 			data.setToken(userToken.getToken());
-			log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+			//log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 		}
 
 		// if (data.isAborted()) {
