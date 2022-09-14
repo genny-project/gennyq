@@ -8,6 +8,7 @@ pipeline {
             steps {
                 configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
                     sh ". ./ports"
+                    sh "echo testing"
                     sh "echo DATAINDEX_PORT:$DATAINDEX_PORT"
                 }
             }
