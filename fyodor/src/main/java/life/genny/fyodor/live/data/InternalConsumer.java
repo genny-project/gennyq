@@ -23,6 +23,7 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
+import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
@@ -33,7 +34,7 @@ public class InternalConsumer {
 
 	static final Logger log = Logger.getLogger(InternalConsumer.class);
 
-    static Jsonb jsonb = JsonbBuilder.create();
+	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
 	GennyScopeInit scope;
@@ -47,7 +48,7 @@ public class InternalConsumer {
 	@Inject
 	FyodorUltra fyodor;
 
-    void onStart(@Observes StartupEvent ev) {
+	void onStart(@Observes StartupEvent ev) {
 
 		service.showConfiguration();
 
@@ -56,7 +57,7 @@ public class InternalConsumer {
 		service.initAttributes();
 		service.initKafka();
 		log.info("[*] Finished Startup!");
-    }
+	}
 
 	@Incoming("search_events")
 	@Blocking
@@ -76,7 +77,7 @@ public class InternalConsumer {
 
 		log.info("Handling search " + searchEntity.getCode());
 
-		Tuple2<List<BaseEntity>, Long> tpl = fyodor.fetch26(searchEntity);
+		Page page = fyodor.fetch26(searchEntity);
 
 		// convert to sendable
 		searchEntity = searchEntity.convertToSendable();
@@ -88,8 +89,8 @@ public class InternalConsumer {
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, searchMessage);
 
 		// send results message
-		QDataBaseEntityMessage entityMsg = new QDataBaseEntityMessage(tpl.getItem1());
-		entityMsg.setTotal(tpl.getItem2());
+		QDataBaseEntityMessage entityMsg = new QDataBaseEntityMessage(page.getItems());
+		entityMsg.setTotal(page.getTotal());
 		entityMsg.setReplace(true);
 		entityMsg.setParentCode(searchEntity.getCode());
 		entityMsg.setToken(userToken.getToken());

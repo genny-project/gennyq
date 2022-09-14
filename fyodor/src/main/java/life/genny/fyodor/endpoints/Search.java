@@ -1,7 +1,5 @@
 package life.genny.fyodor.endpoints;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -18,15 +16,13 @@ import javax.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import io.smallrye.mutiny.tuples.Tuple2;
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.FyodorUltra;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.message.QSearchBeResult;
+import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -64,7 +60,7 @@ public class Search {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	/**
-	 * A POST request for search results based on a 
+	 * A POST request for search results based on a
 	 * {@link SearchEntity}. Will only fetch codes.
 	 *
 	 * @return Success
@@ -82,22 +78,21 @@ public class Search {
 		}
 
 		// Process search
-		Tuple2<List<String>, Long> tpl = null;
 		try {
-			tpl = fyodor.search26(searchEntity);
+			Page page = fyodor.search26(searchEntity);
+			String json = jsonb.toJson(page);
+			log.info("Found " + page.getTotal() + " results!");
+
+			return Response.ok().entity(json).build();
+
 		} catch (ItemNotFoundException e) {
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
-		QSearchBeResult results = new QSearchBeResult(tpl.getItem1(), tpl.getItem2());
-		log.info("Found " + results.getTotal() + " results!");
-
-		String json = jsonb.toJson(results);
-		return Response.ok().entity(json).build();
 	}
 
 	/**
 	 * 
-	 * A POST request for search results based on a 
+	 * A POST request for search results based on a
 	 * {@link SearchEntity}. Will fetch complete entities.
 	 *
 	 * @return Success
@@ -115,17 +110,16 @@ public class Search {
 		}
 
 		// Process search
-		Tuple2<List<BaseEntity>, Long> tpl = null;
 		try {
-			tpl = fyodor.fetch26(searchEntity);
+			Page page = fyodor.fetch26(searchEntity);
+			String json = jsonb.toJson(page);
+			log.info("Found " + page.getTotal() + " results!");
+
+			return Response.ok().entity(json).build();
+
 		} catch (ItemNotFoundException e) {
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
-		QSearchBeResult results = new QSearchBeResult(tpl.getItem1().toArray(BaseEntity[]::new), tpl.getItem2());
-		log.info("Found " + results.getTotal() + " results!");
-
-		String json = jsonb.toJson(results);
-		return Response.ok().entity(json).build();
 	}
 
 	@POST
@@ -146,17 +140,17 @@ public class Search {
 			return "0";
 		}
 
-		Tuple2<List<String>, Long> tpl = null;
 		try {
-			tpl = fyodor.search26(searchEntity);
+			Page page = fyodor.search26(searchEntity);
+
+			Long count = page.getTotal();
+			log.infof("Found %s entities", count);
+
+			return "" + count;
+
 		} catch (ItemNotFoundException e) {
 			return HttpUtils.error(e.getMessage());
 		}
-
-		Long count = tpl.getItem2();
-		log.infof("Found %s entities", count);
-
-		return ""+count;
 	}
 
 	@GET
@@ -172,22 +166,22 @@ public class Search {
 		}
 
 		SearchEntity searchEntity = new SearchEntity("SBE_WILDCARD", "Wildcard")
-			.add(new Filter("PRI_CODE", Operator.LIKE, "PER_%"))
-			.setWildcard(wildcard)
-			.setPageSize(100)
-			.setRealm("lojing");
+				.add(new Filter("PRI_CODE", Operator.LIKE, "PER_%"))
+				.setWildcard(wildcard)
+				.setPageSize(100)
+				.setRealm("lojing");
 
 		// Process search
-		Tuple2<List<BaseEntity>, Long> tpl = null;
 		try {
-			tpl = fyodor.fetch26(searchEntity);
+			Page page = fyodor.fetch26(searchEntity);
+			String json = jsonb.toJson(page);
+			log.info("Found " + page.getTotal() + " results!");
+
+			return Response.ok().entity(json).build();
+
 		} catch (ItemNotFoundException e) {
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
-		log.info("Found " + tpl.getItem2() + " results!");
-
-		String json = jsonb.toJson(tpl);
-		return Response.ok().entity(json).build();
 	}
 
 }

@@ -6,7 +6,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * Trait
  */
 @RegisterForReflection
-public class Trait {
+public abstract class Trait {
 
 	private String code;
 	private String name;

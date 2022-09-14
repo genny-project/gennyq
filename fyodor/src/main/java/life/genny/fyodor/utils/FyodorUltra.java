@@ -28,8 +28,7 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import io.smallrye.mutiny.tuples.Tuple2;
-import life.genny.fyodor.models.JoinMap;
+import life.genny.fyodor.models.TolstoysCauldron;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
@@ -50,6 +49,7 @@ import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
+import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -83,12 +83,11 @@ public class FyodorUltra {
 	 * @param searchEntity
 	 * @return
 	 */
-	public Tuple2<List<BaseEntity>, Long> fetch26(SearchEntity searchEntity) {
+	public Page fetch26(SearchEntity searchEntity) {
 
 		// find codes and total
-		Tuple2<List<String>, Long> results = search26(searchEntity);
-		List<String> codes = results.getItem1();
-		Long count = results.getItem2();
+		Page page = search26(searchEntity);
+		List<String> codes = page.getCodes();
 
 		Set<String> allowed = searchEntity.allowedColumns();
 
@@ -117,75 +116,36 @@ public class FyodorUltra {
 
 			entities.add(be);
 		}
+		page.setItems(entities);
 
-		return Tuple2.of(entities, count);
+		return page;
 	}
 
 	/**
 	 * @param searchEntity
 	 * @return
 	 */
-	public Tuple2<List<String>, Long> search26(SearchEntity searchEntity) {
+	public Page search26(SearchEntity searchEntity) {
 
 		if (searchEntity == null)
 			throw new NullParameterException("searchEntity");
 
 		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
 
-		// setup query
+		// setup search query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Tuple> query = cb.createTupleQuery();
 		Root<BaseEntity> baseEntity = query.from(BaseEntity.class);
 
-		String realm = searchEntity.getRealm();
-		JoinMap map = new JoinMap(realm);
-
-		// find filter by predicates
-		List<Predicate> predicates = new ArrayList<>();
-		searchEntity.getClauseContainers().stream().forEach(cont -> {
-			log.info("Arg: " + jsonb.toJson(cont));
-			predicates.add(findClausePredicate(baseEntity, map, cont));
-		});
-
-		// link search
-		predicates.addAll(findLinkPredicates(query, baseEntity, map, searchEntity));
-
-		// handle wildcard search
-		String wildcard = searchEntity.getWildcard();
-		if (wildcard != null)
-			predicates.add(findWildcardPredicate(baseEntity, map, wildcard));
-
-		// find orders
-		List<Order> orders = new ArrayList<>();
-		searchEntity.getSorts().stream().forEach(sort -> {
-			orders.add(findSortPredicate(baseEntity, map, sort));
-		});
-
-		// ensure realms are correct
-		predicates.add(cb.equal(baseEntity.get("realm"), realm));
-		map.getMap().forEach((code, join) -> {
-			predicates.add(cb.equal(join.get("realm"), realm));
-		});
-
-		// ensure link join realm is correct
-		Root<EntityEntity> linkJoin = map.getLinkJoin();
-		if (linkJoin != null) {
-			predicates.add(cb.equal(linkJoin.get("realm"), realm));
-
-			// order by weight of link if no orders are set
-			if (orders.isEmpty())
-				orders.add(cb.asc(linkJoin.get("weight")));
-		}
-
-		// handle status (defaults to ACTIVE)
-		EEntityStatus status = searchEntity.getSearchStatus();
-		log.info("Search Status: [" + status.toString() + "]");
-		predicates.add(cb.le(baseEntity.get("status").as(Integer.class), status.ordinal()));
+		// build the search query
+		TolstoysCauldron cauldron = new TolstoysCauldron(searchEntity);
+		cauldron.setRoot(baseEntity);
+		brewQueryInCauldron(query, cauldron);
 
 		// build query
 		query.multiselect(baseEntity.get("code")).distinct(true);
-		query.where(predicates.toArray(Predicate[]::new));
-		query.orderBy(orders.toArray(Order[]::new));
+		query.where(cauldron.getPredicates().toArray(Predicate[]::new));
+		query.orderBy(cauldron.getOrders().toArray(Order[]::new));
 
 		// page start and page size
 		Integer defaultPageSize = 20;
@@ -205,30 +165,98 @@ public class FyodorUltra {
 		CriteriaQuery<Long> count = cb.createQuery(Long.class);
 		Root<BaseEntity> countBaseEntity = count.from(BaseEntity.class);
 
+		// build the search query
+		TolstoysCauldron countCauldron = new TolstoysCauldron(searchEntity);
+		countCauldron.setRoot(countBaseEntity);
+		brewQueryInCauldron(query, countCauldron);
+
 		count.select(cb.count(countBaseEntity)).distinct(true);
-		count.where(predicates.toArray(Predicate[]::new));
-		count.orderBy(orders.toArray(Order[]::new));
+		count.where(countCauldron.getPredicates().toArray(Predicate[]::new));
+		count.orderBy(countCauldron.getOrders().toArray(Order[]::new));
 
 		// perform count
 		Long total = entityManager.createQuery(count).getSingleResult();
 
-		return Tuple2.of(codes, total);
+		Page page = new Page();
+		page.setCodes(codes);
+		page.setTotal(total);
+		page.setPageSize(pageSize);
+		page.setPageStart(Long.valueOf(pageStart));
+
+		// TODO: check this math
+		page.setPageNumber((int) Math.floor(pageStart / (total / pageSize)));
+
+		return page;
 	}
 
 	/**
 	 * @param query
 	 * @param baseEntity
-	 * @param map
+	 * @param searchEntity
+	 * @return
+	 */
+	public void brewQueryInCauldron(CriteriaQuery<?> query, TolstoysCauldron cauldron) {
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		String realm = cauldron.getProductCode();
+		SearchEntity searchEntity = cauldron.getSearchEntity();
+		Root<BaseEntity> root = cauldron.getRoot();
+
+		// find filter by predicates
+		searchEntity.getClauseContainers().stream().forEach(cont -> {
+			log.info("Arg: " + jsonb.toJson(cont));
+			cauldron.add(findClausePredicate(cauldron, cont));
+		});
+
+		// link search
+		cauldron.getPredicates().addAll(findLinkPredicates(query, cauldron, searchEntity));
+
+		// handle wildcard search
+		String wildcard = searchEntity.getWildcard();
+		if (wildcard != null)
+			cauldron.add(findWildcardPredicate(cauldron, wildcard));
+
+		// find orders
+		List<Order> orders = new ArrayList<>();
+		searchEntity.getSorts().stream().forEach(sort -> {
+			orders.add(findSortPredicate(cauldron, sort));
+		});
+
+		// ensure realms are correct
+		cauldron.add(cb.equal(root.get("realm"), realm));
+		cauldron.getJoinMap().forEach((code, join) -> {
+			cauldron.add(cb.equal(join.get("realm"), realm));
+		});
+
+		// ensure link join realm is correct
+		Root<EntityEntity> link = cauldron.getLink();
+		if (link != null) {
+			cauldron.add(cb.equal(link.get("realm"), realm));
+
+			// order by weight of link if no orders are set
+			if (cauldron.getOrders().isEmpty())
+				cauldron.add(cb.asc(link.get("weight")));
+		}
+
+		// handle status (defaults to ACTIVE)
+		EEntityStatus status = searchEntity.getSearchStatus();
+		log.info("Search Status: [" + status.toString() + "]");
+		cauldron.add(cb.le(root.get("status").as(Integer.class), status.ordinal()));
+	}
+
+	/**
+	 * @param cauldron
 	 * @param clauseContainer
 	 * @return
 	 */
-	public Predicate findClausePredicate(Root<BaseEntity> baseEntity, JoinMap map, ClauseContainer clauseContainer) {
+	public Predicate findClausePredicate(TolstoysCauldron cauldron, ClauseContainer clauseContainer) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		Filter filter = clauseContainer.getFilter();
 		if (filter != null)
-			return findFilterPredicate(baseEntity, map, filter);
+			return findFilterPredicate(cauldron, filter);
 
 		And and = clauseContainer.getAnd();
 		Or or = clauseContainer.getOr();
@@ -236,8 +264,8 @@ public class FyodorUltra {
 		Clause clause = (and != null ? and : or);
 
 		// find predicate for each clause argument
-		Predicate predicateA = findClausePredicate(baseEntity, map, clause.getA());
-		Predicate predicateB = findClausePredicate(baseEntity, map, clause.getB());
+		Predicate predicateA = findClausePredicate(cauldron, clause.getA());
+		Predicate predicateB = findClausePredicate(cauldron, clause.getB());
 
 		if (and != null)
 			return cb.and(predicateA, predicateB);
@@ -249,18 +277,18 @@ public class FyodorUltra {
 
 	/**
 	 * @param baseEntity
-	 * @param map
+	 * @param cauldron
 	 * @param filter
 	 * @return Predicate
 	 */
 	@SuppressWarnings("unchecked")
-	public Predicate findFilterPredicate(Root<BaseEntity> baseEntity, JoinMap map, Filter filter) {
+	public Predicate findFilterPredicate(TolstoysCauldron cauldron, Filter filter) {
 
 		Class<?> c = filter.getC();
 		if (isChronoClass(c))
-			return findChronoPredicate(baseEntity, map, filter);
+			return findChronoPredicate(cauldron, filter);
 
-		Expression<?> expression = findExpression(baseEntity, map, filter.getCode(), map.getProductCode());
+		Expression<?> expression = findExpression(cauldron, filter.getCode());
 
 		Operator operator = filter.getOperator();
 		Object value = filter.getValue();
@@ -299,13 +327,13 @@ public class FyodorUltra {
 
 	/**
 	 * @param baseEntity
-	 * @param map
+	 * @param cauldron
 	 * @param filter
 	 * @return
 	 */
-	public Predicate findChronoPredicate(Root<BaseEntity> baseEntity, JoinMap map, Filter filter) {
+	public Predicate findChronoPredicate(TolstoysCauldron cauldron, Filter filter) {
 
-		Expression<?> expression = findExpression(baseEntity, map, filter.getCode(), map.getProductCode());
+		Expression<?> expression = findExpression(cauldron, filter.getCode());
 
 		Operator operator = filter.getOperator();
 		Object value = filter.getValue();
@@ -353,11 +381,11 @@ public class FyodorUltra {
 	}
 
 	/**
-	 * @param baseEntity
-	 * @param map
+	 * @param root
+	 * @param cauldron
 	 * @param searchEntity
 	 */
-	public List<Predicate> findLinkPredicates(CriteriaQuery<Tuple> query, Root<BaseEntity> baseEntity, JoinMap map,
+	public List<Predicate> findLinkPredicates(CriteriaQuery<?> query, TolstoysCauldron cauldron,
 			SearchEntity searchEntity) {
 
 		String sourceCode = searchEntity.getSourceCode();
@@ -371,19 +399,20 @@ public class FyodorUltra {
 			return predicates;
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		Root<BaseEntity> root = cauldron.getRoot();
 		Root<EntityEntity> entityEntity = query.from(EntityEntity.class);
 
 		// Only look in targetCode if both are null
 		if (sourceCode == null && targetCode == null) {
-			predicates.add(cb.equal(baseEntity.get("code"), entityEntity.get("link").get("targetCode")));
+			predicates.add(cb.equal(root.get("code"), entityEntity.get("link").get("targetCode")));
 		} else if (sourceCode != null) {
 			predicates.add(cb.and(
 					cb.equal(entityEntity.get("link").get("sourceCode"), sourceCode),
-					cb.equal(baseEntity.get("code"), entityEntity.get("link").get("targetCode"))));
+					cb.equal(root.get("code"), entityEntity.get("link").get("targetCode"))));
 		} else if (targetCode != null) {
 			predicates.add(cb.and(
 					cb.equal(entityEntity.get("link").get("targetCode"), targetCode),
-					cb.equal(baseEntity.get("code"), entityEntity.get("link").get("sourceCode"))));
+					cb.equal(root.get("code"), entityEntity.get("link").get("sourceCode"))));
 		}
 
 		if (linkCode != null) {
@@ -392,54 +421,55 @@ public class FyodorUltra {
 		if (linkValue != null)
 			predicates.add(cb.equal(entityEntity.get("link").get("linkValue"), linkValue));
 
-		map.setLinkJoin(entityEntity);
+		cauldron.setLink(entityEntity);
 
 		return predicates;
 	}
 
 	/**
-	 * @param baseEntity
-	 * @param map
+	 * @param root
+	 * @param cauldron
 	 * @param wildcard
 	 * @return
 	 */
-	public Predicate findWildcardPredicate(Root<BaseEntity> baseEntity, JoinMap map, String wildcard) {
+	public Predicate findWildcardPredicate(TolstoysCauldron cauldron, String wildcard) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		Root<BaseEntity> root = cauldron.getRoot();
 
-		Join<BaseEntity, EntityAttribute> join = baseEntity.join("baseEntityAttributes", JoinType.LEFT);
-		join.on(cb.equal(baseEntity.get("id"), join.get("pk").get("baseEntity").get("id")));
-		map.getMap().put("WILDCARD", join);
+		Join<BaseEntity, EntityAttribute> join = root.join("baseEntityAttributes", JoinType.LEFT);
+		join.on(cb.equal(root.get("id"), join.get("pk").get("baseEntity").get("id")));
+		cauldron.getJoinMap().put("WILDCARD", join);
 
 		return cb.like(join.get("valueString"), "%" + wildcard + "%");
 	}
 
 	/**
 	 * @param baseEntity
-	 * @param map
+	 * @param cauldron
 	 * @param sort
 	 * @return
 	 */
-	public Order findSortPredicate(Root<BaseEntity> baseEntity, JoinMap map, Sort sort) {
+	public Order findSortPredicate(TolstoysCauldron cauldron, Sort sort) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		String code = sort.getCode();
 		Ord order = sort.getOrder();
 		Expression<?> expression = null;
 
+		Root<BaseEntity> root = cauldron.getRoot();
+
 		if (code.startsWith("PRI_CREATED"))
-			expression = baseEntity.<LocalDateTime>get("created");
+			expression = root.<LocalDateTime>get("created");
 		else if (code.startsWith("PRI_UPDATED"))
-			expression = baseEntity.<LocalDateTime>get("updated");
+			expression = root.<LocalDateTime>get("updated");
 		else if (code.equals("PRI_CODE"))
-			expression = baseEntity.<String>get("code");
+			expression = root.<String>get("code");
 		else if (code.equals("PRI_NAME"))
-			expression = baseEntity.<String>get("name");
+			expression = root.<String>get("name");
 		else {
-			log.info("Sort code = " + code);
-			Join<BaseEntity, EntityAttribute> entityAttribute = map.get(cb, baseEntity, code);
-			log.info("ea = " + entityAttribute);
-			expression = findExpression(baseEntity, map, code, map.getProductCode());
+			Join<BaseEntity, EntityAttribute> entityAttribute = cauldron.get(cb, code);
+			expression = findExpression(cauldron, code);
 		}
 
 		// select order type
@@ -452,27 +482,27 @@ public class FyodorUltra {
 	}
 
 	/**
-	 * @param baseEntity
-	 * @param map
+	 * @param cauldron
 	 * @param code
-	 * @param productCode
 	 * @return
 	 */
-	public Expression<?> findExpression(Root<BaseEntity> baseEntity, JoinMap map, String code, String productCode) {
+	public Expression<?> findExpression(TolstoysCauldron cauldron, String code) {
+
+		Root<BaseEntity> root = cauldron.getRoot();
 
 		if (code.startsWith("PRI_CREATED"))
-			return baseEntity.<LocalDateTime>get("created");
+			return root.<LocalDateTime>get("created");
 		else if (code.startsWith("PRI_UPDATED"))
-			return baseEntity.<LocalDateTime>get("updated");
+			return root.<LocalDateTime>get("updated");
 		else if (code.equals("PRI_CODE"))
-			return baseEntity.<String>get("code");
+			return root.<String>get("code");
 		else if (code.equals("PRI_NAME"))
-			return baseEntity.<String>get("name");
+			return root.<String>get("name");
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		Join<BaseEntity, EntityAttribute> entityAttribute = map.get(cb, baseEntity, code);
+		Join<BaseEntity, EntityAttribute> entityAttribute = cauldron.get(cb, code);
 
-		Attribute attr = qwandaUtils.getAttribute(code, productCode);
+		Attribute attr = qwandaUtils.getAttribute(code, cauldron.getProductCode());
 		DataType dtt = attr.getDataType();
 		String className = dtt.getClassName();
 		Class<?> c = null;
@@ -503,6 +533,10 @@ public class FyodorUltra {
 			throw new QueryBuilderException("Invalid path for class " + c);
 	}
 
+	/**
+	 * @param c
+	 * @return
+	 */
 	public Boolean isChronoClass(Class<?> c) {
 		return (c == LocalDateTime.class || c == LocalDate.class || c == LocalTime.class);
 	}

@@ -35,7 +35,7 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
-import life.genny.qwandaq.message.QSearchBeResult;
+import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
@@ -95,8 +95,8 @@ public class SearchUtils {
 
 		try {
 			// deserialise and grab entities
-			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
-			return Arrays.asList(results.getEntities());
+			Page results = jsonb.fromJson(response.body(), Page.class);
+			return results.getItems();
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
@@ -132,8 +132,8 @@ public class SearchUtils {
 
 		try {
 			// deserialise and grab entities
-			QSearchBeResult results = jsonb.fromJson(response.body(), QSearchBeResult.class);
-			return Arrays.asList(results.getCodes());
+			Page results = jsonb.fromJson(response.body(), Page.class);
+			return results.getCodes();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

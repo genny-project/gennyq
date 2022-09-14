@@ -17,7 +17,6 @@ public class Clause implements ClauseArgument {
 	private ClauseContainer a, b;
 
 	public Clause() {
-		log.info("Empty");
 	}
 
 	public Clause(ClauseArgument a, ClauseArgument b) {
