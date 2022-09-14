@@ -7,9 +7,8 @@ pipeline {
         stage('Add Config files') {
             steps {
                 configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                    sh "cat ./ports"
                     sh ". ./ports"
-                    echo $DATAINDEX_PORT
+                    sh "echo $DATAINDEX_PORT"
                 }
             }
         }
@@ -21,11 +20,19 @@ pipeline {
         }
         stage("Build Dependencies") {
             steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                    sh "echo $DATAINDEX_PORT"
+                }
                 sh "./build.sh"
             }
         }
         stage("Build Services") {
             steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                    sh "echo $DATAINDEX_PORT"
+                }
                 parallel (
                     "Build GadaQ" : {
                         sh "./build-docker.sh gadaq"
