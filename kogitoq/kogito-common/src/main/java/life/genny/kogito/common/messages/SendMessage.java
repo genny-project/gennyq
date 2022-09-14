@@ -24,11 +24,11 @@ public class SendMessage extends MessageSendingStrategy {
 
     public SendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
         this.templateCode = templateCode;
-        if (beUtils != null) {
-            this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
-        } else {
-            log.error("beUtils is NULL --> bad CDI");
+        if (beUtils == null) {
+            log.warn("beUtils is NULL --> no userToken");
+            beUtils = new BaseEntityUtils(serviceToken);
         }
+        this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
         this.ctxMap = ctxMap;
     }
 
