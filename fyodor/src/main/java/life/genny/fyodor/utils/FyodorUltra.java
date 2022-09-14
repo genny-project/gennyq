@@ -183,8 +183,8 @@ public class FyodorUltra {
 		page.setPageSize(pageSize);
 		page.setPageStart(Long.valueOf(pageStart));
 
-		// TODO: check this math
-		page.setPageNumber((int) Math.floor(pageStart / (total / pageSize)));
+		// TODO
+		// page.setPageNumber();
 
 		return page;
 	}
