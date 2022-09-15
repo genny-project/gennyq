@@ -181,8 +181,7 @@ public class AnswerLink implements java.io.Serializable {
 		autocreateCreated();
 		setSource(source);
 		setTarget(target);
-		pk.setAttribute(answer.getAttribute());
-		setAttributeCode(answer.getAttributeCode());
+		setAttribute(answer.getAttribute());
 
 		// This permits ease of adding attributes and hides attribute from scoring.
 		if (weight == null) {
@@ -202,6 +201,7 @@ public class AnswerLink implements java.io.Serializable {
 		this.setExpired(answer.getExpired());
 		this.setRefused(answer.getRefused());
 		this.setInferred(answer.getInferred());
+		setAttribute(answer.getAttribute());
 		
 		List<String> formatStrings = null;
 
@@ -222,9 +222,13 @@ public class AnswerLink implements java.io.Serializable {
 			case "Integer":
 				String result = answer.getValue();
 				if (!StringUtils.isBlank(result)) {
-
-					final Integer integer = Integer.parseInt(result);
-					setValueInteger(integer);
+					try {
+						final Integer integer = Integer.parseInt(result);
+						setValueInteger(integer);
+					} catch(NumberFormatException e) {
+						log.error("Error reading integer of: " + result);
+						setValueInteger(0);
+					}
 				} else {
 					setValueInteger(0);
 
@@ -420,6 +424,7 @@ public class AnswerLink implements java.io.Serializable {
 	 */
 	public void setAttribute(final Attribute attribute) {
 		getPk().setAttribute(attribute);
+		setAttributeCode(attribute.getCode());
 	}
 
 	/**

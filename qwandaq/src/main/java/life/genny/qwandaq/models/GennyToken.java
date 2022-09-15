@@ -112,7 +112,6 @@ public class GennyToken implements Serializable {
 		if (iss != null) {
 			String[] issArray = iss.split("/");
 			String tokenRealm = issArray[issArray.length - 1];
-
 			this.realm = tokenRealm;
 			this.keycloakRealm = tokenRealm;
 		}

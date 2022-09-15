@@ -358,6 +358,8 @@ public class KeycloakUtils {
     @Deprecated
     public static String createDummyUser(String token, String realm) {
 
+        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users";
+
         String username = UUID.randomUUID().toString().substring(0, 18);
         String email = username + "@gmail.com";
         String defaultPassword = "password1";
@@ -372,8 +374,6 @@ public class KeycloakUtils {
                 + "\"temporary\":true }]}";
 
         log.info("CreateUserjsonDummy = " + json);
-
-        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users";
 
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
@@ -407,7 +407,8 @@ public class KeycloakUtils {
             e.printStackTrace();
         }
 
-        log.error("Could not return keycloak user Id");
+        log.error("Could not return keycloak user Id url: " + uri);
+        log.error(json);
         log.error("Response Body: " + response.body());
         return null;
     }
