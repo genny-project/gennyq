@@ -145,7 +145,6 @@ public class CommonUtils {
         });
     }
 
-
     /**
      * Get a JSON style array of objects. Pass a callback for custom values. Will default to {@link Object#toString()} otherwise
      * @param <T> type

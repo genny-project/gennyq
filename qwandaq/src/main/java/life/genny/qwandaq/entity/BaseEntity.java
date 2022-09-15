@@ -62,6 +62,8 @@ import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
 
+import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
+
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
  * base parent for many Qwanda classes and serves to establish Hibernate
@@ -490,7 +492,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	}
 
 	private EntityAttribute updateEntityAttributePk(EntityAttribute entityAttribute, Attribute attribute) {
-		if(attribute.getCode().startsWith("CAP")) log.info("Updating baseentityAttribute: " + this.getCode() + ":" + entityAttribute.getAttributeCode());
 		entityAttribute.setBaseEntity(this);
 		entityAttribute.setAttribute(attribute);
 
@@ -1160,4 +1161,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	}
 
+	@JsonbTransient
+	public boolean isPerson() {
+		return getCode().startsWith(PER_BE_PREFIX);
+	}
 }

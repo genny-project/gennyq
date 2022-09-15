@@ -34,6 +34,7 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
+
 /**
  * A non-static utility class used for standard
  * operations involving BaseEntitys.
@@ -392,7 +393,8 @@ public class BaseEntityUtils {
 	 * @param value The value to clean
 	 * @return A clean string
 	 */
-	public String cleanUpAttributeValue(String value) {
+	public String cleanUpAttributeValue(String value) throws NullParameterException {
+		if(value == null) throw new NullParameterException("value");
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
 	}

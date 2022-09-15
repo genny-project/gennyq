@@ -41,6 +41,7 @@ import static life.genny.qwandaq.constants.GennyConstants.LNK_ROLE_CODE;
 import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
 import static life.genny.qwandaq.constants.GennyConstants.PRI_IS_PREFIX;
 import static life.genny.qwandaq.constants.GennyConstants.ROLE_BE_PREFIX;
+import static life.genny.qwandaq.constants.GennyConstants.DEF_ROLE_CODE;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -71,6 +72,7 @@ public class CapabilityUtils {
 	BaseEntityUtils beUtils;
 
 	private BaseEntity roleDef;
+	private Attribute lnkRolAttribute;
 
 	public CapabilityUtils() {
 	}
@@ -82,7 +84,14 @@ public class CapabilityUtils {
 	@PostConstruct
 	public void init() {		
 		// Should only need to find this once.
-		roleDef = beUtils.getBaseEntity("DEF_ROLE");
+		roleDef = beUtils.getBaseEntity(DEF_ROLE_CODE);
+		if(roleDef == null) {
+			log.error("Could not find DEF_ROLE BASE ENTITY!");
+		}
+		lnkRolAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), LNK_ROLE_CODE);
+		if(lnkRolAttribute == null) {
+			log.error("Could not find LNK_ROLE attribute!");
+		}
 	}
 
 	/**
@@ -154,6 +163,47 @@ public class CapabilityUtils {
 		}
 
 		return attribute;
+	}
+
+	public BaseEntity attachRole(BaseEntity target, String roleCode) {
+		
+		// Check we're working with a person
+		if(!target.isPerson())
+			throw new RoleException("Error attaching role to target: " + target.getCode() + ". Target is not a person");
+		
+		roleCode = cleanRoleCode(roleCode);
+		BaseEntity role = beUtils.getBaseEntity(roleCode);
+
+		if(role == null) 
+			throw new RoleException("Error attaching role: " + roleCode + ". Role does not exist");
+
+		return attachRole(target, role);
+	}
+
+	public BaseEntity attachRole(BaseEntity target, BaseEntity role) {
+		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(LNK_ROLE_CODE);
+
+		// Create it
+		if(!eaOpt.isPresent()) {
+			target.addAttribute(lnkRolAttribute, 1.0, "[" + role.getCode() + "]");
+			beUtils.updateBaseEntity(target);
+			return target;
+		}
+
+		EntityAttribute lnkRoleEA = eaOpt.get();
+		String value = lnkRoleEA.getValueString();
+		if(!StringUtils.isBlank(value)) {
+			Set<String> values = Arrays.asList(beUtils.cleanUpAttributeValue(value).split(",")).stream().collect(Collectors.toSet());
+			values.add(role.getCode());
+			value = CommonUtils.getArrayString(values, (String v) -> v);			
+		} else {
+			value = "[" + role.getCode() + "]";
+		}
+
+		lnkRoleEA.setValue(value);
+
+		beUtils.updateBaseEntity(target);
+		return target;
 	}
 
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
