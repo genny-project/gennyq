@@ -778,35 +778,104 @@ public class SearchUtils {
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
 	}
 
+	/**
+	 * Strip search base entity code without jti
+	 * @param orgSbe Original search base entity code
+	 * @return Search base entity code without jti
+	 */
+	public String getCleanSBECode(String orgSbe) {
+		String sbe = "";
+
+		if (orgSbe.indexOf("-") > -1) {
+			int index = orgSbe.lastIndexOf("_");
+			sbe = orgSbe.substring(0, index);
+
+			return sbe;
+		}
+
+		return orgSbe;
+	}
+
+	/**
+	 * Return search base entity code with jti
+	 * @param sbeCode Search Base entity
+	 * @return Search base entity with jti
+	 */
 	public String getSearchBaseEntityCodeByJTI(String sbeCode) {
-		String newSbeCode =  sbeCode +  "_" + userToken.getJTI().toUpperCase();
+		String cleanSbe = getCleanSBECode(sbeCode);
+		String newSbeCode =  cleanSbe +  "_" + userToken.getJTI().toUpperCase();
 		return newSbeCode;
 	}
 	/**
 	 * Return ask with filter group content
 	 * @param sbeCode Search Base Entity Code
 	 * @param questionCode Question code
+	 * @param filterParams Filter parameters
 	 * @return Ask
 	 */
-	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode) {
+	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode, Map<String, String> filterParams) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
-		String  targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
-		ask.setTargetCode(targetCode);
 
-		String filterCode = GennyConstants.QUE_FILTER_GRP + "_" + targetCode;
 		Question question = new Question();
-		question.setCode(filterCode);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
-
 		ask.setQuestion(question);
+
 		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
 		ask.addChildAsk(addFilterAsk);
 
-		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode);
+		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode,filterParams);
+
 		ask.addChildAsk(existFilterAsk);
 
 		return ask;
+	}
+
+	/**
+	 * Change existing filter group
+	 * @param ask Ask existing group
+	 */
+	public void setExistingFilterGroup(String sbeCode,Ask ask,Map<String, String> filterParams) {
+		String questionCode = getFilterParamValByKey(filterParams,GennyConstants.QUE_FILTER_COLUMN);
+		String attrCode = getFilterParamValByKey(filterParams,GennyConstants.ATTRIBUTECODE);
+		String attrName = getFilterParamValByKey(filterParams,GennyConstants.QUE_FILTER_OPTION);
+		String value = getFilterParamValByKey(filterParams,GennyConstants.QUE_FILTER_VALUE);
+
+		if(!value.isEmpty()) {
+			Ask childAsk = new Ask();
+			childAsk.setAttributeCode(GennyConstants.PRI_EVENT);
+
+			String queCodeStrip = questionCode.replaceFirst(GennyConstants.QUE_FILTER_VALUE_PREF,"");
+			String attrNameStrip = attrName.replaceFirst(GennyConstants.SEL_PREF, "");
+
+			String html = queCodeStrip + " " + attrNameStrip + " " + value;
+			Question question = new Question();
+			question.setCode(questionCode);
+			question.setName(html);
+			question.setHtml(html);
+			childAsk.setQuestionCode(questionCode);
+			childAsk.setQuestion(question);
+			childAsk.setTargetCode(getSearchBaseEntityCodeByJTI(sbeCode));
+
+			ask.addChildAsk(childAsk);
+		}
+	}
+
+	/**
+	 * Get parameter value by key
+	 * @param key Parameter Key
+	 */
+	public String getFilterParamValByKey(Map<String, String> filterParams,String key) {
+		String value = "";
+		if(filterParams == null) return value;
+		if(filterParams.containsKey(key)) {
+			value = filterParams.get(key).toString();
+		}
+		String finalVal = value.replace("\"","")
+				.replace("[","").replace("]", "")
+				.replaceFirst(GennyConstants.SEL_FILTER_COLUMN_FLC,"");
+
+		return finalVal;
 	}
 
 	/**
@@ -820,6 +889,7 @@ public class SearchUtils {
 		BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
 		BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
 
+		String sbeCodeJti = getSearchBaseEntityCodeByJTI(sbeCode);
 		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
 		Arrays.asList(ask.getChildAsks()).stream().forEach( e-> {
 			if(e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_COLUMN)
@@ -831,6 +901,8 @@ public class SearchUtils {
 			}else {
 				e.setHidden(true);
 			}
+
+			e.setTargetCode(sbeCodeJti);
 		});
 
 		String  targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
@@ -846,11 +918,12 @@ public class SearchUtils {
 
 
 	/**
-	 * Construct exist filter group object
+	 * Construct existing filter group object in Add Filter group form
 	 * @param sbeCode Search Base Entity Code
+	 * @param filterParams Filter parameters
 	 * @return return existing filter group object
 	 */
-	public Ask getExistingFilterGroupBySearchBE(String sbeCode) {
+	public Ask getExistingFilterGroupBySearchBE(String sbeCode,Map<String, String> filterParams) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
 		String  targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
@@ -861,7 +934,13 @@ public class SearchUtils {
 		question.setCode(GennyConstants.FILTER_QUE_EXIST);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 
+		//change exist filter group
+		if(filterParams.size() > 0) {
+			setExistingFilterGroup(sbeCode,ask, filterParams);
+		}
+
 		ask.setQuestion(question);
+
 		return ask;
 	}
 
@@ -957,39 +1036,13 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter select option values
-	 * @param questionCode Question code
-	 * @return Ask
-	 */
-	public QDataBaseEntityMessage getFilterSelectBoxValueByCode(String questionCode, String lnkCode,String lnkVal) {
-		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
-
-		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
-		base.setLinkCode(GennyConstants.LNK_CORE);
-		base.setLinkValue(GennyConstants.LNK_ITEMS);
-		base.setQuestionCode(questionCode);
-
-		SearchEntity searchBE = new SearchEntity(GennyConstants.SBE_DROPDOWN, GennyConstants.SBE_DROPDOWN)
-				.addColumn(GennyConstants.PRI_CODE, GennyConstants.PRI_CODE_LABEL);
-		searchBE.setRealm(userToken.getProductCode());
-		searchBE.setLinkCode(lnkCode);
-		searchBE.setLinkValue(lnkVal);
-		searchBE.setPageStart(0).setPageSize(1000);
-
-		List<BaseEntity> baseEntities = searchBaseEntitys(searchBE);
-		base.setItems(baseEntities);
-
-		return base;
-	}
-
-	/**
-	 * Return Data Message of bucket select filter
-	 * @param queGrp Question group
+	 * @param queGrp Question Group
 	 * @param queCode Question code
 	 * @param lnkCode Link code
-	 * @param lnkVal Link value
-	 * @return Data message of bucket select filter
+	 * @param lnkVal Link Value
+	 * @return Data message of filter select box
 	 */
-	public QDataBaseEntityMessage getBucketSelectFilter(String queGrp,String queCode, String lnkCode,String lnkVal) {
+	public QDataBaseEntityMessage getFilterSelectBoxValueByCode(String queGrp,String queCode, String lnkCode,String lnkVal) {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
 		base.setParentCode(queGrp);
@@ -1010,6 +1063,19 @@ public class SearchUtils {
 		return base;
 	}
 
+	/**
+	 * Return ask with bucket filter options
+	 * @param queCode Question Code
+	 * @param lnkCode Link Code
+	 * @param lnkValue Link Value
+	 * @return Bucket filter options
+	 */
+	public SearchEntity getBucketFilterOptions(String sbeCode, String queCode,String lnkCode, String lnkValue) {
+		SearchEntity searchBE = new SearchEntity(sbeCode, GennyConstants.SBE_DROPDOWN).addColumn(lnkCode, lnkValue);
+		searchBE.setRealm(userToken.getProductCode());
+		searchBE.setPageStart(0).setPageSize(100);
 
+		return searchBE;
+	}
 
 }

@@ -22,9 +22,11 @@ public final class GennyConstants {
     public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
     public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
     public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
+    public static final String QUE_FILTER_VALUE = "QUE_FILTER_VALUE";
     public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
     public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
     public static final String QUE_SUBMIT = "QUE_SUBMIT";
+    public static final String QUE_FILTER_VALUE_PREF = "QUE_FILTER_VALUE_";
     public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
     public static final String QUE_FILTER_VALUE_STATE = "QUE_FILTER_VALUE_STATE";
     public static final String QUE_FILTER_VALUE_INTERNSHIP_TYPE = "QUE_FILTER_VALUE_INTERNSHIP_TYPE";
@@ -36,8 +38,12 @@ public final class GennyConstants {
 
     //Link
     public static final String LNK_FILTER_COLUMN= "LNK_FILTER_COLUMN";
+    public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
+
     public static final String LNK_CORE= "LNK_CORE";
     public static final String LNK_ITEMS= "LNK_ITEMS";
+    public static final String ITEMS= "ITEMS";
+
 
     //Filter
     public static final String  FILTERS = "Filters";
@@ -45,10 +51,12 @@ public final class GennyConstants {
     public static final String  FILTER_QUE_EXIST_NAME = "Existing Filters";
     public static final String  FILTER_SEL = "SEL_FILTER_COLUMN_";
     public static final String  FILTER_COL = "FLC_";
+    public static final String  SEL_PREF = "SEL_";
     public static final String  SEL_EQUAL_TO = "SEL_EQUAL_TO";
     public static final String  SEL_NOT_EQUAL_TO = "SEL_NOT_EQUAL_TO";
     public static final String  SEL_LIKE = "SEL_LIKE";
     public static final String  SEL_NOT_LIKE = "SEL_NOT_LIKE";
+    public static final String SEL_FILTER_COLUMN_FLC = "SEL_FILTER_COLUMN_FLC_";
 
     //Filter columns
     public static final String FILTER_DATE = "DATE";
@@ -78,9 +86,21 @@ public final class GennyConstants {
 
     //caching
     public static final String CACHING_SBE = "SBE_";
+    public static final String SBE_HOST_COMPANIES_VIEW = "SBE_HOST_COMPANIES_VIEW";
 
     //bucket filter
-    public static final String QUE_BUCKET_INTERNS_GRP = "QUE_BUCKET_INTERNS_GRP";
+    public static final String GRP_BUCKET_INTERNS = "GRP_BUCKET_INTERNS";
     public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
+    public static final String BKT_APPLICATIONS = "BKT_APPLICATIONS";
+
+    public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
+    //Event
+    public static final String PRI_EVENT = "PRI_EVENT";
+    public static final String CODE = "code";
+    public static final String TARGETCODE = "targetCode";
+    public static final String TARGETCODES = "targetCodes";
+    public static final String TOKEN = "token";
+    public static final String ATTRIBUTECODE = "attributeCode";
+    public static final String VALUE = "value";
 
 }
