@@ -64,7 +64,7 @@ public class SearchService {
 
 	private Map<String, String> filterParams = new HashMap<>();
 
-	private List<Map<String, String>> listFilterParams = new ArrayList<>();
+	private Map<String,Map<String, String>> listFilterParams = new HashMap<>();
 
 	/**
 	 * Perform a Detail View search.
@@ -333,7 +333,7 @@ public class SearchService {
 			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
 			if (searchBE != null) {
-				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode, questionCode, filterParams);
+				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode, questionCode, listFilterParams);
 				QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
 				msgFilterGrp.setToken(userToken.getToken());
 				String filterCode = "";
@@ -498,7 +498,6 @@ public class SearchService {
 		List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(searchEntity);
 		msg.setToken(userToken.getToken());
 		msg.setItems(baseEntities);
-//		msg.setParentCode(queGroup);
 		msg.setQuestionCode(queGroup);
 		msg.setLinkCode(GennyConstants.LNK_CORE);
 		msg.setLinkValue(GennyConstants.ITEMS);
@@ -526,16 +525,47 @@ public class SearchService {
 	}
 
 	public boolean isFilterTag(String code) {
-		String question = getFilterParamValByKey(GennyConstants.QUE_FILTER_COLUMN);
-		if(code.startsWith(GennyConstants.QUE_FILTER_VALUE_PREF) && code.equalsIgnoreCase(question)) {
-			return true;
+		for(Map.Entry<String,Map<String, String>> tag:listFilterParams.entrySet()) {
+			String question = tag.getKey();
+			if (code.equalsIgnoreCase(question)) {
+				return true;
+			}
 		}
-
 		return false;
 	}
 
+	/**
+	 * Add filter paramer to the list
+	 */
 	public void addFilterParamToList() {
-		listFilterParams.add(filterParams);
+		Map<String, String> newMap = getCloneFilterParams();
+		String filterKey = searchUtils.getFilterTagKey(newMap,listFilterParams.size());
+		listFilterParams.put(filterKey, newMap);
 	}
 
+	/**
+	 * Clone filter parameter
+	 * @return Clone of filter parameter
+	 */
+	public Map<String, String> getCloneFilterParams() {
+		Map<String, String> newMap = new HashMap<>();
+
+		filterParams.entrySet().stream().forEach( e-> {
+			newMap.put(e.getKey(),e.getValue());
+		});
+		return newMap;
+	}
+
+	/**
+	 * Remove current filter tag by html
+	 * @param questionCode Question code of event
+	 */
+	public void removeFilterTag(String questionCode) {
+		Set<String> keys = new HashSet<>(listFilterParams.keySet());
+		for(String tagKey:keys) {
+			if(tagKey.equalsIgnoreCase(questionCode)) {
+				listFilterParams.remove(tagKey);
+			}
+		}
+	}
 }

@@ -11,6 +11,7 @@ public final class GennyConstants {
     public static final String SEARCH_TEXT="PRI_SEARCH_TEXT";
     public static final String PRI_NAME="PRI_NAME";
     public static final String PRI_CODE="PRI_CODE";
+    public static final String  PRI_PREFIX = "PRI_";
     public static final String PCM_TABLE = "PCM_TABLE";
     public static final String PCM_PROCESS = "PCM_PROCESS";
     public static final String BUCKET_CODES = "BUCKET_CODES";
@@ -27,6 +28,7 @@ public final class GennyConstants {
     public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
     public static final String QUE_SUBMIT = "QUE_SUBMIT";
     public static final String QUE_FILTER_VALUE_PREF = "QUE_FILTER_VALUE_";
+    public static final String QUE_TAG_PREF = "QUE_TAG_";
     public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
     public static final String QUE_FILTER_VALUE_STATE = "QUE_FILTER_VALUE_STATE";
     public static final String QUE_FILTER_VALUE_INTERNSHIP_TYPE = "QUE_FILTER_VALUE_INTERNSHIP_TYPE";

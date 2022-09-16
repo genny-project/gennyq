@@ -22,6 +22,7 @@ import javax.ws.rs.core.Response;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -810,10 +811,10 @@ public class SearchUtils {
 	 * Return ask with filter group content
 	 * @param sbeCode Search Base Entity Code
 	 * @param questionCode Question code
-	 * @param filterParams Filter parameters
+	 * @param listParam List o filter parameters
 	 * @return Ask
 	 */
-	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode, Map<String, String> filterParams) {
+	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode, Map<String,Map<String,String>> listParam) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
 
@@ -824,7 +825,7 @@ public class SearchUtils {
 		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
 		ask.addChildAsk(addFilterAsk);
 
-		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode,filterParams);
+		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode,listParam);
 
 		ask.addChildAsk(existFilterAsk);
 
@@ -833,33 +834,83 @@ public class SearchUtils {
 
 	/**
 	 * Change existing filter group
+	 * @param sbeCode Search base entity code
 	 * @param ask Ask existing group
+	 * @param listFilParams List of filter parameters
 	 */
-	public void setExistingFilterGroup(String sbeCode,Ask ask,Map<String, String> filterParams) {
-		String questionCode = getFilterParamValByKey(filterParams,GennyConstants.QUE_FILTER_COLUMN);
-		String attrCode = getFilterParamValByKey(filterParams,GennyConstants.ATTRIBUTECODE);
-		String attrName = getFilterParamValByKey(filterParams,GennyConstants.QUE_FILTER_OPTION);
-		String value = getFilterParamValByKey(filterParams,GennyConstants.QUE_FILTER_VALUE);
-
-		if(!value.isEmpty()) {
+	public void setExistingFilterGroup(String sbeCode,Ask ask,Map<String,Map<String,String>> listFilParams) {
+		int index = 0;
+		for(Map.Entry<String,Map<String,String>> filterParams: listFilParams.entrySet()) {
 			Ask childAsk = new Ask();
 			childAsk.setAttributeCode(GennyConstants.PRI_EVENT);
 
-			String queCodeStrip = questionCode.replaceFirst(GennyConstants.QUE_FILTER_VALUE_PREF,"");
-			String attrNameStrip = attrName.replaceFirst(GennyConstants.SEL_PREF, "");
+			String html = getHtmlByFilterParam(filterParams.getValue());
 
-			String html = queCodeStrip + " " + attrNameStrip + " " + value;
 			Question question = new Question();
-			question.setCode(questionCode);
+			question.setCode(filterParams.getKey());
 			question.setName(html);
 			question.setHtml(html);
-			childAsk.setQuestionCode(questionCode);
+
+			childAsk.setName(html);
+			childAsk.setHidden(false);
+			childAsk.setQuestionCode(filterParams.getKey());
 			childAsk.setQuestion(question);
 			childAsk.setTargetCode(getSearchBaseEntityCodeByJTI(sbeCode));
 
 			ask.addChildAsk(childAsk);
+
+			index++;
 		}
 	}
+
+	/**
+	 * Return filter tag key
+	 * @param filterParams Filter Parameters
+	 * @param index Index of list filter
+	 * @return Filter tag key
+	 */
+	public String getFilterTagKey(Map<String, String> filterParams,int index) {
+		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE);
+		String partKey = getLastWord(attrCode).toUpperCase();
+		String filterTagKey = GennyConstants.QUE_TAG_PREF + partKey + "_" + index;
+		return filterTagKey;
+	}
+	/**
+	 * Return Html value by filter parameters
+	 * @param filterParams
+	 * @return Html value by filter parameters
+	 */
+	public String getHtmlByFilterParam(Map<String, String> filterParams) {
+		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE)
+				.replaceFirst(GennyConstants.PRI_PREFIX,"");
+
+		String attrName = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_OPTION);
+		String value = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_VALUE);
+		String attrNameStrip = attrName.replaceFirst(GennyConstants.SEL_PREF, "")
+								.replace("_", " ");
+
+		String finalAttCode = StringUtils.capitalize(getLastWord(attrCode).toLowerCase());
+		String finalVal = StringUtils.capitalize(getLastWord(value.toLowerCase()));
+		String html = finalAttCode + " " + StringUtils.capitalize(attrNameStrip.toLowerCase())  + " " + finalVal;
+
+		return html;
+	}
+
+	/**
+	 * Return the last word
+	 * @param str String
+	 * @return The last word
+	 */
+	public String getLastWord(String str) {
+		String word = "";
+		int lastIndex = str.lastIndexOf("_");
+		if(lastIndex > -1) {
+			word = str.substring(lastIndex + 1, str.length());
+			return word;
+		}
+		return str;
+	}
+
 
 	/**
 	 * Get parameter value by key
@@ -920,10 +971,10 @@ public class SearchUtils {
 	/**
 	 * Construct existing filter group object in Add Filter group form
 	 * @param sbeCode Search Base Entity Code
-	 * @param filterParams Filter parameters
+	 * @param listFilParams List of Filter parameters
 	 * @return return existing filter group object
 	 */
-	public Ask getExistingFilterGroupBySearchBE(String sbeCode,Map<String, String> filterParams) {
+	public Ask getExistingFilterGroupBySearchBE(String sbeCode,Map<String,Map<String,String>> listFilParams) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
 		String  targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
@@ -935,8 +986,8 @@ public class SearchUtils {
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 
 		//change exist filter group
-		if(filterParams.size() > 0) {
-			setExistingFilterGroup(sbeCode,ask, filterParams);
+		if(listFilParams.size() > 0) {
+			setExistingFilterGroup(sbeCode,ask, listFilParams);
 		}
 
 		ask.setQuestion(question);
