@@ -493,7 +493,6 @@ public class FyodorUltra {
 		else if (code.equals("PRI_NAME"))
 			expression = root.<String>get("name");
 		else {
-			Join<BaseEntity, EntityAttribute> entityAttribute = cauldron.get(cb, code);
 			expression = findExpression(cauldron, code);
 		}
 
