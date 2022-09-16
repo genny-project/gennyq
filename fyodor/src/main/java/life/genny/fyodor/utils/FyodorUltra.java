@@ -177,14 +177,16 @@ public class FyodorUltra {
 		// build the search query
 		TolstoysCauldron countCauldron = new TolstoysCauldron(searchEntity);
 		countCauldron.setRoot(countBaseEntity);
-		brewQueryInCauldron(query, countCauldron);
+		brewQueryInCauldron(count, countCauldron);
 
 		count.select(cb.count(countBaseEntity)).distinct(true);
 		count.where(countCauldron.getPredicates().toArray(Predicate[]::new));
 		count.orderBy(countCauldron.getOrders().toArray(Order[]::new));
 
 		// perform count
-		Long total = entityManager.createQuery(count).getSingleResult();
+		Long total = entityManager
+				.createQuery(count)
+				.getSingleResult();
 
 		Page page = new Page();
 		page.setCodes(codes);
@@ -421,10 +423,11 @@ public class FyodorUltra {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		Root<BaseEntity> root = cauldron.getRoot();
 		Root<EntityEntity> entityEntity = query.from(EntityEntity.class);
+		cauldron.setLink(entityEntity);
 
 		// Only look in targetCode if both are null
 		if (sourceCode == null && targetCode == null) {
-			predicates.add(cb.equal(root.get("code"), entityEntity.get("link").get("targetCode")));
+			predicates.add(cb.equal(entityEntity.get("link").get("targetCode"), root.get("code")));
 		} else if (sourceCode != null) {
 			predicates.add(cb.and(
 					cb.equal(entityEntity.get("link").get("sourceCode"), sourceCode),
@@ -440,8 +443,6 @@ public class FyodorUltra {
 		}
 		if (linkValue != null)
 			predicates.add(cb.equal(entityEntity.get("link").get("linkValue"), linkValue));
-
-		cauldron.setLink(entityEntity);
 
 		return predicates;
 	}

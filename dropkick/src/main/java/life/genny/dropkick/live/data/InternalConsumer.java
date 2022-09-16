@@ -90,8 +90,8 @@ public class InternalConsumer {
 	}
 
 	/**
-   * Consume incoming answers for inference
-   */
+	 * Consume incoming answers for inference
+	 */
 	@Incoming("events")
 	@Blocking
 	public void getData(String event) {
@@ -145,17 +145,17 @@ public class InternalConsumer {
 
 		// grab search entity
 		String productCode = userToken.getProductCode();
-		String searchAttributeCode = new StringBuilder("SER_").append(attrCode).toString();
+		String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
 		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
 		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
 
 		if (searchEntity == null)
-		throw new ItemNotFoundException(key);
+			throw new ItemNotFoundException(key);
 
 		// Filter by name wildcard provided by user
 		searchEntity.add(new Or(
-			new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
-			new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
+				new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
+				new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
 
 		searchEntity.add(new Column("PRI_NAME", "Name"));
 
@@ -173,14 +173,14 @@ public class InternalConsumer {
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
 
 		if (results == null)
-		throw new DebugException("Dropdown search returned null");
+			throw new DebugException("Dropdown search returned null");
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(results);
 		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
 		for (BaseEntity item : msg.getItems()) {
 			String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
-				item.getValueAsString(Attribute.PRI_NAME));
+					item.getValueAsString(Attribute.PRI_NAME));
 
 			if (item.getValueAsString(Attribute.PRI_NAME) == null)
 				log.warn(logStr);

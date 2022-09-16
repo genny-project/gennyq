@@ -19,7 +19,7 @@ import life.genny.qwandaq.entity.EntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 
 /**
- * TolstoysCauldron - A cauldron of query artifacts.
+ * TolstoysCauldron - A cauldron of query ingredients.
  */
 public class TolstoysCauldron {
 
@@ -94,7 +94,9 @@ public class TolstoysCauldron {
 	}
 
 	/**
-	 * Get an existing join for an attribute code, or create if not existing already.
+	 * Get an existing join for an attribute code, or create if not existing
+	 * already.
+	 * 
 	 * @param cb
 	 * @param code
 	 * @return
@@ -113,6 +115,7 @@ public class TolstoysCauldron {
 
 	/**
 	 * Add a predicate to the mix.
+	 * 
 	 * @param predicate
 	 */
 	public void add(Predicate predicate) {
@@ -121,6 +124,7 @@ public class TolstoysCauldron {
 
 	/**
 	 * Add an order to the mix.
+	 * 
 	 * @param order
 	 */
 	public void add(Order order) {
