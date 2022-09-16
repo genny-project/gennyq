@@ -228,8 +228,8 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	}
 
 	/**
-	 * @param realm
-	 *              the realm to set
+	 * @param realm the realm to set
+	 * @return self
 	 */
 	public CoreEntity setRealm(final String realm) {
 		this.realm = realm;

@@ -23,6 +23,8 @@ package life.genny.qwandaq;
 import java.lang.invoke.MethodHandles;
 
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
@@ -89,6 +91,7 @@ public abstract class CodedEntity extends CoreEntity {
 
 	// TODO, this probably should not be exposed once we have hibernate/infinispan
 	// in place
+	@Enumerated(EnumType.ORDINAL)
 	private EEntityStatus status = EEntityStatus.ACTIVE;
 
 	/**

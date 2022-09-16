@@ -33,11 +33,9 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import com.querydsl.core.annotations.QueryExclude;
-
-
 /**
- * AnswerList represents a set of Answers in the Qwanda library. The answers in the list can be
+ * AnswerList represents a set of Answers in the Qwanda library. The answers in
+ * the list can be
  * applied to a passed value.
  * <ul>
  * <li>List of Answers
@@ -49,52 +47,51 @@ import com.querydsl.core.annotations.QueryExclude;
  * @since 1.0
  */
 
-
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Embeddable
-@QueryExclude
 public class AnswerList implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  /**
-   * A fieldlist that stores the answers for this object.
-   */
-  // @JsonIgnore
-  @XmlTransient
+	/**
+	 * A fieldlist that stores the answers for this object.
+	 */
+	// @JsonIgnore
+	@XmlTransient
 
-  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-  @Fetch(value = FetchMode.SUBSELECT)
-  @JoinColumn(name = "answerlist_id", referencedColumnName = "id")
-  private List<AnswerLink> answerList = new CopyOnWriteArrayList<AnswerLink>();
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@Fetch(value = FetchMode.SUBSELECT)
+	@JoinColumn(name = "answerlist_id", referencedColumnName = "id")
+	private List<AnswerLink> answerList = new CopyOnWriteArrayList<AnswerLink>();
 
-  /**
-   * Constructor.
-   */
-  public AnswerList() {}
+	/**
+	 * Constructor.
+	 */
+	public AnswerList() {
+	}
 
-  /**
-   * Constructor.
-   * 
-   * @param answers the List AnswerLink objects to set
-   */
-  public AnswerList(final List<AnswerLink> answers) {
-    this.answerList = answers;
-  }
+	/**
+	 * Constructor.
+	 * 
+	 * @param answers the List AnswerLink objects to set
+	 */
+	public AnswerList(final List<AnswerLink> answers) {
+		this.answerList = answers;
+	}
 
-  /**
-   * @return the answerList
-   */
-  public List<AnswerLink> getAnswerList() {
-    return answerList;
-  }
+	/**
+	 * @return the answerList
+	 */
+	public List<AnswerLink> getAnswerList() {
+		return answerList;
+	}
 
-  /**
-   * @param answerList the answerList to set
-   */
-  public void setAnswerList(final List<AnswerLink> answerList) {
-    this.answerList = answerList;
-  }
+	/**
+	 * @param answerList the answerList to set
+	 */
+	public void setAnswerList(final List<AnswerLink> answerList) {
+		this.answerList = answerList;
+	}
 
 }

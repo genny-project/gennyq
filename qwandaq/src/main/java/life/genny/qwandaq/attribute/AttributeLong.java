@@ -18,7 +18,6 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
 import java.io.Serializable;
@@ -33,8 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import life.genny.qwandaq.datatype.DataType;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 /**
  * AttributeInteger class handles LocalInteger based attributes.
  * This information adds:
@@ -42,48 +39,42 @@ import com.querydsl.core.annotations.QueryExclude;
  * <li>The AnswerTypeInteger is the Type for the Attribute class
  * </ul>
  * <p>
- * AttributeInteger represent the major way of specifying the Integer data type about a target
+ * AttributeInteger represent the major way of specifying the Integer data type
+ * about a target
  * from sources.
  * <p>
  * 
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("long")
-public class AttributeLong extends Attribute implements Serializable {
+public class AttributeLong extends Attribute {
 
 	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
-	public AttributeLong()
-	{
+	public AttributeLong() {
 		super();
 		// dummy for hibernate
 	}
-	
+
 	/**
 	 * Constructor.
 	 * 
 	 * @param aCode The unique code for this Question
 	 * @param aName The human readable summary name
 	 */
-	public AttributeLong(String aCode, String aName)
-	{
+	public AttributeLong(String aCode, String aName) {
 		super(aCode, aName, new DataType(Long.class));
 	}
-	
+
 }

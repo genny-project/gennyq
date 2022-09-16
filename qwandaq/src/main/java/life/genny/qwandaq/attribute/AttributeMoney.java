@@ -18,7 +18,6 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
 import java.io.Serializable;
@@ -35,8 +34,6 @@ import org.javamoney.moneta.Money;
 
 import life.genny.qwandaq.datatype.DataType;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 /**
  * AttributeMoney class handles LocalDate based attributes.
  * This information adds:
@@ -44,49 +41,43 @@ import com.querydsl.core.annotations.QueryExclude;
  * <li>The AnswerTypeMoney is the Type for the Attribute class
  * </ul>
  * <p>
- * AttributeDate represent the major way of specifying the Money data type about a target
+ * AttributeDate represent the major way of specifying the Money data type about
+ * a target
  * from sources.
  * <p>
  * 
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("money")
-public class AttributeMoney extends Attribute implements Serializable {
+public class AttributeMoney extends Attribute {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
-	public AttributeMoney()
-	{
+	public AttributeMoney() {
 		super();
 		// dummy for hibernate
 	}
-	
+
 	/**
 	 * Constructor.
 	 * 
 	 * @param aCode The unique code for this Question
 	 * @param aName The human readable summary name
 	 */
-	public AttributeMoney(String aCode, String aName)
-	{
+	public AttributeMoney(String aCode, String aName) {
 		super(aCode, aName, new DataType(Money.class));
-		
+
 	}
-	
+
 }
