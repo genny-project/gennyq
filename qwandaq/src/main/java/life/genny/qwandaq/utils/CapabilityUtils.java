@@ -549,7 +549,7 @@ public class CapabilityUtils {
 		if (roles == null || roles.isEmpty())
 			throw new RoleException(String.format("No roles found for user %s", user.getCode()));
 
-		log.info(roles.toString());
+		log.debug("User " + user.getCode() + " roles: " + roles.toString());
 
 		// TODO: return redirect for roles based on priority
 		for (String role : roles) {
@@ -590,7 +590,7 @@ public class CapabilityUtils {
 		String product = userToken.getProductCode();
 		String key = String.format("%s:REDIRECT", roleCode);
 
-		log.info(key);
+		log.debug(key);
 
 		// TODO: grab redirect for role
 		String redirectCode = CacheUtils.getObject(product, key, String.class);
