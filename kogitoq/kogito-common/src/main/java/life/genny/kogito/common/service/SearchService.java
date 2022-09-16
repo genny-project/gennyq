@@ -59,7 +59,8 @@ public class SearchService {
 	public static enum SearchOptions {
 		PAGINATION,
 		SEARCH,
-		FILTER
+		FILTER,
+		PAGINATION_BUCKET
 	}
 
 	private Map<String, String> filterParams = new HashMap<>();
@@ -155,12 +156,6 @@ public class SearchService {
 				sendSearchPCM("PCM_PROCESS", e);
 			});
 
-//			sendBucketFilter(GennyConstants.SBE_HOST_COMPANIES_VIEW,GennyConstants.QUE_BUCKET_INTERNS_GRP
-//									,GennyConstants.QUE_SELECT_INTERN,GennyConstants.PRI_CODE, GennyConstants.PRI_NAME);
-
-			sendBucketFilterOptions(GennyConstants.SBE_HOST_COMPANIES_VIEW,GennyConstants.GRP_BUCKET_INTERNS
-					,GennyConstants.QUE_SELECT_INTERN,GennyConstants.PRI_CODE, GennyConstants.PRI_NAME);
-
 		}catch (Exception ex){
 			log.error(ex);
 		}
@@ -180,6 +175,9 @@ public class SearchService {
 		msgCodes.setSourceCode(GennyConstants.BUCKET_CODES);
 		msgCodes.setTargetCodes(bucketCodes);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgCodes);
+
+		sendBucketFilterOptions(GennyConstants.SBE_HOST_COMPANIES_VIEW,"QUE_BUCKET_INTERNS_GRP"
+				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.PRI_CODE, GennyConstants.PRI_NAME);
 	}
 
 	/**
@@ -262,39 +260,42 @@ public class SearchService {
 				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
 			}
 
-		}else if(ops.equals(SearchOptions.PAGINATION)) { //pagination
+		}else if(ops.equals(SearchOptions.PAGINATION) || ops.equals(SearchOptions.PAGINATION_BUCKET)) { //pagination
 			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(GennyConstants.PAGINATION_INDEX);
 			Integer pageSize = searchBE.getPageSize(0);
 			Integer indexVal = 0;
 			Integer pagePos = 0;
 
 			if(aeIndex.isPresent() && pageSize !=null) {
-				if(code.equalsIgnoreCase(GennyConstants.PAGINATION_NEXT)) {
+				if(code.equalsIgnoreCase(GennyConstants.PAGINATION_NEXT) ||
+						code.equalsIgnoreCase(GennyConstants.QUE_TABLE_LAZY_LOAD)) {
 					indexVal = aeIndex.get().getValueInteger() + 1;
 				} else if (code.equalsIgnoreCase(GennyConstants.PAGINATION_PREV)) {
 					indexVal = aeIndex.get().getValueInteger() - 1;
 				}
-
 				pagePos = (indexVal - 1) * pageSize;
 			}
+			//initial stage of bucket pagination
+			else if (aeIndex.isEmpty() && code.equalsIgnoreCase(GennyConstants.QUE_TABLE_LAZY_LOAD)) {
+				indexVal = 2;
+				pagePos = pageSize;
+			}
+
 			searchBE.setPageStart(pagePos);
 			searchBE.setPageIndex(indexVal);
 		}
 		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
 
-		sendMessageBySearchEntity(searchBE);
-		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
+
+		if(ops.equals(SearchOptions.PAGINATION_BUCKET)) {
+			sendCmdMsgByCodeType(GennyConstants.BUCKET_DISPLAY, GennyConstants.NONE);
+			sendMessageBySearchEntity(searchBE);
+		} else {
+			sendMessageBySearchEntity(searchBE);
+			sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
+		}
 	}
 
-	/**
-	 * Send message of pcm table with search base entity
-	 * @param sbeCode Search base entity code
-	 */
-	public void sendTableFilter(String sbeCode) {
-		searchUtils.searchTable(sbeCode);
-		String sbeCodeJti = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
-		sendSearchPCM(GennyConstants.PCM_TABLE, sbeCodeJti);
-	}
 
 	/**
 	 * Handle search text in bucket page
@@ -498,7 +499,8 @@ public class SearchService {
 		List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(searchEntity);
 		msg.setToken(userToken.getToken());
 		msg.setItems(baseEntities);
-		msg.setQuestionCode(queGroup);
+		msg.setParentCode(queGroup);
+		msg.setQuestionCode(queCode);
 		msg.setLinkCode(GennyConstants.LNK_CORE);
 		msg.setLinkValue(GennyConstants.ITEMS);
 		msg.setMessage(GennyConstants.FILTERS);
@@ -568,4 +570,18 @@ public class SearchService {
 			}
 		}
 	}
+
+	/**
+	 * Send command message type
+	 * @param cmdType Cmd Type
+	 * @param code Code
+	 */
+	public void sendCmdMsgByCodeType(String cmdType, String code){
+		QCmdMessage msg = new QCmdMessage(cmdType,code);
+		msg.setToken(userToken.getToken());
+		msg.setSourceCode(cmdType);
+		msg.setTargetCode(code);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
 }

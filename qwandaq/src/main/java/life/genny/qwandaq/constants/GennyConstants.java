@@ -16,6 +16,7 @@ public final class GennyConstants {
     public static final String PCM_PROCESS = "PCM_PROCESS";
     public static final String BUCKET_CODES = "BUCKET_CODES";
     public static final String BUCKET_DISPLAY = "DISPLAY";
+    public static final String NONE = "NONE";
     public static final String BUCKET_PROCESS = "PROCESS";
 
     //Question
