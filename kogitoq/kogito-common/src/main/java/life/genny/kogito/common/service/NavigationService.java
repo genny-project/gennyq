@@ -83,11 +83,9 @@ public class NavigationService {
 	 * @param code
 	 */
 	public void redirect(String code) {
-
-		log.infof("Performing redirect with code %s", code);
-
 		// route using code if specified
 		if (code != null) {
+			log.infof("Performing redirect with code %s", code);
 			kogitoUtils.triggerWorkflow(GADAQ, "view", 
 				Json.createObjectBuilder()
 				.add("code", code)
