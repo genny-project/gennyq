@@ -77,6 +77,9 @@ public class FyodorUltra {
 	@Inject
 	BaseEntityUtils beUtils;
 
+	@Inject
+	CapHandler capHandler;
+
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
@@ -135,6 +138,13 @@ public class FyodorUltra {
 			throw new NullParameterException("searchEntity");
 
 		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
+		log.info("Applying capabilities...");
+
+		// apply capabilities to traits
+		capHandler.refineFiltersFromCapabilities(searchEntity);
+		capHandler.refineSortsFromCapabilities(searchEntity);
+		capHandler.refineColumnsFromCapabilities(searchEntity);
+		capHandler.refineActionsFromCapabilities(searchEntity);
 
 		// setup search query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();

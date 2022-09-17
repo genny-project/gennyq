@@ -33,19 +33,6 @@ public class CapHandler {
 	/**
 	 * @param searchEntity
 	 */
-	public void refineFiltersFromCapabilities(SearchEntity searchEntity) {
-
-		// TODO
-		List<ClauseContainer> containers = searchEntity.getClauseContainers().stream()
-				// .filter(container -> traitCapabilitiesMet(container))
-				.collect(Collectors.toList());
-
-		searchEntity.setClauseContainers(containers);
-	}
-
-	/**
-	 * @param searchEntity
-	 */
 	public void refineSortsFromCapabilities(SearchEntity searchEntity) {
 
 		List<Sort> sorts = searchEntity.getSorts().stream()
@@ -53,6 +40,19 @@ public class CapHandler {
 				.collect(Collectors.toList());
 
 		searchEntity.setSorts(sorts);
+	}
+
+	/**
+	 * @param searchEntity
+	 */
+	public void refineFiltersFromCapabilities(SearchEntity searchEntity) {
+
+		// TODO: Handle filters and clauses
+		List<ClauseContainer> containers = searchEntity.getClauseContainers().stream()
+				// .filter(container -> traitCapabilitiesMet(container))
+				.collect(Collectors.toList());
+
+		searchEntity.setClauseContainers(containers);
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class CapHandler {
 	 */
 	public Boolean traitCapabilitiesMet(Trait trait) {
 
-		// TODO
+		// TODO: implement capabilities
 		return true;
 	}
 
