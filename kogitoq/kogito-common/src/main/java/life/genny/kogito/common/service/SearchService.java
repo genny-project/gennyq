@@ -176,8 +176,11 @@ public class SearchService {
 		msgCodes.setTargetCodes(bucketCodes);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgCodes);
 
-		sendBucketFilterOptions(GennyConstants.SBE_HOST_COMPANIES_VIEW,"QUE_BUCKET_INTERNS_GRP"
-				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.PRI_CODE, GennyConstants.PRI_NAME);
+		sendBucketFilter(GennyConstants.QUE_BUCKET_INTERNS_GRP,GennyConstants.QUE_SELECT_INTERN,
+				GennyConstants.LNK_PERSON, GennyConstants.BKT_APPLICATIONS);
+
+		sendBucketFilterOptions(GennyConstants.SBE_HOST_COMPANIES_VIEW,GennyConstants.QUE_BUCKET_INTERNS_GRP
+				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.LNK_PERSON, GennyConstants.ITEMS);
 	}
 
 	/**
@@ -469,19 +472,30 @@ public class SearchService {
 	 * @param queGroup Question group
 	 * @param queCode Question code
 	 */
-	public void sendBucketFilter(String sbeCode, String queGroup,String queCode,String lnkCode, String lnkValue) {
+	public void sendBucketFilter(String queGroup,String queCode,String attCode, String targetCode) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
-		ask.setQuestionCode(queGroup);
 		Question question = new Question();
 		question.setCode(queGroup);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 		ask.setQuestion(question);
 
+		Ask childAsk = new Ask();
+		childAsk.setName(GennyConstants.FILTERS);
+		childAsk.setQuestionCode(queCode);
+		Question childQuestion = new Question();
+		childQuestion.setAttributeCode(attCode);
+		childQuestion.setCode(queCode);
+		childAsk.setAttributeCode(attCode);
+		childAsk.setQuestion(childQuestion);
+		childAsk.setTargetCode(targetCode);
+
+		ask.addChildAsk(childAsk);
+
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
-		msg.setTargetCode(GennyConstants.BKT_APPLICATIONS);
-		msg.setQuestionCode(queCode);
+		msg.setTargetCode(targetCode);
+		msg.setQuestionCode(queGroup);
 		msg.setMessage(GennyConstants.FILTERS);
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
@@ -501,8 +515,8 @@ public class SearchService {
 		msg.setItems(baseEntities);
 		msg.setParentCode(queGroup);
 		msg.setQuestionCode(queCode);
-		msg.setLinkCode(GennyConstants.LNK_CORE);
-		msg.setLinkValue(GennyConstants.ITEMS);
+		msg.setLinkCode(lnkCode);
+		msg.setLinkValue(lnkValue);
 		msg.setMessage(GennyConstants.FILTERS);
 		msg.setReplace(true);
 
@@ -526,6 +540,11 @@ public class SearchService {
 		return searchUtils.getFilterParamValByKey(filterParams,key);
 	}
 
+	/**
+	 * Return Whether filter tag or not
+	 * @param code
+	 * @return Whether filter tag or not
+	 */
 	public boolean isFilterTag(String code) {
 		for(Map.Entry<String,Map<String, String>> tag:listFilterParams.entrySet()) {
 			String question = tag.getKey();

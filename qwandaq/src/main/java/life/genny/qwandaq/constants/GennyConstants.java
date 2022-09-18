@@ -44,6 +44,7 @@ public final class GennyConstants {
     public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
 
     public static final String LNK_CORE= "LNK_CORE";
+    public static final String LNK_PERSON= "LNK_PERSON";
     public static final String LNK_ITEMS= "LNK_ITEMS";
     public static final String ITEMS= "ITEMS";
 
@@ -85,14 +86,14 @@ public final class GennyConstants {
 
     //event
     public static final String EVENT_WEBCMDS = "webcmds";
-    public static final String EVENT_SEARCH = "search_events";
-
-    //caching
-    public static final String CACHING_SBE = "SBE_";
+//    public static final String EVENT_SEARCH = "search_events";
+//
+//    //caching
+//    public static final String CACHING_SBE = "SBE_";
     public static final String SBE_HOST_COMPANIES_VIEW = "SBE_HOST_COMPANIES_VIEW";
 
     //bucket filter
-    public static final String GRP_BUCKET_INTERNS = "GRP_BUCKET_INTERNS";
+    public static final String QUE_BUCKET_INTERNS_GRP = "QUE_BUCKET_INTERNS_GRP";
     public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
     public static final String BKT_APPLICATIONS = "BKT_APPLICATIONS";
 
