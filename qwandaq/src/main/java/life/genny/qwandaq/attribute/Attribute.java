@@ -89,12 +89,19 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_CODE = "PRI_CODE";
 	public static final String PRI_UUID = "PRI_UUID";
-	public static final String PRI_TIMEZONE_ID = "PRI_TIMEZONE_ID";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+
+	// definition
+	public static final String LNK_DEF = "LNK_DEF";
+
+	// roles
+	public static final String LNK_ROLE = "LNK_ROLE";
 
 	// contact
 	public static final String PRI_MOBILE = "PRI_MOBILE";
 	public static final String PRI_EMAIL = "PRI_EMAIL";
+	public static final String PRI_TIMEZONE_ID = "PRI_TIMEZONE_ID";
+	public static final String PRI_ADDRESS = "PRI_ADDRESS";
 
 	// search
 	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
@@ -119,10 +126,7 @@ public class Attribute extends CodedEntity {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public Attribute() {
-		// super();
-		// dummy for hibernate
 	}
 
 	public Attribute(String aCode, String aName, DataType dataType) {
