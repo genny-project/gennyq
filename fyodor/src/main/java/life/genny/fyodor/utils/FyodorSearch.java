@@ -700,31 +700,25 @@ public class FyodorSearch {
 			LocalDateTime upperBound = lowerBound.plusDays(1);
 			log.info("upperBound = " + upperBound);
 
-			if (condition.equals(">")) {
-				return path.after(upperBound);
-			} else if (condition.equals(">=")) {
-				return path.after(lowerBound);
-			} else if (condition.equals("<")) {
-				return path.before(lowerBound);
-			} else if (condition.equals("<=")) {
-				return path.before(upperBound);
-			} else if (condition.equals("!=")) {
-				return path.notBetween(lowerBound, upperBound);
-			} else {
-				return path.between(lowerBound, upperBound);
-			}
+			return switch (condition) {
+				case ">" -> path.after(upperBound);
+				case ">=" -> path.after(lowerBound);
+				case "<" -> path.before(lowerBound);
+				case "<=" -> path.before(upperBound);
+				case "!=" -> path.notBetween(lowerBound, upperBound);
+				default -> path.between(lowerBound, upperBound);
+			};
 		}
 		log.info(ea.getAttributeCode() + " " + condition + " " + dateTime);
 
-		if (condition.equals(">=") || condition.equals(">")) {
-			return path.after(dateTime);
-		} else if (condition.equals("<=") || condition.equals("<")) {
-			return path.before(dateTime);
-		} else if (condition.equals("!=")) {
-			return path.ne(dateTime);
-		}
-		// Default to equals
-		return path.eq(dateTime);
+		return switch (condition) {
+			case ">=", ">" -> path.after(dateTime);
+			case "<=", "<" -> path.before(dateTime);
+			case "!=" -> path.ne(dateTime);
+			default ->
+				// Default to equals
+					path.eq(dateTime);
+		};
 	}
 
 	/**

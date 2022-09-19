@@ -78,48 +78,20 @@ public class KafkaBean implements KafkaInterface {
 
 		// channel switch
 		switch (topic) {
-			case EVENTS:
-				producer.getToEvents().send(payload);
-				break;
-			case VALID_EVENTS:
-				producer.getToValidEvents().send(payload);
-				break;
-			case GENNY_EVENTS:
-				producer.getToGennyEvents().send(payload);
-				break;
-			case GENNY_DATA:
-				producer.getToGennyData().send(payload);
-				break;
-			case SEARCH_EVENTS:
-				producer.getToSearchEvents().send(payload);
-				break;
-			case DATA:
-				producer.getToData().send(payload);
-				break;
-			case VALID_DATA:
-				producer.getToValidData().send(payload);
-				break;
-			case SEARCH_DATA:
-				producer.getToSearchData().send(payload);
-				break;
-			case MESSAGES:
-				producer.getToMessages().send(payload);
-				break;
-			case SCHEDULE:
-				producer.getToSchedule().send(payload);
-				break;
-			case BLACKLIST:
-				producer.getToBlacklist().send(payload);
-				break;
-			case WEBCMDS:
-				producer.getToWebCmds().send(Message.of(payload).addMetadata(metadata));
-				break;
-			case WEBDATA:
-				producer.getToWebData().send(Message.of(payload).addMetadata(metadata));
-				break;
-			default:
-				log.error("Producer unable to write to channel " + topic);
-				break;
+			case EVENTS -> producer.getToEvents().send(payload);
+			case VALID_EVENTS -> producer.getToValidEvents().send(payload);
+			case GENNY_EVENTS -> producer.getToGennyEvents().send(payload);
+			case GENNY_DATA -> producer.getToGennyData().send(payload);
+			case SEARCH_EVENTS -> producer.getToSearchEvents().send(payload);
+			case DATA -> producer.getToData().send(payload);
+			case VALID_DATA -> producer.getToValidData().send(payload);
+			case SEARCH_DATA -> producer.getToSearchData().send(payload);
+			case MESSAGES -> producer.getToMessages().send(payload);
+			case SCHEDULE -> producer.getToSchedule().send(payload);
+			case BLACKLIST -> producer.getToBlacklist().send(payload);
+			case WEBCMDS -> producer.getToWebCmds().send(Message.of(payload).addMetadata(metadata));
+			case WEBDATA -> producer.getToWebData().send(Message.of(payload).addMetadata(metadata));
+			default -> log.error("Producer unable to write to channel " + topic);
 		}
 	}
 }

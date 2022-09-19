@@ -7,6 +7,7 @@ import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -38,6 +39,9 @@ public class KogitoScopeInit {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	KogitoService kogitoService;
 
 	/**
 	 * Default Constructor.
@@ -94,5 +98,17 @@ public class KogitoScopeInit {
 	 **/
 	public void destroy() {
 		Arc.container().requestContext().activate();
+	}
+
+	/**
+	 * Call a kogito api to delete a process.
+	 * 
+	 * @param workflowCode
+	 * @param processId
+	 */
+	public void deleteProcess(String workflowCode, String processId) {
+		log.info("Deleting process " + processId + " for workflow " + workflowCode);
+		kogitoService.deleteProcess(workflowCode, processId);
+
 	}
 }
