@@ -10,8 +10,6 @@ public final class GennyConstants {
 	public static final String PAGINATION_PREV = "QUE_TABLE_PREVIOUS_BTN";
 	public static final String PAGINATION_INDEX = "PRI_INDEX";
 	public static final String SEARCH_TEXT = "PRI_SEARCH_TEXT";
-	public static final String PRI_NAME = "PRI_NAME";
-	public static final String PRI_CODE = "PRI_CODE";
 	public static final String PRI_PREFIX = "PRI_";
 	public static final String PCM_TABLE = "PCM_TABLE";
 	public static final String PCM_PROCESS = "PCM_PROCESS";

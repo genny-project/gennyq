@@ -25,6 +25,7 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.persistence.criteria.CriteriaBuilder.Case;
 
 import org.apache.commons.lang3.StringUtils;
@@ -458,6 +459,77 @@ public class FyodorUltra {
 	}
 
 	/**
+	 * @param query
+	 * @param cauldron
+	 * @param filter
+	 * @return
+	 */
+	public void associatedFilterPredicate(CriteriaQuery<?> query, Filter filter) {
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+		// Root<BaseEntity> root = cauldron.getRoot();
+
+		// TODO: Setup for multi layer
+		String code = filter.getCode();
+		String[] associations = code.split("\\.");
+		String base = associations[0];
+		String head = associations[1];
+		// Operator operator = filter.getOperator();
+		// Object value = filter.getValue();
+
+
+		// Join<BaseEntity, EntityAttribute> join = createOrFindJoin(cauldron, base);
+
+		// setup search query
+		Subquery<BaseEntity> subQuery = query.subquery(BaseEntity.class);
+		Root<BaseEntity> subRoot = subQuery.from(BaseEntity.class);
+
+		// build the search query
+		// TolstoysCauldron cauldron = new TolstoysCauldron(searchEntity);
+		// cauldron.setRoot(subRoot);
+		// brewQueryInCauldron(query, cauldron);
+
+		// ensure link exists
+		// cauldron.getPredicates().add(cleanCodeExpression(join.get("valueString")).in(subRoot.get("code")));
+
+		// build query
+		// subQuery.select(subRoot.get("code")).distinct(true);
+		// subQuery.where(cauldron.getPredicates().toArray(Predicate[]::new));
+
+
+		Join<BaseEntity, EntityAttribute> subJoin = subRoot.join("baseEntityAttributes", JoinType.LEFT);
+		subJoin.on(cb.equal(subJoin.get("pk").get("attribute").get("code"), head));
+		subQuery.select(subRoot);
+
+		// return cb.equal(subRoot.get("code"),
+		// cleanCodeExpression(join.get("valueString")));
+		// return cleanCodeExpression(join.get("valueString")).in(subRoot.get("code"));
+	}
+
+	/**
+	 * Return a clean entity code to use in query for valueString containing a
+	 * single entity code array.
+	 * 
+	 * @param root
+	 * @return
+	 */
+	public Expression<String> cleanCodeExpression(Path<?> path) {
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		// return cb.function("replace",
+		// String.class, path,
+		// cb.literal("[\""), cb.literal(""));
+
+		return cb.function("replace",
+				String.class,
+				(cb.function("replace",
+						String.class,
+						path, cb.literal("[\""), cb.literal(""))),
+				cb.literal("\"]"), cb.literal(""));
+	}
+
+	/**
 	 * Find a predicate for a wildcard filter.
 	 * 
 	 * @param root
@@ -535,8 +607,7 @@ public class FyodorUltra {
 		else if (code.equals("PRI_NAME"))
 			return root.<String>get("name");
 
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		Join<BaseEntity, EntityAttribute> entityAttribute = cauldron.get(cb, code);
+		Join<BaseEntity, EntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
 
 		Attribute attr = qwandaUtils.getAttribute(code, cauldron.getProductCode());
 		DataType dtt = attr.getDataType();
@@ -598,6 +669,28 @@ public class FyodorUltra {
 	 */
 	public Boolean isChronoClass(Class<?> c) {
 		return (c == LocalDateTime.class || c == LocalDate.class || c == LocalTime.class);
+	}
+
+	/**
+	 * Get an existing join for an attribute code, or create if not existing
+	 * already.
+	 * 
+	 * @param cb
+	 * @param code
+	 * @return
+	 */
+	public Join<BaseEntity, EntityAttribute> createOrFindJoin(TolstoysCauldron cauldron, String code) {
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		// add to map if not already there
+		if (!cauldron.getJoinMap().containsKey(code)) {
+			Join<BaseEntity, EntityAttribute> join = cauldron.getRoot().join("baseEntityAttributes", JoinType.LEFT);
+			join.on(cb.equal(join.get("pk").get("attribute").get("code"), code));
+			cauldron.getJoinMap().put(code, join);
+		}
+
+		return cauldron.getJoinMap().get(code);
 	}
 
 	/**

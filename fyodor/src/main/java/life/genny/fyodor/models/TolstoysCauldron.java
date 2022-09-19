@@ -6,12 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -29,6 +28,7 @@ public class TolstoysCauldron {
 	private Root<EntityEntity> link;
 
 	private Map<String, Join<BaseEntity, EntityAttribute>> joinMap = new HashMap<>();
+	private Map<String, Subquery<BaseEntity>> subqueryMap = new HashMap<>();
 
 	private List<Predicate> predicates = new ArrayList<>();
 	private List<Order> orders = new ArrayList<>();
@@ -72,6 +72,14 @@ public class TolstoysCauldron {
 		this.joinMap = joinMap;
 	}
 
+	public Map<String, Subquery<BaseEntity>> getSubqueryMap() {
+		return subqueryMap;
+	}
+
+	public void setSubqueryMap(Map<String, Subquery<BaseEntity>> subqueryMap) {
+		this.subqueryMap = subqueryMap;
+	}
+
 	public List<Predicate> getPredicates() {
 		return predicates;
 	}
@@ -91,26 +99,6 @@ public class TolstoysCauldron {
 	@JsonbTransient
 	public String getProductCode() {
 		return this.searchEntity.getRealm();
-	}
-
-	/**
-	 * Get an existing join for an attribute code, or create if not existing
-	 * already.
-	 * 
-	 * @param cb
-	 * @param code
-	 * @return
-	 */
-	public Join<BaseEntity, EntityAttribute> get(CriteriaBuilder cb, String code) {
-
-		// add to map if not already there
-		if (!joinMap.containsKey(code)) {
-			Join<BaseEntity, EntityAttribute> join = root.join("baseEntityAttributes", JoinType.LEFT);
-			join.on(cb.equal(join.get("pk").get("attribute").get("code"), code));
-			joinMap.put(code, join);
-		}
-
-		return joinMap.get(code);
 	}
 
 	/**
