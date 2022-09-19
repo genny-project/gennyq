@@ -20,6 +20,20 @@ public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
 
     /**
+     * Normalize a String by forcing uppercase on first character and lowercase on the rest
+     * e.g: 
+     * <ul>
+     *  <li>string -> String</li>
+     *  <li>STRING -> String</li>
+     * </ul>
+     * @param string
+     * @return
+     */
+	public static String normalizeString(String string) {
+		return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+	}
+
+    /**
      * Log on a specific log level in a specific log and return an object
      * @param level - level to log on in the logger
      * @param msg - message to log

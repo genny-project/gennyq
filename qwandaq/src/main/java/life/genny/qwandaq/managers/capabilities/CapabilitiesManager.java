@@ -72,6 +72,10 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("capability");
 		}
 
+		if(target == null) {
+			throw new NullParameterException("target");
+		}
+
 		target.addAttribute(capability, 0.0, getModeString(modes));
 		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), modes);
 		beUtils.updateBaseEntity(target);
@@ -180,16 +184,25 @@ public class CapabilitiesManager extends Manager {
 	}
 
 
-	public boolean entityHasCapability(final BaseEntity entity, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) 
+	/**
+	 * Check if an entity has one or all capability modes in a capability
+	 * @param target - targetrawCapabilityCode
+	 * @param rawCapabilityCode - capability to check
+	 * @param hasAll - whether or not the target requires all of the supplied checkModes or just one of them
+	 * @param checkModes - one or more {@link CapabilityMode}s
+	 * @return <b>true</b> if target satisfies the requirements specified by the args or <b>false</b> if not
+	 * @throws RoleException - if the target doesn't have the capability
+	 */
+	public boolean entityHasCapability(final BaseEntity target, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) 
 		throws RoleException {
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		final String code = entity.getCode();
-		
+		final String code = target.getCode();
+
 		// check cache first
 		if (entityHasCapabilityCached(userToken.getProductCode(), code, cleanCapabilityCode, hasAll, checkModes))
 			return true;
 
-		if (entityHasCapabilityFromDB(entity, cleanCapabilityCode, hasAll, checkModes))
+		if (entityHasCapabilityFromDB(target, cleanCapabilityCode, hasAll, checkModes))
 			return true;
 
 		return false;
@@ -241,6 +254,7 @@ public class CapabilitiesManager extends Manager {
 	 * 
 	 * @return Boolean
 	 */
+	@Deprecated
 	public Boolean conditionMet(String condition) {
 
 		if (StringUtils.isBlank(condition)) {
@@ -266,6 +280,11 @@ public class CapabilitiesManager extends Manager {
 		return hasCap ^ not;
 	}
 
+	/**
+	 * Deserialise a stringified array of modes to an array of {@link CapabilityMode}
+	 * @param modeString
+	 * @return
+	 */
 	public CapabilityMode[] getCapModesFromString(String modeString) {
 
 		JsonArray array = null;
@@ -291,6 +310,12 @@ public class CapabilitiesManager extends Manager {
 		return modes;
 	}
 
+	/**
+	 * Clean a raw capability code.
+	 * Prepends the Capability Code Prefix if missing and forces uppercase
+	 * @param rawCapabilityCode
+	 * @return
+	 */
 	public static String cleanCapabilityCode(final String rawCapabilityCode) {
 		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
 		if (!cleanCapabilityCode.startsWith(CAP_CODE_PREFIX)) {
@@ -300,24 +325,32 @@ public class CapabilitiesManager extends Manager {
 		return cleanCapabilityCode;
 	}
 
+	/**
+	 * Generate a capability map from a 2D string of attributes
+	 * @param productCode - product code to create capability attributes from
+	 * @param attribData - 2D array of Strings (each entry in the first array is an array of 2 strings, one for name and one for code)
+	 * 			- e.g [ ["CAP_ADMIN", "Manipulate Admin"], ["CAP_STAFF", "Manipulate Staff"]]
+	 * @return a map going from attribute code (capability code) to attribute (capability)
+	 */
 	public Map<String, Attribute> getCapabilityMap(String productCode, String[][] attribData) {
 		Map<String, Attribute> capabilityMap = new HashMap<String, Attribute>();
 
 		Arrays.asList(attribData).stream()
 		// Map data to capability. If capability name/tag is missing then use the code with standard capitalisation
-		.map((String[] item) -> createCapability(productCode, item[0], (item[1] != null ? item[1] : normalizeCode(item[0]))))
+		.map((String[] item) -> createCapability(productCode, item[0], (item[1] != null ? item[1] : CommonUtils.normalizeString(item[0]))))
 		// add each capability attribute to the capability map, stripping the CAP_ prefix to be used with the constants
 		.forEach((Attribute attr) -> capabilityMap.put(attr.getCode().substring(4), attr));
 		
 		return capabilityMap;
 	}
 
+	/**
+	 * Serialize an array of {@link CapabilityMode}s to a string
+	 * @param modes
+	 * @return
+	 */
 	public static String getModeString(CapabilityMode... modes) {
 		return CommonUtils.getArrayString(modes, (mode) -> mode.name());
-	}
-
-	private String normalizeCode(String code) {
-		return code.substring(0, 1).toUpperCase() + code.substring(1).toLowerCase();
 	}
 
 
@@ -339,6 +372,15 @@ public class CapabilitiesManager extends Manager {
 		return modes;
 	}
 
+	/**
+	 * Check if a target has a capability from the database
+	 * @param target
+	 * @param cleanCapabilityCode
+	 * @param hasAll
+	 * @param checkModes
+	 * @return
+	 * @throws RoleException
+	 */
 	private boolean entityHasCapabilityFromDB(final BaseEntity target, final String cleanCapabilityCode, boolean hasAll,
 			final CapabilityMode... checkModes)
 			throws RoleException {
@@ -373,6 +415,15 @@ public class CapabilitiesManager extends Manager {
 		}
 	}
 
+	/**
+	 * Check if a target has a capability in the cache
+	 * @param productCode
+	 * @param targetCode
+	 * @param cleanCapabilityCode
+	 * @param hasAll
+	 * @param checkModes
+	 * @return
+	 */
 	private boolean entityHasCapabilityCached(final String productCode, final String targetCode, final String cleanCapabilityCode, boolean hasAll,
 			final CapabilityMode... checkModes) {
 		Set<CapabilityMode> modes;
