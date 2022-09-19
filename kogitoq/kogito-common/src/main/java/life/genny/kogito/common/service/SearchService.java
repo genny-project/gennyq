@@ -1,5 +1,7 @@
 package life.genny.kogito.common.service;
 
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
+
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,19 +12,20 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QSearchMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -31,7 +34,6 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.constants.GennyConstants;
 
 @ApplicationScoped
 public class SearchService {
@@ -103,6 +105,28 @@ public class SearchService {
 	 * Perform a Bucket search.
 	 */
 	public void sendBuckets() {
+	}
+
+	/**
+	 * Perform a named search from search bar
+	 * 
+	 * @param searchCode
+	 * @param nameWildcard
+	 */
+	public void sendNamedSearch(String searchCode, String nameWildcard) {
+
+		log.info("Sending Named Search :: " + searchCode);
+
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
+				searchCode, SearchEntity.class);
+
+		// TODO: remove this from alyson
+		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
+
+		searchEntity.add(new Filter(PRI_NAME, Operator.LIKE, "%"+nameWildcard+"%"));
+
+		searchUtils.searchTable(searchEntity);
+		// sendSearchPCM("PCM_TABLE", searchCode);
 	}
 
 	/**
