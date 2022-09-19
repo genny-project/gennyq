@@ -1,4 +1,4 @@
-package life.genny.qwandaq.utils.capabilities;
+package life.genny.qwandaq.managers.capabilities.role;
 
 
 import java.lang.invoke.MethodHandles;
@@ -12,11 +12,13 @@ import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 public class RoleBuilder {
     static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
     
-    private CapabilityUtils cpUtils;
+    private CapabilitiesManager capManager;
+    private RoleManager roleMan;
 
     private BaseEntity targetRole;
     
@@ -31,10 +33,11 @@ public class RoleBuilder {
 
     // TODO: Again I want to get rid of product code chains like this
     // TODO: Hopefully we can firm up how product codes are assigned to tokens
-    public RoleBuilder(CapabilityUtils capabilityUtils, String roleCode, String roleName, String productCode) {
-        this.cpUtils = capabilityUtils;
+    public RoleBuilder(CapabilitiesManager capManager, String roleCode, String roleName, String productCode) {
+        this.capManager = capManager;
+        this.roleMan = capManager.getRoleManager();
         this.productCode = productCode;
-        targetRole = cpUtils.createRole(productCode, roleCode, roleName);
+        targetRole = roleMan.createRole(productCode, roleCode, roleName);
     }
 
     public RoleBuilder setCapabilityMap(Map<String, Attribute> capabilityMap) {
@@ -61,10 +64,10 @@ public class RoleBuilder {
             throw new RoleException("Capability Map not set. Try using setCapabilityMap(Map<String, Attribute> capabilityMap) before building.");
         }
 
-        cpUtils.setRoleRedirect(productCode, targetRole, redirectCode);
+        roleMan.setRoleRedirect(productCode, targetRole, redirectCode);
 
         for(String capabilityCode : roleCapabilities.keySet()) {
-            cpUtils.addCapabilityToBaseEntity(productCode, targetRole, fetch(capabilityCode), roleCapabilities.get(capabilityCode));
+            capManager.addCapabilityToBaseEntity(productCode, targetRole, fetch(capabilityCode), roleCapabilities.get(capabilityCode));
         }
 
         return targetRole;

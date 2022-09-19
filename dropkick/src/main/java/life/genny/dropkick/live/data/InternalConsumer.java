@@ -31,6 +31,7 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
@@ -40,7 +41,6 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -71,7 +71,7 @@ public class InternalConsumer {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CapabilityUtils capabilityUtils;
+	CapabilitiesManager capabilityUtils;
 
 	@Inject
 	SearchUtils searchUtils;

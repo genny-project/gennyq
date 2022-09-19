@@ -34,6 +34,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -43,7 +44,6 @@ import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
 
 /**
  * A utility class used for performing table
@@ -64,7 +64,7 @@ public class SearchUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CapabilityUtils capabilityUtils;
+	CapabilitiesManager capabilityUtils;
 
 	@Inject
 	ServiceToken serviceToken;

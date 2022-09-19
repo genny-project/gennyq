@@ -1,7 +1,5 @@
 package life.genny.test.qwandaq.utils;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
