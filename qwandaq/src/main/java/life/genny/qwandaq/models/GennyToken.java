@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.utils.CommonUtils;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -136,6 +138,15 @@ public class GennyToken implements Serializable {
 				this.realm = azp;
 			}
 		}
+
+		String prodCodeStr = CommonUtils.getSystemEnv("PRODUCT_CODES");
+		if(prodCodeStr != null) {
+			String[] productCodes = prodCodeStr.split(":");
+			if(productCodes.length == 1) {
+				log.info("Overriding Product code with: " + productCodes[0]);
+				this.productCode = productCodes[0];
+			}
+		} 
 
 		// add realm name to the decoded token
 		this.adecodedTokenMap.put("realm", this.realm);

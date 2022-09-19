@@ -22,7 +22,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.Allowed;
+
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
@@ -399,87 +399,6 @@ public class CapabilityUtils {
 	public String toString() {
 		return "CapabilityUtils [" + (capabilityManifest != null ? "capabilityManifest=" + capabilityManifest : "")
 				+ "]";
-	}
-
-	/**
-	 * @param user User BaseEntity to generate alloweds for (TODO: Migrate this)
-	 * @return a list of alloweds ready to be inserted into the kieSessions
-	 */
-	public List<Allowed> generateAlloweds(BaseEntity user) {
-		String productCode = userToken.getProductCode();
-		List<Allowed> allowables = new CopyOnWriteArrayList<Allowed>();
-
-		// Look for user capabilities
-		List<EntityAttribute> capabilities = user.findPrefixEntityAttributes(CAP_CODE_PREFIX);
-		for (EntityAttribute capability : capabilities) {
-			String modeString = capability.getValueString();
-			if (modeString != null) {
-				CapabilityMode[] modes = getCapModesFromString(modeString);
-				String cleanCapabilityCode = cleanCapabilityCode(capability.getAttributeCode());
-				allowables.add(new Allowed(cleanCapabilityCode, modes));
-			}
-		}
-
-		Optional<EntityAttribute> LNK_ROLEOpt = user.findEntityAttribute(LNK_ROLE_CODE);
-
-		JsonArray roleCodesArray = null;
-
-		if (LNK_ROLEOpt.isPresent()) {
-			roleCodesArray = jsonb.fromJson(LNK_ROLEOpt.get().getValueString(), JsonArray.class);
-		} else {
-			roleCodesArray = jsonb.fromJson("[]", JsonArray.class);
-			log.info("Could not find " + LNK_ROLE_CODE + " in user: " + user.getCode());
-		}
-
-		// Add keycloak roles
-		// for (String role : userToken.getUserRoles()) {
-		// roleCodesArray.add(role);
-		// }
-
-		for (int i = 0; i < roleCodesArray.size(); i++) {
-			String roleBECode = roleCodesArray.getString(i);
-
-			BaseEntityKey beKey = new BaseEntityKey(productCode, roleBECode);
-			BaseEntity roleBE = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
-			if (roleBE == null) {
-				log.info("facts: could not find roleBe: " + roleBECode + " in cache: " + userToken.getProductCode());
-				continue;
-			}
-
-			// Go through all the entity
-			capabilities = roleBE.findPrefixEntityAttributes(CAP_CODE_PREFIX);
-			for (EntityAttribute ea : capabilities) {
-				String modeString = null;
-				Boolean ignore = false;
-
-				String cleanCapabilityCode = cleanCapabilityCode(ea.getAttributeCode());
-				try {
-					Object val = ea.getValue();
-					if (val instanceof Boolean) {
-						log.error("capability attributeCode=" + cleanCapabilityCode + " is BOOLEAN??????");
-						ignore = true;
-					} else {
-						modeString = ea.getValue();
-					}
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				if (!ignore) {
-					CapabilityMode[] modes = getCapModesFromString(modeString);
-					allowables.add(new Allowed(cleanCapabilityCode, modes));
-				}
-
-			}
-		}
-
-		/* now force the keycloak ones */
-		for (String role : userToken.getUserRoles()) {
-			allowables.add(
-					new Allowed(role.toUpperCase(), CapabilityMode.VIEW));
-		}
-
-		return allowables;
 	}
 
 	public static String getModeString(CapabilityMode... modes) {

@@ -124,10 +124,6 @@ public class Entities {
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
-
-		// NOTE: Forgive me for this, but the rulesservice needs it :(
-		userToken.setProductCode(entity.getRealm());
-
 		beUtils.updateBaseEntity(entity);
 
 		return Response.ok(entity).build();

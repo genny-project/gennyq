@@ -35,7 +35,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * </ul>
  * <p>
  * Link class represents a simple pojo about baseentity links are stored. 
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

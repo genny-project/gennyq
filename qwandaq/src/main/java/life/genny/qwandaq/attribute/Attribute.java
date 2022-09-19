@@ -20,8 +20,6 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
-
 import javax.persistence.Cacheable;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
@@ -58,7 +56,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * </ul>
  * <p>
  * Attributes represent facts about a target.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow
@@ -79,7 +77,7 @@ import life.genny.qwandaq.utils.CommonUtils;
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @RegisterForReflection
-public class Attribute extends CodedEntity implements Serializable {
+public class Attribute extends CodedEntity {
 
 	private static final long serialVersionUID = 1L;
 

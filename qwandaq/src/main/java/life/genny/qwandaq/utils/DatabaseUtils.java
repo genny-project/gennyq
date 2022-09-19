@@ -23,7 +23,6 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NotInitializedException;
 import life.genny.qwandaq.validation.Validation;
-import life.genny.qwandaq.models.UniquePair;
 
 /*
  * A utility class used for standard read and write 
@@ -451,7 +450,7 @@ public class DatabaseUtils {
 	@Transactional
 	public void saveBaseEntity(BaseEntity entity) {
 
-		log.info("Saving BaseEntity " + entity.getCode());
+		log.debug("Saving BaseEntity " + entity.getRealm() + ":" + entity.getCode());
 		checkEntityManager();
 		BaseEntity existingEntity = null;
 		try {
@@ -463,9 +462,10 @@ public class DatabaseUtils {
 		if (existingEntity == null) {
 			entityManager.persist(entity);
 		} else {
+			if(entity.getId() == null) entity.setId(existingEntity.getId());
 			entityManager.merge(entity);
 		}
-		log.info("Successfully saved BaseEntity " + entity.getCode());
+		log.debug("Successfully saved BaseEntity " + entity.getCode());
 	}
 
 	/**

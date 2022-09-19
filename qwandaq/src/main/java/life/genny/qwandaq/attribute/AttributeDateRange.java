@@ -21,10 +21,6 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Inheritance;
@@ -46,7 +42,7 @@ import com.querydsl.core.annotations.QueryExclude;
  * <p>
  * AttributeDate represent the major way of specifying the Date data type about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author      Adam Crow
@@ -63,7 +59,7 @@ import com.querydsl.core.annotations.QueryExclude;
 
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("date_range")
-public class AttributeDateRange extends Attribute implements Serializable {
+public class AttributeDateRange extends Attribute {
 
 	private static final long serialVersionUID = 1L;
 
