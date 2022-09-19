@@ -34,7 +34,7 @@ import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
 import static life.genny.qwandaq.constants.GennyConstants.PRI_IS_PREFIX;
 import static life.genny.qwandaq.constants.GennyConstants.ROLE_BE_PREFIX;
 
-import static life.genny.qwandaq.constants.GennyConstants.LNK_ROLE_CODE;
+import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
 /*
  * A non-static utility class for managing roles and capabilities.
  * 
@@ -164,7 +164,7 @@ public class CapabilitiesManager extends Manager {
 			return true;
 
 		// 3. Check user role capabilities
-		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, LNK_ROLE_CODE);
+		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, ROLE_LINK_CODE);
 
 		try {
 			for (String code : roleCodes) {

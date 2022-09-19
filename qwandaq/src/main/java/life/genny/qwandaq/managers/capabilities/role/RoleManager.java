@@ -6,9 +6,9 @@ import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -19,6 +19,7 @@ import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -26,16 +27,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static life.genny.qwandaq.constants.GennyConstants.DEF_ROLE_CODE;
-import static life.genny.qwandaq.constants.GennyConstants.LNK_ROLE_CODE;
+import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
+import static life.genny.qwandaq.constants.GennyConstants.CHILDREN_LINK_CODE;
+
 import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
 import static life.genny.qwandaq.constants.GennyConstants.ROLE_BE_PREFIX;
 
 @ApplicationScoped
 public class RoleManager extends Manager {
-	protected static final Logger log = Logger.getLogger(RoleManager.class);
 
     private BaseEntity roleDef;
 	private Attribute lnkRolAttribute;
+	private Attribute lnkChildrenAttribute;
 
 	@Inject
 	CapabilitiesManager capManager;
@@ -51,11 +54,25 @@ public class RoleManager extends Manager {
 		if(roleDef == null)
 			throw new NullParameterException(DEF_ROLE_CODE);
 		
-		lnkRolAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), LNK_ROLE_CODE);
-		if(lnkRolAttribute == null)
-			throw new NullParameterException(LNK_ROLE_CODE);
+		lnkRolAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), ROLE_LINK_CODE);
+		if(lnkRolAttribute == null) {
+			error(ROLE_LINK_CODE + " is missing. Adding!");
+			lnkRolAttribute = new AttributeText(ROLE_LINK_CODE, "Role Link");
+		}
+
+		lnkChildrenAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), CHILDREN_LINK_CODE);
+		if(lnkChildrenAttribute == null) {
+			error(CHILDREN_LINK_CODE + " is missing. Adding!");
+			lnkRolAttribute = new AttributeText(CHILDREN_LINK_CODE, "Children Roleb Link");
+		}
 	}
 
+	/**
+	 * Attach a role to a person base entity
+	 * @param target
+	 * @param roleCode
+	 * @return
+	 */
 	public BaseEntity attachRole(BaseEntity target, String roleCode) {
 		
 		// Check we're working with a person
@@ -71,6 +88,13 @@ public class RoleManager extends Manager {
 		return attachRole(target, role);
 	}
 
+	/**
+	 * Create a new role under a given product code
+	 * @param productCode
+	 * @param roleCode
+	 * @param roleName
+	 * @return
+	 */
 	public BaseEntity createRole(String productCode, String roleCode, String roleName) {
 		
 		BaseEntity role = null;
@@ -86,6 +110,99 @@ public class RoleManager extends Manager {
 		return role;
 	}
 
+	/**
+	 * Replace the current set of children for a given role with new children
+	 * @param productCode - product code of the target role
+	 * @param targetRole - role to replace LNK_CHILDREN value
+	 * @param childrenCodes - child codes to replace with
+	 * @return - updated role
+	 */
+	public BaseEntity setChildren(String productCode, BaseEntity targetRole, String... childrenCodes) {
+		if(targetRole == null)
+			throw new NullParameterException("targetRole");
+		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
+
+		String codeString = CommonUtils.getArrayString(childrenCodes);
+
+		// add/edit LNK_CHILDREN
+		if(!optChildren.isPresent()) {
+			targetRole.addAttribute(lnkChildrenAttribute, 1.0, codeString);
+		} else {
+			EntityAttribute childrenEA = optChildren.get();
+			childrenEA.setValue(codeString);
+		}
+
+		beUtils.updateBaseEntity(productCode, targetRole);
+		return targetRole;
+	}
+
+	/**
+	 * add new children to the current set of children for a given role
+	 * @param productCode - product code of the target role
+	 * @param targetRole - role to add to LNK_CHILDREN value
+	 * @param childrenCodes - child codes to add
+	 * @return - updated role
+	 */
+	public BaseEntity addChildren(String productCode, BaseEntity targetRole, String... childrenCodes) {
+		if(targetRole == null)
+			throw new NullParameterException("targetRole");
+		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
+
+		EntityAttribute childrenEA;
+		List<String> childrenCodeList = Arrays.asList(childrenCodes);
+		// add/edit LNK_CHILDREN
+		if(!optChildren.isPresent()) {
+			childrenEA = targetRole.addAttribute(lnkChildrenAttribute, 1.0);
+		} else {
+			childrenEA = optChildren.get();
+			String[] preexistingChildren = beUtils.cleanUpAttributeValue(childrenEA.getValueString()).split(",");
+			childrenCodeList.addAll(Arrays.asList(preexistingChildren));
+		}
+
+		String codeString = CommonUtils.getArrayString(childrenCodeList);
+		childrenEA.setValue(codeString);
+
+		beUtils.updateBaseEntity(productCode, targetRole);
+		return targetRole;
+	}
+
+	public List<String> getChildrenCodes(BaseEntity targetRole) {
+		if(targetRole == null)
+			throw new NullParameterException("targetRole");
+		
+		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
+		if(!optChildren.isPresent()) {
+			warn("No editable children found for: " + targetRole.getCode());
+			return new ArrayList<String>();
+		}
+		String roleCodes = optChildren.get().getValueString();
+		if(StringUtils.isBlank(roleCodes)) {
+			return new ArrayList<String>();
+		}
+		
+		roleCodes = beUtils.cleanUpAttributeValue(roleCodes);
+		return Arrays.asList(roleCodes.split(","));
+	}
+
+	public List<BaseEntity> getChildren(String productCode, BaseEntity targetRole) {
+		return getChildrenCodes(targetRole).stream().map((String beCode) -> {
+			BaseEntity be = beUtils.getBaseEntity(beCode);
+			if(be == null) {
+				error("Could not find Role: " + beCode);
+			}
+
+			return be;
+		})
+		.filter(be -> be != null).collect(Collectors.toList());
+	}
+
+	/**
+	 * Have one role inherit another
+	 * @param productCode - productCode that target role is defined in
+	 * @param role - target role
+	 * @param parentRole - role to inherit
+	 * @return - new target role
+	 */
 	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
@@ -119,7 +236,7 @@ public class RoleManager extends Manager {
 				// return first found redirect
 				return getRoleRedirectCode(role);
 			} catch (RoleException e) {
-				log.debug(e.getMessage());
+				debug(e.getMessage());
 			}
 		}
 
@@ -151,7 +268,7 @@ public class RoleManager extends Manager {
 	}
 
 	public BaseEntity attachRole(BaseEntity target, BaseEntity role) {
-		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(LNK_ROLE_CODE);
+		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(ROLE_LINK_CODE);
 
 		// Create it
 		if(!eaOpt.isPresent()) {
@@ -188,7 +305,7 @@ public class RoleManager extends Manager {
 	}
 	
 	public List<String> getRoleCodes(BaseEntity personBaseEntity) {
-		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, LNK_ROLE_CODE);
+		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, ROLE_LINK_CODE);
 
 		if (roles == null || roles.isEmpty())
 			throw new RoleException(String.format("No roles found for base entity: ", personBaseEntity.getCode()));
@@ -200,7 +317,7 @@ public class RoleManager extends Manager {
 		return roles.stream().map((String roleCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(roleCode);
 			if(be == null) {
-				log.error("Could not find role: " + roleCode);
+				error("Could not find role: " + roleCode);
 			}
 			return be;
 		}).filter((BaseEntity roleBe) -> (roleBe != null)).collect(Collectors.toList());

@@ -2,7 +2,10 @@ package life.genny.qwandaq.managers.capabilities.role;
 
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -24,11 +27,14 @@ public class RoleBuilder {
     
     private String productCode;
 
+    private List<BaseEntity> inheritedRoles = new ArrayList<>();
+
+    private List<String> childrenCodes = new ArrayList<>();
+
     private Map<String, Attribute> capabilityMap;
 
     private Map<String, CapabilityMode[]> roleCapabilities = new HashMap<>();
 
-    // Attribs
     private String redirectCode;
 
     // TODO: Again I want to get rid of product code chains like this
@@ -50,6 +56,11 @@ public class RoleBuilder {
         return this;
     }
 
+    public RoleBuilder inheritRole(BaseEntity... otherRoles) {
+        inheritedRoles.addAll(Arrays.asList(otherRoles));
+        return this;
+    }
+
     public RoleBuilder addView(String capabilityCode) {
         return addCapability(capabilityCode, CapabilityMode.VIEW);
     }
@@ -59,16 +70,31 @@ public class RoleBuilder {
         return this;
     }
 
+    public RoleBuilder addChildren(String... roleCodes) {
+        this.childrenCodes.addAll(Arrays.asList(roleCodes));
+        return this;
+    }
+
     public BaseEntity build() throws RoleException {
         if(capabilityMap == null) {
             throw new RoleException("Capability Map not set. Try using setCapabilityMap(Map<String, Attribute> capabilityMap) before building.");
         }
 
+        // Redirect
         roleMan.setRoleRedirect(productCode, targetRole, redirectCode);
 
+        // Capabilities
         for(String capabilityCode : roleCapabilities.keySet()) {
             capManager.addCapabilityToBaseEntity(productCode, targetRole, fetch(capabilityCode), roleCapabilities.get(capabilityCode));
         }
+        
+        // Role inherits
+        for(BaseEntity parentRole : this.inheritedRoles) {
+            roleMan.inheritRole(productCode, targetRole, parentRole);
+        }
+
+        // Children
+        roleMan.setChildren(productCode, targetRole, childrenCodes.toArray(new String[0]));
 
         return targetRole;
     }

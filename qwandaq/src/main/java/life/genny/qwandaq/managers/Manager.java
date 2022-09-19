@@ -13,6 +13,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 @ApplicationScoped
 public abstract class Manager {
@@ -51,5 +52,25 @@ public abstract class Manager {
     
 	public Logger getLogger() {
 		return log;
+	}
+
+	public void log(Object o, FILogCallback level) {
+		level.log(o);
+	}
+
+	public void info(Object o) {
+		log(o, log::info);
+	}
+
+	public void debug(Object o) {
+		log(o, log::debug);
+	}
+
+	public void warn(Object o) {
+		log(o, log::warn);
+	}
+
+	public void error(Object o) {
+		log(o, log::error);
 	}
 }
