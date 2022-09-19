@@ -20,8 +20,6 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
-
 import javax.persistence.Cacheable;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
