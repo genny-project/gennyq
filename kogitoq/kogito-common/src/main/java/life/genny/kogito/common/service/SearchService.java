@@ -113,9 +113,9 @@ public class SearchService {
 	 * @param searchCode
 	 * @param nameWildcard
 	 */
-	public void sendNamedSearch(String searchCode, String nameWildcard) {
+	public void sendNameSearch(String searchCode, String nameWildcard) {
 
-		log.info("Sending Named Search :: " + searchCode);
+		log.info("Sending Name Search :: " + searchCode);
 
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
 				searchCode, SearchEntity.class);

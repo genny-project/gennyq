@@ -87,7 +87,7 @@ public class InternalConsumer {
 
 		if (searchText.isPresent()) {
 			Answer ans = searchText.get();
-			search.sendNamedSearch(ans.getTargetCode(), ans.getValue());
+			search.sendNameSearch(ans.getTargetCode(), ans.getValue());
 		}
 
 		// pass it on to the next stage of inference pipeline
