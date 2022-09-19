@@ -7,9 +7,7 @@ pipeline {
         stage('Add Config files') {
             steps {
                 configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                    sh "cat ./ports"
                     sh ". ./ports"
-                    echo $DATAINDEX_PORT
                 }
             }
         }
@@ -21,6 +19,9 @@ pipeline {
         }
         stage("Build Dependencies") {
             steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                }
                 sh "./build.sh"
             }
         }
@@ -28,25 +29,46 @@ pipeline {
             steps {
                 parallel (
                     "Build GadaQ" : {
-                        sh "./build-docker.sh gadaq"
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker.sh gadaq"
+                        }
                     },
                     "Build Bridge" : {
-                        sh "./build-docker.sh bridge"
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker.sh bridge"
+                        }
                     },
                     "Build Fyodor" : {
-                        sh "./build-docker.sh fyodor"
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker.sh fyodor"
+                        }
                     },
                     "Build Dropkick" : {
-                        sh "./build-docker.sh dropkick"
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker.sh dropkick"
+                        }
                     },
                     "Build Lauchy" : {
-                        sh "./build-docker.sh lauchy"
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker.sh lauchy"
+                        }
                     },
                     "Build Messages" : {
-                        sh "./build-docker.sh messages"
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker.sh messages"
+                        }
                     },
                     "Build Shleemy" : {
-                        sh "./build-docker.sh shleemy"
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker.sh shleemy"
+                        }
                     }
                 )
             }

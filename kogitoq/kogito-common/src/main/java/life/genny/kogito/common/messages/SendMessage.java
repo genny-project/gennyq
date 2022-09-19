@@ -11,11 +11,12 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.Map;
 
-public class SendMessage extends MessageSendingStrategy{
+public class SendMessage extends MessageSendingStrategy {
 
     private String templateCode;
     private BaseEntity recipientBE;
     private Map<String, String> ctxMap = null;
+
     public SendMessage(String templateCode, String recipientBECode) {
         this.templateCode = templateCode;
         this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
@@ -23,6 +24,10 @@ public class SendMessage extends MessageSendingStrategy{
 
     public SendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
         this.templateCode = templateCode;
+        if (beUtils == null) {
+            log.warn("beUtils is NULL --> no userToken");
+            beUtils = new BaseEntityUtils(serviceToken);
+        }
         this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
         this.ctxMap = ctxMap;
     }

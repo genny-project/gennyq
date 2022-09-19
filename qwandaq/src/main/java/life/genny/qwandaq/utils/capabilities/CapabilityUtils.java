@@ -353,7 +353,7 @@ public class CapabilityUtils {
 	 */
 	public Boolean conditionMet(String condition) {
 
-		if (condition == null) {
+		if (StringUtils.isBlank(condition)) {
 			log.error("condition is NULL!");
 			return false;
 		}
@@ -528,14 +528,13 @@ public class CapabilityUtils {
 	private boolean entityHasCapability(final BaseEntity target, final String cleanCapabilityCode, boolean hasAll,
 			final CapabilityMode... checkModes)
 			throws RoleException {
-		RoleException re = new RoleException(
-				"BaseEntity: " + target.getCode() + "does not have capability in database: " + cleanCapabilityCode);
 
 		Optional<EntityAttribute> optBeCapability = target.findEntityAttribute(cleanCapabilityCode);
 		if (optBeCapability.isPresent()) {
 			EntityAttribute beCapability = optBeCapability.get();
-			if (beCapability.getValueString() == null) {
-				throw re;
+			if (StringUtils.isBlank(beCapability.getValueString())) {
+				throw new RoleException(
+					"BaseEntity: " + target.getCode() + "does not have capability in database: " + cleanCapabilityCode);
 			}
 
 			String modeString = beCapability.getValueString().toUpperCase();
@@ -555,7 +554,8 @@ public class CapabilityUtils {
 				return false;
 			}
 		} else {
-			throw re;
+			throw new RoleException(
+				"BaseEntity: " + target.getCode() + "does not have capability in database: " + cleanCapabilityCode);
 		}
 	}
 

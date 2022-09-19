@@ -1,5 +1,6 @@
 package life.genny.kogito.common.messages;
 
+import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import org.jboss.logging.Logger;
@@ -15,6 +16,9 @@ public abstract class MessageSendingStrategy {
 
     @Inject
     UserToken userToken;
+
+    @Inject
+    ServiceToken serviceToken;
 
     @Inject
     BaseEntityUtils beUtils;
