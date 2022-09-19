@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import life.genny.qwandaq.attribute.AttributeText;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -39,6 +41,8 @@ public class SearchEntity extends BaseEntity {
 	private List<Column> columns = new ArrayList<>();
 	private List<Action> actions = new ArrayList<>();
 	private Boolean allColumns = false;
+
+	Double flcIndex = 1.0;
 
 	/**
    * Default constructor.
@@ -605,6 +609,25 @@ public class SearchEntity extends BaseEntity {
 				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
 				ea.setIndex(i);
 			});
+
+		return this;
+	}
+
+	/**
+	 * This Method allows specifying columns that can be further filtered on by the user
+	 * @param attributeCode The code of the attribute
+	 * @param fName The name given to the filter column
+	 * @return SearchEntity the updated search base entity
+	 */
+	public SearchEntity addFilterableColumn(final String attributeCode, final String fName) {
+		AttributeText attributeFLC = new AttributeText("FLC_" + attributeCode, fName);
+		try {
+			addAttribute(attributeFLC, flcIndex);
+			flcIndex += 1.0;
+
+		} catch (BadDataException e) {
+			log.error("Bad Filterable Column Initialisation");
+		}
 
 		return this;
 	}
