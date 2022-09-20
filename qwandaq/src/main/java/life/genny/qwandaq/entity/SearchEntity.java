@@ -6,13 +6,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import life.genny.qwandaq.attribute.AttributeText;
-import life.genny.qwandaq.exception.runtime.BadDataException;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.And;
@@ -23,7 +22,6 @@ import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
-import life.genny.qwandaq.exception.runtime.ClassBuildException;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
@@ -42,6 +40,7 @@ public class SearchEntity extends BaseEntity {
 	private List<Action> actions = new ArrayList<>();
 	private Boolean allColumns = false;
 
+	// TODO: redesign filters
 	Double flcIndex = 1.0;
 
 	/**
@@ -620,14 +619,11 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity the updated search base entity
 	 */
 	public SearchEntity addFilterableColumn(final String attributeCode, final String fName) {
-		AttributeText attributeFLC = new AttributeText("FLC_" + attributeCode, fName);
-		try {
-			addAttribute(attributeFLC, flcIndex);
-			flcIndex += 1.0;
 
-		} catch (BadDataException e) {
-			log.error("Bad Filterable Column Initialisation");
-		}
+		// TODO: redesign filters
+		AttributeText attributeFLC = new AttributeText("FLC_" + attributeCode, fName);
+		addAttribute(attributeFLC, flcIndex);
+		flcIndex += 1.0;
 
 		return this;
 	}

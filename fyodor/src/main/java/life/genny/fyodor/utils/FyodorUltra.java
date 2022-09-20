@@ -459,54 +459,6 @@ public class FyodorUltra {
 	}
 
 	/**
-	 * @param query
-	 * @param cauldron
-	 * @param filter
-	 * @return
-	 */
-	public void associatedFilterPredicate(CriteriaQuery<?> query, Filter filter) {
-
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		// Root<BaseEntity> root = cauldron.getRoot();
-
-		// TODO: Setup for multi layer
-		String code = filter.getCode();
-		String[] associations = code.split("\\.");
-		String base = associations[0];
-		String head = associations[1];
-		// Operator operator = filter.getOperator();
-		// Object value = filter.getValue();
-
-
-		// Join<BaseEntity, EntityAttribute> join = createOrFindJoin(cauldron, base);
-
-		// setup search query
-		Subquery<BaseEntity> subQuery = query.subquery(BaseEntity.class);
-		Root<BaseEntity> subRoot = subQuery.from(BaseEntity.class);
-
-		// build the search query
-		// TolstoysCauldron cauldron = new TolstoysCauldron(searchEntity);
-		// cauldron.setRoot(subRoot);
-		// brewQueryInCauldron(query, cauldron);
-
-		// ensure link exists
-		// cauldron.getPredicates().add(cleanCodeExpression(join.get("valueString")).in(subRoot.get("code")));
-
-		// build query
-		// subQuery.select(subRoot.get("code")).distinct(true);
-		// subQuery.where(cauldron.getPredicates().toArray(Predicate[]::new));
-
-
-		Join<BaseEntity, EntityAttribute> subJoin = subRoot.join("baseEntityAttributes", JoinType.LEFT);
-		subJoin.on(cb.equal(subJoin.get("pk").get("attribute").get("code"), head));
-		subQuery.select(subRoot);
-
-		// return cb.equal(subRoot.get("code"),
-		// cleanCodeExpression(join.get("valueString")));
-		// return cleanCodeExpression(join.get("valueString")).in(subRoot.get("code"));
-	}
-
-	/**
 	 * Return a clean entity code to use in query for valueString containing a
 	 * single entity code array.
 	 * 
@@ -516,10 +468,6 @@ public class FyodorUltra {
 	public Expression<String> cleanCodeExpression(Path<?> path) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-
-		// return cb.function("replace",
-		// String.class, path,
-		// cb.literal("[\""), cb.literal(""));
 
 		return cb.function("replace",
 				String.class,
