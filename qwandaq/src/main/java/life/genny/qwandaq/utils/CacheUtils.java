@@ -75,7 +75,7 @@ public class CacheUtils {
 	 */
 	public static String writeCache(String realm, String key, String value) {
 
-		log.infof("realm: %s, key: %s", realm, key);
+		log.debugf("realm: %s, key: %s", realm, key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
 		remoteCache.put(key, value);
 
@@ -104,8 +104,7 @@ public class CacheUtils {
 	 */
 	public static <T> T getObject(String realm, String key, Class<T> c) {
 
-		log.debugf("realm: %s, key: %s", realm, key);
-
+		log.tracef("realm: %s, key: %s", realm, key);
 		String data = (String) readCache(realm, key);
 		log.tracef("key: %s, value: %s", key, data);
 

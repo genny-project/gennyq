@@ -42,7 +42,7 @@ import life.genny.qwandaq.datatype.DataType;
  * AttributeBoolean represent the major way of specifying the Boolean data type
  * about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

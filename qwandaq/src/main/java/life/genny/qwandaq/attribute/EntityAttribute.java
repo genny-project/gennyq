@@ -627,7 +627,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	@JsonIgnore
 	@JsonbTransient
 	public Date getUpdatedDate() {
-
 		if (updated == null)
 			return null;
 		final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());

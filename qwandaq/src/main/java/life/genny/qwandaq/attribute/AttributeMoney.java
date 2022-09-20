@@ -44,7 +44,7 @@ import life.genny.qwandaq.datatype.DataType;
  * AttributeDate represent the major way of specifying the Money data type about
  * a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

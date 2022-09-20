@@ -20,8 +20,6 @@
 
 package life.genny.qwandaq;
 
-import java.lang.invoke.MethodHandles;
-
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;

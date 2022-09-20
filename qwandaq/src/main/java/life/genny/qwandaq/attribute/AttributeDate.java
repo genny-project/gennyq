@@ -20,7 +20,6 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 
 import javax.persistence.DiscriminatorValue;
@@ -43,7 +42,7 @@ import life.genny.qwandaq.datatype.DataType;
  * AttributeDate represent the major way of specifying the Date data type about
  * a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

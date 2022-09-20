@@ -394,6 +394,7 @@ public class DefUtils {
 								ctxMap.put(key, baseEntity);
 							}
 						});
+						
 						// check if contexts are present
 						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper

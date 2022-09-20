@@ -40,7 +40,7 @@ import life.genny.qwandaq.datatype.DataType;
  * AttributeText represent the major way of specifying the Text data type about
  * a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

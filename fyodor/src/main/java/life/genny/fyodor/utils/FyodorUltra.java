@@ -557,7 +557,7 @@ public class FyodorUltra {
 
 		Join<BaseEntity, EntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
 
-		Attribute attr = qwandaUtils.getAttribute(code, cauldron.getProductCode());
+		Attribute attr = qwandaUtils.getAttribute(cauldron.getProductCode(), code);
 		DataType dtt = attr.getDataType();
 		String className = dtt.getClassName();
 		Class<?> c = null;

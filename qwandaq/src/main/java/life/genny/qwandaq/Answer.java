@@ -72,7 +72,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
  * <p>
  * Answers represent the manner in which facts about a target from sources are
  * stored. Each Answer is associated with an attribute.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow
@@ -534,11 +534,17 @@ public class Answer {
 	}
 
 	@PreUpdate
+	/**
+	 * Set Updated to current UTC Time
+	 */
 	public void autocreateUpdate() {
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
 	@PrePersist
+	/**
+	 * set created to the current UTC time
+	 */
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
@@ -687,6 +693,9 @@ public class Answer {
 		this.askId = askId;
 	}
 
+	/*
+	 * @return the current kogito workflow process Id
+	 */
 	public String getProcessId() {
 		return processId;
 	}
@@ -840,14 +849,25 @@ public class Answer {
 			throw new NullPointerException("attributeCode cannot be null");
 	}
 
+	/**
+	 * @return changeEvent
+	 */
 	public Boolean isChangeEvent() {
 		return this.changeEvent;
 	}
 
+	/**
+	 * 
+	 * @return expired
+	 */
 	public Boolean isExpired() {
 		return this.expired;
 	}
 
+	/**
+	 * 
+	 * @return inferred
+	 */
 	public Boolean isInferred() {
 		return this.inferred;
 	}
@@ -856,6 +876,9 @@ public class Answer {
 		return this.refused;
 	}
 
+	/**
+	 * @return relevant question code
+	 */
 	public String getCode() {
 		return code;
 	}

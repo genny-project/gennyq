@@ -1,11 +1,11 @@
 package life.genny.qwandaq.exception.checked;
 
-import life.genny.qwandaq.exception.GennyException;
+import life.genny.qwandaq.exception.GennyRuntimeException;
 
 /**
  * This exception is used in handling role based actions.
  */
-public class RoleException extends GennyException {
+public class RoleException extends GennyRuntimeException {
 
 	public RoleException() {
 		super();

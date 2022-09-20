@@ -1,11 +1,11 @@
 package life.genny.qwandaq.utils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
@@ -104,6 +104,15 @@ public class CommonUtils {
         return result;
     }
 
+    public static <T> boolean arrayContains(T[] array, T object) {
+        for(T obj : array) {
+            if(obj.equals(object))
+                return true;
+        }
+
+        return false;
+    }
+
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
@@ -119,7 +128,7 @@ public class CommonUtils {
      * @param list - list to get stringified array of
      * @return a JSON style array of object
      */
-    public static <T> String getArrayString(List<T> list) {
+    public static <T> String getArrayString(Collection<T> list) {
         return getArrayString(list, (item) -> item.toString());
     }
 
@@ -136,7 +145,6 @@ public class CommonUtils {
         });
     }
 
-
     /**
      * Get a JSON style array of objects. Pass a callback for custom values. Will default to {@link Object#toString()} otherwise
      * @param <T> type
@@ -144,7 +152,7 @@ public class CommonUtils {
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
-    public static <T> String getArrayString(List<T> list, FIGetStringCallBack<T> stringCallback) {
+    public static <T> String getArrayString(Collection<T> list, FIGetStringCallBack<T> stringCallback) {
         String result = "";
         for(T object : list) {
             result += "\"" + stringCallback.getString(object) + "\",";

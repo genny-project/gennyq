@@ -56,7 +56,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * </ul>
  * <p>
  * Attributes represent facts about a target.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

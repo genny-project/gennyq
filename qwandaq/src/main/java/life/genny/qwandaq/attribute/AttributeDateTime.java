@@ -43,7 +43,7 @@ import life.genny.qwandaq.datatype.DataType;
  * AttributeDateTime represent the major way of specifying the DateTime data
  * type about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

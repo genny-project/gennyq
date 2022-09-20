@@ -42,7 +42,7 @@ import life.genny.qwandaq.datatype.DataType;
  * AttributeDouble represent the major way of specifying the Double data type
  * about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

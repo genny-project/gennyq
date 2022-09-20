@@ -42,7 +42,7 @@ import life.genny.qwandaq.datatype.DataType;
  * AttributeTime represent the major way of specifying the Time data type about
  * a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

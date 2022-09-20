@@ -42,7 +42,7 @@ import life.genny.qwandaq.entity.BaseEntity;
  * <p>
  * AttributeLink represent the major way of specifying the link between a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

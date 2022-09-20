@@ -59,7 +59,7 @@ import life.genny.qwandaq.entity.BaseEntity;
  * Contexts represent the major way of supplying info about a question that
  * permits a source to make a full decision. Contexts are also used in message
  * merging.
- * <p>
+ * </p>
  *
  *
  * @author Adam Crow

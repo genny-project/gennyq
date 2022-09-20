@@ -79,10 +79,11 @@ public class QwandaUtils {
 	public QwandaUtils() {
 	}
 
-	// Deliberately package private!
-	Attribute saveAttribute(final Attribute attribute) {
-
-		String productCode = userToken.getProductCode();
+	public Attribute saveAttribute(final Attribute attribute) {
+		return saveAttribute(userToken.getProductCode(), attribute);
+	}
+	
+	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
 		if (existingAttrib != null) {
@@ -94,6 +95,7 @@ public class QwandaUtils {
 		}
 
 		CacheUtils.putObject(productCode, attribute.getCode(), attribute);
+		attribute.setRealm(productCode);
 		databaseUtils.saveAttribute(attribute);
 
 		return CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
@@ -108,8 +110,7 @@ public class QwandaUtils {
 	 * @return Attribute
 	 */
 	public Attribute getAttribute(final String attributeCode) {
-		String productCode = userToken.getProductCode();
-		return getAttribute(attributeCode, productCode);
+		return getAttribute(userToken.getProductCode(), attributeCode);
 	}
 
 	/**
@@ -121,8 +122,7 @@ public class QwandaUtils {
 	 * @param productCode the product code
 	 * @return Attribute
 	 */
-	public Attribute getAttribute(final String attributeCode, final String productCode) {
-
+	public Attribute getAttribute(final String productCode, final String attributeCode) {
 		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
 
 		if (attribute == null) {
@@ -179,9 +179,9 @@ public class QwandaUtils {
 						null);
 				long lastMemory = PerformanceUtils.getMemoryUsage("MEGABYTES");
 
-				log.info("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad
+				log.debug("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad
 						+ " attributes");
-				log.info("Current memory usage: " + lastMemory + "MB");
+				log.debug("Current memory usage: " + lastMemory + "MB");
 
 				for (Attribute attribute : attributeList) {
 					String key = attribute.getCode();
@@ -191,10 +191,10 @@ public class QwandaUtils {
 				long currentMemory = PerformanceUtils.getMemoryUsage(PerformanceUtils.MemoryMeasurement.MEGABYTES);
 				long memoryUsed = currentMemory - lastMemory;
 
-				log.info("Post load memory usage: " + currentMemory + "MB");
-				log.info("Used up: " + memoryUsed + "MB");
-				log.info("Percentage: " + PerformanceUtils.getPercentMemoryUsed() * 100f);
-				log.info("============================");
+				log.trace("Post load memory usage: " + currentMemory + "MB");
+				log.trace("Used up: " + memoryUsed + "MB");
+				log.trace("Percentage: " + PerformanceUtils.getPercentMemoryUsed() * 100f);
+				log.trace("============================");
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);
 
@@ -207,7 +207,7 @@ public class QwandaUtils {
 				CacheUtils.putObject(productCode, "ATTRIBUTES_P" + currentPage, msg);
 			}
 
-			log.info("Cached " + totalAttribsCached + " attributes");
+			log.debug("Cached " + totalAttribsCached + " attributes");
 		} catch (Exception e) {
 			log.error("Error loading attributes for productCode: " + productCode);
 			e.printStackTrace();
