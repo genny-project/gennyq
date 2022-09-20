@@ -1,20 +1,24 @@
 package life.genny.kogito.common.service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
 
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
@@ -24,6 +28,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -184,23 +189,56 @@ public class InitService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
-	// TODO: Once we remove the QUE_ADD_ questions from the sheets
-	// We can update this function
-	// This will need further discussion though
-	private Ask generateAddItemsAsk(BaseEntity user) {
-		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
+	private Ask generateAddItemsAsk(String productCode, BaseEntity user) {
+		// Ask ask = qwandaUtils.generateAskFromQuestionCode(, user, user);
 
-		List<Ask> filteredChildAsks = new ArrayList<>();
-		// Get the child asks of add
-		
-		for(Ask childAsk : ask.getChildAsks()) {
-			String capCode = childAsk.getAttributeCode().substring("EVT_ADD_".length());
-			if(capMan.hasCapability(user, capCode, false, CapabilityMode.ADD))
-				filteredChildAsks.add(childAsk);
+		// find the question in the database
+		Question groupQuestion;
+		try {
+			groupQuestion = databaseUtils.findQuestionByCode(productCode, "QUE_ADD_ITEMS_GRP");
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException("QUE_ADD_ITEMS_GRP", e);
 		}
 
-		ask.setChildAsks(filteredChildAsks.toArray(new Ask[0]));
-		return ask;
+		Ask parentAsk = new Ask(groupQuestion);
+		parentAsk.setSourceCode(user.getCode());
+		parentAsk.setTargetCode(user.getCode());
+		parentAsk.setRealm(productCode);
+
+		List<EntityAttribute> capabilities = capMan.getEntityCapabilities(productCode, user);
+		
+		// Generate the Add Items asks from the capabilities
+		// Check if there is a def first
+		for(EntityAttribute capability : capabilities) {
+			String defCode = qwandaUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
+			log.debug("Checking that def exists: " + defCode);
+			BaseEntity def;
+			try {
+				def = beUtils.getBaseEntity(productCode, defCode);
+			} catch(ItemNotFoundException e) {
+				// We don't need to handle this. We don't care if there isn't always a def
+				continue;
+			}
+
+			if(capMan.checkCapability(capability, false, CapabilityMode.ADD)) {
+				// Create the ask (there is a def and we have the capability)
+				String baseCode = qwandaUtils.stripPrefix(capability.getAttributeCode());
+
+				String eventCode = "EVT_ADD".concat(baseCode);
+				String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
+				Attribute event = qwandaUtils.createEvent(eventCode, name);
+
+				Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
+
+				Ask addAsk = new Ask(question);
+				addAsk.setSourceCode(user.getCode());
+				addAsk.setTargetCode(user.getCode());
+				addAsk.setRealm(productCode);
+
+				parentAsk.addChildAsk(addAsk);
+			}
+		}
+		return parentAsk;
 	}
 
 	/**
@@ -209,7 +247,7 @@ public class InitService {
 	public void sendAddItems() {
 		BaseEntity user = beUtils.getUserBaseEntity();
 		
-		Ask ask = generateAddItemsAsk(user);
+		Ask ask = generateAddItemsAsk(userToken.getProductCode(), user);
 		// configure msg and send
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());

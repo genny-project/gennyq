@@ -1,5 +1,6 @@
 package life.genny.qwandaq.managers.capabilities;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -55,7 +56,30 @@ public class CapabilitiesManager extends Manager {
 	// == TODO LIST
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
 	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
+	public List<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
+		List<EntityAttribute> capabilities = new ArrayList<>();
+		if(target.isPerson()) {
+			List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ROLE_LINK_CODE);
+			for(String roleCode : roleCodes) {
+				BaseEntity role = beUtils.getBaseEntity(roleCode);
+				capabilities.addAll(getEntityCapabilities(productCode, role));
+			}
+		}
 
+		capabilities.addAll(target.findPrefixEntityAttributes(CAP_CODE_PREFIX));
+		return capabilities;
+	}
+
+	public Map<String, EntityAttribute> getEntityCapabilitiesMap(final String productCode, final BaseEntity target) {
+		Map<String, EntityAttribute> capabilitiesMap = new HashMap<>();
+		List<EntityAttribute> capabilities = getEntityCapabilities(productCode, target);
+
+		for(EntityAttribute cap : capabilities) {
+			capabilitiesMap.put(cap.getAttributeCode(), cap);
+		}
+
+		return capabilitiesMap;
+	}
 
 	/**
 	 * Add a capability to a BaseEntity.
@@ -103,6 +127,36 @@ public class CapabilitiesManager extends Manager {
 		return attribute;
 	}
 
+	/**
+	 * Check a single EntityAttribute capability if it has one or all of given capability modes
+	 * @param capability
+	 * @param hasAll
+	 * @param checkModes
+	 * @return
+	 */
+	public boolean checkCapability(EntityAttribute capability, boolean hasAll, CapabilityMode... checkModes) {
+		if (StringUtils.isBlank(capability.getValueString())) {
+			return false;
+		}
+
+		String modeString = capability.getValueString().toUpperCase();
+		if (hasAll) {
+			for (CapabilityMode checkMode : checkModes) {
+				boolean hasMode = modeString.contains(checkMode.name());
+				if (!hasMode)
+					return false;
+			}
+			return true;
+		} else {
+			for (CapabilityMode checkMode : checkModes) {
+				boolean hasMode = modeString.contains(checkMode.name());
+				if (hasMode)
+					return true;
+			}
+			return false;
+		}
+	}
+
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
 			final CapabilityMode... modes) {
 		if(capabilityAttribute == null) {
@@ -125,7 +179,7 @@ public class CapabilitiesManager extends Manager {
 
 		updateCapability(productCode, targetBe, capabilityAttribute, modes);
 		return targetBe;
-			}
+	}
 
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, final String rawCapabilityCode,
 			final CapabilityMode... modes) {
@@ -185,7 +239,7 @@ public class CapabilitiesManager extends Manager {
 
 	/**
 	 * Check if an entity has one or all capability modes in a capability
-	 * @param target - targetrawCapabilityCode
+	 * @param target - target
 	 * @param rawCapabilityCode - capability to check
 	 * @param hasAll - whether or not the target requires all of the supplied checkModes or just one of them
 	 * @param checkModes - one or more {@link CapabilityMode}s
@@ -388,26 +442,7 @@ public class CapabilitiesManager extends Manager {
 		Optional<EntityAttribute> optBeCapability = target.findEntityAttribute(cleanCapabilityCode);
 		if (optBeCapability.isPresent()) {
 			EntityAttribute beCapability = optBeCapability.get();
-			if (StringUtils.isBlank(beCapability.getValueString())) {
-				return false;
-			}
-
-			String modeString = beCapability.getValueString().toUpperCase();
-			if (hasAll) {
-				for (CapabilityMode checkMode : checkModes) {
-					boolean hasMode = modeString.contains(checkMode.name());
-					if (!hasMode)
-						return false;
-				}
-				return true;
-			} else {
-				for (CapabilityMode checkMode : checkModes) {
-					boolean hasMode = modeString.contains(checkMode.name());
-					if (hasMode)
-						return true;
-				}
-				return false;
-			}
+			return checkCapability(beCapability, hasAll, checkModes);
 		} else {
 			return false;
 		}
