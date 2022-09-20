@@ -3,14 +3,9 @@ package life.genny.qwandaq.utils;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -879,7 +874,7 @@ public class SearchUtils {
 	}
 	/**
 	 * Return Html value by filter parameters
-	 * @param filterParams
+	 * @param filterParams Filter parameters
 	 * @return Html value by filter parameters
 	 */
 	public String getHtmlByFilterParam(Map<String, String> filterParams) {
@@ -916,6 +911,7 @@ public class SearchUtils {
 
 	/**
 	 * Get parameter value by key
+	 * @param filterParams Filter Parameters
 	 * @param key Parameter Key
 	 */
 	public String getFilterParamValByKey(Map<String, String> filterParams,String key) {
@@ -1036,7 +1032,11 @@ public class SearchUtils {
 					baseEntities.add(baseEntity);
 				});
 
-		msg.setItems(baseEntities);
+		List<BaseEntity> basesSorted =  baseEntities.stream()
+				.sorted(Comparator.comparing(BaseEntity::getName))
+				.collect(Collectors.toList());
+
+		msg.setItems(basesSorted);
 
 		return msg;
 	}
@@ -1111,36 +1111,35 @@ public class SearchUtils {
 		searchBE.setPageStart(0).setPageSize(1000);
 
 		List<BaseEntity> baseEntities = searchBaseEntitys(searchBE);
-		base.setItems(baseEntities);
+
+		List<BaseEntity> basesSorted =  baseEntities.stream()
+										.sorted(Comparator.comparing(BaseEntity::getName))
+												.collect(Collectors.toList());
+		base.setItems(basesSorted);
 
 		return base;
 	}
 
 	/**
 	 * Return ask with bucket filter options
+	 * @param sbeCode Search entity code
 	 * @param lnkCode Link Code
 	 * @param lnkValue Link Value
 	 * @return Bucket filter options
 	 */
 	public SearchEntity getBucketFilterOptions(String sbeCode,String lnkCode, String lnkValue) {
-		SearchEntity searchBE = null;
+		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode)
+				.addFilter(GennyConstants.PRI_CODE, SearchEntity.StringFilter.LIKE, "CPY_%")
+				.addFilter(GennyConstants.PRI_IS_HOST_CPY, true)
+				.addFilter(GennyConstants.PRI_STATUS, SearchEntity.StringFilter.EQUAL, GennyConstants.ACTIVE)
+				.addColumn(lnkCode, lnkCode);
+
 		if(!lnkValue.isEmpty()) {
-			searchBE = new SearchEntity(sbeCode,sbeCode)
-					.addFilter(GennyConstants.PRI_CODE, SearchEntity.StringFilter.LIKE, "CPY_%")
-					.addFilter(GennyConstants.PRI_IS_HOST_CPY, true)
-					.addFilter(GennyConstants.PRI_STATUS, SearchEntity.StringFilter.EQUAL, GennyConstants.ACTIVE)
-					.addColumn(lnkCode, lnkCode)
-					.addFilter(GennyConstants.PRI_NAME, SearchEntity.StringFilter.LIKE, "%" + lnkValue + "%");
-		} else {
-			searchBE = new SearchEntity(sbeCode,sbeCode)
-					.addFilter(GennyConstants.PRI_CODE, SearchEntity.StringFilter.LIKE, "CPY_%")
-					.addFilter(GennyConstants.PRI_IS_HOST_CPY, true)
-					.addFilter(GennyConstants.PRI_STATUS, SearchEntity.StringFilter.EQUAL, GennyConstants.ACTIVE)
-					.addColumn(lnkCode, lnkCode);
+			searchBE.addFilter(GennyConstants.PRI_NAME, SearchEntity.StringFilter.LIKE, "%" + lnkValue + "%");
 		}
 
 		searchBE.setRealm(userToken.getProductCode());
-		searchBE.setPageStart(0).setPageSize(100);
+		searchBE.setPageStart(0).setPageSize(20);
 
 		return searchBE;
 	}

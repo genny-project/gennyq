@@ -324,6 +324,11 @@ public class SearchService {
 				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
 			}
 
+			//filter by select box
+			if (code.equalsIgnoreCase(GennyConstants.LNK_PERSON)) {
+				searchBE.addFilter(GennyConstants.PRI_ASSOC_HC, StringFilter.EQUAL, value);
+			}
+
 			CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
 
 			sendMessageBySearchEntity(searchBE);
@@ -480,14 +485,14 @@ public class SearchService {
 	 */
 	public void sendBucketFilter(String queGroup,String queCode,String attCode, String targetCode) {
 		Ask ask = new Ask();
-		ask.setName(GennyConstants.FILTERS);
+		ask.setName(GennyConstants.BUCKET_FILTER_LABEL);
 		Question question = new Question();
 		question.setCode(queGroup);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 		ask.setQuestion(question);
 
 		Ask childAsk = new Ask();
-		childAsk.setName(GennyConstants.FILTERS);
+		childAsk.setName(GennyConstants.BUCKET_FILTER_LABEL);
 		childAsk.setQuestionCode(queCode);
 		Question childQuestion = new Question();
 		childQuestion.setAttributeCode(attCode);
@@ -502,7 +507,7 @@ public class SearchService {
 		msg.setToken(userToken.getToken());
 		msg.setTargetCode(targetCode);
 		msg.setQuestionCode(queGroup);
-		msg.setMessage(GennyConstants.FILTERS);
+		msg.setMessage(GennyConstants.BUCKET_FILTER_LABEL);
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
@@ -526,7 +531,7 @@ public class SearchService {
 		msg.setQuestionCode(queCode);
 		msg.setLinkCode(lnkCode);
 		msg.setLinkValue(lnkValue);
-		msg.setMessage(GennyConstants.FILTERS);
+		msg.setMessage(GennyConstants.BUCKET_FILTER_LABEL);
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
@@ -610,6 +615,19 @@ public class SearchService {
 		msg.setSourceCode(cmdType);
 		msg.setTargetCode(code);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
+
+	/**
+	 * Return the list of search entity code
+	 * @param searchCode Search entity code
+	 * @return the list of search entity code
+	 */
+	public List<String> getBucketCodesBySBE(String searchCode) {
+		List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
+		List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
+
+		return bucketCodes;
 	}
 
 }
