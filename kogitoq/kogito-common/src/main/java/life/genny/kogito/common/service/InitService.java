@@ -1,6 +1,7 @@
 package life.genny.kogito.common.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -133,6 +134,10 @@ public class InitService {
 		}
 	}
 
+	private BaseEntity configureSidebar(BaseEntity sidebarPCM) {
+		return sidebarPCM;
+	}
+
 	/**
 	 * Send PCM BaseEntities.
 	 */
@@ -155,6 +160,20 @@ public class InitService {
 			log.info("No PCMs found for " + productCode);
 			return;
 		}
+
+		// TODO: Find a better way of doing this. This does not feel elegant
+		// Perhaps we have a flag on whether or not to check capabilities on a question / BaseEntity?
+		Optional<BaseEntity> sidebarPCMOpt = pcms.stream().filter((BaseEntity pcm) -> {
+			return "PCM_SIDEBAR".equals(pcm.getCode());
+		}).findFirst();
+
+		if(!sidebarPCMOpt.isPresent())
+			throw new ItemNotFoundException("PCM_SIDEBAR");
+		BaseEntity sidebarPcm = sidebarPCMOpt.get();
+		// Replace sidebar pcm
+		pcms.remove(sidebarPcm);
+		pcms.add(configureSidebar(sidebarPcm));
+
 		log.info("Sending "+pcms.size()+" PCMs");
 
 		// configure ask msg
@@ -170,6 +189,7 @@ public class InitService {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") null PRI_QUESTION_CODE");
 				continue;
 			}
+
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, user);
 			if (ask == null) {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + questionCode);
@@ -190,8 +210,6 @@ public class InitService {
 	}
 
 	private Ask generateAddItemsAsk(String productCode, BaseEntity user) {
-		// Ask ask = qwandaUtils.generateAskFromQuestionCode(, user, user);
-
 		// find the question in the database
 		Question groupQuestion;
 		try {
