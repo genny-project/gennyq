@@ -225,34 +225,6 @@ public class QwandaUtils {
 		}
 	}
 
-	// TODO: Going to elaborate on this more another time. Will allow for the extra _ character some constants have
-	public String substitutePrefix(String code, String prefix) {
-		if(prefix.length() != 3) {
-			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters");
-			return code;
-		}
-		code = prefix + code.substring(prefix.length());
-		return code;
-	}
-
-	/**
-	 * Strip the prefix assuming there is a prefix of 3 characters on the code
-	 * @param code
-	 * @return the code without the prefix (if there is no prefix of 3 characters, there is no change)
-	 */
-	public String stripPrefix(String code) {
-		String[] components = code.split("_");
-		if(components.length <= 1) { // no prefix
-			return code;
-		} else {
-			if(components[0].length() != 3) {
-				return code;
-			}
-
-			return code.substring(4);
-		}
-	}
-
 	public Attribute createEvent(String code, final String name) {
 		if(!code.startsWith("EVT_")) {
 			code = "EVT_".concat(code);

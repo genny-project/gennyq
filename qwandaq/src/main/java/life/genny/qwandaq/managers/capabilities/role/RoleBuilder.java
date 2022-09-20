@@ -16,6 +16,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.utils.CommonUtils;
 
 public class RoleBuilder {
     static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
@@ -71,6 +72,7 @@ public class RoleBuilder {
     }
 
     public RoleBuilder addCapability(String capabilityCode, CapabilityMode... capModes) {
+        capabilityCode = CommonUtils.safeStripPrefix(capabilityCode);
         roleCapabilities.put(capabilityCode, capModes);
         return this;
     }

@@ -56,6 +56,9 @@ public class CapabilitiesManager extends Manager {
 	// == TODO LIST
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
 	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
+	
+	
+	
 	public List<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
 		List<EntityAttribute> capabilities = new ArrayList<>();
 		if(target.isPerson()) {
@@ -66,6 +69,7 @@ public class CapabilitiesManager extends Manager {
 			}
 		}
 
+		// TODO: Properly Prio User Capabilities
 		capabilities.addAll(target.findPrefixEntityAttributes(CAP_CODE_PREFIX));
 		return capabilities;
 	}

@@ -210,11 +210,10 @@ public class InitService {
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
 		for(EntityAttribute capability : capabilities) {
-			String defCode = qwandaUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
-			log.debug("Checking that def exists: " + defCode);
-			BaseEntity def;
+			String defCode = CommonUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
 			try {
-				def = beUtils.getBaseEntity(productCode, defCode);
+				// Check for a def
+				beUtils.getBaseEntity(productCode, defCode);
 			} catch(ItemNotFoundException e) {
 				// We don't need to handle this. We don't care if there isn't always a def
 				continue;
@@ -222,7 +221,7 @@ public class InitService {
 
 			if(capMan.checkCapability(capability, false, CapabilityMode.ADD)) {
 				// Create the ask (there is a def and we have the capability)
-				String baseCode = qwandaUtils.stripPrefix(capability.getAttributeCode());
+				String baseCode = CommonUtils.safeStripPrefix(capability.getAttributeCode());
 
 				String eventCode = "EVT_ADD".concat(baseCode);
 				String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
