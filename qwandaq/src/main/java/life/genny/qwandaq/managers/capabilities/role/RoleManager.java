@@ -21,7 +21,9 @@ import life.genny.qwandaq.utils.CommonUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -193,7 +195,7 @@ public class RoleManager extends Manager {
 	 * Retrieve the children for a given role
 	 * @param targetRole role base entity to target
 	 */
-	public List<BaseEntity> getChildren(BaseEntity targetRole) {
+	public Set<BaseEntity> getChildren(BaseEntity targetRole) {
 		return getChildrenCodes(targetRole).stream().map((String beCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(beCode);
 			if(be == null) {
@@ -202,7 +204,55 @@ public class RoleManager extends Manager {
 
 			return be;
 		})
-		.filter(be -> be != null).collect(Collectors.toList());
+		.filter(be -> be != null).collect(Collectors.toSet());
+	}
+
+	/**
+	 * Get the descendant codes of a target role
+	 * @param role
+	 * @return
+	 * 
+	 * @see {@link #getDescendants(BaseEntity)}
+	 */
+	public Map<String, Set<String>> getDescendantCodes(BaseEntity role) {
+		Map<String, Set<String>> descendantCodeMap = new HashMap<>();
+		Map<BaseEntity, Set<BaseEntity>> descendantMap = getDescendants(role);
+
+		for(BaseEntity descendantRole : descendantMap.keySet()) {
+			descendantCodeMap.put(descendantRole.getCode(), 
+				descendantMap.get(descendantRole).stream()
+								.map((BaseEntity child) -> child.getCode())
+								.collect(Collectors.toSet()));
+		}
+
+		return descendantCodeMap;
+	}
+
+	/**
+	 * Get all of the children and descendants for a given role, where a descendant is any role X levels below the target role
+	 * @param role role to get descendants of
+	 * @return a map going from role to children of that role (as a set)
+	 */
+	public Map<BaseEntity, Set<BaseEntity>> getDescendants(BaseEntity role) {
+		Map<BaseEntity, Set<BaseEntity>> descendantMap = new HashMap<>();
+		return getDescendants(role, descendantMap);
+	}
+
+	private Map<BaseEntity, Set<BaseEntity>> getDescendants(BaseEntity role, Map<BaseEntity, Set<BaseEntity>> descendantMap) {
+		Set<BaseEntity> children = getChildren(role);
+		if(children.isEmpty()) {
+			return descendantMap;
+		}
+
+		// add children
+		descendantMap.put(role, children);
+		for(BaseEntity child : children) {
+			Set<BaseEntity> childChildren = getChildren(child);
+			if(!childChildren.isEmpty())
+				descendantMap = getDescendants(role, descendantMap);
+		}
+
+		return descendantMap;
 	}
 
 	/**
