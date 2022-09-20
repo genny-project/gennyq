@@ -1123,13 +1123,20 @@ public class SearchUtils {
 	 * @return Bucket filter options
 	 */
 	public SearchEntity getBucketFilterOptions(String sbeCode,String lnkCode, String lnkValue) {
-		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode)
-				.addFilter(GennyConstants.PRI_CODE, SearchEntity.StringFilter.LIKE, "CPY_%")
-				.addFilter(GennyConstants.PRI_IS_HOST_CPY, true)
-				.addFilter(GennyConstants.PRI_STATUS, SearchEntity.StringFilter.EQUAL, GennyConstants.ACTIVE)
-				.addColumn(lnkCode, lnkCode);
+		SearchEntity searchBE = null;
 		if(!lnkValue.isEmpty()) {
-			searchBE.addFilter(GennyConstants.PRI_NAME, SearchEntity.StringFilter.LIKE, "%" + lnkValue + "%");
+			searchBE = new SearchEntity(sbeCode,sbeCode)
+					.addFilter(GennyConstants.PRI_CODE, SearchEntity.StringFilter.LIKE, "CPY_%")
+					.addFilter(GennyConstants.PRI_IS_HOST_CPY, true)
+					.addFilter(GennyConstants.PRI_STATUS, SearchEntity.StringFilter.EQUAL, GennyConstants.ACTIVE)
+					.addColumn(lnkCode, lnkCode)
+					.addFilter(GennyConstants.PRI_NAME, SearchEntity.StringFilter.LIKE, "%" + lnkValue + "%");
+		} else {
+			searchBE = new SearchEntity(sbeCode,sbeCode)
+					.addFilter(GennyConstants.PRI_CODE, SearchEntity.StringFilter.LIKE, "CPY_%")
+					.addFilter(GennyConstants.PRI_IS_HOST_CPY, true)
+					.addFilter(GennyConstants.PRI_STATUS, SearchEntity.StringFilter.EQUAL, GennyConstants.ACTIVE)
+					.addColumn(lnkCode, lnkCode);
 		}
 
 		searchBE.setRealm(userToken.getProductCode());
