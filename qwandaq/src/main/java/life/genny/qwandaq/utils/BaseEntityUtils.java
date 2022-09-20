@@ -179,7 +179,7 @@ public class BaseEntityUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	@Deprecated
-	public BaseEntity getBaseEntityByCode(String productCode, String code) {
+	public BaseEntity getBaseEntityByCode(String productCode, String code) throws ItemNotFoundException {
 
 		if (productCode == null)
 			throw new NullParameterException("productCode");
