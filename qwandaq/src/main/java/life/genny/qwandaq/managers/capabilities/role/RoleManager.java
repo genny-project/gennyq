@@ -166,6 +166,10 @@ public class RoleManager extends Manager {
 		return targetRole;
 	}
 
+	/**
+	 * Retrieve the children codes for a given role
+	 * @param targetRole role base entity to target
+	 */
 	public List<String> getChildrenCodes(BaseEntity targetRole) {
 		if(targetRole == null)
 			throw new NullParameterException("targetRole");
@@ -184,7 +188,12 @@ public class RoleManager extends Manager {
 		return Arrays.asList(roleCodes.split(","));
 	}
 
-	public List<BaseEntity> getChildren(String productCode, BaseEntity targetRole) {
+
+	/**
+	 * Retrieve the children for a given role
+	 * @param targetRole role base entity to target
+	 */
+	public List<BaseEntity> getChildren(BaseEntity targetRole) {
 		return getChildrenCodes(targetRole).stream().map((String beCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(beCode);
 			if(be == null) {
