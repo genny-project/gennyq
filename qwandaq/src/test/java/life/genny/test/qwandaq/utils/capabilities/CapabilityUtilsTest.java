@@ -4,15 +4,15 @@ package life.genny.test.qwandaq.utils.capabilities;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.suite.TestCase;
 
@@ -26,15 +26,16 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 
 @RunWith(MockitoJUnitRunner.class)
-public class CapabilityUtilsTest {
+public class CapabilityUtilsTest extends BaseTestCase {
 
 	static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
-    @Inject
+    @InjectMocks
     CapabilitiesManager capManager;
 
     @Test
     public void cleanCapabilityCodeTest() {
+
         Builder<String, String> builder = new Builder<String, String>();
 
         FITestCallback<Input<String>, Expected<String>> testFunction = (Input<String> input) -> {

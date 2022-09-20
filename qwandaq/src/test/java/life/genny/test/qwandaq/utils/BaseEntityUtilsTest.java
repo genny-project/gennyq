@@ -1,12 +1,12 @@
 package life.genny.test.qwandaq.utils;
 
-import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -18,7 +18,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 
 @RunWith(MockitoJUnitRunner.class)
-public class BaseEntityUtilsTest {
+public class BaseEntityUtilsTest extends BaseTestCase {
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -29,28 +29,32 @@ public class BaseEntityUtilsTest {
 	@InjectMock
 	UserToken userToken;
 
-	@Inject
+	@InjectMocks
 	BaseEntityUtils beUtils;
+
+	@InjectMocks
+	DatabaseUtils dbUtils;
 
 	@Test
 	public void nullInputTest() {
 		// TODO
 	}
 
-	//@Test
+	// @Test
 	public void getBaseEntityTest() {
 		
-        DatabaseUtils databaseUtils = Mockito.mock(DatabaseUtils.class);
+        DatabaseUtils dbUtils = Mockito.mock(DatabaseUtils.class);
         BaseEntityUtils beUtils = Mockito.mock(BaseEntityUtils.class);
 
 		BaseEntity baseEntity = new BaseEntity(ENTITY_CODE, "Test Entity");
 		baseEntity.setRealm(PRODUCT);
 
-		Mockito.when(databaseUtils.findBaseEntityByCode(PRODUCT, ENTITY_CODE)).thenReturn(baseEntity);
-		Mockito.when(databaseUtils.findBaseEntityByCode(PRODUCT, DUMMY_CODE)).thenReturn(null);
+		Mockito.when(dbUtils.checkEntityManager()).thenReturn(true);
+		Mockito.when(dbUtils.findBaseEntityByCode(PRODUCT, ENTITY_CODE)).thenReturn(baseEntity);
+		Mockito.when(dbUtils.findBaseEntityByCode(PRODUCT, DUMMY_CODE)).thenReturn(null);
 
-		assert(beUtils.getBaseEntity(ENTITY_CODE).equals(baseEntity));
-		Assertions.assertThrows(ItemNotFoundException.class, () -> beUtils.getBaseEntity(DUMMY_CODE));
+		assert(baseEntity.equals(beUtils.getBaseEntity(PRODUCT, ENTITY_CODE)));
+		Assertions.assertThrows(ItemNotFoundException.class, () -> beUtils.getBaseEntity(PRODUCT, DUMMY_CODE));
 	}
 
 	public void cleanAttributeValueTest() {

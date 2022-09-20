@@ -43,10 +43,11 @@ public class DatabaseUtils {
 	/**
 	 * Check if entityManager is present.
 	 */
-	public void checkEntityManager() {
+	public boolean checkEntityManager() {
 		if (entityManager == null) {
 			throw new NotInitializedException("EntityManager not initialized");
 		}
+		return entityManager != null;
 	}
 
 	/**

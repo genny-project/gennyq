@@ -50,27 +50,27 @@ public abstract class Manager {
 		return str;
 	}
     
-	public Logger getLogger() {
+	protected Logger getLogger() {
 		return log;
 	}
 
-	public void log(Object o, FILogCallback level) {
+	protected void log(Object o, FILogCallback level) {
 		level.log(o);
 	}
 
-	public void info(Object o) {
+	protected void info(Object o) {
 		log(o, log::info);
 	}
 
-	public void debug(Object o) {
+	protected void debug(Object o) {
 		log(o, log::debug);
 	}
 
-	public void warn(Object o) {
+	protected void warn(Object o) {
 		log(o, log::warn);
 	}
 
-	public void error(Object o) {
+	protected void error(Object o) {
 		log(o, log::error);
 	}
 }
