@@ -46,6 +46,11 @@ public class RoleBuilder {
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
     }
 
+    public RoleBuilder setCapabilityMap(String[][] capData) {
+        this.capabilityMap = capManager.getCapabilityMap(productCode, capData);
+        return this;
+    }
+
     public RoleBuilder setCapabilityMap(Map<String, Attribute> capabilityMap) {
         this.capabilityMap = capabilityMap;
         return this;

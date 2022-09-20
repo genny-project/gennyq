@@ -60,12 +60,14 @@ public class RoleManager extends Manager {
 		if(lnkRolAttribute == null) {
 			error(ROLE_LINK_CODE + " is missing. Adding!");
 			lnkRolAttribute = new AttributeText(ROLE_LINK_CODE, "Role Link");
+			qwandaUtils.saveAttribute(lnkRolAttribute);
 		}
-
-		lnkChildrenAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), CHILDREN_LINK_CODE);
-		if(lnkChildrenAttribute == null) {
+		try {
+			lnkChildrenAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), CHILDREN_LINK_CODE);
+		} catch(NoResultException e) {
 			error(CHILDREN_LINK_CODE + " is missing. Adding!");
-			lnkRolAttribute = new AttributeText(CHILDREN_LINK_CODE, "Children Roleb Link");
+			lnkChildrenAttribute = new AttributeText(CHILDREN_LINK_CODE, "Children Role Link");
+			qwandaUtils.saveAttribute(lnkChildrenAttribute);
 		}
 	}
 

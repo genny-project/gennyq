@@ -1,5 +1,7 @@
 package life.genny.qwandaq.managers;
 
+import java.lang.invoke.MethodHandles;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -38,8 +40,8 @@ public abstract class Manager {
 
 	@PostConstruct
     protected void init() {
-        log.info("[!] Initialized " + this.className());
 		log = Logger.getLogger(className());
+        log.info("[!] Initialized " + this.className());
     }
     
     protected String className() {
@@ -47,7 +49,7 @@ public abstract class Manager {
 		int index = str.indexOf('_');
 		if(index != -1)
 			str = str.substring(0, index);
-		return str;
+		return str != null ? str : MethodHandles.lookup().lookupClass().getCanonicalName();
 	}
     
 	protected Logger getLogger() {

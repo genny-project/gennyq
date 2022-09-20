@@ -148,7 +148,7 @@ public class CapabilitiesManager extends Manager {
 	 * @return whether or not the token can manipulate all the supplied modes for
 	 *         the supplied capabilityCode
 	 */
-	public boolean hasCapability(final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
+	public boolean hasCapability(final BaseEntity user, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
 
 		// 1. Check override
 
@@ -158,7 +158,6 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// 2. Check user capabilities
-		BaseEntity user = beUtils.getUserBaseEntity();
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		if(entityHasCapability(user, cleanCapabilityCode, hasAll, checkModes))
 			return true;
@@ -273,7 +272,8 @@ public class CapabilitiesManager extends Manager {
 		capability = not ? capability.substring(1) : capability;
 
 		// check for Capability
-		Boolean hasCap = hasCapability(capability, false, CapabilityMode.getMode(mode))
+		BaseEntity user = beUtils.getUserBaseEntity();
+		Boolean hasCap = hasCapability(user, capability, false, CapabilityMode.getMode(mode))
 				|| hasCapabilityThroughPriIs(capability, CapabilityMode.getMode(mode));
 
 		// XNOR operator
@@ -389,8 +389,7 @@ public class CapabilitiesManager extends Manager {
 		if (optBeCapability.isPresent()) {
 			EntityAttribute beCapability = optBeCapability.get();
 			if (StringUtils.isBlank(beCapability.getValueString())) {
-				throw new RoleException(
-					"BaseEntity: " + target.getCode() + "does not have capability in database: " + cleanCapabilityCode);
+				return false;
 			}
 
 			String modeString = beCapability.getValueString().toUpperCase();
@@ -410,8 +409,7 @@ public class CapabilitiesManager extends Manager {
 				return false;
 			}
 		} else {
-			throw new RoleException(
-				"BaseEntity: " + target.getCode() + "does not have capability in database: " + cleanCapabilityCode);
+			return false;
 		}
 	}
 
@@ -431,20 +429,26 @@ public class CapabilitiesManager extends Manager {
 			CapabilityMode[] modeArray = getEntityCapabilityFromCache(productCode, targetCode, cleanCapabilityCode);
 			modes = Arrays.asList(modeArray).stream().collect(Collectors.toSet());
 		} catch (RoleException e) {
+			log.info("Could not find " + targetCode + ":" + cleanCapabilityCode + " in cache");
 			return false;
 		}
 
+		log.info("Found " + modes.size() + " modes");
 		// Two separate loops so we don't check hasAll over and over again
 		if (hasAll) {
 			for (CapabilityMode checkMode : checkModes) {
+				log.info("Checking " + checkMode.name());
 				boolean hasMode = modes.contains(checkMode);
+				log.info(" 		- Success: " + hasMode);
 				if (!hasMode)
 					return false;
 			}
 			return true;
 		} else {
 			for (CapabilityMode checkMode : checkModes) {
+				log.info("Checking " + checkMode.name());
 				boolean hasMode = modes.contains(checkMode);
+				log.info(" 		- Success: " + hasMode);
 				if (hasMode)
 					return true;
 			}

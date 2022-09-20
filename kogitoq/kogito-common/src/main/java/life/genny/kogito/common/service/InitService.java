@@ -1,21 +1,23 @@
 package life.genny.kogito.common.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonArray;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
-import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -42,28 +44,35 @@ public class InitService {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	Service service;
+	private Service service;
 
 	@Inject
-	DatabaseUtils databaseUtils;
+	private DatabaseUtils databaseUtils;
 
 	@Inject
-	BaseEntityUtils beUtils;
+	private BaseEntityUtils beUtils;
 
 	@Inject
-	UserToken userToken;
+	private UserToken userToken;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	private QwandaUtils qwandaUtils;
 
 	@Inject
-	KogitoUtils kogitoUtils;
+	private KogitoUtils kogitoUtils;
 
 	@Inject
-	GraphQLUtils gqlUtils;
+	private GraphQLUtils gqlUtils;
 
 	@Inject
-	SearchUtils searchUtils;
+	private SearchUtils searchUtils;
+
+	@Inject
+	private RoleManager roleMan;
+
+	@Inject
+	private CapabilitiesManager capMan;
+
 
 	/**
 	 * Send the Project BaseEntity.
@@ -175,14 +184,32 @@ public class InitService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
+	// TODO: Once we remove the QUE_ADD_ questions from the sheets
+	// We can update this function
+	// This will need further discussion though
+	private Ask generateAddItemsAsk(BaseEntity user) {
+		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
+
+		List<Ask> filteredChildAsks = new ArrayList<>();
+		// Get the child asks of add
+		
+		for(Ask childAsk : ask.getChildAsks()) {
+			String capCode = childAsk.getAttributeCode().substring("EVT_ADD_".length());
+			if(capMan.hasCapability(user, capCode, false, CapabilityMode.ADD))
+				filteredChildAsks.add(childAsk);
+		}
+
+		ask.setChildAsks(filteredChildAsks.toArray(new Ask[0]));
+		return ask;
+	}
+
 	/**
 	 * Send Add Items Menu
 	 */
 	public void sendAddItems() {
-
 		BaseEntity user = beUtils.getUserBaseEntity();
-		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
-
+		
+		Ask ask = generateAddItemsAsk(user);
 		// configure msg and send
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());

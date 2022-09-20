@@ -186,7 +186,10 @@ public class CommonUtils {
         for(T object : array) {
             result += "\"" + stringCallback.getString(object) + "\",";
         }
-        return "[" + result.substring(0, result.length() - 1) + "]";
+        if(!"".equals(result))
+            return "[" + result.substring(0, result.length() - 1) + "]";
+        else
+            return "";
     }
 
     /**
