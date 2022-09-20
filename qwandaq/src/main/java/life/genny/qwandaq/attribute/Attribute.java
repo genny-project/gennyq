@@ -31,7 +31,6 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -70,7 +69,7 @@ import java.util.Objects;
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @RegisterForReflection
-public class Attribute extends CodedEntity implements Serializable {
+public class Attribute extends CodedEntity {
 
     private static final long serialVersionUID = 1L;
 

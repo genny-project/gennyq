@@ -31,7 +31,6 @@ import javax.persistence.InheritanceType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
 
 /**
  * AttributeDate class handles LocalDate based attributes.
@@ -58,7 +57,7 @@ import java.io.Serializable;
 
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("date_range")
-public class AttributeDateRange extends Attribute implements Serializable {
+public class AttributeDateRange extends Attribute {
 
     private static final long serialVersionUID = 1L;
 

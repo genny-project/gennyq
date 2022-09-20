@@ -18,10 +18,10 @@ import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
@@ -83,11 +83,9 @@ public class NavigationService {
 	 * @param code
 	 */
 	public void redirect(String code) {
-
-		log.infof("Performing redirect with code %s", code);
-
 		// route using code if specified
 		if (code != null) {
+			log.infof("Performing redirect with code %s", code);
 			kogitoUtils.triggerWorkflow(GADAQ, "view", 
 				Json.createObjectBuilder()
 				.add("code", code)

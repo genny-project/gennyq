@@ -31,7 +31,6 @@ import javax.persistence.InheritanceType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
 
 /**
  * AttributeText class handles Text based attributes.
@@ -58,7 +57,7 @@ import java.io.Serializable;
 
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("text")
-public class AttributeText extends Attribute implements Serializable {
+public class AttributeText extends Attribute {
 
     private static final long serialVersionUID = 1L;
 

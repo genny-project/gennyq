@@ -1,5 +1,7 @@
 package life.genny.qwandaq.models;
 
+import life.genny.qwandaq.utils.CommonUtils;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -122,6 +124,15 @@ public class GennyToken implements Serializable {
 			// use client id as realm if not already found
 			if (this.realm == null) {
 				this.realm = azp;
+			}
+		}
+
+		String prodCodeStr = CommonUtils.getSystemEnv("PRODUCT_CODES");
+		if(prodCodeStr != null) {
+			String[] productCodes = prodCodeStr.split(":");
+			if(productCodes.length == 1) {
+				log.info("Overriding Product code with: " + productCodes[0]);
+				this.productCode = productCodes[0];
 			}
 		}
 

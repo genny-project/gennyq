@@ -22,27 +22,6 @@
     </license>
   </licenses>
 
-  <developers>
-    <developer>
-      <name>Jasper Robison</name>
-      <email>jasper.robison@gada.io</email>
-      <organization>GADA Technology</organization>
-      <organizationUrl>https://gada.io</organizationUrl>
-    </developer>
-    <developer>
-      <name>Adam Crow</name>
-      <email>adam.crow@gada.io</email>
-      <organization>GADA Technology</organization>
-      <organizationUrl>https://gada.io</organizationUrl>
-    </developer>
-    <developer>
-      <name>Bryn Meachem</name>
-      <email>bryn.meahem@gada.io</email>
-      <organization>GADA Technology</organization>
-      <organizationUrl>https://gada.io</organizationUrl>
-    </developer>
-  </developers>
-
   <scm>
     <connection>scm:git:git://github.com/genny-project/{project.artifactId}.git</connection>
     <developerConnection>scm:git:ssh://github.com:genny-project/{project.artifactId}.git</developerConnection>
@@ -338,7 +317,7 @@
         </executions>
       </plugin>
 
-      <plugin>
+      <!-- <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.3.2</version>
@@ -350,7 +329,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
+      </plugin> -->
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

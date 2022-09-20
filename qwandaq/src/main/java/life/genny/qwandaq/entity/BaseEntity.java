@@ -43,6 +43,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
+
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
  * base parent for many Qwanda classes and serves to establish Hibernate
@@ -456,6 +458,13 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		} else {
 			this.getBaseEntityAttributes().add(entityAttribute);
 		}
+		return updateEntityAttributePk(entityAttribute, attribute);
+	}
+
+	private EntityAttribute updateEntityAttributePk(EntityAttribute entityAttribute, Attribute attribute) {
+		entityAttribute.setBaseEntity(this);
+		entityAttribute.setAttribute(attribute);
+
 		return entityAttribute;
 	}
 
@@ -1122,4 +1131,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	}
 
+	@JsonbTransient
+	public boolean isPerson() {
+		return getCode().startsWith(PER_BE_PREFIX);
+	}
 }

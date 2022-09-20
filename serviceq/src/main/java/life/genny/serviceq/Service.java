@@ -102,7 +102,7 @@ public class Service {
 		if (token == null) {
 			log.error("Service token is null for realm!: " + keycloakRealm);
 		}
-		log.info("ServiceToken: " + token);
+		log.debug("ServiceToken: " + token);
 
 		// init the injected serviceToken
 		serviceToken.init(token);

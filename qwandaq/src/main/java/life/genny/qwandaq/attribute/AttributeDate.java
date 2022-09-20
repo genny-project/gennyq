@@ -59,7 +59,7 @@ import java.time.LocalDate;
 
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("date")
-public class AttributeDate extends Attribute implements Serializable {
+public class AttributeDate extends Attribute {
 
     private static final long serialVersionUID = 1L;
 
