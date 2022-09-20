@@ -1118,13 +1118,20 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with bucket filter options
-	 * @param queCode Question Code
 	 * @param lnkCode Link Code
 	 * @param lnkValue Link Value
 	 * @return Bucket filter options
 	 */
-	public SearchEntity getBucketFilterOptions(String sbeCode, String queCode,String lnkCode, String lnkValue) {
-		SearchEntity searchBE = new SearchEntity(sbeCode, GennyConstants.SBE_DROPDOWN).addColumn(lnkCode, lnkValue);
+	public SearchEntity getBucketFilterOptions(String sbeCode,String lnkCode, String lnkValue) {
+		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode)
+				.addFilter(GennyConstants.PRI_CODE, SearchEntity.StringFilter.LIKE, "CPY_%")
+				.addFilter(GennyConstants.PRI_IS_HOST_CPY, true)
+				.addFilter(GennyConstants.PRI_STATUS, SearchEntity.StringFilter.EQUAL, GennyConstants.ACTIVE)
+				.addColumn(lnkCode, lnkCode);
+		if(!lnkValue.isEmpty()) {
+			searchBE.addFilter(GennyConstants.PRI_NAME, SearchEntity.StringFilter.LIKE, "%" + lnkValue + "%");
+		}
+
 		searchBE.setRealm(userToken.getProductCode());
 		searchBE.setPageStart(0).setPageSize(100);
 

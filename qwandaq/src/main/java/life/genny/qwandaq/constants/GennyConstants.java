@@ -106,4 +106,9 @@ public final class GennyConstants {
     public static final String ATTRIBUTECODE = "attributeCode";
     public static final String VALUE = "value";
 
+    //
+    public static final String PRI_IS_HOST_CPY="PRI_IS_HOST_CPY";
+    public static final String PRI_STATUS="PRI_STATUS";
+    public static final String ACTIVE="ACTIVE";
+
 }

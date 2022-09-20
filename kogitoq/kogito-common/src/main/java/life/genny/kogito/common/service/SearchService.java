@@ -184,8 +184,8 @@ public class SearchService {
 		sendBucketFilter(GennyConstants.QUE_BUCKET_INTERNS_GRP,GennyConstants.QUE_SELECT_INTERN,
 				GennyConstants.LNK_PERSON, GennyConstants.BKT_APPLICATIONS);
 
-		sendBucketFilterOptions(GennyConstants.SBE_HOST_COMPANIES_VIEW,GennyConstants.QUE_BUCKET_INTERNS_GRP
-				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.LNK_PERSON, GennyConstants.ITEMS);
+		sendBucketFilterOptions(GennyConstants.SBE_DROPDOWN,GennyConstants.QUE_BUCKET_INTERNS_GRP
+				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.PRI_NAME, "");
 	}
 
 	/**
@@ -509,11 +509,14 @@ public class SearchService {
 
 	/**
 	 * Send message to bucket page with filter data
+	 * @param sbeCode Search base entity code
 	 * @param queGroup Question group
 	 * @param queCode Question code
+	 * @param lnkCode Column code
+	 * @param lnkValue Select value
 	 */
 	public void sendBucketFilterOptions(String sbeCode, String queGroup,String queCode,String lnkCode, String lnkValue) {
-		SearchEntity searchEntity = searchUtils.getBucketFilterOptions(sbeCode,queCode,lnkCode,lnkValue);
+		SearchEntity searchEntity = searchUtils.getBucketFilterOptions(sbeCode,lnkCode,lnkValue);
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 		List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(searchEntity);
