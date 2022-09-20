@@ -123,4 +123,5 @@ public final class GennyConstants {
 	public static final String ATTRIBUTECODE = "attributeCode";
 	public static final String VALUE = "value";
 
+	public static final String PRI_NAME = "PRI_NAME";
 }
