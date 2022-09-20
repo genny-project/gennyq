@@ -11,12 +11,13 @@ public class BaseEntityInitializerImpl implements SerializationContextInitialize
 
 	@Override
 	public String getProtoFileName() {
-		return "/life/genny/qwandaq/serialization/protos/baseentity.proto";
+		// return "/life/genny/qwandaq/serialization/protos/baseentity.proto";
+		return "baseentity.proto";
 	}
 
 	@Override
 	public String getProtoFile() throws UncheckedIOException {
-		return ResourceUtils.getResourceAsString(getClass(), getProtoFileName());
+		return ResourceUtils.getResourceAsString(getClass(), "/life/genny/qwandaq/serialization/protos/" + getProtoFileName());
 	}
 
 	@Override

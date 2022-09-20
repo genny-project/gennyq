@@ -17,6 +17,7 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -50,8 +51,6 @@ public class AnswerLink implements java.io.Serializable {
 	private static final Logger log = Logger.getLogger(AnswerLink.class);
 
 	private static final long serialVersionUID = 1L;
-
-	private AnswerLinkId pk = new AnswerLinkId();
 
 	/**
 	 * Stores the Created UMT DateTime that this object was created
@@ -150,6 +149,8 @@ public class AnswerLink implements java.io.Serializable {
 	private Long askId;
 	private String attributeCode;
 
+	private String attributeDataType;
+
 	public AnswerLink() {
 	}
 
@@ -164,6 +165,7 @@ public class AnswerLink implements java.io.Serializable {
 
 		this(source, target, answer, 0.0); // make zero so to not impact scoring
 		this.attributeCode = answer.getAttributeCode();
+		this.attributeDataType = answer.getAttribute().getDataType().getClassName();
 		this.setSourceCode(answer.getSourceCode());
 		this.setTargetCode(answer.getTargetCode());
 		this.setAskId(answer.getAskId());
@@ -179,10 +181,10 @@ public class AnswerLink implements java.io.Serializable {
 	 */
 	public AnswerLink(final BaseEntity source, final BaseEntity target, final Answer answer, Double weight) {
 		autocreateCreated();
-		setSource(source);
-		setTarget(target);
-		pk.setAttribute(answer.getAttribute());
+		setSourceCode(source.getCode());
+		setTargetCode(target.getCode());
 		setAttributeCode(answer.getAttributeCode());
+		this.attributeDataType = answer.getAttribute().getDataType().getClassName();
 
 		// This permits ease of adding attributes and hides attribute from scoring.
 		if (weight == null) {
@@ -205,14 +207,7 @@ public class AnswerLink implements java.io.Serializable {
 		
 		List<String> formatStrings = null;
 
-		String className = "";
-		try {
-			className = this.getAttribute().getDataType().getClassName();
-		} catch (NullPointerException e) {
-			e.printStackTrace();
-		}
-
-		switch (className) {
+		switch (attributeDataType) {
 			case "life.genny.qwandaq.entity":
 				List<String> beCodeList = new CopyOnWriteArrayList<String>();
 				beCodeList.add(answer.getValue());
@@ -359,67 +354,6 @@ public class AnswerLink implements java.io.Serializable {
 				break;
 		}
 
-	}
-	
-	/** 
-	 * @return AnswerLinkId
-	 */
-	public AnswerLinkId getPk() {
-		return pk;
-	}
-	
-	/** 
-	 * @param pk the pk to set
-	 */
-	public void setPk(final AnswerLinkId pk) {
-		this.pk = pk;
-	}
-	
-	/** 
-	 * @return BaseEntity
-	 */
-	@Transient
-	@JsonIgnore
-	public BaseEntity getSource() {
-		return getPk().getSource();
-	}
-	
-	/** 
-	 * @param source the source to set
-	 */
-	public void setSource(final BaseEntity source) {
-		getPk().setSource(source);
-		setSourceCode(source.getCode());
-	}
-
-	@Transient
-	@JsonIgnore
-	public BaseEntity getTarget() {
-		return getPk().getTarget();
-	}
-	
-	/** 
-	 * @param target the target to set
-	 */
-	public void setTarget(final BaseEntity target) {
-		getPk().setTarget(target);
-		setTargetCode(target.getCode());
-	}
-
-	/** 
-	 * @return Attribute
-	 */
-	@Transient
-	@JsonIgnore
-	public Attribute getAttribute() {
-		return getPk().getAttribute();
-	}
-
-	/** 
-	 * @param attribute the attribute to set
-	 */
-	public void setAttribute(final Attribute attribute) {
-		getPk().setAttribute(attribute);
 	}
 
 	/**
@@ -795,10 +729,11 @@ public class AnswerLink implements java.io.Serializable {
 
 		final AnswerLink that = (AnswerLink) o;
 
-		if (getPk() != null ? !getPk().equals(that.getPk()) : that.getPk() != null)
-			return false;
-
-		return true;
+		EqualsBuilder equalsBuilder = new EqualsBuilder();
+		equalsBuilder.append(this.attributeCode, that.attributeCode);
+		equalsBuilder.append(this.sourceCode, that.sourceCode);
+		equalsBuilder.append(this.targetCode, this.targetCode);
+		return equalsBuilder.isEquals();
 	}
 	
 	/** 
@@ -806,7 +741,7 @@ public class AnswerLink implements java.io.Serializable {
 	 */
 	@Override
 	public int hashCode() {
-		return (getPk() != null ? getPk().hashCode() : 0);
+		return (this.attributeCode + this.sourceCode + this.targetCode).hashCode();
 	}
 	
 	/** 
@@ -819,7 +754,7 @@ public class AnswerLink implements java.io.Serializable {
 	 */
 	@Override
 	public String toString() {
-		return "EE[" + getTarget().getCode() + ":" + created + ", linkType=" + getAttribute().getCode() + ",weight="
+		return "EE[" + getTargetCode() + ":" + created + ", linkType=" + getAttributeCode() + ",weight="
 				+ weight + ", value=" + getValue() + ", v=" + version + "]";
 	}
 
@@ -834,8 +769,7 @@ public class AnswerLink implements java.io.Serializable {
 	@Transient
 	@XmlTransient
 	public <T> T getValue() {
-		final String dataType = getAttribute().getDataType().getClassName();
-		switch (dataType) {
+		switch (attributeDataType) {
 		case "life.genny.qwandaq.entity":
 			return (T) getValueBaseEntityCodeList();
 		case "java.lang.Integer":
@@ -880,7 +814,7 @@ public class AnswerLink implements java.io.Serializable {
 	@Transient
 	@XmlTransient
 	public <T> void setValue(final Object value) {
-		switch (this.pk.getAttribute().getDataType().getClassName()) {
+		switch (attributeDataType) {
 		case "life.genny.qwandaq.entity":
 			setValueBaseEntityCodeList((List<String>) value);
 			break;
