@@ -3,14 +3,13 @@ package life.genny.kogito.common.messages;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
+
 import life.genny.qwandaq.utils.SearchUtils;
 
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 
