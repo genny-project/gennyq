@@ -66,7 +66,7 @@ import life.genny.qwandaq.serialization.CoreEntitySerializable;
  * Asks represent the major way of retrieving facts (answers) about a target
  * from sources. Each ask is associated with an question which represents one or
  * more distinct fact about a target.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow

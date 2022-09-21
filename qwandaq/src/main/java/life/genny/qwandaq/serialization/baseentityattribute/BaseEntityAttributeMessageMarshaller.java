@@ -98,6 +98,7 @@ public class BaseEntityAttributeMessageMarshaller implements MessageMarshaller<B
 		writer.writeLong("valueDate", valueDateLong);
 		LocalDateTime valueDateTime = bea.getValueDateTime();
 		Long valueDateTimeLong = valueDateTime != null ? valueDateTime.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
+		writer.writeLong("valueDateTime", valueDateTimeLong);
 		writer.writeDouble("valueDouble", bea.getValueDouble());
 		writer.writeInt("valueInteger", bea.getValueInteger());
 		writer.writeLong("valueLong", bea.getValueLong());

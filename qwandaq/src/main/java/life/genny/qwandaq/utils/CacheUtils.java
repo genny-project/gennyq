@@ -1,13 +1,18 @@
 package life.genny.qwandaq.utils;
 
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.data.GennyCache;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import org.apache.commons.lang3.StringUtils;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
@@ -16,21 +21,20 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.QueryResult;
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.CoreEntity;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.data.GennyCache;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /*
- * A static utility class used for standard read and write 
+ * A static utility class used for standard read and write
  * operations to the cache.
- * 
+ *
  * @author Jasper Robison
  */
 @RegisterForReflection
@@ -42,7 +46,16 @@ public class CacheUtils {
 
 	private static GennyCache cache = null;
 
-	/** 
+	@Inject
+	private QuestionUtils questionUtils;
+
+	@Inject
+	private BaseEntityUtils baseEntityUtils;
+
+	@Inject
+	private BaseEntityAttributeUtils baseEntityAttributeUtils;
+
+	/**
 	 * @param gennyCache the gennyCache to set
 	 */
 	public static void init(GennyCache gennyCache) {
@@ -78,7 +91,7 @@ public class CacheUtils {
 	 * @param realm The realm cache to use.
 	 * @param key   The key to save under.
 	 * @param value The value to save.
-	 * 
+	 *
 	 * @return returns the newly written value
 	 */
 	public static String writeCache(String realm, String key, String value) {
@@ -97,7 +110,7 @@ public class CacheUtils {
 	* @param key The key of the entry to remove.
 	 */
 	public static void removeEntry(String realm, String key) {
-		
+
 		cache.getRemoteCache(realm).remove(key);
 	}
 
@@ -160,7 +173,7 @@ public class CacheUtils {
 
 	/**
 	* Get a CoreEntity object from the cache using a CoreEntityKey.
-	* 
+	*
 	* @param cacheName The cache to read from
 	* @param key The key they item is saved against
 	* @return The CoreEntity returned
@@ -187,7 +200,7 @@ public class CacheUtils {
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @param callback - Callback to construct a {@link CoreEntityKey} for cache retrieval
 	 * @return a list of core entities with matching prefixes
-	 * 
+	 *
 	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
 	 */
 	static List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
@@ -210,7 +223,7 @@ public class CacheUtils {
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
-	 * 
+	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
 	public static List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
@@ -223,7 +236,7 @@ public class CacheUtils {
 	 * @param productCode - Product Code to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
-	 * 
+	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
 	public static List<BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
@@ -240,7 +253,7 @@ public class CacheUtils {
 	 * @param productCode - Product Code / Cache to retrieve from
 	 * @param baseEntityCode - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
-	 * 
+	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
 	public static List<BaseEntityAttribute> getBaseEntityAttributesForBaseEntityUsingIckle(String productCode, String baseEntityCode) {
@@ -250,5 +263,56 @@ public class CacheUtils {
 						+ "' and baseEntityCode : '" + baseEntityCode + "'");
 		QueryResult<BaseEntityAttribute> queryResult = query.execute();
 		return queryResult.list();
+	}
+
+	public void saveQuestion(Question question) {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getBaseEntityFromQuestion(question);
+		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY, bek, baseEntity);
+		questionUtils.getBaseEntityAttributesFromQuestion(question).parallelStream().forEach(baseEntityAttribute -> {
+			BaseEntityAttributeKey beak = new BaseEntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
+			cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
+		});
+		question.getChildQuestions().parallelStream().forEach(questionQuestion -> saveQuestionQuestion(questionQuestion));
+	}
+
+	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getBaseEntityFromQuestionQuestion(questionQuestion);
+		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY, bek, baseEntity);
+		questionUtils.getBaseEntityAttributesFromQuestionQuestion(questionQuestion).parallelStream().forEach(baseEntityAttribute -> {
+			BaseEntityAttributeKey beak = new BaseEntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
+			cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
+		});
+	}
+
+	public Question getQuestion(String productCode, String questionCode, String attributeCode) {
+		return getQuestion(productCode, questionCode, attributeCode, false);
+	}
+
+	public Question getQuestion(String productCode, String questionCode, String attributeCode, boolean fetchChildQuestions) {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = baseEntityUtils.getSerializableBaseEntity(productCode, questionCode);
+		Set<BaseEntityAttribute> attributes = new HashSet<>();
+		attributes.addAll(baseEntityAttributeUtils.getAllBaseEntityAttributesForBaseEntity(productCode, questionCode));
+		Question question = questionUtils.getQuestionFromSerializableBaseEntity(baseEntity, attributes, attributeCode);
+		if(fetchChildQuestions) {
+			question.getChildQuestionCodesAsStrings().parallelStream().forEach(code -> {
+				question.getChildQuestions().add(getQuestionQuestionRecursively(productCode, code, true));
+			});
+		}
+		return question;
+	}
+
+	public QuestionQuestion getQuestionQuestionRecursively(String productCode, String baseEntityCode, boolean fetchChildQuestions) {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = baseEntityUtils.getSerializableBaseEntity(productCode, baseEntityCode);
+		Set<BaseEntityAttribute> attributes = new HashSet<>();
+		attributes.addAll(baseEntityAttributeUtils.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode));
+		QuestionQuestion questionQuestion = questionUtils.getQuestionQuestionFromBaseEntityBaseEntityAttributes(baseEntity, attributes);
+		if (fetchChildQuestions) {
+			questionQuestion.getChildQuestionCodes().parallelStream().forEach(code -> {
+				questionQuestion.getChildQuestionQuestions().add(getQuestionQuestionRecursively(productCode, code, true));
+			});
+		}
+		return questionQuestion;
 	}
 }

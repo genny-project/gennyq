@@ -59,7 +59,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * </ul>
  * <p>
  * Attributes represent facts about a target.
- * <p>
+ * </p>
  * 
  * 
  * @author Adam Crow
@@ -68,7 +68,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * @since 1.0
  */
 
-@XmlRootElement
+/*@XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 
 @Table(name = "attribute", indexes = {
@@ -78,7 +78,7 @@ import life.genny.qwandaq.utils.CommonUtils;
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 @RegisterForReflection
 public class Attribute extends CodedEntity implements Serializable {
 

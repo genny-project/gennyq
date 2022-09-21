@@ -18,10 +18,10 @@ import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
@@ -83,11 +83,9 @@ public class NavigationService {
 	 * @param code
 	 */
 	public void redirect(String code) {
-
-		log.infof("Performing redirect with code %s", code);
-
 		// route using code if specified
 		if (code != null) {
+			log.infof("Performing redirect with code %s", code);
 			kogitoUtils.triggerWorkflow(GADAQ, "view", 
 				Json.createObjectBuilder()
 				.add("code", code)
@@ -151,7 +149,9 @@ public class NavigationService {
 		// fetch and update desired pcm
 		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
+		EntityAttribute ea = new EntityAttribute(1.0, questionCode);
+		ea.setBaseEntityCode(pcm.getCode());
+		ea.setAttribute(attribute);
 		try {
 			pcm.addAttribute(ea);
 		} catch (BadDataException e) {

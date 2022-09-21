@@ -6,8 +6,6 @@ import java.time.ZoneOffset;
 
 import org.infinispan.protostream.MessageMarshaller;
 
-import life.genny.qwandaq.EEntityStatus;
-
 public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity> {
 
 	@Override

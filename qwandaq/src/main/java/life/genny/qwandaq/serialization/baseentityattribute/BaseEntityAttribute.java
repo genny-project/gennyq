@@ -26,11 +26,11 @@ public class BaseEntityAttribute implements CoreEntitySerializable {
 
 	private LocalDateTime created;
 
-	private Boolean inferred = false;
+	private Boolean inferred;
 
-	private Boolean privacyFlag = false;
+	private Boolean privacyFlag;
 
-	private Boolean readonly = false;
+	private Boolean readonly;
 
 	private String realm;
 
@@ -316,8 +316,6 @@ public class BaseEntityAttribute implements CoreEntitySerializable {
 		ea.setValueString(getValueString());
 		ea.setUpdated(getUpdated());
 		ea.setWeight(getWeight());
-		ea.setAttribute(getAttribute());
-		ea.setBaseEntity(getBaseEntity());
 		// bea.setIcon(geticon);
 		ea.setConfirmationFlag(getConfirmationFlag());
 		return ea;

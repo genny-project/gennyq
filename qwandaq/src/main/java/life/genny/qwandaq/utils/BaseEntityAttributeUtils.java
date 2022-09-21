@@ -14,7 +14,7 @@ import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeK
 
 /**
  * A non-static utility class used for standard
- * operations involving BaseEntitys.
+ * operations involving BaseEntityAttributes.
  * 
  * @author Varun Shastry
  */
@@ -101,8 +101,11 @@ public class BaseEntityAttributeUtils {
     public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
         List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
         getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
-                .forEach(baseEntityAttribute -> baseEntityAttributes
-                        .add((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
+                .forEach((baseEntityAttribute) -> {
+					EntityAttribute ea = (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity();
+
+					baseEntityAttributes.add(ea);
+				});
         return baseEntityAttributes;
     }
 }

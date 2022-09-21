@@ -44,7 +44,7 @@ import com.querydsl.core.annotations.QueryExclude;
  * <p>
  * AttributeInteger represent the major way of specifying the Integer data type about a target
  * from sources.
- * <p>
+ * </p>
  * 
  * 
  * @author      Adam Crow

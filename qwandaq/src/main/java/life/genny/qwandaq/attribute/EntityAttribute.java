@@ -57,7 +57,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 
-@Entity
+/*@Entity
 @Table(name = "baseentity_attribute", indexes = {
 		@Index(columnList = "baseEntityCode", name = "ba_idx"),
 		@Index(columnList = "attributeCode", name = "ba_idx"),
@@ -70,101 +70,91 @@ import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 })
 @RegisterForReflection
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 public class EntityAttribute implements CoreEntityPersistable, Comparable<Object> {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
 	private static final long serialVersionUID = 1L;
 
-	@Column
 	private String baseEntityCode;
 
-	@Column
 	private String attributeCode;
 
-	@Transient
-	@Column
 	private String attributeName;
 
-	@Column
 	private Boolean readonly = false;
 
 	private String realm;
 
 	@Transient
 	@XmlTransient
-	@Column
 	private Integer index = 0; // used to assist with ordering
 
 	@Transient
 	private String feedback = null;
 
-	@EmbeddedId
-	@Column
-	public EntityAttributeId pk = new EntityAttributeId();
-
 	/**
 	 * Stores the Created UMT DateTime that this object was created
 	 */
-	@Column(name = "created")
+	//@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
-	@Column(name = "updated")
+	//@Column(name = "updated")
 	private LocalDateTime updated;
 
 	/**
 	 * Store the Double value of the attribute for the baseEntity
 	 */
-	@Column
+	//@Column
 	private Double valueDouble;
 
 	/**
 	 * Store the Boolean value of the attribute for the baseEntity
 	 */
-	@Column
+	//@Column
 	private Boolean valueBoolean;
 	/**
 	 * Store the Integer value of the attribute for the baseEntity
 	 */
-	@Column
+	//@Column
 	private Integer valueInteger;
 
 	/**
 	 * Store the Long value of the attribute for the baseEntity
 	 */
-	@Column
+	//@Column
 	private Long valueLong;
 
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	@Column
+	//@Column
 	private LocalTime valueTime;
 
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	@Column
+	//@Column
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
-	@Column
+	//@Column
 	private LocalDate valueDate;
 
 	/**
 	 * Store the String value of the attribute for the baseEntity
 	 */
-	@Type(type = "text")
-	@Column
+//	@Type(type = "text")
+//	@Column
 	private String valueString;
 
-	@Column(name = "money", length = 128)
+	//@Column(name = "money", length = 128)
 	@Convert(converter = MoneyConverter.class)
 	Money valueMoney;
 
@@ -188,25 +178,21 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	 */
 	private Boolean confirmationFlag = false;
 
+	private Attribute attribute;
+
 	public EntityAttribute() {
 	}
 
 	/**
 	 * Constructor.
-	 * 
-	 * @param baseEntity
-	 *                   the entity that needs to contain attributes
-	 * @param attribute
-	 *                   the associated Attribute
+	 *
 	 * @param weight
 	 *                   the weighted importance of this attribute (relative to the
 	 *                   other
 	 *                   attributes)
 	 */
-	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
+	public EntityAttribute(Double weight) {
 		autocreateCreated();
-		setBaseEntity(baseEntity);
-		setAttribute(attribute);
 		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides
 							// attribute from scoring.
@@ -217,11 +203,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 
 	/**
 	 * Constructor.
-	 * 
-	 * @param baseEntity
-	 *                   the entity that needs to contain attributes
-	 * @param attribute
-	 *                   the associated Attribute
+	 *
 	 * @param weight
 	 *                   the weighted importance of this attribute (relative to the
 	 *                   other
@@ -229,11 +211,33 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	 * @param value
 	 *                   the value associated with this attribute
 	 */
-	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
+	public EntityAttribute(Double weight, final Object value) {
 		autocreateCreated();
-		setBaseEntity(baseEntity);
-		setAttribute(attribute);
-		this.setPrivacyFlag(attribute.getDefaultPrivacyFlag());
+		if (weight == null) {
+			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
+		}
+		setWeight(weight);
+		// Assume that Attribute Validation has been performed
+		if (value != null) {
+			setValue(value);
+		}
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param weight
+	 *                   the weighted importance of this attribute (relative to the
+	 *                   other
+	 *                   attributes)
+	 * @param value
+	 *                   the value associated with this attribute
+	 * @param privacyFlag
+	 *                   the value for privacy of this attribute
+	 */
+	public EntityAttribute(Double weight, final Object value, final boolean privacyFlag) {
+		autocreateCreated();
+		this.setPrivacyFlag(privacyFlag);
 		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
 		}
@@ -247,11 +251,11 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	/**
 	 * @return EntityAttributeId
 	 */
-	@JsonIgnore
+	/*@JsonIgnore
 	@JsonbTransient
 	public EntityAttributeId getPk() {
 		return pk;
-	}
+	}*/
 
 	/**
 	 * @return the baseEntityCode
@@ -281,37 +285,6 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	 */
 	public void setAttributeCode(final String attributeCode) {
 		this.attributeCode = attributeCode;
-	}
-
-	/**
-	 * @param pk the pk to set
-	 */
-	public void setPk(final EntityAttributeId pk) {
-		this.pk = pk;
-	}
-
-	public void setBaseEntity(final BaseEntity baseEntity) {
-		getPk().setBaseEntity(baseEntity);
-		this.baseEntityCode = baseEntity.getCode();
-		this.realm = baseEntity.getRealm();
-	}
-
-	/**
-	 * @return Attribute
-	 */
-	@Transient
-	// @JsonIgnore
-	public Attribute getAttribute() {
-		return getPk().getAttribute();
-	}
-
-	/**
-	 * @param attribute the attribute to set
-	 */
-	public void setAttribute(final Attribute attribute) {
-		getPk().setAttribute(attribute);
-		this.attributeCode = attribute.getCode();
-		this.attributeName = attribute.getName();
 	}
 
 	/**
@@ -600,12 +573,12 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		this.feedback = feedback;
 	}
 
-	@PreUpdate
+	//@PreUpdate
 	public void autocreateUpdate() {
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	@PrePersist
+	//@PrePersist
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
@@ -639,6 +612,16 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		return out;
 	}
 
+	public Attribute getAttribute() {
+		return attribute;
+	}
+
+	public void setAttribute(Attribute attribute) {
+		this.attribute = attribute;
+		this.attributeCode = attribute.getCode();
+		this.attributeName = attribute.getName();
+	}
+
 	/**
 	 * Get the value of the EntityAttribute.
 	 *
@@ -651,10 +634,10 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	@XmlTransient
 	@JsonbProperty(nillable = true)
 	public <T> T getValue() {
-		if ((getPk() == null) || (getPk().attribute == null)) {
+		if (attribute == null) {
 			return getLoopValue();
 		}
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
+		final String dataType = attribute.getDataType().getClassName();
 		switch (dataType) {
 			case "java.lang.Integer":
 			case "Integer":
@@ -721,7 +704,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 			return;
 		}
 
-		if (getAttribute() == null) {
+		if (attribute == null) {
 			setLoopValue(value);
 			return;
 		}
@@ -729,9 +712,9 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		if (value instanceof String) {
 			String result = (String) value;
 			try {
-				if (getAttribute().getDataType().getClassName().equalsIgnoreCase(String.class.getCanonicalName())) {
+				if (attribute.getDataType().getClassName().equalsIgnoreCase(String.class.getCanonicalName())) {
 					setValueString(result);
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(LocalDateTime.class.getCanonicalName())) {
 					List<String> formatStrings = Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
 							"yyyy-MM-dd HH:mm:ss",
@@ -749,7 +732,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 
 					}
 
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
 					Date olddate = null;
 					try {
@@ -762,12 +745,12 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 					}
 					final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 					setValueDate(date);
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(LocalTime.class.getCanonicalName())) {
 					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 					final LocalTime date = LocalTime.parse(result, formatter);
 					setValueTime(date);
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(Money.class.getCanonicalName())) {
 					JsonReader reader = Json.createReader(new StringReader(result));
 					JsonObject obj = reader.readObject();
@@ -777,19 +760,19 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 
 					Money money = Money.of(amount, currency);
 					setValueMoney(money);
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(Integer.class.getCanonicalName())) {
 					final Integer integer = Integer.parseInt(result);
 					setValueInteger(integer);
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(Double.class.getCanonicalName())) {
 					final Double d = Double.parseDouble(result);
 					setValueDouble(d);
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(Long.class.getCanonicalName())) {
 					final Long l = Long.parseLong(result);
 					setValueLong(l);
-				} else if (getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(Boolean.class.getCanonicalName())) {
 					final Boolean b = Boolean.parseBoolean(result);
 					setValueBoolean(b);
@@ -797,12 +780,12 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 					setValueString(result);
 				}
 			} catch (Exception e) {
-				log.error("Conversion Error :" + value + " for attribute " + getAttribute() + " and SourceCode:"
+				log.error("Conversion Error :" + value + " for attribute " + attribute + " and SourceCode:"
 						+ this.baseEntityCode);
 			}
 		} else {
 
-			switch (this.getAttribute().getDataType().getClassName()) {
+			switch (this.attribute.getDataType().getClassName()) {
 
 				case "java.lang.Integer":
 				case "Integer":
@@ -857,7 +840,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 				default:
 					if (value instanceof Boolean) {
 						log.error("Value is boolean being saved to String. DataType = "
-								+ this.getAttribute().getDataType().getClassName() + " and attributecode="
+								+ this.attribute.getDataType().getClassName() + " and attributecode="
 								+ this.getAttributeCode());
 						setValueBoolean((Boolean) value);
 					} else {
@@ -950,14 +933,14 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	@XmlTransient
 	@JsonbTransient
 	public String getAsString() {
-		if ((getPk() == null) || (getPk().attribute == null)) {
+		if (attribute == null) {
 			return getAsLoopString();
 		}
 
 		if (getValue() == null) {
 			return null;
 		}
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
+		final String dataType = attribute.getDataType().getClassName();
 		switch (dataType) {
 			case "java.lang.Integer":
 			case "Integer":
@@ -966,16 +949,14 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 			case "LocalDateTime":
 				DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 				Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-				String dout = df.format(datetime);
-				return dout;
+				return df.format(datetime);
 			case "java.lang.Long":
 			case "Long":
 				return "" + getValueLong();
 			case "java.time.LocalTime":
 			case "LocalTime":
 				DateFormat df2 = new SimpleDateFormat("HH:mm");
-				String dout2 = df2.format(getValueTime());
-				return dout2;
+				return df2.format(getValueTime());
 			case "org.javamoney.moneta.Money":
 			case "Money":
 				DecimalFormat decimalFormat = new DecimalFormat("###############0.00");
@@ -992,8 +973,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 			case "LocalDate":
 				df2 = new SimpleDateFormat("yyyy-MM-dd");
 				Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-				dout2 = df2.format(date);
-				return dout2;
+				return df2.format(date);
 
 			case "java.lang.String":
 			default:
@@ -1021,19 +1001,16 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		if (getValueDateTime() != null) {
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 			Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-			String dout = df.format(datetime);
-			return dout;
+			return df.format(datetime);
 		}
 		if (getValueDate() != null) {
 			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 			Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-			String dout2 = df2.format(date);
-			return dout2;
+			return df2.format(date);
 		}
 		if (getValueTime() != null) {
 			DateFormat df2 = new SimpleDateFormat("HH:mm");
-			String dout2 = df2.format(getValueTime());
-			return dout2;
+			return df2.format(getValueTime());
 		}
 		if (getValueLong() != null) {
 			return getValueLong().toString();
@@ -1089,6 +1066,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	public int hashCode() {
 
 		HashCodeBuilder hcb = new HashCodeBuilder();
+		hcb.append(realm);
 		hcb.append(baseEntityCode);
 		hcb.append(attributeCode);
 		return hcb.toHashCode();
@@ -1109,6 +1087,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		}
 		EntityAttribute that = (EntityAttribute) obj;
 		EqualsBuilder eb = new EqualsBuilder();
+		eb.append(realm, that.realm);
 		eb.append(baseEntityCode, that.baseEntityCode);
 		eb.append(attributeCode, that.attributeCode);
 
@@ -1124,7 +1103,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	public int compareTo(Object obj) {
 
 		EntityAttribute myClass = (EntityAttribute) obj;
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
+		final String dataType = attribute.getDataType().getClassName();
 
 		switch (dataType) {
 
@@ -1229,8 +1208,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		if (getValueDateTime() != null) {
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 			Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-			String dout = df.format(datetime);
-			return dout;
+			return df.format(datetime);
 		}
 
 		if (getValueLong() != null) {
@@ -1248,13 +1226,11 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		if (getValueDate() != null) {
 			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 			Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-			String dout2 = df2.format(date);
-			return dout2;
+			return df2.format(date);
 		}
 		if (getValueTime() != null) {
 
-			String dout2 = getValueTime().toString();
-			return dout2;
+			return getValueTime().toString();
 		}
 
 		if (getValueString() != null) {
@@ -1341,8 +1317,6 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		bea.setValueString(getValueString());
 		bea.setUpdated(getUpdated());
 		bea.setWeight(getWeight());
-		bea.setAttributeId(getAttribute().getId());
-		bea.setBaseEntityId(getPk().getBaseEntity().getId());
 		// bea.setIcon(geticon);
 		bea.setConfirmationFlag(getConfirmationFlag());
 		return bea;

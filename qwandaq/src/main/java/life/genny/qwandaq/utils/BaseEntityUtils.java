@@ -38,7 +38,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
 
 /**
@@ -65,10 +64,10 @@ public class BaseEntityUtils {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	BaseEntityAttributeUtils beaUtils;
 
 	@Inject
-	BaseEntityAttributeUtils beaUtils;
+	AttributeUtils attributeUtils;
 
 	@Inject
 	EntityManagerFactory emf;
@@ -191,26 +190,15 @@ public class BaseEntityUtils {
 		return getBaseEntityByCode(productCode, code, true);
 	}
 
-	private BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
-		if (productCode == null) 
-			throw new NullParameterException("productCode");
-		if (code == null) 
-			throw new NullParameterException("code");
-		if (StringUtils.isBlank(productCode))
-			throw new DebugException("productCode is empty");
-		if (StringUtils.isBlank(code))
-			throw new DebugException("code is empty");
+	public BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
 
-		// check for entity in the cache
-		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils
-				.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-	
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = getSerializableBaseEntity(productCode, code);
+
 		BaseEntity entity = null;
 		
 		// check in database if not in cache
 		if (baseEntitySerializable == null) {
-			log.info("$$$$$$$$$$ check in database if not in cache. key: " + key);
+			log.infof("$$$$$$$$$$ check in database if not in cache. [ productCode , code ]: [ %s , %s]", productCode, code);
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
@@ -237,6 +225,7 @@ public class BaseEntityUtils {
 				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
 				if (entity != null) {
 					log.info("Adding BE to cache..");
+					BaseEntityKey key = new BaseEntityKey(productCode, code);
 					CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, entity);
 					if (bundleAttributes) {
 						log.info("Adding BEAs to cache..");
@@ -253,7 +242,7 @@ public class BaseEntityUtils {
 		} else {
 			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
 			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
-			/*if (bundleAttributes) {
+			if (bundleAttributes) {
 				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
 				Map<String, EntityAttribute> attributeMap = new HashMap<>();
 				entity.setAttributeMap(attributeMap);
@@ -262,10 +251,29 @@ public class BaseEntityUtils {
 					attributeMap.put(bea.getAttributeCode(), bea);
 				});
 				log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
-			}*/
+			}
 		}
 
 		return entity;
+	}
+
+	public life.genny.qwandaq.serialization.baseentity.BaseEntity getSerializableBaseEntity(String productCode, String code) {
+		if (productCode == null) {
+			throw new NullParameterException("productCode");
+		}
+		if (code == null) {
+			throw new NullParameterException("code");
+		}
+		if (StringUtils.isBlank(productCode)) {
+			throw new DebugException("productCode is empty");
+		}
+		if (StringUtils.isBlank(code)) {
+			throw new DebugException("code is empty");
+		}
+
+		// check for entity in the cache
+		BaseEntityKey key = new BaseEntityKey(productCode, code);
+		return (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 	}
 
 	/**
@@ -279,13 +287,17 @@ public class BaseEntityUtils {
 		// ensure for all entityAttribute that baseentity and attribute are not null
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 
-			if (ea.getPk().getBaseEntity() == null) {
-				ea.getPk().setBaseEntity(baseEntity);
+			if (ea.getRealm() == null) {
+				ea.setRealm(baseEntity.getRealm());
 			}
 
-			if (ea.getPk().getAttribute() == null) {
-				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
-				ea.getPk().setAttribute(attribute);
+			if (ea.getBaseEntityCode() == null) {
+				ea.setBaseEntityCode(baseEntity.getCode());
+			}
+
+			if (ea.getAttribute() == null) {
+				Attribute attribute = attributeUtils.getAttributeByCode(baseEntity.getRealm(), ea.getAttributeCode());
+				ea.setAttribute(attribute);
 			}
 		}
 
@@ -559,6 +571,8 @@ public class BaseEntityUtils {
 		return entity;
 	}
 
+	// We can parameterise this but there is no point if we aren't going to have any
+	// more NonLiteralAttributes than what is already here - Bryn
 	/**
 	 * Add all non literal attributes to the baseentity.
 	 * 
@@ -569,65 +583,54 @@ public class BaseEntityUtils {
 
 		// Handle Created and Updated attributes
 		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
-		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
-		// Ensure createdDate is not null
-		try {
-			created.setValueDateTime(entity.getCreated());
-		} catch (NullPointerException e) {
+		EntityAttribute created = new EntityAttribute(1.0);
+		created.setAttribute(createdAttr);
+
+		if(entity.getCreated() == null) {
 			log.error("NPE for PRI_CREATED. Generating created date");
 			entity.autocreateCreated();
-			created.setValueDateTime(entity.getCreated());
 		}
+		
+		// Ensure createdDate is not null
+		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
 
 		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
-		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
+		EntityAttribute createdDate = new EntityAttribute(1.0);
+		createdDate.setAttribute(createdDateAttr);
+
 		// Ensure createdDate is not null
-		try {
-			createdDate.setValueDate(entity.getCreated().toLocalDate());
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_CREATED_DATE. Generating created date");
-			entity.autocreateCreated();
-			createdDate.setValueDate(entity.getCreated().toLocalDate());
-		}
+		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
 
 		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
-		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
+		EntityAttribute updated = new EntityAttribute(1.0);
+		updated.setAttribute(updatedAttr);
 		try {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
+
+			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
+			EntityAttribute updatedDate = new EntityAttribute(1.0);
+			updatedDate.setAttribute(updatedDateAttr);
+			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
+			entity.addAttribute(updatedDate);
 		} catch (NullPointerException e) {
 			log.error("NPE for PRI_UPDATED");
 		}
 
-		try {
-			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
-			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
-			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
-			entity.addAttribute(updatedDate);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_UPDATED_DATE");
-		}
+		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
+		EntityAttribute code = new EntityAttribute(1.0);
+			code.setAttribute(codeAttr);
+		code.setValueString(entity.getCode());
+		entity.addAttribute(code);
 
-		try {
-			Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
-			EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
-			code.setValueString(entity.getCode());
-			entity.addAttribute(code);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_CODE");
-		}
-
-		try {
-			Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
-			EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
-			name.setValueString(entity.getName());
-			entity.addAttribute(name);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_NAME");
-		}
-
+		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
+		EntityAttribute name = new EntityAttribute(1.0);
+			name.setAttribute(nameAttr);
+		name.setValueString(entity.getName());
+		entity.addAttribute(name);
+		
 		return entity;
 	}
 
@@ -701,7 +704,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
-			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			Attribute attribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -725,17 +728,20 @@ public class BaseEntityUtils {
 			}
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
-				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
+				EntityAttribute newEA = new EntityAttribute(ea.getWeight(), defaultVal);
+				newEA.setRealm(userToken.getProductCode());
+				newEA.setBaseEntityCode(item.getCode());
+				newEA.setAttribute(attribute);
 				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
 			}
 		}
 
-		Attribute linkDef = qwandaUtils.getAttribute("LNK_DEF");
+		Attribute linkDef = attributeUtils.getAttributeByCode(userToken.getProductCode(), "LNK_DEF");
 		item.addAnswer(new Answer(item, item, linkDef, "[\"" + defBE.getCode() + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
+		Attribute lnkAuthorAttr = attributeUtils.getAttributeByCode(userToken.getProductCode(), "LNK_AUTHOR");
 		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item);
@@ -761,9 +767,12 @@ public class BaseEntityUtils {
 		// if (value == null)
 		// throw new NullParameterException("value");
 
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+		Attribute attribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), attributeCode);
 
-		EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
+		EntityAttribute ea = new EntityAttribute(1.0, value);
+		ea.setRealm(userToken.getProductCode());
+		ea.setBaseEntityCode(be.getCode());
+		ea.setAttribute(attribute);
 		be.addAttribute(ea);
 		return be;
 	}
@@ -806,18 +815,18 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = qwandaUtils.getAttribute("PRI_EMAIL");
+			Attribute emailAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_EMAIL");
 			item.addAnswer(new Answer(item, item, emailAttribute, email));
-			Attribute usernameAttribute = qwandaUtils.getAttribute("PRI_USERNAME");
+			Attribute usernameAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_USERNAME");
 			item.addAnswer(new Answer(item, item, usernameAttribute, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = qwandaUtils.getAttribute("PRI_UUID");
+		Attribute uuidAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_UUID");
 		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
 
 		// keycloak UUID
-		Attribute keycloakAttribute = qwandaUtils.getAttribute("PRI_KEYCLOAK_UUID");
+		Attribute keycloakAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
 		item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
 
 		return item;
