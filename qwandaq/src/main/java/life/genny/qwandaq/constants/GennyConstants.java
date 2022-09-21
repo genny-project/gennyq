@@ -125,5 +125,11 @@ public final class GennyConstants {
 	public static final String ATTRIBUTECODE = "attributeCode";
 	public static final String VALUE = "value";
 
+	//Bucket filter values
+	public static final String PRI_IS_HOST_CPY="PRI_IS_HOST_CPY";
+	public static final String PRI_ASSOC_HC="PRI_ASSOC_HC";
+	public static final String PRI_STATUS="PRI_STATUS";
+	public static final String ACTIVE="ACTIVE";
+	public static final String BUCKET_FILTER_LABEL="Start typing to search";
 }
 

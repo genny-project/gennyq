@@ -29,6 +29,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -288,7 +289,9 @@ public class SearchService {
 			}
 
 			if (!attrName.isBlank()) { //searching text
-				searchBE.add(new Filter(code, Operator.LIKE, value));
+				Filter filter = new Filter(code, Operator.LIKE, value);
+				searchBE.remove(filter);
+				searchBE.add(filter);
 			}
 
 		}else if(ops.equals(SearchOptions.PAGINATION) || ops.equals(SearchOptions.PAGINATION_BUCKET)) { //pagination
@@ -343,8 +346,21 @@ public class SearchService {
 			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
 			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
 
-			if (!name.isBlank()) { //searching text
+			//remove searching text and filter
+			Filter searchText = new Filter(code, Operator.LIKE, value);
+			Filter filter = new Filter(GennyConstants.PRI_ASSOC_HC, Operator.EQUALS, value);
+
+			searchBE.remove(searchText);
+			searchBE.remove(filter);
+
+			//searching text
+			if (!name.isBlank()) {
 				searchBE.add(new Filter(code, Operator.LIKE, value));
+			}
+
+			//filter by select box
+			if (code.equalsIgnoreCase(GennyConstants.LNK_PERSON)) {
+				searchBE.add(filter);
 			}
 
 			CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
@@ -466,15 +482,43 @@ public class SearchService {
 
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCodeJti, SearchEntity.class);
 
-		if (oper.equals(Operator.LIKE)) {
-			value = "%" + value + "%";
+		//by submitting filter form
+		if(oper != null) {
+			if (oper.equals(Operator.LIKE)) {
+				value = "%" + value + "%";
+			}
+			Filter filter = new Filter(attrCode, oper, value);
+			searchBE.remove(filter);
+			if(!value.isEmpty()) {
+				searchBE.add(filter);
+			}
 		}
-		searchBE.add(new Filter(attrCode, oper, value));
+
+		//add conditions by filter parameters
+		setFilterParamsToSearchBE(searchBE);
 
 		CacheUtils.putObject(userToken.getRealm(), sbeCodeJti, searchBE);
 
 		sendMessageBySearchEntity(searchBE);
 		sendSearchPCM(GennyConstants.PCM_TABLE, sbeCodeJti);
+	}
+
+	/**
+	 * Add filer parameters to search base entity
+	 * @param searchBE Search base entity
+	 */
+	public void setFilterParamsToSearchBE(SearchEntity searchBE) {
+		for (Map.Entry<String, Map<String, String>> param : listFilterParams.entrySet()) {
+			String attrName = searchUtils.getFilterParamValByKey(param.getValue(),GennyConstants.QUE_FILTER_OPTION);
+			String value = searchUtils.getFilterParamValByKey(param.getValue(),GennyConstants.QUE_FILTER_VALUE)
+					.replaceFirst(GennyConstants.SEL_PREF,"");
+			String attrCode = searchUtils.getFilterParamValByKey(param.getValue(),GennyConstants.ATTRIBUTECODE);
+			Operator operator = getOperatorByVal(attrName);
+
+			Filter filter = new Filter(attrCode,operator,value);
+			searchBE.remove(filter);
+			searchBE.add(filter);
+		}
 	}
 
 	/**
@@ -501,21 +545,27 @@ public class SearchService {
 	 * @param queGroup Question group
 	 * @param queCode Question code
 	 */
-	public void sendBucketFilter(String queGroup,String queCode, String attCode, String targetCode) {
+	public void sendBucketFilter(String queGroup,String queCode,String attCode, String targetCode) {
 		Ask ask = new Ask();
-		ask.setName(GennyConstants.FILTERS);
+		ask.setName(GennyConstants.BUCKET_FILTER_LABEL);
 		Question question = new Question();
 		question.setCode(queGroup);
 		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
 		ask.setQuestion(question);
 
 		Ask childAsk = new Ask();
-		childAsk.setName(GennyConstants.FILTERS);
+		childAsk.setName(GennyConstants.BUCKET_FILTER_LABEL);
 		childAsk.setQuestionCode(queCode);
 		Question childQuestion = new Question();
 		childQuestion.setAttributeCode(attCode);
 		childQuestion.setCode(queCode);
 		childAsk.setAttributeCode(attCode);
+
+		Attribute childAttr = qwandaUtils.getAttribute(attCode);
+		childAttr.setCode(attCode);
+		childAttr.setName(attCode);
+		childQuestion.setAttribute(childAttr);
+
 		childAsk.setQuestion(childQuestion);
 		childAsk.setTargetCode(targetCode);
 
@@ -525,7 +575,7 @@ public class SearchService {
 		msg.setToken(userToken.getToken());
 		msg.setTargetCode(targetCode);
 		msg.setQuestionCode(queGroup);
-		msg.setMessage(GennyConstants.FILTERS);
+		msg.setMessage(GennyConstants.BUCKET_FILTER_LABEL);
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
@@ -536,7 +586,7 @@ public class SearchService {
 	 * @param queCode Question code
 	 */
 	public void sendBucketFilterOptions(String sbeCode, String queGroup,String queCode,String lnkCode, String lnkValue) {
-		SearchEntity searchEntity = searchUtils.getBucketFilterOptions(sbeCode,queCode,lnkCode,lnkValue);
+		SearchEntity searchEntity = searchUtils.getBucketFilterOptions(sbeCode,lnkCode,lnkValue);
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 		List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(searchEntity);
@@ -546,7 +596,7 @@ public class SearchService {
 		msg.setQuestionCode(queCode);
 		msg.setLinkCode(lnkCode);
 		msg.setLinkValue(lnkValue);
-		msg.setMessage(GennyConstants.FILTERS);
+		msg.setMessage(GennyConstants.BUCKET_FILTER_LABEL);
 		msg.setReplace(true);
 
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
@@ -632,4 +682,65 @@ public class SearchService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
+
+	/**
+	 * Return the list of search entity code
+	 * @param searchCode Search entity code
+	 * @return the list of search entity code
+	 */
+	public List<String> getBucketCodesBySBE(String searchCode) {
+		List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
+		List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
+
+		return bucketCodes;
+	}
+
+	/**
+	 * Get Search filter by filter value
+	 * @param filterVal Filter value
+	 * @return Get Search filter by filter value
+	 */
+	public Operator getOperatorByVal(String filterVal){
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_GREATER_THAN)){
+			return Operator.GREATER_THAN;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_GREATER_THAN_OR_EQUAL_TO)){
+			return Operator.GREATER_THAN_OR_EQUAL;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_LESS_THAN)){
+			return Operator.LESS_THAN;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_LESS_THAN_OR_EQUAL_TO)){
+			return Operator.LESS_THAN_OR_EQUAL;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_EQUAL_TO)){
+			return Operator.EQUALS;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_NOT_EQUAL_TO)){
+			return Operator.NOT_EQUALS;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_EQUAL_TO)){
+			return Operator.EQUALS;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_NOT_EQUAL_TO)){
+			return Operator.NOT_EQUALS;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_LIKE)){
+			return Operator.LIKE;
+		}
+
+		if(filterVal.equalsIgnoreCase(GennyConstants.SEL_NOT_LIKE)){
+			return Operator.NOT_LIKE;
+		}
+
+		return Operator.EQUALS;
+	}
 }
