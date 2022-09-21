@@ -9,7 +9,7 @@ import javax.json.bind.annotation.JsonbTransient;
 import javax.xml.bind.annotation.XmlTransient;
 
 @RegisterForReflection
-public abstract class QMessage implements Serializable, QMessageIntf {
+public abstract class QMessage implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

@@ -3,12 +3,11 @@ package life.genny.qwandaq.message;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
-public abstract class QDataMessage extends QMessage implements QDataMessageIntf {
+public abstract class QDataMessage extends QMessage {
 
   /**
    * @return String
    */
-  @Override
   public String getData_type() {
     return data_type;
   }
@@ -41,7 +40,6 @@ public abstract class QDataMessage extends QMessage implements QDataMessageIntf 
   /**
    * @return Boolean
    */
-  @Override
   public Boolean getDelete() {
     return delete;
   }

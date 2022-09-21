@@ -65,7 +65,7 @@ import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
 
 @MappedSuperclass
 @RegisterForReflection
-public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Comparable<Object> {
+public abstract class CoreEntity implements CoreEntityInterface, Comparable<Object> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -199,7 +199,6 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	 * @param created
 	 *                the created to set
 	 */
-	@Override
 	public void setCreated(final LocalDateTime created) {
 		this.created = created;
 	}
