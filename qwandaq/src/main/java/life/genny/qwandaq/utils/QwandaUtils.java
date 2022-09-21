@@ -618,7 +618,11 @@ public class QwandaUtils {
 				if (className.contains("Boolean") || className.contains("bool"))
 					value = false;
 
-				return new EntityAttribute(processEntity, attribute, 1.0, value);
+				EntityAttribute entityAttribute = new EntityAttribute(1.0, value);
+				entityAttribute.setRealm(processEntity.getRealm());
+				entityAttribute.setBaseEntityCode(processEntity.getCode());
+				entityAttribute.setAttribute(attribute);
+				return entityAttribute;
 			});
 
 			processEntity.addAttribute(ea);

@@ -18,27 +18,21 @@ package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
+import org.jboss.logging.Logger;
 
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.*;
+import javax.persistence.Embedded;
+import javax.persistence.Transient;
 import javax.validation.Valid;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -57,9 +51,9 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * Questions represent the major way of retrieving facts about a target from
  * sources. Each question is associated with an attribute which represents a
  * distinct fact about a target.
- * </p>
- * 
- * 
+ * <p>
+ *
+ *
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -67,15 +61,16 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  */
 
 @XmlRootElement
-@Cacheable
+/*@Cacheable
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "question", indexes = { @Index(columnList = "code", name = "code_idx"),
 		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { "code",
 				"realm" }))
 @Entity
+@QueryExclude
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 
 @RegisterForReflection
 public class Question extends CodedEntity {
@@ -88,14 +83,16 @@ public class Question extends CodedEntity {
 	public static final String QUESTION_GROUP_ATTRIBUTE_CODE = "QQQ_QUESTION_GROUP";
 
 	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
+	//@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
 	@JsonManagedReference(value = "questionQuestion")
 	@JsonbTransient
 	private Set<QuestionQuestion> childQuestions = new HashSet<QuestionQuestion>(0);
 
+	private Set<String> childQuestionCodes = new HashSet<>(0);
+
 	@XmlTransient
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "attribute_id", nullable = false)
+	/*@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "attribute_id", nullable = false)*/
 	private Attribute attribute;
 
 	@Embedded
@@ -144,7 +141,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code      The unique code for this Question
 	 * @param name      The human readable summary name
 	 * @param attribute The associated attribute
@@ -155,7 +152,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code        The unique code for this Question
 	 * @param name        The human readable summary name
 	 * @param attribute   The associated attribute
@@ -167,7 +164,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code      The unique code for this Question
 	 * @param name      The human readable summary name
 	 * @param attribute The associated attribute
@@ -179,7 +176,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code      The unique code for this Question
 	 * @param name      The human readable summary name
 	 * @param attribute The associated attribute
@@ -187,13 +184,13 @@ public class Question extends CodedEntity {
 	 * @param html      the html of the Question
 	 */
 	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
-			final String html) {
+					final String html) {
 		this(code, name, attribute, mandatory, html, null);
 	}
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code        The unique code for this Question
 	 * @param name        The human readable summary name
 	 * @param attribute   The associated attribute
@@ -202,7 +199,7 @@ public class Question extends CodedEntity {
 	 * @param placeholder The placeholder text
 	 */
 	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
-			final String html, final String placeholder) {
+					final String html, final String placeholder) {
 		super(code, name);
 		if (attribute == null) {
 			throw new InvalidParameterException("Attribute must not be null");
@@ -216,7 +213,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code           The unique code for this Question
 	 * @param name           The human readable summary name
 	 * @param childQuestions The associated child Questions in this question Group
@@ -234,7 +231,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code The unique code for this empty Question Group
 	 * @param name The human readable summary name
 	 */
@@ -269,7 +266,7 @@ public class Question extends CodedEntity {
 	 * addTarget This links this question to a target question and associated weight
 	 * to the question. It auto creates the QuestionQuestion object and sets itself
 	 * to be the source. For efficiency we assume the link does not already exist
-	 * 
+	 *
 	 * @param target the target to add
 	 * @param weight the weight
 	 * @return QuestionQuestion
@@ -338,7 +335,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * getDefaultCodePrefix This method is overrides the Base class
-	 * 
+	 *
 	 * @return the default Code prefix for this class.
 	 */
 	static public String getDefaultCodePrefix() {
@@ -426,12 +423,10 @@ public class Question extends CodedEntity {
 	 * @param childQuestions the childQuestions to set
 	 */
 	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
-		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
-		;
+		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);;
 	}
 
 	/**
-	 * 
 	 * addChildQuestion This adds an child Question with default weight of 0.0 to
 	 * the question. It auto creates the QuestionQuestion object. For efficiency we
 	 * assume the child question link does not exist
@@ -443,7 +438,7 @@ public class Question extends CodedEntity {
 		if (qq == null)
 			throw new BadDataException("missing Question");
 
-		addChildQuestion(qq.getPk().getTargetCode(), qq.getWeight(), qq.getMandatory());
+		addChildQuestion(qq.getTargetCode(), qq.getWeight(), qq.getMandatory());
 	}
 
 	/**
@@ -484,7 +479,7 @@ public class Question extends CodedEntity {
 	 * @throws BadDataException if something is missing
 	 */
 	public QuestionQuestion addChildQuestion(final String childQuestionCode, final Double weight,
-			final Boolean mandatory) throws BadDataException {
+											 final Boolean mandatory) throws BadDataException {
 		if (childQuestionCode == null)
 			throw new BadDataException("missing Question");
 		if (weight == null)
@@ -520,7 +515,7 @@ public class Question extends CodedEntity {
 	 */
 	public Optional<QuestionQuestion> findQuestionLink(final String childQuestionCode) {
 		final Optional<QuestionQuestion> foundEntity = Optional.of(getChildQuestions().parallelStream()
-				.filter(x -> (x.getPk().getTargetCode().equals(childQuestionCode))).findFirst().get());
+				.filter(x -> (x.getTargetCode().equals(childQuestionCode))).findFirst().get());
 
 		return foundEntity;
 	}
@@ -535,7 +530,7 @@ public class Question extends CodedEntity {
 	 */
 	public QuestionQuestion findQuestionQuestion(final Question childQuestion) {
 		final QuestionQuestion foundEntity = getChildQuestions().parallelStream()
-				.filter(x -> (x.getPk().getTargetCode().equals(childQuestion.getCode()))).findFirst().get();
+				.filter(x -> (x.getTargetCode().equals(childQuestion.getCode()))).findFirst().get();
 
 		return foundEntity;
 	}
@@ -559,7 +554,7 @@ public class Question extends CodedEntity {
 		String ret = "";
 		if (getAttributeCode().equals(QUESTION_GROUP_ATTRIBUTE_CODE)) {
 			for (QuestionQuestion childQuestion : qqList) {
-				ret += childQuestion.getPk().getTargetCode() + ",";
+				ret += childQuestion.getTargetCode() + ",";
 			}
 		} else {
 			ret = getCode();
@@ -623,4 +618,11 @@ public class Question extends CodedEntity {
 		this.icon = icon;
 	}
 
+	public Set<String> getChildQuestionCodesAsStrings() {
+		return childQuestionCodes;
+	}
+
+	public void setChildQuestionCodes(Set<String> childQuestionCodes) {
+		this.childQuestionCodes = childQuestionCodes;
+	}
 }

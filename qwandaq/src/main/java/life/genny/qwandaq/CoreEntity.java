@@ -42,7 +42,6 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 /**
  * CoreEntity represents a base level core set of class attributes. It is the
