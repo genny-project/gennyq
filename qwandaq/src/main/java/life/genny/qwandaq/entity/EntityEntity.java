@@ -1,23 +1,5 @@
 package life.genny.qwandaq.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.Link;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.converter.MoneyConverter;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.time.DateUtils;
-import org.javamoney.moneta.Money;
-import org.jboss.logging.Logger;
-
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Convert;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlTransient;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -30,6 +12,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
@@ -45,14 +28,19 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
-import life.genny.qwandaq.Link;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.converter.MoneyConverter;
+
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.annotations.Type;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.Link;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.converter.MoneyConverter;
 
 @Entity
 @Table(name = "baseentity_baseentity")
