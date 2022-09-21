@@ -228,10 +228,8 @@ public class GennyCache {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
 		try {
-			CoreEntitySerializable serializableCoreEntity = null;
 			if(value != null) {
-				serializableCoreEntity = value.toSerializableCoreEntity();
-				cache.put(key, serializableCoreEntity);
+				cache.put(key, value);
 			} else {
 				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
 			}
