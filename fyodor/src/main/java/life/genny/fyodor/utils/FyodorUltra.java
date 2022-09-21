@@ -572,6 +572,8 @@ public class FyodorUltra {
 
 		if (c == String.class)
 			return entityAttribute.<String>get("valueString");
+		else if (c == Boolean.class)
+			return entityAttribute.<Boolean>get("valueBoolean");
 		else if (c == Integer.class)
 			return entityAttribute.<Integer>get("valueInteger");
 		else if (c == Long.class)
@@ -585,7 +587,7 @@ public class FyodorUltra {
 		else if (c == LocalTime.class)
 			return entityAttribute.get("valueTime");
 		else
-			throw new QueryBuilderException("Invalid path for class " + c);
+			throw new QueryBuilderException("Invalid path for " + c);
 	}
 
 	/**
