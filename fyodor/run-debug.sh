@@ -1,7 +1,7 @@
 #!/bin/bash
 host="${1:-http://alyson2.genny.life}"
 gennyhost="${2:-http://alyson.genny.life}"
-port=8080
+port="${3:-4242}"
 parser=`echo "$gennyhost" | awk -F/ '{print $3}' `
 echo "Parser = ${parser}"
 rawhost=${parser}
@@ -27,6 +27,6 @@ export INFINISPAN_PASSWORD=password
 export PROJECT_REALM=internmatch
 export PROJECT_URL=https://internmatch.genny.life
 export realm=mentormatch
-./mvnw clean  quarkus:dev -Ddebug=5558 -DskipTests=true  -Dinfinispan.client.hotrod.server_list=${gennyhost}:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC  
+./mvnw clean  quarkus:dev -Ddebug=5558 -Dquarkus.http.port=${port} -DskipTests=true  -Dinfinispan.client.hotrod.server_list=${gennyhost}:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC  
 #./mvnw clean  quarkus:dev -Ddebug=5558 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 
