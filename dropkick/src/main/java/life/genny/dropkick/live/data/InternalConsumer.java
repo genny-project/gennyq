@@ -41,7 +41,7 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.CapabilityUtils;
+import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 

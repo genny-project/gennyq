@@ -15,52 +15,85 @@ public class EntityAttributeId implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 
+<<<<<<< HEAD
 	@ManyToOne()
 	// @JsonBackReference(value="entityAttribute")
 	@JsonManagedReference(value = "entityAttribute")
+=======
+	@ManyToOne ( )
+	//	@JsonBackReference(value="entityAttribute")
+	@JsonManagedReference(value="entityAttribute")
+>>>>>>> @{-1}
 	@JsonIgnoreProperties("baseEntityAttributes")
 	@JsonbTransient
 	public BaseEntity baseEntity;
 
 	@ManyToOne
+<<<<<<< HEAD
 	@JsonBackReference(value = "attribute")
 	// @JsonIgnore
 	public Attribute attribute;
 
 	/**
+=======
+	@JsonBackReference(value="attribute")
+	//	@JsonIgnore
+	public Attribute attribute;
+
+	/** 
+>>>>>>> @{-1}
 	 * @return BaseEntity
 	 */
 	public BaseEntity getBaseEntity() {
 		return baseEntity;
 	}
 
+<<<<<<< HEAD
 	/**
+=======
+	/** 
+>>>>>>> @{-1}
 	 * @param baseEntity the baseentity to set
 	 */
 	public void setBaseEntity(final BaseEntity baseEntity) {
 		this.baseEntity = baseEntity;
 	}
 
+<<<<<<< HEAD
 	/**
+=======
+	/** 
+>>>>>>> @{-1}
 	 * @return Attribute
 	 */
 	public Attribute getAttribute() {
 		return attribute;
 	}
 
+<<<<<<< HEAD
 	/**
+=======
+	/** 
+>>>>>>> @{-1}
 	 * @param attribute the attribute to set
 	 */
 	public void setAttribute(final Attribute attribute) {
 		this.attribute = attribute;
 	}
 
+<<<<<<< HEAD
 	/**
 	 * @return int
 	 */
 	/*
 	 * (non-Javadoc)
 	 * 
+=======
+	/** 
+	 * @return int
+	 */
+	/* (non-Javadoc)
+>>>>>>> @{-1}
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -72,15 +105,23 @@ public class EntityAttributeId implements java.io.Serializable {
 		return result;
 	}
 
+<<<<<<< HEAD
 	/**
+=======
+	/** 
+>>>>>>> @{-1}
 	 * Chek equality
 	 *
 	 * @param obj the object to compare to
 	 * @return boolean
 	 */
+<<<<<<< HEAD
 	/*
 	 * (non-Javadoc)
 	 * 
+=======
+	/* (non-Javadoc)
+>>>>>>> @{-1}
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
