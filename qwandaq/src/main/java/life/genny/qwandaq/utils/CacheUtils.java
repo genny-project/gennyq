@@ -21,6 +21,7 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.QueryResult;
 import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
  * @author Jasper Robison
  */
 @RegisterForReflection
+@ApplicationScoped
 public class CacheUtils {
 
 	static final Logger log = Logger.getLogger(CacheUtils.class);
@@ -286,15 +288,15 @@ public class CacheUtils {
 		});
 	}
 
-	public Question getQuestion(String productCode, String questionCode, String attributeCode) {
-		return getQuestion(productCode, questionCode, attributeCode, false);
+	public Question getQuestion(String productCode, String questionCode) {
+		return getQuestion(productCode, questionCode, false);
 	}
 
-	public Question getQuestion(String productCode, String questionCode, String attributeCode, boolean fetchChildQuestions) {
+	public Question getQuestion(String productCode, String questionCode, boolean fetchChildQuestions) {
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = baseEntityUtils.getSerializableBaseEntity(productCode, questionCode);
 		Set<BaseEntityAttribute> attributes = new HashSet<>();
 		attributes.addAll(baseEntityAttributeUtils.getAllBaseEntityAttributesForBaseEntity(productCode, questionCode));
-		Question question = questionUtils.getQuestionFromSerializableBaseEntity(baseEntity, attributes, attributeCode);
+		Question question = questionUtils.getQuestionFromSerializableBaseEntity(baseEntity, attributes);
 		if(fetchChildQuestions) {
 			question.getChildQuestionCodesAsStrings().parallelStream().forEach(code -> {
 				question.getChildQuestions().add(getQuestionQuestionRecursively(productCode, code, true));

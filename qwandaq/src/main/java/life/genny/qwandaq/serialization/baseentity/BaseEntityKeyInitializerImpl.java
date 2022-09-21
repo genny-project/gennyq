@@ -2,6 +2,7 @@ package life.genny.qwandaq.serialization.baseentity;
 
 import java.io.UncheckedIOException;
 
+import life.genny.qwandaq.constants.GennyConstants;
 import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
@@ -11,12 +12,12 @@ public class BaseEntityKeyInitializerImpl implements SerializationContextInitial
 
 	@Override
 	public String getProtoFileName() {
-		return "/life/genny/qwandaq/serialization/protos/baseentity_key.proto";
+		return "baseentity_key.proto";
 	}
 
 	@Override
 	public String getProtoFile() throws UncheckedIOException {
-		return ResourceUtils.getResourceAsString(getClass(), getProtoFileName());
+		return ResourceUtils.getResourceAsString(getClass(), GennyConstants.PATH_TO_PROTOS + getProtoFileName());
 	}
 
 	@Override

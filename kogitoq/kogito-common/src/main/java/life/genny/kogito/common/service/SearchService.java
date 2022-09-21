@@ -1,25 +1,5 @@
 package life.genny.kogito.common.service;
 
-import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
-
-import java.lang.invoke.MethodHandles;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -35,12 +15,19 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.*;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.invoke.MethodHandles;
+import java.time.LocalDateTime;
+import java.util.*;
+
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 
 @ApplicationScoped
 public class SearchService {
@@ -57,6 +44,9 @@ public class SearchService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	CacheUtils cacheUtils;
 
 	@Inject
 	DefUtils defUtils;
@@ -387,7 +377,9 @@ public class SearchService {
 				}
 				msgFilterGrp.setTargetCode(filterCode);
 				ask.setQuestionCode(filterCode);
-				ask.getQuestion().setCode(filterCode);
+				// ask.getQuestion().setCode(filterCode);
+				Question question = cacheUtils.getQuestion(userToken.getRealm(), filterCode, );
+				ask.setQuestion(question);
 
 				msgFilterGrp.setMessage(GennyConstants.FILTERS);
 				msgFilterGrp.setTag(GennyConstants.FILTERS);

@@ -86,8 +86,8 @@ public class Context extends CoreEntity implements Serializable {
 
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlTransient
-	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "baseentity_id", nullable = false)
+	/*@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "baseentity_id", nullable = false)*/
 	private BaseEntity entity;
 
 	private Double weight = 1.0;

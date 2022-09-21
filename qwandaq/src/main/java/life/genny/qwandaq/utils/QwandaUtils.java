@@ -74,6 +74,9 @@ public class QwandaUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	CacheUtils cacheUtils;
+
+	@Inject
 	UserToken userToken;
 
 	public QwandaUtils() {
@@ -244,7 +247,8 @@ public class QwandaUtils {
 		// find the question in the database
 		Question question;
 		try {
-			question = databaseUtils.findQuestionByCode(productCode, code);
+			// question = databaseUtils.findQuestionByCode(productCode, code);
+			question = cacheUtils.getQuestion(productCode, code);
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);
 		}

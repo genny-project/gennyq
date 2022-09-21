@@ -24,7 +24,7 @@ public class QuestionUtils {
 
     public BaseEntity getBaseEntityFromQuestion(Question question) {
         BaseEntity baseEntity = new BaseEntity();
-        baseEntity.setCode(question.getCode() + BaseEntityKey.BE_KEY_DELIMITER + question.getAttributeCode());
+        baseEntity.setCode(question.getCode());
         baseEntity.setCreated(question.getCreated());
         baseEntity.setName(question.getName());
         baseEntity.setRealm(question.getRealm());
@@ -132,9 +132,9 @@ public class QuestionUtils {
         return attribute;
     }
 
-    public Question getQuestionFromSerializableBaseEntity(BaseEntity baseEntity, Set<BaseEntityAttribute> attributes, String attributeCode) {
+    public Question getQuestionFromSerializableBaseEntity(BaseEntity baseEntity, Set<BaseEntityAttribute> attributes) {
         Question question = new Question();
-        question.setCode(baseEntity.getCode() + BaseEntityKey.BE_KEY_DELIMITER + attributeCode);
+        question.setCode(baseEntity.getCode());
         question.setCreated(baseEntity.getCreated());
         question.setName(baseEntity.getName());
         question.setRealm(baseEntity.getRealm());

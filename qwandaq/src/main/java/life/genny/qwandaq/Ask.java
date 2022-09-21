@@ -90,8 +90,8 @@ public class Ask extends CoreEntity {
 	private static final long serialVersionUID = 1L;
 
 	@XmlTransient
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "question_id", nullable = false)
+	/*@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "question_id", nullable = false)*/
 	private Question question;
 
 	private String sourceCode;

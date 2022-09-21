@@ -39,6 +39,7 @@ public class TaskService {
 	@Inject QwandaUtils qwandaUtils;
 	@Inject DatabaseUtils databaseUtils;
 	@Inject BaseEntityUtils beUtils;
+	@Inject CacheUtils cacheUtils;
 	@Inject DefUtils defUtils;
 
 	@Inject NavigationService navigationService;
@@ -71,11 +72,15 @@ public class TaskService {
 	 */
 	public Ask fetchAsk(ProcessData processData) {
 
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), processData.getQuestionCode());
+		String questionCode = processData.getQuestionCode();
+		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), questionCode);
 		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
 
 		if (ask == null)
 			ask = generateAsks(processData);
+
+		Question question = cacheUtils.getQuestion(userToken.getRealm(), questionCode, true);
+		ask.setQuestion(question);
 
 		return ask;
 	}
