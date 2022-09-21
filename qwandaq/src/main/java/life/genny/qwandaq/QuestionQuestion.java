@@ -3,21 +3,34 @@ package life.genny.qwandaq;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.AssociationOverride;
+import javax.persistence.AssociationOverrides;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.JoinColumn;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
-/*@Entity
+import com.querydsl.core.annotations.QueryExclude;
+
+@Entity
 @QueryExclude
 @Table(name = "question_question", uniqueConstraints = @UniqueConstraint(columnNames = { "sourceCode", "targetCode",
 		"realm" }), indexes = {
@@ -26,21 +39,22 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 		})
 @AssociationOverrides({ @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))
 })
-@Cacheable*/
+@Cacheable
 @RegisterForReflection
 public class QuestionQuestion implements java.io.Serializable, Comparable<Object> {
 
 	private static final long serialVersionUID = 1L;
 
-	private String sourceCode;
+	@EmbeddedId
+	private QuestionQuestionId pk = new QuestionQuestionId();
 
-	private String targetCode;
-
+	@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
+	@Column(name = "updated")
 	private LocalDateTime updated;
 
 	/**
@@ -71,14 +85,6 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 
 	private String icon;
 
-	private Set<String> parentQuestionCodes = new HashSet<>(0);
-
-	private Set<String> childQuestionCodes = new HashSet<>(0);
-
-	private Set<QuestionQuestion> parentQuestionQuestions = new HashSet<>(0);
-
-	private Set<QuestionQuestion> childQuestionQuestions = new HashSet<>(0);
-
 	public QuestionQuestion() {
 	}
 
@@ -106,8 +112,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
 			boolean disabled, boolean hidden, boolean readonly) {
 		autocreateCreated();
-		setSourceCode(source.getCode());
-		setTargetCode(targetCode);
+		getPk().setSource(source);
+		getPk().setTargetCode(targetCode);
 		setMandatory(mandatory);
 		setDisabled(disabled);
 		setHidden(hidden);
@@ -196,9 +202,9 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public QuestionQuestion(final Question source, final Question target, Double weight) {
 		autocreateCreated();
 
-		this.setSourceCode(source.getCode());
+		this.pk.setSource(source);
 
-		this.setTargetCode(target.getCode());
+		this.pk.setTargetCode(target.getCode());
 
 		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides
@@ -208,12 +214,18 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 
 	}
 
-	public void setSourceCode(String sourceCode) {
-		this.sourceCode = sourceCode;
+	/**
+	 * @return QuestionQuestionId
+	 */
+	public QuestionQuestionId getPk() {
+		return pk;
 	}
 
-	public void setTargetCode(String targetCode) {
-		this.targetCode = targetCode;
+	/**
+	 * @param pk the pk to set
+	 */
+	public void setPk(final QuestionQuestionId pk) {
+		this.pk = pk;
 	}
 
 	/**
@@ -422,8 +434,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public int hashCode() {
 
 		HashCodeBuilder hcb = new HashCodeBuilder();
-		hcb.append(getSourceCode());
-		hcb.append(getTargetCode());
+		hcb.append(pk.getSourceCode());
+		hcb.append(pk.getTargetCode());
 		hcb.append(getRealm());
 		return hcb.toHashCode();
 	}
@@ -444,8 +456,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		}
 		QuestionQuestion that = (QuestionQuestion) obj;
 		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(getSourceCode(), that.getSourceCode());
-		eb.append(getTargetCode(), that.getTargetCode());
+		eb.append(pk.getSourceCode(), that.pk.getSourceCode());
+		eb.append(pk.getTargetCode(), that.pk.getTargetCode());
 		eb.append(getRealm(), that.getRealm());
 		return eb.isEquals();
 	}
@@ -525,7 +537,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	@Override
 	public String toString() {
-		return "SRC:" + getSourceCode() + " - " + getTargetCode() + " "
+		return "SRC:" + getPk().getSourceCode() + " - " + getPk().getTargetCode() + " "
 				+ (this.getMandatory() ? "MANDATORY" : "OPTIONAL") + " " + (this.getReadonly() ? "RO" : "RW") + " "
 				+ (this.getFormTrigger() ? "FT" : "NFT") + " " + (this.getCreateOnTrigger() ? "COT" : "NCOT");
 	}
@@ -534,14 +546,14 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * @return String
 	 */
 	public String getSourceCode() {
-		return getSourceCode();
+		return pk.getSourceCode();
 	}
 
 	/**
 	 * @return String
 	 */
 	public String getTargetCode() {
-		return getTargetCode();
+		return pk.getTargetCode();
 	}
 
 	/**
@@ -572,35 +584,4 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		return this.icon;
 	}
 
-	public Set<String> getParentQuestionCodes() {
-		return parentQuestionCodes;
-	}
-
-	public void setParentQuestionCodes(Set<String> parentQuestionCodes) {
-		this.parentQuestionCodes = parentQuestionCodes;
-	}
-
-	public Set<String> getChildQuestionCodes() {
-		return childQuestionCodes;
-	}
-
-	public void setChildQuestionCodes(Set<String> childQuestionCodes) {
-		this.childQuestionCodes = childQuestionCodes;
-	}
-
-	public Set<QuestionQuestion> getParentQuestionQuestions() {
-		return parentQuestionQuestions;
-	}
-
-	public void setParentQuestionQuestions(Set<QuestionQuestion> parentQuestionQuestions) {
-		this.parentQuestionQuestions = parentQuestionQuestions;
-	}
-
-	public Set<QuestionQuestion> getChildQuestionQuestions() {
-		return childQuestionQuestions;
-	}
-
-	public void setChildQuestionQuestions(Set<QuestionQuestion> childQuestionQuestions) {
-		this.childQuestionQuestions = childQuestionQuestions;
-	}
 }

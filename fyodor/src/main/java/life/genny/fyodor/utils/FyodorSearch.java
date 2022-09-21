@@ -37,12 +37,12 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-//import life.genny.qwandaq.attribute.QEntityAttribute;
+import life.genny.qwandaq.attribute.QEntityAttribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-//import life.genny.qwandaq.entity.QBaseEntity;
-//import life.genny.qwandaq.entity.QEntityEntity;
+import life.genny.qwandaq.entity.QBaseEntity;
+import life.genny.qwandaq.entity.QEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
@@ -50,7 +50,6 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchBeResult;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityAttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -75,9 +74,6 @@ public class FyodorSearch {
 
 	@Inject
 	BaseEntityUtils beUtils;
-
-	@Inject
-	BaseEntityAttributeUtils beaUtils;
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -245,11 +241,15 @@ public class FyodorSearch {
 		Integer defaultPageSize = 20;
 		// Init necessary vars
 		QSearchBeResult result = null;
-		/*List<String> codes = new ArrayList<String>();
+		List<String> codes = new ArrayList<String>();
 		// Get page start and page size from SBE
 		Integer pageStart = searchBE.getPageStart(0);
 		Integer pageSize = searchBE.getPageSize(defaultPageSize);
 		// Integer pageSize = searchBE.getPageSize(defaultPageSize);
+
+		QBaseEntity baseEntity = new QBaseEntity("baseEntity");
+		JPAQuery<?> query = new JPAQuery<Void>(entityManager);
+		query.from(baseEntity);
 
 		// Define a join for link searches
 		String linkCode = null;
@@ -441,7 +441,7 @@ public class FyodorSearch {
 						 * whitelists, blacklists and ordinary cases.
 						 */
 
-						/*builder.and(
+						builder.and(
 								baseEntity.name.like(wildcardValue)
 										// check code for Dev UI searches
 										.or(searchBE.getCode().startsWith("SBE_DEV_UI")
@@ -632,7 +632,7 @@ public class FyodorSearch {
 		Instant end = Instant.now();
 		log.info("Finished RUNNING query with duration: " + Duration.between(middle, end).toMillis() + " millSeconds.");
 		// Return codes and count
-		log.info("SQL = " + query.toString());*/
+		log.info("SQL = " + query.toString());
 		return result;
 	}
 
@@ -734,7 +734,7 @@ public class FyodorSearch {
 	 * @param entityAttribute
 	 * @return
 	 */
-	/*public static Predicate getAttributeSearchColumn(EntityAttribute ea, QEntityAttribute entityAttribute) {
+	public static Predicate getAttributeSearchColumn(EntityAttribute ea, QEntityAttribute entityAttribute) {
 
 		String attributeFilterValue = ea.getAsString();
 		String condition = SearchEntity.convertFromSaveable(ea.getAttributeName());
@@ -852,7 +852,7 @@ public class FyodorSearch {
 	 * @param entityAttribute
 	 * @return
 	 */
-	/*public static ComparableExpressionBase getPathFromDatatype(String dtt, QEntityAttribute entityAttribute) {
+	public static ComparableExpressionBase getPathFromDatatype(String dtt, QEntityAttribute entityAttribute) {
 
 		if (dtt.equals("Text")) {
 			return entityAttribute.valueString;
@@ -918,7 +918,7 @@ public class FyodorSearch {
 	 * @param ea The EntityAttribute filter from SBE
 	 * @return the subquery object
 	 */
-	/*public static JPQLQuery generateSubQuery(List<EntityAttribute> eaList) {
+	public static JPQLQuery generateSubQuery(List<EntityAttribute> eaList) {
 
 		// Find first attribute that is not AND/OR. There should be only one
 		EntityAttribute ea = eaList.stream()
@@ -987,7 +987,7 @@ public class FyodorSearch {
 	 * @param blacklist
 	 * @return
 	 */
-	/*public static JPQLQuery generateWildcardSubQuery(String value, Integer recursion, String[] whitelist,
+	public static JPQLQuery generateWildcardSubQuery(String value, Integer recursion, String[] whitelist,
 			String[] blacklist) {
 
 		// Random uuid to for uniqueness in the query string

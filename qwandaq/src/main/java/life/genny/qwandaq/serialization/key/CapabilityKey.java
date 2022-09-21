@@ -1,7 +1,7 @@
 package life.genny.qwandaq.serialization.key;
 
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
-import life.genny.qwandaq.utils.CapabilityUtils;
+import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
 
 public class CapabilityKey implements CoreEntityKey {
 

@@ -3,7 +3,6 @@ package life.genny.qwandaq.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,7 +35,6 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -82,7 +80,7 @@ public class QwandaUtils {
 	public Attribute saveAttribute(final Attribute attribute) {
 		return saveAttribute(userToken.getProductCode(), attribute);
 	}
-
+	
 	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
@@ -618,11 +616,7 @@ public class QwandaUtils {
 				if (className.contains("Boolean") || className.contains("bool"))
 					value = false;
 
-				EntityAttribute entityAttribute = new EntityAttribute(1.0, value);
-				entityAttribute.setRealm(processEntity.getRealm());
-				entityAttribute.setBaseEntityCode(processEntity.getCode());
-				entityAttribute.setAttribute(attribute);
-				return entityAttribute;
+				return new EntityAttribute(processEntity, attribute, 1.0, value);
 			});
 
 			processEntity.addAttribute(ea);

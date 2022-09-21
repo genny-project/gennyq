@@ -129,16 +129,12 @@ public class SearchService {
 		// update content
 		BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
 		Attribute attribute = qwandaUtils.getAttribute("PRI_LOC1");
-		EntityAttribute ea = new EntityAttribute(1.0, pcmCode);
-		ea.setBaseEntityCode(content.getCode());
-		ea.setAttribute(attribute);
+		EntityAttribute ea = new EntityAttribute(content, attribute, 1.0, pcmCode);
 		content.addAttribute(ea);
 
 		// update target pcm
 		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
-		ea = new EntityAttribute(1.0, searchCode);
-		ea.setBaseEntityCode(pcm.getCode());
-		ea.setAttribute(attribute);
+		ea = new EntityAttribute(pcm, attribute, 1.0, searchCode);
 		pcm.addAttribute(ea);
 
 		// send to alyson
@@ -232,9 +228,7 @@ public class SearchService {
 		try {
 			BaseEntity base = beUtils.getBaseEntity(attrCode);
 			Attribute attribute = qwandaUtils.getAttribute(attrCode);
-			ea = new EntityAttribute(1.0, attrCode);
-			ea.setBaseEntityCode(base.getCode());
-			ea.setAttribute(attribute);
+			ea = new EntityAttribute(base, attribute, 1.0, attrCode);
 			if(!attrName.isEmpty()) {
 				ea.setAttributeName(attrName);
 			}
