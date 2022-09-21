@@ -35,53 +35,48 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import com.querydsl.core.annotations.QueryExclude;
-
-
 /**
  * ContextList represents a set of Contexts in the Qwanda library.
  * The Contexts in the list can be applied to a passed value.
  * <ul>
- * <li>List of Context 
+ * <li>List of Context
  * </ul>
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
-
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Embeddable
-@QueryExclude
 public class ContextList implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 *A fieldlist that stores the Contexts for this object.
+	 * A fieldlist that stores the Contexts for this object.
 	 */
-//  @JsonInclude(Include.NON_NULL)
+	// @JsonInclude(Include.NON_NULL)
 	@XmlTransient
-	@OneToMany( cascade = CascadeType.ALL,fetch = FetchType.EAGER)
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@Fetch(value = FetchMode.SUBSELECT)
 	@JoinColumn(name = "list_id", referencedColumnName = "id")
 	private List<Context> contexts;
-	
+
 	/**
 	 * Constructor.
 	 */
-	public ContextList() { }
-	
+	public ContextList() {
+	}
+
 	/**
-	* Constructor.
-	*
-	* @param Contexts Contexts to set.
+	 * Constructor.
+	 *
+	 * @param Contexts Contexts to set.
 	 */
-	public ContextList(List<Context> Contexts) 
-	{
+	public ContextList(List<Context> Contexts) {
 		this.contexts = Contexts;
 	}
 
@@ -113,22 +108,21 @@ public class ContextList implements Serializable {
 		this.contexts = contexts;
 	}
 
-	
-	/** 
+	/**
 	 * @return String
 	 */
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
 		String ret = "ContextList->";
 		for (Context context : contexts) {
-			ret += context+",";
+			ret += context + ",";
 		}
 		return ret;
 	}
 
-
-	
 }

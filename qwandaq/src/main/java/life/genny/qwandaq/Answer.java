@@ -49,7 +49,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.querydsl.core.annotations.QueryExclude;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
@@ -89,7 +88,6 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 		@Index(columnList = "realm", name = "code_idx")
 })
 @Entity
-@QueryExclude
 @Immutable
 @RegisterForReflection
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
@@ -140,8 +138,8 @@ public class Answer {
 	@JsonIgnore
 	@NotNull
 	@XmlTransient
-	/*@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "attribute_id", nullable = false)*/
+	@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "attribute_id", nullable = false)
 	private Attribute attribute;
 
 	/**
