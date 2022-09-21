@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +29,7 @@ import io.quarkus.arc.Arc;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
@@ -34,7 +37,8 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
 
 /**
  * A non-static utility class used for standard
@@ -60,7 +64,10 @@ public class BaseEntityUtils {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	BaseEntityAttributeUtils beaUtils;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	@Inject
 	EntityManagerFactory emf;
@@ -176,32 +183,22 @@ public class BaseEntityUtils {
 	 *
 	 * @param productCode The productCode to use
 	 * @param code        The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
+	 * @return The corresponding BaseEntity bundled with BaseEntityAttributes, or null if not found.
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
+		return getBaseEntityByCode(productCode, code, true);
+	}
 
-		if (productCode == null)
-			throw new NullParameterException("productCode");
-		if (code == null)
-			throw new NullParameterException("code");
-		if (StringUtils.isBlank(productCode))
-			throw new DebugException("productCode is empty");
-		if (StringUtils.isBlank(code))
-			throw new DebugException("code is empty");
+	public BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
 
-		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(productCode, code);
-		// BaseEntity entity = (BaseEntity)
-		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = getSerializableBaseEntity(productCode, code);
 
-		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
-		// updates are working.
 		BaseEntity entity = null;
-		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-
+		
 		// check in database if not in cache
-		if (entity == null) {
+		if (baseEntitySerializable == null) {
+			log.infof("$$$$$$$$$$ check in database if not in cache. [ productCode , code ]: [ %s , %s]", productCode, code);
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
@@ -221,14 +218,58 @@ public class BaseEntityUtils {
 					}
 				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode + ", "
-						+ (entity == null ? "not found in db" : "found in db"));
+				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
+				if (entity != null) {
+					log.info("Adding BE to cache..");
+					BaseEntityKey key = new BaseEntityKey(productCode, code);
+					CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, entity);
+					if (bundleAttributes) {
+						log.info("Adding BEAs to cache..");
+						entity.getBaseEntityAttributes().forEach(attribute -> {
+							BaseEntityAttributeKey attributeKey = new BaseEntityAttributeKey(productCode,
+									attribute.getBaseEntityCode(), attribute.getAttributeCode());
+							CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, attributeKey, attribute);
+						});
+					}
+				}
 			} catch (NoResultException e) {
 				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
+			}
+		} else {
+			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
+			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
+			if (bundleAttributes) {
+				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
+				Map<String, EntityAttribute> attributeMap = new HashMap<>();
+				entity.setAttributeMap(attributeMap);
+				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
+					attributes.add(bea);
+					attributeMap.put(bea.getAttributeCode(), bea);
+				});
+				log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
 			}
 		}
 
 		return entity;
+	}
+
+	public life.genny.qwandaq.serialization.baseentity.BaseEntity getSerializableBaseEntity(String productCode, String code) {
+		if (productCode == null) {
+			throw new NullParameterException("productCode");
+		}
+		if (code == null) {
+			throw new NullParameterException("code");
+		}
+		if (StringUtils.isBlank(productCode)) {
+			throw new DebugException("productCode is empty");
+		}
+		if (StringUtils.isBlank(code)) {
+			throw new DebugException("code is empty");
+		}
+
+		// check for entity in the cache
+		BaseEntityKey key = new BaseEntityKey(productCode, code);
+		return (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 	}
 
 	/**
@@ -238,40 +279,30 @@ public class BaseEntityUtils {
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
-		return updateBaseEntity(userToken.getProductCode(), baseEntity);
-	}
-
-	/**
-	 * Update a {@link BaseEntity} in the database and the cache.
-	 *
-	 * @param productCode The productCode to cache into
-	 * @param baseEntity The BaseEntity to update
-	 * @return the newly cached BaseEntity
-	 */
-	public BaseEntity updateBaseEntity(String productCode, BaseEntity baseEntity) {
 
 		// ensure for all entityAttribute that baseentity and attribute are not null
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
-			ea.setRealm(productCode);
-			if (ea.getPk().getBaseEntity() == null) {
-				ea.getPk().setBaseEntity(baseEntity);
+
+			if (ea.getRealm() == null) {
+				ea.setRealm(baseEntity.getRealm());
 			}
 
-			if (ea.getPk().getAttribute() == null) {
-				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
-				ea.getPk().setAttribute(attribute);
+			if (ea.getBaseEntityCode() == null) {
+				ea.setBaseEntityCode(baseEntity.getCode());
+			}
+
+			if (ea.getAttribute() == null) {
+				Attribute attribute = attributeUtils.getAttributeByCode(baseEntity.getRealm(), ea.getAttributeCode());
+				ea.setAttribute(attribute);
 			}
 		}
 
-		baseEntity.setRealm(productCode);
-		databaseUtils.saveBaseEntity(baseEntity);
-		CacheUtils.putObject(productCode, baseEntity.getCode(), baseEntity);
+		// databaseUtils.saveBaseEntity(baseEntity);
+		// CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
 
-		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),
-		// baseEntity.getCode());
-		// return (BaseEntity)
-		// CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
-		return baseEntity;
+		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		boolean savedSuccssfully = CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		return savedSuccssfully ? baseEntity : null;
 	}
 
 	/**
@@ -390,8 +421,7 @@ public class BaseEntityUtils {
 	 * @param value The value to clean
 	 * @return A clean string
 	 */
-	public String cleanUpAttributeValue(String value) throws NullParameterException {
-		if(value == null) throw new NullParameterException("value");
+	public String cleanUpAttributeValue(String value) {
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
 	}
@@ -549,7 +579,8 @@ public class BaseEntityUtils {
 
 		// Handle Created and Updated attributes
 		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
-		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
+		EntityAttribute created = new EntityAttribute(1.0);
+		created.setAttribute(createdAttr);
 
 		if(entity.getCreated() == null) {
 			log.error("NPE for PRI_CREATED. Generating created date");
@@ -561,20 +592,23 @@ public class BaseEntityUtils {
 		entity.addAttribute(created);
 
 		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
-		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
+		EntityAttribute createdDate = new EntityAttribute(1.0);
+		createdDate.setAttribute(createdDateAttr);
 
 		// Ensure createdDate is not null
 		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
 
 		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
-		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
+		EntityAttribute updated = new EntityAttribute(1.0);
+		updated.setAttribute(updatedAttr);
 		try {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
 
 			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
-			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
+			EntityAttribute updatedDate = new EntityAttribute(1.0);
+			updatedDate.setAttribute(updatedDateAttr);
 			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
 			entity.addAttribute(updatedDate);
 		} catch (NullPointerException e) {
@@ -582,12 +616,14 @@ public class BaseEntityUtils {
 		}
 
 		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
-		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
+		EntityAttribute code = new EntityAttribute(1.0);
+			code.setAttribute(codeAttr);
 		code.setValueString(entity.getCode());
 		entity.addAttribute(code);
 
 		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
-		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
+		EntityAttribute name = new EntityAttribute(1.0);
+			name.setAttribute(nameAttr);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
 		
@@ -661,12 +697,10 @@ public class BaseEntityUtils {
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		// TODO: Surely we don't have to fetch attribute from attribute code if the attribute
-		// is already stored in the entity attribute?
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
-			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			Attribute attribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -690,17 +724,20 @@ public class BaseEntityUtils {
 			}
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
-				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
+				EntityAttribute newEA = new EntityAttribute(ea.getWeight(), defaultVal);
+				newEA.setRealm(userToken.getProductCode());
+				newEA.setBaseEntityCode(item.getCode());
+				newEA.setAttribute(attribute);
 				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
 			}
 		}
 
-		Attribute linkDef = qwandaUtils.getAttribute("LNK_DEF");
+		Attribute linkDef = attributeUtils.getAttributeByCode(userToken.getProductCode(), "LNK_DEF");
 		item.addAnswer(new Answer(item, item, linkDef, "[\"" + defBE.getCode() + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
+		Attribute lnkAuthorAttr = attributeUtils.getAttributeByCode(userToken.getProductCode(), "LNK_AUTHOR");
 		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item);
@@ -726,9 +763,12 @@ public class BaseEntityUtils {
 		// if (value == null)
 		// throw new NullParameterException("value");
 
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+		Attribute attribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), attributeCode);
 
-		EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
+		EntityAttribute ea = new EntityAttribute(1.0, value);
+		ea.setRealm(userToken.getProductCode());
+		ea.setBaseEntityCode(be.getCode());
+		ea.setAttribute(attribute);
 		be.addAttribute(ea);
 		return be;
 	}
@@ -771,18 +811,18 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = qwandaUtils.getAttribute("PRI_EMAIL");
+			Attribute emailAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_EMAIL");
 			item.addAnswer(new Answer(item, item, emailAttribute, email));
-			Attribute usernameAttribute = qwandaUtils.getAttribute("PRI_USERNAME");
+			Attribute usernameAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_USERNAME");
 			item.addAnswer(new Answer(item, item, usernameAttribute, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = qwandaUtils.getAttribute("PRI_UUID");
+		Attribute uuidAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_UUID");
 		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
 
 		// keycloak UUID
-		Attribute keycloakAttribute = qwandaUtils.getAttribute("PRI_KEYCLOAK_UUID");
+		Attribute keycloakAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
 		item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
 
 		return item;

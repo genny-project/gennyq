@@ -1,0 +1,7 @@
+package life.genny.qwandaq.serialization.baseentityattribute;
+
+message BaseEntityAttributeKey {
+  optional string realm = 1;
+  optional string baseEntityCode = 2;
+  optional string attributeCode = 3;
+}

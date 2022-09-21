@@ -1,4 +1,4 @@
-package life.genny.qwandaq.serialization.baseentity;
+package life.genny.qwandaq.serialization.attribute;
 
 import java.io.UncheckedIOException;
 
@@ -7,12 +7,11 @@ import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.impl.ResourceUtils;
 
-public class BaseEntityInitializerImpl implements SerializationContextInitializer {
+public class AttributeKeyInitializerImpl implements SerializationContextInitializer {
 
 	@Override
 	public String getProtoFileName() {
-		// return "/life/genny/qwandaq/serialization/protos/baseentity.proto";
-		return "baseentity.proto";
+		return "attribute_key.proto";
 	}
 
 	@Override
@@ -28,7 +27,7 @@ public class BaseEntityInitializerImpl implements SerializationContextInitialize
 
 	@Override
 	public void registerMarshallers(SerializationContext serCtx) {
-		serCtx.registerMarshaller(new BaseEntityMessageMarshaller());
+		serCtx.registerMarshaller(new AttributeKeyMessageMarshaller());
 	}
 
 }

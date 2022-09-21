@@ -8,7 +8,7 @@ import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.datatype.CapabilityMode;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.suite.TestCase;
 

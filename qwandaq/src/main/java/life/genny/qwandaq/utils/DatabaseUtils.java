@@ -23,6 +23,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NotInitializedException;
 import life.genny.qwandaq.validation.Validation;
+import life.genny.qwandaq.models.UniquePair;
 
 /*
  * A utility class used for standard read and write 
@@ -462,7 +463,6 @@ public class DatabaseUtils {
 		if (existingEntity == null) {
 			entityManager.persist(entity);
 		} else {
-			if(entity.getId() == null) entity.setId(existingEntity.getId());
 			entityManager.merge(entity);
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
@@ -501,19 +501,20 @@ public class DatabaseUtils {
 	@Transactional
 	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
 
-		QuestionQuestionId pk = questionQuestion.getPk();
-		log.info("Saving QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
+		String sourceCode = questionQuestion.getSourceCode();
+		String targetCode = questionQuestion.getTargetCode();
+		log.info("Saving QuestionQuestion " + sourceCode + ":" + targetCode);
 		checkEntityManager();
 
 		QuestionQuestion existingQuestionQuestion = null;
 		try {
 			existingQuestionQuestion = findQuestionQuestionBySourceAndTarget(
 					questionQuestion.getRealm(),
-					pk.getSourceCode(),
-					pk.getTargetCode());
+					sourceCode,
+					targetCode);
 		} catch (NoResultException e) {
 			log.debugf("%s:%s not found in database, creating new row...",
-					questionQuestion.getSourceCode(), questionQuestion.getTargetCode());
+					sourceCode, targetCode);
 		}
 
 		if (existingQuestionQuestion == null) {
@@ -522,7 +523,7 @@ public class DatabaseUtils {
 			entityManager.merge(questionQuestion);
 		}
 
-		log.info("Successfully saved QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
+		log.info("Successfully saved QuestionQuestion " + sourceCode + ":" + targetCode);
 	}
 
 	/**

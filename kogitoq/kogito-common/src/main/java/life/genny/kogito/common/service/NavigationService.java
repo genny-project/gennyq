@@ -21,7 +21,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
@@ -149,7 +149,9 @@ public class NavigationService {
 		// fetch and update desired pcm
 		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
+		EntityAttribute ea = new EntityAttribute(1.0, questionCode);
+		ea.setBaseEntityCode(pcm.getCode());
+		ea.setAttribute(attribute);
 		try {
 			pcm.addAttribute(ea);
 		} catch (BadDataException e) {

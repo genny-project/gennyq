@@ -46,7 +46,7 @@ import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
+import life.genny.qwandaq.utils.CapabilityUtils;
 
 /**
  * A utility class used for performing table

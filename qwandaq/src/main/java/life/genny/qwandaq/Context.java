@@ -43,6 +43,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 /**
  * Context is the class for all entity contexts managed in the Qwanda library. A
@@ -86,8 +87,8 @@ public class Context extends CoreEntity implements Serializable {
 
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	@XmlTransient
-	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "baseentity_id", nullable = false)
+	/*@OneToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "baseentity_id", nullable = false)*/
 	private BaseEntity entity;
 
 	private Double weight = 1.0;

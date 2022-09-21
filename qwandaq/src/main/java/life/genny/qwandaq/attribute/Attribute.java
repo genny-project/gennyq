@@ -20,6 +20,8 @@
 
 package life.genny.qwandaq.attribute;
 
+import java.io.Serializable;
+
 import javax.persistence.Cacheable;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
@@ -38,6 +40,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /**
@@ -65,7 +68,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * @since 1.0
  */
 
-@XmlRootElement
+/*@XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 
 @Table(name = "attribute", indexes = {
@@ -75,9 +78,9 @@ import life.genny.qwandaq.utils.CommonUtils;
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 @RegisterForReflection
-public class Attribute extends CodedEntity {
+public class Attribute extends CodedEntity implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

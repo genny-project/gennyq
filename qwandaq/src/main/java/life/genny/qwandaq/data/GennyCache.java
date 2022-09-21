@@ -12,6 +12,10 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 
+import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
+import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
+import life.genny.qwandaq.serialization.entityentity.EntityEntityInitializerImpl;
+import life.genny.qwandaq.serialization.entityentity.EntityEntityKeyInitializerImpl;
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -25,8 +29,12 @@ import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeInitializerImpl;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKeyInitializerImpl;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 /**
@@ -97,7 +105,18 @@ public class GennyCache {
 		serCtxInitList.add(baseEntitySCI);
 		SerializationContextInitializer baseEntityKeySCI = new BaseEntityKeyInitializerImpl();
 		serCtxInitList.add(baseEntityKeySCI);
-
+		SerializationContextInitializer baseEntityAttributeSCI = new BaseEntityAttributeInitializerImpl();
+		serCtxInitList.add(baseEntityAttributeSCI);
+		SerializationContextInitializer baseEntityAttributeKeySCI = new BaseEntityAttributeKeyInitializerImpl();
+		serCtxInitList.add(baseEntityAttributeKeySCI);
+		SerializationContextInitializer attributeSCI = new AttributeInitializerImpl();
+		serCtxInitList.add(attributeSCI);
+		SerializationContextInitializer attributeKeySCI = new AttributeKeyInitializerImpl();
+		serCtxInitList.add(attributeKeySCI);
+		SerializationContextInitializer entityEntitySCI = new EntityEntityInitializerImpl();
+		serCtxInitList.add(entityEntitySCI);
+		SerializationContextInitializer entityEntityKeySCI = new EntityEntityKeyInitializerImpl();
+		serCtxInitList.add(entityEntityKeySCI);
 		return serCtxInitList;
 	}
 
@@ -145,15 +164,15 @@ public class GennyCache {
 	* @param key The key to the entity to fetch
 	* @return The entity
 	 */
-	public CoreEntity getEntityFromCache(String cacheName, CoreEntityKey key) {
+	public CoreEntitySerializable getEntityFromCache(String cacheName, CoreEntityKey key) {
 
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
 
-		RemoteCache<CoreEntityKey, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
+		RemoteCache<CoreEntityKey, CoreEntitySerializable> cache = remoteCacheManager.getCache(cacheName);
 		if (cache == null) {
-			log.error("Could not find a cache called " + cacheName);
+			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
 
 		return cache.get(key);
@@ -164,29 +183,62 @@ public class GennyCache {
 	* 
 	* @param cacheName The cache to get from
 	* @param key The key to put the entity under
-	* @param value The entity
-	* @return The Entity
+	* @param value The persistable entity
+	* @return True if the entity is successfully inserted into cache, False otherwise
 	 */
-	public CoreEntity putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntity value) {
-		if(value == null) {
-			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
-		}
-
+	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
-
-		RemoteCache<CoreEntityKey, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
+		RemoteCache<CoreEntityKey, CoreEntitySerializable> cache = remoteCacheManager.getCache(cacheName);
 		if (cache == null) {
-			log.error("Could not find a cache called " + cacheName);
+			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
-
-		// TODO: Remove this try catch very soon
 		try {
-			cache.put(key, value);
+			CoreEntitySerializable serializableCoreEntity = null;
+			if(value != null) {
+				serializableCoreEntity = value.toSerializableCoreEntity();
+				cache.put(key, serializableCoreEntity);
+			} else {
+				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
+			}
 		} catch (Exception e) {
+			log.error("Exception when inserting entity into cache: " + e.getMessage());
+			log.error(e.getStackTrace());
 			e.printStackTrace();
+			return false;
 		}
-		return cache.get(key);
+		return true;
+	}
+
+	/**
+	 * Put a CoreEntity into the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key The key to put the entity under
+	 * @param value The serializable entity
+	 * @return True if the entity is successfully inserted into cache, False otherwise
+	 */
+	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntitySerializable value) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+		RemoteCache<CoreEntityKey, CoreEntitySerializable> cache = remoteCacheManager.getCache(cacheName);
+		if (cache == null) {
+			throw new NullPointerException("Could not find a cache called " + cacheName);
+		}
+		try {
+			if(value != null) {
+				cache.put(key, value);
+			} else {
+				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
+			}
+		} catch (Exception e) {
+			log.error("Exception when inserting entity into cache: " + e.getMessage());
+			log.error(e.getStackTrace());
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 }
