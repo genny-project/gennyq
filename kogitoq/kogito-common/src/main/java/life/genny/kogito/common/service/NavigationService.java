@@ -150,11 +150,7 @@ public class NavigationService {
 		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
 		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
-		try {
-			pcm.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
+		pcm.addAttribute(ea);
 
 		// package all and send
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();

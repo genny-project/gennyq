@@ -79,17 +79,12 @@ public class SummaryService {
 		}
 
 		String summaryCode = array.getJsonObject(0).getString("summary");
-		// navigationService.navigateContent("PCM_SUMMARY_"+summaryCode, "QUE_SUMMARY_"+summaryCode);
 
 		// fetch pcm and summary entities
 		BaseEntity summary = beUtils.getBaseEntityByCode("SUM_"+summaryCode);
 		BaseEntity pcm = beUtils.getBaseEntityByCode("PCM_SUMMARY_"+summaryCode);
 		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
-		try {
-            content.setValue("PRI_LOC1", pcm.getCode());
-        } catch (BadDataException e) {
-            e.printStackTrace();
-        }
+		content.setValue("PRI_LOC1", pcm.getCode());
 
 		// build context map for merging
 		Map<String, Object> ctxMap = new HashMap<>();
@@ -127,6 +122,9 @@ public class SummaryService {
 		recursivelySendSummaryData(pcm);
 	}
 
+	/**
+	 * @param pcm
+	 */
 	public void recursivelySendSummaryData(BaseEntity pcm) {
 
 		for (EntityAttribute ea : pcm.getBaseEntityAttributes()) {
