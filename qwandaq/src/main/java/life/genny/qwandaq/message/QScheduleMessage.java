@@ -20,16 +20,13 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.GennyToken;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 @Entity
 @Cacheable
 @Table(name = "schedulemessage")
 @RegisterForReflection
-@QueryExclude
 public class QScheduleMessage extends PanacheEntity {
 
-	private static final Logger log = Logger.getLogger(QScheduleMessage.class);	
+	private static final Logger log = Logger.getLogger(QScheduleMessage.class);
 	private static Jsonb jsonb = JsonbBuilder.create();
 
 	@JsonbTypeAdapter(PanacheLocalDateTimeAdapter.class)
@@ -60,13 +57,15 @@ public class QScheduleMessage extends PanacheEntity {
 	@Column(name = "jsonMessage", columnDefinition = "LONGTEXT")
 	public String jsonMessage;
 
-	public QScheduleMessage() {}
+	public QScheduleMessage() {
+	}
 
 	public QScheduleMessage(String code) {
 		this.code = code;
 	}
 
-	public QScheduleMessage(final String code, final String jsonMessage, final String sourceCode, final String channel, final String cron, final String realm) {
+	public QScheduleMessage(final String code, final String jsonMessage, final String sourceCode, final String channel,
+			final String cron, final String realm) {
 
 		this.code = code;
 		this.cron = cron;
@@ -75,7 +74,8 @@ public class QScheduleMessage extends PanacheEntity {
 		this.sourceCode = sourceCode;
 	}
 
-	public QScheduleMessage(final String code,final String jsonMessage, final String sourceCode, final String channel, final LocalDateTime triggerTime, final String realm) {
+	public QScheduleMessage(final String code, final String jsonMessage, final String sourceCode, final String channel,
+			final LocalDateTime triggerTime, final String realm) {
 
 		this.code = code;
 		this.triggerTime = triggerTime;
@@ -85,60 +85,60 @@ public class QScheduleMessage extends PanacheEntity {
 	}
 
 	/**
-	* Set the realm
-	*
-	* @param realm The realm to set
+	 * Set the realm
+	 *
+	 * @param realm The realm to set
 	 */
 	public void setRealm(String realm) {
 		this.realm = realm;
 	}
 
 	/**
-	* Get the realm
-	*
-	* @return The realm
+	 * Get the realm
+	 *
+	 * @return The realm
 	 */
 	public String getRealm() {
 		return realm;
 	}
 
 	/**
-	* Set the source code
-	*
-	* @param sourceCode The source code to set
+	 * Set the source code
+	 *
+	 * @param sourceCode The source code to set
 	 */
 	public void setSourceCode(String sourceCode) {
 		this.sourceCode = sourceCode;
 	}
 
 	/**
-	* Get the source code of the schedule message
-	*
-	* @return The source code
+	 * Get the source code of the schedule message
+	 *
+	 * @return The source code
 	 */
 	public String getSourceCode() {
 		return sourceCode;
 	}
 
 	/**
-	* Set the targeted channel
-	*
-	* @param channel The channel to set
+	 * Set the targeted channel
+	 *
+	 * @param channel The channel to set
 	 */
 	public void setChannel(String channel) {
 		this.channel = channel;
 	}
 
 	/**
-	* Get the targeted channel
-	*
-	* @return The channel 
+	 * Get the targeted channel
+	 *
+	 * @return The channel
 	 */
 	public String getChannel() {
 		return channel;
 	}
 
-	/** 
+	/**
 	 * Set the code
 	 *
 	 * @param code the code to set
@@ -147,7 +147,7 @@ public class QScheduleMessage extends PanacheEntity {
 		this.code = code;
 	}
 
-	/** 
+	/**
 	 * Get the code
 	 *
 	 * @return The code
@@ -156,7 +156,7 @@ public class QScheduleMessage extends PanacheEntity {
 		return code;
 	}
 
-	/** 
+	/**
 	 * Set the token
 	 *
 	 * @param token the token to set
@@ -165,7 +165,7 @@ public class QScheduleMessage extends PanacheEntity {
 		this.token = token;
 	}
 
-	/** 
+	/**
 	 * Get the token
 	 *
 	 * @return String
@@ -321,7 +321,7 @@ public class QScheduleMessage extends PanacheEntity {
 		/**
 		 * Set the Event Message to send at trigger time
 		 *
-		 * @param code The code of the event message
+		 * @param code       The code of the event message
 		 * @param targetCode The target code of the event message
 		 * @return The builder
 		 */
@@ -378,7 +378,7 @@ public class QScheduleMessage extends PanacheEntity {
 			// handle event message
 			if (this.eventMessage != null) {
 
-				String[] rxList = new String[]{ "SUPERUSER", gennyToken.getUserCode() };
+				String[] rxList = new String[] { "SUPERUSER", gennyToken.getUserCode() };
 				this.eventMessage.setRecipientCodeArray(rxList);
 				this.eventMessage.setToken(this.gennyToken.getToken());
 
@@ -402,8 +402,9 @@ public class QScheduleMessage extends PanacheEntity {
 			}
 
 			// null check the json body
-			if (this.msg.getJsonMessage() == null ) {
-				log.error("No json has been set for shcedule msg. Please check that a valid event or comm has been provided!");
+			if (this.msg.getJsonMessage() == null) {
+				log.error(
+						"No json has been set for shcedule msg. Please check that a valid event or comm has been provided!");
 				return null;
 			}
 
@@ -424,7 +425,7 @@ public class QScheduleMessage extends PanacheEntity {
 		return find("id", id).firstResult();
 	}
 
-	/** 
+	/**
 	 * Find a message using the code.
 	 *
 	 * @param code The code to delete by
@@ -434,7 +435,7 @@ public class QScheduleMessage extends PanacheEntity {
 		return find("code", code).firstResult();
 	}
 
-	/** 
+	/**
 	 * Delete a message using the id.
 	 *
 	 * @param id The id to delete by
@@ -444,7 +445,7 @@ public class QScheduleMessage extends PanacheEntity {
 		return delete("id", id);
 	}
 
-	/** 
+	/**
 	 * Delete a message using the code.
 	 *
 	 * @param code The code to delete by

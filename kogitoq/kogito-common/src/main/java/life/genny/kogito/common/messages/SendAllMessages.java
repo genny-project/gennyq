@@ -1,8 +1,18 @@
 package life.genny.kogito.common.messages;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -36,7 +46,6 @@ public class SendAllMessages extends MessageSendingStrategy {
 
     public static final String SBE_MILESTONE_MESSAGES = "SBE_MILESTONE_MESSAGES";
     public static final String NAME = "Fetch All Messages associated with milestone Code";
-    public static final String PRI_CODE = "PRI_CODE";
     public static final String PRI_MILESTONE = "PRI_MILESTONE";
     public static final String PRI_RECIPIENT_LNK = "PRI_RECIPIENT_LNK";
     public static final String PRI_SENDER_LNK = "PRI_SENDER_LNK";
@@ -64,8 +73,8 @@ public class SendAllMessages extends MessageSendingStrategy {
     @Override
     public void sendMessage() {
         SearchEntity searchEntity = new SearchEntity(SBE_MILESTONE_MESSAGES, NAME)
-                .addFilter(PRI_CODE, SearchEntity.StringFilter.LIKE, "MSG_%")
-                .addFilter(PRI_MILESTONE, SearchEntity.StringFilter.LIKE, "%\"" + milestoneCode.toUpperCase() + "\"%")
+                .add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "MSG_%"))
+                .add(new Filter(PRI_MILESTONE, Operator.LIKE, "%\"" + milestoneCode.toUpperCase() + "\"%"))
                 .setPageStart(0)
                 .setPageSize(100);
 

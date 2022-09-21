@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -204,13 +205,9 @@ public class BaseEntityUtils {
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
-					// Arc.container().requestContext().activate();
 					Arc.container().instance(DatabaseUtils.class);
-					// databaseUtils = new DatabaseUtils();
 					EntityManagerFactory factory = Persistence.createEntityManagerFactory("genny");
 					entityManager = factory.createEntityManager();
-					// entityManager =
-					// Persistence.createEntityManagerFactory("genny").createEntityManager();
 					if (entityManager == null) {
 						log.error("entityManager is null");
 					}
@@ -525,10 +522,10 @@ public class BaseEntityUtils {
 	 * Apply the privacy filter to a BaseEntity.
 	 * 
 	 * @param entity  The be to apply the filter to
-	 * @param allowed The list of allowed attribute codes
+	 * @param allowed The set of allowed attribute codes
 	 * @return The filtered BaseEntity
 	 */
-	public BaseEntity privacyFilter(BaseEntity entity, List<String> allowed) {
+	public BaseEntity privacyFilter(BaseEntity entity, Set<String> allowed) {
 
 		// Filter out unwanted attributes
 		entity.setBaseEntityAttributes(

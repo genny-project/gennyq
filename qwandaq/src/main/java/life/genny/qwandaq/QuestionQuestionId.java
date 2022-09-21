@@ -14,10 +14,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.json.bind.annotation.JsonbTransient;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 @Embeddable
-@QueryExclude
 @RegisterForReflection
 public class QuestionQuestionId implements java.io.Serializable {
 

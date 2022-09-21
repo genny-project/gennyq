@@ -1,7 +1,5 @@
 package life.genny.qwandaq.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -14,6 +12,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
@@ -29,29 +28,25 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
-import life.genny.qwandaq.Link;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.converter.MoneyConverter;
+
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.annotations.Type;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-
-
-
-
-
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.Link;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.converter.MoneyConverter;
 
 @Entity
 @Table(name = "baseentity_baseentity")
-
 @AssociationOverrides({
     @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))
 })
-
 @RegisterForReflection
 public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 
@@ -83,7 +78,6 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 */
 	public Link getLink() {
 		return link;
-
 	}
 
 	/**
@@ -121,19 +115,16 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateAdapter.class)
 	private LocalDate valueDate;
 
 	/**
 	 * Store the LocalTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalTimeAdapter.class)
 	private LocalTime valueTime;
 
 	@Column(name = "money", length = 128)

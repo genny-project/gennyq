@@ -15,26 +15,26 @@ public class EntityAttributeId implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 
-	@ManyToOne ( )
-	//	@JsonBackReference(value="entityAttribute")
-	@JsonManagedReference(value="entityAttribute")
+	@ManyToOne()
+	// @JsonBackReference(value="entityAttribute")
+	@JsonManagedReference(value = "entityAttribute")
 	@JsonIgnoreProperties("baseEntityAttributes")
 	@JsonbTransient
 	public BaseEntity baseEntity;
 
 	@ManyToOne
-	@JsonBackReference(value="attribute")
-	//	@JsonIgnore
+	@JsonBackReference(value = "attribute")
+	// @JsonIgnore
 	public Attribute attribute;
 
-	/** 
+	/**
 	 * @return BaseEntity
 	 */
 	public BaseEntity getBaseEntity() {
 		return baseEntity;
 	}
 
-	/** 
+	/**
 	 * @param baseEntity the baseentity to set
 	 */
 	public void setBaseEntity(final BaseEntity baseEntity) {
@@ -55,10 +55,12 @@ public class EntityAttributeId implements java.io.Serializable {
 		this.attribute = attribute;
 	}
 
-	/** 
+	/**
 	 * @return int
 	 */
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override

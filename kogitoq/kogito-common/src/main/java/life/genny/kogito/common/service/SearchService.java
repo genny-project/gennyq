@@ -1,30 +1,39 @@
 package life.genny.kogito.common.service;
 
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
+
 import java.lang.invoke.MethodHandles;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QSearchMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QCmdMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -32,13 +41,6 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.entity.SearchEntity.StringFilter;
-import life.genny.qwandaq.entity.SearchEntity.Filter;
-import java.time.LocalDateTime;
 
 @ApplicationScoped
 public class SearchService {
@@ -105,7 +107,7 @@ public class SearchService {
 		log.info("Sending Detail View :: " + searchCode);
 
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), searchCode, SearchEntity.class);
-		searchEntity.addFilter("PRI_CODE", SearchEntity.StringFilter.EQUAL, targetCode);
+		searchEntity.add(new Filter("PRI_CODE", Operator.EQUALS, targetCode));
 
 		// perform the search
 		searchUtils.searchTable(searchEntity);
@@ -116,6 +118,28 @@ public class SearchService {
 	 * Perform a Bucket search.
 	 */
 	public void sendBuckets() {
+	}
+
+	/**
+	 * Perform a named search from search bar
+	 * 
+	 * @param searchCode
+	 * @param nameWildcard
+	 */
+	public void sendNameSearch(String searchCode, String nameWildcard) {
+
+		log.info("Sending Name Search :: " + searchCode);
+
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
+				searchCode, SearchEntity.class);
+
+		// TODO: remove this from alyson
+		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
+
+		searchEntity.add(new Filter(PRI_NAME, Operator.LIKE, "%"+nameWildcard+"%"));
+
+		searchUtils.searchTable(searchEntity);
+		// sendSearchPCM("PCM_TABLE", searchCode);
 	}
 
 	/**
@@ -212,7 +236,6 @@ public class SearchService {
 	public void sendMessageBySearchEntity(SearchEntity searchBE) {
 		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
 		searchBeMsg.setToken(userToken.getToken());
-		searchBeMsg.setDestination(GennyConstants.EVENT_WEBCMDS);
 		KafkaUtils.writeMsg(KafkaTopic.SEARCH_EVENTS, searchBeMsg);
 	}
 
@@ -265,12 +288,12 @@ public class SearchService {
 			}
 
 			if (!attrName.isBlank()) { //searching text
-				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+				searchBE.add(new Filter(code, Operator.LIKE, value));
 			}
 
 		}else if(ops.equals(SearchOptions.PAGINATION) || ops.equals(SearchOptions.PAGINATION_BUCKET)) { //pagination
 			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(GennyConstants.PAGINATION_INDEX);
-			Integer pageSize = searchBE.getPageSize(0);
+			Integer pageSize = searchBE.getPageSize();
 			Integer indexVal = 0;
 			Integer pagePos = 0;
 
@@ -321,7 +344,7 @@ public class SearchService {
 			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
 
 			if (!name.isBlank()) { //searching text
-				searchBE.addFilter(code, SearchEntity.StringFilter.LIKE, value);
+				searchBE.add(new Filter(code, Operator.LIKE, value));
 			}
 
 			CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
@@ -438,15 +461,15 @@ public class SearchService {
 	 * @param value  Value String
 	 * @param cleanSbeCode Search base entity code without JTI
 	 */
-	public void handleFilterByString(String que,String attrCode, StringFilter oper,String value, String cleanSbeCode) {
+	public void handleFilterByString(String que, String attrCode, Operator oper ,String value, String cleanSbeCode) {
 		String sbeCodeJti = searchUtils.getSearchBaseEntityCodeByJTI(cleanSbeCode);
 
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCodeJti, SearchEntity.class);
 
-		if (oper.equals(SearchEntity.StringFilter.LIKE)) {
+		if (oper.equals(Operator.LIKE)) {
 			value = "%" + value + "%";
 		}
-		searchBE.addFilter(attrCode, oper, value);
+		searchBE.add(new Filter(attrCode, oper, value));
 
 		CacheUtils.putObject(userToken.getRealm(), sbeCodeJti, searchBE);
 
@@ -462,10 +485,10 @@ public class SearchService {
 	 * @param value Filter value
 	 * @param targetCode Event target code
 	 */
-	public void handleFilterByDateTime(String que,String attrCode, Filter oper,LocalDateTime value, String targetCode) {
+	public void handleFilterByDateTime(String que, String attrCode, Operator oper, LocalDateTime value, String targetCode) {
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
 
-		searchBE.addFilter(attrCode, oper, value);
+		searchBE.add(new Filter(attrCode, oper, value));
 
 		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
 
@@ -478,7 +501,7 @@ public class SearchService {
 	 * @param queGroup Question group
 	 * @param queCode Question code
 	 */
-	public void sendBucketFilter(String queGroup,String queCode,String attCode, String targetCode) {
+	public void sendBucketFilter(String queGroup,String queCode, String attCode, String targetCode) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
 		Question question = new Question();

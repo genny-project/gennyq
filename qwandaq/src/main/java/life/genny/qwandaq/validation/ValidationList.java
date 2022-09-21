@@ -32,11 +32,9 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.querydsl.core.annotations.QueryExclude;
-
-
 /**
- * ValidationList represents a set of Validations the Qwanda library. The validations in the list
+ * ValidationList represents a set of Validations the Qwanda library. The
+ * validations in the list
  * can be applied to a passed value.
  * <ul>
  * <li>List of Validation
@@ -47,56 +45,47 @@ import com.querydsl.core.annotations.QueryExclude;
  * @version %I%, %G%
  * @since 1.0
  */
-
-
 @XmlRootElement
-@QueryExclude
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Embeddable
 public class ValidationList implements Serializable {
 
-  private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-  /**
-   * A fieldlist that stores the validations for this object.
-   */
-  @JsonIgnore
-  @XmlTransient
-  @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  @JoinColumn(name = "dtype_id", referencedColumnName = "id")
-  private List<Validation> validationList = new CopyOnWriteArrayList<Validation>();
+	/**
+	 * A fieldlist that stores the validations for this object.
+	 */
+	@JsonIgnore
+	@XmlTransient
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "dtype_id", referencedColumnName = "id")
+	private List<Validation> validationList = new CopyOnWriteArrayList<Validation>();
 
-  public ValidationList() {
+	public ValidationList() {
 
-  }
+	}
 
-  /**
-   * Constructor.
-   *
-   * @param validations the list of validations to set
-   */
-  public ValidationList(final List<Validation> validations) {
-    this.validationList = validations;
-  }
+	/**
+	 * Constructor.
+	 *
+	 * @param validations the list of validations to set
+	 */
+	public ValidationList(final List<Validation> validations) {
+		this.validationList = validations;
+	}
 
+	/**
+	 * @return the validationList
+	 */
+	public List<Validation> getValidationList() {
+		return validationList;
+	}
 
-
-  /**
-   * @return the validationList
-   */
-  public List<Validation> getValidationList() {
-    return validationList;
-  }
-
-
-
-  /**
-   * @param validationList the validationList to set
-   */
-  public void setValidationList(final List<Validation> validationList) {
-    this.validationList = validationList;
-  }
-
-
+	/**
+	 * @param validationList the validationList to set
+	 */
+	public void setValidationList(final List<Validation> validationList) {
+		this.validationList = validationList;
+	}
 
 }

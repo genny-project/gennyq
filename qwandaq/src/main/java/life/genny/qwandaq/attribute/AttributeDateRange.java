@@ -18,7 +18,6 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
 import javax.persistence.DiscriminatorValue;
@@ -31,8 +30,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import life.genny.qwandaq.datatype.DataType;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 /**
  * AttributeDate class handles LocalDate based attributes.
  * This information adds:
@@ -40,23 +37,20 @@ import com.querydsl.core.annotations.QueryExclude;
  * <li>The AnswerTypeDate is the Type for the Attribute class
  * </ul>
  * <p>
- * AttributeDate represent the major way of specifying the Date data type about a target
+ * AttributeDate represent the major way of specifying the Date data type about
+ * a target
  * from sources.
  * </p>
  * 
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("date_range")
 public class AttributeDateRange extends Attribute {
@@ -66,22 +60,19 @@ public class AttributeDateRange extends Attribute {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
-	public AttributeDateRange()
-	{
+	public AttributeDateRange() {
 		super();
 		// dummy for hibernate
 	}
-	
+
 	/**
 	 * Constructor.
 	 * 
 	 * @param aCode The unique code for this Question
 	 * @param aName The human readable summary name
 	 */
-	public AttributeDateRange(String aCode, String aName)
-	{
+	public AttributeDateRange(String aCode, String aName) {
 		super(aCode, aName, new DataType("range.LocalDate"));
 	}
-	
+
 }

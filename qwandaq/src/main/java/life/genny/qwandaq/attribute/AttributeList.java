@@ -36,45 +36,41 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 /**
  * AttributeList represents a set of Attributes in the Qwanda library.
  * The attributes in the list can be applied to a passed value.
  * <ul>
- * <li>List of Attribute 
+ * <li>List of Attribute
  * </ul>
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Embeddable
-@QueryExclude
 public class AttributeList implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 *A fieldlist that stores the attributes for this object.
+	 * A fieldlist that stores the attributes for this object.
 	 */
 	@JsonIgnore
 	@XmlTransient
-	@ManyToMany( cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	@JoinColumn(name = "base_id", referencedColumnName = "id")
 	private List<Attribute> attributeList = new CopyOnWriteArrayList<Attribute>();
 
 	/**
-	* Constructor
-	*
-	* @param attributes the attributes to set
+	 * Constructor
+	 *
+	 * @param attributes the attributes to set
 	 */
-	public AttributeList(List<Attribute> attributes) 
-	{
+	public AttributeList(List<Attribute> attributes) {
 		this.attributeList = attributes;
 	}
 

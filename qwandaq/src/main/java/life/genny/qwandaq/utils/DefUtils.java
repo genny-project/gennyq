@@ -21,6 +21,10 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.trait.Ord;
+import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
@@ -76,15 +80,18 @@ public class DefUtils {
 	@Deprecated
 	public void initializeDefPrefixs(String productCode) {
 
-		SearchEntity searchBE = new SearchEntity("SBE_DEF", "DEF check")
-				.addSort("PRI_NAME", "Created", SearchEntity.Sort.ASC)
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "DEF_%")
+		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
+				.add(new Sort("PRI_NAME", Ord.ASC))
+				.add(new Filter("PRI_CODE", Operator.LIKE, "DEF_%"))
 				.setPageStart(0)
 				.setPageSize(10000);
 
-		searchBE.setRealm(productCode);
+		log.info("########  PRODUCT CODE ===== " + productCode);
+		searchEntity.setRealm(productCode);
 
-		List<String> codes = searchUtils.searchBaseEntityCodes(searchBE);
+		log.info(jsonb.toJson(searchEntity));
+
+		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
 
 		if (codes == null) {
 			log.error("Could not fetch DEF codes!");

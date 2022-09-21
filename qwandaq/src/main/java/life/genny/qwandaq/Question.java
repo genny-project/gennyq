@@ -40,8 +40,6 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
  * library. A Question object is used as a means of requesting information from
@@ -75,7 +73,6 @@ import com.querydsl.core.annotations.QueryExclude;
 		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { "code",
 				"realm" }))
 @Entity
-@QueryExclude
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -429,10 +426,12 @@ public class Question extends CodedEntity {
 	 * @param childQuestions the childQuestions to set
 	 */
 	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
-		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);;
+		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
+		;
 	}
 
 	/**
+	 * 
 	 * addChildQuestion This adds an child Question with default weight of 0.0 to
 	 * the question. It auto creates the QuestionQuestion object. For efficiency we
 	 * assume the child question link does not exist
