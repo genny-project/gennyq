@@ -11,7 +11,6 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.And;
@@ -621,7 +620,7 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity addFilterableColumn(final String attributeCode, final String fName) {
 
 		// TODO: redesign filters
-		AttributeText attributeFLC = new AttributeText("FLC_" + attributeCode, fName);
+		Attribute attributeFLC = new Attribute("FLC_" + attributeCode, fName, new DataType(String.class));
 		addAttribute(attributeFLC, flcIndex);
 		flcIndex += 1.0;
 

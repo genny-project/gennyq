@@ -81,7 +81,7 @@ public class Attribute extends CodedEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String DEFAULT_CODE_PREFIX = "PRI_";
+	public static final String DEFAULT_CODE_PREFIX = "PRI_";
 
 	// core
 	public static final String PRI_NAME = "PRI_NAME";
@@ -89,6 +89,7 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_UUID = "PRI_UUID";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+	public static final String PRI_EVENT = "LNK_AUTHOR";
 
 	// definition
 	public static final String LNK_DEF = "LNK_DEF";
@@ -145,15 +146,6 @@ public class Attribute extends CodedEntity {
 	 */
 	public void setDataType(DataType dataType) {
 		this.dataType = dataType;
-	}
-
-	/**
-	 * getDefaultCodePrefix This method is overrides the Base class
-	 * 
-	 * @return the default Code prefix for this class.
-	 */
-	static public String getDefaultCodePrefix() {
-		return DEFAULT_CODE_PREFIX;
 	}
 
 	/**

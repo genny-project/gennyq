@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -19,11 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
-
 import life.genny.qwandaq.datatype.CapabilityMode;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -114,7 +110,7 @@ public class CapabilityUtils {
 		Attribute attribute = qwandaUtils.getAttribute(cleanCapabilityCode);
 
 		if (attribute == null) {
-			attribute = new AttributeText(cleanCapabilityCode, name);
+			attribute = new Attribute(cleanCapabilityCode, name, new DataType(String.class));
 			qwandaUtils.saveAttribute(attribute);
 		}
 

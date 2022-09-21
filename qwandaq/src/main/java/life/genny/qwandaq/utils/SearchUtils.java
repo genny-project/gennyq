@@ -818,7 +818,7 @@ public class SearchUtils {
 		int index = 0;
 		for (Map.Entry<String, Map<String, String>> filterParams : listFilParams.entrySet()) {
 			Ask childAsk = new Ask();
-			childAsk.setAttributeCode(GennyConstants.PRI_EVENT);
+			childAsk.setAttributeCode(Attribute.PRI_EVENT);
 
 			String html = getHtmlByFilterParam(filterParams.getValue());
 
@@ -861,7 +861,7 @@ public class SearchUtils {
 	 */
 	public String getHtmlByFilterParam(Map<String, String> filterParams) {
 		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE)
-				.replaceFirst(GennyConstants.PRI_PREFIX, "");
+				.replaceFirst(Attribute.DEFAULT_CODE_PREFIX, "");
 
 		String attrName = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_OPTION);
 		String value = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_VALUE);

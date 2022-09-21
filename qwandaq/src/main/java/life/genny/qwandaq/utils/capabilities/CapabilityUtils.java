@@ -21,10 +21,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 
 import life.genny.qwandaq.datatype.CapabilityMode;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -158,7 +158,7 @@ public class CapabilityUtils {
 
 		if (attribute == null) {
 			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
-			attribute = new AttributeText(cleanCapabilityCode, name);
+			attribute = new Attribute(cleanCapabilityCode, name, new DataType(String.class));
 			qwandaUtils.saveAttribute(productCode, attribute);
 		}
 

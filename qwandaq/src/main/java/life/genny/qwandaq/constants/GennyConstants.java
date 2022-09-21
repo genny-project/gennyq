@@ -9,11 +9,6 @@ public final class GennyConstants {
 
     public static final String PAGINATION_NEXT="QUE_TABLE_NEXT_BTN";
     public static final String PAGINATION_PREV="QUE_TABLE_PREVIOUS_BTN";
-    public static final String PAGINATION_INDEX="PRI_INDEX";
-    public static final String SEARCH_TEXT="PRI_SEARCH_TEXT";
-    public static final String PRI_NAME="PRI_NAME";
-    public static final String PRI_CODE="PRI_CODE";
-    public static final String  PRI_PREFIX = "PRI_";
     public static final String PCM_TABLE = "PCM_TABLE";
     public static final String PCM_PROCESS = "PCM_PROCESS";
     public static final String BUCKET_CODES = "BUCKET_CODES";
@@ -34,7 +29,6 @@ public final class GennyConstants {
 
 	public static final String LNK_ROLE_CODE = "LNK_ROLE";
 	public static final String DEF_ROLE_CODE = "DEF_ROLE";
-
 	
 	// =====================================================================================================
 
@@ -117,7 +111,6 @@ public final class GennyConstants {
 	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
 
 	// event
-	public static final String PRI_EVENT = "PRI_EVENT";
 	public static final String CODE = "code";
 	public static final String TARGETCODE = "targetCode";
 	public static final String TARGETCODES = "targetCodes";

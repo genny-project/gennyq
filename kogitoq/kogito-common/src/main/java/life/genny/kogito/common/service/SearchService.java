@@ -292,7 +292,7 @@ public class SearchService {
 			}
 
 		}else if(ops.equals(SearchOptions.PAGINATION) || ops.equals(SearchOptions.PAGINATION_BUCKET)) { //pagination
-			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(GennyConstants.PAGINATION_INDEX);
+			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(Attribute.PRI_INDEX);
 			Integer pageSize = searchBE.getPageSize();
 			Integer indexVal = 0;
 			Integer pagePos = 0;
