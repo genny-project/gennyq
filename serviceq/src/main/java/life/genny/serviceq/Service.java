@@ -122,7 +122,7 @@ public class Service {
 	 * Fetch the Product Codes from the PRODUCT_CODES. If PRODUCT_CODES are unset use PROJECT_REALM
 	 * @return
 	 */
-	private String[] getProductCodes() {
+	public String[] getProductCodes() {
 
 		String projectRealm = CommonUtils.getSystemEnv("PROJECT_REALM", false);
 		String allowedProducts = CommonUtils.getSystemEnv("PRODUCT_CODES");

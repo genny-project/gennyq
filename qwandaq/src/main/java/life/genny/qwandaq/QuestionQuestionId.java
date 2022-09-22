@@ -1,19 +1,20 @@
 package life.genny.qwandaq;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.querydsl.core.annotations.QueryExclude;
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.json.bind.annotation.JsonbTransient;
+
 @Embeddable
-@QueryExclude
 @RegisterForReflection
 public class QuestionQuestionId implements java.io.Serializable {
 

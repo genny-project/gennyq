@@ -71,7 +71,6 @@ import java.util.Date;
 		@Index(columnList = "realm", name = "code_idx")
 })
 @Entity
-@QueryExclude
 @Immutable
 @RegisterForReflection
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)

@@ -18,11 +18,9 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
-import com.querydsl.core.annotations.QueryExclude;
-import life.genny.qwandaq.datatype.DataType;
+import java.io.Serializable;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -32,6 +30,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import life.genny.qwandaq.datatype.DataType;
+
 /**
  * AttributeInteger class handles LocalInteger based attributes.
  * This information adds:
@@ -39,46 +39,43 @@ import javax.xml.bind.annotation.XmlRootElement;
  * <li>The AnswerTypeInteger is the Type for the Attribute class
  * </ul>
  * <p>
- * AttributeInteger represent the major way of specifying the Integer data type about a target
+ * AttributeInteger represent the major way of specifying the Integer data type
+ * about a target
  * from sources.
  * </p>
- *
+ * 
+ * 
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
  * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("integer")
-public class AttributeInteger extends Attribute implements Serializable {
+public class AttributeInteger extends Attribute {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    /**
-     * Constructor.
-     */
-    @SuppressWarnings("unused")
-    public AttributeInteger() {
-        super();
-        // dummy for hibernate
-    }
+	/**
+	 * Constructor.
+	 */
+	public AttributeInteger() {
+		super();
+		// dummy for hibernate
+	}
 
-    /**
-     * Constructor.
-     *
-     * @param aCode The unique code for this Question
-     * @param aName The human readable summary name
-     */
-    public AttributeInteger(String aCode, String aName) {
-        super(aCode, aName, new DataType(Integer.class));
+	/**
+	 * Constructor.
+	 * 
+	 * @param aCode The unique code for this Question
+	 * @param aName The human readable summary name
+	 */
+	public AttributeInteger(String aCode, String aName) {
+		super(aCode, aName, new DataType(Integer.class));
 
-    }
+	}
 
 }

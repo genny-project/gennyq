@@ -1,5 +1,28 @@
 package life.genny.qwandaq.utils;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
+import javax.persistence.Persistence;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
@@ -11,26 +34,6 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 
 /**
@@ -202,13 +205,9 @@ public class BaseEntityUtils {
 			try {
 				if (databaseUtils == null) {
 					log.error("databaseUtils is null");
-					// Arc.container().requestContext().activate();
 					Arc.container().instance(DatabaseUtils.class);
-					// databaseUtils = new DatabaseUtils();
 					EntityManagerFactory factory = Persistence.createEntityManagerFactory("genny");
 					entityManager = factory.createEntityManager();
-					// entityManager =
-					// Persistence.createEntityManagerFactory("genny").createEntityManager();
 					if (entityManager == null) {
 						log.error("entityManager is null");
 					}
@@ -516,10 +515,10 @@ public class BaseEntityUtils {
 	 * Apply the privacy filter to a BaseEntity.
 	 * 
 	 * @param entity  The be to apply the filter to
-	 * @param allowed The list of allowed attribute codes
+	 * @param allowed The set of allowed attribute codes
 	 * @return The filtered BaseEntity
 	 */
-	public BaseEntity privacyFilter(BaseEntity entity, List<String> allowed) {
+	public BaseEntity privacyFilter(BaseEntity entity, Set<String> allowed) {
 
 		// Filter out unwanted attributes
 		entity.setBaseEntityAttributes(

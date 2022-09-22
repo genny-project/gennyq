@@ -403,6 +403,35 @@ public class KogitoUtils {
 		throw new GraphQLException("All intances are complete");
 	}
 
+	public String getOutstandingTasks() throws GraphQLException {
+
+		// TODO: allow this to check for internal gadaq processQuestions too
+		// we store the summary code in the persons lifecycle
+		JsonArray array = gqlUtils.queryTable("ReceiveQuestionRequest", "sourceCode", userToken.getUserCode(), "id");
+		if (array == null || array.isEmpty())
+			throw new GraphQLException("No ReceiveQuestionRequest items found");
+
+		// grab ProcessInstances with the parentId equal to this calling id
+		String callProcessId = array.getJsonObject(0).getString("id");
+		array = gqlUtils.queryTable("ProcessInstances", "parentProcessInstanceId", callProcessId, "id", "variables");
+		if (array == null || array.isEmpty())
+			throw new GraphQLException("No ProcessInstances items found");
+
+		// iterate processInstance tokens
+		for (JsonValue value : array) {
+
+			JsonObject object = value.asJsonObject();
+			JsonObject variables = jsonb.fromJson(object.getString("variables"), JsonObject.class);
+			String status = variables.getString("status");
+
+			// return first active instance id
+			if (status.equals("ACTIVE"))
+				return object.getString("id");
+		}
+
+		throw new GraphQLException("All intances are complete");
+	}
+
 	/**
 	 * Initialise bucket data by rule
 	 */

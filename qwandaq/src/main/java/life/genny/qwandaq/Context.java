@@ -20,18 +20,29 @@
 
 package life.genny.qwandaq;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.querydsl.core.annotations.QueryExclude;
-import life.genny.qwandaq.entity.BaseEntity;
-import org.apache.commons.lang3.builder.CompareToBuilder;
+import java.io.Serializable;
 
-import javax.persistence.*;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Index;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.CompareToBuilder;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import life.genny.qwandaq.entity.BaseEntity;
 
 /**
  * Context is the class for all entity contexts managed in the Qwanda library. A
@@ -59,14 +70,11 @@ import java.io.Serializable;
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "context", 
-indexes = {
-        @Index(columnList = "id", name =  "code_idx"),
-        @Index(columnList = "realm", name = "code_idx")
-    },
-uniqueConstraints = @UniqueConstraint(columnNames = {"id", "realm"}))
+@Table(name = "context", indexes = {
+		@Index(columnList = "id", name = "code_idx"),
+		@Index(columnList = "realm", name = "code_idx")
+}, uniqueConstraints = @UniqueConstraint(columnNames = { "id", "realm" }))
 @Entity
-@QueryExclude
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
 
@@ -87,11 +95,10 @@ public class Context extends CoreEntity implements Serializable {
 	private String contextCode;
 
 	private String dataType;
-	
+
 	private String dttCode;
 
 	private VisualControlType visualControlType;
-
 
 	/**
 	 * @return the visualControlType
@@ -122,6 +129,7 @@ public class Context extends CoreEntity implements Serializable {
 	public Context(ContextType key, BaseEntity aEntity, VisualControlType visualControlType) {
 		this(key, aEntity, visualControlType, 1.0);
 	}
+
 	public Context(ContextType key, BaseEntity aEntity, VisualControlType visualControlType, Double weight) {
 		super(key.contextType());
 		this.entity = aEntity;
@@ -129,7 +137,7 @@ public class Context extends CoreEntity implements Serializable {
 		this.visualControlType = visualControlType;
 		this.weight = weight;
 	}
-	
+
 	public Context(ContextType key, String entityCode) {
 		this(key, entityCode, VisualControlType.VCL_DEFAULT);
 	}
@@ -137,7 +145,7 @@ public class Context extends CoreEntity implements Serializable {
 	public Context(ContextType key, String entityCode, VisualControlType visualControlType) {
 		this(key, entityCode, visualControlType, 1.0);
 	}
-	
+
 	public Context(ContextType key, String entityCode, VisualControlType visualControlType, Double weight) {
 		super(key.contextType());
 		this.entity = null;
@@ -145,7 +153,9 @@ public class Context extends CoreEntity implements Serializable {
 		this.visualControlType = visualControlType;
 		this.weight = weight;
 	}
-	public Context(ContextType key, String entityCode, VisualControlType visualControlType, Double weight, String dttCode) {
+
+	public Context(ContextType key, String entityCode, VisualControlType visualControlType, Double weight,
+			String dttCode) {
 		super(key.contextType());
 		this.entity = null;
 		this.contextCode = entityCode;
@@ -153,7 +163,6 @@ public class Context extends CoreEntity implements Serializable {
 		this.weight = weight;
 		this.dttCode = dttCode;
 	}
-	
 
 	/**
 	 * @return the entity
@@ -179,12 +188,12 @@ public class Context extends CoreEntity implements Serializable {
 
 	/**
 	 * @param weight
-	 *            the weight to set
+	 *               the weight to set
 	 */
 	public void setWeight(final Double weight) {
 		this.weight = weight;
 	}
-	
+
 	/**
 	 * @return the contextCode
 	 */
@@ -193,9 +202,9 @@ public class Context extends CoreEntity implements Serializable {
 	}
 
 	/**
-	* set the contextCode.
-	*
-	* @param contextCode The context code to set
+	 * set the contextCode.
+	 *
+	 * @param contextCode The context code to set
 	 */
 	public void setContextCode(String contextCode) {
 		this.contextCode = contextCode;
@@ -214,7 +223,7 @@ public class Context extends CoreEntity implements Serializable {
 	public void setDataType(String dataType) {
 		this.dataType = dataType;
 	}
-	
+
 	/**
 	 * @return the dttCode
 	 */
@@ -229,23 +238,21 @@ public class Context extends CoreEntity implements Serializable {
 		this.dttCode = dttCode;
 	}
 
-	
-	/** 
+	/**
 	 * Compare to an object
 	 *
 	 * @param o the object to compare with
 	 * @return int
 	 */
 	@Override
-	 public int compareTo(Object o) {
-		 Context myClass = (Context) o;
-	     return new CompareToBuilder()
-	       .append(entity,myClass.getEntity())
-	       .toComparison();
-	   }
+	public int compareTo(Object o) {
+		Context myClass = (Context) o;
+		return new CompareToBuilder()
+				.append(entity, myClass.getEntity())
+				.toComparison();
+	}
 
-	
-	/** 
+	/**
 	 * @return String
 	 */
 	@Override
@@ -253,8 +260,5 @@ public class Context extends CoreEntity implements Serializable {
 		return "Context [entity=" + entity + ", weight=" + weight + ", contextCode=" + contextCode + ", dataType="
 				+ dataType + ", visualControlType=" + visualControlType + "]";
 	}
-
-	
-
 
 }

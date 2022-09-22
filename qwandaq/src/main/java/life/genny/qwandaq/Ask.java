@@ -61,20 +61,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "ask", 
-	indexes = { 
+@Table(name = "ask", indexes = {
 		@Index(columnList = "id", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx") 
-	}, 
-	uniqueConstraints = @UniqueConstraint(
-		columnNames = { 
-			"id",
-			"realm" 
-		}
-	)
-)
+		@Index(columnList = "realm", name = "code_idx")
+}, uniqueConstraints = @UniqueConstraint(columnNames = {
+		"id",
+		"realm"
+}))
 @Entity
-@QueryExclude
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Ask extends CoreEntity {
@@ -629,9 +623,9 @@ public class Ask extends CoreEntity {
 	}
 
 	/**
-	* Add a child to childAsks
-	*
-	* @param child The child ask to add
+	 * Add a child to childAsks
+	 *
+	 * @param child The child ask to add
 	 */
 	public void addChildAsk(Ask child) {
 

@@ -16,6 +16,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.graphql.ProcessData;
 
 /*
@@ -41,8 +42,7 @@ public class GraphQLUtils {
 	 * @param value The value the field must equal
 	 * @return The process id
 	 */
-	public String fetchProcessId(String table, String field, String value) {
-
+	public String fetchProcessId(String table, String field, String value) throws GraphQLException {
 		return fetchProcessId(table, Map.of(field, value));
 	}
 
@@ -53,7 +53,7 @@ public class GraphQLUtils {
 	 * @param queryMap A map of key-value pairs used in the query
 	 * @return The process id
 	 */
-	public String fetchProcessId(String table, Map<String, String> queryMap) {
+	public String fetchProcessId(String table, Map<String, String> queryMap) throws GraphQLException {
 
 		JsonArray array = queryTable(table, queryMap, "id");
 
@@ -78,7 +78,7 @@ public class GraphQLUtils {
 	 * @param returns The fields to return
 	 * @return A JsonArray of process instance variable objects
 	 */
-	public JsonArray queryTable(String table, String field, String value, String... returns) {
+	public JsonArray queryTable(String table, String field, String value, String... returns) throws GraphQLException {
 
 		return queryTable(table, Map.of(field, value), returns);
 	}
@@ -91,7 +91,7 @@ public class GraphQLUtils {
 	 * @param returns  The fields to return
 	 * @return A JsonArray of process instance variable objects
 	 */
-	public JsonArray queryTable(String table, Map<String, String> queryMap, String... returns) {
+	public JsonArray queryTable(String table, Map<String, String> queryMap, String... returns) throws GraphQLException {
 
 		String body = performGraphQLQuery(table, queryMap, returns);
 		log.debug("GraphQL Response Body: " + body);
@@ -126,7 +126,7 @@ public class GraphQLUtils {
 	 * @param returns  The fields to return
 	 * @return The response body
 	 */
-	public String performGraphQLQuery(String table, Map<String, String> queryMap, String... returns) {
+	public String performGraphQLQuery(String table, Map<String, String> queryMap, String... returns) throws GraphQLException {
 
 		// setup fields to query on
 		String queryFields = queryMap.entrySet().stream()
@@ -142,6 +142,9 @@ public class GraphQLUtils {
 		String uri = GennySettings.dataIndexUrl() + "/graphql";
 		HttpResponse<String> response = HttpUtils.post(uri, query, "application/GraphQL", userToken);
 
+		if (response == null)
+			throw new GraphQLException("Bad response from graphql");
+
 		return response.body();
 	}
 
@@ -152,7 +155,7 @@ public class GraphQLUtils {
 	 * @param processId The processId to check
 	 * @return The associated TargetCode
 	 */
-	public String fetchProcessInstanceTargetCode(String processId) {
+	public String fetchProcessInstanceTargetCode(String processId) throws GraphQLException {
 
 		log.info("Fetching targetCode for processId : " + processId);
 
@@ -179,7 +182,7 @@ public class GraphQLUtils {
 	 * @param processId The id of the process to fetch for
 	 * @return The process data
 	 */
-	public ProcessData fetchProcessData(String processId) {
+	public ProcessData fetchProcessData(String processId) throws GraphQLException {
 
 		log.info("Fetching processBE for processId : " + processId);
 		String key = String.format("%s:PROCESS_DATA", processId);

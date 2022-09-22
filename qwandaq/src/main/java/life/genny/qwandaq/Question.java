@@ -18,13 +18,11 @@ package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.querydsl.core.annotations.QueryExclude;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
-import org.jboss.logging.Logger;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.*;
@@ -33,9 +31,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+import com.querydsl.core.annotations.QueryExclude;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -55,8 +60,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * sources. Each question is associated with an attribute which represents a
  * distinct fact about a target.
  * </p>
- *
- *
+ * 
+ * 
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -70,7 +75,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { "code",
 				"realm" }))
 @Entity
-@QueryExclude
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

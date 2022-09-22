@@ -100,7 +100,6 @@ public class Attribute extends CodedEntity {
     /**
      * Constructor.
      */
-    @SuppressWarnings("unused")
     public Attribute() {
         // super();
         // dummy for hibernate
@@ -242,45 +241,46 @@ public class Attribute extends CodedEntity {
         return this.icon;
     }
 
+	/**
+	 * Deep-compare two attributes
+	 *
+	 * @param other attribute to compare against
+	 * @return true if all fields are the same. False if one is different
+	 */
+	public boolean equals(Attribute other) {
+		return equals(other, false);
+	}
 
-    /**
-     * Deep-compare two attributes
-     *
-     * @param other attribute to compare against
-     * @return true if all fields are the same. False if one is different
-     */
-    public boolean equals(Attribute other) {
-        return equals(other, false);
-    }
+	/**
+	 * Deep-compare two attributes
+	 *
+	 * @param other   attribute to compare against
+	 * @param checkId whether to check the id or not (database equality) (default:
+	 *                false)
+	 * @return true if all fields are the same. False if one is different
+	 */
+	public boolean equals(Attribute other, boolean checkId) {
+		boolean sameDesc = CommonUtils.compare(description, other.description);
+		if (!sameDesc)
+			return false;
 
-    /**
-     * Deep-compare two attributes
-     *
-     * @param other   attribute to compare against
-     * @param checkId whether to check the id or not (database equality) (default: false)
-     * @return true if all fields are the same. False if one is different
-     */
-    public boolean equals(Attribute other, boolean checkId) {
-        boolean sameDesc = CommonUtils.compare(description, other.description);
-        if (!sameDesc) return false;
+		boolean samePrivacy = (defaultPrivacyFlag == other.defaultPrivacyFlag);
+		if(!samePrivacy) return false;
 
-        boolean samePrivacy = (defaultPrivacyFlag == other.defaultPrivacyFlag);
-        if (!samePrivacy) return false;
+		boolean sameDTT = CommonUtils.compare(dataType, other.dataType);
+		if(!sameDTT) return false;
 
-        boolean sameDTT = CommonUtils.compare(dataType, other.dataType);
-        if (!sameDTT) return false;
+		boolean sameHelp = CommonUtils.compare(help, other.help);
+		if(!sameHelp) return false;
 
-        boolean sameHelp = CommonUtils.compare(help, other.help);
-        if (!sameHelp) return false;
+		boolean samePlaceholder = CommonUtils.compare(placeholder, other.placeholder);
+		if(!samePlaceholder) return false;
 
-        boolean samePlaceholder = CommonUtils.compare(placeholder, other.placeholder);
-        if (!samePlaceholder) return false;
+		boolean sameDefault = CommonUtils.compare(defaultValue, other.defaultValue);
+		if(!sameDefault) return false;
 
-        boolean sameDefault = CommonUtils.compare(defaultValue, other.defaultValue);
-        if (!sameDefault) return false;
-
-        boolean sameIcon = CommonUtils.compare(icon, other.icon);
-        if (!sameIcon) return false;
+		boolean sameIcon = CommonUtils.compare(icon, other.icon);
+		if(!sameIcon) return false;
 
         // Check the id if necessary
         return !checkId || (Objects.equals(other.getId(), getId()));

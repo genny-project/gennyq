@@ -1,5 +1,27 @@
 package life.genny.qwandaq.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
@@ -8,6 +30,8 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -18,20 +42,6 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -72,7 +82,7 @@ public class QwandaUtils {
 	public Attribute saveAttribute(final Attribute attribute) {
 		return saveAttribute(userToken.getProductCode(), attribute);
 	}
-
+	
 	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
@@ -125,7 +135,6 @@ public class QwandaUtils {
 		}
 
 		return attribute;
-
 	}
 
 	/**
@@ -792,14 +801,14 @@ public class QwandaUtils {
 				continue;
 
 			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
+					.add(new Filter("PRI_CODE", Operator.LIKE, prefix + "_%"))
 					.setPageStart(0)
 					.setPageSize(1);
 
 			// ensure we are not counting any of our targets
 			for (BaseEntity target : targets) {
 				log.info("adding not equal " + target.getCode());
-				searchEntity.addAnd("PRI_CODE", SearchEntity.StringFilter.NOT_EQUAL, target.getCode());
+				searchEntity.add(new Filter("PRI_CODE", Operator.NOT_EQUALS, target.getCode()));
 			}
 
 			for (String code : codes) {
@@ -835,7 +844,7 @@ public class QwandaUtils {
 					value = beUtils.cleanUpAttributeValue(value);
 
 				log.info("Adding unique filter: " + code + " like " + value);
-				searchEntity.addFilter(code, SearchEntity.StringFilter.LIKE, "%" + value + "%");
+				searchEntity.add(new Filter(code, Operator.LIKE, "%" + value + "%"));
 			}
 
 			// set realm and count results
@@ -872,7 +881,7 @@ public class QwandaUtils {
 
 		// send to commands topic
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
-		log.info("Sent error message to frontend : " + json);
+		log.info("Sent error message to frontend : " + json.toString());
 	}
 
 

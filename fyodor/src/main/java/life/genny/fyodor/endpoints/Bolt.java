@@ -295,9 +295,9 @@ public class Bolt {
 		}
 
 		// handle special cases
-		if (attributeCode.equals("PRI_CODE")) {
+		if (attributeCode.equals(Attribute.PRI_CODE)) {
 			target.setCode((String) value);
-		} else if (attributeCode.equals("PRI_NAME")) {
+		} else if (attributeCode.equals(Attribute.PRI_NAME)) {
 			target.setName((String) value);
 		}
 

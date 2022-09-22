@@ -18,11 +18,9 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
-import com.querydsl.core.annotations.QueryExclude;
-import life.genny.qwandaq.datatype.DataType;
+import java.time.LocalTime;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -31,8 +29,8 @@ import javax.persistence.InheritanceType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
-import java.time.LocalTime;
+
+import life.genny.qwandaq.datatype.DataType;
 
 /**
  * AttributeTime class handles LocalTime based attributes.
@@ -41,47 +39,43 @@ import java.time.LocalTime;
  * <li>The AnswerTypeTime is the Type for the Attribute class
  * </ul>
  * <p>
- * AttributeTime represent the major way of specifying the Time data type about a target
+ * AttributeTime represent the major way of specifying the Time data type about
+ * a target
  * from sources.
- * <p>
- *
+ * </p>
+ * 
+ * 
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
  * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("time")
-public class AttributeTime extends Attribute implements Serializable {
+public class AttributeTime extends Attribute {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    /**
-     * Constructor.
-     */
-    @SuppressWarnings("unused")
-    public AttributeTime() {
-        super();
-        // dummy for hibernate
-    }
+	/**
+	 * Constructor.
+	 */
+	public AttributeTime() {
+		super();
+		// dummy for hibernate
+	}
 
-    /**
-     * Constructor.
-     *
-     * @param aCode The unique code for this Question
-     * @param aName The human readable summary name
-     */
-    public AttributeTime(String aCode, String aName) {
-        super(aCode, aName, new DataType(LocalTime.class));
+	/**
+	 * Constructor.
+	 * 
+	 * @param aCode The unique code for this Question
+	 * @param aName The human readable summary name
+	 */
+	public AttributeTime(String aCode, String aName) {
+		super(aCode, aName, new DataType(LocalTime.class));
 
-    }
-
+	}
 
 }

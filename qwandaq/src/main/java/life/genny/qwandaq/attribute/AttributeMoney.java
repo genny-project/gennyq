@@ -18,12 +18,9 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
-import com.querydsl.core.annotations.QueryExclude;
-import life.genny.qwandaq.datatype.DataType;
-import org.javamoney.moneta.Money;
+import java.io.Serializable;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -32,7 +29,10 @@ import javax.persistence.InheritanceType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
+
+import org.javamoney.moneta.Money;
+
+import life.genny.qwandaq.datatype.DataType;
 
 /**
  * AttributeMoney class handles LocalDate based attributes.
@@ -41,46 +41,43 @@ import java.io.Serializable;
  * <li>The AnswerTypeMoney is the Type for the Attribute class
  * </ul>
  * <p>
- * AttributeDate represent the major way of specifying the Money data type about a target
+ * AttributeDate represent the major way of specifying the Money data type about
+ * a target
  * from sources.
  * </p>
- *
+ * 
+ * 
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
  * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("money")
-public class AttributeMoney extends Attribute implements Serializable {
+public class AttributeMoney extends Attribute {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    /**
-     * Constructor.
-     */
-    @SuppressWarnings("unused")
-    public AttributeMoney() {
-        super();
-        // dummy for hibernate
-    }
+	/**
+	 * Constructor.
+	 */
+	public AttributeMoney() {
+		super();
+		// dummy for hibernate
+	}
 
-    /**
-     * Constructor.
-     *
-     * @param aCode The unique code for this Question
-     * @param aName The human readable summary name
-     */
-    public AttributeMoney(String aCode, String aName) {
-        super(aCode, aName, new DataType(Money.class));
+	/**
+	 * Constructor.
+	 * 
+	 * @param aCode The unique code for this Question
+	 * @param aName The human readable summary name
+	 */
+	public AttributeMoney(String aCode, String aName) {
+		super(aCode, aName, new DataType(Money.class));
 
-    }
+	}
 
 }

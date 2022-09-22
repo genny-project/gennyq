@@ -20,59 +20,59 @@
 
 package life.genny.qwandaq.attribute;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.querydsl.core.annotations.QueryExclude;
+import java.io.Serializable;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import java.io.Serializable;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * AttributeList represents a set of Attributes in the Qwanda library.
  * The attributes in the list can be applied to a passed value.
  * <ul>
- * <li>List of Attribute 
+ * <li>List of Attribute
  * </ul>
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Embeddable
-@QueryExclude
 public class AttributeList implements Serializable {
-	
+
 	private static final long serialVersionUID = 1L;
 
-    /**
-     * A fieldlist that stores the attributes for this object.
-     */
-    @JsonIgnore
-    @XmlTransient
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "base_id", referencedColumnName = "id")
-    private List<Attribute> attributeList = new CopyOnWriteArrayList<Attribute>();
+	/**
+	 * A fieldlist that stores the attributes for this object.
+	 */
+	@JsonIgnore
+	@XmlTransient
+	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@JoinColumn(name = "base_id", referencedColumnName = "id")
+	private List<Attribute> attributeList = new CopyOnWriteArrayList<Attribute>();
 
-    public AttributeList() {
-    }
-
-    /**
-     * Constructor
-     *
-     * @param attributes the attributes to set
-     */
-    public AttributeList(List<Attribute> attributes) {
-        this.attributeList = attributes;
-    }
+	/**
+	 * Constructor
+	 *
+	 * @param attributes the attributes to set
+	 */
+	public AttributeList(List<Attribute> attributes) {
+		this.attributeList = attributes;
+	}
 
 	/**
 	 * @return the attributeList
