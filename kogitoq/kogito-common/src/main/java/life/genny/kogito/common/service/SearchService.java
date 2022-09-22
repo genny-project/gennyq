@@ -378,7 +378,7 @@ public class SearchService {
 				msgFilterGrp.setTargetCode(filterCode);
 				ask.setQuestionCode(filterCode);
 				// ask.getQuestion().setCode(filterCode);
-				Question question = cacheUtils.getQuestion(userToken.getRealm(), filterCode, );
+				Question question = cacheUtils.getQuestion(userToken.getRealm(), filterCode);
 				ask.setQuestion(question);
 
 				msgFilterGrp.setMessage(GennyConstants.FILTERS);

@@ -26,10 +26,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.reflect.Type;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /*
@@ -303,6 +300,30 @@ public class CacheUtils {
 			});
 		}
 		return question;
+	}
+
+	public List<QuestionQuestion> getQuestionQuestionByQuestionCode(String productCode, String questionCode) {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE));
+		Query<BaseEntityAttribute> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
+						+ "' and valueString : '" + questionCode + "'  and attributeCode : 'sourceCode' order by baseEntityCode");
+		List<QuestionQuestion> questionQuestions = new LinkedList<>();
+		QueryResult<BaseEntityAttribute> queryResult = query.execute();
+		String prevBaseEntityCode = null;
+		List<BaseEntityAttribute> allAttributes = queryResult.list();
+		Set<BaseEntityAttribute> attributesForBaseEntity = new HashSet<>();
+		for (BaseEntityAttribute baseEntityAttribute : allAttributes) {
+			String curBaseEntityCode = baseEntityAttribute.getBaseEntityCode();
+			if (prevBaseEntityCode != null && !prevBaseEntityCode.equals(curBaseEntityCode)) {
+				life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = baseEntityUtils.getSerializableBaseEntity(productCode, curBaseEntityCode);
+				questionQuestions.add(questionUtils.getQuestionQuestionFromBaseEntityBaseEntityAttributes(baseEntity, attributesForBaseEntity));
+				attributesForBaseEntity.clear();
+			} else {
+				attributesForBaseEntity.add(baseEntityAttribute);
+			}
+			prevBaseEntityCode = curBaseEntityCode;
+		}
+		return questionQuestions;
 	}
 
 	public QuestionQuestion getQuestionQuestionRecursively(String productCode, String baseEntityCode, boolean fetchChildQuestions) {
