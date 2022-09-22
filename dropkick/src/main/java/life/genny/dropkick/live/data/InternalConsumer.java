@@ -71,7 +71,7 @@ public class InternalConsumer {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CapabilitiesManager capabilityUtils;
+	CapabilitiesManager capMan;
 
 	@Inject
 	SearchUtils searchUtils;
@@ -190,7 +190,7 @@ public class InternalConsumer {
 				if (json.containsKey("conditions")) {
 					JsonArray conditions = json.getJsonArray("conditions");
 					for (Object cond : conditions) {
-						if (!capabilityUtils.conditionMet(cond.toString().replaceAll("\"", ""))) {
+						if (!capMan.conditionMet(cond.toString().replaceAll("\"", ""))) {
 							conditionsAreMet = false;
 						}
 					}

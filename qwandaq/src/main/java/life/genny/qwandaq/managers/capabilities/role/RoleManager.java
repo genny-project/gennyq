@@ -136,7 +136,8 @@ public class RoleManager extends Manager {
 			childrenEA.setValue(codeString);
 		}
 
-		beUtils.updateBaseEntity(productCode, targetRole);
+		// TODO: Keep an eye on this becasue it may have just broken
+		beUtils.updateBaseEntity(targetRole);
 		return targetRole;
 	}
 
@@ -166,7 +167,8 @@ public class RoleManager extends Manager {
 		String codeString = CommonUtils.getArrayString(childrenCodeList);
 		childrenEA.setValue(codeString);
 
-		beUtils.updateBaseEntity(productCode, targetRole);
+		// TODO: Keep an eye on this becasue it may have just broken
+		beUtils.updateBaseEntity(targetRole);
 		return targetRole;
 	}
 

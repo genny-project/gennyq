@@ -135,6 +135,7 @@ public class InitService {
 	}
 
 	private BaseEntity configureSidebar(BaseEntity sidebarPCM) {
+		
 		return sidebarPCM;
 	}
 

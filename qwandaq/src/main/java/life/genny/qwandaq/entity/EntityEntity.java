@@ -1,7 +1,20 @@
 package life.genny.qwandaq.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.Link;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.converter.MoneyConverter;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.time.DateUtils;
+import org.javamoney.moneta.Money;
+import org.jboss.logging.Logger;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Convert;
+import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlTransient;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -14,50 +27,20 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlTransient;
-import life.genny.qwandaq.Link;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.converter.MoneyConverter;
-import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.annotations.Type;
-import org.javamoney.moneta.Money;
-import org.jboss.logging.Logger;
 
-
-
-
-
-
-
-
-@Entity
+/*@Entity
 @Table(name = "baseentity_baseentity")
 
 @AssociationOverrides({
     @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))
 })
 
-@RegisterForReflection
-public class EntityEntity implements java.io.Serializable, Comparable<Object> {
+@RegisterForReflection*/
+public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 
 	private static final Logger log = Logger.getLogger(EntityEntity.class);
 
-	@AttributeOverrides({
+	/*@AttributeOverrides({
 		@AttributeOverride(name = "sourceCode", column = @Column(name = "SOURCE_CODE", nullable = false)),
 		@AttributeOverride(name = "targetCode", column = @Column(name = "TARGET_CODE", nullable = false)),
 		@AttributeOverride(name = "attributeCode", column = @Column(name = "LINK_CODE", nullable = false)),
@@ -66,17 +49,21 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		@AttributeOverride(name = "childColour", column = @Column(name = "CHILD_COL", nullable = true)),
 		@AttributeOverride(name = "rule", column = @Column(name = "RULE", nullable = true))
 	})
-	@Column
+	@Column*/
 	private Link link;
+
+    private String sourceCode;
+
+    private String targetCode;
 
 	private String realm;
 
 	private static final long serialVersionUID = 1L;
 
-	@EmbeddedId
+	/*@EmbeddedId
 	@Column
 	@JsonbTransient
-	private EntityEntityId pk = new EntityEntityId();
+	private EntityEntityId pk = new EntityEntityId();*/
 
 	/**
 	 * @return the link
@@ -89,13 +76,13 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	/**
 	 * Stores the Created UMT DateTime that this object was created
 	 */
-	@Column(name = "created")
+	//@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
-	@Column(name = "updated")
+	//@Column(name = "updated")
 	private LocalDateTime updated;
 
 	/**
@@ -108,7 +95,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 */
 	private Boolean valueBoolean;
 
-	/**
+    /**
 	 * Store the Integer value of the attribute for the baseEntity
 	 */
 	private Integer valueInteger;
@@ -136,14 +123,14 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	//  @XmlJavaTypeAdapter(LocalTimeAdapter.class)
 	private LocalTime valueTime;
 
-	@Column(name = "money", length = 128)
+	//@Column(name = "money", length = 128)
 	@Convert(converter = MoneyConverter.class)
 	Money valueMoney;
 
 	/**
 	 * Store the String value of the attribute for the baseEntity
 	 */
-	@Type(type="text")
+	//@Type(type="text")
 	private String valueString;
 
 	/**
@@ -153,43 +140,47 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 
 	private Long version = 1L;
 
+	private Attribute attribute;
+
 
 	public EntityEntity() {}
 
 	/**
 	 * Constructor.
-	 * 
-	 * @param source the source baseEntity
-	 * @param target the target entity that is linked to
-	 * @param attribute the associated attribute
+	 *
+	 * @param productCode the product code
+     * @param sourceCode the code of source baseEntity
+     * @param targetCode the code of target entity that is linked to
+     * @param attribute the associated attribute
 	 * @param weight the weighted importance of this attribute (relative to the other attributes)
 	 */
-	public EntityEntity(final BaseEntity source, final BaseEntity target,
+	public EntityEntity(final String productCode, final String sourceCode, final String targetCode,
 			final Attribute attribute, Double weight) {
-		this(source,target,attribute, "DUMMY",weight);
+		this(productCode, sourceCode, targetCode ,attribute, "DUMMY", weight);
 		this.getLink().setLinkValue(null);
 		this.setValueString(null);
 	}
 
 	/**
 	 * Constructor.
-	 * 
-	 * @param source the source baseEntity
-	 * @param target the target entity that is linked to
-	 * @param attribute the associated attribute
+	 *
+	 * @param productCode the product code
+     * @param sourceCode the code of source baseEntity
+     * @param targetCode the code of target entity that is linked to
+     * @param attribute the associated attribute
 	 * @param value the associated value
 	 * @param weight the weighted importance of this attribute (relative to the other attributes)
 	 */
-	public EntityEntity(final BaseEntity source, final BaseEntity target,
-			final Attribute attribute, final Object value, Double weight) {
+    public EntityEntity(final String productCode, final String sourceCode, final String targetCode,
+                        final Attribute attribute, final Object value, Double weight) {
 		autocreateCreated();
-		getPk().setSource(source);
-		//    getPk().setTarget(target);
-		getPk().setAttribute(attribute);
-		this.setRealm(target.getRealm());
+		setSourceCode(sourceCode);
+		setTargetCode(targetCode);
+		this.attribute = attribute;
+		this.setRealm(productCode);
 		//    this.pk.setSourceCode(source.getCode());
-		this.pk.setTargetCode(target.getCode());
-		link = new Link(source.getCode(),target.getCode(),attribute.getCode(),null);
+		this.targetCode = targetCode;
+		link = new Link(sourceCode, targetCode, attribute.getCode(),null);
 
 		if (value != null) {
 			setValue(value);
@@ -204,22 +195,22 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	/**
 	 * Constructor.
 	 *
-	 * @param source the source baseEntity
-	 * @param target the target entity that is linked to
+     * @param productCode the product code
+	 * @param sourceCode the code of source baseEntity
+	 * @param targetCode the code of target entity that is linked to
 	 * @param attribute the associated attribute
 	 * @param value the associated value
 	 * @param weight the weighted importance of this attribute (relative to the other attributes)
 	 */
-	public EntityEntity(final BaseEntity source, final BaseEntity target,
-			final Attribute attribute, Double weight, final Object value) {
+    public EntityEntity(final String productCode, final String sourceCode, final String targetCode,
+                        final Attribute attribute, Double weight, final Object value) {
 		autocreateCreated();
 
-		this.pk.setSource(source);
-		//   this.pk.setTarget(target);
-		this.pk.setTargetCode(target.getCode());
-		this.pk.setAttribute(attribute);
+		this.sourceCode = sourceCode;
+		this.targetCode = targetCode;
+		this.attribute = attribute;
 
-		link = new Link(source.getCode(),target.getCode(),attribute.getCode());
+		link = new Link(sourceCode, targetCode, attribute.getCode());
 
 		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides
@@ -232,22 +223,22 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	}
 
 
-	/** 
+	/**
 	 * @return EntityEntityId
 	 */
-	@JsonIgnore
+	/*@JsonIgnore
 	@JsonbTransient
 	public EntityEntityId getPk() {
 		return pk;
-	}
+	}*/
 
 
-	/** 
+	/**
 	 * @param pk the pk to set
 	 */
-	public void setPk(final EntityEntityId pk) {
+	/*public void setPk(final EntityEntityId pk) {
 		this.pk = pk;
-	}
+	}*/
 
 
 	/**
@@ -262,6 +253,30 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 */
 	public void setCreated(final LocalDateTime created) {
 		this.created = created;
+	}
+
+    public String getSourceCode() {
+        return sourceCode;
+    }
+
+    public void setSourceCode(String sourceCode) {
+        this.sourceCode = sourceCode;
+    }
+
+    public String getTargetCode() {
+        return targetCode;
+    }
+
+    public void setTargetCode(String targetCode) {
+        this.targetCode = targetCode;
+    }
+
+	public Attribute getAttribute() {
+		return attribute;
+	}
+
+	public void setAttribute(Attribute attribute) {
+		this.attribute = attribute;
 	}
 
 	/**
@@ -412,18 +427,18 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		this.link = link;
 	}
 
-	@PreUpdate
+	//@PreUpdate
 	public void autocreateUpdate() {
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	@PrePersist
+	//@PrePersist
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	/** 
+	/**
 	 * @return Date
 	 */
 	@Transient
@@ -433,7 +448,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		return out;
 	}
 
-	/** 
+	/**
 	 * @return Date
 	 */
 	@Transient
@@ -447,7 +462,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		}
 	}
 
-	/** 
+	/**
 	 * @param o the object to compare to
 	 * @return int
 	 */
@@ -460,7 +475,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 			.toComparison();
 	}
 
-	/** 
+	/**
 	 * @return int
 	 */
 	@Override
@@ -469,7 +484,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 				valueLong, valueMoney, valueString, valueTime, weight);
 	}
 
-	/** 
+	/**
 	 * @param obj the object to compare to
 	 * @return boolean
 	 */
@@ -494,7 +509,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 			&& Objects.equals(weight, other.weight);
 	}
 
-	/** 
+	/**
 	 * @param <T> the Type to return
 	 * @return T
 	 */
@@ -504,7 +519,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@Transient
 	@XmlTransient
 	public <T> T getValue() {
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
+		final String dataType = attribute.getDataType().getClassName();
 		switch (dataType) {
 			case "java.lang.Integer":
 				return (T) getValueInteger();
@@ -536,7 +551,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	}
 
 
-	/** 
+	/**
 	 * @return Boolean
 	 */
 	public Boolean isValueBoolean() {
@@ -564,7 +579,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		this.valueDate = valueDate;
 	}
 
-	/** 
+	/**
 	 * @param <T> the type to return
 	 * @param value the value to set
 	 */
@@ -577,9 +592,9 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		if (value instanceof String) {
 			String result = (String) value;
 			try {
-				if (getPk().getAttribute().getDataType().getClassName().equalsIgnoreCase(String.class.getCanonicalName())) {
+				if (attribute.getDataType().getClassName().equalsIgnoreCase(String.class.getCanonicalName())) {
 					setValueString(result);
-				} else if (getPk().getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(LocalDateTime.class.getCanonicalName())) {
 					List<String> formatStrings = Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
 							"yyyy-MM-dd'T'HH:mm:ss.SSSZ");
@@ -591,6 +606,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 							setValueDateTime(dateTime);
 							break;
 						} catch (ParseException e) {
+							log.error("Error while parsing date time", e);
 						}
 
 					}
@@ -600,7 +616,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 					// final LocalDateTime dateTime =
 					// olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 					// setValueDateTime(dateTime);
-				} else if (getPk().getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
 					Date olddate = null;
 					try {
@@ -612,7 +628,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 					}
 					final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 					setValueDate(date);
-				} else if (getPk().getAttribute().getDataType().getClassName()
+				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(LocalTime.class.getCanonicalName())) {
 					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 					final LocalTime date = LocalTime.parse(result, formatter);
@@ -623,19 +639,19 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 					// 	Gson gson = gsonBuilder.create();
 					// 	Money money = gson.fromJson(result, Money.class);
 					// 	setValueMoney(money);
-			} else if (getPk().getAttribute().getDataType().getClassName()
+			} else if (attribute.getDataType().getClassName()
 					.equalsIgnoreCase(Integer.class.getCanonicalName())) {
 				final Integer integer = Integer.parseInt(result);
 				setValueInteger(integer);
-			} else if (getPk().getAttribute().getDataType().getClassName()
+			} else if (attribute.getDataType().getClassName()
 					.equalsIgnoreCase(Double.class.getCanonicalName())) {
 				final Double d = Double.parseDouble(result);
 				setValueDouble(d);
-			} else if (getPk().getAttribute().getDataType().getClassName()
+			} else if (attribute.getDataType().getClassName()
 					.equalsIgnoreCase(Long.class.getCanonicalName())) {
 				final Long l = Long.parseLong(result);
 				setValueLong(l);
-			} else if (getPk().getAttribute().getDataType().getClassName()
+			} else if (attribute.getDataType().getClassName()
 					.equalsIgnoreCase(Boolean.class.getCanonicalName())) {
 				final Boolean b = Boolean.parseBoolean(result);
 				setValueBoolean(b);
@@ -643,12 +659,12 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 				setValueString(result);
 			}
 			} catch (Exception e) {
-				log.error("Conversion Error :" + value + " for attribute " + getPk().getAttribute() + " and SourceCode:"
-						+ this.getPk().getSource().getCode());
+				log.error("Conversion Error :" + value + " for attribute " + attribute + " and SourceCode:"
+						+ this.sourceCode);
 			}
 		} else {
 
-			switch (this.getPk().getAttribute().getDataType().getClassName()) {
+			switch (this.attribute.getDataType().getClassName()) {
 				case "java.lang.Integer":
 				case "Integer":
 					setValueInteger((Integer) value);
@@ -692,7 +708,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		this.link.setLinkValue(getObjectAsString(getValue()));
 	}
 
-	/** 
+	/**
 	 * @return String
 	 */
 	@JsonIgnore
@@ -702,7 +718,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	public String getAsString() {
 		String dataType = "";
 		try {
-			dataType = getPk().getAttribute().getDataType().getClassName();
+			dataType = attribute.getDataType().getClassName();
 		} catch (Exception e) {
 		}
 		switch (dataType) {
@@ -711,8 +727,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 			case "java.time.LocalDateTime":
 				DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 				Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-				String dout = df.format(datetime);
-				return dout;
+				return df.format(datetime);
 			case "java.lang.Long":
 				return "" + getValueLong();
 			case "java.time.LocalTime":
@@ -727,8 +742,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 			case "java.time.LocalDate":
 				DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 				Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-				String dout2 = df2.format(date);
-				return dout2;
+				return df2.format(date);
 
 			case "java.lang.String":
 			default:
@@ -737,7 +751,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 
 	}
 
-	/** 
+	/**
 	 * @param value the value to get
 	 * @return String
 	 */
@@ -750,16 +764,14 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 			return ""+value;
 		if (value instanceof LocalDateTime) {
 			LocalDateTime val = (LocalDateTime)value;
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS"); 
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 			Date datetime = Date.from(val.atZone(ZoneId.systemDefault()).toInstant());
-			String dout = df.format(datetime);
-			return dout;
+			return df.format(datetime);
 		}
 		if (value instanceof Long)
 			return ""+value;
 		if (value instanceof Double) {
-			Double val = (Double) value;
-			return val.toString();
+			return ((Double) value).toString();
 		}
 		if (value instanceof Boolean) {
 			Boolean val = (Boolean)value;
@@ -767,24 +779,20 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		}
 		if (value instanceof LocalDate) {
 			LocalDate val = (LocalDate)value;
-			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd"); 
+			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 			Date date = Date.from(val.atStartOfDay(ZoneId.systemDefault()).toInstant());
-			String dout2 = df2.format(date);
-			return dout2;
+			return df2.format(date);
 		}
 
 		if (value instanceof Money) {
 			Money val = (Money)value;
-			String dout2 = val.toString();
-			return dout2;
+			return val.toString();
 		}
 		if (value instanceof LocalTime) {
 			LocalTime val = (LocalTime)value;
-			String dout2 = val.toString();
-			return dout2;
+			return val.toString();
 		}
-		String val = (String)value;
-		return val;
+		return (String)value;
 	}
 
 	/**
@@ -801,11 +809,43 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		this.realm = realm;
 	}
 
-	/** 
+	/**
 	 * @return String
 	 */
 	@Override
 	public String toString() {
 		return this.realm+":"+this.link;
+	}
+
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.entityentity.EntityEntity ee = new life.genny.qwandaq.serialization.entityentity.EntityEntity();
+		ee.setTargetCode(getTargetCode());
+		ee.setCreated(getCreated());
+		Link link = getLink();
+		link.setAttributeCode(getAttribute().getCode());
+		link.setChildColor(link.getChildColor());
+		link.setLinkValue(link.getLinkValue());
+		link.setParentColor(link.getParentColor());
+		link.setRule(link.getRule());
+		link.setSourceCode(link.getSourceCode());
+		link.setTargetCode(link.getTargetCode());
+		link.setWeight(link.getWeight());
+		ee.setSourceCode(getSourceCode());
+		ee.setTarget_code(getTargetCode());
+		ee.setRealm(getRealm());
+		ee.setUpdated(getUpdated());
+		ee.setValueBoolean(getValueBoolean());
+		ee.setValueDate(getValueDate());
+		ee.setValueDateTime(getValueDateTime());
+		ee.setValueDouble(getValueDouble());
+		ee.setValueInteger(getValueInteger());
+		ee.setValueLong(getValueLong());
+		ee.setMoney(getValueMoney());
+		ee.setValueString(getValueString());
+		ee.setValueTime(getValueTime());
+		ee.setVersion(getVersion());
+		ee.setWeight(getWeight());
+		return ee;
 	}
 }

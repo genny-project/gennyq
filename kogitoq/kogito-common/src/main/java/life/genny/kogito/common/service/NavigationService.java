@@ -21,6 +21,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+
 import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
@@ -34,7 +35,7 @@ import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -66,9 +67,6 @@ public class NavigationService {
 
 	@Inject
 	SearchUtils searchUtils;
-
-	@Inject
-	CapabilitiesManager capabilityUtils;
 
 	@Inject
 	RoleManager roleManager;
@@ -153,7 +151,9 @@ public class NavigationService {
 		// fetch and update desired pcm
 		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
+		EntityAttribute ea = new EntityAttribute(1.0, questionCode);
+		ea.setBaseEntityCode(pcm.getCode());
+		ea.setAttribute(attribute);
 		try {
 			pcm.addAttribute(ea);
 		} catch (BadDataException e) {
