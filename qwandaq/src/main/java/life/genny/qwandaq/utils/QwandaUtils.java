@@ -278,10 +278,10 @@ public class QwandaUtils {
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
-						+ questionQuestion.getTargetCode());
+				log.info("   [-] Found Child Question in database:  " + questionQuestion.getParentCode() + ":"
+						+ questionQuestion.getChildCode());
 
-				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
+				Ask child = generateAskFromQuestionCode(questionQuestion.getChildCode(), source, target);
 
 				// Do not include PRI_SUBMIT
 				if ("PRI_SUBMIT".equals(child.getAttributeCode())) {

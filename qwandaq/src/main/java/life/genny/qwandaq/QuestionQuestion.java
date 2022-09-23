@@ -32,9 +32,9 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 
 	private static final long serialVersionUID = 1L;
 
-	private String sourceCode;
+	private String parentCode;
 
-	private String targetCode;
+	private String childCode;
 
 	private LocalDateTime created;
 
@@ -87,7 +87,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * 
 	 * @param source
 	 *                   the source baseEntity
-	 * @param targetCode
+	 * @param childCode
 	 *                   the target code of the entity that is linked to
 	 * @param weight
 	 *                   the associated weight
@@ -103,11 +103,11 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 *                   other
 	 *                   attributes)
 	 */
-	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
-			boolean disabled, boolean hidden, boolean readonly) {
+	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory,
+							boolean disabled, boolean hidden, boolean readonly) {
 		autocreateCreated();
-		setSourceCode(source.getCode());
-		setTargetCode(targetCode);
+		setParentCode(source.getCode());
+		setChildCode(childCode);
 		setMandatory(mandatory);
 		setDisabled(disabled);
 		setHidden(hidden);
@@ -124,7 +124,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * 
 	 * @param source
 	 *                   the source baseEntity
-	 * @param targetCode
+	 * @param childCode
 	 *                   the target code of the entity that is linked to
 	 * @param weight
 	 *                   the weighted importance of this attribute (relative to the
@@ -137,9 +137,9 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * @param hidden
 	 *                   Is the question hidden
 	 */
-	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
-			boolean disabled, boolean hidden) {
-		this(source, targetCode, weight, mandatory, disabled, hidden, false);
+	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory,
+							boolean disabled, boolean hidden) {
+		this(source, childCode, weight, mandatory, disabled, hidden, false);
 	}
 
 	/**
@@ -147,7 +147,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * 
 	 * @param source
 	 *                   the source baseEntity
-	 * @param targetCode
+	 * @param childCode
 	 *                   the target code of the entity that is linked to
 	 * @param weight
 	 *                   the weighted importance of this attribute (relative to the
@@ -158,9 +158,9 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * @param disabled
 	 *                   Is the question read only
 	 */
-	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
-			boolean disabled) {
-		this(source, targetCode, weight, mandatory, disabled, false);
+	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory,
+							boolean disabled) {
+		this(source, childCode, weight, mandatory, disabled, false);
 	}
 
 	/**
@@ -168,7 +168,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * 
 	 * @param source
 	 *                   the source baseEntity
-	 * @param targetCode
+	 * @param childCode
 	 *                   the target code of the entity that is linked to
 	 * @param weight
 	 *                   the weighted importance of this attribute (relative to the
@@ -177,8 +177,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 * @param mandatory
 	 *                   The mandatory status of this QuestionQuestion
 	 */
-	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory) {
-		this(source, targetCode, weight, mandatory, false);
+	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory) {
+		this(source, childCode, weight, mandatory, false);
 	}
 
 	/**
@@ -196,9 +196,9 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public QuestionQuestion(final Question source, final Question target, Double weight) {
 		autocreateCreated();
 
-		this.setSourceCode(source.getCode());
+		this.setParentCode(source.getCode());
 
-		this.setTargetCode(target.getCode());
+		this.setChildCode(target.getCode());
 
 		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides
@@ -208,12 +208,12 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 
 	}
 
-	public void setSourceCode(String sourceCode) {
-		this.sourceCode = sourceCode;
+	public void setParentCode(String parentCode) {
+		this.parentCode = parentCode;
 	}
 
-	public void setTargetCode(String targetCode) {
-		this.targetCode = targetCode;
+	public void setChildCode(String childCode) {
+		this.childCode = childCode;
 	}
 
 	/**
@@ -422,8 +422,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public int hashCode() {
 
 		HashCodeBuilder hcb = new HashCodeBuilder();
-		hcb.append(getSourceCode());
-		hcb.append(getTargetCode());
+		hcb.append(getParentCode());
+		hcb.append(getChildCode());
 		hcb.append(getRealm());
 		return hcb.toHashCode();
 	}
@@ -444,8 +444,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		}
 		QuestionQuestion that = (QuestionQuestion) obj;
 		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(getSourceCode(), that.getSourceCode());
-		eb.append(getTargetCode(), that.getTargetCode());
+		eb.append(getParentCode(), that.getParentCode());
+		eb.append(getChildCode(), that.getChildCode());
 		eb.append(getRealm(), that.getRealm());
 		return eb.isEquals();
 	}
@@ -525,7 +525,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	@Override
 	public String toString() {
-		return "SRC:" + getSourceCode() + " - " + getTargetCode() + " "
+		return "SRC:" + getParentCode() + " - " + getChildCode() + " "
 				+ (this.getMandatory() ? "MANDATORY" : "OPTIONAL") + " " + (this.getReadonly() ? "RO" : "RW") + " "
 				+ (this.getFormTrigger() ? "FT" : "NFT") + " " + (this.getCreateOnTrigger() ? "COT" : "NCOT");
 	}
@@ -533,15 +533,15 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	/**
 	 * @return String
 	 */
-	public String getSourceCode() {
-		return getSourceCode();
+	public String getParentCode() {
+		return getParentCode();
 	}
 
 	/**
 	 * @return String
 	 */
-	public String getTargetCode() {
-		return getTargetCode();
+	public String getChildCode() {
+		return getChildCode();
 	}
 
 	/**

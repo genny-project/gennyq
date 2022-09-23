@@ -78,7 +78,7 @@ public class QuestionUtils {
 
     public BaseEntity getBaseEntityFromQuestionQuestion(QuestionQuestion questionQuestion) {
         BaseEntity baseEntity = new BaseEntity();
-        baseEntity.setCode(questionQuestion.getSourceCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getTargetCode());
+        baseEntity.setCode(questionQuestion.getParentCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getChildCode());
         baseEntity.setCreated(questionQuestion.getCreated());
         baseEntity.setRealm(questionQuestion.getRealm());
         baseEntity.setUpdated(questionQuestion.getUpdated());
@@ -87,8 +87,8 @@ public class QuestionUtils {
 
     public List<BaseEntityAttribute> getBaseEntityAttributesFromQuestionQuestion(QuestionQuestion questionQuestion) {
         List<BaseEntityAttribute> attributes = new LinkedList<>();
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "sourceCode", questionQuestion.getSourceCode()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "targetCode", questionQuestion.getTargetCode()));
+        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "parentCode", questionQuestion.getParentCode()));
+        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "childCode", questionQuestion.getChildCode()));
         attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "createOnTrigger", questionQuestion.getCreateOnTrigger()));
         attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "dependency", questionQuestion.getDependency()));
         attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "disabled", questionQuestion.getDisabled()));
@@ -106,7 +106,7 @@ public class QuestionUtils {
     public BaseEntityAttribute createBaseEntityAttributeFromQuestionQuestion(QuestionQuestion questionQuestion, String attributeCode, Object value) {
         BaseEntityAttribute attribute = new BaseEntityAttribute();
         attribute.setRealm(questionQuestion.getRealm());
-        attribute.setBaseEntityCode(questionQuestion.getSourceCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getTargetCode());
+        attribute.setBaseEntityCode(questionQuestion.getParentCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getChildCode());
         attribute.setAttributeCode(attributeCode);
         attribute.setCreated(questionQuestion.getCreated());
         attribute.setUpdated(questionQuestion.getUpdated());
@@ -185,8 +185,8 @@ public class QuestionUtils {
         QuestionQuestion questionQuestion = new QuestionQuestion();
         String beCode = baseEntity.getCode();
         String[] sourceTargetCodes = beCode.split(BaseEntityKey.BE_KEY_DELIMITER);
-        questionQuestion.setSourceCode(sourceTargetCodes[0]);
-        questionQuestion.setTargetCode(sourceTargetCodes[1]);
+        questionQuestion.setParentCode(sourceTargetCodes[0]);
+        questionQuestion.setChildCode(sourceTargetCodes[1]);
         questionQuestion.setCreated(baseEntity.getCreated());
         questionQuestion.setRealm(baseEntity.getRealm());
         questionQuestion.setUpdated(baseEntity.getUpdated());
@@ -198,10 +198,10 @@ public class QuestionUtils {
         attributes.parallelStream().forEach(attribute -> {
             switch (attribute.getAttributeCode()) {
                 case "sourceCode":
-                    questionQuestion.setSourceCode(attribute.getValueString());
+                    questionQuestion.setParentCode(attribute.getValueString());
                     break;
                 case "targetCode":
-                    questionQuestion.setTargetCode(attribute.getValueString());
+                    questionQuestion.setChildCode(attribute.getValueString());
                     break;
                 case "createOnTrigger":
                     questionQuestion.setCreateOnTrigger(attribute.getValueBoolean());

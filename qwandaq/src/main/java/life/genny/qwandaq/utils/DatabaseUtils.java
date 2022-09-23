@@ -18,7 +18,6 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NotInitializedException;
@@ -501,8 +500,8 @@ public class DatabaseUtils {
 	@Transactional
 	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
 
-		String sourceCode = questionQuestion.getSourceCode();
-		String targetCode = questionQuestion.getTargetCode();
+		String sourceCode = questionQuestion.getParentCode();
+		String targetCode = questionQuestion.getChildCode();
 		log.info("Saving QuestionQuestion " + sourceCode + ":" + targetCode);
 		checkEntityManager();
 

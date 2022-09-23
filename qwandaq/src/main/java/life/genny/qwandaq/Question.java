@@ -438,7 +438,7 @@ public class Question extends CodedEntity {
 		if (qq == null)
 			throw new BadDataException("missing Question");
 
-		addChildQuestion(qq.getTargetCode(), qq.getWeight(), qq.getMandatory());
+		addChildQuestion(qq.getChildCode(), qq.getWeight(), qq.getMandatory());
 	}
 
 	/**
@@ -515,7 +515,7 @@ public class Question extends CodedEntity {
 	 */
 	public Optional<QuestionQuestion> findQuestionLink(final String childQuestionCode) {
 		final Optional<QuestionQuestion> foundEntity = Optional.of(getChildQuestions().parallelStream()
-				.filter(x -> (x.getTargetCode().equals(childQuestionCode))).findFirst().get());
+				.filter(x -> (x.getChildCode().equals(childQuestionCode))).findFirst().get());
 
 		return foundEntity;
 	}
@@ -530,7 +530,7 @@ public class Question extends CodedEntity {
 	 */
 	public QuestionQuestion findQuestionQuestion(final Question childQuestion) {
 		final QuestionQuestion foundEntity = getChildQuestions().parallelStream()
-				.filter(x -> (x.getTargetCode().equals(childQuestion.getCode()))).findFirst().get();
+				.filter(x -> (x.getChildCode().equals(childQuestion.getCode()))).findFirst().get();
 
 		return foundEntity;
 	}
@@ -554,7 +554,7 @@ public class Question extends CodedEntity {
 		String ret = "";
 		if (getAttributeCode().equals(QUESTION_GROUP_ATTRIBUTE_CODE)) {
 			for (QuestionQuestion childQuestion : qqList) {
-				ret += childQuestion.getTargetCode() + ",";
+				ret += childQuestion.getChildCode() + ",";
 			}
 		} else {
 			ret = getCode();

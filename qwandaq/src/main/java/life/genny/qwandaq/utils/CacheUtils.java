@@ -306,7 +306,7 @@ public class CacheUtils {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE));
 		Query<BaseEntityAttribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
-						+ "' and valueString : '" + questionCode + "'  and attributeCode : 'sourceCode' order by baseEntityCode");
+						+ "' and valueString : '" + questionCode + "'  and attributeCode : 'parentCode' order by baseEntityCode");
 		List<QuestionQuestion> questionQuestions = new LinkedList<>();
 		QueryResult<BaseEntityAttribute> queryResult = query.execute();
 		String prevBaseEntityCode = null;
