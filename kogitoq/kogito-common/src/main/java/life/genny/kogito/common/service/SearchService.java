@@ -4,6 +4,7 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -471,31 +472,18 @@ public class SearchService {
 
 	/**
 	 * handle filter by string in the table
-	 * @param que Question code
 	 * @param attrCode Attribute code
-	 * @param oper StringFilter Operator
-	 * @param value  Value String
-	 * @param cleanSbeCode Search base entity code without JTI
+	 * @param sbeCode Search base entity code without JTI
+	 * @param isSubmitted removed  filter when click on filer tag
+	 * @param isSubmitted Being whether question is date time or not
 	 */
-	public void handleFilterByString(String que, String attrCode, Operator oper ,String value, String cleanSbeCode) {
-		String sbeCodeJti = searchUtils.getSearchBaseEntityCodeByJTI(cleanSbeCode);
+	public void handleFilter(String attrCode,String sbeCode, boolean isSubmitted) {
+		String sbeCodeJti = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
 
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCodeJti, SearchEntity.class);
 
-		//by submitting filter form
-		if(oper != null) {
-			if (oper.equals(Operator.LIKE)) {
-				value = "%" + value + "%";
-			}
-			Filter filter = new Filter(attrCode, oper, value);
-			searchBE.remove(filter);
-			if(!value.isEmpty()) {
-				searchBE.add(filter);
-			}
-		}
-
 		//add conditions by filter parameters
-		setFilterParamsToSearchBE(searchBE);
+		setFilterParamsToSearchBE(searchBE,attrCode,isSubmitted);
 
 		CacheUtils.putObject(userToken.getRealm(), sbeCodeJti, searchBE);
 
@@ -506,38 +494,58 @@ public class SearchService {
 	/**
 	 * Add filer parameters to search base entity
 	 * @param searchBE Search base entity
+	 * @param isSubmitted being removed filter
 	 */
-	public void setFilterParamsToSearchBE(SearchEntity searchBE) {
-		for (Map.Entry<String, Map<String, String>> param : listFilterParams.entrySet()) {
-			String attrName = searchUtils.getFilterParamValByKey(param.getValue(),GennyConstants.QUE_FILTER_OPTION);
-			String value = searchUtils.getFilterParamValByKey(param.getValue(),GennyConstants.QUE_FILTER_VALUE)
+	public void setFilterParamsToSearchBE(SearchEntity searchBE, String attrCode,boolean isSubmitted) {
+		if(isSubmitted) {
+			String queCode = getFilterParamValByKey(GennyConstants.QUE_FILTER_COLUMN);
+			String attrName = getFilterParamValByKey(GennyConstants.QUE_FILTER_OPTION);
+			String value = getFilterParamValByKey(GennyConstants.QUE_FILTER_VALUE)
 					.replaceFirst(GennyConstants.SEL_PREF,"");
-			String attrCode = searchUtils.getFilterParamValByKey(param.getValue(),GennyConstants.ATTRIBUTECODE);
+			String attrCodeByParam = getFilterParamValByKey(GennyConstants.ATTRIBUTECODE);
 			Operator operator = getOperatorByVal(attrName);
 
-			Filter filter = new Filter(attrCode,operator,value);
-			searchBE.remove(filter);
+			if (operator.equals(Operator.LIKE)) {
+				value = "%" + value + "%";
+			}
+
+			boolean isDate =  isDateTimeSelected(queCode);
+			Filter filter = null;
+
+			if(isDate) {
+				LocalDateTime dateTime  = parseStringToDate(value);
+				filter = new Filter(attrCodeByParam,operator,dateTime);
+			}else {
+				filter = new Filter(attrCodeByParam,operator,value);
+			}
+
 			searchBE.add(filter);
+		}else {
+			Map<String, String> mapParam = listFilterParams.get(attrCode);
+
+			String queCode = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.QUE_FILTER_COLUMN);
+			String attrName = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.QUE_FILTER_OPTION);
+			String value = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.QUE_FILTER_VALUE)
+					.replaceFirst(GennyConstants.SEL_PREF,"");
+			String attrCodeByParam = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.ATTRIBUTECODE);
+			Operator operator = getOperatorByVal(attrName);
+
+			if (operator.equals(Operator.LIKE)) {
+				value = "%" + value + "%";
+			}
+
+			boolean isDate =  isDateTimeSelected(queCode);
+			Filter filter = null;
+
+			if(isDate) {
+				LocalDateTime dateTime  = parseStringToDate(value);
+				filter = new Filter(attrCodeByParam,operator,dateTime);
+			}else {
+				filter = new Filter(attrCodeByParam,operator,value);
+			}
+
+			searchBE.remove(filter);
 		}
-	}
-
-	/**
-	 * Handle filter by date time in the table
-	 * @param que Question code
-	 * @param attrCode Attribute code
-	 * @param oper Operator
-	 * @param value Filter value
-	 * @param targetCode Event target code
-	 */
-	public void handleFilterByDateTime(String que, String attrCode, Operator oper, LocalDateTime value, String targetCode) {
-		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
-
-		searchBE.add(new Filter(attrCode, oper, value));
-
-		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
-
-		sendMessageBySearchEntity(searchBE);
-		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
 	}
 
 	/**
@@ -625,12 +633,10 @@ public class SearchService {
 	 * @return Whether filter tag or not
 	 */
 	public boolean isFilterTag(String code) {
-		for(Map.Entry<String,Map<String, String>> tag:listFilterParams.entrySet()) {
-			String question = tag.getKey();
-			if (code.equalsIgnoreCase(question)) {
-				return true;
-			}
+		if(code.startsWith(GennyConstants.QUE_TAG_PREF)) {
+			return true;
 		}
+
 		return false;
 	}
 
@@ -742,5 +748,42 @@ public class SearchService {
 		}
 
 		return Operator.EQUALS;
+	}
+
+	/**
+	 * Parse string to local date time
+	 * @param strDate Date String
+	 * @return Return local date time
+	 */
+	public LocalDateTime parseStringToDate(String strDate){
+		LocalDateTime localDateTime = null;
+		try {
+			ZonedDateTime zdt = ZonedDateTime.parse(strDate);
+			localDateTime = zdt.toLocalDateTime();
+		}catch(Exception ex) {
+			log.info(ex);
+		}
+
+		return localDateTime;
+	}
+
+	/**
+	 * Being whether date time is selected or not
+	 * @param questionCode Question code
+	 * @return Being whether date time is selected or not
+	 */
+	public boolean isDateTimeSelected(String questionCode){
+		boolean isDateTime = false;
+
+		//date,time
+		if(questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATE)){
+			return true;
+		} else if(questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATETIME)){
+			return true;
+		} else if(questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_TIME)){
+			return true;
+		}
+
+		return isDateTime;
 	}
 }
