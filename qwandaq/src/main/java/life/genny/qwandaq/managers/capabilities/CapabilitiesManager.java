@@ -1,5 +1,6 @@
 package life.genny.qwandaq.managers.capabilities;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -57,7 +58,9 @@ public class CapabilitiesManager extends Manager {
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
 	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
 	
-	
+	/*
+	 * Refactor Structure
+	 */
 	
 	public List<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
 		List<EntityAttribute> capabilities = new ArrayList<>();
@@ -207,18 +210,19 @@ public class CapabilitiesManager extends Manager {
 	 *         the supplied capabilityCode
 	 */
 	public boolean hasCapability(final BaseEntity user, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
-
+		CommonUtils.DebugTimer timer = new CommonUtils.DebugTimer(log::debug);
 		// 1. Check override
-
 		// allow keycloak admin and devs to do anything
 		if (shouldOverride()) {
+			timer.logTime();
 			return true;
 		}
-
 		// 2. Check user capabilities
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		if(entityHasCapability(user, cleanCapabilityCode, hasAll, checkModes))
+		if(entityHasCapability(user, cleanCapabilityCode, hasAll, checkModes)) {
+			timer.logTime();
 			return true;
+		}
 
 		// 3. Check user role capabilities
 		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, ROLE_LINK_CODE);
@@ -230,13 +234,16 @@ public class CapabilitiesManager extends Manager {
 					log.error("Could not find role: " + code);
 					continue;
 				}
-				if(entityHasCapability(role, rawCapabilityCode, hasAll, checkModes))
+				if(entityHasCapability(role, rawCapabilityCode, hasAll, checkModes)) {
+					timer.logTime();
 					return true;
+				}
 			}
 		} catch (RoleException re) {
 			log.error(re.getMessage());
 		}
 
+		timer.logTime();
 		return false;
 	}
 

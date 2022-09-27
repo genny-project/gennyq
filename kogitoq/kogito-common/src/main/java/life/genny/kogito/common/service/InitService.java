@@ -238,6 +238,7 @@ public class InitService {
 				continue;
 			}
 
+			// TODO: Rewrite this with refactor
 			if(capMan.checkCapability(capability, false, CapabilityMode.ADD)) {
 				// Create the ask (there is a def and we have the capability)
 				String baseCode = CommonUtils.safeStripPrefix(capability.getAttributeCode());
