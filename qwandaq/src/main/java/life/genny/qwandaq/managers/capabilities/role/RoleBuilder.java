@@ -38,7 +38,7 @@ public class RoleBuilder {
 
     private String redirectCode;
 
-    private String[] sidebarEventCodes;
+    // private String[] sidebarEventCodes;
 
     // TODO: Again I want to get rid of product code chains like this
     // TODO: Hopefully we can firm up how product codes are assigned to tokens
@@ -79,10 +79,10 @@ public class RoleBuilder {
         return this;
     }
 
-    public RoleBuilder setSidebar(String... eventCodes) {
-        this.sidebarEventCodes = eventCodes;
-        return this;
-    }
+    // public RoleBuilder setSidebar(String... eventCodes) {
+    //     this.sidebarEventCodes = eventCodes;
+    //     return this;
+    // }
 
     public RoleBuilder addChildren(String... roleCodes) {
         this.childrenCodes.addAll(Arrays.asList(roleCodes));
@@ -108,9 +108,9 @@ public class RoleBuilder {
         }
 
         // Sidebar
-        for(String sidebarCode : sidebarEventCodes) {
+        // for(String sidebarCode : sidebarEventCodes) {
             
-        }
+        // }
 
         // Children
         roleMan.setChildren(productCode, targetRole, childrenCodes.toArray(new String[0]));

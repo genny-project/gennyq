@@ -118,6 +118,7 @@ public final class GennyConstants {
 	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
 
 	// event
+	public static final String EVENT_PREFIX = "EVT_";
 	public static final String PRI_EVENT = "PRI_EVENT";
 	public static final String CODE = "code";
 	public static final String TARGETCODE = "targetCode";
