@@ -1,7 +1,9 @@
 package life.genny.kogito.common.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -16,6 +18,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -88,21 +91,24 @@ public class ProcessAnswerService {
 	 */
 	public Boolean checkMandatory(ProcessData processData) {
 
-		Ask ask = taskService.fetchAsk(processData);
+		QBulkMessage msg = taskService.fetchBulkMessage(processData);
 
 		// update ask target
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		frontendService.recursivelyUpdateAskTarget(ask, processEntity);
+		Map<String, Ask> flatMapOfAsks = new HashMap<>();
+		for (Ask ask : msg.getAsks())
+			frontendService.recursivelyUpdateAskTarget(ask, processEntity, flatMapOfAsks);
 
 		// find the submit ask
 		List<Answer> answers = processData.getAnswers();
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
-		qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(msg.getAsks(), processEntity);
+		for (Ask ask : msg.getAsks())
+			qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+		QDataAskMessage asks = new QDataAskMessage(msg.getAsks());
+		asks.setToken(userToken.getToken());
+		asks.setReplace(true);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, asks);
 
 		return answered;
 	}
@@ -142,10 +148,11 @@ public class ProcessAnswerService {
 			acceptSubmission = false;
 		}
 
-		Ask ask = taskService.fetchAsk(processData);
+		QBulkMessage msg = taskService.fetchBulkMessage(processData);
 
 		// disable submit button if not unique
-		qwandaUtils.sendSubmit(ask, acceptSubmission);
+		for (Ask ask : msg.getAsks())
+			qwandaUtils.sendSubmit(ask, acceptSubmission);
 
 		return acceptSubmission;
 	}

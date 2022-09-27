@@ -377,10 +377,10 @@ public class QwandaUtils {
 		return true;
 	}
 
-  public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
+	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
 		Map<String, Ask> flatMapAsks = getAllAsksRecursively(ask);
-    return updateDependentAsks(ask, target, defBE, flatMapAsks);
-  }
+		return updateDependentAsks(ask, target, defBE, flatMapAsks);
+	}
 
 	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
 		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
@@ -405,16 +405,17 @@ public class QwandaUtils {
 	/**
 	 * Check if all Ask mandatory fields are answered for a BaseEntity.
 	 *
-	 * @param ask        The ask to check
+	 * @param asks        The ask to check
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(Ask ask, BaseEntity baseEntity) {
-
-		log.info("Checking " + ask.getQuestionCode() + " mandatorys against " + baseEntity.getCode());
+	public Boolean mandatoryFieldsAreAnswered(List<Ask> asks, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
-		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<String, Boolean>(), ask);
+		Map<String, Boolean> map = new HashMap<String, Boolean>();
+		for (Ask ask : asks)
+			map = recursivelyFillMandatoryMap(map, ask);
+
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
@@ -506,9 +507,8 @@ public class QwandaUtils {
 	 *
 	 * @param ask      The ask to traverse
 	 * @param disabled Should the submit ask be disabled
-	 * @return The updated ask
 	 */
-	public Ask recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
+	public void recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
 
 		// return ask if submit is found
 		if (ask.getQuestion().getAttribute().getCode().equals("EVT_SUBMIT")) {
@@ -519,11 +519,9 @@ public class QwandaUtils {
 		// recursively check child asks for submit
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-				child = recursivelyFindAndUpdateSubmitDisabled(child, disabled);
+				recursivelyFindAndUpdateSubmitDisabled(child, disabled);
 			}
 		}
-
-		return ask;
 	}
 
 	/**

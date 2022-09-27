@@ -2,11 +2,9 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
-
 import java.util.HashMap;
-import java.util.Map;
-
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -27,7 +25,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -44,100 +42,54 @@ public class FrontendService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject UserToken userToken;
+	@Inject
+	UserToken userToken;
 
-	@Inject QwandaUtils qwandaUtils;
-	@Inject DatabaseUtils databaseUtils;
-	@Inject BaseEntityUtils beUtils;
-	@Inject DefUtils defUtils;
+	@Inject
+	QwandaUtils qwandaUtils;
+	@Inject
+	DatabaseUtils databaseUtils;
+	@Inject
+	BaseEntityUtils beUtils;
+	@Inject
+	DefUtils defUtils;
 
-	@Inject NavigationService navigationService;
-	@Inject TaskService taskService;
+	@Inject
+	NavigationService navigationService;
+	@Inject
+	TaskService taskService;
 
 	/**
-	 * Control main content navigation using a pcm and a question
+	 * Send the bulk message to the frontend.
+	 * 
+	 * @param processData
 	 */
-	public void navigateContent(ProcessData processData) {
+	public void sendBulkMessage(ProcessData processData) {
 
 		log.info("Navigating to form...");
 		String pcmCode = processData.getPcmCode();
 		String questionCode = processData.getQuestionCode();
 
-		navigationService.navigateContent(pcmCode, questionCode);
-	}
+		if (!"PCM_ROOT".equals(pcmCode))
+			navigationService.navigateContent(pcmCode, questionCode);
 
-	/**
-	 * Get asks using a question code, for a given source and target.
-	 *
-	 * @param questionCode The question code used to fetch asks
-	 * @param sourceCode   The code of the source entity
-	 * @param targetCode   The code of the target entity
-	 * @param processId    The processId to set in the asks
-	 * @return The ask message
-	 */
-	public void sendAsks(ProcessData processData) {
-
-		Ask ask = taskService.fetchAsk(processData);
+		QBulkMessage msg = taskService.fetchBulkMessage(processData);
 
 		// update ask target
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		Map<String, Ask> flatMapOfAsks = recursivelyUpdateAskTarget(ask, processEntity);
+		Map<String, Ask> flatMapOfAsks = new HashMap<>();
+		for (Ask ask : msg.getAsks())
+			flatMapOfAsks = recursivelyUpdateAskTarget(ask, processEntity, flatMapOfAsks);
 
 		// check mandatories and update submit
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(ask, processEntity);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(msg.getAsks(), processEntity);
 		log.info("Mandatory fields are " + (answered ? "answered" : "not answered"));
-		ask = qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
+		for (Ask ask : msg.getAsks())
+			qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
 
 		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		qwandaUtils.updateDependentAsks(ask, processEntity, defBE, flatMapOfAsks);
-
-		// send to user
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		msg.setTag("sendAsks");
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-	}
-
-  public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
-    return recursivelyUpdateAskTarget(ask, target, new HashMap<String, Ask>());
-  }
-
-	/**
-	 * Recursively update the ask target.
-	 *
-	 * @param ask    The ask to traverse
-	 * @param target The target entity to set
-   	 * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and prevent further unnecessary recursion
-	 */
-	public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target, Map<String, Ask> asks) {
-
-		ask.setTargetCode(target.getCode());
-
-		// recursively update children
-		if (ask.getChildAsks() != null) {
-			for (Ask child : ask.getChildAsks()) {
-        		asks.put(child.getAttributeCode(), child);
-				asks = recursivelyUpdateAskTarget(child, target, asks);
-			}
-		}
-
-    	return asks;
-	}
-
-	/**
-	 * Send a baseentity after filtering the entity attributes
-	 * based on the questions in the ask message.
-	 *
-	 * @param code      The code of the baseentity to send
-	 * @param askMsg    The ask message used to filter attributes
-	 * @param processId The process id to use for the baseentity cache
-	 * @param defCode   . The type of processBE (to save calculating it again)
-	 */
-	public void sendBaseEntitys(ProcessData processData) {
-
-		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		List<String> attributeCodes = processData.getAttributeCodes();
+		for (Ask ask : msg.getAsks())
+			qwandaUtils.updateDependentAsks(ask, processEntity, defBE, flatMapOfAsks);
 
 		// grab all entityAttributes from the entity
 		Set<EntityAttribute> entityAttributes = ConcurrentHashMap
@@ -147,30 +99,51 @@ public class FrontendService {
 		}
 
 		// delete any attribute that is not in the allowed Set
+		List<String> attributeCodes = processData.getAttributeCodes();
 		for (EntityAttribute ea : entityAttributes) {
 			if (!attributeCodes.contains(ea.getAttributeCode())) {
 				processEntity.removeAttribute(ea.getAttributeCode());
 			}
 		}
 
-		// send entity front end
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
-		msg.add(processEntity);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		msg.setTotal(Long.valueOf(msg.getItems().size()));
-		msg.setTag("SendBaseEntities");
-
 		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
+		msg.add(processEntity);
 
 		// check cache first
 		qwandaUtils.storeProcessData(processData);
-		Ask ask = taskService.fetchAsk(processData);
 
 		// handle initial dropdown selections
-		recuresivelyFindAndSendDropdownItems(ask, processEntity, ask.getQuestion().getCode());
+		for (Ask ask : msg.getAsks())
+			recuresivelyFindAndSendDropdownItems(ask, processEntity, ask.getQuestion().getCode());
 
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, jsonb.toJson(msg));
+		// send to user
+		msg.setToken(userToken.getToken());
+		msg.setTag("BulkMessage");
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
+	/**
+	 * Recursively update the ask target.
+	 *
+	 * @param ask    The ask to traverse
+	 * @param target The target entity to set
+	 * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and
+	 *         prevent further unnecessary recursion
+	 */
+	public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target, Map<String, Ask> asks) {
+
+		ask.setTargetCode(target.getCode());
+
+		// recursively update children
+		if (ask.getChildAsks() != null) {
+			for (Ask child : ask.getChildAsks()) {
+				asks.put(child.getAttributeCode(), child);
+				asks = recursivelyUpdateAskTarget(child, target, asks);
+			}
+		}
+
+		return asks;
 	}
 
 	/**
@@ -199,7 +172,8 @@ public class FrontendService {
 						continue;
 					}
 					if ((code.startsWith("{startDate")) || (code.startsWith("endDate"))) {
-						log.error("BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
+						log.error(
+								"BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
 						continue;
 					}
 

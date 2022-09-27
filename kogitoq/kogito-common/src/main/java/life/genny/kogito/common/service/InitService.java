@@ -1,24 +1,19 @@
 package life.genny.kogito.common.service;
 
-import java.util.List;
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.SELF;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonArray;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
-import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -128,57 +123,66 @@ public class InitService {
 	 */
 	public void sendPCMs() {
 
-		log.info("Sending PCMs for " + userToken.getProductCode());
+		JsonObject payload = Json.createObjectBuilder()
+				.add("pcmCode", "PCM_ROOT")
+				.add("sourceCode", userToken.getUserCode())
+				.add("targetCode", userToken.getUserCode())
+				.build();
 
-		String productCode = userToken.getProductCode();
-		BaseEntity user = beUtils.getUserBaseEntity();
+		log.info("triggering workflow!");
+		kogitoUtils.triggerWorkflow(SELF, "processQuestions", payload);
 
-		// get pcms using search
-		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
-				.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "PCM_%"))
-				.setAllColumns(true)
-				.setPageSize(1000)
-				.setRealm(productCode);
+		// log.info("Sending PCMs for " + userToken.getProductCode());
 
-		log.info(jsonb.toJson(searchEntity));
+		// String productCode = userToken.getProductCode();
+		// BaseEntity user = beUtils.getUserBaseEntity();
 
-		List<BaseEntity> pcms = searchUtils.searchBaseEntitys(searchEntity);
-		if (pcms == null) {
-			log.info("No PCMs found for " + productCode);
-			return;
-		}
-		log.info("Sending "+pcms.size()+" PCMs");
+		// // get pcms using search
+		// SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
+		// 		.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "PCM_%"))
+		// 		.setAllColumns(true)
+		// 		.setPageSize(1000)
+		// 		.setRealm(productCode);
 
-		// configure ask msg
-		QDataAskMessage askMsg = new QDataAskMessage();
-		askMsg.setToken(userToken.getToken());
-		askMsg.setReplace(true);
-		askMsg.setAliasCode("PCM_INIT_ASK_MESSAGE");
+		// log.info(jsonb.toJson(searchEntity));
 
-		for (BaseEntity pcm : pcms) {
-			log.info("Processing " + pcm.getCode());
-			String questionCode = pcm.getValue("PRI_QUESTION_CODE", null);
-			if (questionCode == null) {
-				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") null PRI_QUESTION_CODE");
-				continue;
-			}
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, user);
-			if (ask == null) {
-				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + questionCode);
-				continue;
-			}
-			askMsg.add(ask);
-		}
+		// List<BaseEntity> pcms = searchUtils.searchBaseEntitys(searchEntity);
+		// if (pcms == null) {
+		// 	log.info("No PCMs found for " + productCode);
+		// 	return;
+		// }
+		// log.info("Sending "+pcms.size()+" PCMs");
 
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, askMsg);
+		// // configure ask msg
+		// QDataAskMessage askMsg = new QDataAskMessage();
+		// askMsg.setToken(userToken.getToken());
+		// askMsg.setReplace(true);
+		// askMsg.setAliasCode("PCM_INIT_ASK_MESSAGE");
 
-		// configure msg and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		msg.setAliasCode("PCM_INIT_MESSAGE");
+		// for (BaseEntity pcm : pcms) {
+		// 	log.info("Processing " + pcm.getCode());
+		// 	String questionCode = pcm.getValue("PRI_QUESTION_CODE", null);
+		// 	if (questionCode == null) {
+		// 		log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") null PRI_QUESTION_CODE");
+		// 		continue;
+		// 	}
+		// 	Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, user);
+		// 	if (ask == null) {
+		// 		log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + questionCode);
+		// 		continue;
+		// 	}
+		// 	askMsg.add(ask);
+		// }
 
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+		// KafkaUtils.writeMsg(KafkaTopic.WEBDATA, askMsg);
+
+		// // configure msg and send
+		// QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcms);
+		// msg.setToken(userToken.getToken());
+		// msg.setReplace(true);
+		// msg.setAliasCode("PCM_INIT_MESSAGE");
+
+		// KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	/**
@@ -186,15 +190,15 @@ public class InitService {
 	 */
 	public void sendAddItems() {
 
-		BaseEntity user = beUtils.getUserBaseEntity();
-		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
+		// BaseEntity user = beUtils.getUserBaseEntity();
+		// Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
 
-		// configure msg and send
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
+		// // configure msg and send
+		// QDataAskMessage msg = new QDataAskMessage(ask);
+		// msg.setToken(userToken.getToken());
+		// msg.setReplace(true);
 
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+		// KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	public void sendDrafts() {

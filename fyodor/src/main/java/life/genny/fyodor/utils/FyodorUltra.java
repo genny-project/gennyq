@@ -17,6 +17,7 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
@@ -25,8 +26,6 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.criteria.CriteriaBuilder.Case;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -156,6 +155,7 @@ public class FyodorUltra {
 		searchEntity.getClauseContainers().stream().forEach(cont -> {
 			log.info("Arg: " + jsonb.toJson(cont));
 		});
+		log.info("Search Status: [" + searchEntity.getSearchStatus().toString() + "]");
 
 		// build the search query
 		TolstoysCauldron cauldron = new TolstoysCauldron(searchEntity);
@@ -266,7 +266,6 @@ public class FyodorUltra {
 		EEntityStatus status = searchEntity.getSearchStatus();
 		Case<Number> sc = selectCaseEntityStatus(root);
 
-		log.info("Search Status: [" + status.toString() + "]");
 		cauldron.add(cb.le(sc, status.ordinal()));
 	}
 

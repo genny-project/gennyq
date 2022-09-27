@@ -635,12 +635,8 @@ public class SearchUtils {
 				// Long.valueOf(finalResultList.size()) + "");
 
 				Attribute attribute = qwandaUtils.getAttribute("PRI_TOTAL_RESULTS");
-				try {
-					searchBE.addAnswer(
-							new Answer(searchBE, searchBE, attribute, Long.valueOf(finalResultList.size()) + ""));
-				} catch (BadDataException e) {
-					log.error("Could not update total results");
-				}
+				searchBE.addAnswer(
+					new Answer(searchBE, searchBE, attribute, Long.valueOf(finalResultList.size()) + ""));
 				CacheUtils.putObject(productCode, searchBE.getCode(), searchBE);
 
 				log.info("Sending Search Entity : " + searchBE.getCode());

@@ -83,8 +83,8 @@ public class SearchService {
 	public void sendTable(String code) {
 
 		// trim TREE_ITEM_ from code if present
-		code = StringUtils.removeStart(code, "TREE_ITEM_");
-		String searchCode = "SBE_"+code;
+		code = StringUtils.replaceOnce(code, "_TREE_ITEM_", "_");
+		String searchCode = StringUtils.replaceOnce(code, "QUE_", "SBE_");
 		log.info("Sending Table :: " + searchCode);
 
 		searchUtils.searchTable(searchCode);
@@ -175,7 +175,7 @@ public class SearchService {
 	 */
 	public void getBuckets(String code) {
 		try {
-			String searchCode = "SBE_" + code;
+			String searchCode = StringUtils.replaceOnce(code, "QUE_", "SBE_");
 
 			List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
 			List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);

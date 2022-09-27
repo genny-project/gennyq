@@ -4,55 +4,30 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.net.ssl.HttpsURLConnection;
-import javax.ws.rs.core.Response;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.keycloak.representations.account.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
-
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.attribute.AttributeText;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.ServiceToken;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
@@ -73,25 +48,13 @@ import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.AndTreeFilter;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
+import org.jboss.logging.Logger;
 
 import io.vertx.mutiny.sqlclient.Tuple;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.TimeZone;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.BaseEntity;
 
 /**
  * A static utility class used for standard requests and
@@ -105,6 +68,8 @@ public class GithubUtils {
     static Jsonb jsonb = JsonbBuilder.create();
 
     public static final String GIT_PROP_EXTENSION = "-git.properties";
+
+	public static DataType dtt = new DataType(String.class);
 
     public String gitGet(final String branch, final String project, final String repositoryName,
             final String layoutFilename) throws IOException, GitAPIException {
@@ -302,23 +267,23 @@ public class GithubUtils {
                     }
 
                     BaseEntity layout = new BaseEntity(layoutCode, name);
-                    layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_DATA", "Layout Data"),
+                    layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt),
                             content));
                     layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URI", "Layout URI"), uri));
-                    layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URL", "Layout URL"),
+                            new Answer(layout, layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), uri));
+                    layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt),
                             "http://layout-cache-service/" + fullpath));
                     layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_LAYOUT_NAME", "Layout Name"), name));
+                            new Answer(layout, layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), name));
                     layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_BRANCH", "Branch"), branch));
+                            new Answer(layout, layout, new Attribute("PRI_BRANCH", "Branch", dtt), branch));
                     long secs = commit.getCommitTime();
                     LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
                             TimeZone.getDefault().toZoneId());
 
                     String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
                     layout.addAnswer(new Answer(layout, layout,
-                            new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"), lastCommitDateTimeString)); // if
+                            new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt), lastCommitDateTimeString)); // if
                                                                                                                    // new
                     layout.setRealm(realm);
                     layout.setUpdated(commitDateTime);
@@ -389,17 +354,17 @@ public class GithubUtils {
             String layoutCode = ("LAY_" + realm + "_" + precode).toUpperCase();
             log.info(layoutCode + " file = " + fullpath + " size=" + tupleFile.getString(1).length());
             BaseEntity layout = new BaseEntity(layoutCode, name);
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_DATA", "Layout Data"), content));
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URI", "Layout URI"), filepath));
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URL", "Layout URL"),
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt), content));
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), filepath));
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt),
                     "http://layout-cache-service/" + realmFilter + "/" + fullpath));
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_NAME", "Layout Name"), name));
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), name));
             long secs = commitTime;
             LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
                     TimeZone.getDefault().toZoneId());
 
             String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"),
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt),
                     lastCommitDateTimeString)); // if new
             layout.setRealm(realm);
             layout.setUpdated(commitDateTime);

@@ -4,7 +4,11 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -17,9 +21,12 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -34,19 +41,26 @@ public class TaskService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject UserToken userToken;
+	@Inject
+	UserToken userToken;
 
-	@Inject QwandaUtils qwandaUtils;
-	@Inject DatabaseUtils databaseUtils;
-	@Inject BaseEntityUtils beUtils;
-	@Inject DefUtils defUtils;
+	@Inject
+	QwandaUtils qwandaUtils;
+	@Inject
+	DatabaseUtils databaseUtils;
+	@Inject
+	BaseEntityUtils beUtils;
+	@Inject
+	DefUtils defUtils;
 
-	@Inject NavigationService navigationService;
+	@Inject
+	NavigationService navigationService;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:%s";
 
 	/**
 	 * Get the user code of the current user.
+	 * 
 	 * @return The user code
 	 */
 	public String getCurrentUserCode() {
@@ -55,36 +69,39 @@ public class TaskService {
 
 	/**
 	 * Cache an ask for a processId and questionCode combination.
+	 * 
 	 * @param processData The processData to cache for
-	 * @param ask The ask to cache
+	 * @param asks         The ask to cache
 	 */
-	public void cacheAsks(ProcessData processData, Ask ask) {
+	public void cacheBulkMessage(ProcessData processData, QBulkMessage msg) {
 
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), processData.getQuestionCode());
-		CacheUtils.putObject(userToken.getProductCode(), key, ask);
+		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), "MSG");
+		CacheUtils.putObject(userToken.getProductCode(), key, msg);
 	}
 
 	/**
 	 * Fetch an ask from cache for a processId and questionCode combination.
+	 * 
 	 * @param processData The processData to fetch for
 	 * @return
 	 */
-	public Ask fetchAsk(ProcessData processData) {
+	public QBulkMessage fetchBulkMessage(ProcessData processData) {
 
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), processData.getQuestionCode());
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), "MSG");
+		QBulkMessage msg = CacheUtils.getObject(userToken.getProductCode(), key, QBulkMessage.class);
 
-		if (ask == null)
-			ask = generateAsks(processData);
+		if (msg == null)
+			msg = generateBulkMessage(processData);
 
-		return ask;
+		return msg;
 	}
 
 	/**
 	 * Generate the asks and save them to the cache
+	 * 
 	 * @param processData The process data
 	 */
-	public Ask generateAsks(ProcessData processData) {
+	public QBulkMessage generateBulkMessage(ProcessData processData) {
 
 		String questionCode = processData.getQuestionCode();
 		String sourceCode = processData.getSourceCode();
@@ -96,16 +113,91 @@ public class TaskService {
 
 		log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 
-		// fetch question from DB
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-		Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
-		ask.addChildAsk(events);
-		qwandaUtils.recursivelySetProcessId(ask, processId);
+		QBulkMessage msg = new QBulkMessage();
+
+		if (questionCode != null) {
+			// fetch question from DB
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
+			Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
+			ask.addChildAsk(events);
+			msg.add(ask);
+		}
+
+		// find first level PCM
+		traversePCM(processData.getPcmCode(), source, target, msg);
+
+		for (Ask child : msg.getAsks())
+			qwandaUtils.recursivelySetProcessId(child, processId);
 
 		// cache them for fast fetching
-		cacheAsks(processData, ask);
+		cacheBulkMessage(processData, msg);
 
-		return ask;
+		return msg;
+	}
+
+	/**
+	 * Traverse a PCM looking for a non-readonly question.
+	 * 
+	 * @param pcm
+	 * @param source
+	 * @param target
+	 * @return
+	 */
+	public Boolean traversePCM(String pcmCode, BaseEntity source, BaseEntity target, QBulkMessage msg) {
+
+		if ("PCM_DASHBOARD".equals(pcmCode))
+			return false;
+		// add pcm to bulk message
+		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+		msg.add(pcm);
+
+		Ask ask = null;
+		String questionCode = pcm.getValueAsString("PRI_QUESTION_CODE");
+		if (questionCode == null) {
+			log.warn("Question Code is null for " + pcm.getCode());
+		} else {
+			// add ask to bulk message
+			ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
+			msg.add(ask);
+		}
+
+		Boolean expecting = false;
+
+		// iterate fields recursively
+		List<EntityAttribute> locations = pcm.getBaseEntityAttributes().stream()
+				.filter(ea -> ea.getAttribute() != null && ea.getAttribute().getCode() != null)
+				.filter(ea -> ea.getAttribute().getCode().startsWith("PRI_LOC"))
+				.collect(Collectors.toList());
+
+		for (EntityAttribute entityAttribute : locations) {
+
+			// recursively check PCM fields
+			String value = entityAttribute.getAsString();
+			if (value.startsWith("PCM_")) {
+				if (traversePCM(value, source, target, msg))
+					expecting = true;
+				continue;
+			}
+
+			// cannot check asks if not existant
+			if (ask == null)
+				continue;
+
+			// find appropriate ask (could use map instead)
+			Optional<Ask> child = Stream.of(ask.getChildAsks())
+					.filter(a -> a.getAttributeCode().equals(value))
+					.findFirst();
+			if (child.isEmpty()) {
+				log.warn("No corresponding child for pcm location " + value);
+				continue;
+			}
+
+			// return true if answer expected
+			if (!child.get().getReadonly())
+				expecting = true;
+		}
+
+		return expecting;
 	}
 
 	/**
@@ -196,7 +288,6 @@ public class TaskService {
 		}
 	}
 
-
 	/**
 	 * Work out the DEF for the baseentity .
 	 *
@@ -218,17 +309,53 @@ public class TaskService {
 	}
 
 	/**
+	 * @param processData
+	 * @return
+	 */
+	public Boolean isExpectingAnswers(ProcessData processData) {
+
+		QBulkMessage msg = fetchBulkMessage(processData);
+
+		for (Ask ask : msg.getAsks())
+			if (containsNonReadonly(ask))
+				return true;
+
+		return false;
+	}
+
+	/**
+	 * @param ask
+	 * @return
+	 */
+	public Boolean containsNonReadonly(Ask ask) {
+
+		if (ask.getReadonly())
+			return true;
+
+		if (ask.getChildAsks() != null) {
+			for (Ask child : ask.getChildAsks())
+				if (containsNonReadonly(child))
+					return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Find the involved attribute codes.
+	 * 
 	 * @param processData The process data json
 	 * @return process json
 	 */
 	public ProcessData findAttributeCodes(ProcessData processData) {
 
-		Ask ask = fetchAsk(processData);
+		QBulkMessage msg = fetchBulkMessage(processData);
 
 		// find all allowed attribute codes
 		Set<String> attributeCodes = new HashSet<>();
-		attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
+		for (Ask ask : msg.getAsks())
+			attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
+
 		processData.setAttributeCodes(Arrays.asList(attributeCodes.toArray(new String[attributeCodes.size()])));
 
 		return processData;
