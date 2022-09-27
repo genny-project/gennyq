@@ -1,10 +1,9 @@
 package life.genny.bridge.client;
 
-import io.vertx.core.json.JsonObject;
-import life.genny.qwandaq.exception.ResponseException;
 import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-
+import io.vertx.core.json.JsonObject;
+import life.genny.qwandaq.exception.ResponseException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 
@@ -14,7 +13,7 @@ import javax.ws.rs.Path;
  * has to be synchronous so kafka or any asyn implementation cannot be
  * used.
  *
- * @author hello@gada.io
+ * @author    hello@gada.io
  */
 @Path("/eventbus")
 @RegisterRestClient

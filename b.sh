@@ -1,4 +1,4 @@
-#!/bin/bash
+./#!/bin/bash
 mvn clean
 cd qwandaq;
 mvn clean install -U

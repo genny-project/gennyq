@@ -19,7 +19,6 @@ package life.genny.qwandaq;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.querydsl.core.annotations.QueryExclude;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 

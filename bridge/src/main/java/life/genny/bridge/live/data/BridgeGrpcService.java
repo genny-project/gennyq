@@ -168,7 +168,6 @@ public class BridgeGrpcService implements Stream {
 
     /**
      * Creates a keycloakTokenPayload out of an Item, based on its token
-     *
      * @param request
      * @return
      */

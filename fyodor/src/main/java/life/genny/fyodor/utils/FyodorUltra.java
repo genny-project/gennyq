@@ -1,36 +1,5 @@
 package life.genny.fyodor.utils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.criteria.CriteriaBuilder.Case;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.fyodor.models.TolstoysCauldron;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
@@ -44,11 +13,7 @@ import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
-import life.genny.qwandaq.entity.search.trait.Column;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.entity.search.trait.*;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
@@ -57,6 +22,26 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder.Case;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class FyodorUltra {
@@ -215,8 +200,7 @@ public class FyodorUltra {
 	 * Use a cauldron to build a search query from a CriteriaQuery base.
 	 * 
 	 * @param query
-	 * @param baseEntity
-	 * @param searchEntity
+	 * @param cauldron
 	 * @return
 	 */
 	public void brewQueryInCauldron(CriteriaQuery<?> query, TolstoysCauldron cauldron) {
@@ -324,40 +308,26 @@ public class FyodorUltra {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-		switch (operator) {
-			case LIKE:
-				return cb.like((Expression<String>) expression, String.class.cast(value));
-			case NOT_LIKE:
-				return cb.notLike((Expression<String>) expression, String.class.cast(value));
-			case CONTAINS:
-				return cb.like((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case NOT_CONTAINS:
-				return cb.notLike((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case STARTS_WITH:
-				return cb.like((Expression<String>) expression, String.class.cast(value) + "%");
-			case NOT_STARTS_WITH:
-				return cb.notLike((Expression<String>) expression, String.class.cast(value) + "%");
-			case EQUALS:
-				return cb.equal(expression, value);
-			case NOT_EQUALS:
-				return cb.notEqual(expression, value);
-			case GREATER_THAN:
-				return cb.gt((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN:
-				return cb.lt((Expression<Number>) expression, Number.class.cast(value));
-			case GREATER_THAN_OR_EQUAL:
-				return cb.ge((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN_OR_EQUAL:
-				return cb.le((Expression<Number>) expression, Number.class.cast(value));
-			default:
-				throw new QueryBuilderException("Invalid Operator: " + operator);
-		}
+		return switch (operator) {
+			case LIKE -> cb.like((Expression<String>) expression, String.class.cast(value));
+			case NOT_LIKE -> cb.notLike((Expression<String>) expression, String.class.cast(value));
+			case CONTAINS -> cb.like((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
+			case NOT_CONTAINS -> cb.notLike((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
+			case STARTS_WITH -> cb.like((Expression<String>) expression, String.class.cast(value) + "%");
+			case NOT_STARTS_WITH -> cb.notLike((Expression<String>) expression, String.class.cast(value) + "%");
+			case EQUALS -> cb.equal(expression, value);
+			case NOT_EQUALS -> cb.notEqual(expression, value);
+			case GREATER_THAN -> cb.gt((Expression<Number>) expression, Number.class.cast(value));
+			case LESS_THAN -> cb.lt((Expression<Number>) expression, Number.class.cast(value));
+			case GREATER_THAN_OR_EQUAL -> cb.ge((Expression<Number>) expression, Number.class.cast(value));
+			case LESS_THAN_OR_EQUAL -> cb.le((Expression<Number>) expression, Number.class.cast(value));
+			default -> throw new QueryBuilderException("Invalid Operator: " + operator);
+		};
 	}
 
 	/**
 	 * Find a predicate of a DateTime type filter.
-	 * 
-	 * @param baseEntity
+	 *
 	 * @param cauldron
 	 * @param filter
 	 * @return
@@ -499,8 +469,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a search order for a sort.
-	 * 
-	 * @param baseEntity
+	 *
 	 * @param cauldron
 	 * @param sort
 	 * @return

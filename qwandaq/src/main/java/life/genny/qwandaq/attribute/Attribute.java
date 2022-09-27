@@ -71,15 +71,32 @@ import java.util.Objects;
 @RegisterForReflection
 public class Attribute extends CodedEntity {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    private static final String DEFAULT_CODE_PREFIX = "PRI_";
+	private static final String DEFAULT_CODE_PREFIX = "PRI_";
 
-    // @OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.attribute")
-    // @JsonManagedReference(value="attribute")
-    // @JsonIgnore
-    // private Set<EntityAttribute> baseEntityAttributes = new
-    // HashSet<EntityAttribute>(0);
+	// core
+	public static final String PRI_NAME = "PRI_NAME";
+	public static final String PRI_CODE = "PRI_CODE";
+	public static final String PRI_UUID = "PRI_UUID";
+	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
+	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+
+	// definition
+	public static final String LNK_DEF = "LNK_DEF";
+
+	// roles
+	public static final String LNK_ROLE = "LNK_ROLE";
+
+	// contact
+	public static final String PRI_MOBILE = "PRI_MOBILE";
+	public static final String PRI_EMAIL = "PRI_EMAIL";
+	public static final String PRI_TIMEZONE_ID = "PRI_TIMEZONE_ID";
+	public static final String PRI_ADDRESS = "PRI_ADDRESS";
+
+	// search
+	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
+	public static final String PRI_INDEX = "PRI_INDEX";
 
     @Embedded
     @NotNull
@@ -97,13 +114,11 @@ public class Attribute extends CodedEntity {
 
     private String icon;
 
-    /**
-     * Constructor.
-     */
-    public Attribute() {
-        // super();
-        // dummy for hibernate
-    }
+	/**
+	 * Constructor.
+	 */
+	public Attribute() {
+	}
 
     public Attribute(String aCode, String aName, DataType dataType) {
         super(aCode, aName);

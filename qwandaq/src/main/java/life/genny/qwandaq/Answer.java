@@ -17,7 +17,6 @@
 package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.querydsl.core.annotations.QueryExclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
@@ -84,7 +83,6 @@ public class Answer {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
 	@GenericGenerator(name = "native", strategy = "native")
-
 	@Basic(optional = false)
 	@Column(name = "id", updatable = false, nullable = false)
 	private Long id;

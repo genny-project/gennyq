@@ -20,7 +20,7 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
+import life.genny.qwandaq.datatype.DataType;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
@@ -29,8 +29,6 @@ import javax.persistence.InheritanceType;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import life.genny.qwandaq.datatype.DataType;
 
 /**
  * AttributeDouble class handles LocalDouble based attributes.

@@ -5,7 +5,8 @@ package life.genny.bridge.exception;
  * issues which were faced before, known issues or expected problems that
  * can be documented
  *
- * @author hello@gada.io
+ * @author    hello@gada.io
+ *
  */
 public class BridgeException extends Exception {
 

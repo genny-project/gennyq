@@ -18,7 +18,10 @@
 		<jandex.version>1.0.7</jandex.version>
 		<jjwt.version>0.7.0</jjwt.version>
 		<testcontainers.version>1.17.0</testcontainers.version>
-	</properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
+  </properties>
 
 	<dependencyManagement>
 		<dependencies>
