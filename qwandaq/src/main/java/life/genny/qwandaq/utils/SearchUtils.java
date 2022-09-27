@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -32,6 +33,8 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.clause.Or;
+import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
@@ -1109,9 +1112,8 @@ public class SearchUtils {
 	 */
 	public SearchEntity getBucketFilterOptions(String sbeCode,String lnkCode, String lnkValue) {
 		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode)
-				.add(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "CPY_%"))
-				.add(new Filter(GennyConstants.PRI_IS_HOST_CPY, true))
-				.add(new Filter(GennyConstants.PRI_STATUS, Operator.EQUALS, GennyConstants.ACTIVE))
+				.add(new Or(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "CPY_%")
+						,new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "PER_%")))
 				.add(new Column(lnkCode, lnkCode));
 
 		if(!lnkValue.isEmpty()) {

@@ -210,8 +210,6 @@ public class SearchService {
 		sendBucketFilter(GennyConstants.QUE_BUCKET_INTERNS_GRP,GennyConstants.QUE_SELECT_INTERN,
 				GennyConstants.LNK_PERSON, GennyConstants.BKT_APPLICATIONS);
 
-		sendBucketFilterOptions(GennyConstants.SBE_HOST_COMPANIES_VIEW,GennyConstants.QUE_BUCKET_INTERNS_GRP
-				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.LNK_PERSON, GennyConstants.ITEMS);
 	}
 
 	/**
@@ -586,6 +584,9 @@ public class SearchService {
 		msg.setMessage(GennyConstants.BUCKET_FILTER_LABEL);
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+
+		sendBucketFilterOptions(GennyConstants.SBE_DROPDOWN,GennyConstants.QUE_BUCKET_INTERNS_GRP
+				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.LNK_PERSON, GennyConstants.ITEMS);
 	}
 
 	/**

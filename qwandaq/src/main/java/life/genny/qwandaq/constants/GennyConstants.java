@@ -111,6 +111,7 @@ public final class GennyConstants {
 
 	// bucket filte
 	public static final String QUE_BUCKET_INTERNS_GRP = "QUE_BUCKET_INTERNS_GRP";
+	public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
 	public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
 	public static final String BKT_APPLICATIONS = "BKT_APPLICATIONS";
 
@@ -131,5 +132,8 @@ public final class GennyConstants {
 	public static final String PRI_STATUS="PRI_STATUS";
 	public static final String ACTIVE="ACTIVE";
 	public static final String BUCKET_FILTER_LABEL="Start typing to search";
+	public static final String PRI_IS_INTERN="PRI_IS_INTERN";
+	public static final String PRI_IS_EDU_PRO="PRI_IS_EDU_PRO";
+
 }
 
