@@ -234,6 +234,12 @@ public class InitService {
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
 		for(EntityAttribute capability : capabilities) {
+
+			// If they don't have the capability then don't bother finding the def
+			if(!capMan.checkCapability(capability, false, CapabilityMode.ADD))
+				continue;
+
+			
 			String defCode = CommonUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
 			try {
 				// Check for a def
@@ -243,23 +249,21 @@ public class InitService {
 				continue;
 			}
 
-			if(capMan.checkCapability(capability, false, CapabilityMode.ADD)) {
-				// Create the ask (there is a def and we have the capability)
-				String baseCode = CommonUtils.safeStripPrefix(capability.getAttributeCode());
+			// Create the ask (there is a def and we have the capability)
+			String baseCode = CommonUtils.safeStripPrefix(capability.getAttributeCode());
 
-				String eventCode = "EVT_ADD".concat(baseCode);
-				String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
-				Attribute event = qwandaUtils.createEvent(eventCode, name);
+			String eventCode = "EVT_ADD".concat(baseCode);
+			String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
+			Attribute event = qwandaUtils.createEvent(eventCode, name);
 
-				Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
+			Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
 
-				Ask addAsk = new Ask(question);
-				addAsk.setSourceCode(user.getCode());
-				addAsk.setTargetCode(user.getCode());
-				addAsk.setRealm(productCode);
+			Ask addAsk = new Ask(question);
+			addAsk.setSourceCode(user.getCode());
+			addAsk.setTargetCode(user.getCode());
+			addAsk.setRealm(productCode);
 
-				parentAsk.addChildAsk(addAsk);
-			}
+			parentAsk.addChildAsk(addAsk);
 		}
 		return parentAsk;
 	}
