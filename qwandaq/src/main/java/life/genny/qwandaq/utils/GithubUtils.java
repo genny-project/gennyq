@@ -179,12 +179,12 @@ public class GithubUtils {
             throws InvalidRemoteException, TransportException, GitAPIException,
             RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException {
 
-        List<BaseEntity> layouts = new ArrayList<BaseEntity>();
+        List<BaseEntity> layouts = new ArrayList<>();
 
-        Map<String, String> lays = new HashMap<String, String>();
+        Map<String, String> lays = new HashMap<>();
 
         String gitFolder = gitrealm;
-        String realmFilter = gitFolder;// +"/sublayouts";
+        String realmFilter = gitFolder;
 
         log.info("remoteUrl=" + remoteUrl);
         log.info("branch=" + branch);
@@ -193,8 +193,7 @@ public class GithubUtils {
         log.info("gitFolder=" + gitFolder);
         log.info("realmFilter=" + realmFilter);
 
-        // Process pp = Runtime.getRuntime().exec("cd /tmp;git clone -b "+branch+"
-        // "+remoteUrl);
+
 
         String tmpDir = "/tmp/git";
         try {
