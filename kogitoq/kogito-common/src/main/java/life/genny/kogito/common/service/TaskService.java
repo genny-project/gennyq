@@ -158,7 +158,7 @@ public class TaskService {
 			throw new NullParameterException("events");
 
 		// fetch attributes and create group
-		Attribute submit = qwandaUtils.getAttribute("EVT_SUBMIT");
+		// Attribute submit = qwandaUtils.getAttribute("EVT_SUBMIT");
 		Attribute groupAttribute = qwandaUtils.getAttribute("QQQ_QUESTION_GROUP");
 		Question groupQuestion = new Question("QUE_EVENTS", "", groupAttribute);
 
@@ -169,7 +169,7 @@ public class TaskService {
 		// split events string by comma
 		for (String event : events.split(",")) {
 			// create child and add to ask
-			Attribute attribute = new Attribute("EVT_" + event, event, submit.getDataType());
+			Attribute attribute = qwandaUtils.createEvent(event, event);//new Attribute("EVT_" + event, event, submit.getDataType());
 			Question question = new Question("QUE_" + event, event, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.addChildAsk(child);
