@@ -1,11 +1,35 @@
 package life.genny.qwandaq.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
@@ -20,20 +44,7 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -71,10 +82,21 @@ public class QwandaUtils {
 	public QwandaUtils() {
 	}
 
+	private static DataType DTT_EVENT;
+
+	@PostConstruct
+	private void init() {
+		Attribute submit = getAttribute("EVT_SUBMIT");
+		if (submit == null) {
+			log.error("Could not find Attribute: EVT_SUBMIT");
+		}
+		DTT_EVENT = submit.getDataType();
+	}
+
 	public Attribute saveAttribute(final Attribute attribute) {
 		return saveAttribute(userToken.getProductCode(), attribute);
 	}
-	
+
 	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
@@ -202,6 +224,14 @@ public class QwandaUtils {
 			log.error("Error loading attributes for productCode: " + productCode);
 			e.printStackTrace();
 		}
+	}
+
+	public Attribute createEvent(String code, final String name) {
+		if (!code.startsWith(EVENT_PREFIX)) {
+			code = EVENT_PREFIX.concat(code);
+		}
+		code = code.toUpperCase();
+		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
 	/**
@@ -348,8 +378,8 @@ public class QwandaUtils {
 	}
 
 	private Map<String, Ask> getAllAsksRecursively(Ask ask, Map<String, Ask> asks) {
-		if(ask.hasChildren()) {
-			for(Ask childAsk : ask.getChildAsks()) {
+		if (ask.hasChildren()) {
+			for (Ask childAsk : ask.getChildAsks()) {
 				asks.put(childAsk.getAttributeCode(), childAsk);
 				asks = getAllAsksRecursively(childAsk, asks);
 			}
@@ -367,10 +397,10 @@ public class QwandaUtils {
 		return true;
 	}
 
-  public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
+	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
 		Map<String, Ask> flatMapAsks = getAllAsksRecursively(ask);
-    return updateDependentAsks(ask, target, defBE, flatMapAsks);
-  }
+		return updateDependentAsks(ask, target, defBE, flatMapAsks);
+	}
 
 	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
 		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
@@ -378,17 +408,17 @@ public class QwandaUtils {
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), "DEP_");
 			Ask targetAsk = flatMapAsks.get(attributeCode);
-			if(targetAsk == null) {
+			if (targetAsk == null) {
 				continue;
 			}
-			
+
 			String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
 
 			boolean depsAnswered = hasDepsAnswered(target, dependencies);
 			targetAsk.setDisabled(!depsAnswered);
 			targetAsk.setHidden(!depsAnswered);
 		}
-		
+
 		return ask;
 	}
 
@@ -460,6 +490,7 @@ public class QwandaUtils {
 
 	/**
 	 * Fill the flat set of asks using recursion.
+	 * 
 	 * @param set The set to fill
 	 * @param ask The ask to traverse
 	 * @return The filled set
@@ -538,12 +569,13 @@ public class QwandaUtils {
 
 	/**
 	 * Save process data to cache.
+	 * 
 	 * @param processData The data to save
 	 */
 	public void storeProcessData(ProcessData processData) {
 
 		String productCode = userToken.getProductCode();
-		String key = String.format("%s:PROCESS_DATA", processData.getProcessId()); 
+		String key = String.format("%s:PROCESS_DATA", processData.getProcessId());
 
 		CacheUtils.putObject(productCode, key, processData);
 		log.infof("ProcessData cached to %s", key);
@@ -551,12 +583,13 @@ public class QwandaUtils {
 
 	/**
 	 * clear process data from cache.
+	 * 
 	 * @param processId The id of the data to clear
 	 */
 	public void clearProcessData(String processId) {
 
 		String productCode = userToken.getProductCode();
-		String key = String.format("%s:PROCESS_DATA", processId); 
+		String key = String.format("%s:PROCESS_DATA", processId);
 
 		CacheUtils.removeEntry(productCode, key);
 		log.infof("ProcessData removed from cache: %s", key);
@@ -564,13 +597,14 @@ public class QwandaUtils {
 
 	/**
 	 * Fetch process data from cache.
+	 * 
 	 * @param processId The id of the data to fetch
 	 * @return The saved data
 	 */
 	public ProcessData fetchProcessData(String processId) {
-		
+
 		String productCode = userToken.getProductCode();
-		String key = String.format("%s:PROCESS_DATA", processId); 
+		String key = String.format("%s:PROCESS_DATA", processId);
 
 		return CacheUtils.getObject(productCode, key, ProcessData.class);
 	}
@@ -737,13 +771,13 @@ public class QwandaUtils {
 
 					String questionCode = DefUtils.PREF_QUE
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-							DefUtils.PREF_PRI), DefUtils.PREF_LNK);
+									DefUtils.PREF_PRI), DefUtils.PREF_LNK);
 
 					Question childQues = new Question(questionCode, attribute.getName(), attribute);
 					Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-				childAsks.add(childAsk);
-			});
+					childAsks.add(childAsk);
+				});
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
@@ -770,9 +804,11 @@ public class QwandaUtils {
 
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * 
 	 * @param definition The definition to check against
-	 * @param answer An incoming answer
-	 * @param targets The target entities to check, usually processEntity and original target
+	 * @param answer     An incoming answer
+	 * @param targets    The target entities to check, usually processEntity and
+	 *                   original target
 	 * @return Boolean
 	 */
 	public Boolean isDuplicate(BaseEntity definition, Answer answer, BaseEntity... targets) {
@@ -785,7 +821,7 @@ public class QwandaUtils {
 
 		for (EntityAttribute entityAttribute : uniques) {
 			// fetch list of unique code combo
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, 
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,
 					entityAttribute.getAttribute().getCode());
 
 			// skip if no value found
@@ -826,7 +862,6 @@ public class QwandaUtils {
 					}
 				}
 
-
 				// value has not yet been answered, not a duplicate
 				if (value == null)
 					return false;
@@ -852,38 +887,40 @@ public class QwandaUtils {
 
 	/**
 	 * Send a baseentity with a feedback message to be displayed.
-	 * @param parentCode The parentCode of the question group
-	 * @param questionCode The questionCode of the bad answer
+	 * 
+	 * @param parentCode    The parentCode of the question group
+	 * @param questionCode  The questionCode of the bad answer
 	 * @param attributeCode The attributeCode of the bad answer
-	 * @param feedback The feedback to provide the user
+	 * @param feedback      The feedback to provide the user
 	 */
-	public void sendAttributeErrorMessage(String parentCode, String questionCode, String attributeCode, String feedback) {
+	public void sendAttributeErrorMessage(String parentCode, String questionCode, String attributeCode,
+			String feedback) {
 
 		// send a special FIELDMSG
 		JsonObject json = Json.createObjectBuilder()
-			.add("token", userToken.getToken())
-			.add("cmd_type", "FIELDMSG")
-			.add("msg_type", "CMD_MSG")
-			.add("code", parentCode)
-			.add("attributeCode", attributeCode)
-			.add("questionCode", questionCode)
-			.add("message", Json.createObjectBuilder()
-				.add("value", "This field must be unique and not have already been selected")
-			).build();
+				.add("token", userToken.getToken())
+				.add("cmd_type", "FIELDMSG")
+				.add("msg_type", "CMD_MSG")
+				.add("code", parentCode)
+				.add("attributeCode", attributeCode)
+				.add("questionCode", questionCode)
+				.add("message", Json.createObjectBuilder()
+						.add("value", "This field must be unique and not have already been selected"))
+				.build();
 
 		// send to commands topic
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
 		log.info("Sent error message to frontend : " + json.toString());
 	}
 
-
 	/**
 	 * Return attribute relied on base entity object and attribute code
-	 * @param baseEntity Base entity
+	 * 
+	 * @param baseEntity    Base entity
 	 * @param attributeCode Attribute code
 	 * @return Return attribute object
 	 */
-	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode){
+	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode) {
 		Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
 
 		if (baseEA.isPresent()) {

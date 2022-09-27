@@ -14,6 +14,7 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
@@ -22,7 +23,6 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -60,7 +60,7 @@ public class SearchUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CapabilityUtils capabilityUtils;
+	CapabilitiesManager capabilityUtils;
 
 	@Inject
 	ServiceToken serviceToken;
@@ -738,6 +738,7 @@ public class SearchUtils {
 
 	/**
 	 * Strip search base entity code without jti
+	 * 
 	 * @param orgSbe Original search base entity code
 	 * @return Search base entity code without jti
 	 */

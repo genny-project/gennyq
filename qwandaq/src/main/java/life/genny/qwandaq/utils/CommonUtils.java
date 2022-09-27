@@ -19,6 +19,20 @@ public class CommonUtils {
     static final Logger log = Logger.getLogger(CommonUtils.class);
 
     /**
+     * Normalize a String by forcing uppercase on first character and lowercase on the rest
+     * e.g: 
+     * <ul>
+     *  <li>string -> String</li>
+     *  <li>STRING -> String</li>
+     * </ul>
+     * @param string
+     * @return
+     */
+	public static String normalizeString(String string) {
+		return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+	}
+
+    /**
      * Log on a specific log level in a specific log and return an object
      * 
      * @param level - level to log on in the logger
@@ -193,7 +207,10 @@ public class CommonUtils {
         for (T object : array) {
             result += "\"" + stringCallback.getString(object) + "\",";
         }
-        return "[" + result.substring(0, result.length() - 1) + "]";
+        if(!"".equals(result))
+            return "[" + result.substring(0, result.length() - 1) + "]";
+        else
+            return "";
     }
 
     /**
@@ -235,5 +252,34 @@ public class CommonUtils {
     public static String removePrefix(String str) {
         return str.substring(str.indexOf("_") + 1);
     }
+
+
+	// TODO: Going to elaborate on this more another time. Will allow for the extra _ character some constants have
+	public static String substitutePrefix(String code, String prefix) {
+		if(prefix.length() != 3) {
+			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters");
+			return code;
+		}
+		code = prefix + code.substring(prefix.length());
+		return code;
+	}
+
+	/**
+	 * Strip the prefix assuming there is a prefix of 3 characters on the code
+	 * @param code
+	 * @return the code without the prefix (if there is no prefix of 3 characters, there is no change)
+	 */
+	public static String safeStripPrefix(String code) {
+		String[] components = code.split("_");
+		if(components.length <= 1) { // no prefix
+			return code;
+		} else {
+			if(components[0].length() != 3) {
+				return code;
+			}
+
+			return code.substring(4);
+		}
+	}
 
 }

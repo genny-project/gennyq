@@ -164,6 +164,7 @@ public class BaseEntityUtils {
 	 * @param code The code of the BaseEntity to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
+	@Deprecated
 	public BaseEntity getBaseEntityByCode(String code) {
 		if (userToken == null) {
 			throw new NullParameterException("User Token");
@@ -224,7 +225,7 @@ public class BaseEntityUtils {
 				log.debug(code + " not in cache for product " + productCode + " but "
 						+ (entity == null ? "not found in db" : "found in db"));
 			} catch (NoResultException e) {
-				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
+				throw new ItemNotFoundException(productCode, code);
 			}
 		}
 
@@ -389,7 +390,8 @@ public class BaseEntityUtils {
 	 * @return A clean string
 	 */
 	public String cleanUpAttributeValue(String value) throws NullParameterException {
-		if(value == null) throw new NullParameterException("value");
+		if(value == null) 
+			throw new NullParameterException("value");
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
 	}
