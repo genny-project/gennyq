@@ -18,7 +18,6 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
 import java.io.Serializable;
@@ -34,8 +33,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 /**
  * AttributeLink class is the main link type between BaseEntitys.
  * This information adds:
@@ -48,47 +45,40 @@ import com.querydsl.core.annotations.QueryExclude;
  * </p>
  * 
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("link")
-public class AttributeLink extends Attribute implements Serializable {
+public class AttributeLink extends Attribute {
 
 	private static final long serialVersionUID = 1L;
 
 	private static final String DEFAULT_LNKCODE_PREFIX = "LNK_";
-		
+
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
-	public AttributeLink()
-	{
+	public AttributeLink() {
 		super();
 		// dummy for hibernate
 	}
-	
+
 	/**
 	 * Constructor.
 	 * 
 	 * @param aCode The unique code for this Question
 	 * @param aName The human readable summary name
 	 */
-	public AttributeLink(String aCode, String aName)
-	{
+	public AttributeLink(String aCode, String aName) {
 		super(aCode, aName, new DataType(BaseEntity.class));
 	}
-	
+
 	/**
 	 * getDefaultCodePrefix This method is overrides the Base class
 	 * 
@@ -97,5 +87,5 @@ public class AttributeLink extends Attribute implements Serializable {
 	static public String getDefaultCodePrefix() { // TODO: this won't work
 		return DEFAULT_LNKCODE_PREFIX;
 	}
-	
+
 }

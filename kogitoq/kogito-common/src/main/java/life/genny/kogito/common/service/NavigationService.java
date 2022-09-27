@@ -151,9 +151,7 @@ public class NavigationService {
 		// fetch and update desired pcm
 		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(1.0, questionCode);
-		ea.setBaseEntityCode(pcm.getCode());
-		ea.setAttribute(attribute);
+		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
 		try {
 			pcm.addAttribute(ea);
 		} catch (BadDataException e) {

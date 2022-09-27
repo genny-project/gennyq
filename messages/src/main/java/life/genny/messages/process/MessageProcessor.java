@@ -219,13 +219,9 @@ public class MessageProcessor {
                 recipientBe = new BaseEntity(code, recipient);
 
                 try {
-                    EntityAttribute email = new EntityAttribute(1.0, recipient);
-                    email.setBaseEntityCode(recipientBe.getCode());
-                    email.setAttribute(emailAttr);
+                    EntityAttribute email = new EntityAttribute(recipientBe, emailAttr, 1.0, recipient);
                     recipientBe.addAttribute(email);
-                    EntityAttribute mobile = new EntityAttribute(1.0, recipient);
-                    mobile.setBaseEntityCode(recipientBe.getCode());
-                    mobile.setAttribute(mobileAttr);
+                    EntityAttribute mobile = new EntityAttribute(recipientBe, mobileAttr, 1.0, recipient);
                     recipientBe.addAttribute(mobile);
                 } catch (Exception e) {
                     log.error("Exception when passing recipient BE: " + recipient);

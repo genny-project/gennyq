@@ -3,7 +3,6 @@ package life.genny.qwandaq.utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,12 +32,13 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -95,7 +95,7 @@ public class QwandaUtils {
 	public Attribute saveAttribute(final Attribute attribute) {
 		return saveAttribute(userToken.getProductCode(), attribute);
 	}
-
+	
 	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
@@ -132,6 +132,7 @@ public class QwandaUtils {
 	 * will try to fetch attributes from the DB.
 	 *
 	 * @param attributeCode the code of the attribute to get
+	 * @param productCode the product code
 	 * @return Attribute
 	 */
 	public Attribute getAttribute(final String productCode, final String attributeCode) {
@@ -149,7 +150,6 @@ public class QwandaUtils {
 		}
 
 		return attribute;
-				
 	}
 
 	/**
@@ -639,11 +639,7 @@ public class QwandaUtils {
 				if (className.contains("Boolean") || className.contains("bool"))
 					value = false;
 
-				EntityAttribute entityAttribute = new EntityAttribute(1.0, value);
-				entityAttribute.setRealm(processEntity.getRealm());
-				entityAttribute.setBaseEntityCode(processEntity.getCode());
-				entityAttribute.setAttribute(attribute);
-				return entityAttribute;
+				return new EntityAttribute(processEntity, attribute, 1.0, value);
 			});
 
 			processEntity.addAttribute(ea);
@@ -828,14 +824,14 @@ public class QwandaUtils {
 				continue;
 
 			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-					.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, prefix + "_%")
+					.add(new Filter("PRI_CODE", Operator.LIKE, prefix + "_%"))
 					.setPageStart(0)
 					.setPageSize(1);
 
 			// ensure we are not counting any of our targets
 			for (BaseEntity target : targets) {
 				log.info("adding not equal " + target.getCode());
-				searchEntity.addAnd("PRI_CODE", SearchEntity.StringFilter.NOT_EQUAL, target.getCode());
+				searchEntity.add(new Filter("PRI_CODE", Operator.NOT_EQUALS, target.getCode()));
 			}
 
 			for (String code : codes) {
@@ -871,7 +867,7 @@ public class QwandaUtils {
 					value = beUtils.cleanUpAttributeValue(value);
 
 				log.info("Adding unique filter: " + code + " like " + value);
-				searchEntity.addFilter(code, SearchEntity.StringFilter.LIKE, "%" + value + "%");
+				searchEntity.add(new Filter(code, Operator.LIKE, "%" + value + "%"));
 			}
 
 			// set realm and count results
