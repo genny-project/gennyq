@@ -19,6 +19,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -66,7 +67,12 @@ public class SummaryService {
 	 */
 	public void sendSummary() {
 		// we store the summary code in the persons lifecycle
-		JsonArray array = gqlUtils.queryTable("PersonLifecycle", "entityCode", userToken.getUserCode(), "summary");
+		JsonArray array = null;
+		try {
+			array = gqlUtils.queryTable("PersonLifecycle", "entityCode", userToken.getUserCode(), "summary");
+		} catch (GraphQLException e) {
+			e.printStackTrace();
+		}
 		if (array == null || array.isEmpty()) {
 			log.error("No PersonLifecycle items found");
 			return;

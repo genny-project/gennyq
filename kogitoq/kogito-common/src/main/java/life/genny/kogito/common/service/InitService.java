@@ -19,6 +19,9 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
@@ -150,13 +153,15 @@ public class InitService {
 		BaseEntity user = beUtils.getUserBaseEntity();
 
 		// get pcms using search
-		SearchEntity searchBE = new SearchEntity("SBE_PCMS", "PCM Search")
-				.addFilter("PRI_CODE", SearchEntity.StringFilter.LIKE, "PCM_%")
-				.addColumn("*", "All Columns");
+		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
+				.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "PCM_%"))
+				.setAllColumns(true)
+				.setPageSize(1000)
+				.setRealm(productCode);
 
-		searchBE.setRealm(productCode);
-		searchBE.setPageSize(1000);
-		List<BaseEntity> pcms = searchUtils.searchBaseEntitys(searchBE);
+		log.info(jsonb.toJson(searchEntity));
+
+		List<BaseEntity> pcms = searchUtils.searchBaseEntitys(searchEntity);
 		if (pcms == null) {
 			log.info("No PCMs found for " + productCode);
 			return;
@@ -266,6 +271,19 @@ public class InitService {
 		BaseEntity user = beUtils.getUserBaseEntity();
 		
 		Ask ask = generateAddItemsAsk(userToken.getProductCode(), user);
+		// configure msg and send
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+	}
+
+	public void sendDrafts() {
+
+		BaseEntity user = beUtils.getUserBaseEntity();
+		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_DRAFTS_GRP", user, user);
+
 		// configure msg and send
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());

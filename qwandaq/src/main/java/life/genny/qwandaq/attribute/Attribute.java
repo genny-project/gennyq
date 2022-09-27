@@ -20,8 +20,6 @@
 
 package life.genny.qwandaq.attribute;
 
-import java.io.Serializable;
-
 import javax.persistence.Cacheable;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
@@ -40,7 +38,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /**
@@ -68,7 +65,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * @since 1.0
  */
 
-/*@XmlRootElement
+@XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 
 @Table(name = "attribute", indexes = {
@@ -78,19 +75,36 @@ import life.genny.qwandaq.utils.CommonUtils;
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @RegisterForReflection
-public class Attribute extends CodedEntity implements Serializable {
+public class Attribute extends CodedEntity {
 
 	private static final long serialVersionUID = 1L;
 
 	private static final String DEFAULT_CODE_PREFIX = "PRI_";
 
-	// @OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.attribute")
-	// @JsonManagedReference(value="attribute")
-	// @JsonIgnore
-	// private Set<EntityAttribute> baseEntityAttributes = new
-	// HashSet<EntityAttribute>(0);
+	// core
+	public static final String PRI_NAME = "PRI_NAME";
+	public static final String PRI_CODE = "PRI_CODE";
+	public static final String PRI_UUID = "PRI_UUID";
+	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
+	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+
+	// definition
+	public static final String LNK_DEF = "LNK_DEF";
+
+	// roles
+	public static final String LNK_ROLE = "LNK_ROLE";
+
+	// contact
+	public static final String PRI_MOBILE = "PRI_MOBILE";
+	public static final String PRI_EMAIL = "PRI_EMAIL";
+	public static final String PRI_TIMEZONE_ID = "PRI_TIMEZONE_ID";
+	public static final String PRI_ADDRESS = "PRI_ADDRESS";
+
+	// search
+	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
+	public static final String PRI_INDEX = "PRI_INDEX";
 
 	@Embedded
 	@NotNull
@@ -111,10 +125,7 @@ public class Attribute extends CodedEntity implements Serializable {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public Attribute() {
-		// super();
-		// dummy for hibernate
 	}
 
 	public Attribute(String aCode, String aName, DataType dataType) {
@@ -253,9 +264,9 @@ public class Attribute extends CodedEntity implements Serializable {
 		return this.icon;
 	}
 
-
 	/**
 	 * Deep-compare two attributes
+	 * 
 	 * @param other attribute to compare against
 	 * @return true if all fields are the same. False if one is different
 	 */
@@ -265,31 +276,40 @@ public class Attribute extends CodedEntity implements Serializable {
 
 	/**
 	 * Deep-compare two attributes
-	 * @param other attribute to compare against
-	 * @param checkId whether to check the id or not (database equality) (default: false)
+	 * 
+	 * @param other   attribute to compare against
+	 * @param checkId whether to check the id or not (database equality) (default:
+	 *                false)
 	 * @return true if all fields are the same. False if one is different
 	 */
 	public boolean equals(Attribute other, boolean checkId) {
 		boolean sameDesc = CommonUtils.compare(description, other.description);
-		if(!sameDesc) return false;
+		if (!sameDesc)
+			return false;
 
 		boolean samePrivacy = (defaultPrivacyFlag == other.defaultPrivacyFlag);
-		if(!samePrivacy) return false;
+		if (!samePrivacy)
+			return false;
 
 		boolean sameDTT = CommonUtils.compare(dataType, other.dataType);
-		if(!sameDTT) return false;
+		if (!sameDTT)
+			return false;
 
 		boolean sameHelp = CommonUtils.compare(help, other.help);
-		if(!sameHelp) return false;
+		if (!sameHelp)
+			return false;
 
 		boolean samePlaceholder = CommonUtils.compare(placeholder, other.placeholder);
-		if(!samePlaceholder) return false;
+		if (!samePlaceholder)
+			return false;
 
 		boolean sameDefault = CommonUtils.compare(defaultValue, other.defaultValue);
-		if(!sameDefault) return false;
+		if (!sameDefault)
+			return false;
 
 		boolean sameIcon = CommonUtils.compare(icon, other.icon);
-		if(!sameIcon) return false;
+		if (!sameIcon)
+			return false;
 
 		// Check the id if necessary
 		return checkId ? (other.getId() == getId()) : true;

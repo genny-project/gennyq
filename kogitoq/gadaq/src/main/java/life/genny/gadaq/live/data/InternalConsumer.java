@@ -6,6 +6,7 @@ import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
@@ -19,6 +20,7 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
+import life.genny.kogito.common.service.SearchService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -47,6 +49,9 @@ public class InternalConsumer {
 	@Inject
 	KogitoUtils kogitoUtils;
 
+	@Inject
+	SearchService search;
+
 	/**
 	 * Execute on start up.
 	 *
@@ -58,6 +63,7 @@ public class InternalConsumer {
 
 	/**
 	 * Consume incoming answers for inference
+	 * 
 	 * @param data The incoming data
 	 */
 	@Incoming("valid_data")
@@ -73,7 +79,16 @@ public class InternalConsumer {
 		if (answers.isEmpty())
 			log.warn("[!] No answers after inference");
 		// else
-		//  	kogitoUtils.funnelAnswers(answers);
+		// kogitoUtils.funnelAnswers(answers);
+
+		Optional<Answer> searchText = answers.stream()
+				.filter(ans -> ans.getAttributeCode().equals("PRI_SEARCH_TEXT"))
+				.findFirst();
+
+		if (searchText.isPresent()) {
+			Answer ans = searchText.get();
+			search.sendNameSearch(ans.getTargetCode(), ans.getValue());
+		}
 
 		// pass it on to the next stage of inference pipeline
 		QDataAnswerMessage msg = new QDataAnswerMessage(answers);
@@ -88,12 +103,13 @@ public class InternalConsumer {
 
 	/**
 	 * Consume from the genny_events topic.
+	 * 
 	 * @param event The incoming event
 	 */
 	@Incoming("events")
 	@Blocking
 	public void getEvent(String event) {
-		
+
 		Instant start = Instant.now();
 		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
 		if (eventJson.containsKey("event_type")) {
@@ -107,8 +123,5 @@ public class InternalConsumer {
 		scope.init(event);
 		kogitoUtils.routeEvent(event);
 		scope.destroy();
-		// log duration
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 }

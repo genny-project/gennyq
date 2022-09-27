@@ -18,7 +18,6 @@
  *     Byron Aguirre
  */
 
-
 package life.genny.qwandaq.attribute;
 
 import java.io.Serializable;
@@ -33,8 +32,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import life.genny.qwandaq.datatype.DataType;
 
-import com.querydsl.core.annotations.QueryExclude;
-
 /**
  * AttributeDouble class handles LocalDouble based attributes.
  * This information adds:
@@ -42,49 +39,41 @@ import com.querydsl.core.annotations.QueryExclude;
  * <li>The AnswerTypeDouble is the Type for the Attribute class
  * </ul>
  * <p>
- * AttributeDouble represent the major way of specifying the Double data type about a target
+ * AttributeDouble represent the major way of specifying the Double data type
+ * about a target
  * from sources.
  * </p>
  * 
  * 
- * @author      Adam Crow
- * @author      Byron Aguirre
- * @version     %I%, %G%
- * @since       1.0
+ * @author Adam Crow
+ * @author Byron Aguirre
+ * @version %I%, %G%
+ * @since 1.0
  */
-
-@SuppressWarnings("serial")
 @Entity
-@QueryExclude
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue("double")
-public class AttributeDouble extends Attribute implements Serializable {
+public class AttributeDouble extends Attribute {
 
 	private static final long serialVersionUID = 1L;
-	
+
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
-	public AttributeDouble()
-	{
+	public AttributeDouble() {
 		super();
-		// dummy for hibernate
 	}
-	
+
 	/**
 	 * Constructor.
 	 * 
 	 * @param aCode The unique code for this Attribute
 	 * @param aName The name for this Attribute
 	 */
-	public AttributeDouble(String aCode, String aName)
-	{
+	public AttributeDouble(String aCode, String aName) {
 		super(aCode, aName, new DataType(Double.class));
-		
 	}
-	
+
 }
