@@ -38,8 +38,6 @@ public class RoleBuilder {
 
     private String redirectCode;
 
-    // private String[] sidebarEventCodes;
-
     // TODO: Again I want to get rid of product code chains like this
     // TODO: Hopefully we can firm up how product codes are assigned to tokens
     public RoleBuilder(CapabilitiesManager capManager, String roleCode, String roleName, String productCode) {
@@ -79,11 +77,6 @@ public class RoleBuilder {
         return this;
     }
 
-    // public RoleBuilder setSidebar(String... eventCodes) {
-    //     this.sidebarEventCodes = eventCodes;
-    //     return this;
-    // }
-
     public RoleBuilder addChildren(String... roleCodes) {
         this.childrenCodes.addAll(Arrays.asList(roleCodes));
         return this;
@@ -106,11 +99,6 @@ public class RoleBuilder {
         for(BaseEntity parentRole : this.inheritedRoles) {
             roleMan.inheritRole(productCode, targetRole, parentRole);
         }
-
-        // Sidebar
-        // for(String sidebarCode : sidebarEventCodes) {
-            
-        // }
 
         // Children
         roleMan.setChildren(productCode, targetRole, childrenCodes.toArray(new String[0]));
