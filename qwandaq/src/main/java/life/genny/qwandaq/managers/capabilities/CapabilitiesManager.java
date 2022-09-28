@@ -3,6 +3,7 @@ package life.genny.qwandaq.managers.capabilities;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +29,7 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -48,6 +50,8 @@ public class CapabilitiesManager extends Manager {
 
 	@Inject
 	private RoleManager roleMan;
+
+	private Map<CapabilityMode, Attribute> coreAttributes = new HashMap<>();
 
 	/**
 	 * Post-Construct initialization of capability attributes based on capability mode enum
@@ -71,33 +75,9 @@ public class CapabilitiesManager extends Manager {
 				attribute = new AttributeText(attributeCode, CommonUtils.normalizeString(mode.name()) + " capability");
 				qwandaUtils.saveAttribute(serviceToken.getProductCode(), attribute);
 			}
+
+			coreAttributes.put(mode, attribute);
 		}
-	}
-
-	public List<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
-		List<EntityAttribute> capabilities = new ArrayList<>();
-		if(target.isPerson()) {
-			List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ROLE_LINK_CODE);
-			for(String roleCode : roleCodes) {
-				BaseEntity role = beUtils.getBaseEntity(roleCode);
-				capabilities.addAll(getEntityCapabilities(productCode, role));
-			}
-		}
-
-		// TODO: Properly Prio User Capabilities
-		capabilities.addAll(target.findPrefixEntityAttributes(CAP_CODE_PREFIX));
-		return capabilities;
-	}
-
-	public Map<String, EntityAttribute> getEntityCapabilitiesMap(final String productCode, final BaseEntity target) {
-		Map<String, EntityAttribute> capabilitiesMap = new HashMap<>();
-		List<EntityAttribute> capabilities = getEntityCapabilities(productCode, target);
-
-		for(EntityAttribute cap : capabilities) {
-			capabilitiesMap.put(cap.getAttributeCode(), cap);
-		}
-
-		return capabilitiesMap;
 	}
 
 	/**
@@ -105,86 +85,115 @@ public class CapabilitiesManager extends Manager {
 	 * 
 	 * @param productCode    The product code
 	 * @param target         The target entity
-	 * @param capabilityCode The capability code
+	 * @param cleanCapabilityCode The capability code
 	 * @param modes          The modes to set
 	 */
-	private void updateCapability(String productCode, BaseEntity target, final Attribute capability,
+	private void updateCapability(String productCode, BaseEntity target, final String cleanCapabilityCode,
 			final CapabilityMode... modes) {
 		// Update base entity
-		if (capability == null) {
-			throw new NullParameterException("capability");
+		if (cleanCapabilityCode == null) {
+			throw new NullParameterException("capability code");
 		}
 
 		if(target == null) {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(modes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), modes);
+		// Update each attribute in modes
+		for(CapabilityMode mode : modes) {
+			Attribute capAttribute = coreAttributes.get(mode);
+			Optional<EntityAttribute> optEa = target.findEntityAttribute(capAttribute);
+			
+			EntityAttribute entityAttribute;
+			
+			if(optEa.isPresent()) {
+				entityAttribute = optEa.get();
+			} else {
+				entityAttribute = new EntityAttribute(target, capAttribute, 0.0);
+			}
+
+			String capabilityString = entityAttribute.getValueString();
+			if(capabilityString == null)
+				capabilityString = "";
+			
+			// add the capability code to the mode set
+			capabilityString = CommonUtils.cleanUpAttributeValue(capabilityString);
+			Set<String> capabilities = Arrays.asList(capabilityString.split(",")).stream().collect(Collectors.toSet());
+			capabilities.add(cleanCapabilityCode);
+
+			// Convert back to comma-delimited array
+			String valueString = CommonUtils.getArrayString(capabilities, (String c) -> c);
+			entityAttribute.setValue(valueString);
+			
+			// Update cache and entity attribute
+			target.addAttribute(entityAttribute);
+			String key = getCacheKey(target.getCode(), entityAttribute.getAttributeCode());
+			CacheUtils.putObject(productCode, key, valueString);
+		}
+		
 		beUtils.updateBaseEntity(target);
 	}
 
-	public Attribute createCapability(final String productCode, final String rawCapabilityCode, final String name) {
-		return createCapability(productCode, rawCapabilityCode, name, false);
-	}
-
-	public Attribute createCapability(final String productCode, final String rawCapabilityCode, final String name, boolean cleanedCode) {
-		String cleanCapabilityCode = cleanedCode ? rawCapabilityCode : cleanCapabilityCode(rawCapabilityCode);
-		Attribute attribute = null;
-		try {
-			attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
-		} catch(ItemNotFoundException e) {
-			debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
-		}
-
-		if (attribute == null) {
-			trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
-			attribute = new AttributeText(cleanCapabilityCode, name);
-			qwandaUtils.saveAttribute(productCode, attribute);
-		}
-
-		return attribute;
+	/**
+	 * Get a map of capabilities for a target, with all of the capability modes as the key and
+	 * the capability codes of each as the value
+	 * @param target - target base entity
+	 * @return a map of modes to capability codes for a target
+	 */
+	public Map<CapabilityMode, String[]> getTargetCapabilityMap(BaseEntity target) {
+		return getTargetCapabilityMap(target, CapabilityMode.values());
 	}
 
 	/**
-	 * Check a single EntityAttribute capability if it has one or all of given capability modes
-	 * @param capability
-	 * @param hasAll
-	 * @param checkModes
-	 * @return
+	 * Get a map of capabilities for a target, with each of the requested modes as the key and
+	 * the capability codes of each as the value
+	 * @param target - target base entity
+	 * @param modes - modes to get
+	 * @return a map of modes to capability codes for a target
 	 */
-	public boolean checkCapability(EntityAttribute capability, boolean hasAll, CapabilityMode... checkModes) {
-		if (StringUtils.isBlank(capability.getValueString())) {
-			return false;
+	public Map<CapabilityMode, String[]> getTargetCapabilityMap(BaseEntity target, CapabilityMode... modes) {
+		Map<CapabilityMode, String[]> capMap = new HashMap<>();
+
+		/*
+		 * For each capability mode in the requested modes, add a string array
+		 * of capability codes that exist in the target's capability attributes
+		 */
+		for(CapabilityMode mode : modes) {
+			String[] capabilities = getTargetCapabilities(target, mode);
+			capMap.put(mode, capabilities);
 		}
 
-		String modeString = capability.getValueString().toUpperCase();
-		if (hasAll) {
-			for (CapabilityMode checkMode : checkModes) {
-				boolean hasMode = modeString.contains(checkMode.name());
-				if (!hasMode)
-					return false;
-			}
-			return true;
-		} else {
-			for (CapabilityMode checkMode : checkModes) {
-				boolean hasMode = modeString.contains(checkMode.name());
-				if (hasMode)
-					return true;
-			}
-			return false;
-		}
+		return capMap;
 	}
 
-	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
+	public String[] getTargetCapabilities(BaseEntity target, CapabilityMode mode) {
+		Attribute capAttrib = coreAttributes.get(mode);
+		Optional<EntityAttribute> optEa = target.findEntityAttribute(capAttrib);
+		String[] capabilities = new String[0];
+		if(optEa.isPresent()) {
+			EntityAttribute entityAttribute = optEa.get();
+			
+			String valueString = entityAttribute.getValueString();
+			if(valueString != null) {
+				valueString = CommonUtils.cleanUpAttributeValue(valueString);
+				capabilities = valueString.split(",");
+			}
+		}
+
+		return capabilities;
+	}
+
+	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, String capabilityCode,
 			final CapabilityMode... modes) {
-		if(capabilityAttribute == null) {
+		if(capabilityCode == null) {
 			throw new ItemNotFoundException(productCode, "Capability Attribute");
 		}
 
+		capabilityCode = cleanCapabilityCode(capabilityCode);
+
 		// Check the user token has required capabilities
 		if(!shouldOverride()) {
-			error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+			error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityCode
 					+ " TO BASE ENTITITY: " + targetBe.getCode());
 			return targetBe;
 		}
@@ -196,32 +205,21 @@ public class CapabilitiesManager extends Manager {
 		// 	return targetBe;
 		// }
 
-		updateCapability(productCode, targetBe, capabilityAttribute, modes);
+		updateCapability(productCode, targetBe, capabilityCode, modes);
 		return targetBe;
-	}
-
-	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, final String rawCapabilityCode,
-			final CapabilityMode... modes) {
-				// Ensure the capability is well defined
-				String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-
-				// Don't need to catch here since we don't want to create
-				Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
-
-				return addCapabilityToBaseEntity(productCode, targetBe, attribute, modes);
 	}
 
 	/**
 	 * Go through a list of capability modes and check that the token can manipulate
 	 * the modes for the provided capabilityCode
 	 * 
-	 * @param rawCapabilityCode capabilityCode to check against (will be cleaned
+	 * @param capabilityCode capabilityCode to check against (will be cleaned
 	 *                          before use)
 	 * @param checkModes        array of modes to check against
 	 * @return whether or not the token can manipulate all the supplied modes for
 	 *         the supplied capabilityCode
 	 */
-	public boolean hasCapability(final BaseEntity user, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
+	public boolean hasCapability(final BaseEntity user, String capabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
 
 		// 1. Check override
 
@@ -231,9 +229,27 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// 2. Check user capabilities
-		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		if(entityHasCapability(user, cleanCapabilityCode, hasAll, checkModes))
+		capabilityCode = cleanCapabilityCode(capabilityCode);
+
+		Map<CapabilityMode, String[]> capabilitiesMap = getTargetCapabilityMap(user, checkModes);
+
+
+		if(hasAll) {
+			for(String[] capabilityCodes : capabilitiesMap.values()) {
+				if(!CommonUtils.isInArray(capabilityCodes, capabilityCode)) {
+					return false;
+				}
+			}
+
 			return true;
+		} else {
+			for(String[] capabilityCodes : capabilitiesMap.values()) {
+				
+			}
+
+			return false;
+		}
+
 
 		// 3. Check user role capabilities
 		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, ROLE_LINK_CODE);
@@ -245,7 +261,7 @@ public class CapabilitiesManager extends Manager {
 					error("Could not find role: " + code);
 					continue;
 				}
-				if(entityHasCapability(role, rawCapabilityCode, hasAll, checkModes))
+				if(entityHasCapability(role, capabilityCode, hasAll, checkModes))
 					return true;
 			}
 		} catch (RoleException re) {
@@ -399,25 +415,6 @@ public class CapabilitiesManager extends Manager {
 	}
 
 	/**
-	 * Generate a capability map from a 2D string of attributes
-	 * @param productCode - product code to create capability attributes from
-	 * @param attribData - 2D array of Strings (each entry in the first array is an array of 2 strings, one for name and one for code)
-	 * 			- e.g [ ["CAP_ADMIN", "Manipulate Admin"], ["CAP_STAFF", "Manipulate Staff"]]
-	 * @return a map going from attribute code (capability code) to attribute (capability)
-	 */
-	public Map<String, Attribute> getCapabilityMap(String productCode, String[][] attribData) {
-		Map<String, Attribute> capabilityMap = new HashMap<String, Attribute>();
-
-		Arrays.asList(attribData).stream()
-		// Map data to capability. If capability name/tag is missing then use the code with standard capitalisation
-		.map((String[] item) -> createCapability(productCode, item[0], (item[1] != null ? item[1] : CommonUtils.normalizeString(item[0]))))
-		// add each capability attribute to the capability map, stripping the CAP_ prefix to be used with the constants
-		.forEach((Attribute attr) -> capabilityMap.put(attr.getCode().substring(4), attr));
-		
-		return capabilityMap;
-	}
-
-	/**
 	 * Serialize an array of {@link CapabilityMode}s to a string
 	 * @param modes
 	 * @return
@@ -457,6 +454,8 @@ public class CapabilitiesManager extends Manager {
 	private boolean entityHasCapabilityFromDB(final BaseEntity target, final String cleanCapabilityCode, boolean hasAll,
 			final CapabilityMode... checkModes)
 			throws RoleException {
+		
+		
 
 		Optional<EntityAttribute> optBeCapability = target.findEntityAttribute(cleanCapabilityCode);
 		if (optBeCapability.isPresent()) {

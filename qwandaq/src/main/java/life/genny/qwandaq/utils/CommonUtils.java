@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
@@ -256,6 +257,42 @@ public class CommonUtils {
 
 			return code.substring(4);
 		}
+	}
+
+    /**
+     * Check if object <T> is in array
+     * @param <T>
+     * @param array
+     * @param object
+     * @return
+     */
+    public static <T> boolean isInArray(T[] array, T object) {
+        for(T obj : array) {
+            if(obj.equals(object))
+                return true;
+        }
+
+        return false;
+    }
+
+	/**
+	 * Classic Genny style string clean up. This will remove any double quotes,
+	 * whitespaces and square brackets from the string.
+	 * <p>
+	 * Hope this makes our code look a little
+	 * nicer :)
+	 * <p>
+	 * 
+	 * TODO: Consider moving this to CommonUtils
+	 *
+	 * @param value The value to clean
+	 * @return A clean string
+	 */
+	public static String cleanUpAttributeValue(String value) throws NullParameterException {
+		if(value == null) 
+			throw new NullParameterException("value");
+		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
+		return cleanCode;
 	}
 
 }

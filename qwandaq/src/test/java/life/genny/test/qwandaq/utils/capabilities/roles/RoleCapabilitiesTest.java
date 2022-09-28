@@ -72,7 +72,7 @@ public class RoleCapabilitiesTest extends BaseTestCase {
         log.info("Done");
 
         log.info("Creating new test role");
-        BaseEntity role = new RoleBuilder(capMan,"ROL_TEST", "Test Role", PRODUCT_CODE)
+        BaseEntity role = new RoleBuilder("ROL_TEST", "Test Role", PRODUCT_CODE)
             .setCapabilityMap(capabilitiesMap)
             .addCapability("CAP_TEST_1", ADD, EDIT, DELETE)
             .addChildren("ROL_TEST_2")

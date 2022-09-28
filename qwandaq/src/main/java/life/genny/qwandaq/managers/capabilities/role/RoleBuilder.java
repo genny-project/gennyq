@@ -34,8 +34,6 @@ public class RoleBuilder {
 
     private List<String> childrenCodes = new ArrayList<>();
 
-    private Map<String, Attribute> capabilityMap;
-
     private Map<String, CapabilityMode[]> roleCapabilities = new HashMap<>();
 
     private String redirectCode;
@@ -47,16 +45,6 @@ public class RoleBuilder {
         this.roleMan = capManager.getRoleManager();
         this.productCode = productCode;
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
-    }
-
-    public RoleBuilder setCapabilityMap(String[][] capData) {
-        this.capabilityMap = capManager.getCapabilityMap(productCode, capData);
-        return this;
-    }
-
-    public RoleBuilder setCapabilityMap(Map<String, Attribute> capabilityMap) {
-        this.capabilityMap = capabilityMap;
-        return this;
     }
 
     public RoleBuilder setRoleRedirect(String redirectCode) {
@@ -85,10 +73,6 @@ public class RoleBuilder {
     }
 
     public BaseEntity build() throws RoleException {
-        if(capabilityMap == null) {
-            throw new RoleException("Capability Map not set. Try using setCapabilityMap(Map<String, Attribute> capabilityMap) before building.");
-        }
-
         // Redirect
         roleMan.setRoleRedirect(productCode, targetRole, redirectCode);
 
@@ -107,13 +91,4 @@ public class RoleBuilder {
 
         return targetRole;
     }
-
-	private Attribute fetch(String attrCode) throws ItemNotFoundException {
-		Attribute attribute = capabilityMap.get(attrCode);
-		if(attribute == null) {
-			log.error("Could not find capability in map: " + attrCode);
-			throw new ItemNotFoundException("capability map", attrCode);
-		}
-		return attribute;
-	}
 }
