@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.quarkus.arc.Arc;
+
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
@@ -40,8 +42,8 @@ public class RoleBuilder {
 
     // TODO: Again I want to get rid of product code chains like this
     // TODO: Hopefully we can firm up how product codes are assigned to tokens
-    public RoleBuilder(CapabilitiesManager capManager, String roleCode, String roleName, String productCode) {
-        this.capManager = capManager;
+    public RoleBuilder(String roleCode, String roleName, String productCode) {
+        this.capManager = Arc.container().select(CapabilitiesManager.class).get();
         this.roleMan = capManager.getRoleManager();
         this.productCode = productCode;
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
