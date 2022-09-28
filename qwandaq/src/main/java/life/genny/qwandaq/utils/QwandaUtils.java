@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -28,6 +29,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
@@ -42,6 +44,8 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
+
+import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -77,6 +81,17 @@ public class QwandaUtils {
 	UserToken userToken;
 
 	public QwandaUtils() {
+	}
+
+	private static DataType DTT_EVENT;
+
+	@PostConstruct
+	private void init() {
+		Attribute submit = getAttribute("EVT_SUBMIT");
+		if(submit == null) {
+			log.error("Could not find Attribute: EVT_SUBMIT");
+		}
+		DTT_EVENT = submit.getDataType();
 	}
 
 	public Attribute saveAttribute(final Attribute attribute) {
@@ -212,6 +227,14 @@ public class QwandaUtils {
 			log.error("Error loading attributes for productCode: " + productCode);
 			e.printStackTrace();
 		}
+	}
+
+	public Attribute createEvent(String code, final String name) {
+		if(!code.startsWith(EVENT_PREFIX)) {
+			code = EVENT_PREFIX.concat(code);
+		}
+		code = code.toUpperCase();
+		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
 	/**

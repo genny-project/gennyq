@@ -6,9 +6,15 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import life.genny.qwandaq.datatype.CapabilityMode;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
+
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+
+import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.suite.TestCase;
 
@@ -21,17 +27,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 
-public class CapabilityUtilsTest {
+@RunWith(MockitoJUnitRunner.class)
+public class CapabilityUtilsTest extends BaseTestCase {
 
-	static final Logger log = Logger.getLogger(CapabilityUtils.class);
+	static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
+    @InjectMocks
+    CapabilitiesManager capManager;
 
     @Test
     public void cleanCapabilityCodeTest() {
+
         Builder<String, String> builder = new Builder<String, String>();
 
         FITestCallback<Input<String>, Expected<String>> testFunction = (Input<String> input) -> {
-            return new Expected<String>(CapabilityUtils.cleanCapabilityCode(input.input));
+            return new Expected<String>(CapabilitiesManager.cleanCapabilityCode(input.input));
         };
         
         List<TestCase<String, String>> tests = new ArrayList<>();
@@ -64,7 +74,7 @@ public class CapabilityUtilsTest {
         List<TestCase<String, CapabilityMode[]>> tests = new ArrayList<>();
 
         FITestCallback<Input<String>, Expected<CapabilityMode[]>> testFunction = (Input<String> input) -> {
-            return new Expected<CapabilityMode[]>(CapabilityUtils.getCapModesFromString(input.input));
+            return new Expected<CapabilityMode[]>(capManager.getCapModesFromString(input.input));
         };
         
         tests.add(
@@ -97,7 +107,7 @@ public class CapabilityUtilsTest {
         List<TestCase<CapabilityMode[], String>> tests = new ArrayList<>();
 
         FITestCallback<Input<CapabilityMode[]>, Expected<String>> testFunction = (input) -> {
-            return new Expected<String>(CapabilityUtils.getModeString(input.input));
+            return new Expected<String>(CapabilitiesManager.getModeString(input.input));
         };
 
         tests.add(

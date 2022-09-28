@@ -27,8 +27,9 @@ public final class GennyConstants {
 	// TODO: Confirm we want DEFs to have capabilities as well
 	public static final String[] ACCEPTED_CAP_PREFIXES = { ROLE_BE_PREFIX, PER_BE_PREFIX, "DEF_" };
 
-	public static final String LNK_ROLE_CODE = "LNK_ROLE";
-	public static final String DEF_ROLE_CODE = "DEF_ROLE";
+	public static final String ROLE_LINK_CODE = "LNK_ROLE";
+    public static final String CHILDREN_LINK_CODE = "LNK_CHILDREN";
+    public static final String DEF_ROLE_CODE = "DEF_ROLE";
 	
 	// =====================================================================================================
 
@@ -111,6 +112,8 @@ public final class GennyConstants {
 	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
 
 	// event
+	public static final String EVENT_PREFIX = "EVT_";
+	public static final String PRI_EVENT = "PRI_EVENT";
 	public static final String CODE = "code";
 	public static final String TARGETCODE = "targetCode";
 	public static final String TARGETCODES = "targetCodes";

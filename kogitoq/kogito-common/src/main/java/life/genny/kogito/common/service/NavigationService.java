@@ -21,7 +21,7 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
+
 import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
@@ -35,6 +35,8 @@ import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
+
+import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 
@@ -67,7 +69,7 @@ public class NavigationService {
 	SearchUtils searchUtils;
 
 	@Inject
-	CapabilityUtils capabilityUtils;
+	RoleManager roleManager;
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
@@ -108,7 +110,7 @@ public class NavigationService {
 
 		// otherwise check for default role redirect
 		try {
-			String redirectCode = capabilityUtils.getUserRoleRedirectCode();
+			String redirectCode = roleManager.getUserRoleRedirectCode();
 			log.infof("Role Redirect found: %s", redirectCode);
 			kogitoUtils.triggerWorkflow(GADAQ, "view", 
 				Json.createObjectBuilder()
