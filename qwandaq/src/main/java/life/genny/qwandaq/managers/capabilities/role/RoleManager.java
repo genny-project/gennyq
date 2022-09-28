@@ -8,9 +8,9 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.StringUtils;
 
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -38,6 +38,8 @@ import static life.genny.qwandaq.constants.GennyConstants.ROLE_BE_PREFIX;
 @ApplicationScoped
 public class RoleManager extends Manager {
 
+	public final static DataType dtt = new DataType(String.class);
+
     private BaseEntity roleDef;
 	private Attribute lnkRolAttribute;
 	private Attribute lnkChildrenAttribute;
@@ -59,14 +61,14 @@ public class RoleManager extends Manager {
 		lnkRolAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), ROLE_LINK_CODE);
 		if(lnkRolAttribute == null) {
 			error(ROLE_LINK_CODE + " is missing. Adding!");
-			lnkRolAttribute = new AttributeText(ROLE_LINK_CODE, "Role Link");
+			lnkRolAttribute = new Attribute(ROLE_LINK_CODE, "Role Link", dtt);
 			qwandaUtils.saveAttribute(lnkRolAttribute);
 		}
 		try {
 			lnkChildrenAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), CHILDREN_LINK_CODE);
 		} catch(NoResultException e) {
 			error(CHILDREN_LINK_CODE + " is missing. Adding!");
-			lnkChildrenAttribute = new AttributeText(CHILDREN_LINK_CODE, "Children Role Link");
+			lnkChildrenAttribute = new Attribute(CHILDREN_LINK_CODE, "Children Role Link", dtt);
 			qwandaUtils.saveAttribute(lnkChildrenAttribute);
 		}
 	}

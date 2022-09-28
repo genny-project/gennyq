@@ -9,7 +9,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import io.quarkus.test.junit.mockito.InjectMock;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleBuilder;
@@ -27,8 +27,10 @@ import static life.genny.qwandaq.constants.GennyConstants.CHILDREN_LINK_CODE;;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RoleCapabilitiesTest extends BaseTestCase {
+
 	private static Logger log = Logger.getLogger(RoleCapabilitiesTest.class);
 
+	public final static DataType dtt = new DataType(String.class);
 
     @InjectMock
     UserToken userToken;
@@ -39,8 +41,8 @@ public class RoleCapabilitiesTest extends BaseTestCase {
     @InjectMocks
     RoleManager roleMan;
 
-    private static final Attribute LNK_ROLE = new AttributeText(ROLE_LINK_CODE, "Role Link");
-    private static final Attribute LNK_CHILDREN = new AttributeText(CHILDREN_LINK_CODE, "Children Link");
+    private static final Attribute LNK_ROLE = new Attribute(ROLE_LINK_CODE, "Role Link", dtt);
+    private static final Attribute LNK_CHILDREN = new Attribute(CHILDREN_LINK_CODE, "Children Link", dtt);
 
     private static final String PRODUCT_CODE = "lojing";
 
@@ -64,7 +66,7 @@ public class RoleCapabilitiesTest extends BaseTestCase {
         };
 
         for(String[] capInfo : capData) {
-            Mockito.when(capMan.createCapability(PRODUCT_CODE, capInfo[0], capInfo[1])).thenReturn(new AttributeText(capInfo[0], capInfo[1]));
+            Mockito.when(capMan.createCapability(PRODUCT_CODE, capInfo[0], capInfo[1])).thenReturn(new Attribute(capInfo[0], capInfo[1], dtt));
         }
 
         log.info("Generating Capabilities Map!");
