@@ -273,9 +273,7 @@ public class QwandaUtils {
 		}
 
 		// init new parent ask
-		Ask ask = new Ask(question);
-		ask.setSourceCode(source.getCode());
-		ask.setTargetCode(target.getCode());
+		Ask ask = new Ask(question, source.getCode(), target.getCode());
 		ask.setRealm(productCode);
 
 		Attribute attribute = question.getAttribute();
@@ -305,7 +303,7 @@ public class QwandaUtils {
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 
 				// Do not include PRI_SUBMIT
-				if ("PRI_SUBMIT".equals(child.getAttributeCode())) {
+				if ("PRI_SUBMIT".equals(child.getQuestion().getAttribute().getCode())) {
 					continue;
 				}
 
@@ -321,7 +319,7 @@ public class QwandaUtils {
 					child.getQuestion().setIcon(questionQuestion.getIcon());
 				}
 
-				ask.addChildAsk(child);
+				ask.add(child);
 			}
 		}
 
@@ -338,8 +336,8 @@ public class QwandaUtils {
 
 		ask.setProcessId(processId);
 
-		if (ask.getChildAsks() != null) {
-			for (Ask child : ask.getChildAsks()) {
+		if (ask.getChildren() != null) {
+			for (Ask child : ask.getChildren()) {
 				recursivelySetProcessId(child, processId);
 			}
 		}
@@ -354,7 +352,7 @@ public class QwandaUtils {
 	 */
 	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
 
-		String code = ask.getAttributeCode();
+		String code = ask.getQuestion().getAttribute().getCode();
 
 		// grab attribute code of current ask if conditions met
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
@@ -362,34 +360,50 @@ public class QwandaUtils {
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			log.debugf("Attribute %s in exclude list", code);
 		} else if (ask.getReadonly()) {
-			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+			log.debugf("Ask %s is set to readonly", ask.getQuestion().getCode());
 		} else {
 			codes.add(code);
 		}
 
 		// grab all child ask attribute codes
 		if (ask.hasChildren()) {
-			for (Ask childAsk : ask.getChildAsks()) {
+			for (Ask childAsk : ask.getChildren()) {
 				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
 			}
 		}
 		return codes;
 	}
 
-	private Map<String, Ask> getAllAsksRecursively(Ask ask) {
-		return getAllAsksRecursively(ask, new HashMap<String, Ask>());
+	/**
+	 * @param asks
+	 * @return
+	 */
+	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks) {
+		return getAllAsksRecursively(asks, new HashMap<String, Ask>());
 	}
 
-	private Map<String, Ask> getAllAsksRecursively(Ask ask, Map<String, Ask> asks) {
-		if(ask.hasChildren()) {
-			for(Ask childAsk : ask.getChildAsks()) {
-				asks.put(childAsk.getAttributeCode(), childAsk);
-				asks = getAllAsksRecursively(childAsk, asks);
+	/**
+	 * @param asks
+	 * @param map
+	 * @return
+	 */
+	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks, Map<String, Ask> map) {
+
+		for (Ask ask : asks) {
+			if (ask.hasChildren()) {
+				map.put(ask.getQuestion().getAttribute().getCode(), ask);
+				map = getAllAsksRecursively(ask.getChildren(), map);
 			}
 		}
-		return asks;
+
+		return map;
 	}
 
+	/**
+	 * @param target
+	 * @param dependencies
+	 * @return
+	 */
 	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
 		target.getBaseEntityAttributes().stream().forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
 		for (String d : dependencies) {
@@ -400,12 +414,26 @@ public class QwandaUtils {
 		return true;
 	}
 
-	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
-		Map<String, Ask> flatMapAsks = getAllAsksRecursively(ask);
-		return updateDependentAsks(ask, target, defBE, flatMapAsks);
+	/**
+	 * @param asks
+	 * @param target
+	 * @param defBE
+	 * @return
+	 */
+	public Map<String, Ask> updateDependentAsks(List<Ask> asks, BaseEntity target, BaseEntity defBE) {
+		Map<String, Ask> flatMapAsks = getAllAsksRecursively(asks);
+		return updateDependentAsks(asks, target, defBE, flatMapAsks);
 	}
 
-	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
+	/**
+	 * @param asks
+	 * @param target
+	 * @param defBE
+	 * @param flatMapAsks
+	 * @return
+	 */
+	public Map<String, Ask> updateDependentAsks(List<Ask> asks, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
+
 		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
 
 		for (EntityAttribute dep : dependentAsks) {
@@ -422,7 +450,7 @@ public class QwandaUtils {
 			targetAsk.setHidden(!depsAnswered);
 		}
 		
-		return ask;
+		return flatMapAsks;
 	}
 
 	/**
@@ -477,15 +505,15 @@ public class QwandaUtils {
 	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
 
 		// add current ask attribute code to map
-		map.put(ask.getAttributeCode(), ask.getMandatory());
+		map.put(ask.getQuestion().getAttribute().getCode(), ask.getMandatory());
 
 		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
+		if (ask.getChildren() == null) {
 			return map;
 		}
 
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildAsks()) {
+		for (Ask child : ask.getChildren()) {
 			map = recursivelyFillMandatoryMap(map, child);
 		}
 
@@ -500,71 +528,29 @@ public class QwandaUtils {
 	 */
 	public Set<Ask> recursivelyFillFlatSet(Set<Ask> set, Ask ask) {
 
-		String code = ask.getAttributeCode();
+		String code = ask.getQuestion().getAttribute().getCode();
 		// add current ask attribute code to map
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
 			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			log.debugf("Attribute %s in exclude list", code);
 		} else if (ask.getReadonly()) {
-			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+			log.debugf("Ask %s is set to readonly", ask.getQuestion().getCode());
 		} else {
 			set.add(ask);
 		}
 
 		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
+		if (ask.hasChildren()) {
 			return set;
 		}
 
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildAsks()) {
+		for (Ask child : ask.getChildren()) {
 			set = recursivelyFillFlatSet(set, child);
 		}
 
 		return set;
-	}
-
-	/**
-	 * Find the submit ask using recursion.
-	 *
-	 * @param ask      The ask to traverse
-	 * @param disabled Should the submit ask be disabled
-	 */
-	public void recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
-
-		// return ask if submit is found
-		if (ask.getQuestion().getAttribute().getCode().equals("EVT_SUBMIT")) {
-			log.info("[@] Setting PRI_SUBMIT disabled = " + disabled);
-			ask.setDisabled(disabled);
-		}
-
-		// recursively check child asks for submit
-		if (ask.getChildAsks() != null) {
-			for (Ask child : ask.getChildAsks()) {
-				recursivelyFindAndUpdateSubmitDisabled(child, disabled);
-			}
-		}
-	}
-
-	/**
-	 * Send Submit enable/disable.
-	 *
-	 * @param ask     The ask message representing the questions
-	 * @param enable. Enable the submit button
-	 * @return Boolean representing whether the submit button was enabled
-	 */
-	public Boolean sendSubmit(Ask ask, Boolean enable) {
-
-		// find the submit ask
-		recursivelyFindAndUpdateSubmitDisabled(ask, !enable);
-
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-
-		return enable;
 	}
 
 	/**
@@ -604,6 +590,21 @@ public class QwandaUtils {
 		String key = String.format("%s:PROCESS_DATA", processId); 
 
 		return CacheUtils.getObject(productCode, key, ProcessData.class);
+	}
+
+	/**
+	 * @param processData
+	 */
+	public void completeProcessData(ProcessData processData) {
+
+		// find target
+		String targetCode = processData.getTargetCode();
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
+		// find targets definition
+		BaseEntity definition = defUtils.getDEF(target);
+		log.info("ProcessBE identified as a " + definition);
+		processData.setDefinitionCode(definition.getCode());
 	}
 
 	/**
@@ -777,7 +778,7 @@ public class QwandaUtils {
 			});
 
 		// set child asks
-		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
+		ask.setChildren(childAsks.toArray(new Ask[childAsks.size()]));
 
 		return ask;
 	}

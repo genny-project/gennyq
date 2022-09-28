@@ -263,7 +263,7 @@ public class TopologyProducer {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
 				String feedback = "Error: This value already exists and must be unique.";
 
-				String parentCode = processData.getQuestionCode();
+				String parentCode = processData.getQuestion();
 				String questionCode = answer.getCode();
 
 				qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);

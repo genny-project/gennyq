@@ -115,11 +115,10 @@ public class InternalConsumer {
 		String sourceCode = dataJson.getString("sourceCode");
 		String targetCode = dataJson.getString("targetCode");
 		String searchText = dataJson.getString("value");
-		String parentCode = dataJson.getString("parentCode");
 		String questionCode = dataJson.getString("questionCode");
 		String processId = dataJson.getString("processId");
 
-		log.info(attrCode + ":" + parentCode + ":[" + searchText + "]");
+		log.info(attrCode + ":" + ":[" + searchText + "]");
 
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 
@@ -188,7 +187,6 @@ public class InternalConsumer {
 		}
 
 		// Set all required message fields and return msg
-		msg.setParentCode(parentCode);
 		msg.setQuestionCode(questionCode);
 		msg.setToken(userToken.getToken());
 		msg.setLinkCode("LNK_CORE");

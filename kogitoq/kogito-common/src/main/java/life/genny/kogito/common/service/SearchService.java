@@ -99,7 +99,7 @@ public class SearchService {
 	public void sendDetailView(String targetCode) {
 
 		// fetch target and find it's definition
-		BaseEntity target = beUtils.getBaseEntityByCode(targetCode);
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
 
 		// grab the corresponding detail view SBE
@@ -380,7 +380,6 @@ public class SearchService {
 					filterCode = queGrp + "_" + sbeCode;
 				}
 				msgFilterGrp.setTargetCode(filterCode);
-				ask.setQuestionCode(filterCode);
 				ask.getQuestion().setCode(filterCode);
 
 				msgFilterGrp.setMessage(GennyConstants.FILTERS);
@@ -511,15 +510,15 @@ public class SearchService {
 
 		Ask childAsk = new Ask();
 		childAsk.setName(GennyConstants.FILTERS);
-		childAsk.setQuestionCode(queCode);
+		childAsk.getQuestion().setCode(queCode);
 		Question childQuestion = new Question();
 		childQuestion.setAttributeCode(attCode);
 		childQuestion.setCode(queCode);
-		childAsk.setAttributeCode(attCode);
+		childAsk.getQuestion().getAttribute().setCode(attCode);
 		childAsk.setQuestion(childQuestion);
 		childAsk.setTargetCode(targetCode);
 
-		ask.addChildAsk(childAsk);
+		ask.add(childAsk);
 
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());

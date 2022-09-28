@@ -6,7 +6,6 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -794,11 +793,11 @@ public class SearchUtils {
 		ask.setQuestion(question);
 
 		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
-		ask.addChildAsk(addFilterAsk);
+		ask.add(addFilterAsk);
 
 		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode, listParam);
 
-		ask.addChildAsk(existFilterAsk);
+		ask.add(existFilterAsk);
 
 		return ask;
 	}
@@ -814,7 +813,7 @@ public class SearchUtils {
 		int index = 0;
 		for (Map.Entry<String, Map<String, String>> filterParams : listFilParams.entrySet()) {
 			Ask childAsk = new Ask();
-			childAsk.setAttributeCode(Attribute.PRI_EVENT);
+			childAsk.getQuestion().setAttributeCode(Attribute.PRI_EVENT);
 
 			String html = getHtmlByFilterParam(filterParams.getValue());
 
@@ -825,11 +824,11 @@ public class SearchUtils {
 
 			childAsk.setName(html);
 			childAsk.setHidden(false);
-			childAsk.setQuestionCode(filterParams.getKey());
+			childAsk.getQuestion().setCode(filterParams.getKey());
 			childAsk.setQuestion(question);
 			childAsk.setTargetCode(getSearchBaseEntityCodeByJTI(sbeCode));
 
-			ask.addChildAsk(childAsk);
+			ask.add(childAsk);
 
 			index++;
 		}
@@ -920,12 +919,12 @@ public class SearchUtils {
 
 		String sbeCodeJti = getSearchBaseEntityCodeByJTI(sbeCode);
 		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
-		Arrays.asList(ask.getChildAsks()).stream().forEach(e -> {
-			if (e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_COLUMN)
-					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
-					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_SUBMIT)) {
+		ask.getChildren().stream().forEach(e -> {
+			if (e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_COLUMN)
+					|| e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
+					|| e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_SUBMIT)) {
 				e.setHidden(false);
-			} else if (e.getQuestionCode().equalsIgnoreCase(questionCode)) {
+			} else if (e.getQuestion().getCode().equalsIgnoreCase(questionCode)) {
 				e.setHidden(false);
 			} else {
 				e.setHidden(true);
@@ -940,7 +939,7 @@ public class SearchUtils {
 		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_SUBMIT, source, target);
 		ask.setTargetCode(targetCode);
 
-		ask.addChildAsk(askSubmit);
+		ask.add(askSubmit);
 
 		return ask;
 	}

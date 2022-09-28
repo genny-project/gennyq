@@ -1,9 +1,8 @@
-package life.genny.kogito.common.service;
+package life.genny.kogito.common.core;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -12,6 +11,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.kogito.common.service.TaskService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
@@ -19,7 +19,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -27,10 +26,13 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
+/**
+ * ProcessAnswers
+ */
 @ApplicationScoped
-public class ProcessAnswerService {
+public class ProcessAnswers {
 
-	private static final Logger log = Logger.getLogger(ProcessAnswerService.class);
+	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -40,77 +42,30 @@ public class ProcessAnswerService {
 	@Inject BaseEntityUtils beUtils;
 	@Inject DefUtils defUtils;
 
-	@Inject FrontendService frontendService;
+	@Inject Dispatch dispatch;
 	@Inject TaskService taskService;
 
 	/**
-	 * Save incoming answer to the process baseentity.
-	 *
-	 * @param answerJson The incoming answer
-	 * @param processBEJson The process entity to store the answer data
-	 * @return The updated process baseentity
+	 * @param answer
+	 * @param processData
+	 * @return
 	 */
-	public ProcessData storeIncomingAnswer(Answer answer, ProcessData processData) {
+	public Boolean isValid(Answer answer, ProcessData processData) {
 
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processData.getProcessEntityCode())) {
 			log.warn("Bad targetCode in answer!");
-			return processData;
+			return false;
 		}
 
 		// check if the answer is valid for the target
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		if (!defUtils.answerValidForDEF(definition, answer)) {
 			log.error("Bad incoming answer... Not saving!");
-			return processData;
+			return false;
 		}
 
-		processData.getAnswers().add(answer);
-		qwandaUtils.storeProcessData(processData);
-
-		return processData;
-	}
-
-	/**
-	 * @param processData
-	 * @return
-	 */
-	public ProcessData deleteStoredAnswers(ProcessData processData) {
-
-		processData.setAnswers(new ArrayList<>());
-
-		return processData;
-	}
-
-	/**
-	 * Check if all mandatory questions have been answered.
-	 *
-	 * @param askMessageJson The ask message representing the questions
-	 * @param processBEJson The process entity storing the answer data
-	 * @return Boolean representing whether all mandatory questions have been answered
-	 */
-	public Boolean checkMandatory(ProcessData processData) {
-
-		QBulkMessage msg = taskService.fetchBulkMessage(processData);
-
-		// update ask target
-		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		Map<String, Ask> flatMapOfAsks = new HashMap<>();
-		for (Ask ask : msg.getAsks())
-			frontendService.recursivelyUpdateAskTarget(ask, processEntity, flatMapOfAsks);
-
-		// find the submit ask
-		List<Answer> answers = processData.getAnswers();
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(msg.getAsks(), processEntity);
-		for (Ask ask : msg.getAsks())
-			qwandaUtils.recursivelyFindAndUpdateSubmitDisabled(ask, !answered);
-
-		QDataAskMessage asks = new QDataAskMessage(msg.getAsks());
-		asks.setToken(userToken.getToken());
-		asks.setReplace(true);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, asks);
-
-		return answered;
+		return true;
 	}
 
 	/**
@@ -121,7 +76,7 @@ public class ProcessAnswerService {
 	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
-	public Boolean checkUniqueness(ProcessData processData, Boolean acceptSubmission) {
+	public Boolean checkUniqueness(ProcessData processData) {
 
 		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
@@ -132,12 +87,10 @@ public class ProcessAnswerService {
 		// send error for last answer in the list
 		// NOTE: This should be reconsidered
 
-		if (answers.isEmpty())
-			return acceptSubmission;
-
 		Answer answer = answers.get(answers.size()-1);
 		String attributeCode = answer.getAttributeCode();
 
+		Boolean acceptSubmission = true;
 		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
@@ -148,11 +101,7 @@ public class ProcessAnswerService {
 			acceptSubmission = false;
 		}
 
-		QBulkMessage msg = taskService.fetchBulkMessage(processData);
-
-		// disable submit button if not unique
-		for (Ask ask : msg.getAsks())
-			qwandaUtils.sendSubmit(ask, acceptSubmission);
+		QBulkMessage msg = dispatch.fetchBulkMessage(processData);
 
 		return acceptSubmission;
 	}
@@ -209,5 +158,17 @@ public class ProcessAnswerService {
 		log.infof("Cleared caches for %s",processId);
 		return true;
 	}
+
+	/**
+	 * @param processData
+	 * @return
+	 */
+	public ProcessData deleteStoredAnswers(ProcessData processData) {
+
+		processData.setAnswers(new ArrayList<>());
+
+		return processData;
+	}
+
 
 }
