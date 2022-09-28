@@ -44,13 +44,9 @@ public class RoleManager extends Manager {
 
 	@Inject
 	CapabilitiesManager capManager;
-
-	public RoleManager() {}
     
-	@Override
 	@PostConstruct
 	protected void init() {
-		super.init();
 		// Should only need to find this once.
 		roleDef = beUtils.getBaseEntity(DEF_ROLE_CODE);
 		if(roleDef == null)

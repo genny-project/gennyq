@@ -9,13 +9,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonArray;
 import javax.json.bind.JsonbException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
@@ -45,20 +45,35 @@ import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
  */
 @ApplicationScoped
 public class CapabilitiesManager extends Manager {
-	protected static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
 	@Inject
 	private RoleManager roleMan;
 
-	public CapabilitiesManager() {
+	/**
+	 * Post-Construct initialization of capability attributes based on capability mode enum
+	 */
+	@PostConstruct
+	private void init() {
+
+		// Initialize the capability mode attributes
+		CapabilityMode[] modes = CapabilityMode.values();
+		for(CapabilityMode mode : modes) {
+			String attributeCode = "CAP_".concat(mode.name().toUpperCase());
+			Attribute attribute = null;
+
+			try {
+				attribute = qwandaUtils.getAttribute(serviceToken.getProductCode(), attributeCode);
+			} catch(ItemNotFoundException e) {
+				debug("Capability Attribute: " + attributeCode + " not in system under product code: " + serviceToken.getProductCode() + ". Creating now!");
+			}
+	
+			if (attribute == null) {
+				attribute = new AttributeText(attributeCode, CommonUtils.normalizeString(mode.name()) + " capability");
+				qwandaUtils.saveAttribute(serviceToken.getProductCode(), attribute);
+			}
+		}
 	}
 
-	// == TODO LIST
-	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
-	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
-	
-	
-	
 	public List<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
 		List<EntityAttribute> capabilities = new ArrayList<>();
 		if(target.isPerson()) {
@@ -119,11 +134,11 @@ public class CapabilitiesManager extends Manager {
 		try {
 			attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
 		} catch(ItemNotFoundException e) {
-			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
+			debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
 		}
 
 		if (attribute == null) {
-			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
+			trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
 			attribute = new AttributeText(cleanCapabilityCode, name);
 			qwandaUtils.saveAttribute(productCode, attribute);
 		}
@@ -169,14 +184,14 @@ public class CapabilitiesManager extends Manager {
 
 		// Check the user token has required capabilities
 		if(!shouldOverride()) {
-			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+			error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
 					+ " TO BASE ENTITITY: " + targetBe.getCode());
 			return targetBe;
 		}
 
 		// ===== Old capability check ===
 		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
-		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + cleanCapabilityCode
+		// 	error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + cleanCapabilityCode
 		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
 		// 	return targetBe;
 		// }
@@ -227,14 +242,14 @@ public class CapabilitiesManager extends Manager {
 			for (String code : roleCodes) {
 				BaseEntity role = beUtils.getBaseEntity(code);
 				if(role == null) {
-					log.error("Could not find role: " + code);
+					error("Could not find role: " + code);
 					continue;
 				}
 				if(entityHasCapability(role, rawCapabilityCode, hasAll, checkModes))
 					return true;
 			}
 		} catch (RoleException re) {
-			log.error(re.getMessage());
+			error(re.getMessage());
 		}
 
 		return false;
@@ -278,14 +293,14 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated
 	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
-		log.warn("[!] Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
+		warn("[!] Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
 		if (shouldOverride())
 			return true;
 
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		BaseEntity user = beUtils.getUserBaseEntity();
 		if (user == null) {
-			log.error("Null user detected for token: " + userToken.getToken());
+			error("Null user detected for token: " + userToken.getToken());
 			return false;
 		}
 		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
@@ -295,7 +310,7 @@ public class CapabilitiesManager extends Manager {
 			String roleCode = ROLE_BE_PREFIX + priIsCode.substring(PRI_IS_PREFIX.length());
 			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
 			if (roleBe == null) {
-				log.error("Could not find role: " + roleCode);
+				error("Could not find role: " + roleCode);
 				return false;
 			}
 
@@ -315,11 +330,11 @@ public class CapabilitiesManager extends Manager {
 	public Boolean conditionMet(String condition) {
 
 		if (StringUtils.isBlank(condition)) {
-			log.error("condition is NULL!");
+			error("condition is NULL!");
 			return false;
 		}
 
-		log.debug("Testing condition with value: " + condition);
+		debug("Testing condition with value: " + condition);
 		String[] conditionArray = condition.split(":");
 
 		String capability = conditionArray[0];
@@ -350,7 +365,7 @@ public class CapabilitiesManager extends Manager {
 			try {
 				array = jsonb.fromJson(modeString, JsonArray.class);
 			} catch (JsonbException e) {
-				log.error("Could not deserialize CapabilityMode array modeString: " + modeString);
+				error("Could not deserialize CapabilityMode array modeString: " + modeString);
 				return null;
 			}
 		} else {
@@ -468,26 +483,26 @@ public class CapabilitiesManager extends Manager {
 			CapabilityMode[] modeArray = getEntityCapabilityFromCache(productCode, targetCode, cleanCapabilityCode);
 			modes = Arrays.asList(modeArray).stream().collect(Collectors.toSet());
 		} catch (RoleException e) {
-			log.info("Could not find " + targetCode + ":" + cleanCapabilityCode + " in cache");
+			info("Could not find " + targetCode + ":" + cleanCapabilityCode + " in cache");
 			return false;
 		}
 
-		log.info("Found " + modes.size() + " modes");
+		info("Found " + modes.size() + " modes");
 		// Two separate loops so we don't check hasAll over and over again
 		if (hasAll) {
 			for (CapabilityMode checkMode : checkModes) {
-				log.info("Checking " + checkMode.name());
+				info("Checking " + checkMode.name());
 				boolean hasMode = modes.contains(checkMode);
-				log.info(" 		- Success: " + hasMode);
+				info(" 		- Success: " + hasMode);
 				if (!hasMode)
 					return false;
 			}
 			return true;
 		} else {
 			for (CapabilityMode checkMode : checkModes) {
-				log.info("Checking " + checkMode.name());
+				info("Checking " + checkMode.name());
 				boolean hasMode = modes.contains(checkMode);
-				log.info(" 		- Success: " + hasMode);
+				info(" 		- Success: " + hasMode);
 				if (hasMode)
 					return true;
 			}

@@ -2,7 +2,6 @@ package life.genny.qwandaq.managers;
 
 import java.lang.invoke.MethodHandles;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -19,7 +18,7 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 @ApplicationScoped
 public abstract class Manager {
-	private static Logger log;
+	private Logger log;
 
 	protected static Jsonb jsonb = JsonbBuilder.create();
 
@@ -38,12 +37,11 @@ public abstract class Manager {
 	@Inject
 	protected DatabaseUtils dbUtils;
 
-	@PostConstruct
-    protected void init() {
-		log = Logger.getLogger(className());
+	public Manager() {
+		this.log = Logger.getLogger(className());
         log.info("[!] Initialized " + this.className());
-    }
-    
+	}
+
     protected String className() {
 		String str = this.getClass().getSimpleName();
 		int index = str.indexOf('_');
@@ -66,6 +64,10 @@ public abstract class Manager {
 
 	protected void debug(Object o) {
 		log(o, log::debug);
+	}
+
+	protected void trace(Object o) {
+		log(o, log::trace);
 	}
 
 	protected void warn(Object o) {
