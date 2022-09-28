@@ -206,10 +206,6 @@ public class SearchService {
 		msgCodes.setSourceCode(GennyConstants.BUCKET_CODES);
 		msgCodes.setTargetCodes(bucketCodes);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgCodes);
-
-		sendBucketFilter(GennyConstants.QUE_BUCKET_INTERNS_GRP,GennyConstants.QUE_SELECT_INTERN,
-				GennyConstants.LNK_PERSON, GennyConstants.BKT_APPLICATIONS);
-
 	}
 
 	/**
@@ -551,7 +547,7 @@ public class SearchService {
 	 * @param queGroup Question group
 	 * @param queCode Question code
 	 */
-	public void sendBucketFilter(String queGroup,String queCode,String attCode, String targetCode) {
+	public void sendQuickSearch(String queGroup,String queCode,String attCode, String targetCode) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.BUCKET_FILTER_LABEL);
 		Question question = new Question();
@@ -585,8 +581,7 @@ public class SearchService {
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
-		sendBucketFilterOptions(GennyConstants.SBE_DROPDOWN,GennyConstants.QUE_BUCKET_INTERNS_GRP
-				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.LNK_PERSON, GennyConstants.ITEMS);
+		sendBucketFilterOptions(GennyConstants.SBE_DROPDOWN,queGroup,queCode,GennyConstants.PRI_NAME, "");
 	}
 
 	/**

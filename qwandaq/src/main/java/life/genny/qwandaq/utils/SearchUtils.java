@@ -938,6 +938,8 @@ public class SearchUtils {
 		ask.setTargetCode(targetCode);
 
 		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_SUBMIT, source, target);
+//		askSubmit.setDisabled(true);
+
 		ask.setTargetCode(targetCode);
 
 		ask.addChildAsk(askSubmit);
@@ -1111,10 +1113,10 @@ public class SearchUtils {
 	 * @return Bucket filter options
 	 */
 	public SearchEntity getBucketFilterOptions(String sbeCode,String lnkCode, String lnkValue) {
-		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode)
-				.add(new Or(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "CPY_%")
-						,new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "PER_%")))
-				.add(new Column(lnkCode, lnkCode));
+		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
+		searchBE.add(new Or(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "CPY_%")
+                		,new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "PER_%")))
+          		.add(new Column(lnkCode, lnkCode));
 
 		if(!lnkValue.isEmpty()) {
 			searchBE.add(new Filter(GennyConstants.PRI_NAME, Operator.LIKE, "%" + lnkValue + "%"));
