@@ -14,6 +14,7 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.models.ServiceToken;
+import org.jboss.logging.Logger;
 
 public class SendAllMessages extends MessageSendingStrategy {
 
@@ -23,6 +24,7 @@ public class SendAllMessages extends MessageSendingStrategy {
     @Inject
     ServiceToken serviceToken;
 
+    static final Logger log = Logger.getLogger(SendAllMessages.class);
     private final String productCode;
     private final String milestoneCode;
     private final BaseEntity coreBE;

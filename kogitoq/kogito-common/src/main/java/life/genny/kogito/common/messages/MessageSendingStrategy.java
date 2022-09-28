@@ -11,7 +11,7 @@ import javax.json.bind.JsonbBuilder;
 import io.quarkus.arc.Arc;
 
 public abstract class MessageSendingStrategy {
-    static final Logger log = Logger.getLogger(SendMessageService.class);
+    static final Logger log = Logger.getLogger(MessageSendingStrategy.class);
 
     Jsonb jsonb = JsonbBuilder.create();
 

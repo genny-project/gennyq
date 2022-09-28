@@ -2,6 +2,7 @@ package life.genny.kogito.common.messages;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QMessageGennyMSG;
+import org.jboss.logging.Logger;
 
 import java.util.Map;
 
@@ -10,6 +11,8 @@ public class SendMessage extends MessageSendingStrategy {
     private String templateCode;
     private BaseEntity recipientBE;
     private Map<String, String> ctxMap = null;
+
+    static final Logger log = Logger.getLogger(SendMessage.class);
 
     public SendMessage(String templateCode, String recipientBECode) {
         super();
