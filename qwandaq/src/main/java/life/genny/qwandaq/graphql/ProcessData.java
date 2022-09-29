@@ -12,11 +12,17 @@ import life.genny.qwandaq.Answer;
 @RegisterForReflection
 public class ProcessData extends ProcessInstanceVariables {
 
-	private String questionCode;
 	private String sourceCode;
-	private String pcmCode;
-	private String definitionCode;
+	private String targetCode;
+	private String questionCode;
+
+    private String pcmCode;
+    private String parent;
+    private String location;
+
 	private String events;
+
+	private String definitionCode;
 	private String processEntityCode;
 	private List<String> attributeCodes;
 	private List<Answer> answers;
@@ -25,21 +31,29 @@ public class ProcessData extends ProcessInstanceVariables {
 		super();
     }
 
-    public String getQuestionCode() {
-        return questionCode;
-    }
+	public String getSourceCode() {
+		return sourceCode;
+	}
 
-    public void setQuestionCode(String questionCode) {
-        this.questionCode = questionCode;
-    }
+	public void setSourceCode(String sourceCode) {
+		this.sourceCode = sourceCode;
+	}
 
-    public String getSourceCode() {
-        return sourceCode;
-    }
+	public String getTargetCode() {
+		return targetCode;
+	}
 
-    public void setSourceCode(String sourceCode) {
-        this.sourceCode = sourceCode;
-    }
+	public void setTargetCode(String targetCode) {
+		this.targetCode = targetCode;
+	}
+
+	public String getQuestionCode() {
+		return questionCode;
+	}
+
+	public void setQuestionCode(String questionCode) {
+		this.questionCode = questionCode;
+	}
 
 	public String getPcmCode() {
 		return pcmCode;
@@ -49,21 +63,37 @@ public class ProcessData extends ProcessInstanceVariables {
 		this.pcmCode = pcmCode;
 	}
 
+	public String getParent() {
+		return parent;
+	}
+
+	public void setParent(String parent) {
+		this.parent = parent;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	public String getEvents() {
+		return events;
+	}
+
+	public void setEvents(String events) {
+		this.events = events;
+	}
+
 	public String getDefinitionCode() {
-        return definitionCode;
-    }
+		return definitionCode;
+	}
 
-    public void setDefinitionCode(String definitionCode) {
-        this.definitionCode = definitionCode;
-    }
-
-    public String getEvents() {
-        return events;
-    }
-
-    public void setEvents(String events) {
-        this.events = events;
-    }
+	public void setDefinitionCode(String definitionCode) {
+		this.definitionCode = definitionCode;
+	}
 
 	public String getProcessEntityCode() {
 		return processEntityCode;

@@ -22,7 +22,6 @@ public class TimerDataTest {
     @Test
     public void TimerEventTest() {
         log.info("This is the TimerEventTest");
-        log.info("This is the TimerEventTest2");
 
         TimerEvent t1 = new TimerEvent(0L, "TEST_TIMER_1", "LNK_WARNING");
         log.info("TimerEvent1 = " + t1);

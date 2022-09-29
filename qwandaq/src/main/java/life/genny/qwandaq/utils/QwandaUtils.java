@@ -593,21 +593,6 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * @param processData
-	 */
-	public void completeProcessData(ProcessData processData) {
-
-		// find target
-		String targetCode = processData.getTargetCode();
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		// find targets definition
-		BaseEntity definition = defUtils.getDEF(target);
-		log.info("ProcessBE identified as a " + definition);
-		processData.setDefinitionCode(definition.getCode());
-	}
-
-	/**
 	 * Setup the process entity used to store task data.
 	 *
 	 * @param processData The process data

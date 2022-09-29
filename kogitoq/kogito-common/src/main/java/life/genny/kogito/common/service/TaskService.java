@@ -13,6 +13,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
+import life.genny.kogito.common.models.S2SData;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -52,16 +53,51 @@ public class TaskService {
 	ProcessAnswers processAnswers;
 
 	/**
-	 * Create processData from inputs.
-	 * 
-	 * @param questionCode The code of the question to send
-	 * @param sourceCode   The source user
-	 * @param targetCode   The Target entity
-	 * @param pcmCode      The code eof the PCM to use
-	 * @return The processData json
+	 * @param processData
 	 */
-	public ProcessData inputs(String questionCode, String sourceCode, String targetCode,
-			String pcmCode, String events, String processId) {
+	public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
+		
+		// check if task exists
+
+		// re-questions if it does
+	}
+
+	/**
+	 * @param sourceCode
+	 * @param targetCode
+	 * @param pcmCode
+	 * @param parent
+	 * @param location
+	 */
+	public void dispatch(String sourceCode, String targetCode, String pcmCode, String parent, String location) {
+
+		// construct basic processData
+		ProcessData processData = new ProcessData();
+		processData.setSourceCode(sourceCode);
+		processData.setTargetCode(targetCode);
+
+		// pcm data
+		processData.setPcmCode(pcmCode);
+		processData.setParent(parent);
+		processData.setLocation(location);
+
+		// build and send data
+		dispatch.sendData(processData);
+	}
+
+	/**
+	 * @param sourceCode
+	 * @param targetCode
+	 * @param questionCode
+	 * @param processId
+	 * @param pcmCode
+	 * @param parent
+	 * @param location
+	 * @param events
+	 * @return
+	 */
+	public ProcessData dispatch(String sourceCode, String targetCode, String questionCode, String processId, 
+			String pcmCode, String parent, String location, String events) {
 
 		log.info("==========================================");
 		log.info("processId : " + processId);
@@ -72,11 +108,17 @@ public class TaskService {
 		log.info("events : " + events);
 		log.info("==========================================");
 
+		// init process data
 		ProcessData processData = new ProcessData();
 		processData.setQuestionCode(questionCode);
 		processData.setSourceCode(sourceCode);
 		processData.setTargetCode(targetCode);
+
+		// pcm data
 		processData.setPcmCode(pcmCode);
+		processData.setParent(parent);
+		processData.setLocation(location);
+
 		processData.setEvents(events);
 		processData.setProcessId(processId);
 		processData.setAnswers(new ArrayList<Answer>());
@@ -84,29 +126,12 @@ public class TaskService {
 		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
-		return processData;
-	}
-
-	/**
-	 * @param processData
-	 */
-	public void doesTaskExist(ProcessData processData) {
-		
-		// check if task exists
-
-		// re-questions if it does
-	}
-
-	/**
-	 * @param processData
-	 */
-	public ProcessData dispatch(ProcessData processData) {
-
-		String sourceCode = processData.getSourceCode();
 		String userCode = userToken.getUserCode();
 
-		// finish building process data
-		qwandaUtils.completeProcessData(processData);
+		// find target and target definition
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+		BaseEntity definition = defUtils.getDEF(target);
+		processData.setDefinitionCode(definition.getCode());
 
 		// dispatch data
 		if (sourceCode.equals(userCode))
