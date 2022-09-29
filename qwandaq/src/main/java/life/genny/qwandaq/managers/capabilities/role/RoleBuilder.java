@@ -7,20 +7,24 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.CapabilityMode;
+import life.genny.qwandaq.datatype.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
 
+
+import static life.genny.qwandaq.datatype.Capability.CapabilityMode.VIEW;
+
 public class RoleBuilder {
-    static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
     
     private CapabilitiesManager capManager;
     private RoleManager roleMan;
@@ -33,12 +37,19 @@ public class RoleBuilder {
 
     private List<String> childrenCodes = new ArrayList<>();
 
+    /**
+     * A map from Attribute (Capability) Code to Attribute (Capability)
+     */
     private Map<String, Attribute> capabilityMap;
 
-    private Map<String, CapabilityMode[]> roleCapabilities = new HashMap<>();
+    /**
+     * A map from Capability Code to Capabilities to add to the role for that Capability
+     */
+    private Map<String, Capability[]> roleCapabilities = new HashMap<>();
 
     private String redirectCode;
 
+    // TODO: Implement this
     private String[] sidebarEventCodes;
 
     // TODO: Again I want to get rid of product code chains like this
@@ -50,6 +61,20 @@ public class RoleBuilder {
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
     }
 
+    /**
+     * Set the {@link RoleBuilder#capabilityMap}
+     * @param capData a 2D String array, where each element of the first array is of the form {Code, Name}
+     * Example:
+     * <pre>
+     *{
+     *  {"CAP_ADMIN", "Manipulate Admin"},
+     *  {"CAP_TENANT", "Manipulate Tenant"}
+     *}
+     * </pre>
+     * @return this RoleBuilder
+     * 
+     * @see {@link CapabilitiesManager#getCapabilityMap(String, String[][])}
+     */
     public RoleBuilder setCapabilityMap(String[][] capData) {
         this.capabilityMap = capManager.getCapabilityMap(productCode, capData);
         return this;
@@ -71,12 +96,18 @@ public class RoleBuilder {
     }
 
     public RoleBuilder addView(String capabilityCode) {
-        return addCapability(capabilityCode, CapabilityMode.VIEW);
+        return addCapability(capabilityCode, VIEW);
     }
 
-    public RoleBuilder addCapability(String capabilityCode, CapabilityMode... capModes) {
+    @Deprecated
+    public RoleBuilder addCapability(String capabilityCode, Capability.CapabilityMode... capModes) {
+        Capability[] capabilities = Arrays.asList(capModes).stream().map((Capability.CapabilityMode mode) -> new Capability(mode)).collect(Collectors.toList()).toArray(new Capability[0]);
+        return addCapability(capabilityCode, capabilities);
+    }
+
+    public RoleBuilder addCapability(String capabilityCode, Capability... capabilities) {
         capabilityCode = CommonUtils.safeStripPrefix(capabilityCode);
-        roleCapabilities.put(capabilityCode, capModes);
+        roleCapabilities.put(capabilityCode, capabilities);
         return this;
     }
 
