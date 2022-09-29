@@ -51,7 +51,7 @@ public class DefUtils {
 
 	@Inject
 	BaseEntityUtils beUtils;
-	
+
 	@Inject
 	SearchUtils searchUtils;
 
@@ -69,7 +69,8 @@ public class DefUtils {
 	public static final String PREF_LNK = "LNK_";
 	public static final String PREF_SER = "SER_";
 
-	public DefUtils() { }
+	public DefUtils() {
+	}
 
 	/**
 	 * Initialize the in memory DEF store
@@ -116,7 +117,7 @@ public class DefUtils {
 
 			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
 			defPrefixMap.get(productCode).put(prefix, code);
-			CacheUtils.putObject(productCode, def.getCode()+":PREFIX", prefix);
+			CacheUtils.putObject(productCode, def.getCode() + ":PREFIX", prefix);
 		}
 	}
 
@@ -138,6 +139,9 @@ public class DefUtils {
 		}
 		if (entity.getCode().startsWith("PRJ_")) {
 			return beUtils.getBaseEntity("DEF_PROJECT");
+		}
+		if (entity.getCode().startsWith("DOT_")) {
+			return beUtils.getBaseEntity("DEF_DOCUMENT_TEMPLATE");
 		}
 
 		// NOTE: temporary special check for internmatch
@@ -191,7 +195,7 @@ public class DefUtils {
 	}
 
 	/**
-	 * Find the corresponding definition for a given {@link BaseEntity}. 
+	 * Find the corresponding definition for a given {@link BaseEntity}.
 	 * NOTE: Temporary special method for Internmatch only.
 	 *
 	 * @param entity The {@link BaseEntity} to check
@@ -249,7 +253,7 @@ public class DefUtils {
 
 			// check for single PRI_IS
 			if (codes.size() == 1) {
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+codes.get(0).substring("PRI_IS_".length()));
+				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + codes.get(0).substring("PRI_IS_".length()));
 				return def;
 			}
 
@@ -262,7 +266,7 @@ public class DefUtils {
 			for (String code : codes) {
 
 				// get def for PRI_IS
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+code.substring("PRI_IS_".length()));
+				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + code.substring("PRI_IS_".length()));
 				if (def == null) {
 					continue;
 				}
@@ -390,11 +394,12 @@ public class DefUtils {
 							if (value.getClass().equals(BaseEntity.class)) {
 								BaseEntity baseEntity = (BaseEntity) value;
 								BaseEntity savedEntity = beUtils.getBaseEntityByCode(baseEntity.getCode());
-								if(savedEntity != null) baseEntity = savedEntity;
+								if (savedEntity != null)
+									baseEntity = savedEntity;
 								ctxMap.put(key, baseEntity);
 							}
 						});
-						
+
 						// check if contexts are present
 						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper
