@@ -406,11 +406,11 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param attribute the attribute to find
 	 * @return EntityAttribute
 	 */
-	public EntityAttribute findEntityAttribute(final Attribute attribute) {
-		final EntityAttribute foundEntity = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst().get();
+	public Optional<EntityAttribute> findEntityAttribute(final Attribute attribute) {
+		final Optional<EntityAttribute> foundEntityOpt = getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst();
 
-		return foundEntity;
+		return foundEntityOpt;
 	}
 
 	/**
@@ -482,7 +482,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
-			existing.get().setValue(value);
+			if(value != null)
+				existing.get().setValue(value);
 			existing.get().setWeight(weight);
 			// removeAttribute(existing.get().getAttributeCode());
 		} else {
