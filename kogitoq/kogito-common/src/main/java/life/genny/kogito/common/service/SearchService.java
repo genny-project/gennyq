@@ -782,4 +782,13 @@ public class SearchService {
 
 		return isDateTime;
 	}
+
+
+	/**
+	 *
+	 * @return List of Filter Parameters in the application scope
+	 */
+	public Map<String,Map<String, String>> getListFilterParams() {
+		return listFilterParams;
+	}
 }
