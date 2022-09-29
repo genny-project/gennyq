@@ -1,28 +1,20 @@
 package life.genny.test;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
+
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.test.junit.QuarkusTest;
-import io.restassured.http.ContentType;
-import io.restassured.response.ExtractableResponse;
-import io.restassured.response.Response;
 import life.genny.kogito.common.models.TimerData;
 import life.genny.kogito.common.models.TimerEvent;
 
-import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.notNullValue;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.concurrent.TimeUnit;
-
-@QuarkusTest
 public class TimerDataTest {
+
     private static final Logger log = Logger.getLogger(TimerDataTest.class);
 
     Jsonb jsonb = JsonbBuilder.create();
@@ -51,7 +43,7 @@ public class TimerDataTest {
 
         timerData.updateElapsed();
 
-        for (int t = 0; t < 100; t++) {
+        for (int t = 0; t < 5; t++) {
             Long currentTimeStampUTC = LocalDateTime.now().atZone(
                     ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
             if (timerData.isMilestone()) {
@@ -64,7 +56,7 @@ public class TimerDataTest {
                 log.info("");
             }
             try {
-                TimeUnit.SECONDS.sleep(10);
+                TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
 
             }

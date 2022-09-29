@@ -50,8 +50,6 @@
 		<jandex.version>1.0.7</jandex.version>
 		<jjwt.version>0.7.0</jjwt.version>
 
-		<testcontainers.version>1.17.0</testcontainers.version>
-
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<surefire.forkCount>1</surefire.forkCount>
 		<failsafe.include>**/*IT.java</failsafe.include>
