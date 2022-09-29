@@ -1,10 +1,9 @@
 package life.genny.qwandaq.managers.capabilities;
 
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +13,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.JsonArray;
 import javax.json.bind.JsonbException;
+
+import life.genny.qwandaq.utils.DebugTimer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -57,10 +58,6 @@ public class CapabilitiesManager extends Manager {
 	// == TODO LIST
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
 	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
-	
-	/*
-	 * Refactor Structure
-	 */
 	
 	public List<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
 		List<EntityAttribute> capabilities = new ArrayList<>();
@@ -210,7 +207,7 @@ public class CapabilitiesManager extends Manager {
 	 *         the supplied capabilityCode
 	 */
 	public boolean hasCapability(final BaseEntity user, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
-		CommonUtils.DebugTimer timer = new CommonUtils.DebugTimer(log::debug);
+		DebugTimer timer = new DebugTimer(log::debug);
 		// 1. Check override
 		// allow keycloak admin and devs to do anything
 		if (shouldOverride()) {
@@ -219,6 +216,7 @@ public class CapabilitiesManager extends Manager {
 		}
 		// 2. Check user capabilities
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
+		
 		if(entityHasCapability(user, cleanCapabilityCode, hasAll, checkModes)) {
 			timer.logTime();
 			return true;
@@ -234,6 +232,7 @@ public class CapabilitiesManager extends Manager {
 					log.error("Could not find role: " + code);
 					continue;
 				}
+
 				if(entityHasCapability(role, rawCapabilityCode, hasAll, checkModes)) {
 					timer.logTime();
 					return true;

@@ -13,8 +13,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import life.genny.qwandaq.datatype.CapabilityMode;
 
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.test.qwandaq.utils.BaseTestCase;
 
+import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.suite.TestCase;
 

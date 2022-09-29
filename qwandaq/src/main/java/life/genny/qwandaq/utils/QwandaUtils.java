@@ -45,6 +45,8 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 
+import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
+
 /**
  * A utility class to assist in any Qwanda Engine Question
  * and Answer operations.
@@ -228,8 +230,8 @@ public class QwandaUtils {
 	}
 
 	public Attribute createEvent(String code, final String name) {
-		if(!code.startsWith("EVT_")) {
-			code = "EVT_".concat(code);
+		if(!code.startsWith(EVENT_PREFIX)) {
+			code = EVENT_PREFIX.concat(code);
 		}
 		code = code.toUpperCase();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);

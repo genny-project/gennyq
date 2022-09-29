@@ -92,6 +92,7 @@ import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 
 /**
  * A static utility class used for standard requests and
@@ -99,6 +100,7 @@ import org.apache.commons.lang3.StringUtils;
  * 
  * @author Adam Crow
  */
+
 public class GithubUtils {
 
     static final Logger log = Logger.getLogger(GithubUtils.class);
@@ -174,17 +176,18 @@ public class GithubUtils {
         return jsonb.toJson(response.build());
     }
 
-    public List<BaseEntity> getLayoutBaseEntitys(final String remoteUrl, final String branch, final String realm,
+    public List<BaseEntity> getLayoutBaseEntitys(BaseEntityUtils beUtils, final String remoteUrl, final String branch,
+            final String realm,
             final String gitrealm, boolean recursive)
             throws InvalidRemoteException, TransportException, GitAPIException,
             RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException {
 
-        List<BaseEntity> layouts = new ArrayList<BaseEntity>();
+        List<BaseEntity> layouts = new ArrayList<>();
 
-        Map<String, String> lays = new HashMap<String, String>();
+        Map<String, String> lays = new HashMap<>();
 
         String gitFolder = gitrealm;
-        String realmFilter = gitFolder;// +"/sublayouts";
+        String realmFilter = gitFolder;
 
         log.info("remoteUrl=" + remoteUrl);
         log.info("branch=" + branch);
@@ -192,9 +195,6 @@ public class GithubUtils {
         log.info("realm=" + realm);
         log.info("gitFolder=" + gitFolder);
         log.info("realmFilter=" + realmFilter);
-
-        // Process pp = Runtime.getRuntime().exec("cd /tmp;git clone -b "+branch+"
-        // "+remoteUrl);
 
         String tmpDir = "/tmp/git";
         try {
@@ -241,7 +241,7 @@ public class GithubUtils {
         // treeWalk.setFilter(AndTreeFilter.create(TreeFilter.ANY_DIFF,
         // PathFilter.ANY_DIFF));
 
-        treeWalk.setFilter(AndTreeFilter.create(PathFilter.create(realmFilter), PathSuffixFilter.create(".json")));
+        treeWalk.setFilter(AndTreeFilter.create(PathFilter.create(realmFilter), PathSuffixFilter.create(".html")));
         while (treeWalk.next()) {
 
             final ObjectId objectId = treeWalk.getObjectId(0);
@@ -272,6 +272,7 @@ public class GithubUtils {
                     uri = ("genny".equals(gitrealm) ? "/" : "") + p.getParent().toString();
                 }
                 name = p.getFileName().toString().replaceFirst("[.][^.]+$", "");
+                String nameCode = name.replaceAll("\\-", "");
 
                 if (!name.equals(gitrealm)) { // avoid root folder
                     String content = new String(loader.getBytes());
@@ -290,120 +291,45 @@ public class GithubUtils {
                         uri = StringUtils.removeEndIgnoreCase(uri, "/");
                     }
 
-                    String precode = String.valueOf(uri.replaceAll("[^a-zA-Z0-9]", "").toUpperCase().hashCode());
-                    layoutCode = ("LAY_" + realm + "_" + precode).toUpperCase();
+                    String precode = String.valueOf(uri.replaceAll("[^a-zA-Z0-9\\-]", "").toUpperCase().hashCode());
+                    layoutCode = ("DOT_" + nameCode).toUpperCase();
 
                     String existingUrl = lays.get(layoutCode);
-                    if (existingUrl != null) {
-                        log.info("DUPLICATE - " + layoutCode + ":" + existingUrl + "--->" + fullpath);
-                        // continue;
-                    } else {
-                        lays.put(layoutCode, fullpath);
+                    BaseEntity layout = null;
+                    try {
+                        layout = beUtils.getBaseEntityOrNull(realm, layoutCode);
+                    } catch (ItemNotFoundException e) {
+                        log.info("No be found for " + layoutCode);
                     }
 
-                    BaseEntity layout = new BaseEntity(layoutCode, name);
-                    layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_DATA", "Layout Data"),
+                    if ((existingUrl != null) || (layout != null)) {
+                        log.info("DUPLICATE - " + layoutCode + ":" + existingUrl + "--->" + fullpath);
+
+                    } else {
+                        lays.put(layoutCode, fullpath);
+                        layout = new BaseEntity(layoutCode, name);
+                    }
+
+                    layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_HTML_MERGE", "Layout Data"),
                             content));
+
                     layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URI", "Layout URI"), uri));
-                    layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URL", "Layout URL"),
-                            "http://layout-cache-service/" + fullpath));
-                    layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_LAYOUT_NAME", "Layout Name"), name));
-                    layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_BRANCH", "Branch"), branch));
+                            new Answer(layout, layout, new AttributeText("PRI_NAME", "Document Name"), name));
                     long secs = commit.getCommitTime();
                     LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
                             TimeZone.getDefault().toZoneId());
 
-                    String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                    layout.addAnswer(new Answer(layout, layout,
-                            new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"), lastCommitDateTimeString)); // if
-                                                                                                                   // new
+                    // String lastCommitDateTimeString =
+                    // commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                    // layout.addAnswer(new Answer(layout, layout,
+                    // new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"),
+                    // lastCommitDateTimeString)); // if
+                    // // new
                     layout.setRealm(realm);
                     layout.setUpdated(commitDateTime);
                     layouts.add(layout);
                 }
             }
-
-        }
-
-        return layouts;
-
-    }
-
-    public List<BaseEntity> getLayoutBaseEntitys2(final String remoteUrl, final String branch,
-            final String realm) throws InvalidRemoteException, TransportException, GitAPIException,
-            RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException {
-
-        List<BaseEntity> layouts = new ArrayList<BaseEntity>();
-
-        String gitFolder = realm;
-
-        log.info("remoteUrl=" + remoteUrl);
-        log.info("branch=" + branch);
-        log.info("realm=" + realm);
-
-        String tmpDir = "/tmp/git";
-        try {
-            File directory = new File(tmpDir);
-
-            // Deletes a directory recursively. When deletion process is fail an
-            // IOException is thrown and that's why we catch the exception.
-            FileUtils.deleteDirectory(directory);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Process pp = Runtime.getRuntime().exec("cd /tmp;git clone -b "+branch+"
-        // "+remoteUrl);
-
-        Git git = Git.cloneRepository()
-
-                .setURI(remoteUrl).setDirectory(new File(tmpDir)).setBranch(branch).call();
-
-        log.info("Set up Git");
-
-        git.fetch().setRemote(remoteUrl).setRefSpecs(new RefSpec("+refs/heads/*:refs/heads/*")).call();
-
-        // git show -s --format=%ct master^{commit}
-        // Process pp = Runtime.getRuntime().exec("cd /tmp;git show -s --format=%ct
-        // master^{commit}");
-
-        String commitTimeStr = execCmd("git show -s --format=%ct " + branch + "^{commit}");
-        long commitTime = Long.parseLong(commitTimeStr);
-
-        String realmFilter = tmpDir + "/" + gitFolder + "/sublayouts";
-        List<Tuple> layoutTexts = readFilenamesFromDirectory(realmFilter);
-
-        for (Tuple tupleFile : layoutTexts) {
-            String fullpath = tupleFile.getString(0).substring(realmFilter.length() + 1); // get rid of
-                                                                                          // realm+"-new/sublayouts/"
-            String content = tupleFile.getString(1);
-            Path p = Paths.get(fullpath);
-            String filepath = p.getParent().toString();
-            String name = fullpath.substring(filepath.length() + 1).replaceFirst("[.][^.]+$", "");
-            ;
-            filepath = filepath + "/" + name;
-            String precode = String.valueOf(filepath.replaceAll("[^a-zA-Z0-9]", "").toUpperCase().hashCode());
-            String layoutCode = ("LAY_" + realm + "_" + precode).toUpperCase();
-            log.info(layoutCode + " file = " + fullpath + " size=" + tupleFile.getString(1).length());
-            BaseEntity layout = new BaseEntity(layoutCode, name);
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_DATA", "Layout Data"), content));
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URI", "Layout URI"), filepath));
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_URL", "Layout URL"),
-                    "http://layout-cache-service/" + realmFilter + "/" + fullpath));
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_NAME", "Layout Name"), name));
-            long secs = commitTime;
-            LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
-                    TimeZone.getDefault().toZoneId());
-
-            String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"),
-                    lastCommitDateTimeString)); // if new
-            layout.setRealm(realm);
-            layout.setUpdated(commitDateTime);
-            layouts.add(layout);
 
         }
 

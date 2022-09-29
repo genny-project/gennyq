@@ -35,7 +35,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
-
 /**
  * A non-static utility class used for standard
  * operations involving BaseEntitys.
@@ -246,7 +245,7 @@ public class BaseEntityUtils {
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
 	 * @param productCode The productCode to cache into
-	 * @param baseEntity The BaseEntity to update
+	 * @param baseEntity  The BaseEntity to update
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(String productCode, BaseEntity baseEntity) {
@@ -553,11 +552,11 @@ public class BaseEntityUtils {
 		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
 
-		if(entity.getCreated() == null) {
+		if (entity.getCreated() == null) {
 			log.error("NPE for PRI_CREATED. Generating created date");
 			entity.autocreateCreated();
 		}
-		
+
 		// Ensure createdDate is not null
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
@@ -592,7 +591,7 @@ public class BaseEntityUtils {
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
-		
+
 		return entity;
 	}
 
@@ -656,14 +655,22 @@ public class BaseEntityUtils {
 				name = defBE.getName();
 
 			// create entity and set realm
-			item = new BaseEntity(code.toUpperCase(), name);
+			// check if code already exists
+			try {
+				item = this.getBaseEntity(code);
+				item.setName(name);
+			} catch (ItemNotFoundException e) {
+				item = new BaseEntity(code.toUpperCase(), name);
+			}
+
 			item.setRealm(userToken.getProductCode());
 		}
 
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		// TODO: Surely we don't have to fetch attribute from attribute code if the attribute
+		// TODO: Surely we don't have to fetch attribute from attribute code if the
+		// attribute
 		// is already stored in the entity attribute?
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {

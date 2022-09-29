@@ -48,8 +48,7 @@ public class BaseEntityUtilsTest extends BaseTestCase {
 
 		BaseEntity baseEntity = new BaseEntity(ENTITY_CODE, "Test Entity");
 		baseEntity.setRealm(PRODUCT);
-
-		Mockito.when(dbUtils.checkEntityManager()).thenReturn(true);
+		
 		Mockito.when(dbUtils.findBaseEntityByCode(PRODUCT, ENTITY_CODE)).thenReturn(baseEntity);
 		Mockito.when(dbUtils.findBaseEntityByCode(PRODUCT, DUMMY_CODE)).thenReturn(null);
 
