@@ -49,6 +49,7 @@ public class RoleBuilder {
 
     private String redirectCode;
 
+    // TODO: Implement this
     private String[] sidebarEventCodes;
 
     // TODO: Again I want to get rid of product code chains like this
