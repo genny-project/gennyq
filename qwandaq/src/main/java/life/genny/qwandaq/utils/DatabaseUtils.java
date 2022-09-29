@@ -21,7 +21,6 @@ import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.NotInitializedException;
 import life.genny.qwandaq.validation.Validation;
 
 /*

@@ -4,7 +4,7 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 import org.jboss.logging.Logger;
 
 /**
- * Timer class that makes use of {@link System#currentTimeMillis()}
+ * Timer class that makes use of {@link System#nanoTime()}
  */
 public class DebugTimer {
 	private static final Logger defaultLogger = Logger.getLogger(DebugTimer.class);
@@ -23,9 +23,9 @@ public class DebugTimer {
      * @param message - message to prepend to the time when logging
      */
     public DebugTimer(FILogCallback logLevel, String message) {
-        start = System.currentTimeMillis();
         this.logLevel = logLevel;
         logLevel.log("Started new Debug Timer!");
+        start = System.nanoTime();
     }
 
     /**
@@ -67,7 +67,7 @@ public class DebugTimer {
      * @return the duration at the current point in time
      */
     public long getDuration() {
-        end = System.currentTimeMillis();
+        end = System.nanoTime();
         return end - start;
     }
 
@@ -75,6 +75,7 @@ public class DebugTimer {
      * Log the current duration
      */
     public void logTime() {
-        logLevel.log(message + getDuration());
+        long duration = getDuration();
+        logLevel.log(message + duration + "ns (nanoseconds)");
     }
 }

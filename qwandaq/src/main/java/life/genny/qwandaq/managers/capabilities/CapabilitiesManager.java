@@ -34,8 +34,6 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
 import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
-import static life.genny.qwandaq.constants.GennyConstants.PRI_IS_PREFIX;
-import static life.genny.qwandaq.constants.GennyConstants.ROLE_BE_PREFIX;
 
 import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
 /*
@@ -207,7 +205,7 @@ public class CapabilitiesManager extends Manager {
 	 *         the supplied capabilityCode
 	 */
 	public boolean hasCapability(final BaseEntity user, final String rawCapabilityCode, boolean hasAll, final CapabilityMode... checkModes) {
-		DebugTimer timer = new DebugTimer(log::debug);
+		DebugTimer timer = new DebugTimer(log::trace);
 		// 1. Check override
 		// allow keycloak admin and devs to do anything
 		if (shouldOverride()) {
@@ -270,80 +268,7 @@ public class CapabilitiesManager extends Manager {
 
 		return false;
 	}
-
-	/**
-	 * Checks if the user has a capability using any PRI_IS_ attributes.
-	 *
-	 * NOTE: This should be temporary until the LNK_ROLE attribute is properly in
-	 * place!
-	 * Lets do it in 10.1.0!!!
-	 *
-	 * @param rawCapabilityCode The code of the capability.
-	 * @param mode              The mode of the capability.
-	 * @return Boolean True if the user has the capability, False otherwise.
-	 */
-	@Deprecated
-	public boolean hasCapabilityThroughPriIs(String rawCapabilityCode, CapabilityMode mode) {
-		log.warn("[!] Assessing roles through PRI_IS attribs for user with uuid: " + userToken.getCode());
-		if (shouldOverride())
-			return true;
-
-		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
-		BaseEntity user = beUtils.getUserBaseEntity();
-		if (user == null) {
-			log.error("Null user detected for token: " + userToken.getToken());
-			return false;
-		}
-		List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
-
-		return priIsAttributes.stream().anyMatch((EntityAttribute priIsAttribute) -> {
-			String priIsCode = priIsAttribute.getAttributeCode();
-			String roleCode = ROLE_BE_PREFIX + priIsCode.substring(PRI_IS_PREFIX.length());
-			BaseEntity roleBe = beUtils.getBaseEntityByCode(roleCode);
-			if (roleBe == null) {
-				log.error("Could not find role: " + roleCode);
-				return false;
-			}
-
-			String modeString = roleBe.getValueAsString(cleanCapabilityCode);
-			if (StringUtils.isBlank(modeString))
-				return false;
-			return modeString.contains(mode.name());
-		});
-	}
-
-	/**
-	 * @param condition the condition to check
-	 * 
-	 * @return Boolean
-	 */
-	@Deprecated
-	public Boolean conditionMet(String condition) {
-
-		if (StringUtils.isBlank(condition)) {
-			log.error("condition is NULL!");
-			return false;
-		}
-
-		log.debug("Testing condition with value: " + condition);
-		String[] conditionArray = condition.split(":");
-
-		String capability = conditionArray[0];
-		String mode = conditionArray[1];
-
-		// check for NOT operator
-		Boolean not = capability.startsWith("!");
-		capability = not ? capability.substring(1) : capability;
-
-		// check for Capability
-		BaseEntity user = beUtils.getUserBaseEntity();
-		Boolean hasCap = hasCapability(user, capability, false, CapabilityMode.getMode(mode))
-				|| hasCapabilityThroughPriIs(capability, CapabilityMode.getMode(mode));
-
-		// XNOR operator
-		return hasCap ^ not;
-	}
-
+	
 	/**
 	 * Deserialise a stringified array of modes to an array of {@link CapabilityMode}
 	 * @param modeString

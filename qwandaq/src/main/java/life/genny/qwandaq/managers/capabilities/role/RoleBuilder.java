@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -42,8 +43,8 @@ public class RoleBuilder {
 
     // TODO: Again I want to get rid of product code chains like this
     // TODO: Hopefully we can firm up how product codes are assigned to tokens
-    public RoleBuilder(CapabilitiesManager capManager, String roleCode, String roleName, String productCode) {
-        this.capManager = capManager;
+    public RoleBuilder(String roleCode, String roleName, String productCode) {
+        this.capManager = Arc.container().select(CapabilitiesManager.class).get();
         this.roleMan = capManager.getRoleManager();
         this.productCode = productCode;
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
