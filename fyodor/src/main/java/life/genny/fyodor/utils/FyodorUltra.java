@@ -25,7 +25,7 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
+
 import javax.persistence.criteria.CriteriaBuilder.Case;
 
 import org.apache.commons.lang3.StringUtils;
@@ -64,22 +64,22 @@ public class FyodorUltra {
 	private static final Logger log = Logger.getLogger(FyodorUltra.class);
 
 	@Inject
-	EntityManager entityManager;
+	private EntityManager entityManager;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	private QwandaUtils qwandaUtils;
 
 	@Inject
-	Service service;
+	private Service service;
 
 	@Inject
-	UserToken userToken;
+	private UserToken userToken;
 
 	@Inject
-	BaseEntityUtils beUtils;
+	private BaseEntityUtils beUtils;
 
 	@Inject
-	CapHandler capHandler;
+	private CapHandler capHandler;
 
 	static Jsonb jsonb = JsonbBuilder.create();
 

@@ -13,16 +13,20 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Ask;
+
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.CapabilityMode;
+import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.datatype.Capability.PermissionMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
@@ -39,6 +43,8 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
+
+import static life.genny.qwandaq.datatype.Capability.CapabilityMode;
 
 /**
  * A Service class used for Auth Init operations.
@@ -234,12 +240,10 @@ public class InitService {
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
 		for(EntityAttribute capability : capabilities) {
-
 			// If they don't have the capability then don't bother finding the def
-			if(!capMan.checkCapability(capability, false, CapabilityMode.ADD))
+			if(!capMan.checkCapability(capability, false, new Capability(CapabilityMode.ADD, PermissionMode.ALL)))
 				continue;
 
-			
 			String defCode = CommonUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
 			try {
 				// Check for a def
@@ -248,7 +252,6 @@ public class InitService {
 				// We don't need to handle this. We don't care if there isn't always a def
 				continue;
 			}
-
 			// Create the ask (there is a def and we have the capability)
 			String baseCode = CommonUtils.safeStripPrefix(capability.getAttributeCode());
 
