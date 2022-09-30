@@ -21,7 +21,6 @@ import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.NotInitializedException;
 import life.genny.qwandaq.validation.Validation;
 
 /*
@@ -39,7 +38,7 @@ public class DatabaseUtils {
 
 	@Inject
 	EntityManager entityManager;
-
+	
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
@@ -47,9 +46,8 @@ public class DatabaseUtils {
 	 * @param prefix      - Prefix to check for
 	 * @return A list of attributes
 	 */
-	// TODO: Lint this against accepted prefixes
 	public List<Attribute> findAttributesWithPrefix(String productCode, String prefix) {
-		return findAttributes(productCode, null, null, "PRM_");
+		return findAttributes(productCode, null, null, prefix);
 	}
 
 	/**

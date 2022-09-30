@@ -1,12 +1,17 @@
 package life.genny.qwandaq.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
+import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
@@ -30,7 +35,7 @@ public class CommonUtils {
      * @return
      */
 	public static String normalizeString(String string) {
-		return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
+		return string.substring(0, 1).toUpperCase().concat(string.substring(1).toLowerCase());
 	}
 
     /**
@@ -118,15 +123,6 @@ public class CommonUtils {
         return result;
     }
 
-    public static <T> boolean arrayContains(T[] array, T object) {
-        for(T obj : array) {
-            if(obj.equals(object))
-                return true;
-        }
-
-        return false;
-    }
-
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
@@ -154,7 +150,6 @@ public class CommonUtils {
      */
     public static <T> String getArrayString(T[] arr) {
         return getArrayString(arr, (item) -> {
-            System.out.println("Item: " + item.toString());
             return item.toString();
         });
     }
@@ -167,11 +162,20 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(Collection<T> list, FIGetStringCallBack<T> stringCallback) {
-        String result = "";
-        for(T object : list) {
-            result += "\"" + stringCallback.getString(object) + "\",";
+        StringBuilder result = new StringBuilder("[");
+        Iterator<T> iterator = list.iterator();
+        for(int i = 0; i < list.size() - 1; i++) {
+            T object = iterator.next();
+            result.append("\"")
+                .append(stringCallback.getString(object))
+                .append("\",");
         }
-        return "[" + result.substring(0, result.length() - 1) + "]";
+
+        T object = iterator.next();
+        result.append("\"")
+            .append(stringCallback.getString(object))
+            .append("\"]");
+        return result.toString();
     }
 
     /**
@@ -182,14 +186,54 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
-        String result = "";
-        for(T object : array) {
-            result += "\"" + stringCallback.getString(object) + "\",";
+        StringBuilder result = new StringBuilder("[");
+        int i;
+        for(i = 0; i < array.length - 1; i++) {
+            result.append("\"")
+            .append(stringCallback.getString(array[i]))
+            .append("\",");
         }
-        if(!"".equals(result))
-            return "[" + result.substring(0, result.length() - 1) + "]";
-        else
-            return "";
+
+        result.append("\"")
+        .append(stringCallback.getString(array[i + 1]))
+        .append("\"]");
+        
+        return result.toString();
+    }
+
+    /**
+     * Assuming arrayString is of the form "[a,b,c,d]"
+     * @param <T>
+     * @param arrayString
+     * @param objectCallback
+     * @return
+     */
+    public static <T> List<T> getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
+        String[] components = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").split(",");
+        List<T> newList = new ArrayList<>();
+        for(String component : components) {
+            newList.add(objectCallback.getObject(component));
+        }
+
+        return newList;
+    }
+
+
+    /**
+     * 
+     * @param <T>
+     * @param arrayString
+     * @param objectCallback
+     * @return
+     */
+    public static <T> Set<T> getSetFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
+        String[] components = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").split(",");
+        Set<T> newSet = new HashSet<>();
+        for(String component : components) {
+            newSet.add(objectCallback.getObject(component));
+        }
+
+        return newSet;
     }
 
     /**
@@ -198,13 +242,30 @@ public class CommonUtils {
      * @return The equals string
      */
     public static String equalsBreak(int len) {
-        String ret = "";
+        StringBuilder ret = new StringBuilder();
         for(int i = 0; i < len; i++) {
-            ret += "=";
+            ret.append("=");
         }
 
-        return ret;
+        return ret.toString();
     }
+
+    /**
+     * Check if item is in array
+     */
+    public static <T>boolean isInArray(T[] array, T obj) {
+        for(T o : array) {
+            if(o.equals(obj))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static String cleanUpAttributeValue(String value) {
+		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
+		return cleanCode;
+	}
 
 	/**
 	 * Replace the three character prefix of a string with another prefix.
@@ -257,5 +318,4 @@ public class CommonUtils {
 			return code.substring(4);
 		}
 	}
-
 }
