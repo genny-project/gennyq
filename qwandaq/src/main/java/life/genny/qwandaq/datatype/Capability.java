@@ -58,6 +58,12 @@ public class Capability {
 	 * Create a new capability with the given mode and permissions
 	 * @param capMode the {@link Capability} to assign 
 	 * @param permMode the {@link PermissionMode} to assign
+	 * <p>
+	 * <pre>
+	 * new Capability(VIEW, ALL)
+	 * </pre>
+	 * will create a new Capability as VIEW:ALL
+	 * </p>
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */

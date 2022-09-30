@@ -47,7 +47,7 @@ public abstract class Trait {
 		this.capabilities = capabilities;
 	}
 
-	public Trait add(CapabilityTrait capability) {
+	public Trait addCapability(CapabilityTrait capability) {
 		this.capabilities.add(capability);
 		return this;
 	}
