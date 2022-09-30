@@ -72,7 +72,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         Builder<Capability, String> builder = new Builder<>();
 
         FITestCallback<Input<Capability>, Expected<String>> testFunc = (input) -> {
-            return new Expected<>(input.toString());
+            return new Expected<>(input.input.toString());
         };
         
         List<TestCase<Capability, String>> tests = new ArrayList<>();

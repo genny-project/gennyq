@@ -271,7 +271,7 @@ public class RoleManager extends Manager {
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
-			Capability[] capabilities = capManager.getCapModesFromString(permissionEA.getValue());
+			List<Capability> capabilities = capManager.deserializeCapArray(permissionEA.getValue());
 			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);

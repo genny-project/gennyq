@@ -25,6 +25,7 @@ public class DebugTimer {
     public DebugTimer(FILogCallback logLevel, String message) {
         this.logLevel = logLevel;
         logLevel.log("Started new Debug Timer!");
+        this.message = message;
         start = System.nanoTime();
     }
 

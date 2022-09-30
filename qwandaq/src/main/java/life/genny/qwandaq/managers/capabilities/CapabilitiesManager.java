@@ -2,6 +2,7 @@ package life.genny.qwandaq.managers.capabilities;
 
 import java.util.Arrays;
 import java.util.HashMap;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -11,8 +12,6 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonArray;
-import javax.json.bind.JsonbException;
 
 import life.genny.qwandaq.utils.DebugTimer;
 
@@ -108,6 +107,22 @@ public class CapabilitiesManager extends Manager {
 		beUtils.updateBaseEntity(target);
 	}
 
+	private void updateCapability(String productCode, BaseEntity target, final Attribute capability,
+		final List<Capability> modeList) {
+			// Update base entity
+			if (capability == null) {
+				throw new NullParameterException("capability");
+			}
+
+			if(target == null) {
+				throw new NullParameterException("target");
+			}
+
+			target.addAttribute(capability, 0.0, getModeString(modeList));
+			CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), modeList.toArray(new Capability[0]));
+			beUtils.updateBaseEntity(target);
+		}
+
 	public Attribute createCapability(final String productCode, final String rawCapabilityCode, final String name) {
 		return createCapability(productCode, rawCapabilityCode, name, false);
 	}
@@ -142,19 +157,22 @@ public class CapabilitiesManager extends Manager {
 			return false;
 		}
 
-		String modeString = capability.getValueString().toUpperCase();
+		String modeString = capability.getValueString();
+		Set<Capability> capabilities = deserializeCapSet(modeString);
 		if (hasAll) {
 			for (Capability checkMode : checkModes) {
-				boolean hasMode = modeString.contains(checkMode.toString());
-				if (!hasMode)
+				boolean hasMode = capabilities.contains(checkMode);
+				if (!hasMode) {
 					return false;
+				}
 			}
 			return true;
 		} else {
 			for (Capability checkMode : checkModes) {
-				boolean hasMode = modeString.contains(checkMode.toString());
-				if (hasMode)
+				boolean hasMode = capabilities.contains(checkMode);
+				if (hasMode) {
 					return true;
+				}
 			}
 			return false;
 		}
@@ -162,6 +180,30 @@ public class CapabilitiesManager extends Manager {
 
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
 			final Capability... modes) {
+		if(capabilityAttribute == null) {
+			throw new ItemNotFoundException(productCode, "Capability Attribute");
+		}
+
+		// Check the user token has required capabilities
+		if(!shouldOverride()) {
+			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+					+ " TO BASE ENTITITY: " + targetBe.getCode());
+			return targetBe;
+		}
+
+		// ===== Old capability check ===
+		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
+		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + cleanCapabilityCode
+		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
+		// 	return targetBe;
+		// }
+
+		updateCapability(productCode, targetBe, capabilityAttribute, modes);
+		return targetBe;
+	}
+
+	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
+			final List<Capability> modes) {
 		if(capabilityAttribute == null) {
 			throw new ItemNotFoundException(productCode, "Capability Attribute");
 		}
@@ -195,6 +237,16 @@ public class CapabilitiesManager extends Manager {
 				return addCapabilityToBaseEntity(productCode, targetBe, attribute, modes);
 	}
 
+	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity target, final String rawCapCode,
+			final List<Capability> capabilityList) {
+				// Ensure the capability is well defined
+				String cleanCapabilityCode = cleanCapabilityCode(rawCapCode);
+
+				// Don't need to catch here since we don't want to create
+				Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+				return addCapabilityToBaseEntity(productCode, target, attribute, capabilityList);
+			}
+
 	/**
 	 * Go through a list of capability modes and check that the token can manipulate
 	 * the modes for the provided capabilityCode
@@ -206,7 +258,7 @@ public class CapabilitiesManager extends Manager {
 	 *         the supplied capabilityCode
 	 */
 	public boolean hasCapability(final BaseEntity user, final String rawCapabilityCode, boolean hasAll, final Capability... checkModes) {
-		DebugTimer timer = new DebugTimer(log::trace);
+		DebugTimer timer = new DebugTimer(log::debug);
 		// 1. Check override
 		// allow keycloak admin and devs to do anything
 		if (shouldOverride()) {
@@ -271,33 +323,21 @@ public class CapabilitiesManager extends Manager {
 	}
 	
 	/**
+	 * Deserialise a stringified array of modes to a set of {@link Capability}
+	 * @param modeString
+	 * @return
+	 */
+	public Set<Capability> deserializeCapSet(String modeString) {
+		return CommonUtils.getSetFromString(modeString, Capability::parseCapability);
+	}
+
+	/**
 	 * Deserialise a stringified array of modes to an array of {@link Capability}
 	 * @param modeString
 	 * @return
 	 */
-	public Capability[] getCapModesFromString(String modeString) {
-
-		JsonArray array = null;
-		if (modeString.startsWith("[")) {
-			try {
-				array = jsonb.fromJson(modeString, JsonArray.class);
-			} catch (JsonbException e) {
-				log.error("Could not deserialize Capability array modeString: " + modeString);
-				return null;
-			}
-		} else {
-			Capability mode = Capability.parseCapability(modeString);
-			return new Capability[] { mode };
-
-		}
-
-		Capability[] modes = new Capability[array.size()];
-
-		for (int i = 0; i < array.size(); i++) {
-			modes[i] = Capability.parseCapability(array.getString(i));
-		}
-
-		return modes;
+	public List<Capability> deserializeCapArray(String modeString) {
+		return CommonUtils.getArrayFromString(modeString, Capability::parseCapability);
 	}
 
 	/**
@@ -343,6 +383,9 @@ public class CapabilitiesManager extends Manager {
 		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
 	}
 
+	public static String getModeString(List<Capability> capabilities) {
+		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
+	}
 
 	/**
 	 * Get a set of capability modes for a target and capability combination.
