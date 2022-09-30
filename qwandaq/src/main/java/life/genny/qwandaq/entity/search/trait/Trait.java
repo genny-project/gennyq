@@ -13,7 +13,7 @@ public abstract class Trait {
 	private String code;
 	private String name;
 
-	private List<Capability> capabilities;
+	private List<CapabilityTrait> capabilities;
 
 	public Trait() {
 	}
@@ -39,15 +39,15 @@ public abstract class Trait {
 		this.name = name;
 	}
 
-	public List<Capability> getCapabilities() {
+	public List<CapabilityTrait> getCapabilities() {
 		return capabilities;
 	}
 
-	public void setCapabilities(List<Capability> capabilities) {
+	public void setCapabilities(List<CapabilityTrait> capabilities) {
 		this.capabilities = capabilities;
 	}
 
-	public Trait add(Capability capability) {
+	public Trait add(CapabilityTrait capability) {
 		this.capabilities.add(capability);
 		return this;
 	}

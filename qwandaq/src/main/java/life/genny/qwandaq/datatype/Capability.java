@@ -56,7 +56,7 @@ public class Capability {
 
 	/**
 	 * Create a new capability with the given mode and permissions
-	 * @param capMode the {@link CapabilityMode} to assign 
+	 * @param capMode the {@link Capability} to assign 
 	 * @param permMode the {@link PermissionMode} to assign
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}

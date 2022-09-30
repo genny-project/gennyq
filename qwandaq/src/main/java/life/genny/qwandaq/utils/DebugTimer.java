@@ -77,5 +77,6 @@ public class DebugTimer {
     public void logTime() {
         long duration = getDuration();
         logLevel.log(message + duration + "ns (nanoseconds)");
+        logLevel.log(   " - Took " + (duration / 1000) + "ms (milliseconds)");
     }
 }

@@ -17,7 +17,8 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.CapabilityMode;
+import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.datatype.Capability.PermissionMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 
@@ -42,6 +43,8 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
+
+import static life.genny.qwandaq.datatype.Capability.CapabilityMode;
 
 /**
  * A Service class used for Auth Init operations.
@@ -238,7 +241,7 @@ public class InitService {
 		// Check if there is a def first
 		for(EntityAttribute capability : capabilities) {
 			// If they don't have the capability then don't bother finding the def
-			if(!capMan.checkCapability(capability, false, CapabilityMode.ADD))
+			if(!capMan.checkCapability(capability, false, new Capability(CapabilityMode.ADD, PermissionMode.ALL)))
 				continue;
 
 			String defCode = CommonUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
