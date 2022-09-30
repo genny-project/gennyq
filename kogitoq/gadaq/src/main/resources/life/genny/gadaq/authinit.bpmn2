@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_uj9gECHtEDuPcelbdMaYdQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_I_BpYCKNEDuo3J1LJz1IZA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_userCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__39949304-47C6-4185-9389-AACA3E958164_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__39949304-47C6-4185-9389-AACA3E958164_targetCodeInputXItem" structureRef="String"/>
@@ -21,8 +21,8 @@
   <bpmn2:interface id="_39949304-47C6-4185-9389-AACA3E958164_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
     <bpmn2:operation id="_39949304-47C6-4185-9389-AACA3E958164_ServiceOperation" name="dispatch" implementationRef="dispatch"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_896B8AC6-F45D-4EED-BE80-FD69392A5FBD" name="Default Collaboration">
-    <bpmn2:participant id="_667FD9BF-C083-48DE-95CE-22845FCD8359" name="Pool Participant" processRef="authInit"/>
+  <bpmn2:collaboration id="_11FA0946-AAFB-4EE3-9AC8-B263201E2D87" name="Default Collaboration">
+    <bpmn2:participant id="_34F14F26-6D48-4161-8B57-89CEE6C32360" name="Pool Participant" processRef="authInit"/>
   </bpmn2:collaboration>
   <bpmn2:process id="authInit" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Auth Init" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[The initialisation workflow. This is called whenever a user logs in or refreshes a page.]]></bpmn2:documentation>
@@ -151,22 +151,22 @@
         <dc:Bounds height="102" width="154" x="277" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A" bpmnElement="_1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A">
-        <dc:Bounds height="56" width="56" x="1628" y="239"/>
+        <dc:Bounds height="56" width="56" x="1537" y="239"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__1CA3B0C7-F31D-4699-B8B2-5F186C587F2C" bpmnElement="_1CA3B0C7-F31D-4699-B8B2-5F186C587F2C">
-        <dc:Bounds height="102" width="154" x="502" y="216"/>
+        <dc:Bounds height="102" width="154" x="487" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__C96836A1-E29F-42DF-A617-1E060B913B2F" bpmnElement="_C96836A1-E29F-42DF-A617-1E060B913B2F">
-        <dc:Bounds height="102" width="154" x="727" y="216"/>
+        <dc:Bounds height="102" width="154" x="697" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__34659FC5-AC5A-410F-9A63-1B1406E7DBC3" bpmnElement="_34659FC5-AC5A-410F-9A63-1B1406E7DBC3">
-        <dc:Bounds height="102" width="154" x="952" y="216"/>
+        <dc:Bounds height="102" width="154" x="907" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__F40C5589-1031-4985-8B75-38FDB9C6BF02" bpmnElement="_F40C5589-1031-4985-8B75-38FDB9C6BF02">
-        <dc:Bounds height="102" width="154" x="1402" y="216"/>
+        <dc:Bounds height="102" width="154" x="1327" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__39949304-47C6-4185-9389-AACA3E958164" bpmnElement="_39949304-47C6-4185-9389-AACA3E958164">
-        <dc:Bounds height="102" width="154" x="1160" y="216"/>
+        <dc:Bounds height="102" width="154" x="1117" y="216"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="edge_shape__321CE5F6-80DE-48BD-93F4-41E832A810FF_to_shape__C26E7E06-BC61-4F28-836A-5AC72A0AFFC2" bpmnElement="_9EAFFC1E-9D1F-449C-90C5-1E1E545291F2">
         <di:waypoint x="193" y="267"/>
@@ -174,27 +174,27 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__C26E7E06-BC61-4F28-836A-5AC72A0AFFC2_to_shape__1CA3B0C7-F31D-4699-B8B2-5F186C587F2C" bpmnElement="_E1E6860C-248D-480B-9500-7AC2B2B698D8">
         <di:waypoint x="354" y="267"/>
-        <di:waypoint x="579" y="267"/>
+        <di:waypoint x="564" y="267"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__F40C5589-1031-4985-8B75-38FDB9C6BF02_to_shape__1F19AFC8-E247-40D5-94BA-3FCACCA9FB5A" bpmnElement="_1E33F51C-4DB5-484E-9B8B-CC69C0CCB4DA">
-        <di:waypoint x="1479" y="267"/>
-        <di:waypoint x="1656" y="267"/>
+        <di:waypoint x="1404" y="267"/>
+        <di:waypoint x="1565" y="267"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__1CA3B0C7-F31D-4699-B8B2-5F186C587F2C_to_shape__C96836A1-E29F-42DF-A617-1E060B913B2F" bpmnElement="_CA087554-EA8E-4B60-B194-DF63CE843CEB">
-        <di:waypoint x="579" y="267"/>
-        <di:waypoint x="727" y="267"/>
+        <di:waypoint x="564" y="267"/>
+        <di:waypoint x="697" y="267"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__C96836A1-E29F-42DF-A617-1E060B913B2F_to_shape__34659FC5-AC5A-410F-9A63-1B1406E7DBC3" bpmnElement="_7DD319EC-E0C1-40B6-A5A4-557DCBDE907F">
-        <di:waypoint x="804" y="267"/>
-        <di:waypoint x="952" y="267"/>
+        <di:waypoint x="774" y="267"/>
+        <di:waypoint x="907" y="267"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__34659FC5-AC5A-410F-9A63-1B1406E7DBC3_to_shape__39949304-47C6-4185-9389-AACA3E958164" bpmnElement="_30D58104-F258-450C-AE6E-5BD6AC9213CD">
-        <di:waypoint x="1029" y="267"/>
-        <di:waypoint x="1237" y="267"/>
+        <di:waypoint x="984" y="267"/>
+        <di:waypoint x="1194" y="267"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__39949304-47C6-4185-9389-AACA3E958164_to_shape__F40C5589-1031-4985-8B75-38FDB9C6BF02" bpmnElement="_787754E8-8D74-4551-A545-B6514CDED2BD">
-        <di:waypoint x="1237" y="267"/>
-        <di:waypoint x="1402" y="267"/>
+        <di:waypoint x="1194" y="267"/>
+        <di:waypoint x="1327" y="267"/>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
@@ -333,7 +333,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_uj9gECHtEDuPcelbdMaYdQ</bpmn2:source>
-    <bpmn2:target>_uj9gECHtEDuPcelbdMaYdQ</bpmn2:target>
+    <bpmn2:source>_I_BpYCKNEDuo3J1LJz1IZA</bpmn2:source>
+    <bpmn2:target>_I_BpYCKNEDuo3J1LJz1IZA</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

@@ -13,7 +13,6 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
-import life.genny.kogito.common.models.S2SData;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -82,7 +81,7 @@ public class TaskService {
 		processData.setLocation(location);
 
 		// build and send data
-		dispatch.sendData(processData);
+		dispatch.buildAndSend(processData);
 	}
 
 	/**
@@ -135,7 +134,7 @@ public class TaskService {
 
 		// dispatch data
 		if (sourceCode.equals(userCode))
-			dispatch.sendData(processData);
+			dispatch.buildAndSend(processData);
 
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
@@ -157,7 +156,7 @@ public class TaskService {
 			return processData;
 
 		processData.getAnswers().add(answer);
-		dispatch.sendData(processData);
+		dispatch.buildAndSend(processData);
 
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
@@ -203,7 +202,7 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		// resend BaseEntities
-		dispatch.sendData(processData);
+		dispatch.buildAndSend(processData);
 
 		return processData;
 	}

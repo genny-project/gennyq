@@ -16,6 +16,7 @@
 
 package life.genny.qwandaq;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -65,7 +66,7 @@ public class Ask extends CoreEntity {
 
 	private Double weight = 0.0;
 
-	private List<Ask> children;
+	private List<Ask> children = new ArrayList<>();
 
 	/**
 	 * Default Constructor.

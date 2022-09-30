@@ -1,6 +1,7 @@
 package life.genny.kogito.common.core;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -282,7 +283,7 @@ public class Dispatch {
 	 *
 	 * @param processData
 	 */
-	public void sendData(ProcessData processData) {
+	public void buildAndSend(ProcessData processData) {
 
 		// construct bulk message
 		QBulkMessage msg = fetchBulkMessage(processData);
@@ -295,7 +296,11 @@ public class Dispatch {
 		// pre-send ask updates
 		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		Map<String, Ask> flatMapOfAsks = qwandaUtils.updateDependentAsks(asks, processEntity, defBE);
-		flatMapOfAsks.get("EVT_SUBMIT").setDisabled(!answered);;
+		flatMapOfAsks.get("EVT_SUBMIT").setDisabled(!answered);
+
+		processData.setAttributeCodes(new ArrayList<String>());
+		for (String code : flatMapOfAsks.keySet())
+			processData.getAttributeCodes().add(code);
 
 		// filter unwanted attributes
 		privacyFilter(processEntity, processData.getAttributeCodes());
@@ -311,9 +316,7 @@ public class Dispatch {
 		msg.setTag("BulkMessage");
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
-
 		// TODO: send searches
-
 	}
 
 	/**
