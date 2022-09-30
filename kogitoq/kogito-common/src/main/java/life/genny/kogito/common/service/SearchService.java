@@ -581,7 +581,7 @@ public class SearchService {
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
-		sendBucketFilterOptions(GennyConstants.SBE_DROPDOWN,queGroup,queCode,GennyConstants.PRI_NAME, "");
+		sendQuickSearchItems(GennyConstants.SBE_DROPDOWN,queGroup,queCode,GennyConstants.PRI_NAME, "");
 	}
 
 	/**
@@ -589,20 +589,9 @@ public class SearchService {
 	 * @param queGroup Question group
 	 * @param queCode Question code
 	 */
-	public void sendBucketFilterOptions(String sbeCode, String queGroup,String queCode,String lnkCode, String lnkValue) {
-		SearchEntity searchEntity = searchUtils.getBucketFilterOptions(sbeCode,lnkCode,lnkValue);
-
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
-		List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(searchEntity);
-		msg.setToken(userToken.getToken());
-		msg.setItems(baseEntities);
-		msg.setParentCode(queGroup);
-		msg.setQuestionCode(queCode);
-		msg.setLinkCode(lnkCode);
-		msg.setLinkValue(lnkValue);
-		msg.setMessage(GennyConstants.BUCKET_FILTER_LABEL);
-		msg.setReplace(true);
-
+	public void sendQuickSearchItems(String sbeCode, String queGroup,String queCode,String lnkCode, String lnkValue) {
+		SearchEntity searchEntity = searchUtils.getQuickOptions(sbeCode,lnkCode,lnkValue);
+		QDataBaseEntityMessage msg = getBaseItemsMsg(queGroup,queCode,lnkCode,lnkValue,searchEntity);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
@@ -790,5 +779,44 @@ public class SearchService {
 	 */
 	public Map<String,Map<String, String>> getListFilterParams() {
 		return listFilterParams;
+	}
+
+	/**
+	 * Send dropdown options data
+	 * @param sbeCode Search base entity code
+	 * @param group Question group code
+	 * @param code Question code
+	 * @param lnkCode Link code
+	 * @param lnkValue Link value
+	 * @param likeCond Like condition of searching data
+	 */
+	public void sendDropdownOptions(String sbeCode,String group,String code,String lnkCode,String lnkValue,String likeCond) {
+		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond);
+		QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
+	/**
+	 * Get Message of list base entity
+	 * @param group Question group code
+	 * @param code Question code
+	 * @param lnkCode Link code
+	 * @param lnkValue Link value
+	 * @param search Search entity
+	 * @return Message of list base entity
+	 */
+	public QDataBaseEntityMessage getBaseItemsMsg(String group,String code,String lnkCode, String lnkValue,SearchEntity search) {
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+
+		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+		msg.setToken(userToken.getToken());
+		msg.setItems(bases);
+		msg.setParentCode(group);
+		msg.setQuestionCode(code);
+		msg.setLinkCode(lnkCode);
+		msg.setLinkValue(lnkValue);
+		msg.setReplace(true);
+
+		return msg;
 	}
 }
