@@ -196,52 +196,11 @@ public class BaseEntityUtils {
 
 		BaseEntity entity = null;
 
-		// check in database if not in cache
 		if (baseEntitySerializable == null) {
-			log.infof("$$$$$$$$$$ check in database if not in cache. [ productCode , code ]: [ %s , %s]", productCode, code);
-			try {
-				if (databaseUtils == null) {
-					log.error("databaseUtils is null");
-					// Arc.container().requestContext().activate();
-					Arc.container().instance(DatabaseUtils.class);
-					// databaseUtils = new DatabaseUtils();
-					EntityManagerFactory factory = Persistence.createEntityManagerFactory("genny");
-					entityManager = factory.createEntityManager();
-					// entityManager =
-					// Persistence.createEntityManagerFactory("genny").createEntityManager();
-					if (entityManager == null) {
-						log.error("entityManager is null");
-					}
-					if (databaseUtils == null) {
-						log.error("databaseUtils is still null");
-						databaseUtils = new DatabaseUtils();
-
-						databaseUtils.setEntityManager(entityManager);
-					} else {
-						databaseUtils.setEntityManager(entityManager);
-					}
-				}
-				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode+" but "+(entity==null?"not found in db":"found in db"));
-				if (entity != null) {
-					log.info("Adding BE to cache..");
-					BaseEntityKey key = new BaseEntityKey(productCode, code);
-					CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, entity);
-					if (bundleAttributes) {
-						log.info("Adding BEAs to cache..");
-						entity.getBaseEntityAttributes().forEach(attribute -> {
-							BaseEntityAttributeKey attributeKey = new BaseEntityAttributeKey(productCode,
-									attribute.getBaseEntityCode(), attribute.getAttributeCode());
-							CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, attributeKey, attribute);
-						});
-					}
-				}
-			} catch (NoResultException e) {
-				log.error(new ItemNotFoundException(productCode, code).getLocalizedMessage());
-			}
+			log.errorf("No baseentity found in cache for [ productCode , code ]: [ %s , %s]", productCode, code);
 		} else {
 			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
-			log.info("$$$$$$$$$$ Converted cached BE to entity BE.");
+			log.info("Converted cached BE to entity BE.");
 			if (bundleAttributes) {
 				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
 				Map<String, EntityAttribute> attributeMap = new HashMap<>();
@@ -250,7 +209,7 @@ public class BaseEntityUtils {
 					attributes.add(bea);
 					attributeMap.put(bea.getAttributeCode(), bea);
 				});
-				log.infof("$$$$$$$$$$ Added %s BaseEntityAttributes to BE.", attributeMap.size());
+				log.infof("Added %s BaseEntityAttributes to BE.", attributeMap.size());
 			}
 		}
 

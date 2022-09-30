@@ -1,19 +1,15 @@
 package life.genny.qwandaq.data;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
 import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeInitializerImpl;
+import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKeyInitializerImpl;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityentity.EntityEntityInitializerImpl;
 import life.genny.qwandaq.serialization.entityentity.EntityEntityKeyInitializerImpl;
 import org.infinispan.client.hotrod.DefaultTemplate;
@@ -23,19 +19,16 @@ import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
 import org.infinispan.commons.api.CacheContainerAdmin;
+import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.CoreEntity;
-import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
-import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeInitializerImpl;
-import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKeyInitializerImpl;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * A remote cache management class for accessing realm caches.
@@ -158,6 +151,21 @@ public class GennyCache {
 	}
 
 	/**
+	 * Return a remote cache for the given entity.
+	 *
+	 * @param entityName
+	 * 		the name of the associated entity the desired cache
+	 * @return RemoteCache&lt;String, String&gt;
+	 * 		the remote cache associated with the entity
+	 */
+	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+		return remoteCacheManager.getCache(entityName);
+	}
+
+	/**
 	 * Get a CoreEntity from the cache.
 	 *
 	 * @param cacheName The cache to get from
@@ -170,12 +178,16 @@ public class GennyCache {
 			initRemoteCacheManager();
 		}
 
-		RemoteCache<CoreEntityKey, CoreEntitySerializable> cache = remoteCacheManager.getCache(cacheName);
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
 
-		return cache.get(key);
+		CoreEntityPersistable coreEntityPersistable = cache.get(key);
+		if (coreEntityPersistable == null) {
+			return null;
+		}
+		return coreEntityPersistable.toSerializableCoreEntity();
 	}
 
 	/**
@@ -187,28 +199,7 @@ public class GennyCache {
 	 * @return True if the entity is successfully inserted into cache, False otherwise
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
-		if (remoteCacheManager == null) {
-			initRemoteCacheManager();
-		}
-		RemoteCache<CoreEntityKey, CoreEntitySerializable> cache = remoteCacheManager.getCache(cacheName);
-		if (cache == null) {
-			throw new NullPointerException("Could not find a cache called " + cacheName);
-		}
-		try {
-			CoreEntitySerializable serializableCoreEntity = null;
-			if(value != null) {
-				serializableCoreEntity = value.toSerializableCoreEntity();
-				cache.put(key, serializableCoreEntity);
-			} else {
-				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
-			}
-		} catch (Exception e) {
-			log.error("Exception when inserting entity into cache: " + e.getMessage());
-			log.error(e.getStackTrace());
-			e.printStackTrace();
-			return false;
-		}
-		return true;
+		return putEntityIntoCache(cacheName, key, value.toSerializableCoreEntity());
 	}
 
 	/**
@@ -225,13 +216,13 @@ public class GennyCache {
 		}
 		RemoteCache<CoreEntityKey, CoreEntitySerializable> cache = remoteCacheManager.getCache(cacheName);
 		if (cache == null) {
-			throw new NullPointerException("Could not find a cache called " + cacheName);
+			throw new NullPointerException("Cache not found: " + cacheName);
 		}
 		try {
 			if(value != null) {
 				cache.put(key, value);
 			} else {
-				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
+				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
 			}
 		} catch (Exception e) {
 			log.error("Exception when inserting entity into cache: " + e.getMessage());
@@ -242,3 +233,4 @@ public class GennyCache {
 		return true;
 	}
 }
+
