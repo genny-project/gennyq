@@ -996,14 +996,15 @@ public class SearchUtils {
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
 		base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
+		questionCode = questionCode.toUpperCase();
 
-		if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATETIME)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_TIME)) {
+		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATETIME)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_TIME)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN_OR_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LESS_THAN));
@@ -1011,11 +1012,11 @@ public class SearchUtils {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_STATE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_STATE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
