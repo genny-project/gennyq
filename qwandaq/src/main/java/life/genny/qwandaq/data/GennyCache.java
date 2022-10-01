@@ -55,7 +55,7 @@ public class GennyCache {
 	}
 
 	/**
-	 * Initialize the remote cache manager using the 
+	 * Initialize the remote cache manager using the
 	 * hotrod clcient properties file.
 	 **/
 	private void initRemoteCacheManager() {
@@ -65,7 +65,7 @@ public class GennyCache {
 
 		// load infinispan properties
 		InputStream stream = FileLookupFactory.newInstance().lookupFile(HOTROD_CLIENT_PROPERTIES, cl);
-		
+
 		if (stream == null) {
 			log.error("Could not find infinispan hotrod client properties file: " + HOTROD_CLIENT_PROPERTIES);
 			return;
@@ -80,12 +80,15 @@ public class GennyCache {
 		// create cache manager
 		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
-		remoteCacheManager = new RemoteCacheManager(config);
-		remoteCacheManager.getConfiguration().marshallerClass();
+		if (remoteCacheManager == null) {
+			remoteCacheManager = new RemoteCacheManager(config);
+			remoteCacheManager.getConfiguration().marshallerClass();
+		}
+
 	}
 
 	/**
-	 * Get a list of {@link SerializationContextInitializer} objects 
+	 * Get a list of {@link SerializationContextInitializer} objects
 	 * used in configureing the cache.
 	 *
 	 * @return The list of SerializationContextInitializer objects
@@ -120,30 +123,31 @@ public class GennyCache {
 	/**
 	 * Return a remote cache for the given realm.
 	 *
-	 * @param realm 
-	 * 		the associated realm of the desired cache
-	 * @return RemoteCache&lt;String, String&gt; 
-	 * 		the remote cache associatd with the realm
+	 * @param realm
+	 *              the associated realm of the desired cache
+	 * @return RemoteCache&lt;String, String&gt;
+	 *         the remote cache associatd with the realm
 	 */
 	public RemoteCache<String, String> getRemoteCache(final String realm) {
 
 		if (realms.contains(realm)) {
-			return caches.get(realm); 
+			return caches.get(realm);
 		}
 
-		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
+		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm,
+				DefaultTemplate.DIST_SYNC);
 		realms.add(realm);
-		caches.put(realm, remoteCacheManager.getCache(realm)); 
+		caches.put(realm, remoteCacheManager.getCache(realm));
 
-		return caches.get(realm); 
+		return caches.get(realm);
 	}
 
 	/**
-	* Get a CoreEntity from the cache.
-	*
-	* @param cacheName The cache to get from
-	* @param key The key to the entity to fetch
-	* @return The entity
+	 * Get a CoreEntity from the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key       The key to the entity to fetch
+	 * @return The entity
 	 */
 	public CoreEntity getEntityFromCache(String cacheName, CoreEntityKey key) {
 
@@ -160,15 +164,15 @@ public class GennyCache {
 	}
 
 	/**
-	* Put a CoreEntity into the cache.
-	* 
-	* @param cacheName The cache to get from
-	* @param key The key to put the entity under
-	* @param value The entity
-	* @return The Entity
+	 * Put a CoreEntity into the cache.
+	 * 
+	 * @param cacheName The cache to get from
+	 * @param key       The key to put the entity under
+	 * @param value     The entity
+	 * @return The Entity
 	 */
 	public CoreEntity putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntity value) {
-		if(value == null) {
+		if (value == null) {
 			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
 		}
 

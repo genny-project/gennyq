@@ -960,7 +960,8 @@ public class QwandaUtils {
 			boolean regexOk = Pattern.compile(regex).matcher(value).matches();
 
 			if (!regexOk) {
-				log.error("Regex FAILED! " + regex + " ... " + validation.getErrormsg());
+				log.error("Regex FAILED! " + attribute.getCode() + ":" + regex + " ... [" + value + "] "
+						+ validation.getErrormsg());
 				return false;
 			}
 
