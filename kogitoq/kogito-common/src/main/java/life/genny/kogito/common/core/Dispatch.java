@@ -32,6 +32,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QBulkMessage;
@@ -110,7 +111,7 @@ public class Dispatch {
 	 * @param processData
 	 * @param pcm
 	 */
-	public void buildAndSend(ProcessData processData, BaseEntity pcm) {
+	public void buildAndSend(ProcessData processData, PCM pcm) {
 
 		// fetch source and target entities
 		String sourceCode = processData.getSourceCode();
@@ -138,7 +139,7 @@ public class Dispatch {
 
 		// traverse pcm to build data
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
-		pcm = (pcm == null ? beUtils.getBaseEntity(processData.getPcmCode()) : pcm);
+		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
 		traversePCM(pcm, source, target, flatMapOfAsks, msg, processData);
 		List<Ask> asks = msg.getAsks();
 
@@ -216,7 +217,7 @@ public class Dispatch {
 	}
 
 	/**
-	 * Fetch a PCM  to traverse, looking for a non-readonly question.
+	 * Fetch a PCM to traverse, looking for a non-readonly question.
 	 *
 	 * @param code
 	 * @param source
@@ -232,7 +233,7 @@ public class Dispatch {
 			return;
 
 		// add pcm to bulk message
-		BaseEntity pcm = beUtils.getBaseEntity(code);
+		PCM pcm = beUtils.getPCM(code);
 		traversePCM(pcm, source, target, map, msg, processData);
 	}
 
@@ -244,7 +245,7 @@ public class Dispatch {
 	 * @param target
 	 * @return
 	 */
-	public void traversePCM(BaseEntity pcm, BaseEntity source, BaseEntity target, 
+	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
 
 		log.debug("Traversing " + pcm.getCode());

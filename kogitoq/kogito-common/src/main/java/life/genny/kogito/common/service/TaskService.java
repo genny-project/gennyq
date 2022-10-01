@@ -16,6 +16,7 @@ import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
@@ -73,7 +74,7 @@ public class TaskService {
 
 		if (pcmCode == null)
 			throw new NullParameterException("pcmCode");
-		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+		PCM pcm = beUtils.getPCM(pcmCode);
 
 		dispatch(sourceCode, targetCode, pcm, parent, location);
 	}
@@ -85,7 +86,7 @@ public class TaskService {
 	 * @param parent
 	 * @param location
 	 */
-	public void dispatch(String sourceCode, String targetCode, BaseEntity pcm, String parent, String location) {
+	public void dispatch(String sourceCode, String targetCode, PCM pcm, String parent, String location) {
 
 		if (sourceCode == null)
 			throw new NullParameterException("sourceCode");

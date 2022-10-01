@@ -112,7 +112,7 @@ public class SearchService {
 
 		// construct template and question codes from type
 		String template = "TPL_" + type + "_DETAIL_VIEW";
-		String questionode = "QUE_" + type;
+		String questionCode = "QUE_" + type;
 
 		// send pcm with correct info
 		String userCode = userToken.getUserCode();
