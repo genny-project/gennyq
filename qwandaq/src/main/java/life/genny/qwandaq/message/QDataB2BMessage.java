@@ -3,11 +3,11 @@ package life.genny.qwandaq.message;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.message.QDataMessage;
+import life.genny.qwandaq.message.QData;
 import life.genny.qwandaq.models.GennyItem;
 
 @RegisterForReflection
-public class QDataB2BMessage extends QDataMessage {
+public class QDataB2BMessage extends QData {
 	
 	
 	private static final long serialVersionUID = 1L;

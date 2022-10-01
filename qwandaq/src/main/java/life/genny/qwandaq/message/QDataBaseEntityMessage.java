@@ -10,7 +10,7 @@ import life.genny.qwandaq.WeightedItem;
 import life.genny.qwandaq.entity.BaseEntity;
 
 @RegisterForReflection
-public class QDataBaseEntityMessage extends QDataMessage implements Comparable<QDataBaseEntityMessage> {
+public class QDataBaseEntityMessage extends QData implements Comparable<QDataBaseEntityMessage> {
 
 	private static final long serialVersionUID = 1L;
 

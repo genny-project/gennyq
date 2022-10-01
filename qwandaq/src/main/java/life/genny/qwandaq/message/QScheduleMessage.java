@@ -250,7 +250,7 @@ public class QScheduleMessage extends PanacheEntity {
 		public QScheduleMessage msg;
 		public GennyToken gennyToken;
 
-		public QEventMessage eventMessage;
+		public QEvent eventMessage;
 		public QMessageGennyMSG commsMessage;
 
 		public Builder(String scheduleCode) {
@@ -327,7 +327,7 @@ public class QScheduleMessage extends PanacheEntity {
 		 */
 		public Builder setEventMessage(String code, String targetCode) {
 
-			QEventMessage eventMessage = new QEventMessage("SCHEDULE_EVT", code);
+			QEvent eventMessage = new QEvent("SCHEDULE_EVT", code);
 
 			eventMessage.setToken(this.msg.getToken());
 			eventMessage.getData().setTargetCode(targetCode);
@@ -342,7 +342,7 @@ public class QScheduleMessage extends PanacheEntity {
 		 * @param eventMessage The event message to send
 		 * @return The builder
 		 */
-		public Builder setEventMessage(QEventMessage eventMessage) {
+		public Builder setEventMessage(QEvent eventMessage) {
 
 			this.eventMessage = eventMessage;
 			return this;
