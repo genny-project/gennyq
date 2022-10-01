@@ -29,6 +29,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -107,8 +108,19 @@ public class BaseEntityUtils {
 	}
 
 	/**
+	 * Get a PCM using a code, but throw an
+	 * ItemNotFoundException if the entity does not exist.
+
+	 * @param code
+	 * @return
+	 */
+	public PCM getPCM(String code) {
+		return PCM.class.cast(getBaseEntity(code));
+	}
+
+	/**
 	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entitiy does not exist.
+	 * ItemNotFoundException if the entity does not exist.
 	 * 
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity

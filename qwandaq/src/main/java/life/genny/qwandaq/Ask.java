@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.json.bind.annotation.JsonbProperty;
+
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
 /**
@@ -53,6 +55,8 @@ public class Ask extends CoreEntity {
 	private static final long serialVersionUID = 1L;
 
 	private Question question;
+	private String questionCode;
+	private String attributeCode;
 
 	private String processId = "no-idq";
 	private String sourceCode;
@@ -66,7 +70,7 @@ public class Ask extends CoreEntity {
 
 	private Double weight = 0.0;
 
-	private List<Ask> children = new ArrayList<>();
+	private List<Ask> childAsks;
 
 	/**
 	 * Default Constructor.
@@ -82,7 +86,7 @@ public class Ask extends CoreEntity {
 	 */
 	public Ask(Question question, String sourceCode, String targetCode) {
 		super(question.getName());
-		this.question = question;
+		setQuestion(question);
 		this.sourceCode = sourceCode;
 		this.targetCode = targetCode;
 	}
@@ -103,7 +107,7 @@ public class Ask extends CoreEntity {
 		ask.weight = this.getWeight();
 
 		if (this.hasChildren()) {
-			ask.children = this.children;
+			ask.childAsks = this.childAsks;
 		}
 		return ask;
 	}
@@ -128,7 +132,7 @@ public class Ask extends CoreEntity {
 	 * @return
 	 */
 	public boolean hasChildren() {
-		return !this.children.isEmpty();
+		return !this.childAsks.isEmpty();
 	}
 
 	/**
@@ -137,7 +141,9 @@ public class Ask extends CoreEntity {
 	 * @param child The child ask to add
 	 */
 	public void add(Ask child) {
-		this.children.add(child);
+		if (this.childAsks == null)
+			this.childAsks = new ArrayList<Ask>();
+		this.childAsks.add(child);
 	}
 
 	public static long getSerialversionuid() {
@@ -150,6 +156,24 @@ public class Ask extends CoreEntity {
 
 	public void setQuestion(Question question) {
 		this.question = question;
+		this.questionCode = question.getCode();
+		this.attributeCode = question.getAttribute().getCode();
+	}
+
+	public String getQuestionCode() {
+		return questionCode;
+	}
+
+	public void setQuestionCode(String questionCode) {
+		this.questionCode = questionCode;
+	}
+
+	public String getAttributeCode() {
+		return attributeCode;
+	}
+
+	public void setAttributeCode(String attributeCode) {
+		this.attributeCode = attributeCode;
 	}
 
 	public String getProcessId() {
@@ -224,16 +248,16 @@ public class Ask extends CoreEntity {
 		this.weight = weight;
 	}
 
-	public List<Ask> getChildren() {
-		return children;
+	public List<Ask> getChildAsks() {
+		return childAsks;
 	}
 
-	public void setChildren(Ask[] children) {
-		this.setChildren(Arrays.asList(children));
+	public void setChildAsks(Ask[] children) {
+		this.setChildAsks(Arrays.asList(children));
 	}
 
-	public void setChildren(List<Ask> children) {
-		this.children = children;
+	public void setChildAsks(List<Ask> children) {
+		this.childAsks = children;
 	}
 
 }

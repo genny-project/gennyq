@@ -84,6 +84,7 @@ public class Attribute extends CodedEntity {
 	public static final String DEFAULT_CODE_PREFIX = "PRI_";
 
 	// core
+	public static final String QQQ_QUESTION_GROUP = "QQQ_QUESTION_GROUP";
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_CODE = "PRI_CODE";
 	public static final String PRI_UUID = "PRI_UUID";
@@ -99,6 +100,14 @@ public class Attribute extends CodedEntity {
 
 	// roles
 	public static final String LNK_ROLE = "LNK_ROLE";
+
+	// pcm
+	public static final String PRI_TEMPLATE_CODE = "PRI_TEMPLATE_CODE";
+	public static final String PRI_QUESTION_CODE = "PRI_QUESTION_CODE";
+	public static final String PRI_TARGET_CODE = "PRI_TARGET_CODE";
+
+	// events
+	public static final String EVT_SUBMIT = "EVT_SUBMIT";
 
 	// contact
 	public static final String PRI_MOBILE = "PRI_MOBILE";

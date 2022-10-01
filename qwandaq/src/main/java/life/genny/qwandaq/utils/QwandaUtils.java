@@ -336,8 +336,8 @@ public class QwandaUtils {
 
 		ask.setProcessId(processId);
 
-		if (ask.getChildren() != null) {
-			for (Ask child : ask.getChildren()) {
+		if (ask.getChildAsks() != null) {
+			for (Ask child : ask.getChildAsks()) {
 				recursivelySetProcessId(child, processId);
 			}
 		}
@@ -367,7 +367,7 @@ public class QwandaUtils {
 
 		// grab all child ask attribute codes
 		if (ask.hasChildren()) {
-			for (Ask childAsk : ask.getChildren()) {
+			for (Ask childAsk : ask.getChildAsks()) {
 				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
 			}
 		}
@@ -392,7 +392,7 @@ public class QwandaUtils {
 		for (Ask ask : asks) {
 			if (ask.hasChildren()) {
 				map.put(ask.getQuestion().getAttribute().getCode(), ask);
-				map = getAllAsksRecursively(ask.getChildren(), map);
+				map = getAllAsksRecursively(ask.getChildAsks(), map);
 			}
 		}
 
@@ -508,12 +508,12 @@ public class QwandaUtils {
 		map.put(ask.getQuestion().getAttribute().getCode(), ask.getMandatory());
 
 		// ensure child asks is not null
-		if (ask.getChildren() == null) {
+		if (ask.getChildAsks() == null) {
 			return map;
 		}
 
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildren()) {
+		for (Ask child : ask.getChildAsks()) {
 			map = recursivelyFillMandatoryMap(map, child);
 		}
 
@@ -546,7 +546,7 @@ public class QwandaUtils {
 		}
 
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildren()) {
+		for (Ask child : ask.getChildAsks()) {
 			set = recursivelyFillFlatSet(set, child);
 		}
 
@@ -763,7 +763,7 @@ public class QwandaUtils {
 			});
 
 		// set child asks
-		ask.setChildren(childAsks.toArray(new Ask[childAsks.size()]));
+		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
 		return ask;
 	}

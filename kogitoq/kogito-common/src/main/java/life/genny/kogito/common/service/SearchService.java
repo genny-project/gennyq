@@ -26,6 +26,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
@@ -76,7 +77,7 @@ public class SearchService {
 
 	private Map<String, String> filterParams = new HashMap<>();
 
-	private Map<String,Map<String, String>> listFilterParams = new HashMap<>();
+	private Map<String, Map<String, String>> listFilterParams = new HashMap<>();
 
 	/**
 	 * Perform a Detail View search.
@@ -90,8 +91,11 @@ public class SearchService {
 		String searchCode = StringUtils.replaceOnce(code, "QUE_", "SBE_");
 		log.info("Sending Table :: " + searchCode);
 
-		searchUtils.searchTable(searchCode);
-		sendSearchPCM("PCM_TABLE", searchCode);
+		// send pcm with correct template code
+		String userCode = userToken.getUserCode();
+		PCM pcm = beUtils.getPCM(PCM.PCM_TABLE);
+		pcm.setLocation(1, searchCode);
+		tasks.dispatch(userCode, userCode, pcm, PCM.PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**
@@ -106,20 +110,16 @@ public class SearchService {
 		BaseEntity definition = defUtils.getDEF(target);
 		String type = StringUtils.removeStart(definition.getCode(), "DEF_");
 
-		// grab the corresponding detail view SBE
-		String searchCode = "SBE_" + type;
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), searchCode, SearchEntity.class);
-		searchEntity.add(new Filter("PRI_CODE", Operator.EQUALS, targetCode));
-
-		// perform the search
-		log.info("Sending Detail View :: " + searchCode);
-		searchUtils.searchTable(searchEntity);
-
-		// send pcm with correct template code
-		String userCode = userToken.getUserCode();
-		BaseEntity pcm = beUtils.getBaseEntity("PCM_TABLE");
+		// construct template and question codes from type
 		String template = "TPL_" + type + "_DETAIL_VIEW";
-		pcm.setValue("PRI_TEMPLATE_CODE", template);
+		String questionode = "QUE_" + type;
+
+		// send pcm with correct info
+		String userCode = userToken.getUserCode();
+		PCM pcm = beUtils.getPCM(PCM.PCM_DETAIL_VIEW);
+		pcm.setTemplateCode(template);
+		pcm.setQuestionCode(questionCode);
+
 		tasks.dispatch(userCode, userCode, pcm, "PCM_CONTENT", "PRI_LOC1");
 	}
 

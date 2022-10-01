@@ -16,6 +16,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.NavigationService;
 import life.genny.kogito.common.service.SearchService;
+import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -47,6 +48,8 @@ public class Events {
 	NavigationService navigation;
 	@Inject
 	SearchService search;
+	@Inject
+	TaskService tasks;
 
 	/**
 	 * @param msg

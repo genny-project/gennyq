@@ -145,31 +145,8 @@ public class Dispatch {
 		// only build processEntity if answers are expected
 		List<String> attributeCodes = processData.getAttributeCodes();
 		log.info("Non-Readonly Attributes: " + attributeCodes);
-		if (!attributeCodes.isEmpty()) {
-			// update target and processId
-			BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-			updateRequiredAskFields(asks, processEntity, processData.getProcessId());
-
-			// check mandatory fields
-			Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(asks, processEntity);
-
-			// pre-send ask updates
-			BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-			qwandaUtils.updateDependentAsks(asks, processEntity, defBE, flatMapOfAsks);
-			flatMapOfAsks.get("EVT_SUBMIT").setDisabled(!answered);
-
-			// filter unwanted attributes
-			privacyFilter(processEntity, attributeCodes);
-
-			log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
-			msg.add(processEntity);
-
-			// handle initial dropdown selections
-			recursivelyHandleDropdownAttributes(asks, processEntity, msg);
-
-			// only cache for non-readonly invocation
-			cacheAsks(processData, asks);
-		}
+		if (!attributeCodes.isEmpty())
+			handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 
 		// update parent pcm
 		String parent = processData.getParent();
@@ -179,14 +156,14 @@ public class Dispatch {
 			msg.add(parentPCM);
 		}
 
+		// seperate into msgs
+		// TODO: implement new bulk message in alyson
 		QDataAskMessage asksMessage = new QDataAskMessage(msg.getAsks());
 		asksMessage.setToken(userToken.getToken());
 		QDataBaseEntityMessage baseEntityMessage = new QDataBaseEntityMessage(msg.getEntities());
 		baseEntityMessage.setToken(userToken.getToken());
 
 		// send to user
-		// msg.setToken(userToken.getToken());
-		// msg.setTag("BulkMessage");
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, asksMessage);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, baseEntityMessage);
 
@@ -196,6 +173,51 @@ public class Dispatch {
 	}
 
 	/**
+	 * Build the process entity and perform checks 
+	 * only required for asks expecting answers.
+	 *
+	 * @param processData
+	 * @param asks
+	 * @param flatMapOfAsks
+	 * @param msg
+	 */
+	public void handleNonReadonly(ProcessData processData, List<Ask> asks,
+			Map<String, Ask> flatMapOfAsks, QBulkMessage msg) {
+
+		// update all asks target and processId
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		for (Ask ask : flatMapOfAsks.values()) {
+			ask.setTargetCode(processEntity.getCode());
+			ask.setProcessId(processData.getProcessId());
+		}
+
+		// check mandatory fields
+		// TODO: change to use flatMap
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(asks, processEntity);
+
+		// pre-send ask updates
+		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+		qwandaUtils.updateDependentAsks(asks, processEntity, defBE, flatMapOfAsks);
+		flatMapOfAsks.get(Attribute.EVT_SUBMIT).setDisabled(!answered);
+
+		// filter unwanted attributes
+		List<String> attributeCodes = processData.getAttributeCodes();
+		privacyFilter(processEntity, attributeCodes);
+
+		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
+		msg.add(processEntity);
+
+		// handle initial dropdown selections
+		// TODO: change to use flatMap
+		recursivelyHandleDropdownAttributes(asks, processEntity, msg);
+
+		// only cache for non-readonly invocation
+		cacheAsks(processData, asks);
+	}
+
+	/**
+	 * Fetch a PCM  to traverse, looking for a non-readonly question.
+	 *
 	 * @param code
 	 * @param source
 	 * @param target
@@ -225,32 +247,29 @@ public class Dispatch {
 	public void traversePCM(BaseEntity pcm, BaseEntity source, BaseEntity target, 
 			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
 
-		log.info("Traversing " + pcm.getCode());
-		log.info(jsonb.toJson(pcm));
+		log.debug("Traversing " + pcm.getCode());
 		msg.add(pcm);
 
 		Ask ask = null;
-		String questionCode = pcm.getValueAsString("PRI_QUESTION_CODE");
+		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
 		if (questionCode == null) {
 			log.warn("Question Code is null for " + pcm.getCode());
 		} else {
+			// use pcm target if one is specified
+			String targetCode = pcm.getValueAsString(Attribute.PRI_TARGET_CODE);
+			if (targetCode == null)
+				target = new BaseEntity(targetCode, targetCode);
 			// add ask to bulk message
 			ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
 			msg.add(ask);
 		}
 
-		// iterate fields recursively
-		List<EntityAttribute> locations = pcm.getBaseEntityAttributes().stream()
-				.filter(ea -> ea.getAttribute() != null && ea.getAttribute().getCode() != null)
-				.filter(ea -> ea.getAttribute().getCode().startsWith("PRI_LOC"))
-				.collect(Collectors.toList());
-
+		// iterate locations
+		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
 		for (EntityAttribute entityAttribute : locations) {
 
-			log.info(entityAttribute.getAttributeCode());
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
-			log.info(value);
 			if (value.startsWith(Prefix.PCM)) {
 				traversePCM(value, source, target, map, msg, processData);
 				continue;
@@ -264,7 +283,7 @@ public class Dispatch {
 				continue;
 
 			// find appropriate ask (could use map instead)
-			Optional<Ask> opt = ask.getChildren().stream()
+			Optional<Ask> opt = ask.getChildAsks().stream()
 					.filter(a -> a.getQuestion().getAttributeCode().equals(value))
 					.findFirst();
 			if (opt.isEmpty()) {
@@ -291,7 +310,7 @@ public class Dispatch {
 	public Ask createEvents(String events, String sourceCode, String targetCode) {
 
 		// fetch attributes and create group
-		Attribute groupAttribute = qwandaUtils.getAttribute("QQQ_QUESTION_GROUP");
+		Attribute groupAttribute = qwandaUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question groupQuestion = new Question("QUE_EVENTS", "", groupAttribute);
 
 		// init ask
@@ -308,24 +327,6 @@ public class Dispatch {
 		}
 
 		return ask;
-	}
-
-	/**
-	 * Recursively update the ask target and process id.
-	 * 
-	 * @param asks
-	 * @param target
-	 * @param processId
-	 */
-	public void updateRequiredAskFields(List<Ask> asks, BaseEntity target, String processId) {
-
-		for (Ask ask : asks) {
-			ask.setTargetCode(target.getCode());
-			ask.setProcessId(processId);
-
-			if (ask.hasChildren())
-				updateRequiredAskFields(ask.getChildren(), target, processId);
-		}
 	}
 
 	/**
@@ -360,12 +361,12 @@ public class Dispatch {
 		for (Ask ask : asks) {
 
 			// recursively handle any child asks
-			if (ask.getChildren() != null) {
-				recursivelyHandleDropdownAttributes(ask.getChildren(), target, msg);
+			if (ask.getChildAsks() != null) {
+				recursivelyHandleDropdownAttributes(ask.getChildAsks(), target, msg);
 			}
 
 			// check for dropdown attribute
-			if (ask.getQuestion().getAttribute().getCode().startsWith("LNK_")) {
+			if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
 
 				// get list of value codes
 				List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ask.getQuestion().getAttribute().getCode());
@@ -404,7 +405,7 @@ public class Dispatch {
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
 
-		if (attribute.getCode().startsWith("LNK_")) {
+		if (attribute.getCode().startsWith(Prefix.LNK)) {
 
 			// check for already selected items
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());

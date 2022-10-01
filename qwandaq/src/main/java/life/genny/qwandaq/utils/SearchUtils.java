@@ -919,7 +919,7 @@ public class SearchUtils {
 
 		String sbeCodeJti = getSearchBaseEntityCodeByJTI(sbeCode);
 		Ask ask = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_ADD_FILTER_GRP, source, target);
-		ask.getChildren().stream().forEach(e -> {
+		ask.getChildAsks().stream().forEach(e -> {
 			if (e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_COLUMN)
 					|| e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
 					|| e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_SUBMIT)) {
