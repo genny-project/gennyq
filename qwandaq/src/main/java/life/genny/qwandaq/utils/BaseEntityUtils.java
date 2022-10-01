@@ -191,15 +191,7 @@ public class BaseEntityUtils {
 		if (StringUtils.isBlank(code))
 			throw new DebugException("code is empty");
 
-		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(productCode, code);
-		// BaseEntity entity = (BaseEntity)
-		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-
-		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
-		// updates are working.
-		BaseEntity entity = null;
-		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
 
 		// check in database if not in cache
 		if (entity == null) {

@@ -18,6 +18,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.intf.GennyScopeInit;
 
 import org.apache.commons.lang3.StringUtils;
@@ -132,23 +133,4 @@ public class Service2Service {
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, json.toString());
 	}
 
-	/**
-	 * Send a message to perform an update of a persons summary
-	 */
-	public void updateSummary(String personCode, String summaryCode) {
-
-		JsonObject json = Json.createObjectBuilder()
-				.add("event_type", "LIFECYCLE")
-				.add("msg_type", "EVT_MSG")
-				.add("token", userToken.getToken())
-				.add("data", Json.createObjectBuilder()
-						.add("code", "UPDATE_SUMMARY")
-						.add("parentCode", summaryCode)
-						.add("targetCode", personCode))
-				.build();
-
-		log.info("Sending summary update -> " + personCode + " : " + summaryCode);
-
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
-	}
 }

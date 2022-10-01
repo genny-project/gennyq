@@ -25,7 +25,16 @@ public class ProcessData extends ProcessInstanceVariables {
 	private String definitionCode;
 	private String processEntityCode;
 	private List<String> attributeCodes;
+	private List<String> searches;
 	private List<Answer> answers;
+
+	public List<String> getSearches() {
+		return searches;
+	}
+
+	public void setSearches(List<String> searches) {
+		this.searches = searches;
+	}
 
 	public ProcessData() {
 		super();

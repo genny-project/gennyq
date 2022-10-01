@@ -64,6 +64,9 @@ public class SearchService {
 	@Inject
 	QwandaUtils qwandaUtils;
 
+	@Inject
+	TaskService tasks;
+
 	public static enum SearchOptions {
 		PAGINATION,
 		SEARCH,
@@ -101,17 +104,23 @@ public class SearchService {
 		// fetch target and find it's definition
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
+		String type = StringUtils.removeStart(definition.getCode(), "DEF_");
 
 		// grab the corresponding detail view SBE
-		String searchCode = "SBE_" + StringUtils.removeStart(definition.getCode(), "DEF_");
-		log.info("Sending Detail View :: " + searchCode);
-
+		String searchCode = "SBE_" + type;
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), searchCode, SearchEntity.class);
 		searchEntity.add(new Filter("PRI_CODE", Operator.EQUALS, targetCode));
 
 		// perform the search
+		log.info("Sending Detail View :: " + searchCode);
 		searchUtils.searchTable(searchEntity);
-		sendSearchPCM("PCM_DETAIL_VIEW", searchEntity.getCode());
+
+		// send pcm with correct template code
+		String userCode = userToken.getUserCode();
+		BaseEntity pcm = beUtils.getBaseEntity("PCM_TABLE");
+		String template = "TPL_" + type + "_DETAIL_VIEW";
+		pcm.setValue("PRI_TEMPLATE_CODE", template);
+		tasks.dispatch(userCode, userCode, pcm, "PCM_CONTENT", "PRI_LOC1");
 	}
 
 	/**

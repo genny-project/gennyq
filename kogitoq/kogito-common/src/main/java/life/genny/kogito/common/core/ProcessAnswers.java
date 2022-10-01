@@ -101,8 +101,6 @@ public class ProcessAnswers {
 			acceptSubmission = false;
 		}
 
-		QBulkMessage msg = dispatch.fetchBulkMessage(processData);
-
 		return acceptSubmission;
 	}
 
@@ -169,6 +167,4 @@ public class ProcessAnswers {
 
 		return processData;
 	}
-
-
 }

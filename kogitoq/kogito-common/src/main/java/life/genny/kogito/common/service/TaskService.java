@@ -16,6 +16,7 @@ import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
@@ -70,18 +71,45 @@ public class TaskService {
 	 */
 	public void dispatch(String sourceCode, String targetCode, String pcmCode, String parent, String location) {
 
+		if (pcmCode == null)
+			throw new NullParameterException("pcmCode");
+		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+
+		dispatch(sourceCode, targetCode, pcm, parent, location);
+	}
+
+	/**
+	 * @param sourceCode
+	 * @param targetCode
+	 * @param pcmCode
+	 * @param parent
+	 * @param location
+	 */
+	public void dispatch(String sourceCode, String targetCode, BaseEntity pcm, String parent, String location) {
+
+		if (sourceCode == null)
+			throw new NullParameterException("sourceCode");
+		if (targetCode == null)
+			throw new NullParameterException("targetCode");
+		if (pcm == null)
+			throw new NullParameterException("pcm");
+		if (parent == null)
+			throw new NullParameterException("parent");
+		if (location == null)
+			throw new NullParameterException("location");
+
 		// construct basic processData
 		ProcessData processData = new ProcessData();
 		processData.setSourceCode(sourceCode);
 		processData.setTargetCode(targetCode);
 
 		// pcm data
-		processData.setPcmCode(pcmCode);
+		processData.setPcmCode(pcm.getCode());
 		processData.setParent(parent);
 		processData.setLocation(location);
 
 		// build and send data
-		dispatch.buildAndSend(processData);
+		dispatch.buildAndSend(processData, pcm);
 	}
 
 	/**
@@ -97,6 +125,23 @@ public class TaskService {
 	 */
 	public ProcessData dispatch(String sourceCode, String targetCode, String questionCode, String processId, 
 			String pcmCode, String parent, String location, String events) {
+
+		if (sourceCode == null)
+			throw new NullParameterException("sourceCode");
+		if (targetCode == null)
+			throw new NullParameterException("targetCode");
+		if (questionCode == null)
+			throw new NullParameterException("questionCode");
+		if (processId == null)
+			throw new NullParameterException("processId");
+		if (pcmCode == null)
+			throw new NullParameterException("pcmCode");
+		if (parent == null)
+			throw new NullParameterException("parent");
+		if (location == null)
+			throw new NullParameterException("location");
+		if (events == null)
+			throw new NullParameterException("events");
 
 		log.info("==========================================");
 		log.info("processId : " + processId);
@@ -171,8 +216,7 @@ public class TaskService {
 	public Boolean submit(ProcessData processData) {
 		
 		// construct bulk message
-		QBulkMessage msg = dispatch.fetchBulkMessage(processData);
-		List<Ask> asks = msg.getAsks();
+		List<Ask> asks = dispatch.fetchAsks(processData);
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);

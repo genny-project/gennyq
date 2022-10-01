@@ -14,8 +14,8 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.kogito.common.service.NavigationService;
 import life.genny.kogito.common.service.SearchService;
-import life.genny.kogito.common.service.SummaryService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -44,7 +44,7 @@ public class Events {
 	GraphQLUtils gqlUtils;
 
 	@Inject
-	SummaryService summary;
+	NavigationService navigation;
 	@Inject
 	SearchService search;
 
@@ -93,7 +93,7 @@ public class Events {
 
 		// dashboard
 		if ("QUE_DASHBOARD_VIEW".equals(code)) {
-			summary.sendSummary();
+			navigation.sendSummary();
 			return;
 		}
 
@@ -159,18 +159,6 @@ public class Events {
 			}
 
 			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
-			return;
-		}
-
-		// update summary code
-		if ("UPDATE_SUMMARY".equals(code)) {
-			try {
-				processId = gqlUtils.fetchProcessId("PersonLifecycle", "entityCode", msg.getData().getTargetCode());
-			} catch (GraphQLException e) {
-				e.printStackTrace();
-				return;
-			}
-			kogitoUtils.sendSignal(SELF, "personLifecycle", processId, "update_summary", jsonb.toJson(msg));
 			return;
 		}
 

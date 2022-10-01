@@ -24,11 +24,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.NavigationService;
+import life.genny.kogito.common.service.SearchService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -42,6 +44,7 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 /**
  * Dispatch
@@ -60,8 +63,11 @@ public class Dispatch {
 	QwandaUtils qwandaUtils;
 	@Inject
 	BaseEntityUtils beUtils;
+	@Inject
+	SearchUtils search;
 
-	public static String ASK_CACHE_KEY_FORMAT = "%s:%s";
+
+	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
 	/**
 	 * Cache an ask for a processId and questionCode combination.
@@ -69,10 +75,10 @@ public class Dispatch {
 	 * @param processData The processData to cache for
 	 * @param asks        e ask to cache
 	 */
-	public void cacheBulkMessage(ProcessData processData, QBulkMessage msg) {
+	public void cacheAsks(ProcessData processData, List<Ask> asks) {
 
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), "MSG");
-		CacheUtils.putObject(userToken.getProductCode(), key, msg);
+		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
+		CacheUtils.putObject(userToken.getProductCode(), key, asks);
 	}
 
 	/**
@@ -81,55 +87,131 @@ public class Dispatch {
 	 * @param processData The processData to fetch for
 	 * @return
 	 */
-	public QBulkMessage fetchBulkMessage(ProcessData processData) {
+	public List<Ask> fetchAsks(ProcessData processData) {
 
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), "MSG");
-		QBulkMessage msg = CacheUtils.getObject(userToken.getProductCode(), key, QBulkMessage.class);
+		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
+		List<Ask> asks = CacheUtils.getObject(userToken.getProductCode(), key, List.class);
 
-		if (msg == null)
-			msg = generateBulkMessage(processData);
-
-		return msg;
+		return asks;
 	}
 
 	/**
-	 * Generate the asks and save them to the cache
-	 * 
-	 * @param processData The process data
+	 * Send Asks, PCMs and Searches
+	 *
+	 * @param processData
 	 */
-	public QBulkMessage generateBulkMessage(ProcessData processData) {
+	public void buildAndSend(ProcessData processData) {
+		buildAndSend(processData, null);
+	}
 
-		String questionCode = processData.getQuestionCode();
+	/**
+	 * Send Asks, PCMs and Searches
+	 *
+	 * @param processData
+	 * @param pcm
+	 */
+	public void buildAndSend(ProcessData processData, BaseEntity pcm) {
+
+		// fetch source and target entities
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
-		String processId = processData.getProcessId();
-
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
-		log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-
 		QBulkMessage msg = new QBulkMessage();
 
+		String questionCode = processData.getQuestionCode();
 		if (questionCode != null) {
 			// fetch question from DB
+			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
 			Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
 			ask.add(events);
 			msg.add(ask);
 		}
 
-		// find first level PCM
-		traversePCM(processData.getPcmCode(), source, target, msg);
+		// init lists
+		if (processData.getAttributeCodes() == null)
+			processData.setAttributeCodes(new ArrayList<String>());
+		if (processData.getSearches() == null)
+			processData.setSearches(new ArrayList<String>());
 
-		// update target and processId
-		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		updateRequiredAskFields(msg.getAsks(), processEntity, processId);
+		// traverse pcm to build data
+		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
+		pcm = (pcm == null ? beUtils.getBaseEntity(processData.getPcmCode()) : pcm);
+		traversePCM(pcm, source, target, flatMapOfAsks, msg, processData);
+		List<Ask> asks = msg.getAsks();
 
-		// cache them for fast fetching
-		cacheBulkMessage(processData, msg);
+		// only build processEntity if answers are expected
+		List<String> attributeCodes = processData.getAttributeCodes();
+		log.info("Non-Readonly Attributes: " + attributeCodes);
+		if (!attributeCodes.isEmpty()) {
+			// update target and processId
+			BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+			updateRequiredAskFields(asks, processEntity, processData.getProcessId());
 
-		return msg;
+			// check mandatory fields
+			Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(asks, processEntity);
+
+			// pre-send ask updates
+			BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+			qwandaUtils.updateDependentAsks(asks, processEntity, defBE, flatMapOfAsks);
+			flatMapOfAsks.get("EVT_SUBMIT").setDisabled(!answered);
+
+			// filter unwanted attributes
+			privacyFilter(processEntity, attributeCodes);
+
+			log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
+			msg.add(processEntity);
+
+			// handle initial dropdown selections
+			recursivelyHandleDropdownAttributes(asks, processEntity, msg);
+
+			// only cache for non-readonly invocation
+			cacheAsks(processData, asks);
+		}
+
+		// update parent pcm
+		String parent = processData.getParent();
+		if (!"PCM_TREE".equals(parent)) {
+			BaseEntity parentPCM = beUtils.getBaseEntity(parent);
+			parentPCM.setValue(processData.getLocation(), processData.getPcmCode());
+			msg.add(parentPCM);
+		}
+
+		QDataAskMessage asksMessage = new QDataAskMessage(msg.getAsks());
+		asksMessage.setToken(userToken.getToken());
+		QDataBaseEntityMessage baseEntityMessage = new QDataBaseEntityMessage(msg.getEntities());
+		baseEntityMessage.setToken(userToken.getToken());
+
+		// send to user
+		// msg.setToken(userToken.getToken());
+		// msg.setTag("BulkMessage");
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, asksMessage);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, baseEntityMessage);
+
+		// send searches
+		for (String code : processData.getSearches())
+			search.searchTable(code);
+	}
+
+	/**
+	 * @param code
+	 * @param source
+	 * @param target
+	 * @param map
+	 * @param msg
+	 * @param processData
+	 */
+	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
+			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
+
+		if ("PCM_DASHBOARD".equals(code))
+			return;
+
+		// add pcm to bulk message
+		BaseEntity pcm = beUtils.getBaseEntity(code);
+		traversePCM(pcm, source, target, map, msg, processData);
 	}
 
 	/**
@@ -140,12 +222,11 @@ public class Dispatch {
 	 * @param target
 	 * @return
 	 */
-	public Boolean traversePCM(String pcmCode, BaseEntity source, BaseEntity target, QBulkMessage msg) {
+	public void traversePCM(BaseEntity pcm, BaseEntity source, BaseEntity target, 
+			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
 
-		if ("PCM_DASHBOARD".equals(pcmCode))
-			return false;
-		// add pcm to bulk message
-		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+		log.info("Traversing " + pcm.getCode());
+		log.info(jsonb.toJson(pcm));
 		msg.add(pcm);
 
 		Ask ask = null;
@@ -158,8 +239,6 @@ public class Dispatch {
 			msg.add(ask);
 		}
 
-		Boolean expecting = false;
-
 		// iterate fields recursively
 		List<EntityAttribute> locations = pcm.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttribute() != null && ea.getAttribute().getCode() != null)
@@ -168,11 +247,15 @@ public class Dispatch {
 
 		for (EntityAttribute entityAttribute : locations) {
 
+			log.info(entityAttribute.getAttributeCode());
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
-			if (value.startsWith("PCM_")) {
-				if (traversePCM(value, source, target, msg))
-					expecting = true;
+			log.info(value);
+			if (value.startsWith(Prefix.PCM)) {
+				traversePCM(value, source, target, map, msg, processData);
+				continue;
+			} else if (value.startsWith(Prefix.SBE)) {
+				processData.getSearches().add(value);
 				continue;
 			}
 
@@ -181,20 +264,20 @@ public class Dispatch {
 				continue;
 
 			// find appropriate ask (could use map instead)
-			Optional<Ask> child = ask.getChildren().stream()
+			Optional<Ask> opt = ask.getChildren().stream()
 					.filter(a -> a.getQuestion().getAttributeCode().equals(value))
 					.findFirst();
-			if (child.isEmpty()) {
+			if (opt.isEmpty()) {
 				log.warn("No corresponding child for pcm location " + value);
 				continue;
 			}
 
 			// return true if answer expected
-			if (!child.get().getReadonly())
-				expecting = true;
+			Ask child = opt.get();
+			if (!child.getReadonly())
+				processData.getAttributeCodes().add(child.getQuestion().getAttribute().getCode());
 		}
 
-		return expecting;
 	}
 
 	/**
@@ -228,39 +311,6 @@ public class Dispatch {
 	}
 
 	/**
-	 * @param processData
-	 * @return
-	 */
-	public Boolean isExpectingAnswers(ProcessData processData) {
-
-		QBulkMessage msg = fetchBulkMessage(processData);
-
-		for (Ask ask : msg.getAsks())
-			if (containsNonReadonly(ask))
-				return true;
-
-		return false;
-	}
-
-	/**
-	 * @param ask
-	 * @return
-	 */
-	public Boolean containsNonReadonly(Ask ask) {
-
-		if (ask.getReadonly())
-			return true;
-
-		if (ask.getChildren() != null) {
-			for (Ask child : ask.getChildren())
-				if (containsNonReadonly(child))
-					return true;
-		}
-
-		return false;
-	}
-
-	/**
 	 * Recursively update the ask target and process id.
 	 * 
 	 * @param asks
@@ -276,47 +326,6 @@ public class Dispatch {
 			if (ask.hasChildren())
 				updateRequiredAskFields(ask.getChildren(), target, processId);
 		}
-	}
-
-	/**
-	 * Send Asks, PCMs and Searches
-	 *
-	 * @param processData
-	 */
-	public void buildAndSend(ProcessData processData) {
-
-		// construct bulk message
-		QBulkMessage msg = fetchBulkMessage(processData);
-		List<Ask> asks = msg.getAsks();
-
-		// check mandatory fields
-		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(asks, processEntity);
-
-		// pre-send ask updates
-		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.updateDependentAsks(asks, processEntity, defBE);
-		flatMapOfAsks.get("EVT_SUBMIT").setDisabled(!answered);
-
-		processData.setAttributeCodes(new ArrayList<String>());
-		for (String code : flatMapOfAsks.keySet())
-			processData.getAttributeCodes().add(code);
-
-		// filter unwanted attributes
-		privacyFilter(processEntity, processData.getAttributeCodes());
-
-		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
-		msg.add(processEntity);
-
-		// handle initial dropdown selections
-		recursivelyHandleDropdownAttributes(asks, processEntity, msg);
-
-		// send to user
-		msg.setToken(userToken.getToken());
-		msg.setTag("BulkMessage");
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-
-		// TODO: send searches
 	}
 
 	/**
