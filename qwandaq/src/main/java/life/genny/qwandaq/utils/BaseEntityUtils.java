@@ -36,7 +36,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
-
 /**
  * A non-static utility class used for standard
  * operations involving BaseEntitys.
@@ -115,7 +114,8 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public PCM getPCM(String code) {
-		return PCM.class.cast(getBaseEntity(code));
+
+		return PCM.from(getBaseEntity(code));
 	}
 
 	/**

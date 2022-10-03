@@ -1,17 +1,16 @@
 package life.genny.kogito.common.core;
 
+import static life.genny.qwandaq.entity.PCM.PCM_TREE;
+
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -23,9 +22,7 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.service.NavigationService;
-import life.genny.kogito.common.service.SearchService;
-import life.genny.qwandaq.Answer;
+import life.genny.kogito.common.service.TaskService;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -41,9 +38,8 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 
@@ -67,6 +63,8 @@ public class Dispatch {
 	@Inject
 	SearchUtils search;
 
+	@Inject
+	TaskService tasks;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
@@ -121,6 +119,7 @@ public class Dispatch {
 
 		QBulkMessage msg = new QBulkMessage();
 
+		// check for a provided question code
 		String questionCode = processData.getQuestionCode();
 		if (questionCode != null) {
 			// fetch question from DB
@@ -131,7 +130,7 @@ public class Dispatch {
 			msg.add(ask);
 		}
 
-		// init lists
+		// init if null to stop null pointers
 		if (processData.getAttributeCodes() == null)
 			processData.setAttributeCodes(new ArrayList<String>());
 		if (processData.getSearches() == null)
@@ -149,10 +148,16 @@ public class Dispatch {
 		if (!attributeCodes.isEmpty())
 			handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 
-		// update parent pcm
+		/**
+		 * update parent pcm
+		 * NOTE: the null check protects from cases where 
+		 * dispatch is called with a null parent and location.
+		 * This occurs when triggering dispatch for a pcm 
+		 * that requires a different target code.
+		 */
 		String parent = processData.getParent();
-		if (!"PCM_TREE".equals(parent)) {
-			BaseEntity parentPCM = beUtils.getBaseEntity(parent);
+		if (parent != null && !PCM_TREE.equals(parent)) {
+			PCM parentPCM = beUtils.getPCM(parent);
 			parentPCM.setValue(processData.getLocation(), processData.getPcmCode());
 			msg.add(parentPCM);
 		}
@@ -169,8 +174,10 @@ public class Dispatch {
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, baseEntityMessage);
 
 		// send searches
-		for (String code : processData.getSearches())
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
 			search.searchTable(code);
+		}
 	}
 
 	/**
@@ -229,6 +236,7 @@ public class Dispatch {
 	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
 			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
 
+		// TODO: make this location empty in original PCM_CONTENT
 		if ("PCM_DASHBOARD".equals(code))
 			return;
 
@@ -249,8 +257,10 @@ public class Dispatch {
 			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
 
 		log.debug("Traversing " + pcm.getCode());
+		log.info(jsonb.toJson(pcm));
 		msg.add(pcm);
 
+		// check for a question code
 		Ask ask = null;
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
 		if (questionCode == null) {
@@ -258,11 +268,19 @@ public class Dispatch {
 		} else {
 			// use pcm target if one is specified
 			String targetCode = pcm.getValueAsString(Attribute.PRI_TARGET_CODE);
-			if (targetCode == null)
-				target = new BaseEntity(targetCode, targetCode);
-			// add ask to bulk message
-			ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-			msg.add(ask);
+			if (targetCode != null && !targetCode.equals(target.getCode())) {
+				// merge targetCode
+				Map<String, Object> ctxMap = new HashMap<>();
+				ctxMap.put("TARGET", target);
+				targetCode = MergeUtils.merge(targetCode, ctxMap);
+				// providing a null parent & location since it is already set in the parent
+				tasks.dispatch(source.getCode(), targetCode, pcm, null, null);
+				return;
+			} else {
+				// add ask to bulk message
+				ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
+				msg.add(ask);
+			}
 		}
 
 		// iterate locations
@@ -292,7 +310,7 @@ public class Dispatch {
 				continue;
 			}
 
-			// return true if answer expected
+			// add to active attrbute codes if answer expected
 			Ask child = opt.get();
 			if (!child.getReadonly())
 				processData.getAttributeCodes().add(child.getQuestion().getAttribute().getCode());
@@ -322,7 +340,7 @@ public class Dispatch {
 		for (String event : events.split(",")) {
 			// create child and add to ask
 			Attribute attribute = qwandaUtils.createEvent(event, event);
-			Question question = new Question("QUE_" + event, event, attribute);
+			Question question = new Question(Prefix.QUE + event, event, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.add(child);
 		}
@@ -423,7 +441,8 @@ public class Dispatch {
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
-					selection = beUtils.privacyFilter(selection, Collections.singleton("PRI_NAME"));
+					selection = beUtils.privacyFilter(selection, 
+							Collections.singleton(Attribute.PRI_NAME));
 					selectionMsg.add(selection);
 				}
 

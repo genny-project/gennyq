@@ -174,7 +174,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public BaseEntity() {
 		// super();
 		// dummy
@@ -187,7 +186,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 */
 	public BaseEntity(final String aName) {
 		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
-
 	}
 
 	/**
@@ -199,7 +197,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@ProtoFactory
 	public BaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
-
 	}
 
 	/**

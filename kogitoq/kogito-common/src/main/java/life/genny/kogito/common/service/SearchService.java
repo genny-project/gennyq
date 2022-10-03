@@ -1,6 +1,7 @@
 package life.genny.kogito.common.service;
 
 import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
+import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -88,14 +90,14 @@ public class SearchService {
 
 		// trim TREE_ITEM_ from code if present
 		code = StringUtils.replaceOnce(code, "_TREE_ITEM_", "_");
-		String searchCode = StringUtils.replaceOnce(code, "QUE_", "SBE_");
+		String searchCode = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.SBE);
 		log.info("Sending Table :: " + searchCode);
 
 		// send pcm with correct template code
 		String userCode = userToken.getUserCode();
 		PCM pcm = beUtils.getPCM(PCM.PCM_TABLE);
 		pcm.setLocation(1, searchCode);
-		tasks.dispatch(userCode, userCode, pcm, PCM.PCM_CONTENT, "PRI_LOC1");
+		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**
@@ -108,11 +110,11 @@ public class SearchService {
 		// fetch target and find it's definition
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
-		String type = StringUtils.removeStart(definition.getCode(), "DEF_");
+		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF);
 
 		// construct template and question codes from type
 		String template = "TPL_" + type + "_DETAIL_VIEW";
-		String questionCode = "QUE_" + type;
+		String questionCode = Prefix.QUE + type;
 
 		// send pcm with correct info
 		String userCode = userToken.getUserCode();
@@ -120,7 +122,7 @@ public class SearchService {
 		pcm.setTemplateCode(template);
 		pcm.setQuestionCode(questionCode);
 
-		tasks.dispatch(userCode, userCode, pcm, "PCM_CONTENT", "PRI_LOC1");
+		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**
@@ -146,9 +148,7 @@ public class SearchService {
 		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
 
 		searchEntity.add(new Filter(PRI_NAME, Operator.LIKE, "%"+nameWildcard+"%"));
-
 		searchUtils.searchTable(searchEntity);
-		// sendSearchPCM("PCM_TABLE", searchCode);
 	}
 
 	/**
@@ -160,7 +160,7 @@ public class SearchService {
 	public void sendSearchPCM(String pcmCode, String searchCode) {
 
 		// update content
-		BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
+		BaseEntity content = beUtils.getBaseEntity(PCM_CONTENT);
 		Attribute attribute = qwandaUtils.getAttribute("PRI_LOC1");
 		EntityAttribute ea = new EntityAttribute(content, attribute, 1.0, pcmCode);
 		content.addAttribute(ea);
@@ -184,7 +184,7 @@ public class SearchService {
 	 */
 	public void getBuckets(String code) {
 		try {
-			String searchCode = StringUtils.replaceOnce(code, "QUE_", "SBE_");
+			String searchCode = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.SBE);
 
 			List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
 			List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);

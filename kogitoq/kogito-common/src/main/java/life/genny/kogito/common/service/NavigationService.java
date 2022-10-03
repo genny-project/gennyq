@@ -1,6 +1,7 @@
 package life.genny.kogito.common.service;
 
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
+import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
@@ -19,6 +20,7 @@ import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
@@ -125,10 +127,10 @@ public class NavigationService {
 	public void sendSummary() {
 
 		BaseEntity user = beUtils.getUserBaseEntity();
-		BaseEntity pcm = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY);
+		PCM pcm = PCM.from(beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY));
 
 		log.infof("Dispatching Summary %s for user %s", user.getCode(), pcm.getCode());
-		tasks.dispatch(user.getCode(), user.getCode(), pcm.getCode(), "PCM_CONTENT", "PRI_LOC1");
+		tasks.dispatch(user.getCode(), user.getCode(), pcm, PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**

@@ -102,6 +102,7 @@ public class Attribute extends CodedEntity {
 	public static final String LNK_ROLE = "LNK_ROLE";
 
 	// pcm
+	public static final String PRI_LOC = "PRI_LOC";
 	public static final String PRI_TEMPLATE_CODE = "PRI_TEMPLATE_CODE";
 	public static final String PRI_QUESTION_CODE = "PRI_QUESTION_CODE";
 	public static final String PRI_TARGET_CODE = "PRI_TARGET_CODE";

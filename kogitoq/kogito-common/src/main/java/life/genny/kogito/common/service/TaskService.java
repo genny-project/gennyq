@@ -64,6 +64,8 @@ public class TaskService {
 	}
 
 	/**
+	 * Fetch PCM and dispatch a readonly PCM tree update.
+	 *
 	 * @param sourceCode
 	 * @param targetCode
 	 * @param pcmCode
@@ -79,7 +81,10 @@ public class TaskService {
 		dispatch(sourceCode, targetCode, pcm, parent, location);
 	}
 
+
 	/**
+	 * Dispatch a readonly PCM tree update.
+	 *
 	 * @param sourceCode
 	 * @param targetCode
 	 * @param pcmCode
@@ -94,10 +99,9 @@ public class TaskService {
 			throw new NullParameterException("targetCode");
 		if (pcm == null)
 			throw new NullParameterException("pcm");
-		if (parent == null)
-			throw new NullParameterException("parent");
-		if (location == null)
-			throw new NullParameterException("location");
+		/*
+		 * no need to check parent and location as they can sometimes be null
+		 */
 
 		// construct basic processData
 		ProcessData processData = new ProcessData();
@@ -114,6 +118,8 @@ public class TaskService {
 	}
 
 	/**
+	 * Build a question group and assign to the PCM before dispatching a PCM tree update.
+	 *
 	 * @param sourceCode
 	 * @param targetCode
 	 * @param questionCode
@@ -137,12 +143,11 @@ public class TaskService {
 			throw new NullParameterException("processId");
 		if (pcmCode == null)
 			throw new NullParameterException("pcmCode");
-		if (parent == null)
-			throw new NullParameterException("parent");
-		if (location == null)
-			throw new NullParameterException("location");
 		if (events == null)
 			throw new NullParameterException("events");
+		/*
+		 * no need to check parent and location as they can sometimes be null
+		 */
 
 		log.info("==========================================");
 		log.info("processId : " + processId);
