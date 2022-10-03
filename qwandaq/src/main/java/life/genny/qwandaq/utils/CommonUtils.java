@@ -186,6 +186,7 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
+        if(array.length == 0) return "[]";
         StringBuilder result = new StringBuilder("[");
         int i;
         for(i = 0; i < array.length - 1; i++) {
@@ -195,7 +196,7 @@ public class CommonUtils {
         }
 
         result.append("\"")
-        .append(stringCallback.getString(array[i + 1]))
+        .append(stringCallback.getString(array[i]))
         .append("\"]");
         
         return result.toString();
