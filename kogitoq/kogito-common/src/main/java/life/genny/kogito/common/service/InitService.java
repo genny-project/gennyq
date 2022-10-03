@@ -242,9 +242,14 @@ public class InitService {
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
 		for(EntityAttribute capability : capabilities) {
+			log.info("Analyzing " + capability.getAttributeCode());
+			log.info("		= " + capability.getValueString());
 			// If they don't have the capability then don't bother finding the def
-			if(!capMan.checkCapability(capability, false, new Capability(CapabilityMode.ADD, PermissionMode.ALL)))
+			DebugTimer capTimer = new DebugTimer(log::debug, "[!] Check Capability Timer: ");
+			if(!capMan.checkCapability(capability, false, new Capability(CapabilityMode.ADD, PermissionMode.ALL))) {
+				capTimer.logTime();
 				continue;
+			} else capTimer.logTime();
 
 			String defCode = CommonUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
 			try {
