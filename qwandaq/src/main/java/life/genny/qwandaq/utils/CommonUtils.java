@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
@@ -203,6 +204,21 @@ public class CommonUtils {
     }
 
     /**
+     * Fetch an instance of a class from {@link io.quarkus.Arc}
+     * @param <T>
+     * @param clazz - Class to fetch instance for
+     * @return the instance from CDI
+     */
+    public static <T> T getArcInstance(Class<T> clazz) {
+        T instance = Arc.container().select(clazz).get();
+        if(instance == null) {
+            log.error("Could not find instance of " + clazz.getSimpleName() + " in the context!");
+        }
+
+        return instance;
+    }
+
+    /**
      * Assuming arrayString is of the form "[a,b,c,d]"
      * @param <T>
      * @param arrayString
@@ -211,7 +227,7 @@ public class CommonUtils {
      */
     public static <T> List<T> getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
         String[] components = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").split(",");
-        List<T> newList = new ArrayList<>();
+        List<T> newList = new ArrayList<>(components.length);
         for(String component : components) {
             newList.add(objectCallback.getObject(component));
         }

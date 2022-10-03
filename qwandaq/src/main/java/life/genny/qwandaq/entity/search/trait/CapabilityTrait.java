@@ -1,10 +1,12 @@
 package life.genny.qwandaq.entity.search.trait;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.datatype.CapabilityNode;
 
 /**
  * Capability
@@ -12,23 +14,31 @@ import life.genny.qwandaq.datatype.Capability;
 @RegisterForReflection
 public class CapabilityTrait extends Trait {
 
-	private List<Capability> capabilities;
+	private Set<CapabilityNode> capabilityRequirements;
+
+	private boolean requiresAll;
 
 	public CapabilityTrait() {
 		super();
 	}
 
-	public CapabilityTrait(String code, Capability... caps) {
+	public CapabilityTrait(String code, boolean requiresAll, CapabilityNode... caps) {
 		super(code, code);
-		setCapabilities(caps);
+		this.requiresAll = requiresAll;
+		setCapabilityRequirements(caps);
+	}
+	
+	public boolean meetsRequirements(Set<Capability> capabilities) {
+		for(Capability cap : capabilities) {
+			if(!cap.checkPerms(requiresAll, capabilityRequirements))
+				return false;
+		}
+
+		return true;
 	}
 
-	public List<Capability> getRequirements() {
-		return capabilities;
-	}
-
-	public void setCapabilities(Capability... caps) {
-		this.capabilities = Arrays.asList(caps);
+	public void setCapabilityRequirements(CapabilityNode... caps) {
+		this.capabilityRequirements = new HashSet<>(Arrays.asList(caps));
 	}
 
 }

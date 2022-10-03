@@ -1,22 +1,36 @@
 package life.genny.fyodor.utils;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.Capability;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.CapabilityTrait;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
+import life.genny.qwandaq.managers.Manager;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.models.UserToken;
 
 /**
  * CapHandler
  */
 @ApplicationScoped
-public class CapHandler {
+public class CapHandler extends Manager {
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
+	CapabilitiesManager capMan;
 
 	/**
 	 * @param searchEntity
@@ -72,7 +86,16 @@ public class CapHandler {
 	 * @return
 	 */
 	public Boolean traitCapabilitiesMet(Trait trait) {
+		if(userToken == null) {
+			error("[!] No UserToken, cannot verify capabilities");
+		}
 
+		Set<Capability> capabilities = userToken.getUserCapabilities();
+		for(CapabilityTrait capTrait : trait.getCapabilityRequirements()) {
+			if(!capTrait.meetsRequirements(capabilities)) {
+				return false;
+			}
+		}
 		// TODO: implement capabilities
 		return true;
 	}

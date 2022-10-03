@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
 import java.io.IOException;
@@ -26,6 +28,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -36,6 +40,12 @@ import org.jboss.logging.Logger;
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
+
+	@Inject
+	protected BaseEntityUtils beUtils;
+
+	@Inject
+	protected CapabilitiesManager capMan;
 
 	private static final long serialVersionUID = 1L;
 	static final Logger log = Logger.getLogger(GennyToken.class);
