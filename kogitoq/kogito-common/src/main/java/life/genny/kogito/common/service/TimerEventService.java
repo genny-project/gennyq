@@ -80,7 +80,7 @@ public class TimerEventService {
 				log.info(" PRI_MINUTES : " + timerEventBE.getValue("PRI_MINUTES", 0));
 				TimerEvent timerEvent = new TimerEvent();
 				timerEvent.setTimeStamp((long) timerEventBE.getValue("PRI_MINUTES", 0));
-				timerEvent.setUniqueCode(timerEventBE.getValueAsString("PRI_MILESTONE").get());
+				timerEvent.setUniqueCode(timerEventBE.getValueAsString("PRI_MILESTONE"));
 				timerData.add(timerEvent);
 			}
 		}
