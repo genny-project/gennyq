@@ -395,7 +395,7 @@ public class BaseEntityUtils {
 	 * @return A clean string
 	 */
 	public String cleanUpAttributeValue(String value) throws NullParameterException {
-		if (value == null)
+		if(value == null) 
 			throw new NullParameterException("value");
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;

@@ -83,7 +83,9 @@ public class CapabilityUtilsTest extends BaseTestCase {
             }
         }
 
-        List<String> expected = caps.stream().map((Capability cap) -> cap.capMode.name() + Capability.DELIMITER + cap.permMode.name()).collect(Collectors.toList());
+        List<String> expected = caps.stream()
+            .map((Capability cap) -> cap.capMode.getIdentifier() + Capability.DELIMITER + cap.permMode.getIdentifier())
+            .collect(Collectors.toList());
 
         for(int i = 0; i < caps.size(); i++) {
             tests.add(
@@ -113,14 +115,13 @@ public class CapabilityUtilsTest extends BaseTestCase {
 
         for(CapabilityMode mode : CapabilityMode.values()) {
             for(PermissionMode permMode : PermissionMode.values()) {
-                capString.add(mode.name() + Capability.DELIMITER + permMode.name());
+                capString.add(mode.getIdentifier() + Capability.DELIMITER + permMode.getIdentifier());
             }
         }
 
         List<Capability> expected = capString.stream().map((String caps) -> {
-            String[] components = caps.split(":");
-            CapabilityMode mode = CapabilityMode.valueOf(components[0]);
-            PermissionMode permMode = PermissionMode.valueOf(components[1]);
+            CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(0));
+            PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(2));
 
             return new Capability(mode, permMode);
         }).collect(Collectors.toList());

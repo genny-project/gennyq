@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -38,6 +39,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DebugTimer;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -235,7 +237,7 @@ public class InitService {
 		parentAsk.setTargetCode(user.getCode());
 		parentAsk.setRealm(productCode);
 
-		List<EntityAttribute> capabilities = capMan.getEntityCapabilities(productCode, user);
+		Set<EntityAttribute> capabilities = capMan.getEntityCapabilities(productCode, user);
 		
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first

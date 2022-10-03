@@ -38,7 +38,7 @@ public class DatabaseUtils {
 
 	@Inject
 	EntityManager entityManager;
-
+	
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
