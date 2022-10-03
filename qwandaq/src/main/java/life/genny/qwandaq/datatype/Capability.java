@@ -1,5 +1,7 @@
 package life.genny.qwandaq.datatype;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
@@ -133,19 +135,32 @@ public class Capability {
 		return new Capability(capMode, permMode);
 	}
 
+	@Override
 	public String toString() {
 		return capMode.identifier + DELIMITER + permMode.identifier;
 	}
 
+	@Override
 	public boolean equals(Object other) {
-		if(!this.getClass().equals(other.getClass()))
+		if(!this.getClass().equals(other.getClass())) {
 			return false;
+		}
 		Capability cap = (Capability)other;
-		if(cap.capMode.identifier != this.capMode.identifier)
+		if(cap.capMode.identifier != this.capMode.identifier) {
 			return false;
-		if(cap.permMode.identifier != this.permMode.identifier)
+		}
+		if(cap.permMode.identifier != this.permMode.identifier) {
 			return false;
+		}
 
 		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder()
+			.append(capMode.identifier)
+			.append(permMode.identifier)
+			.build();
 	}
 }

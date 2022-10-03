@@ -152,12 +152,12 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	public boolean checkCapability(EntityAttribute capability, boolean hasAll, Capability... checkModes) {
+		String modeString = capability.getValueString();
+		Set<Capability> capabilities = deserializeCapSet(modeString);
 		if (StringUtils.isBlank(capability.getValueString())) {
 			return false;
 		}
 
-		String modeString = capability.getValueString();
-		Set<Capability> capabilities = deserializeCapSet(modeString);
 		if (hasAll) {
 			for (Capability checkMode : checkModes) {
 				boolean hasMode = capabilities.contains(checkMode);
