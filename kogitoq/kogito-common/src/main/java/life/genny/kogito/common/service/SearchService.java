@@ -73,9 +73,9 @@ public class SearchService {
 		PAGINATION_BUCKET
 	}
 
-	private Map<String, String> filterParams = new HashMap<>();
+//	private Map<String, String> filterParams = new HashMap<>();
 
-	private Map<String,Map<String, String>> listFilterParams = new HashMap<>();
+//	private Map<String,Map<String, String>> listFilterParams = new HashMap<>();
 
 	/**
 	 * Perform a Detail View search.
@@ -372,7 +372,8 @@ public class SearchService {
 	 * @param questionCode Question code
 	 * @param addedJti Adding JTI to search base entity
 	 */
-	public void sendFilterGroup(String sbeCode, String queGrp,String questionCode,boolean addedJti) {
+	public void sendFilterGroup(String sbeCode, String queGrp,String questionCode,boolean addedJti,
+								Map<String, Map<String,String>> listFilterParams) {
 		try {
 			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
@@ -448,36 +449,21 @@ public class SearchService {
 	}
 
 	/**
-	 *
-	 * @return Filter Parameters in the application scope
-	 */
-	public Map<String, String> getFilterParams() {
-		return filterParams;
-	}
-
-	/**
-	 * Set Filter Pamameters in application scope
-	 * @param filterParams
-	 */
-	public void setFilterParams(Map<String, String> filterParams) {
-		this.filterParams = filterParams;
-	}
-
-
-	/**
 	 * handle filter by string in the table
 	 * @param attrCode Attribute code
 	 * @param sbeCode Search base entity code without JTI
 	 * @param isSubmitted removed  filter when click on filer tag
 	 * @param isSubmitted Being whether question is date time or not
+	 * @param listFilterParams List of filter parameters
 	 */
-	public void handleFilter(String attrCode,String sbeCode, boolean isSubmitted) {
+	public void handleFilter(String attrCode,String sbeCode, boolean isSubmitted,
+							 Map<String,Map<String, String>> listFilterParams) {
 		String sbeCodeJti = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
 
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCodeJti, SearchEntity.class);
 
 		//add conditions by filter parameters
-		setFilterParamsToSearchBE(searchBE,attrCode,isSubmitted);
+		setFilterParamsToSearchBE(searchBE,attrCode,isSubmitted, listFilterParams);
 
 		CacheUtils.putObject(userToken.getRealm(), sbeCodeJti, searchBE);
 
@@ -490,55 +476,60 @@ public class SearchService {
 	 * @param searchBE Search base entity
 	 * @param isSubmitted being removed filter
 	 */
-	public void setFilterParamsToSearchBE(SearchEntity searchBE, String attrCode,boolean isSubmitted) {
-		if(isSubmitted) {
-			String queCode = getFilterParamValByKey(GennyConstants.QUE_FILTER_COLUMN);
-			String attrName = getFilterParamValByKey(GennyConstants.QUE_FILTER_OPTION);
-			String value = getFilterParamValByKey(GennyConstants.QUE_FILTER_VALUE)
-					.replaceFirst(GennyConstants.SEL_PREF,"");
-			String attrCodeByParam = getFilterParamValByKey(GennyConstants.ATTRIBUTECODE);
-			Operator operator = getOperatorByVal(attrName);
+	public void setFilterParamsToSearchBE(SearchEntity searchBE, String attrCode,boolean isSubmitted,
+										  Map<String,Map<String, String>> listFilterParams) {
 
-			if (operator.equals(Operator.LIKE)) {
-				value = "%" + value + "%";
-			}
+		for(Map.Entry<String, Map<String,String>> e : listFilterParams.entrySet()) {
+//			if (isSubmitted) {
+//				String queCode = getFilterParamValByKey(GennyConstants.QUE_FILTER_COLUMN);
+//				String attrName = getFilterParamValByKey(GennyConstants.QUE_FILTER_OPTION);
+//				String value = getFilterParamValByKey(GennyConstants.QUE_FILTER_VALUE)
+//						.replaceFirst(GennyConstants.SEL_PREF, "");
+//				String attrCodeByParam = getFilterParamValByKey(GennyConstants.ATTRIBUTECODE);
+//				Operator operator = getOperatorByVal(attrName);
+//
+//				if (operator.equals(Operator.LIKE)) {
+//					value = "%" + value + "%";
+//				}
+//
+//				boolean isDate = isDateTimeSelected(queCode);
+//				Filter filter = null;
+//
+//				if (isDate) {
+//					LocalDateTime dateTime = parseStringToDate(value);
+//					filter = new Filter(attrCodeByParam, operator, dateTime);
+//				} else {
+//					filter = new Filter(attrCodeByParam, operator, value);
+//				}
+//
+//				searchBE.add(filter);
+//			} else {
+//				Map<String, String> mapParam = listFilterParams.get(attrCode);
 
-			boolean isDate =  isDateTimeSelected(queCode);
-			Filter filter = null;
+				String queCode = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_COLUMN);
+				String attrName = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_OPTION);
+				String value = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_VALUE)
+						.replaceFirst(GennyConstants.SEL_PREF, "");
+				String attrCodeByParam = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.ATTRIBUTECODE);
+				Operator operator = getOperatorByVal(attrName);
 
-			if(isDate) {
-				LocalDateTime dateTime  = parseStringToDate(value);
-				filter = new Filter(attrCodeByParam,operator,dateTime);
-			}else {
-				filter = new Filter(attrCodeByParam,operator,value);
-			}
+				if (operator.equals(Operator.LIKE)) {
+					value = "%" + value + "%";
+				}
 
-			searchBE.add(filter);
-		}else {
-			Map<String, String> mapParam = listFilterParams.get(attrCode);
+				boolean isDate = isDateTimeSelected(queCode);
+				Filter filter = null;
 
-			String queCode = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.QUE_FILTER_COLUMN);
-			String attrName = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.QUE_FILTER_OPTION);
-			String value = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.QUE_FILTER_VALUE)
-					.replaceFirst(GennyConstants.SEL_PREF,"");
-			String attrCodeByParam = searchUtils.getFilterParamValByKey(mapParam,GennyConstants.ATTRIBUTECODE);
-			Operator operator = getOperatorByVal(attrName);
+				if (isDate) {
+					LocalDateTime dateTime = parseStringToDate(value);
+					filter = new Filter(attrCodeByParam, operator, dateTime);
+				} else {
+					filter = new Filter(attrCodeByParam, operator, value);
+				}
 
-			if (operator.equals(Operator.LIKE)) {
-				value = "%" + value + "%";
-			}
-
-			boolean isDate =  isDateTimeSelected(queCode);
-			Filter filter = null;
-
-			if(isDate) {
-				LocalDateTime dateTime  = parseStringToDate(value);
-				filter = new Filter(attrCodeByParam,operator,dateTime);
-			}else {
-				filter = new Filter(attrCodeByParam,operator,value);
-			}
-
-			searchBE.remove(filter);
+//				searchBE.remove(filter);
+				searchBE.add(filter);
+//			}
 		}
 	}
 
@@ -601,7 +592,7 @@ public class SearchService {
 	 * @param value Parameter Value
 	 */
 	public void setFilterParamValByKey(String key, String value) {
-		filterParams.put(key, value);
+//		filterParams.put(key, value);
 	}
 
 	/**
@@ -609,7 +600,8 @@ public class SearchService {
 	 * @param key Parameter Key
 	 */
 	public String getFilterParamValByKey(String key) {
-		return searchUtils.getFilterParamValByKey(filterParams,key);
+//		return searchUtils.getFilterParamValByKey(filterParams,key);
+		return "";
 	}
 
 	/**
@@ -623,41 +615,6 @@ public class SearchService {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Add filter paramer to the list
-	 */
-	public void addFilterParamToList() {
-		Map<String, String> newMap = getCloneFilterParams();
-		String filterKey = searchUtils.getFilterTagKey(newMap,listFilterParams.size());
-		listFilterParams.put(filterKey, newMap);
-	}
-
-	/**
-	 * Clone filter parameter
-	 * @return Clone of filter parameter
-	 */
-	public Map<String, String> getCloneFilterParams() {
-		Map<String, String> newMap = new HashMap<>();
-
-		filterParams.entrySet().stream().forEach( e-> {
-			newMap.put(e.getKey(),e.getValue());
-		});
-		return newMap;
-	}
-
-	/**
-	 * Remove current filter tag by html
-	 * @param questionCode Question code of event
-	 */
-	public void removeFilterTag(String questionCode) {
-		Set<String> keys = new HashSet<>(listFilterParams.keySet());
-		for(String tagKey:keys) {
-			if(tagKey.equalsIgnoreCase(questionCode)) {
-				listFilterParams.remove(tagKey);
-			}
-		}
 	}
 
 	/**
@@ -778,7 +735,8 @@ public class SearchService {
 	 * @return List of Filter Parameters in the application scope
 	 */
 	public Map<String,Map<String, String>> getListFilterParams() {
-		return listFilterParams;
+//		return listFilterParams;
+		return null;
 	}
 
 	/**
@@ -791,7 +749,7 @@ public class SearchService {
 	 * @param likeCond Like condition of searching data
 	 */
 	public void sendDropdownOptions(String sbeCode,String group,String code,String lnkCode,String lnkValue,String likeCond) {
-		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond);
+		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, false);
 		QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
@@ -818,5 +776,20 @@ public class SearchService {
 		msg.setReplace(true);
 
 		return msg;
+	}
+
+	/**
+	 * Return the list of dropdown items
+	 * @param sbeCode Search base entity code
+	 * @param lnkCode Link code
+	 * @param lnkValue Link value
+	 * @param likeCond Like condition
+	 * @param isSortedDate sorted by date
+	 * @return The list of dropdown items
+	 */
+	public List<BaseEntity> getListDropdownItems(String sbeCode,String lnkCode,String lnkValue,String likeCond, boolean isSortedDate) {
+		SearchEntity search = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, true);
+		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+		return bases;
 	}
 }

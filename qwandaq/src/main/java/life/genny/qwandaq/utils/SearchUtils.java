@@ -20,6 +20,7 @@ import javax.ws.rs.core.Response;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
+import life.genny.qwandaq.entity.search.trait.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -30,9 +31,6 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.exception.runtime.BadDataException;
@@ -836,23 +834,8 @@ public class SearchUtils {
 	}
 
 	/**
-	 * Return filter tag key
-	 * 
-	 * @param filterParams Filter Parameters
-	 * @param index        Index of list filter
-	 * @return Filter tag key
-	 */
-	public String getFilterTagKey(Map<String, String> filterParams, int index) {
-		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE);
-		String partKey = getLastWord(attrCode).toUpperCase();
-		String filterTagKey = GennyConstants.QUE_TAG_PREF + partKey + "_" + index;
-		return filterTagKey;
-	}
-
-	/**
 	 * Return Html value by filter parameters
-	 * 
-	 * @param filterParams
+	 * @param filterParams Filter parameters
 	 * @return Html value by filter parameters
 	 */
 	public String getHtmlByFilterParam(Map<String, String> filterParams) {
@@ -889,7 +872,7 @@ public class SearchUtils {
 
 	/**
 	 * Get parameter value by key
-	 * 
+	 * @param filterParams Filter Parameters
 	 * @param key Parameter Key
 	 */
 	public String getFilterParamValByKey(Map<String, String> filterParams, String key) {
@@ -1128,11 +1111,26 @@ public class SearchUtils {
 		return searchBE;
 	}
 
-
-	public SearchEntity getBaseDropdownOptions(String sbeCode,String lnkCode, String lnkValue,String likeCond) {
+	/**
+	 * Get search base entity
+	 * @param sbeCode Search base entity
+	 * @param lnkCode link code
+	 * @param lnkValue Link value
+	 * @param likeCond Like condition
+	 * @param isSortedDate being sorted by date
+	 * @return Search entity
+	 */
+	public SearchEntity getBaseDropdownOptions(String sbeCode,String lnkCode, String lnkValue,String likeCond,
+											   boolean isSortedDate) {
 		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
 		searchBE.add(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, likeCond))
-				.add(new Column(lnkCode, lnkCode));
+				.add(new Column(lnkCode, lnkValue));
+
+		if(isSortedDate) {
+			searchBE.add(new Sort("PRI_CREATED", Ord.DESC));
+		} else {
+			searchBE.add(new Sort("PRI_CREATED", Ord.ASC));
+		}
 
 		searchBE.setRealm(userToken.getProductCode());
 		searchBE.setPageStart(0).setPageSize(20);
