@@ -309,36 +309,13 @@ public class TopologyProducer {
 		}
 
 		// blacklist if none of the regex match
-		if (!validationsAreMet(answer, attribute))
+		if (!qwandaUtils.validationsAreMet(attribute, answer.getValue())) {
+			log.info("Answer Value is bad: " + answer.getValue());
 			return blacklist();
-
-		return true;
-	}
-
-	/**
-	 * Check if all validations are met for an answer.
-	 * 
-	 * @param answer    The answer to check
-	 * @param attribute The Attribute of the answer
-	 * @return Boolean representing whether the validation conditions have been met
-	 */
-	public Boolean validationsAreMet(Answer answer, Attribute attribute) {
-
-		log.info("Answer Value: " + answer.getValue());
-		DataType dataType = attribute.getDataType();
-
-		// check each validation against value
-		for (Validation validation : dataType.getValidationList()) {
-
-			String regex = validation.getRegex();
-			boolean regexOk = Pattern.compile(regex).matcher(answer.getValue()).matches();
-
-			if (!regexOk) {
-				log.error("Regex FAILED! " + regex + " ... " + validation.getErrormsg());
-				return false;
-			}
-			log.info("Regex OK! [ " + answer.getValue() + " ] for regex " + regex);
+		} else {
+			log.info("Answer Value is good: " + answer.getValue());
 		}
+
 		return true;
 	}
 

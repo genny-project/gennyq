@@ -243,10 +243,9 @@ public class InitService {
 		// Check if there is a def first
 		for(EntityAttribute capability : capabilities) {
 			// If they don't have the capability then don't bother finding the def
-			if(!capMan.checkCapability(capability, false, new Capability(CapabilityMode.ADD, PermissionMode.ALL))) {
+			if(!capMan.checkCapability(capability, false, new Capability(CapabilityMode.ADD, PermissionMode.ALL)))
 				continue;
-			}
-			
+
 			String defCode = CommonUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
 			try {
 				// Check for a def

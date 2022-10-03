@@ -3,7 +3,9 @@ package life.genny.qwandaq.managers.capabilities;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+
 import java.util.List;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -55,7 +57,6 @@ public class CapabilitiesManager extends Manager {
 	// == TODO LIST
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
 	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
-	
 	public Set<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>();
 		if(target.isPerson()) {
@@ -152,12 +153,13 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	public boolean checkCapability(EntityAttribute capability, boolean hasAll, Capability... checkModes) {
-		String modeString = capability.getValueString();
-		Set<Capability> capabilities = deserializeCapSet(modeString);
 		if (StringUtils.isBlank(capability.getValueString())) {
 			return false;
 		}
 
+		String modeString = capability.getValueString();
+		Set<Capability> capabilities = deserializeCapSet(modeString);
+		
 		if (hasAll) {
 			for (Capability checkMode : checkModes) {
 				boolean hasMode = capabilities.contains(checkMode);

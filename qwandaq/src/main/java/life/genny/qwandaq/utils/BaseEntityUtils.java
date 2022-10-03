@@ -114,7 +114,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntity(String code) {
 
-		return getBaseEntity(userToken.getProductCode(), code);
+		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
 	}
 
 	/**
@@ -168,7 +168,7 @@ public class BaseEntityUtils {
 		if (userToken == null) {
 			throw new NullParameterException("User Token");
 		}
-		return getBaseEntityByCode(userToken.getProductCode(), code);
+		return getBaseEntityByCode(serviceToken.getProductCode(), code);
 	}
 
 	/**
@@ -198,7 +198,11 @@ public class BaseEntityUtils {
 		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
 		// updates are working.
 		BaseEntity entity = null;
-		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+		try {
+			// entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+		} catch (NullPointerException e) {
+			log.error("Error getting BaseEntity from Cache, trying db");
+		}
 
 		// check in database if not in cache
 		if (entity == null) {
@@ -238,7 +242,7 @@ public class BaseEntityUtils {
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
-		return updateBaseEntity(userToken.getProductCode(), baseEntity);
+		return updateBaseEntity(baseEntity.getRealm(), baseEntity);
 	}
 
 	/**
@@ -657,13 +661,13 @@ public class BaseEntityUtils {
 			// create entity and set realm
 			// check if code already exists
 			try {
-				item = this.getBaseEntity(code);
+				item = this.getBaseEntity(defBE.getRealm(), code);
 				item.setName(name);
 			} catch (ItemNotFoundException e) {
 				item = new BaseEntity(code.toUpperCase(), name);
 			}
 
-			item.setRealm(userToken.getProductCode());
+			item.setRealm(defBE.getRealm());
 		}
 
 		// save to DB and cache
@@ -672,6 +676,7 @@ public class BaseEntityUtils {
 		// TODO: Surely we don't have to fetch attribute from attribute code if the
 		// attribute
 		// is already stored in the entity attribute?
+		// ACC: not quite, it is the DEF 'ATT' attribute, not the real one
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());

@@ -19,7 +19,8 @@ public class TimerEvent implements Serializable {
     static final Logger log = Logger.getLogger(TimerEvent.class);
 
     private Long timeStamp; // UTC timestamp in seconds that this event should trigger
-    private String uniqueCode; // This is the unique code for this event. Used for messaging
+    private String uniqueCode; // This is the unique milestone code for this event. Used primarily for
+                               // messaging
     private String statusCode; // This is the status code for this event. Saved to the associated BaseEntity
                                // PRI_TIMER_STATUS
 
@@ -106,30 +107,30 @@ public class TimerEvent implements Serializable {
         this.statusCode = statusCode;
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public String getDateTimeUTC() {
         return ZonedDateTime.ofInstant(
                 Instant.ofEpochSecond(timeStamp),
                 ZoneId.of("UTC")).toString();
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public String getDateTime(final String timezoneId) {
         return ZonedDateTime.ofInstant(
                 Instant.ofEpochSecond(timeStamp),
                 ZoneId.of(timezoneId)).toString();
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public String getDateTime(final Long epochSeconds) {
         return LocalDateTime.ofEpochSecond(epochSeconds, 0, ZoneOffset.UTC).toString();
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public Long getNow() {
         return LocalDateTime.now().atZone(
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();

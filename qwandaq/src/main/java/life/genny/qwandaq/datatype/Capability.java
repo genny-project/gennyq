@@ -1,7 +1,6 @@
 package life.genny.qwandaq.datatype;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
@@ -125,7 +124,6 @@ public class Capability {
 	 */
 	public static Capability parseCapability(String capabilityString) 
 		throws BadDataException {
-
 		CapabilityMode capMode;
 		PermissionMode permMode;
 
