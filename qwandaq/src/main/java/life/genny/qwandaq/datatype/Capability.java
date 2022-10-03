@@ -17,15 +17,28 @@ public class Capability {
 	 */
 	public static enum CapabilityMode {
 		// Priority to be determined by .ordinal()
-		VIEW("VIEW"),
-		EDIT("EDIT"),
-		ADD("ADD"),
-		DELETE("DELETE");
+		VIEW('V'),
+		EDIT('E'),
+		ADD('A'),
+		DELETE('D');
 
-		private final String identifier;
+		private final char identifier;
 
-		private CapabilityMode(String identifier) {
+		private CapabilityMode(char identifier) {
 			this.identifier = identifier;
+		}
+
+		public char getIdentifier() {
+			return this.identifier;
+		}
+
+		public static CapabilityMode getByIdentifier(char identifier) {
+			for(CapabilityMode mode : values()) {
+				if(mode.identifier == identifier)
+					return mode;
+			}
+
+			return null;
 		}
 	}
 
@@ -33,14 +46,27 @@ public class Capability {
 	 * An enum to declare what permissions this capability has
 	 */
 	public static enum PermissionMode {
-		ALL("ALL"),
-		SELF("SELF"),
-		NONE("NONE");
+		ALL('A'),
+		SELF('S'),
+		NONE('N');
 
-		private final String identifier;
+		private final char identifier;
 
-		private PermissionMode(String identifier) {
+		private PermissionMode(char identifier) {
 			this.identifier = identifier;
+		}
+
+		public char getIdentifier() {
+			return this.identifier;
+		}
+
+		public static PermissionMode getByIdentifier(char identifier) {
+			for(PermissionMode mode : values()) {
+				if(mode.identifier == identifier)
+					return mode;
+			}
+
+			return null;
 		}
 	}
 
@@ -97,24 +123,12 @@ public class Capability {
 	 */
 	public static Capability parseCapability(String capabilityString) 
 		throws BadDataException {
-		String[] identifiers = capabilityString.split(":");
-		if(identifiers.length != 2) {
-			throw new BadDataException("There must be exactly 2 identifiers detected in capability strings. this string has: " + identifiers.length + ". (Delimited by '" + DELIMITER + "')");
-		}
-		
+
 		CapabilityMode capMode;
 		PermissionMode permMode;
 
-		try {
-			capMode = CapabilityMode.valueOf(identifiers[0]);
-		} catch(IllegalArgumentException e) {
-			throw new BadDataException("No Capability Mode with identifier: " + identifiers[0]);
-		}
-		try {
-			permMode = PermissionMode.valueOf(identifiers[1]);
-		} catch(IllegalArgumentException e) {
-			throw new BadDataException("No Permission Mode with identifier: " + identifiers[1]);
-		}
+		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
+		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));
 
 		return new Capability(capMode, permMode);
 	}
@@ -127,9 +141,9 @@ public class Capability {
 		if(!this.getClass().equals(other.getClass()))
 			return false;
 		Capability cap = (Capability)other;
-		if(!cap.capMode.equals(this.capMode))
+		if(cap.capMode.identifier != this.capMode.identifier)
 			return false;
-		if(!cap.permMode.equals(this.permMode))
+		if(cap.permMode.identifier != this.permMode.identifier)
 			return false;
 
 		return true;

@@ -2,9 +2,8 @@ package life.genny.qwandaq.managers.capabilities;
 
 import java.util.Arrays;
 import java.util.HashMap;
-
+import java.util.HashSet;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -57,8 +56,8 @@ public class CapabilitiesManager extends Manager {
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
 	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
 	
-	public List<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
-		List<EntityAttribute> capabilities = new ArrayList<>();
+	public Set<EntityAttribute> getEntityCapabilities(final String productCode, final BaseEntity target) {
+		Set<EntityAttribute> capabilities = new HashSet<>();
 		if(target.isPerson()) {
 			List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ROLE_LINK_CODE);
 			for(String roleCode : roleCodes) {
@@ -74,7 +73,7 @@ public class CapabilitiesManager extends Manager {
 
 	public Map<String, EntityAttribute> getEntityCapabilitiesMap(final String productCode, final BaseEntity target) {
 		Map<String, EntityAttribute> capabilitiesMap = new HashMap<>();
-		List<EntityAttribute> capabilities = getEntityCapabilities(productCode, target);
+		Set<EntityAttribute> capabilities = getEntityCapabilities(productCode, target);
 
 		for(EntityAttribute cap : capabilities) {
 			capabilitiesMap.put(cap.getAttributeCode(), cap);
@@ -103,7 +102,7 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		target.addAttribute(capability, 0.0, getModeString(modes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), modes);
+		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(modes));
 		beUtils.updateBaseEntity(target);
 	}
 
