@@ -17,9 +17,9 @@ import life.genny.qwandaq.Ask;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.Capability;
-import life.genny.qwandaq.datatype.Capability.PermissionMode;
+import life.genny.qwandaq.datatype.CapabilityNode;
+import life.genny.qwandaq.datatype.CapabilityNode.PermissionMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 
@@ -39,18 +39,18 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DebugTimer;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
 
-import static life.genny.qwandaq.datatype.Capability.CapabilityMode;
+import static life.genny.qwandaq.datatype.CapabilityNode.CapabilityMode;
 
 /**
  * A Service class used for Auth Init operations.
  *
+ * @auther Bryn Meachem
  * @author Jasper Robison
  */
 @ApplicationScoped
@@ -237,16 +237,16 @@ public class InitService {
 		parentAsk.setTargetCode(user.getCode());
 		parentAsk.setRealm(productCode);
 
-		Set<EntityAttribute> capabilities = capMan.getEntityCapabilities(productCode, user);
+		Set<Capability> capabilities = userToken.getUserCapabilities();
 		
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
-		for(EntityAttribute capability : capabilities) {
+		for(Capability capability : capabilities) {
 			// If they don't have the capability then don't bother finding the def
-			if(!capMan.checkCapability(capability, false, new Capability(CapabilityMode.ADD, PermissionMode.ALL)))
+			if(!capability.checkPerms(false, new CapabilityNode(CapabilityMode.ADD, PermissionMode.ALL)))
 				continue;
 
-			String defCode = CommonUtils.substitutePrefix(capability.getAttributeCode(), "DEF");
+			String defCode = CommonUtils.substitutePrefix(capability.code, "DEF");
 			try {
 				// Check for a def
 				beUtils.getBaseEntity(productCode, defCode);
@@ -255,7 +255,7 @@ public class InitService {
 				continue;
 			}
 			// Create the ask (there is a def and we have the capability)
-			String baseCode = CommonUtils.safeStripPrefix(capability.getAttributeCode());
+			String baseCode = CommonUtils.safeStripPrefix(capability.code);
 
 			String eventCode = "EVT_ADD".concat(baseCode);
 			String name = "Add ".concat(CommonUtils.normalizeString(baseCode));

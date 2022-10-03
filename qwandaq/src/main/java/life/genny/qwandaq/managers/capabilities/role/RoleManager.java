@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.datatype.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -271,7 +271,7 @@ public class RoleManager extends Manager {
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
-			List<Capability> capabilities = capManager.deserializeCapArray(permissionEA.getValue());
+			List<CapabilityNode> capabilities = capManager.deserializeCapArray(permissionEA.getValue());
 			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);

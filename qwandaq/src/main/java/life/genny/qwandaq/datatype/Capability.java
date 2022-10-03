@@ -1,164 +1,124 @@
 package life.genny.qwandaq.datatype;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.exception.runtime.BadDataException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-/*
- * Capability Class to encapsulate necessary data to determine capabilities 
- * @author Bryn Meachem
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+
+/**
+ * A lightweight class meant to purely store deserialized capabilities and the respective capabilitycode
+ * Can be derived from an EntityAttribute
  */
 @RegisterForReflection
 public class Capability {
-	// Leave this here please
-	public static final String DELIMITER = ":";
+    
+    public final String code;
+    public final Set<CapabilityNode> nodes;
 
-	/**
-	 * An enum to declare what mode this capability concerns
-	 */
-	public static enum CapabilityMode {
-		// Priority to be determined by .ordinal()
-		VIEW('V'),
-		EDIT('E'),
-		ADD('A'),
-		DELETE('D');
+    public Capability(String capabilityCode, Set<CapabilityNode> nodes) {
+        this.code = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
+        this.nodes = nodes;
+    }
 
-		private final char identifier;
+    public Capability(String capabilityCode, CapabilityNode... nodes) {
+        this(capabilityCode, new HashSet<>(Arrays.asList(nodes)));
+    }
 
-		private CapabilityMode(char identifier) {
-			this.identifier = identifier;
-		}
+    public Capability(String capabilityCode, List<CapabilityNode> nodes) {
+        this(capabilityCode, new HashSet<>(nodes));
+    }
 
-		public char getIdentifier() {
-			return this.identifier;
-		}
+    /**
+     * Merge this Capability with another, creating a new Capability that
+     * is the most permissive given the pool of permission nodes
+     * <p>Will return the value of the caller if the two Capability codes are different</p>
+     * 
+     * @param other
+     * @return
+     */
+    public Capability merge(Capability other) {
+        if(!this.code.equals(other.code))
+            return this;
 
-		public static CapabilityMode getByIdentifier(char identifier) {
-			for(CapabilityMode mode : values()) {
-				if(mode.identifier == identifier)
-					return mode;
-			}
+        Set<CapabilityNode> newNodes = new HashSet<>();
+        // this handles all 3 cases (this is empty, other is empty and both are empty)
+        if(other.nodes.isEmpty()) {
+            return this;
+        }
+        if(this.nodes.isEmpty()) {
+            return other;
+        }
+        // For each node, find the most permissive nodes
+        for(CapabilityNode node : this.nodes) {
+            for(CapabilityNode otherNode : other.nodes) {
+                if(node.capMode.equals(otherNode.capMode)) {
+                    newNodes.add(node.getMostPermissiveNode(otherNode));
+                }
+            }
+        }
 
-			return null;
-		}
+        return new Capability(this.code, newNodes);
+    }
+
+    /**
+     * Check if this capability already belongs in a specified set of capabilities (code-based equality).
+     * If it exists then return that capability object
+     * @param capabilities - the set of capabilities to check
+     * @return the capability object that shares the same capability code, or null if none could be found (returns the first instance)
+     */
+    public Capability hasCodeInSet(Set<Capability> capabilities) {
+        for(Capability c : capabilities) {
+            if(c.code.equals(this.code)) {
+                return c;
+            }
+        }
+
+        return null;
+    }
+
+	public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
+		return CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]));
 	}
 
-	/**
-	 * An enum to declare what permissions this capability has
-	 */
-	public static enum PermissionMode {
-		ALL('A'),
-		SELF('S'),
-		NONE('N');
+    public boolean checkPerms(boolean hasAll, CapabilityNode... nodes) {
+        return CapabilitiesManager.checkCapability(this.nodes, hasAll, nodes);
+    }
 
-		private final char identifier;
+    public static Capability getFromEA(EntityAttribute ea) {
+        String capCode = ea.getAttributeCode();
+        List<CapabilityNode> caps = CapabilitiesManager.deserializeCapArray(ea.getValueString());
+        return new Capability(capCode, caps);
+    }
 
-		private PermissionMode(char identifier) {
-			this.identifier = identifier;
-		}
+    @Override
+    public boolean equals(Object other) {
+        if(!this.getClass().equals(other.getClass())) {
+            return false;
+        }
 
-		public char getIdentifier() {
-			return this.identifier;
-		}
+        Capability otherCap = (Capability)other;
+        if(!otherCap.code.equals(this.code)) {
+            return false;
+        }
 
-		public static PermissionMode getByIdentifier(char identifier) {
-			for(PermissionMode mode : values()) {
-				if(mode.identifier == identifier)
-					return mode;
-			}
+        if(!this.nodes.equals(otherCap.nodes)) {
+            return false;
+        }
 
-			return null;
-		}
-	}
+        return true;
+    }
 
-	/**
-	 * This capability's mode
-	 */
-	public final CapabilityMode capMode;
-
-	/**
-	 * This capability's permission for the given mode
-	 */
-	public final PermissionMode permMode;
-
-	/**
-	 * Create a new capability with the given mode and permissions
-	 * @param capMode the {@link Capability} to assign 
-	 * @param permMode the {@link PermissionMode} to assign
-	 * <p>
-	 * <pre>
-	 * new Capability(VIEW, ALL)
-	 * </pre>
-	 * will create a new Capability as VIEW:ALL
-	 * </p>
-	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
-	 */
-	public Capability(CapabilityMode capMode, PermissionMode permMode) {
-		this.capMode = capMode;
-		this.permMode = permMode;
-	}
-
-	/**
-	 * Create a new capability with the given mode and permissions
-	 * @param capMode
-	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
-	 */
-	public Capability(CapabilityMode capMode) {
-		this(capMode, PermissionMode.SELF);
-	}
-
-	/**
-	 * Parse a new capability given a String such as
-	 * <pre>
-	 * VIEW:ALL
-	 * </pre>
-	 * 
-	 * Each component of the string is to be separated by {@link Capability#DELIMITER} (currently ':')
-	 * @param capabilityString - the capabilityString to deserialize
-	 * @return a new Capability based on the CapabilityMode and PermissionMode in the String
-	 * @throws BadDataException if the capabilityString is malformed in some way/the corresponding CapabilityMode or PermissionMode could not be found
-	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
-	 */
-	public static Capability parseCapability(String capabilityString) 
-		throws BadDataException {
-		CapabilityMode capMode;
-		PermissionMode permMode;
-
-		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
-		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));
-
-		return new Capability(capMode, permMode);
-	}
-
-	@Override
-	public String toString() {
-		return capMode.identifier + DELIMITER + permMode.identifier;
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if(!this.getClass().equals(other.getClass())) {
-			return false;
-		}
-		Capability cap = (Capability)other;
-		if(cap.capMode.identifier != this.capMode.identifier) {
-			return false;
-		}
-		if(cap.permMode.identifier != this.permMode.identifier) {
-			return false;
-		}
-
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		return new HashCodeBuilder()
-			.append(capMode.identifier)
-			.append(permMode.identifier)
-			.build();
-	}
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder()
+            .append(code)
+            .append(nodes)
+            .build();
+    }
 }
