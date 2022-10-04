@@ -147,6 +147,8 @@ public class Dispatch {
 		log.info("Non-Readonly Attributes: " + attributeCodes);
 		if (!attributeCodes.isEmpty())
 			handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+		else
+			msg.add(target);
 
 		/**
 		 * update parent pcm
