@@ -1,6 +1,8 @@
 package life.genny.qwandaq.managers.capabilities.role;
 
 
+import static life.genny.qwandaq.datatype.capability.CapabilityMode.VIEW;
+
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,15 +15,13 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
-
-
-import static life.genny.qwandaq.datatype.CapabilityNode.CapabilityMode.VIEW;
 
 public class RoleBuilder {
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
@@ -109,8 +109,8 @@ public class RoleBuilder {
     }
 
     @Deprecated
-    public RoleBuilder addCapability(String capabilityCode, CapabilityNode.CapabilityMode... capModes) {
-        CapabilityNode[] capabilities = Arrays.asList(capModes).stream().map((CapabilityNode.CapabilityMode mode) -> new CapabilityNode(mode)).collect(Collectors.toList()).toArray(new CapabilityNode[0]);
+    public RoleBuilder addCapability(String capabilityCode, CapabilityMode... capModes) {
+        CapabilityNode[] capabilities = Arrays.asList(capModes).stream().map((CapabilityMode mode) -> new CapabilityNode(mode)).collect(Collectors.toList()).toArray(new CapabilityNode[0]);
         return addCapability(capabilityCode, capabilities);
     }
 

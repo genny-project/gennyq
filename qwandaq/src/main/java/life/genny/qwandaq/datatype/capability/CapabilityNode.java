@@ -1,10 +1,10 @@
-package life.genny.qwandaq.datatype;
+package life.genny.qwandaq.datatype.capability;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
-/*
+/**
  * Capability Class to encapsulate necessary data to determine capabilities 
  * @author Bryn Meachem
  */
@@ -12,64 +12,6 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 public class CapabilityNode {
 	// Leave this here please
 	public static final String DELIMITER = ":";
-
-	/**
-	 * An enum to declare what mode this capability concerns
-	 */
-	public static enum CapabilityMode {
-		// Priority to be determined by .ordinal()
-		VIEW('V'),
-		EDIT('E'),
-		ADD('A'),
-		DELETE('D');
-
-		private final char identifier;
-
-		private CapabilityMode(char identifier) {
-			this.identifier = identifier;
-		}
-
-		public char getIdentifier() {
-			return this.identifier;
-		}
-
-		public static CapabilityMode getByIdentifier(char identifier) {
-			for(CapabilityMode mode : values()) {
-				if(mode.identifier == identifier)
-					return mode;
-			}
-
-			return null;
-		}
-	}
-
-	/**
-	 * An enum to declare what permissions this capability has
-	 */
-	public static enum PermissionMode {
-		ALL('A'),
-		SELF('S'),
-		NONE('N');
-
-		private final char identifier;
-
-		private PermissionMode(char identifier) {
-			this.identifier = identifier;
-		}
-
-		public char getIdentifier() {
-			return this.identifier;
-		}
-
-		public static PermissionMode getByIdentifier(char identifier) {
-			for(PermissionMode mode : values()) {
-				if(mode.identifier == identifier)
-					return mode;
-			}
-
-			return null;
-		}
-	}
 
 	/**
 	 * This capability's mode
@@ -114,7 +56,7 @@ public class CapabilityNode {
 	 * @param other - the other node to compare
 	 * @return the most permissive node between this and the other node or this if the two modes are different
 	 */
-	public CapabilityNode getMostPermissiveNode(CapabilityNode other) {
+	public CapabilityNode compareNodes(CapabilityNode other, boolean mostPermissive) {
 		if(!this.capMode.equals(other.capMode))
 			return this;
 		// if -1 then this is less permissive
@@ -122,9 +64,23 @@ public class CapabilityNode {
 		// if 1 then this is more permissive
 		int ord = this.permMode.compareTo(other.permMode);
 		if(ord > 0)
-			return other;
+			return mostPermissive ? other : this;
 		else
-			return this;
+			return mostPermissive ? this : other;
+	}
+
+	/**
+	 * Get all CapabilityNodes with less permissions than this one for it's given Mode
+	 * @return
+	 */
+	public CapabilityNode[] getLesserNodes() {
+		int size = this.permMode.ordinal();
+		CapabilityNode[] lesserNodes = new CapabilityNode[size];
+		for(int i = 0; i < size; i++) {
+			lesserNodes[i] = new CapabilityNode(capMode, PermissionMode.getByOrd(size - (i + 1)));
+		}
+
+		return lesserNodes;
 	}
 
 	/**
@@ -151,9 +107,17 @@ public class CapabilityNode {
 		return new CapabilityNode(capMode, permMode);
 	}
 
+	public String toString(boolean verbose) {
+		if(verbose) {
+			return capMode.name() + DELIMITER + permMode.name();
+		} else {
+			return capMode.getIdentifier() + DELIMITER + permMode.getIdentifier();
+		}
+	}
+
 	@Override
 	public String toString() {
-		return capMode.identifier + DELIMITER + permMode.identifier;
+		return toString(false);
 	}
 
 	@Override
@@ -162,10 +126,10 @@ public class CapabilityNode {
 			return false;
 		}
 		CapabilityNode cap = (CapabilityNode)other;
-		if(cap.capMode.identifier != this.capMode.identifier) {
+		if(cap.capMode.getIdentifier() != this.capMode.getIdentifier()) {
 			return false;
 		}
-		if(cap.permMode.identifier != this.permMode.identifier) {
+		if(cap.permMode.getIdentifier() != this.permMode.getIdentifier()) {
 			return false;
 		}
 
@@ -175,8 +139,8 @@ public class CapabilityNode {
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder()
-			.append(capMode.identifier)
-			.append(permMode.identifier)
+			.append(capMode.getIdentifier())
+			.append(permMode.getIdentifier())
 			.build();
 	}
 }

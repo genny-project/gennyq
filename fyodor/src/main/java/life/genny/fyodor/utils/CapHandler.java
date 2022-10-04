@@ -7,8 +7,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;

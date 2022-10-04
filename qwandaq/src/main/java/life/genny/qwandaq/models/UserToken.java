@@ -2,7 +2,7 @@ package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 
 import java.util.Set;
@@ -33,17 +33,16 @@ public class UserToken extends GennyToken {
 
 	public UserToken(final String code, final String token) {
 		super(code, token);
-		capabilities = capMan.getUserCapabilities();
 	}
 
 	public UserToken(final String token) {
 		super(token);
-		capabilities = capMan.getUserCapabilities();
 	}
 
     @PostConstruct
     void init() {
 		log.debug("CONSTRUCTING UserToken Bean");
+		log.debug("Initializing user capabilities");
     }
 
     @PreDestroy
@@ -56,7 +55,7 @@ public class UserToken extends GennyToken {
 	 * @return
 	 */
 	public BaseEntity getUserEntity() {
-		return beUtils.getBaseEntity(GennyConstants.PER_BE_PREFIX.concat(getUuid()));
+		return beUtils.getUserBaseEntity();
 	}
 
 	/**
@@ -64,6 +63,8 @@ public class UserToken extends GennyToken {
 	 * @return
 	 */
 	public Set<Capability> getUserCapabilities() {
+		if(capabilities == null)
+			capabilities = capMan.getUserCapabilities();
 		return capabilities;
 	}
 

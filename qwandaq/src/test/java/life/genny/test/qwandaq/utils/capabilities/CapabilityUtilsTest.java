@@ -2,7 +2,10 @@ package life.genny.test.qwandaq.utils.capabilities;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
@@ -11,20 +14,22 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import life.genny.qwandaq.datatype.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.PermissionMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.suite.TestCase;
 
+import static life.genny.qwandaq.datatype.capability.CapabilityMode.*;
+import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
+
 import static life.genny.test.utils.suite.TestCase.Builder;
 import static life.genny.test.utils.suite.TestCase.Input;
 import static life.genny.test.utils.suite.TestCase.Expected;
-
-import static life.genny.qwandaq.datatype.CapabilityNode.CapabilityMode;
-import static life.genny.qwandaq.datatype.CapabilityNode.PermissionMode;
-
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -38,7 +43,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
     @Test
     public void cleanCapabilityCodeTest() {
 
-        Builder<String, String> builder = new Builder<String, String>();
+        Builder<String, String> builder = new Builder<>();
 
         FITestCallback<Input<String>, Expected<String>> testFunction = (input) -> {
             return new Expected<>(CapabilitiesManager.cleanCapabilityCode(input.input));
@@ -139,6 +144,59 @@ public class CapabilityUtilsTest extends BaseTestCase {
         for(TestCase<String, CapabilityNode> test : tests) {
             assertEquals(test.getExpected(), test.test());
         }
+    }
+
+    @Test
+    public void getLesserNodesTest() {
+        Builder<CapabilityNode, CapabilityNode[]> builder = new Builder<>();
+        List<TestCase<CapabilityNode, CapabilityNode[]>> tests = new ArrayList<>();
+
+        FITestCallback<Input<CapabilityNode>, Expected<CapabilityNode[]>> testFunc = (input) -> {
+            return new Expected<>(input.input.getLesserNodes());
+        };
+
+        tests.add(
+            builder.setName("Lesser Nodes Test 1")
+                    .setInput(new CapabilityNode(ADD, ALL))
+                    .setExpected(new CapabilityNode[] {
+                        new CapabilityNode(ADD, SELF),
+                        new CapabilityNode(ADD, NONE)
+                    })
+                    .setTest(testFunc)
+                    .build()
+        );
+
+        for(TestCase<CapabilityNode, CapabilityNode[]> test : tests) {
+            assertArrayEquals(test.getExpected(), test.test());
+        }
+
+    }
+
+    @Test
+    public void testCheckCapability() {
+        // testing checkCapability
+        Set<CapabilityNode> capabilitySet = new HashSet<>(Arrays.asList(
+            new CapabilityNode[] {
+                new CapabilityNode(ADD, ALL),
+                new CapabilityNode(EDIT, SELF),
+                new CapabilityNode(VIEW, NONE)
+            }
+        ));
+
+        boolean result = CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode(ADD, ALL));
+        assertEquals(true, result);
+        
+        result = CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode(ADD, SELF));
+        assertEquals(true, result);
+
+        result = CapabilitiesManager.checkCapability(capabilitySet, true, new CapabilityNode(ADD, SELF));
+        assertEquals(true, result);
+
+        result = CapabilitiesManager.checkCapability(capabilitySet, true, new CapabilityNode(ADD, SELF), new CapabilityNode(DELETE, ALL));
+        assertEquals(false, result);
+
+        result = CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode(ADD, SELF), new CapabilityNode(DELETE, ALL));
+        assertEquals(true, result);
     }
 
     @Test
