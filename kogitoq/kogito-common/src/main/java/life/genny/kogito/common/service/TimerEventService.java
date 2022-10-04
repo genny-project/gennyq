@@ -61,6 +61,7 @@ public class TimerEventService {
 				.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "TEV_%"))
 				.add(new Filter("LNK_QUESTION", Operator.LIKE, "%\"" + questionCode.toUpperCase() + "\"%"))
 				.add(new Column("PRI_MILESTONE", "Milestone"))
+				.add(new Column("PRI_ATTRIBUTECODE_VALUES", "Settings"))
 				.add(new Column("PRI_MINUTES", "Minutes"))
 				.setPageStart(0)
 				.setPageSize(100);
@@ -77,10 +78,12 @@ public class TimerEventService {
 
 				log.info("Processing TimerEvent " + timerEventBE.getCode());
 				log.info(" PRI_MILESTONE : " + timerEventBE.getValue("PRI_MILESTONE"));
+				log.info(" PRI_ATTRIBUTECODE_VALUES : " + timerEventBE.getValue("PRI_ATTRIBUTECODE_VALUES"));
 				log.info(" PRI_MINUTES : " + timerEventBE.getValue("PRI_MINUTES", 0));
 				TimerEvent timerEvent = new TimerEvent();
 				timerEvent.setTimeStamp((long) timerEventBE.getValue("PRI_MINUTES", 0));
 				timerEvent.setUniqueCode(timerEventBE.getValueAsString("PRI_MILESTONE"));
+				timerEvent.setUpdatePairs(timerEventBE.getValueAsString("PRI_ATTRIBUTECODE_VALUES"));
 				timerData.add(timerEvent);
 			}
 		}
