@@ -43,12 +43,11 @@ public final class GennyConstants {
 	public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
 	public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
 	public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
-	public static final String QUE_FILTER_VALUE = "QUE_FILTER_VALUE";
 	public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
 	public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
 	public static final String QUE_FILTER_VALUE_PREF = "QUE_FILTER_VALUE_";
-	public static final String QUE_TAG_PREF = "QUE_TAG_";
+	public static final String QUE_TAG_PREF = "ROW_";
 	public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
 	public static final String QUE_FILTER_VALUE_STATE = "QUE_FILTER_VALUE_STATE";
 	public static final String QUE_FILTER_VALUE_INTERNSHIP_TYPE = "QUE_FILTER_VALUE_INTERNSHIP_TYPE";
@@ -124,7 +123,10 @@ public final class GennyConstants {
 	public static final String TARGETCODES = "targetCodes";
 	public static final String TOKEN = "token";
 	public static final String ATTRIBUTECODE = "attributeCode";
+	public static final String COLUMN = "column";
 	public static final String VALUE = "value";
+	public static final String OPTION = "option";
+	public static final String QUESTIONCODE = "questionCode";
 
 	//Bucket filter values
 	public static final String PRI_IS_HOST_CPY="PRI_IS_HOST_CPY";
@@ -134,6 +136,9 @@ public final class GennyConstants {
 	public static final String BUCKET_FILTER_LABEL="Start typing to search";
 	public static final String PRI_IS_INTERN="PRI_IS_INTERN";
 	public static final String PRI_IS_EDU_PRO="PRI_IS_EDU_PRO";
+
+	//saved searches
+	public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
 
 }
 

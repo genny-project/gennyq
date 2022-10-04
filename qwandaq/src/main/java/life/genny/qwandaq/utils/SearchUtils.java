@@ -839,11 +839,11 @@ public class SearchUtils {
 	 * @return Html value by filter parameters
 	 */
 	public String getHtmlByFilterParam(Map<String, String> filterParams) {
-		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE)
+		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.COLUMN)
 				.replaceFirst(GennyConstants.PRI_PREFIX, "");
 
-		String attrName = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_OPTION);
-		String value = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_VALUE);
+		String attrName = getFilterParamValByKey(filterParams, GennyConstants.OPTION);
+		String value = getFilterParamValByKey(filterParams, GennyConstants.VALUE);
 		String attrNameStrip = attrName.replaceFirst(GennyConstants.SEL_PREF, "")
 				.replace("_", " ");
 
@@ -1127,9 +1127,9 @@ public class SearchUtils {
 				.add(new Column(lnkCode, lnkValue));
 
 		if(isSortedDate) {
-			searchBE.add(new Sort("PRI_CREATED", Ord.DESC));
+			searchBE.add(new Sort("PRI_CREATED_DATE", Ord.DESC));
 		} else {
-			searchBE.add(new Sort("PRI_CREATED", Ord.ASC));
+			searchBE.add(new Sort("PRI_CREATED_DATE", Ord.ASC));
 		}
 
 		searchBE.setRealm(userToken.getProductCode());

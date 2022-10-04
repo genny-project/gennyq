@@ -5,13 +5,8 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -30,7 +25,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -72,10 +66,6 @@ public class SearchService {
 		FILTER,
 		PAGINATION_BUCKET
 	}
-
-//	private Map<String, String> filterParams = new HashMap<>();
-
-//	private Map<String,Map<String, String>> listFilterParams = new HashMap<>();
 
 	/**
 	 * Perform a Detail View search.
@@ -451,20 +441,16 @@ public class SearchService {
 
 	/**
 	 * handle filter by string in the table
-	 * @param attrCode Attribute code
 	 * @param sbeCode Search base entity code without JTI
-	 * @param isSubmitted removed  filter when click on filer tag
-	 * @param isSubmitted Being whether question is date time or not
 	 * @param listFilterParams List of filter parameters
 	 */
-	public void handleFilter(String attrCode,String sbeCode, boolean isSubmitted,
-							 Map<String,Map<String, String>> listFilterParams) {
+	public void handleFilter(String sbeCode, Map<String,Map<String, String>> listFilterParams) {
 		String sbeCodeJti = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
 
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCodeJti, SearchEntity.class);
 
 		//add conditions by filter parameters
-		setFilterParamsToSearchBE(searchBE,attrCode,isSubmitted, listFilterParams);
+		setFilterParamsToSearchBE(searchBE,listFilterParams);
 
 		CacheUtils.putObject(userToken.getRealm(), sbeCodeJti, searchBE);
 
@@ -475,41 +461,13 @@ public class SearchService {
 	/**
 	 * Add filer parameters to search base entity
 	 * @param searchBE Search base entity
-	 * @param isSubmitted being removed filter
 	 */
-	public void setFilterParamsToSearchBE(SearchEntity searchBE, String attrCode,boolean isSubmitted,
-										  Map<String,Map<String, String>> listFilterParams) {
+	public void setFilterParamsToSearchBE(SearchEntity searchBE, Map<String,Map<String, String>> listFilterParams) {
 
 		for(Map.Entry<String, Map<String,String>> e : listFilterParams.entrySet()) {
-//			if (isSubmitted) {
-//				String queCode = getFilterParamValByKey(GennyConstants.QUE_FILTER_COLUMN);
-//				String attrName = getFilterParamValByKey(GennyConstants.QUE_FILTER_OPTION);
-//				String value = getFilterParamValByKey(GennyConstants.QUE_FILTER_VALUE)
-//						.replaceFirst(GennyConstants.SEL_PREF, "");
-//				String attrCodeByParam = getFilterParamValByKey(GennyConstants.ATTRIBUTECODE);
-//				Operator operator = getOperatorByVal(attrName);
-//
-//				if (operator.equals(Operator.LIKE)) {
-//					value = "%" + value + "%";
-//				}
-//
-//				boolean isDate = isDateTimeSelected(queCode);
-//				Filter filter = null;
-//
-//				if (isDate) {
-//					LocalDateTime dateTime = parseStringToDate(value);
-//					filter = new Filter(attrCodeByParam, operator, dateTime);
-//				} else {
-//					filter = new Filter(attrCodeByParam, operator, value);
-//				}
-//
-//				searchBE.add(filter);
-//			} else {
-//				Map<String, String> mapParam = listFilterParams.get(attrCode);
-
-			String queCode = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_COLUMN);
-			String attrName = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_OPTION);
-			String value = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_VALUE)
+			String queCode = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUESTIONCODE);
+			String attrName = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.OPTION);
+			String value = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.VALUE)
 					.replaceFirst(GennyConstants.SEL_PREF, "");
 			String attrCodeByParam = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.ATTRIBUTECODE);
 			Operator operator = getOperatorByVal(attrName);
@@ -528,9 +486,7 @@ public class SearchService {
 				filter = new Filter(attrCodeByParam, operator, value);
 			}
 
-//				searchBE.remove(filter);
 			searchBE.add(filter);
-//			}
 		}
 	}
 
@@ -585,19 +541,6 @@ public class SearchService {
 		SearchEntity searchEntity = searchUtils.getQuickOptions(sbeCode,lnkCode,lnkValue);
 		QDataBaseEntityMessage msg = getBaseItemsMsg(queGroup,queCode,lnkCode,lnkValue,searchEntity);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-	}
-
-	/**
-	 * Return Whether filter tag or not
-	 * @param code
-	 * @return Whether filter tag or not
-	 */
-	public boolean isFilterTag(String code) {
-		if(code.startsWith(GennyConstants.QUE_TAG_PREF)) {
-			return true;
-		}
-
-		return false;
 	}
 
 	/**
@@ -712,16 +655,6 @@ public class SearchService {
 		return isDateTime;
 	}
 
-
-	/**
-	 *
-	 * @return List of Filter Parameters in the application scope
-	 */
-	public Map<String,Map<String, String>> getListFilterParams() {
-//		return listFilterParams;
-		return null;
-	}
-
 	/**
 	 * Send dropdown options data
 	 * @param sbeCode Search base entity code
@@ -732,7 +665,7 @@ public class SearchService {
 	 * @param likeCond Like condition of searching data
 	 */
 	public void sendDropdownOptions(String sbeCode,String group,String code,String lnkCode,String lnkValue,String likeCond) {
-		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, false);
+		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, true);
 		QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
@@ -750,8 +683,12 @@ public class SearchService {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
 		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+
+		List<BaseEntity> basesSorted =  bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
+												.collect(Collectors.toList());
+
 		msg.setToken(userToken.getToken());
-		msg.setItems(bases);
+		msg.setItems(basesSorted);
 		msg.setParentCode(group);
 		msg.setQuestionCode(code);
 		msg.setLinkCode(lnkCode);

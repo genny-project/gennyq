@@ -234,4 +234,17 @@ public class EventMessageUtils {
         return isDateTime;
     }
 
+    /**
+     * Return Whether filter tag or not
+     * @param code
+     * @return Whether filter tag or not
+     */
+    public boolean isFilterTag(String code) {
+        if(code.startsWith(GennyConstants.QUE_TAG_PREF)) {
+            return true;
+        }
+
+        return false;
+    }
+
 }
