@@ -14,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.datatype.capability.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.PermissionMode;
@@ -144,6 +145,13 @@ public class CapabilityUtilsTest extends BaseTestCase {
         for(TestCase<String, CapabilityNode> test : tests) {
             assertEquals(test.getExpected(), test.test());
         }
+    }
+
+    @Test
+    public void mostPermissiveTest() {
+        Capability capability1 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, NONE), new CapabilityNode(EDIT, SELF));
+        Capability capability2 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, SELF));
+        Capability capability3 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, ALL));
     }
 
     @Test

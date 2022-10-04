@@ -22,6 +22,8 @@ import life.genny.qwandaq.utils.CommonUtils;
 public class Capability {
     
     public final String code;
+
+    // TODO: Consider the use of an Enum Map here
     public final Set<CapabilityNode> nodes;
 
     public Capability(String capabilityCode, Set<CapabilityNode> nodes) {

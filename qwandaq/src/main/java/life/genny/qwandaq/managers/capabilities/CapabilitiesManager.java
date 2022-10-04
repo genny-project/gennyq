@@ -72,26 +72,35 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated(forRemoval = false)
 	public Set<Capability> getUserCapabilities() {
+		// this is a necessary log, since we are trying to minimize how often this function is called
+		// it is good to see how often it comes up
+		info("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		BaseEntity userBE = userToken.getUserEntity();
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
-		Set<Capability> capabilities = new HashSet<>();
-		// TODO: Think about compounding capabilities
-		for(BaseEntity role : roles) {
-			Set<Capability> roleCaps = getEntityCapabilities(role);
-			// Being careful about accidentally duplicating capabilities 
-			// (given the nature of the hashCode and equals methods in Capability.java)
-			for(Capability cap : roleCaps) {
-				info("	- " + cap);
-				// Find preexisting capability. If it exists, merge the Nodes in the way that
-				// grants the most permission possible
-				Capability preexistingCap = cap.hasCodeInSet(capabilities);
-				if(preexistingCap != null) {
-					capabilities.remove(preexistingCap);
-					cap = preexistingCap.merge(cap, true);
+		Set<Capability> capabilities;
+		
+		if(!roles.isEmpty()) {
+			BaseEntity role = roles.get(0);
+			capabilities = getEntityCapabilities(role);
+			for(int i = 1; i < roles.size(); i++) {
+				Set<Capability> roleCaps = getEntityCapabilities(role);
+				// Being careful about accidentally duplicating capabilities 
+				// (given the nature of the hashCode and equals methods in Capability.java)
+				for(Capability cap : roleCaps) {
+					info("	- " + cap);
+					// Find preexisting capability. If it exists, merge the Nodes in the way that
+					// grants the most permission possible
+					Capability preexistingCap = cap.hasCodeInSet(capabilities);
+					if(preexistingCap != null) {
+						capabilities.remove(preexistingCap);
+						cap = preexistingCap.merge(cap, true);
+					}
+					capabilities.add(cap);
 				}
-				capabilities.add(cap);
 			}
+		} else {
+			capabilities = new HashSet<>();
 		}
 
 		// Now overwrite with user capabilities
