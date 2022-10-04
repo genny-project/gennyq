@@ -81,6 +81,7 @@ public class CapabilitiesManager extends Manager {
 		for(BaseEntity role : roles) {
 			info("Analyzing role: " + role.getCode());
 			Set<Capability> roleCaps = getEntityCapabilities(role);
+			info("Found " + roleCaps.size() + " caps for role: " + role.getCode());
 			// Being careful about accidentally duplicating capabilities 
 			// (given the nature of the hashCode and equals methods in Capability.java)
 			for(Capability cap : roleCaps) {
@@ -91,16 +92,17 @@ public class CapabilitiesManager extends Manager {
 				if(preexistingCap != null) {
 					info("Found preexisting cap: " + preexistingCap);
 					capabilities.remove(preexistingCap);
-					Capability newCap = preexistingCap.merge(cap, true);
-					info("New Cap: " + newCap);
-					capabilities.add(newCap);
+					cap = preexistingCap.merge(cap, true);
+					info("New Cap: " + cap);
 				}
+				capabilities.add(cap);
 			}
 		}
 
 		info("After roles");
 		// Now overwrite with user capabilities
 		Set<Capability> userCapabilities = getEntityCapabilities(userBE);
+		info("Found " + userCapabilities.size() + " capabilities");
 		for(Capability capability : userCapabilities) {
 			info("User Cap: " + capability.code);
 			// Try and find a preexisting capability to overwrite.
@@ -109,13 +111,13 @@ public class CapabilitiesManager extends Manager {
 			if(otherCapability != null) {
 				info("Found preexisting cap: " + otherCapability);
 				capabilities.remove(otherCapability);
-				otherCapability.merge(capability, false);
-				capabilities.add(capability);
+				capability = otherCapability.merge(capability, false);
 			}
+			capabilities.add(capability);
 		}
 
-		info("=============USER CAPABILITIES " + userCapabilities.size() + "=============");
-		CommonUtils.printCollection(userCapabilities, log::debug, (Capability cap) -> cap.toString());
+		info("=============USER CAPABILITIES " + capabilities.size() + "=============");
+		CommonUtils.printCollection(capabilities, log::debug, (Capability cap) -> cap.toString());
 
 		return capabilities;
 	}
