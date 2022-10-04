@@ -1,16 +1,9 @@
 package life.genny.qwandaq.managers.capabilities.role;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-
-import org.apache.commons.lang3.StringUtils;
-
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.CapabilityMode;
+import life.genny.qwandaq.datatype.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -18,22 +11,16 @@ import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import static life.genny.qwandaq.constants.GennyConstants.DEF_ROLE_CODE;
-import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
-import static life.genny.qwandaq.constants.GennyConstants.CHILDREN_LINK_CODE;
-
-import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
-import static life.genny.qwandaq.constants.GennyConstants.ROLE_BE_PREFIX;
+import static life.genny.qwandaq.constants.GennyConstants.*;
 
 @ApplicationScoped
 public class RoleManager extends Manager {
@@ -271,8 +258,8 @@ public class RoleManager extends Manager {
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
-			CapabilityMode[] modes = capManager.getCapModesFromString(permissionEA.getValue());
-			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), modes);
+			List<Capability> capabilities = capManager.deserializeCapArray(permissionEA.getValue());
+			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);
 		}
@@ -303,7 +290,7 @@ public class RoleManager extends Manager {
 			}
 		}
 
-		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+		throw new RoleException(String.format("No redirect in roles %s", roles));
 	}
 
 	/**

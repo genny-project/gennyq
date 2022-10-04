@@ -1,31 +1,25 @@
 package life.genny.test.qwandaq.utils.capabilities;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
+import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.test.qwandaq.utils.BaseTestCase;
+import life.genny.test.utils.callbacks.test.FITestCallback;
+import life.genny.test.utils.suite.TestCase;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import life.genny.qwandaq.datatype.CapabilityMode;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-
-import life.genny.test.qwandaq.utils.BaseTestCase;
-import life.genny.test.utils.callbacks.test.FITestCallback;
-import life.genny.test.utils.suite.TestCase;
-
-import static life.genny.test.utils.suite.TestCase.Builder;
-import static life.genny.test.utils.suite.TestCase.Input;
-import static life.genny.test.utils.suite.TestCase.Expected;
-
-import static life.genny.qwandaq.datatype.CapabilityMode.*;
+import static life.genny.qwandaq.datatype.Capability.CapabilityMode;
+import static life.genny.qwandaq.datatype.Capability.PermissionMode;
+import static life.genny.test.utils.suite.TestCase.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class CapabilityUtilsTest extends BaseTestCase {
@@ -40,8 +34,8 @@ public class CapabilityUtilsTest extends BaseTestCase {
 
         Builder<String, String> builder = new Builder<String, String>();
 
-        FITestCallback<Input<String>, Expected<String>> testFunction = (Input<String> input) -> {
-            return new Expected<String>(CapabilitiesManager.cleanCapabilityCode(input.input));
+        FITestCallback<Input<String>, Expected<String>> testFunction = (input) -> {
+            return new Expected<>(CapabilitiesManager.cleanCapabilityCode(input.input));
         };
         
         List<TestCase<String, String>> tests = new ArrayList<>();
@@ -68,67 +62,86 @@ public class CapabilityUtilsTest extends BaseTestCase {
     }
 
     @Test
-    public void getCapModeArrayTest() {
-        Builder<String, CapabilityMode[]> builder = new Builder<String, CapabilityMode[]>();
-        
-        List<TestCase<String, CapabilityMode[]>> tests = new ArrayList<>();
+    public void serializeCapabilityTest() {
+        Builder<Capability, String> builder = new Builder<>();
 
-        FITestCallback<Input<String>, Expected<CapabilityMode[]>> testFunction = (Input<String> input) -> {
-            return new Expected<CapabilityMode[]>(capManager.getCapModesFromString(input.input));
+        FITestCallback<Input<Capability>, Expected<String>> testFunc = (input) -> {
+            return new Expected<>(input.input.toString());
         };
         
-        tests.add(
-            builder.setName("Create Cap Mode 1")
-                .setInput("EDIT")
-                .setExpected(new CapabilityMode[] {EDIT})
-                .setTest(testFunction)
-                .build()
-        );
-    
-        // TODO: Need to figure out a better way to do this
-        tests.add(
-            builder.setName("Create Cap Mode 2")
-                .setInput("[\"VIEW\",\"ADD\"]")
-                .setExpected(new CapabilityMode[] {VIEW, ADD})
-                .setTest(testFunction)
-                .build()
-        );
+        List<TestCase<Capability, String>> tests = new ArrayList<>();
+        List<Capability> caps = new ArrayList<>();
+        for(CapabilityMode mode : CapabilityMode.values()) {
+            for(PermissionMode permMode : PermissionMode.values()) {
+                caps.add(new Capability(mode, permMode));
+            }
+        }
 
-        for(TestCase<String, CapabilityMode[]> test : tests) {
-            log.info(test.name);
-            assertArrayEquals(test.getExpected(), test.test());
+        List<String> expected = caps.stream()
+            .map((Capability cap) -> cap.capMode.getIdentifier() + Capability.DELIMITER + cap.permMode.getIdentifier())
+            .collect(Collectors.toList());
+
+        for(int i = 0; i < caps.size(); i++) {
+            tests.add(
+                builder.setName("Serialize test: " + expected.get(i))
+                    .setInput(caps.get(i))
+                    .setExpected(expected.get(i))
+                    .setTest(testFunc)
+                    .build()
+            );
+        }
+
+        for(TestCase<Capability, String> test : tests) {
+            assertEquals(test.getExpected(), test.test());
         }
     }
 
     @Test
-    public void getCapModeStringTest() {
-        Builder<CapabilityMode[], String> builder = new Builder<CapabilityMode[], String>();
-        
-        List<TestCase<CapabilityMode[], String>> tests = new ArrayList<>();
+    public void deserializeCapabilityTest() {
+        Builder<String, Capability> builder = new Builder<>();
 
-        FITestCallback<Input<CapabilityMode[]>, Expected<String>> testFunction = (input) -> {
-            return new Expected<String>(CapabilitiesManager.getModeString(input.input));
+        FITestCallback<Input<String>, Expected<Capability>> testFunc = (input) -> {
+            return new Expected<>(Capability.parseCapability(input.input));
         };
+        
+        List<TestCase<String, Capability>> tests = new ArrayList<>();
+        List<String> capString = new ArrayList<>();
 
-        tests.add(
-            builder.setName("Serialise CapabilityMode[] array 1")
-                .setInput(new CapabilityMode[] {EDIT})
-                .setExpected("[\"EDIT\"]")
-                .setTest(testFunction)
-                .build()
-        );
-    
-        // TODO: Need to figure out a better way to do this
-        tests.add(
-            builder.setName("Serialise CapabilityMode[] array 2")
-                .setInput(new CapabilityMode[] {VIEW, ADD})
-                .setExpected("[\"VIEW\",\"ADD\"]")
-                .setTest(testFunction)
-                .build()
-        );
+        for(CapabilityMode mode : CapabilityMode.values()) {
+            for(PermissionMode permMode : PermissionMode.values()) {
+                capString.add(mode.getIdentifier() + Capability.DELIMITER + permMode.getIdentifier());
+            }
+        }
 
-        for(TestCase<CapabilityMode[], String> test : tests) {
+        List<Capability> expected = capString.stream().map((String caps) -> {
+            CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(0));
+            PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(2));
+
+            return new Capability(mode, permMode);
+        }).collect(Collectors.toList());
+
+        for(int i = 0; i < expected.size(); i++) {
+            tests.add(
+                builder.setName("Serialize test: " + expected.get(i))
+                    .setInput(capString.get(i))
+                    .setExpected(expected.get(i))
+                    .setTest(testFunc)
+                    .build()
+            );
+        }
+
+        for(TestCase<String, Capability> test : tests) {
             assertEquals(test.getExpected(), test.test());
         }
+    }
+
+    @Test
+    public void getCapModeArrayTest() {
+        Builder<String, Capability[]> builder = new Builder<String, Capability[]>();
+    }
+
+    @Test
+    public void getCapModeStringTest() {
+        Builder<Capability[], String> builder = new Builder<Capability[], String>();
     }
 }

@@ -6,7 +6,6 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -187,7 +186,7 @@ public class SearchUtils {
 	 * @param searchBE the SearchEntity to evaluate filters of
 	 * @return SearchEntity
 	 */
-	public SearchEntity evaluateConditionalFilters(SearchEntity searchBE) {
+	/*public SearchEntity evaluateConditionalFilters(SearchEntity searchBE) {
 
 		List<String> shouldRemove = new ArrayList<>();
 
@@ -212,10 +211,10 @@ public class SearchUtils {
 
 					// check for Capability
 					Boolean hasCap = capabilityUtils.hasCapabilityThroughPriIs(capability,
-							CapabilityMode.getMode(mode));
+							Capability.CapabilityMode.getMode(mode));
 
 					// XNOR operator
-					if (Objects.equals(hasCap, not)) {
+					if (!(hasCap ^ not)) {
 						shouldRemove.add(ea.getAttributeCode());
 					}
 				}
@@ -223,10 +222,12 @@ public class SearchUtils {
 		}
 
 		// remove unwanted attrs
-		shouldRemove.forEach(searchBE::removeAttribute);
+		shouldRemove.stream().forEach(item -> {
+			searchBE.removeAttribute(item);
+		});
 
 		return searchBE;
-	}
+	}*/
 
 	/**
 	 * Perform a table like search in Genny using a {@link SearchEntity} code.
@@ -506,7 +507,7 @@ public class SearchUtils {
 					Operator filter = Operator.EQUALS;
 					String mergedValue = MergeUtils.merge(value, ctxMap);
 					log.info("Adding filter: " + attributeCode + " "
-							+ filter.toString() + " " + mergedValue);
+							+ filter + " " + mergedValue);
 					baseSearch.add(new Filter(attributeCode, filter, mergedValue));
 				}
 			}
@@ -757,7 +758,7 @@ public class SearchUtils {
 
 	/**
 	 * Return search base entity code with jti
-	 *
+	 * 
 	 * @param sbeCode Search Base entity
 	 * @return Search base entity with jti
 	 */
@@ -769,7 +770,7 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter group content
-	 *
+	 * 
 	 * @param sbeCode      Search Base Entity Code
 	 * @param questionCode Question code
 	 * @param listParam    List o filter parameters
@@ -796,7 +797,7 @@ public class SearchUtils {
 
 	/**
 	 * Change existing filter group
-	 *
+	 * 
 	 * @param sbeCode       Search base entity code
 	 * @param ask           Ask existing group
 	 * @param listFilParams List of filter parameters
@@ -872,7 +873,7 @@ public class SearchUtils {
 		String word = "";
 		int lastIndex = str.lastIndexOf("_");
 		if (lastIndex > -1) {
-			word = str.substring(lastIndex + 1, str.length());
+			word = str.substring(lastIndex + 1);
 			return word;
 		}
 		return str;
@@ -888,7 +889,7 @@ public class SearchUtils {
 		if (filterParams == null)
 			return value;
 		if (filterParams.containsKey(key)) {
-			value = filterParams.get(key).toString();
+			value = filterParams.get(key);
 		}
 		String finalVal = value.replace("\"", "")
 				.replace("[", "").replace("]", "")
@@ -916,11 +917,7 @@ public class SearchUtils {
 					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
 					|| e.getQuestionCode().equalsIgnoreCase(GennyConstants.QUE_SUBMIT)) {
 				e.setHidden(false);
-			} else if (e.getQuestionCode().equalsIgnoreCase(questionCode)) {
-				e.setHidden(false);
-			} else {
-				e.setHidden(true);
-			}
+			} else e.setHidden(!e.getQuestionCode().equalsIgnoreCase(questionCode));
 
 			e.setTargetCode(sbeCodeJti);
 		});
@@ -938,7 +935,7 @@ public class SearchUtils {
 
 	/**
 	 * Construct existing filter group object in Add Filter group form
-	 *
+	 * 
 	 * @param sbeCode       Search Base Entity Code
 	 * @param listFilParams List of Filter parameters
 	 * @return return existing filter group object
@@ -966,7 +963,7 @@ public class SearchUtils {
 
 	/**
 	 * Return Message of filter column
-	 *
+	 * 
 	 * @param searchBE Search Base Entity
 	 * @return Message of Filter column
 	 */
@@ -1011,7 +1008,7 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter option
-	 *
+	 * 
 	 * @param questionCode Question code
 	 * @return Ask
 	 */
@@ -1022,14 +1019,15 @@ public class SearchUtils {
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
 		base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
+		questionCode = questionCode.toUpperCase();
 
-		if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATETIME)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_TIME)) {
+		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATETIME)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_TIME)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN_OR_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LESS_THAN));
@@ -1037,11 +1035,11 @@ public class SearchUtils {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_STATE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_STATE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
@@ -1057,7 +1055,7 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter select option values
-	 *
+	 * 
 	 * @param queGrp  Question Group
 	 * @param queCode Question code
 	 * @param lnkCode Link code
@@ -1088,7 +1086,7 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with bucket filter options
-	 *
+	 * 
 	 * @param queCode  Question Code
 	 * @param lnkCode  Link Code
 	 * @param lnkValue Link Value

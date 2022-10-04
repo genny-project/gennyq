@@ -1,27 +1,21 @@
 package life.genny.kogito.common.models;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
-import javax.json.bind.annotation.JsonbTransient;
-
-import java.time.ZoneOffset;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.json.bind.annotation.JsonbTransient;
+import java.io.Serializable;
+import java.time.*;
 
 public class TimerEvent implements Serializable {
 
     static final Logger log = Logger.getLogger(TimerEvent.class);
 
     private Long timeStamp; // UTC timestamp in seconds that this event should trigger
-    private String uniqueCode; // This is the unique code for this event. Used for messaging
-    private String statusCode; // This is the status code for this event. Saved to the associated BaseEntity
-                               // PRI_TIMER_STATUS
+    private String uniqueCode; // This is the unique milestone code for this event. Used primarily for
+                               // messaging
+    private String updatePairs; // These are the pairs of code and value updates that need to be set at this
+                                // milestone
 
     public TimerEvent() {
         // TODO document why this constructor is empty
@@ -29,7 +23,7 @@ public class TimerEvent implements Serializable {
 
     public TimerEvent(final String timerEventString) {
         // Split up into TimerEvents
-        String[] timerEventStrArray = timerEventString.split(":");
+        String[] timerEventStrArray = timerEventString.split(";");
 
         Long timerEventTimeStamp = Long.parseLong(timerEventStrArray[0]);
         if (timerEventTimeStamp < 1000000L) {
@@ -41,12 +35,12 @@ public class TimerEvent implements Serializable {
         this.timeStamp = timerEventTimeStamp;
         this.uniqueCode = timerEventStrArray[1];
         if (timerEventStrArray.length > 2) {
-            this.statusCode = timerEventStrArray[2];
+            this.updatePairs = timerEventStrArray[2];
         }
 
     }
 
-    public TimerEvent(final Long timeStamp, final String uniqueCode, final String statusCode) {
+    public TimerEvent(final Long timeStamp, final String uniqueCode, final String updatepairs) {
         // log.info("Init2 TimerEvent timeStamp = " + timeStamp + " , " +
         // getDateTime(timeStamp));
         if (timeStamp < 1000000L) {
@@ -61,25 +55,25 @@ public class TimerEvent implements Serializable {
         log.info("2TimerEvent incoming timeStamp = " + timeStamp + " , final:" + this.timeStamp + " , "
                 + getDateTime(this.timeStamp));
         this.uniqueCode = uniqueCode;
-        this.statusCode = statusCode;
+        this.updatePairs = updatePairs;
     }
 
     public TimerEvent(final LocalDateTime startDateTimeUTC, final Long minutes, final String uniqueCode,
-            final String statusCode) {
+            final String updatePairs) {
         this(startDateTimeUTC.atZone(
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).plusMinutes(minutes).toEpochSecond(),
-                uniqueCode, statusCode);
+                uniqueCode, updatePairs);
     }
 
-    public TimerEvent(final ZonedDateTime eventZonedDateTimeUTC, final String uniqueCode, final String statusCode) {
+    public TimerEvent(final ZonedDateTime eventZonedDateTimeUTC, final String uniqueCode, final String updatePairs) {
         // Convert to Zoned UTC
-        this(eventZonedDateTimeUTC.withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond(), uniqueCode, statusCode);
+        this(eventZonedDateTimeUTC.withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond(), uniqueCode, updatePairs);
     }
 
-    public TimerEvent(final LocalDateTime eventDateTime, final String uniqueCode, final String statusCode) {
+    public TimerEvent(final LocalDateTime eventDateTime, final String uniqueCode, final String updatePairs) {
         // Convert to Zoned UTC
         this(eventDateTime.atZone(ZoneId.systemDefault()).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond(),
-                uniqueCode, statusCode);
+                uniqueCode, updatePairs);
     }
 
     public Long getTimeStamp() {
@@ -98,38 +92,38 @@ public class TimerEvent implements Serializable {
         this.uniqueCode = uniqueCode;
     }
 
-    public String getStatusCode() {
-        return statusCode;
+    public String getUpdatePairs() {
+        return updatePairs;
     }
 
-    public void setStatusCode(String statusCode) {
-        this.statusCode = statusCode;
+    public void setUpdatePairs(String updatePairs) {
+        this.updatePairs = updatePairs;
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public String getDateTimeUTC() {
         return ZonedDateTime.ofInstant(
                 Instant.ofEpochSecond(timeStamp),
                 ZoneId.of("UTC")).toString();
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public String getDateTime(final String timezoneId) {
         return ZonedDateTime.ofInstant(
                 Instant.ofEpochSecond(timeStamp),
                 ZoneId.of(timezoneId)).toString();
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public String getDateTime(final Long epochSeconds) {
         return LocalDateTime.ofEpochSecond(epochSeconds, 0, ZoneOffset.UTC).toString();
     }
 
-	@JsonbTransient
-	@JsonIgnore
+    @JsonbTransient
+    @JsonIgnore
     public Long getNow() {
         return LocalDateTime.now().atZone(
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
@@ -137,8 +131,8 @@ public class TimerEvent implements Serializable {
 
     @Override
     public String toString() {
-        return "TimerEvent [statusCode=" + statusCode + ", timeStamp=" + timeStamp + " (UTC:" + getDateTimeUTC()
-                + "), uniqueCode=" + uniqueCode + "]";
+        return "TimerEvent [updatePairs=" + updatePairs + ", timeStamp=" + timeStamp + " (UTC:" + getDateTimeUTC()
+                + "), uniqueMilestoneCode=" + uniqueCode + "]";
     }
 
 }

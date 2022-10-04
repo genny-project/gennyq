@@ -39,563 +39,584 @@ import java.util.List;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
-        @Index(columnList = "baseEntityCode", name = "ba_idx"),
-        @Index(columnList = "attributeCode", name = "ba_idx"),
-        @Index(columnList = "valueString", name = "ba_idx"),
-        @Index(columnList = "valueBoolean", name = "ba_idx")
-}, uniqueConstraints = @UniqueConstraint(columnNames = {"attributeCode", "baseEntityCode", "realm"}))
+		@Index(columnList = "baseEntityCode", name = "ba_idx"),
+		@Index(columnList = "attributeCode", name = "ba_idx"),
+		@Index(columnList = "valueString", name = "ba_idx"),
+		@Index(columnList = "valueBoolean", name = "ba_idx")
+}, uniqueConstraints = @UniqueConstraint(columnNames = { "attributeCode", "baseEntityCode", "realm" }))
 @AssociationOverrides({
-        @AssociationOverride(name = "pk.baseEntity", joinColumns = @JoinColumn(name = "BASEENTITY_ID")),
-        @AssociationOverride(name = "pk.attribute", joinColumns = @JoinColumn(name = "ATTRIBUTE_ID"))
+	@AssociationOverride(name = "pk.baseEntity", joinColumns = @JoinColumn(name = "BASEENTITY_ID")),
+	@AssociationOverride(name = "pk.attribute", joinColumns = @JoinColumn(name = "ATTRIBUTE_ID")) 
 })
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class EntityAttribute implements java.io.Serializable, Comparable<Object> {
 
-    private static final Logger log = Logger.getLogger(EntityAttribute.class);
-
-    private static final long serialVersionUID = 1L;
-
-    @Column
-    private String baseEntityCode;
-
-    @Column
-    private String attributeCode;
-
-    @Transient
-    @Column
-    private String attributeName;
-
-    @Column
-    private Boolean readonly = false;
-
-    private String realm;
-
-    @Transient
-    @XmlTransient
-    @Column
-    private Integer index = 0; // used to assist with ordering
-
-    @Transient
-    private String feedback = null;
-
-    @EmbeddedId
-    @Column
-    public EntityAttributeId pk = new EntityAttributeId();
-
-    /**
-     * Stores the Created UMT DateTime that this object was created
-     */
-    @Column(name = "created")
-    private LocalDateTime created;
-
-    /**
-     * Stores the Last Modified UMT DateTime that this object was last updated
-     */
-    @Column(name = "updated")
-    private LocalDateTime updated;
-
-    /**
-     * Store the Double value of the attribute for the baseEntity
-     */
-    @Column
-    private Double valueDouble;
-
-    /**
-     * Store the Boolean value of the attribute for the baseEntity
-     */
-    @Column
-    private Boolean valueBoolean;
-    /**
-     * Store the Integer value of the attribute for the baseEntity
-     */
-    @Column
-    private Integer valueInteger;
-
-    /**
-     * Store the Long value of the attribute for the baseEntity
-     */
-    @Column
-    private Long valueLong;
-
-    /**
-     * Store the LocalDateTime value of the attribute for the baseEntity
-     */
-    @Column
-    private LocalTime valueTime;
-
-    /**
-     * Store the LocalDateTime value of the attribute for the baseEntity
-     */
-    @Column
-    private LocalDateTime valueDateTime;
-
-    /**
-     * Store the LocalDate value of the attribute for the baseEntity
-     */
-    @Column
-    private LocalDate valueDate;
-
-    /**
-     * Store the String value of the attribute for the baseEntity
-     */
-    @Type(type = "text")
-    @Column
-    private String valueString;
-
-    @Column(name = "money", length = 128)
-    @Convert(converter = MoneyConverter.class)
-    Money valueMoney;
-
-    /**
-     * Store the relative importance of the attribute for the baseEntity
-     */
-    private Double weight;
-
-    /**
-     * Store the relative importance of the attribute for the baseEntity
-     */
-    private Boolean inferred = false;
-
-    /**
-     * Store the privacy of this attribute , i.e. Don't display
-     */
-    private Boolean privacyFlag = false;
-
-    /**
-     * Store the confirmation
-     */
-    private Boolean confirmationFlag = false;
-
-    public EntityAttribute() {
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param baseEntity the entity that needs to contain attributes
-     * @param attribute  the associated Attribute
-     * @param weight     the weighted importance of this attribute (relative to the
-     *                   other
-     *                   attributes)
-     */
-    public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
-        autocreateCreated();
-        setBaseEntity(baseEntity);
-        setAttribute(attribute);
-        if (weight == null) {
-            weight = 0.0; // This permits ease of adding attributes and hides
-            // attribute from scoring.
-        }
-        setWeight(weight);
-        setReadonly(false);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param baseEntity the entity that needs to contain attributes
-     * @param attribute  the associated Attribute
-     * @param weight     the weighted importance of this attribute (relative to the
-     *                   other
-     *                   attributes)
-     * @param value      the value associated with this attribute
-     */
-    public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
-        autocreateCreated();
-        setBaseEntity(baseEntity);
-        setAttribute(attribute);
-        this.setPrivacyFlag(attribute.getDefaultPrivacyFlag());
-        if (weight == null) {
-            weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
-        }
-        setWeight(weight);
-        // Assume that Attribute Validation has been performed
-        if (value != null) {
-            setValue(value);
-        }
-    }
-
-    /**
-     * @return EntityAttributeId
-     */
-    @JsonIgnore
-    @JsonbTransient
-    public EntityAttributeId getPk() {
-        return pk;
-    }
-
-    /**
-     * @return the baseEntityCode
-     */
-    public String getBaseEntityCode() {
-        return baseEntityCode;
-    }
-
-    /**
-     * @param baseEntityCode the baseEntityCode to set
-     */
-    public void setBaseEntityCode(final String baseEntityCode) {
-        this.baseEntityCode = baseEntityCode;
-    }
-
-    /**
-     * @return the attributeCode
-     */
-    public String getAttributeCode() {
-        return attributeCode;
-    }
-
-    /**
-     * @param attributeCode the attributeCode to set
-     */
-    public void setAttributeCode(final String attributeCode) {
-        this.attributeCode = attributeCode;
-    }
-
-    /**
-     * @param pk the pk to set
-     */
-    public void setPk(final EntityAttributeId pk) {
-        this.pk = pk;
-    }
-
-    public void setBaseEntity(final BaseEntity baseEntity) {
-        getPk().setBaseEntity(baseEntity);
-        this.baseEntityCode = baseEntity.getCode();
-        this.realm = baseEntity.getRealm();
-    }
-
-    /**
-     * @return Attribute
-     */
-    @Transient
-    // @JsonIgnore
-    public Attribute getAttribute() {
-        return getPk().getAttribute();
-    }
-
-    /**
-     * @param attribute the attribute to set
-     */
-    public void setAttribute(final Attribute attribute) {
-        getPk().setAttribute(attribute);
-        this.attributeCode = attribute.getCode();
-        this.attributeName = attribute.getName();
-    }
-
-    /**
-     * @return Boolean
-     */
-    public Boolean isConfirmationFlag() {
-        return getConfirmationFlag();
-    }
-
-    /**
-     * @return Boolean
-     */
-    public Boolean isInferred() {
-        return getInferred();
-    }
-
-    /**
-     * @return Boolean
-     */
-    public Boolean isPrivacyFlag() {
-        return getPrivacyFlag();
-    }
-
-    /**
-     * @return Boolean
-     */
-    public Boolean isReadonly() {
-        return getReadonly();
-    }
-
-    /**
-     * @return Boolean
-     */
-    public Boolean isValueBoolean() {
-        return getValueBoolean();
-    }
-
-    /**
-     * @return the created
-     */
-    @JsonbTransient
-    public LocalDateTime getCreated() {
-        return created;
-    }
-
-    /**
-     * @param created the created to set
-     */
-    public void setCreated(final LocalDateTime created) {
-        this.created = created;
-    }
-
-    /**
-     * @return the updated
-     */
-    // @JsonbTransient
-    public LocalDateTime getUpdated() {
-        return updated;
-    }
-
-    /**
-     * @param updated the updated to set
-     */
-    public void setUpdated(final LocalDateTime updated) {
-        this.updated = updated;
-    }
-
-    /**
-     * @return the weight
-     */
-    public Double getWeight() {
-        return weight;
-    }
-
-    /**
-     * @param weight the weight to set
-     */
-    public void setWeight(final Double weight) {
-        this.weight = weight;
-    }
-
-    /**
-     * @return the valueDouble
-     */
-    public Double getValueDouble() {
-        return valueDouble;
-    }
-
-    /**
-     * @param valueDouble the valueDouble to set
-     */
-    public void setValueDouble(final Double valueDouble) {
-        this.valueDouble = valueDouble;
-    }
-
-    /**
-     * @return the valueInteger
-     */
-    public Integer getValueInteger() {
-        return valueInteger;
-    }
-
-    /**
-     * @param valueInteger the valueInteger to set
-     */
-    public void setValueInteger(final Integer valueInteger) {
-        this.valueInteger = valueInteger;
-    }
-
-    /**
-     * @return the valueLong
-     */
-    public Long getValueLong() {
-        return valueLong;
-    }
-
-    /**
-     * @param valueLong the valueLong to set
-     */
-    public void setValueLong(final Long valueLong) {
-        this.valueLong = valueLong;
-    }
-
-    /**
-     * @return LocalDate
-     */
-    public LocalDate getValueDate() {
-        return valueDate;
-    }
-
-    /**
-     * @param valueDate the valueDate to set
-     */
-    public void setValueDate(LocalDate valueDate) {
-        this.valueDate = valueDate;
-    }
-
-    /**
-     * @return the valueDateTime
-     */
-    public LocalDateTime getValueDateTime() {
-        return valueDateTime;
-    }
-
-    /**
-     * @param valueDateTime the valueDateTime to set
-     */
-    public void setValueDateTime(final LocalDateTime valueDateTime) {
-        this.valueDateTime = valueDateTime;
-    }
-
-    /**
-     * @return the valueTime
-     */
-    public LocalTime getValueTime() {
-        return valueTime;
-    }
-
-    /**
-     * @param valueTime the valueTime to set
-     */
-    public void setValueTime(LocalTime valueTime) {
-        this.valueTime = valueTime;
-    }
-
-    /**
-     * @return the valueString
-     */
-    public String getValueString() {
-        return valueString;
-    }
-
-    /**
-     * @param valueString the valueString to set
-     */
-    public void setValueString(final String valueString) {
-        this.valueString = valueString;
-    }
-
-    /**
-     * @return Boolean
-     */
-    public Boolean getValueBoolean() {
-        return valueBoolean;
-    }
-
-    /**
-     * @param valueBoolean the valueBoolean to set
-     */
-    public void setValueBoolean(Boolean valueBoolean) {
-        this.valueBoolean = valueBoolean;
-    }
-
-    // /**
-    // * @return the valueDateRange
-    // */
-    // public Range<LocalDate> getValueDateRange() {
-    // return valueDateRange;
-    // }
-    //
-    // /**
-    // * @param valueDateRange the valueDateRange to set
-    // */
-    // public void setValueDateRange(Range<LocalDate> valueDateRange) {
-    // this.valueDateRange = valueDateRange;
-    // }
-
-    /**
-     * @return the valueMoney
-     */
-    public Money getValueMoney() {
-        return valueMoney;
-    }
-
-    /**
-     * @param valueMoney the valueMoney to set
-     */
-    public void setValueMoney(Money valueMoney) {
-        this.valueMoney = valueMoney;
-    }
-
-    /**
-     * @return the privacyFlag
-     */
-    public Boolean getPrivacyFlag() {
-        return privacyFlag;
-    }
-
-    /**
-     * @param privacyFlag the privacyFlag to set
-     */
-    public void setPrivacyFlag(Boolean privacyFlag) {
-        this.privacyFlag = privacyFlag;
-    }
-
-    /**
-     * @return the inferred
-     */
-    public Boolean getInferred() {
-        return inferred;
-    }
-
-    /**
-     * @param inferred the inferred to set
-     */
-    public void setInferred(Boolean inferred) {
-        this.inferred = inferred;
-    }
-
-    /**
-     * @return the readonly
-     */
-    public Boolean getReadonly() {
-        return readonly;
-    }
-
-    /**
-     * @param readonly the readonly to set
-     */
-    public void setReadonly(Boolean readonly) {
-        this.readonly = readonly;
-    }
-
-    /**
-     * @return the feedback
-     */
-    public String getFeedback() {
-        return feedback;
-    }
-
-    /**
-     * @param feedback the feedback to set
-     */
-    public void setFeedback(String feedback) {
-        this.feedback = feedback;
-    }
-
-    @PreUpdate
-    public void autocreateUpdate() {
-        setUpdated(LocalDateTime.now(ZoneId.of("Z")));
-    }
-
-    @PrePersist
-    public void autocreateCreated() {
-        if (getCreated() == null)
-            setCreated(LocalDateTime.now(ZoneId.of("Z")));
-    }
-
-    /**
-     * @return Date
-     */
-    @Transient
-    @JsonIgnore
-    @JsonbTransient
-    public Date getCreatedDate() {
-
-        final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
-
-        return out;
-    }
-
-    /**
-     * @return Date
-     */
-    @Transient
-    @JsonIgnore
-    @JsonbTransient
-    public Date getUpdatedDate() {
-        if (updated == null)
-            return null;
-        final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
-        return out;
-    }
+	private static final Logger log = Logger.getLogger(EntityAttribute.class);
+
+	private static final long serialVersionUID = 1L;
+
+	@Column
+	private String baseEntityCode;
+
+	@Column
+	private String attributeCode;
+
+	@Transient
+	@Column
+	private String attributeName;
+
+	@Column
+	private Boolean readonly = false;
+
+	private String realm;
+
+	@Transient
+	@XmlTransient
+	@Column
+	private Integer index = 0; // used to assist with ordering
+
+	@Transient
+	private String feedback = null;
+
+	@EmbeddedId
+	@Column
+	public EntityAttributeId pk = new EntityAttributeId();
+
+	/**
+	 * Stores the Created UMT DateTime that this object was created
+	 */
+	@Column(name = "created")
+	private LocalDateTime created;
+
+	/**
+	 * Stores the Last Modified UMT DateTime that this object was last updated
+	 */
+	@Column(name = "updated")
+	private LocalDateTime updated;
+
+	/**
+	 * Store the Double value of the attribute for the baseEntity
+	 */
+	@Column
+	private Double valueDouble;
+
+	/**
+	 * Store the Boolean value of the attribute for the baseEntity
+	 */
+	@Column
+	private Boolean valueBoolean;
+	/**
+	 * Store the Integer value of the attribute for the baseEntity
+	 */
+	@Column
+	private Integer valueInteger;
+
+	/**
+	 * Store the Long value of the attribute for the baseEntity
+	 */
+	@Column
+	private Long valueLong;
+
+	/**
+	 * Store the LocalDateTime value of the attribute for the baseEntity
+	 */
+	@Column
+	private LocalTime valueTime;
+
+	/**
+	 * Store the LocalDateTime value of the attribute for the baseEntity
+	 */
+	@Column
+	private LocalDateTime valueDateTime;
+
+	/**
+	 * Store the LocalDate value of the attribute for the baseEntity
+	 */
+	@Column
+	private LocalDate valueDate;
+
+	/**
+	 * Store the String value of the attribute for the baseEntity
+	 */
+	@Type(type = "text")
+	@Column
+	private String valueString;
+
+	@Column(name = "money", length = 128)
+	@Convert(converter = MoneyConverter.class)
+	Money valueMoney;
+
+	/**
+	 * Store the relative importance of the attribute for the baseEntity
+	 */
+	private Double weight;
+
+	/**
+	 * Store the relative importance of the attribute for the baseEntity
+	 */
+	private Boolean inferred = false;
+
+	/**
+	 * Store the privacy of this attribute , i.e. Don't display
+	 */
+	private Boolean privacyFlag = false;
+
+	/**
+	 * Store the confirmation
+	 */
+	private Boolean confirmationFlag = false;
+
+	public EntityAttribute() {
+	}
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param baseEntity
+	 *                   the entity that needs to contain attributes
+	 * @param attribute
+	 *                   the associated Attribute
+	 * @param weight
+	 *                   the weighted importance of this attribute (relative to the
+	 *                   other
+	 *                   attributes)
+	 */
+	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
+		autocreateCreated();
+		setBaseEntity(baseEntity);
+		setAttribute(attribute);
+		if (weight == null) {
+			weight = 0.0; // This permits ease of adding attributes and hides
+							// attribute from scoring.
+		}
+		setWeight(weight);
+		setReadonly(false);
+	}
+
+	/**
+	 * Constructor.
+	 * 
+	 * @param baseEntity
+	 *                   the entity that needs to contain attributes
+	 * @param attribute
+	 *                   the associated Attribute
+	 * @param weight
+	 *                   the weighted importance of this attribute (relative to the
+	 *                   other
+	 *                   attributes)
+	 * @param value
+	 *                   the value associated with this attribute
+	 */
+	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
+		autocreateCreated();
+		setBaseEntity(baseEntity);
+		setAttribute(attribute);
+		this.setPrivacyFlag(attribute.getDefaultPrivacyFlag());
+		if (weight == null) {
+			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
+		}
+		setWeight(weight);
+		// Assume that Attribute Validation has been performed
+		if (value != null) {
+			setValue(value);
+		}
+	}
+
+	/**
+	 * @return EntityAttributeId
+	 */
+	@JsonIgnore
+	@JsonbTransient
+	public EntityAttributeId getPk() {
+		return pk;
+	}
+
+	/**
+	 * @return the baseEntityCode
+	 */
+	public String getBaseEntityCode() {
+		return baseEntityCode;
+	}
+
+	/**
+	 * @param baseEntityCode
+	 *                       the baseEntityCode to set
+	 */
+	public void setBaseEntityCode(final String baseEntityCode) {
+		this.baseEntityCode = baseEntityCode;
+	}
+
+	/**
+	 * @return the attributeCode
+	 */
+	public String getAttributeCode() {
+		return attributeCode;
+	}
+
+	/**
+	 * @param attributeCode
+	 *                      the attributeCode to set
+	 */
+	public void setAttributeCode(final String attributeCode) {
+		this.attributeCode = attributeCode;
+	}
+
+	/**
+	 * @param pk the pk to set
+	 */
+	public void setPk(final EntityAttributeId pk) {
+		this.pk = pk;
+	}
+
+	public void setBaseEntity(final BaseEntity baseEntity) {
+		getPk().setBaseEntity(baseEntity);
+		this.baseEntityCode = baseEntity.getCode();
+		this.realm = baseEntity.getRealm();
+	}
+
+	/**
+	 * @return Attribute
+	 */
+	@Transient
+	// @JsonIgnore
+	public Attribute getAttribute() {
+		return getPk().getAttribute();
+	}
+
+	/**
+	 * @param attribute the attribute to set
+	 */
+	public void setAttribute(final Attribute attribute) {
+		getPk().setAttribute(attribute);
+		this.attributeCode = attribute.getCode();
+		this.attributeName = attribute.getName();
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isConfirmationFlag() {
+		return getConfirmationFlag();
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isInferred() {
+		return getInferred();
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isPrivacyFlag() {
+		return getPrivacyFlag();
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isReadonly() {
+		return getReadonly();
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isValueBoolean() {
+		return getValueBoolean();
+	}
+
+	/**
+	 * @return the created
+	 */
+	@JsonbTransient
+	public LocalDateTime getCreated() {
+		return created;
+	}
+
+	/**
+	 * @param created
+	 *                the created to set
+	 */
+	public void setCreated(final LocalDateTime created) {
+		this.created = created;
+	}
+
+	/**
+	 * @return the updated
+	 */
+	// @JsonbTransient
+	public LocalDateTime getUpdated() {
+		return updated;
+	}
+
+	/**
+	 * @param updated
+	 *                the updated to set
+	 */
+	public void setUpdated(final LocalDateTime updated) {
+		this.updated = updated;
+	}
+
+	/**
+	 * @return the weight
+	 */
+	public Double getWeight() {
+		return weight;
+	}
+
+	/**
+	 * @param weight
+	 *               the weight to set
+	 */
+	public void setWeight(final Double weight) {
+		this.weight = weight;
+	}
+
+	/**
+	 * @return the valueDouble
+	 */
+	public Double getValueDouble() {
+		return valueDouble;
+	}
+
+	/**
+	 * @param valueDouble
+	 *                    the valueDouble to set
+	 */
+	public void setValueDouble(final Double valueDouble) {
+		this.valueDouble = valueDouble;
+	}
+
+	/**
+	 * @return the valueInteger
+	 */
+	public Integer getValueInteger() {
+		return valueInteger;
+	}
+
+	/**
+	 * @param valueInteger
+	 *                     the valueInteger to set
+	 */
+	public void setValueInteger(final Integer valueInteger) {
+		this.valueInteger = valueInteger;
+	}
+
+	/**
+	 * @return the valueLong
+	 */
+	public Long getValueLong() {
+		return valueLong;
+	}
+
+	/**
+	 * @param valueLong
+	 *                  the valueLong to set
+	 */
+	public void setValueLong(final Long valueLong) {
+		this.valueLong = valueLong;
+	}
+
+	/**
+	 * @return LocalDate
+	 */
+	public LocalDate getValueDate() {
+		return valueDate;
+	}
+
+	/**
+	 * @param valueDate the valueDate to set
+	 */
+	public void setValueDate(LocalDate valueDate) {
+		this.valueDate = valueDate;
+	}
+
+	/**
+	 * @return the valueDateTime
+	 */
+	public LocalDateTime getValueDateTime() {
+		return valueDateTime;
+	}
+
+	/**
+	 * @param valueDateTime
+	 *                      the valueDateTime to set
+	 */
+	public void setValueDateTime(final LocalDateTime valueDateTime) {
+		this.valueDateTime = valueDateTime;
+	}
+
+	/**
+	 * @return the valueTime
+	 */
+	public LocalTime getValueTime() {
+		return valueTime;
+	}
+
+	/**
+	 * @param valueTime
+	 *                  the valueTime to set
+	 */
+	public void setValueTime(LocalTime valueTime) {
+		this.valueTime = valueTime;
+	}
+
+	/**
+	 * @return the valueString
+	 */
+	public String getValueString() {
+		return valueString;
+	}
+
+	/**
+	 * @param valueString
+	 *                    the valueString to set
+	 */
+	public void setValueString(final String valueString) {
+		this.valueString = valueString;
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean getValueBoolean() {
+		return valueBoolean;
+	}
+
+	/**
+	 * @param valueBoolean the valueBoolean to set
+	 */
+	public void setValueBoolean(Boolean valueBoolean) {
+		this.valueBoolean = valueBoolean;
+	}
+
+	// /**
+	// * @return the valueDateRange
+	// */
+	// public Range<LocalDate> getValueDateRange() {
+	// return valueDateRange;
+	// }
+	//
+	// /**
+	// * @param valueDateRange the valueDateRange to set
+	// */
+	// public void setValueDateRange(Range<LocalDate> valueDateRange) {
+	// this.valueDateRange = valueDateRange;
+	// }
+
+	/**
+	 * @return the valueMoney
+	 */
+	public Money getValueMoney() {
+		return valueMoney;
+	}
+
+	/**
+	 * @param valueMoney the valueMoney to set
+	 */
+	public void setValueMoney(Money valueMoney) {
+		this.valueMoney = valueMoney;
+	}
+
+	/**
+	 * @return the privacyFlag
+	 */
+	public Boolean getPrivacyFlag() {
+		return privacyFlag;
+	}
+
+	/**
+	 * @param privacyFlag
+	 *                    the privacyFlag to set
+	 */
+	public void setPrivacyFlag(Boolean privacyFlag) {
+		this.privacyFlag = privacyFlag;
+	}
+
+	/**
+	 * @return the inferred
+	 */
+	public Boolean getInferred() {
+		return inferred;
+	}
+
+	/**
+	 * @param inferred
+	 *                 the inferred to set
+	 */
+	public void setInferred(Boolean inferred) {
+		this.inferred = inferred;
+	}
+
+	/**
+	 * @return the readonly
+	 */
+	public Boolean getReadonly() {
+		return readonly;
+	}
+
+	/**
+	 * @param readonly the readonly to set
+	 */
+	public void setReadonly(Boolean readonly) {
+		this.readonly = readonly;
+	}
+
+	/**
+	 * @return the feedback
+	 */
+	public String getFeedback() {
+		return feedback;
+	}
+
+	/**
+	 * @param feedback the feedback to set
+	 */
+	public void setFeedback(String feedback) {
+		this.feedback = feedback;
+	}
+
+	@PreUpdate
+	public void autocreateUpdate() {
+		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
+	}
+
+	@PrePersist
+	public void autocreateCreated() {
+		if (getCreated() == null)
+			setCreated(LocalDateTime.now(ZoneId.of("Z")));
+	}
+
+	/**
+	 * @return Date
+	 */
+	@Transient
+	@JsonIgnore
+	@JsonbTransient
+	public Date getCreatedDate() {
+
+		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
+
+		return out;
+	}
+
+	/**
+	 * @return Date
+	 */
+	@Transient
+	@JsonIgnore
+	@JsonbTransient
+	public Date getUpdatedDate() {
+		if (updated == null)
+			return null;
+		final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
+
+		return out;
+	}
 
     /**
      * Get the value of the EntityAttribute.
@@ -627,15 +648,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
         };
     }
 
-    /**
-     * Set the value
-     *
-     * @param <T>   the Type
-     * @param value the value to set
-     */
-    @JsonIgnore
-    @JsonbTransient
-    @Transient
+	/**
+	 * Set the value
+	 *
+	 * @param <T>   the Type
+	 * @param value the value to set
+	 */
+	@JsonIgnore
+	@JsonbTransient
+	@Transient
 	@XmlTransient
 	public <T> void setValue(final Object value) {
 		setValue(value, false);
@@ -900,14 +921,14 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
         };
     }
 
-    /**
-     * @return String
-     */
-    @JsonIgnore
-    @Transient
-    @XmlTransient
-    @JsonbTransient
-    public String getAsLoopString() {
+	/**
+	 * @return String
+	 */
+	@JsonIgnore
+	@Transient
+	@XmlTransient
+	@JsonbTransient
+	public String getAsLoopString() {
 
         String ret = "";
         if (getValueString() != null) {
@@ -977,46 +998,51 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
         return null;
     }
 
-    /**
-     * @return int
-     */
-    @Override
-    public int hashCode() {
+	private Object getValueAsObject() {
+		return getValue();
+	}
 
-        HashCodeBuilder hcb = new HashCodeBuilder();
-        hcb.append(baseEntityCode);
-        hcb.append(attributeCode);
-        return hcb.toHashCode();
-    }
+	/**
+	 * @return int
+	 */
+	@Override
+	public int hashCode() {
 
-    /**
-     * @param obj the object to compare to
-     * @return boolean
-     */
-    @Override
-    public boolean equals(Object obj) {
+		HashCodeBuilder hcb = new HashCodeBuilder();
+		hcb.append(baseEntityCode);
+		hcb.append(attributeCode);
+		hcb.append(getValueAsObject());
+		return hcb.toHashCode();
+	}
 
-        if (this == obj) {
-            return true;
-        }
-        if (obj instanceof EntityAttribute that) {
-            EqualsBuilder eb = new EqualsBuilder();
-            eb.append(baseEntityCode, that.baseEntityCode);
-            eb.append(attributeCode, that.attributeCode);
+	/**
+	 * @param obj the object to compare to
+	 * @return boolean
+	 */
+	@Override
+	public boolean equals(Object obj) {
 
-            return eb.isEquals();
-        } else {
-            return false;
-        }
-    }
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof EntityAttribute that)) {
+			return false;
+		}
+		EqualsBuilder eb = new EqualsBuilder();
+		eb.append(baseEntityCode, that.baseEntityCode);
+		eb.append(attributeCode, that.attributeCode);
+		eb.append(getValueAsObject(), getValueAsObject());
 
-    /**
-     * Compare to an object
-     *
-     * @param obj object to compare to
-     * @return int
-     */
-    public int compareTo(Object obj) {
+		return eb.isEquals();
+	}
+
+	/**
+	 * Compare to an object
+	 *
+	 * @param obj object to compare to
+	 * @return int
+	 */
+	public int compareTo(Object obj) {
 
         EntityAttribute myClass = (EntityAttribute) obj;
         final String dataType = getPk().getAttribute().getDataType().getClassName();
@@ -1044,148 +1070,156 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
         };
     }
 
-    @Override
-    public String toString() {
-        return "attributeCode=" + attributeCode + ", value="
-                + getObjectAsString() + ", weight=" + weight + ", inferred=" + inferred + "] be="
-                + this.getBaseEntityCode();
-    }
+	@Override
+	public String toString() {
+		return "attributeCode=" + attributeCode + ", value="
+				+ getObjectAsString() + ", weight=" + weight + ", inferred=" + inferred + "] be="
+				+ this.getBaseEntityCode();
+	}
 
-    /**
-     * Get the object
-     *
-     * @param <T> the Type to return
-     * @return T
-     */
-    @SuppressWarnings("unchecked")
-    @JsonIgnore
-    @Transient
-    @XmlTransient
-    @JsonbTransient
-    public <T> T getObject() {
+	/**
+	 * Get the object
+	 *
+	 * @param <T> the Type to return
+	 * @return T
+	 */
+	@SuppressWarnings("unchecked")
+	@JsonIgnore
+	@Transient
+	@XmlTransient
+	@JsonbTransient
+	public <T> T getObject() {
 
-        if (getValueInteger() != null) {
-            return (T) getValueInteger();
-        }
-        if (getValueDateTime() != null) {
-            return (T) getValueDateTime();
-        }
-        if (getValueLong() != null) {
-            return (T) getValueLong();
-        }
-        if (getValueDouble() != null) {
-            return (T) getValueDouble();
-        }
-        if (getValueBoolean() != null) {
-            return (T) getValueBoolean();
-        }
-        if (getValueDate() != null) {
-            return (T) getValueDate();
-        }
-        if (getValueTime() != null) {
-            return (T) getValueTime();
-        }
-        if (getValueString() != null) {
-            return (T) getValueString();
-        }
+		if (getValueInteger() != null) {
+			return (T) getValueInteger();
+		}
+		if (getValueDateTime() != null) {
+			return (T) getValueDateTime();
+		}
+		if (getValueLong() != null) {
+			return (T) getValueLong();
+		}
+		if (getValueDouble() != null) {
+			return (T) getValueDouble();
+		}
+		if (getValueBoolean() != null) {
+			return (T) getValueBoolean();
+		}
+		if (getValueDate() != null) {
+			return (T) getValueDate();
+		}
+		if (getValueTime() != null) {
+			return (T) getValueTime();
+		}
+		if (getValueString() != null) {
+			return (T) getValueString();
+		}
 
-        return (T) getValueString();
-    }
+		return (T) getValueString();
+	}
 
-    @JsonIgnore
-    @Transient
-    @XmlTransient
-    @JsonbTransient
-    public String getObjectAsString() {
+	@JsonIgnore
+	@Transient
+	@XmlTransient
+	@JsonbTransient
+	public String getObjectAsString() {
 
-        if (getValueInteger() != null) {
-            return "" + getValueInteger();
-        }
+		if (getValueInteger() != null) {
+			return "" + getValueInteger();
+		}
 
-        if (getValueDateTime() != null) {
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
-            Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-            return df.format(datetime);
-        }
+		if (getValueDateTime() != null) {
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
+			Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
+			String dout = df.format(datetime);
+			return dout;
+		}
 
-        if (getValueLong() != null) {
-            return "" + getValueLong();
-        }
+		if (getValueLong() != null) {
+			return "" + getValueLong();
+		}
 
-        if (getValueDouble() != null) {
-            return getValueDouble().toString();
-        }
+		if (getValueDouble() != null) {
+			return getValueDouble().toString();
+		}
 
-        if (getValueBoolean() != null) {
-            return Boolean.TRUE.equals(getValueBoolean()) ? "TRUE" : "FALSE";
-        }
+		if (getValueBoolean() != null) {
+			return getValueBoolean() ? "TRUE" : "FALSE";
+		}
 
-        if (getValueDate() != null) {
-            DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-            return df2.format(date);
-        }
-        if (getValueTime() != null) {
-            return getValueTime().toString();
-        }
+		if (getValueDate() != null) {
+			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
+			Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
+			String dout2 = df2.format(date);
+			return dout2;
+		}
+		if (getValueTime() != null) {
 
-        return getValueString();
-    }
+			String dout2 = getValueTime().toString();
+			return dout2;
+		}
 
-    /**
-     * @return the attributeName
-     */
-    public String getAttributeName() {
-        return attributeName;
-    }
+		if (getValueString() != null) {
+			return getValueString();
+		}
 
-    /**
-     * @param attributeName the attributeName to set
-     */
-    public void setAttributeName(String attributeName) {
-        this.attributeName = attributeName;
-    }
+		return getValueString();
+	}
 
-    /**
-     * @return the index
-     */
-    public Integer getIndex() {
-        return index;
-    }
+	/**
+	 * @return the attributeName
+	 */
+	public String getAttributeName() {
+		return attributeName;
+	}
 
-    /**
-     * @param index the index to set
-     */
-    public void setIndex(Integer index) {
-        this.index = index;
-    }
+	/**
+	 * @param attributeName the attributeName to set
+	 */
+	public void setAttributeName(String attributeName) {
+		this.attributeName = attributeName;
+	}
 
-    /**
-     * @return the realm
-     */
-    public String getRealm() {
-        return realm;
-    }
+	/**
+	 * @return the index
+	 */
+	public Integer getIndex() {
+		return index;
+	}
 
-    /**
-     * @param realm the realm to set
-     */
-    public void setRealm(String realm) {
-        this.realm = realm;
-    }
+	/**
+	 * @param index the index to set
+	 */
+	public void setIndex(Integer index) {
+		this.index = index;
+	}
 
-    /**
-     * @return Boolean
-     */
-    public Boolean getConfirmationFlag() {
-        return confirmationFlag;
-    }
+	/**
+	 * @return the realm
+	 */
+	public String getRealm() {
+		return realm;
+	}
 
-    /**
-     * @param confirmationFlag the confirmationFlag to set
-     */
-    public void setConfirmationFlag(Boolean confirmationFlag) {
-        this.confirmationFlag = confirmationFlag;
-    }
+	/**
+	 * @param realm the realm to set
+	 */
+	public void setRealm(String realm) {
+		this.realm = realm;
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean getConfirmationFlag() {
+		return confirmationFlag;
+	}
+
+	/**
+	 * @param confirmationFlag the confirmationFlag to set
+	 */
+	public void setConfirmationFlag(Boolean confirmationFlag) {
+		this.confirmationFlag = confirmationFlag;
+	}
 
 }

@@ -49,22 +49,22 @@ public class FyodorUltra {
 	private static final Logger log = Logger.getLogger(FyodorUltra.class);
 
 	@Inject
-	EntityManager entityManager;
+	private EntityManager entityManager;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	private QwandaUtils qwandaUtils;
 
 	@Inject
-	Service service;
+	private Service service;
 
 	@Inject
-	UserToken userToken;
+	private UserToken userToken;
 
 	@Inject
-	BaseEntityUtils beUtils;
+	private BaseEntityUtils beUtils;
 
 	@Inject
-	CapHandler capHandler;
+	private CapHandler capHandler;
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -309,18 +309,18 @@ public class FyodorUltra {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		return switch (operator) {
-			case LIKE -> cb.like((Expression<String>) expression, String.class.cast(value));
-			case NOT_LIKE -> cb.notLike((Expression<String>) expression, String.class.cast(value));
-			case CONTAINS -> cb.like((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case NOT_CONTAINS -> cb.notLike((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case STARTS_WITH -> cb.like((Expression<String>) expression, String.class.cast(value) + "%");
-			case NOT_STARTS_WITH -> cb.notLike((Expression<String>) expression, String.class.cast(value) + "%");
+			case LIKE -> cb.like((Expression<String>) expression, (String) value);
+			case NOT_LIKE -> cb.notLike((Expression<String>) expression, (String) value);
+			case CONTAINS -> cb.like((Expression<String>) expression, "%\"" + (String) value + "\"%");
+			case NOT_CONTAINS -> cb.notLike((Expression<String>) expression, "%\"" + (String) value + "\"%");
+			case STARTS_WITH -> cb.like((Expression<String>) expression, (String) value + "%");
+			case NOT_STARTS_WITH -> cb.notLike((Expression<String>) expression, (String) value + "%");
 			case EQUALS -> cb.equal(expression, value);
 			case NOT_EQUALS -> cb.notEqual(expression, value);
-			case GREATER_THAN -> cb.gt((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN -> cb.lt((Expression<Number>) expression, Number.class.cast(value));
-			case GREATER_THAN_OR_EQUAL -> cb.ge((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN_OR_EQUAL -> cb.le((Expression<Number>) expression, Number.class.cast(value));
+			case GREATER_THAN -> cb.gt((Expression<Number>) expression, (Number) value);
+			case LESS_THAN -> cb.lt((Expression<Number>) expression, (Number) value);
+			case GREATER_THAN_OR_EQUAL -> cb.ge((Expression<Number>) expression, (Number) value);
+			case LESS_THAN_OR_EQUAL -> cb.le((Expression<Number>) expression, (Number) value);
 			default -> throw new QueryBuilderException("Invalid Operator: " + operator);
 		};
 	}
@@ -350,32 +350,32 @@ public class FyodorUltra {
 			case GREATER_THAN:
 				// TODO: Remove triple ifs (Bryn)
 				if (c == LocalDateTime.class)
-					return cb.greaterThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.greaterThan(expression.as(LocalDateTime.class), (LocalDateTime) value);
 				if (c == LocalDate.class)
-					return cb.greaterThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.greaterThan(expression.as(LocalDate.class), (LocalDate) value);
 				if (c == LocalTime.class)
-					return cb.greaterThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.greaterThan(expression.as(LocalTime.class), (LocalTime) value);
 			case LESS_THAN:
 				if (c == LocalDateTime.class)
-					return cb.lessThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.lessThan(expression.as(LocalDateTime.class), (LocalDateTime) value);
 				if (c == LocalDate.class)
-					return cb.lessThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.lessThan(expression.as(LocalDate.class), (LocalDate) value);
 				if (c == LocalTime.class)
-					return cb.lessThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.lessThan(expression.as(LocalTime.class), (LocalTime) value);
 			case GREATER_THAN_OR_EQUAL:
 				if (c == LocalDateTime.class)
-					return cb.greaterThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.greaterThanOrEqualTo(expression.as(LocalDateTime.class), (LocalDateTime) value);
 				if (c == LocalDate.class)
-					return cb.greaterThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.greaterThanOrEqualTo(expression.as(LocalDate.class), (LocalDate) value);
 				if (c == LocalTime.class)
-					return cb.greaterThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.greaterThanOrEqualTo(expression.as(LocalTime.class), (LocalTime) value);
 			case LESS_THAN_OR_EQUAL:
 				if (c == LocalDateTime.class)
-					return cb.lessThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.lessThanOrEqualTo(expression.as(LocalDateTime.class), (LocalDateTime) value);
 				if (c == LocalDate.class)
-					return cb.lessThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.lessThanOrEqualTo(expression.as(LocalDate.class), (LocalDate) value);
 				if (c == LocalTime.class)
-					return cb.lessThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.lessThanOrEqualTo(expression.as(LocalTime.class), (LocalTime) value);
 			default:
 				throw new QueryBuilderException("Invalid Chrono Operator: " + operator + ", class: " + c);
 		}
@@ -621,7 +621,7 @@ public class FyodorUltra {
 		Set<String> columns = searchEntity.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith(Column.PREFIX))
 				.map(ea -> ea.getAttributeCode())
-				.map(code -> (String) StringUtils.removeStart(code, Column.PREFIX))
+				.map(code -> StringUtils.removeStart(code, Column.PREFIX))
 				.collect(Collectors.toSet());
 
 		return columns;

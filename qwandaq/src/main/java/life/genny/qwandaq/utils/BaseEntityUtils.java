@@ -1,28 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
@@ -34,7 +11,23 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
+import javax.persistence.Persistence;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A non-static utility class used for standard
@@ -115,7 +108,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntity(String code) {
 
-		return getBaseEntity(userToken.getProductCode(), code);
+		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
 	}
 
 	/**
@@ -169,7 +162,7 @@ public class BaseEntityUtils {
 		if (userToken == null) {
 			throw new NullParameterException("User Token");
 		}
-		return getBaseEntityByCode(userToken.getProductCode(), code);
+		return getBaseEntityByCode(serviceToken.getProductCode(), code);
 	}
 
 	/**
@@ -199,7 +192,11 @@ public class BaseEntityUtils {
 		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
 		// updates are working.
 		BaseEntity entity = null;
-		entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+		try {
+			// entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+		} catch (NullPointerException e) {
+			log.error("Error getting BaseEntity from Cache, trying db");
+		}
 
 		// check in database if not in cache
 		if (entity == null) {
@@ -239,14 +236,14 @@ public class BaseEntityUtils {
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
-		return updateBaseEntity(userToken.getProductCode(), baseEntity);
+		return updateBaseEntity(baseEntity.getRealm(), baseEntity);
 	}
 
 	/**
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
 	 * @param productCode The productCode to cache into
-	 * @param baseEntity The BaseEntity to update
+	 * @param baseEntity  The BaseEntity to update
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(String productCode, BaseEntity baseEntity) {
@@ -546,11 +543,11 @@ public class BaseEntityUtils {
 		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
 
-		if(entity.getCreated() == null) {
+		if (entity.getCreated() == null) {
 			log.error("NPE for PRI_CREATED. Generating created date");
 			entity.autocreateCreated();
 		}
-		
+
 		// Ensure createdDate is not null
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
@@ -585,7 +582,7 @@ public class BaseEntityUtils {
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
-		
+
 		return entity;
 	}
 
@@ -649,15 +646,24 @@ public class BaseEntityUtils {
 				name = defBE.getName();
 
 			// create entity and set realm
-			item = new BaseEntity(code.toUpperCase(), name);
-			item.setRealm(userToken.getProductCode());
+			// check if code already exists
+			try {
+				item = this.getBaseEntity(defBE.getRealm(), code);
+				item.setName(name);
+			} catch (ItemNotFoundException e) {
+				item = new BaseEntity(code.toUpperCase(), name);
+			}
+
+			item.setRealm(defBE.getRealm());
 		}
 
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		// TODO: Surely we don't have to fetch attribute from attribute code if the attribute
+		// TODO: Surely we don't have to fetch attribute from attribute code if the
+		// attribute
 		// is already stored in the entity attribute?
+		// ACC: not quite, it is the DEF 'ATT' attribute, not the real one
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());

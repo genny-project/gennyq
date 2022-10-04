@@ -1,21 +1,20 @@
 package life.genny.lauchy.streams;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
+import io.quarkus.runtime.StartupEvent;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.*;
+import life.genny.serviceq.Service;
+import life.genny.serviceq.intf.GennyScopeInit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsBuilder;
@@ -25,30 +24,17 @@ import org.apache.kafka.streams.kstream.Produced;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.StartupEvent;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.GraphQLUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.validation.Validation;
-import life.genny.serviceq.Service;
-import life.genny.serviceq.intf.GennyScopeInit;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -309,36 +295,13 @@ public class TopologyProducer {
 		}
 
 		// blacklist if none of the regex match
-		if (!validationsAreMet(answer, attribute))
+		if (!qwandaUtils.validationsAreMet(attribute, answer.getValue())) {
+			log.info("Answer Value is bad: " + answer.getValue());
 			return blacklist();
-
-		return true;
-	}
-
-	/**
-	 * Check if all validations are met for an answer.
-	 * 
-	 * @param answer    The answer to check
-	 * @param attribute The Attribute of the answer
-	 * @return Boolean representing whether the validation conditions have been met
-	 */
-	public Boolean validationsAreMet(Answer answer, Attribute attribute) {
-
-		log.info("Answer Value: " + answer.getValue());
-		DataType dataType = attribute.getDataType();
-
-		// check each validation against value
-		for (Validation validation : dataType.getValidationList()) {
-
-			String regex = validation.getRegex();
-			boolean regexOk = Pattern.compile(regex).matcher(answer.getValue()).matches();
-
-			if (!regexOk) {
-				log.error("Regex FAILED! " + regex + " ... " + validation.getErrormsg());
-				return false;
-			}
-			log.info("Regex OK! [ " + answer.getValue() + " ] for regex " + regex);
+		} else {
+			log.info("Answer Value is good: " + answer.getValue());
 		}
+
 		return true;
 	}
 
