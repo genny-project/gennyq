@@ -11,6 +11,7 @@ public class Prefix {
 	public static final String SBE = "SBE_";
 	public static final String PCM = "PCM_";
 	public static final String ROL = "ROL_";
+	public static final String PRJ = "PRJ_";
 
 	// baseentity
 	public static final String PER = "PER_";

@@ -18,6 +18,7 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -81,8 +82,8 @@ public class DefUtils {
 	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
-				.add(new Sort("PRI_NAME", Ord.ASC))
-				.add(new Filter("PRI_CODE", Operator.LIKE, "DEF_%"))
+				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
+				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF))
 				.setPageStart(0)
 				.setPageSize(10000);
 
@@ -109,7 +110,7 @@ public class DefUtils {
 			}
 			BaseEntity def = beUtils.getBaseEntity(productCode, code);
 
-			String prefix = def.getValue("PRI_PREFIX", null);
+			String prefix = def.getValue(Attribute.PRI_PREFIX, null);
 			if (prefix == null) {
 				continue;
 			}
@@ -133,10 +134,10 @@ public class DefUtils {
 		}
 
 		// save processing time on particular entities
-		if (entity.getCode().startsWith("DEF_")) {
+		if (entity.getCode().startsWith(Prefix.DEF)) {
 			return entity;
 		}
-		if (entity.getCode().startsWith("PRJ_")) {
+		if (entity.getCode().startsWith(Prefix.PRJ)) {
 			return beUtils.getBaseEntity("DEF_PROJECT");
 		}
 
@@ -146,7 +147,7 @@ public class DefUtils {
 			return getInternmatchDEF(entity);
 		}
 
-		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, "LNK_DEF");
+		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
 		// null/empty check the role attribute
 		if (codes == null) {

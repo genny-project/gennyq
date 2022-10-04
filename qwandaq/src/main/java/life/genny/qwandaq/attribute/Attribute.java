@@ -97,6 +97,7 @@ public class Attribute extends CodedEntity {
 
 	// definition
 	public static final String LNK_DEF = "LNK_DEF";
+	public static final String PRI_PREFIX = "PRI_PREFIX";
 
 	// roles
 	public static final String LNK_ROLE = "LNK_ROLE";
