@@ -81,7 +81,7 @@ public class FyodorUltra {
 	@Inject
 	private CapHandler capHandler;
 
-	static Jsonb jsonb = JsonbBuilder.create();
+	private static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.

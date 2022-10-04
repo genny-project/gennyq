@@ -1,6 +1,6 @@
 package life.genny.qwandaq.entity.search.trait;
 
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -14,7 +14,7 @@ public abstract class Trait {
 	private String code;
 	private String name;
 
-	private Set<CapabilityTrait> capabilityRequirements;
+	private Set<CapabilityTrait> capabilityRequirements = new HashSet<>();
 
 	public Trait() {
 	}

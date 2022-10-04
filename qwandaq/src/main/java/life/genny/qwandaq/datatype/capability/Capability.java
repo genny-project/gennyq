@@ -1,4 +1,4 @@
-package life.genny.qwandaq.datatype;
+package life.genny.qwandaq.datatype.capability;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -10,10 +10,13 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * A lightweight class meant to purely store deserialized capabilities and the respective capabilitycode
  * Can be derived from an EntityAttribute
+ * 
+ * @author Bryn Meachem
  */
 @RegisterForReflection
 public class Capability {
@@ -36,13 +39,14 @@ public class Capability {
 
     /**
      * Merge this Capability with another, creating a new Capability that
-     * is the most permissive given the pool of permission nodes
+     * is either the most or least permissive given the pool of permission nodes
      * <p>Will return the value of the caller if the two Capability codes are different</p>
      * 
      * @param other
+     * @param mostPermissive
      * @return
      */
-    public Capability merge(Capability other) {
+    public Capability merge(Capability other, boolean mostPermissive) {
         if(!this.code.equals(other.code))
             return this;
 
@@ -58,7 +62,7 @@ public class Capability {
         for(CapabilityNode node : this.nodes) {
             for(CapabilityNode otherNode : other.nodes) {
                 if(node.capMode.equals(otherNode.capMode)) {
-                    newNodes.add(node.getMostPermissiveNode(otherNode));
+                    newNodes.add(node.compareNodes(otherNode, mostPermissive));
                 }
             }
         }
@@ -120,5 +124,9 @@ public class Capability {
             .append(code)
             .append(nodes)
             .build();
+    }
+
+    public String toString() {
+        return this.code + " = " + CommonUtils.getArrayString(nodes);
     }
 }

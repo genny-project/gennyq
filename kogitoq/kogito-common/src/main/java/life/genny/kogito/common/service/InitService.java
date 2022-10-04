@@ -17,9 +17,10 @@ import life.genny.qwandaq.Ask;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.Capability;
-import life.genny.qwandaq.datatype.CapabilityNode;
-import life.genny.qwandaq.datatype.CapabilityNode.PermissionMode;
+import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.PermissionMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 
@@ -44,8 +45,6 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
-
-import static life.genny.qwandaq.datatype.CapabilityNode.CapabilityMode;
 
 /**
  * A Service class used for Auth Init operations.

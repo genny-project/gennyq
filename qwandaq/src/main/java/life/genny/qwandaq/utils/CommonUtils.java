@@ -61,15 +61,18 @@ public class CommonUtils {
         return msg;
     }
 
-    /**
-     * Prints a list over multiple lines
-     * works well assuming that the toString method of the item is well defined
-     * @param list list to print
-     */
-    public static void printList(List<?> list) {
-        for(Object item : list) {
-            log.info(item);
+    public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+        for(T item : collection) {
+            logCallback.log(logLine.getString(item));
         }
+    }
+
+    public static <T>void printCollection(Collection<T> collection, FIGetStringCallBack<T> logLine) {
+        printCollection(collection, log::info, logLine);
+    }
+
+    public static <T>void printCollection(Collection<T> collection) {
+        printCollection(collection, log::info, Object::toString);
     }
 
     /**

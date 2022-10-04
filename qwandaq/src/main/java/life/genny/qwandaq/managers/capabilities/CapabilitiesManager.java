@@ -1,5 +1,6 @@
 package life.genny.qwandaq.managers.capabilities;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,8 +26,10 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.Capability;
-import life.genny.qwandaq.datatype.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.PermissionMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -71,36 +74,48 @@ public class CapabilitiesManager extends Manager {
 	public Set<Capability> getUserCapabilities() {
 
 		BaseEntity userBE = userToken.getUserEntity();
-
+		info("Getting user capabilities for: " + userBE.getCode());
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
 		Set<Capability> capabilities = new HashSet<>();
 		// TODO: Think about compounding capabilities
 		for(BaseEntity role : roles) {
+			info("Analyzing role: " + role.getCode());
 			Set<Capability> roleCaps = getEntityCapabilities(role);
 			// Being careful about accidentally duplicating capabilities 
 			// (given the nature of the hashCode and equals methods in Capability.java)
 			for(Capability cap : roleCaps) {
+				info("	- " + cap);
 				// Find preexisting capability. If it exists, merge the Nodes in the way that
 				// grants the most permission possible
 				Capability preexistingCap = cap.hasCodeInSet(capabilities);
 				if(preexistingCap != null) {
+					info("Found preexisting cap: " + preexistingCap);
 					capabilities.remove(preexistingCap);
-					Capability newCap = preexistingCap.merge(cap);
+					Capability newCap = preexistingCap.merge(cap, true);
+					info("New Cap: " + newCap);
 					capabilities.add(newCap);
 				}
 			}
 		}
 
+		info("After roles");
 		// Now overwrite with user capabilities
 		Set<Capability> userCapabilities = getEntityCapabilities(userBE);
 		for(Capability capability : userCapabilities) {
+			info("User Cap: " + capability.code);
 			// Try and find a preexisting capability to overwrite.
 			// If it exists, remove so we can override the role-based capability
 			Capability otherCapability = capability.hasCodeInSet(capabilities);
 			if(otherCapability != null) {
+				info("Found preexisting cap: " + otherCapability);
 				capabilities.remove(otherCapability);
+				otherCapability.merge(capability, false);
+				capabilities.add(capability);
 			}
 		}
+
+		info("=============USER CAPABILITIES " + userCapabilities.size() + "=============");
+		CommonUtils.printCollection(userCapabilities, log::debug, (Capability cap) -> cap.toString());
 
 		return capabilities;
 	}
@@ -206,6 +221,7 @@ public class CapabilitiesManager extends Manager {
 	}
 
 	public static boolean checkCapability(Set<CapabilityNode> capabilitySet, boolean hasAll, CapabilityNode... checkModes) {
+		capabilitySet = cascadeCapabilities(capabilitySet);
 		if (hasAll) {
 			for (CapabilityNode checkMode : checkModes) {
 				boolean hasMode = capabilitySet.contains(checkMode);
@@ -223,6 +239,17 @@ public class CapabilitiesManager extends Manager {
 			}
 			return false;
 		}
+	}
+
+	private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSet) {
+		// Allocate new list with max size of all combinations of CapMode and PermMode
+		List<CapabilityNode> newCaps = new ArrayList<>(capSet.size() * CapabilityMode.values().length * PermissionMode.values().length);
+		for(CapabilityNode node : capSet) {
+			newCaps.addAll(Arrays.asList(node.getLesserNodes()));
+		}
+
+		capSet.addAll(newCaps);
+		return capSet;
 	}
 
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,

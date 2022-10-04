@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -271,7 +271,7 @@ public class RoleManager extends Manager {
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
-			List<CapabilityNode> capabilities = capManager.deserializeCapArray(permissionEA.getValue());
+			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
 			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);
@@ -377,7 +377,9 @@ public class RoleManager extends Manager {
 
 	public List<BaseEntity> getRoles(BaseEntity personBaseEntity) {
 		List<String> roles = getRoleCodes(personBaseEntity);
+		info("Found " + roles.size() + " roles");
 		return roles.stream().map((String roleCode) -> {
+			info("	- "  + roleCode);
 			BaseEntity be = beUtils.getBaseEntity(roleCode);
 			if(be == null) {
 				error("Could not find role: " + roleCode);
