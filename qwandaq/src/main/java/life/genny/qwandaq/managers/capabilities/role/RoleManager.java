@@ -377,9 +377,8 @@ public class RoleManager extends Manager {
 
 	public List<BaseEntity> getRoles(BaseEntity personBaseEntity) {
 		List<String> roles = getRoleCodes(personBaseEntity);
-		info("Found " + roles.size() + " roles");
+		
 		return roles.stream().map((String roleCode) -> {
-			info("	- "  + roleCode);
 			BaseEntity be = beUtils.getBaseEntity(roleCode);
 			if(be == null) {
 				error("Could not find role: " + roleCode);

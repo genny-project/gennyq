@@ -1,7 +1,6 @@
 package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 

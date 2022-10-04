@@ -74,14 +74,11 @@ public class CapabilitiesManager extends Manager {
 	public Set<Capability> getUserCapabilities() {
 
 		BaseEntity userBE = userToken.getUserEntity();
-		info("Getting user capabilities for: " + userBE.getCode());
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
 		Set<Capability> capabilities = new HashSet<>();
 		// TODO: Think about compounding capabilities
 		for(BaseEntity role : roles) {
-			info("Analyzing role: " + role.getCode());
 			Set<Capability> roleCaps = getEntityCapabilities(role);
-			info("Found " + roleCaps.size() + " caps for role: " + role.getCode());
 			// Being careful about accidentally duplicating capabilities 
 			// (given the nature of the hashCode and equals methods in Capability.java)
 			for(Capability cap : roleCaps) {
@@ -90,33 +87,27 @@ public class CapabilitiesManager extends Manager {
 				// grants the most permission possible
 				Capability preexistingCap = cap.hasCodeInSet(capabilities);
 				if(preexistingCap != null) {
-					info("Found preexisting cap: " + preexistingCap);
 					capabilities.remove(preexistingCap);
 					cap = preexistingCap.merge(cap, true);
-					info("New Cap: " + cap);
 				}
 				capabilities.add(cap);
 			}
 		}
 
-		info("After roles");
 		// Now overwrite with user capabilities
 		Set<Capability> userCapabilities = getEntityCapabilities(userBE);
-		info("Found " + userCapabilities.size() + " capabilities");
 		for(Capability capability : userCapabilities) {
-			info("User Cap: " + capability.code);
 			// Try and find a preexisting capability to overwrite.
 			// If it exists, remove so we can override the role-based capability
 			Capability otherCapability = capability.hasCodeInSet(capabilities);
 			if(otherCapability != null) {
-				info("Found preexisting cap: " + otherCapability);
 				capabilities.remove(otherCapability);
 				capability = otherCapability.merge(capability, false);
 			}
 			capabilities.add(capability);
 		}
 
-		info("=============USER CAPABILITIES " + capabilities.size() + "=============");
+		debug("=============USER CAPABILITIES " + capabilities.size() + "=============");
 		CommonUtils.printCollection(capabilities, log::debug, (Capability cap) -> cap.toString());
 
 		return capabilities;

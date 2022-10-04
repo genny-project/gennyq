@@ -14,7 +14,7 @@ public abstract class Trait {
 	private String code;
 	private String name;
 
-	private Set<CapabilityTrait> capabilityRequirements = new HashSet<>();
+	private Set<CapabilityTrait> capabilityRequirements;
 
 	public Trait() {
 	}
