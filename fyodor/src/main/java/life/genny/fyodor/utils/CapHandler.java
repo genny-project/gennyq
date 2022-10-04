@@ -35,6 +35,7 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineColumnsFromCapabilities(SearchEntity searchEntity) {
+		info("Filtering columns");
 
 		List<Column> columns = searchEntity.getColumns().stream()
 				.filter(column -> traitCapabilitiesMet(column))
@@ -47,6 +48,7 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineSortsFromCapabilities(SearchEntity searchEntity) {
+		info("Filtering sorts");
 
 		List<Sort> sorts = searchEntity.getSorts().stream()
 				.filter(sort -> traitCapabilitiesMet(sort))
@@ -54,12 +56,12 @@ public class CapHandler extends Manager {
 
 		searchEntity.setSorts(sorts);
 	}
-
+	
 	/**
 	 * @param searchEntity
 	 */
 	public void refineFiltersFromCapabilities(SearchEntity searchEntity) {
-
+		info("Filtering filters");
 		// TODO: Handle filters and clauses
 		List<ClauseContainer> containers = searchEntity.getClauseContainers().stream()
 				// .filter(container -> traitCapabilitiesMet(container))
@@ -72,6 +74,7 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineActionsFromCapabilities(SearchEntity searchEntity) {
+		info("Filtering actions");
 
 		List<Action> actions = searchEntity.getActions().stream()
 				.filter(action -> traitCapabilitiesMet(action))

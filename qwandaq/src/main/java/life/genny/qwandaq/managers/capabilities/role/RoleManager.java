@@ -371,7 +371,7 @@ public class RoleManager extends Manager {
 		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, ROLE_LINK_CODE);
 
 		if (roles == null || roles.isEmpty())
-			throw new RoleException(String.format("No roles found for base entity: ", personBaseEntity.getCode()));
+			return new ArrayList<String>();// throw new RoleException(String.format("No roles found for base entity: ", personBaseEntity.getCode()));
 		return roles;
 	}
 
