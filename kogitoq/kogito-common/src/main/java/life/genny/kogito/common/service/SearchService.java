@@ -448,6 +448,7 @@ public class SearchService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
+
 	/**
 	 * handle filter by string in the table
 	 * @param attrCode Attribute code
@@ -506,29 +507,29 @@ public class SearchService {
 //			} else {
 //				Map<String, String> mapParam = listFilterParams.get(attrCode);
 
-				String queCode = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_COLUMN);
-				String attrName = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_OPTION);
-				String value = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_VALUE)
-						.replaceFirst(GennyConstants.SEL_PREF, "");
-				String attrCodeByParam = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.ATTRIBUTECODE);
-				Operator operator = getOperatorByVal(attrName);
+			String queCode = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_COLUMN);
+			String attrName = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_OPTION);
+			String value = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUE_FILTER_VALUE)
+					.replaceFirst(GennyConstants.SEL_PREF, "");
+			String attrCodeByParam = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.ATTRIBUTECODE);
+			Operator operator = getOperatorByVal(attrName);
 
-				if (operator.equals(Operator.LIKE)) {
-					value = "%" + value + "%";
-				}
+			if (operator.equals(Operator.LIKE)) {
+				value = "%" + value + "%";
+			}
 
-				boolean isDate = isDateTimeSelected(queCode);
-				Filter filter = null;
+			boolean isDate = isDateTimeSelected(queCode);
+			Filter filter = null;
 
-				if (isDate) {
-					LocalDateTime dateTime = parseStringToDate(value);
-					filter = new Filter(attrCodeByParam, operator, dateTime);
-				} else {
-					filter = new Filter(attrCodeByParam, operator, value);
-				}
+			if (isDate) {
+				LocalDateTime dateTime = parseStringToDate(value);
+				filter = new Filter(attrCodeByParam, operator, dateTime);
+			} else {
+				filter = new Filter(attrCodeByParam, operator, value);
+			}
 
 //				searchBE.remove(filter);
-				searchBE.add(filter);
+			searchBE.add(filter);
 //			}
 		}
 	}
@@ -584,24 +585,6 @@ public class SearchService {
 		SearchEntity searchEntity = searchUtils.getQuickOptions(sbeCode,lnkCode,lnkValue);
 		QDataBaseEntityMessage msg = getBaseItemsMsg(queGroup,queCode,lnkCode,lnkValue,searchEntity);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-	}
-
-	/**
-	 * Set parameter value by key
-	 * @param key Parameter Key
-	 * @param value Parameter Value
-	 */
-	public void setFilterParamValByKey(String key, String value) {
-//		filterParams.put(key, value);
-	}
-
-	/**
-	 * Get parameter value by key
-	 * @param key Parameter Key
-	 */
-	public String getFilterParamValByKey(String key) {
-//		return searchUtils.getFilterParamValByKey(filterParams,key);
-		return "";
 	}
 
 	/**
