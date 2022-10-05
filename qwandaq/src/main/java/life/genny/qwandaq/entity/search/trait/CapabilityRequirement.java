@@ -12,33 +12,33 @@ import life.genny.qwandaq.datatype.capability.CapabilityNode;
  * Capability
  */
 @RegisterForReflection
-public class CapabilityTrait extends Trait {
+public class CapabilityRequirement extends Trait {
 
-	private Set<CapabilityNode> capabilityRequirements;
+	private Set<CapabilityNode> nodes;
 
 	private boolean requiresAll;
 
-	public CapabilityTrait() {
+	public CapabilityRequirement() {
 		super();
 	}
 
-	public CapabilityTrait(String code, boolean requiresAll, CapabilityNode... caps) {
+	public CapabilityRequirement(String code, boolean requiresAll, CapabilityNode... caps) {
 		super(code, code);
 		this.requiresAll = requiresAll;
-		setCapabilityRequirements(caps);
+		setNodes(caps);
 	}
 	
 	public boolean meetsRequirements(Set<Capability> capabilities) {
 		for(Capability cap : capabilities) {
-			if(!cap.checkPerms(requiresAll, capabilityRequirements))
+			if(!cap.checkPerms(requiresAll, nodes))
 				return false;
 		}
 
 		return true;
 	}
 
-	public void setCapabilityRequirements(CapabilityNode... caps) {
-		this.capabilityRequirements = new HashSet<>(Arrays.asList(caps));
+	public void setNodes(CapabilityNode... caps) {
+		this.nodes = new HashSet<>(Arrays.asList(caps));
 	}
 
 }

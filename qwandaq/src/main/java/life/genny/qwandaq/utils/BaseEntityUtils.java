@@ -32,6 +32,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
@@ -180,15 +181,10 @@ public class BaseEntityUtils {
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
-
-		if (productCode == null)
-			throw new NullParameterException("productCode");
-		if (code == null)
-			throw new NullParameterException("code");
 		if (StringUtils.isBlank(productCode))
-			throw new DebugException("productCode is empty");
+			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(code))
-			throw new DebugException("code is empty");
+			throw new NullParameterException("code");
 
 		// check for entity in the cache
 		// BaseEntityKey key = new BaseEntityKey(productCode, code);
@@ -306,8 +302,13 @@ public class BaseEntityUtils {
 		if (StringUtils.isEmpty(newBaseEntityCode)) {
 			return null;
 		}
-		BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
-		return newBe;
+		try {
+			BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
+			return newBe;
+		} catch(ItemNotFoundException e) {
+			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
+			return null;
+		}
 	}
 
 	/**

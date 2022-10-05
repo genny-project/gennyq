@@ -88,7 +88,6 @@ public class CapabilitiesManager extends Manager {
 				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
 				for(Capability cap : roleCaps) {
-					info("	- " + cap);
 					// Find preexisting capability. If it exists, merge the Nodes in the way that
 					// grants the most permission possible
 					Capability preexistingCap = cap.hasCodeInSet(capabilities);
@@ -115,9 +114,6 @@ public class CapabilitiesManager extends Manager {
 			}
 			capabilities.add(capability);
 		}
-
-		debug("=============USER CAPABILITIES " + capabilities.size() + "=============");
-		CommonUtils.printCollection(capabilities, log::debug, (Capability cap) -> cap.toString());
 
 		return capabilities;
 	}
@@ -452,7 +448,7 @@ public class CapabilitiesManager extends Manager {
 		// Map data to capability. If capability name/tag is missing then use the code with standard capitalisation
 		.map((String[] item) -> createCapability(productCode, item[0], (item[1] != null ? item[1] : CommonUtils.normalizeString(item[0]))))
 		// add each capability attribute to the capability map, stripping the CAP_ prefix to be used with the constants
-		.forEach((Attribute attr) -> capabilityMap.put(attr.getCode().substring(4), attr));
+		.forEach((Attribute attr) -> capabilityMap.put(attr.getCode(), attr));
 		
 		return capabilityMap;
 	}
