@@ -34,26 +34,30 @@ public class KogitoService {
 	 * @param processId
 	 */
 	public void deleteProcess(final String workflowCode, final String processId) {
+		log.info(
+				"Pretending to delete the process, but really allowing the workflow to go through to a terminating end");
 
-		final String url = "http://localhost:8080/" + workflowCode + "/" + processId;
-		log.debug("Deleting process " + url);
-		log.debug("token=" + serviceToken.getToken());
+		TimeUnit.MINUTES.sleep(1); // wait a minute to let workflow finish
 
-		HttpClient client = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(url))
-				.header("Authorization", "Bearer " + serviceToken.getToken())
-				.DELETE()
-				.build();
+		// final String url = "http://localhost:8080/" + workflowCode + "/" + processId;
+		// log.debug("Deleting process " + url);
+		// log.debug("token=" + serviceToken.getToken());
 
-		HttpResponse<String> response = null;
-		try {
-			response = client.send(request,
-					HttpResponse.BodyHandlers.ofString());
-			log.debug(response.statusCode() + ":" + response.body());
-		} catch (IOException | InterruptedException e) {
-			log.error(e.getLocalizedMessage());
-		}
+		// HttpClient client = HttpClient.newHttpClient();
+		// HttpRequest request = HttpRequest.newBuilder()
+		// .uri(URI.create(url))
+		// .header("Authorization", "Bearer " + serviceToken.getToken())
+		// .DELETE()
+		// .build();
+
+		// HttpResponse<String> response = null;
+		// try {
+		// response = client.send(request,
+		// HttpResponse.BodyHandlers.ofString());
+		// log.debug(response.statusCode() + ":" + response.body());
+		// } catch (IOException | InterruptedException e) {
+		// log.error(e.getLocalizedMessage());
+		// }
 		// return response.statusCode() == 200 ? Response.ok().build() :
 		// Response.serverError().build();
 	}
