@@ -76,7 +76,7 @@ public class CapabilitiesManager extends Manager {
 		// it is good to see how often it comes up
 		info("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
-		BaseEntity userBE = userToken.getUserEntity();
+		BaseEntity userBE = beUtils.getUserBaseEntity();
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
 		Set<Capability> capabilities;
 		

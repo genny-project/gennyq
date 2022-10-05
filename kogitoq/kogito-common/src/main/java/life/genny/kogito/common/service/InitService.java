@@ -237,7 +237,7 @@ public class InitService {
 		parentAsk.setTargetCode(user.getCode());
 		parentAsk.setRealm(productCode);
 
-		Set<Capability> capabilities = userToken.getUserCapabilities();
+		Set<Capability> capabilities = capMan.getUserCapabilities();
 		
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
