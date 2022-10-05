@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.TimeUnit;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -37,7 +38,12 @@ public class KogitoService {
 		log.info(
 				"Pretending to delete the process, but really allowing the workflow to go through to a terminating end");
 
-		TimeUnit.MINUTES.sleep(1); // wait a minute to let workflow finish
+		try {
+			TimeUnit.MINUTES.sleep(1);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // wait a minute to let workflow finish
 
 		// final String url = "http://localhost:8080/" + workflowCode + "/" + processId;
 		// log.debug("Deleting process " + url);
