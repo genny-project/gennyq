@@ -128,6 +128,7 @@ public class InternalConsumer {
 		kogitoUtils.routeEvent(event);
 		scope.destroy();
 
+		//handle filter
 		filterUtils.handleFilterEvent(event);
 	}
 
@@ -140,6 +141,7 @@ public class InternalConsumer {
 	public void getDataFromExternalBridge(String data) {
 		Instant start = Instant.now();
 
+		//handle filter
 		filterUtils.handleFilterEventData(data);
 
 		log.info("Received Data : " + data);

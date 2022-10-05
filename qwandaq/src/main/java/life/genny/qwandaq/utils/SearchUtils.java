@@ -785,7 +785,7 @@ public class SearchUtils {
 	 * @param listParam    List o filter parameters
 	 * @return Ask
 	 */
-	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode,
+	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode,String filterCode,
 			Map<String, Map<String, String>> listParam) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
@@ -797,7 +797,7 @@ public class SearchUtils {
 		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
 		ask.addChildAsk(addFilterAsk);
 
-		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode, listParam);
+		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode,filterCode,listParam);
 
 		ask.addChildAsk(existFilterAsk);
 
@@ -809,23 +809,35 @@ public class SearchUtils {
 	 * 
 	 * @param sbeCode       Search base entity code
 	 * @param ask           Ask existing group
+	 * @param filterCode    Filter code
 	 * @param listFilParams List of filter parameters
 	 */
-	public void setExistingFilterGroup(String sbeCode, Ask ask, Map<String, Map<String, String>> listFilParams) {
-		for (Map.Entry<String, Map<String, String>> filterParams : listFilParams.entrySet()) {
+	public void setExistingFilterGroup(String sbeCode, Ask ask, String filterCode,
+									   		Map<String, Map<String, String>> listFilParams) {
+		//current filter state
+		Ask curAsk = new Ask();
+		curAsk.setQuestionCode(GennyConstants.QUE_CODE_SAVED_SEARCH);
+		curAsk.setAttributeCode(GennyConstants.QUE_CODE_SAVED_SEARCH);
+		curAsk.setName(filterCode);
+		Question curQue = new Question();
+		curQue.setCode(GennyConstants.QUE_CODE_SAVED_SEARCH);
+		curAsk.setQuestion(curQue);
+
+		ask.addChildAsk(curAsk);
+
+		for (Map.Entry<String, Map<String, String>> param : listFilParams.entrySet()) {
 			Ask childAsk = new Ask();
 			childAsk.setAttributeCode(GennyConstants.PRI_EVENT);
 
-			String html = getHtmlByFilterParam(filterParams.getValue());
-
 			Question question = new Question();
-			question.setCode(filterParams.getKey());
-			question.setName(html);
-			question.setHtml(html);
+			question.setAttributeCode(param.getValue().get(GennyConstants.COLUMN));
+			question.setCode(param.getValue().get(GennyConstants.QUESTIONCODE));
+			question.setName(param.getValue().get(GennyConstants.OPTION));
+			question.setHtml(param.getValue().get(GennyConstants.VALUE));
 
-			childAsk.setName(html);
+			childAsk.setName(param.getValue().get(GennyConstants.COLUMN));
 			childAsk.setHidden(false);
-			childAsk.setQuestionCode(filterParams.getKey());
+			childAsk.setQuestionCode(param.getValue().get(GennyConstants.QUESTIONCODE));
 			childAsk.setQuestion(question);
 			childAsk.setTargetCode(getSearchBaseEntityCodeByJTI(sbeCode));
 
@@ -934,10 +946,12 @@ public class SearchUtils {
 	 * Construct existing filter group object in Add Filter group form
 	 * 
 	 * @param sbeCode       Search Base Entity Code
+	 * @param filterCode    Filter code
 	 * @param listFilParams List of Filter parameters
 	 * @return return existing filter group object
 	 */
-	public Ask getExistingFilterGroupBySearchBE(String sbeCode, Map<String, Map<String, String>> listFilParams) {
+	public Ask getExistingFilterGroupBySearchBE(String sbeCode,String filterCode,
+												Map<String, Map<String, String>> listFilParams) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
 		String targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
@@ -950,7 +964,7 @@ public class SearchUtils {
 
 		// change exist filter group
 		if (listFilParams.size() > 0) {
-			setExistingFilterGroup(sbeCode, ask, listFilParams);
+			setExistingFilterGroup(sbeCode, ask,filterCode, listFilParams);
 		}
 
 		ask.setQuestion(question);

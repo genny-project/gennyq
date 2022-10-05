@@ -362,39 +362,39 @@ public class SearchService {
 	 * @param questionCode Question code
 	 * @param addedJti Adding JTI to search base entity
 	 */
-	public void sendFilterGroup(String sbeCode, String queGrp,String questionCode,boolean addedJti,
+	public void sendFilterGroup(String sbeCode, String queGrp,String questionCode,boolean addedJti,String filterCode,
 								Map<String, Map<String,String>> listFilterParams) {
 		try {
 			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
 			if (searchBE != null) {
-				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode, questionCode, listFilterParams);
+				Ask ask = searchUtils.getFilterGroupBySearchBE(sbeCode, questionCode, filterCode, listFilterParams);
 				QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
 				msgFilterGrp.setToken(userToken.getToken());
-				String filterCode = "";
+				String queCode = "";
 				if(addedJti) {
-					filterCode = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
-					ask.setTargetCode(filterCode);
+					queCode = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
+					ask.setTargetCode(queCode);
 
-					filterCode = queGrp + "_" + filterCode;
+					queCode = queGrp + "_" + queCode;
 				}else {
 					ask.setTargetCode(sbeCode);
-					filterCode = queGrp + "_" + sbeCode;
+					queCode = queGrp + "_" + sbeCode;
 				}
-				msgFilterGrp.setTargetCode(filterCode);
-				ask.setQuestionCode(filterCode);
-				ask.getQuestion().setCode(filterCode);
+				msgFilterGrp.setTargetCode(queCode);
+				ask.setQuestionCode(queCode);
+				ask.getQuestion().setCode(queCode);
 
 				msgFilterGrp.setMessage(GennyConstants.FILTERS);
 				msgFilterGrp.setTag(GennyConstants.FILTERS);
 				msgFilterGrp.setReplace(true);
 				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
 
-				QDataBaseEntityMessage msgAddFilter = searchUtils.getFilterColumBySearchBE(searchBE);
+				QDataBaseEntityMessage msgColumn = searchUtils.getFilterColumBySearchBE(searchBE);
 
-				msgAddFilter.setToken(userToken.getToken());
-				msgAddFilter.setReplace(true);
-				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgAddFilter);
+				msgColumn.setToken(userToken.getToken());
+				msgColumn.setReplace(true);
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgColumn);
 			}
 		}catch (Exception ex) {
 			log.error(ex);
@@ -466,11 +466,12 @@ public class SearchService {
 
 		for(Map.Entry<String, Map<String,String>> e : listFilterParams.entrySet()) {
 			String queCode = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.QUESTIONCODE);
-			String attrName = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.OPTION);
+			String operatorCode = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.OPTION);
 			String value = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.VALUE)
 					.replaceFirst(GennyConstants.SEL_PREF, "");
-			String attrCodeByParam = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.ATTRIBUTECODE);
-			Operator operator = getOperatorByVal(attrName);
+			String field = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.COLUMN)
+											.replaceFirst(GennyConstants.SEL_FILTER_COLUMN_FLC, "");
+			Operator operator = getOperatorByVal(operatorCode);
 
 			if (operator.equals(Operator.LIKE)) {
 				value = "%" + value + "%";
@@ -481,11 +482,13 @@ public class SearchService {
 
 			if (isDate) {
 				LocalDateTime dateTime = parseStringToDate(value);
-				filter = new Filter(attrCodeByParam, operator, dateTime);
+				filter = new Filter(field, operator, dateTime);
 			} else {
-				filter = new Filter(attrCodeByParam, operator, value);
+				filter = new Filter(field, operator, value);
 			}
 
+			log.info("searchBE.getClauseContainers().size() :" + searchBE.getClauseContainers().size());
+			searchBE.remove(filter);
 			searchBE.add(filter);
 		}
 	}

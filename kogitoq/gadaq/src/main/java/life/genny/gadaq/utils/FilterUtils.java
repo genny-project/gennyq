@@ -72,9 +72,8 @@ public class FilterUtils {
     public static final String FLT_PREF = "FLT_";
     public static final String PRI_PREFIX = "PRI_PREFIX";
     public static final String ATT_PREF = "LNK_";
-//    public static final String SAVED_SEARCHES = "SAVED_SEARCHES";
-    public static final String SAVED_SEARCHES = "S10_SEARCHES";
-    public  DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
+    public static final String SAVED_SEARCHES = "SAVED_SEARCHES";
+    public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
 
 
     /**
@@ -488,8 +487,9 @@ public class FilterUtils {
     public void selectFilerColumn(String targetCode, String value) {
         String queCode = getQuestionCodeByFilterValue(value);
 
-        Map<String, Map<String, String>> listParam = new HashMap<>();
-        searchService.sendFilterGroup(targetCode, GennyConstants.QUE_FILTER_GRP,queCode,true,listParam);
+        String filterCode = "";
+        Map<String, Map<String, String>> params = new HashMap<>();
+        searchService.sendFilterGroup(targetCode, GennyConstants.QUE_FILTER_GRP,queCode,true,filterCode,params);
         searchService.sendFilterOption(queCode, targetCode);
 
         boolean isSelectBox = isFilterSelectQuestion(value);
@@ -521,8 +521,9 @@ public class FilterUtils {
      * @return
      */
     public boolean isSavedSearch(String eventCode) {
-        boolean result = true;
-        if(eventCode.startsWith(GennyConstants.QUE_SAVED_SEARCH_SAVE))
+        boolean result = false;
+//        if(eventCode.startsWith(GennyConstants.QUE_SAVED_SEARCH_SAVE))
+        if(eventCode.startsWith(GennyConstants.QUE_SUBMIT))
             return true;
 
         return result;
@@ -532,14 +533,20 @@ public class FilterUtils {
      * Save searches
      * @param name Event name
      */
-    public void saveSearches(String token, String prefix, String name,Map<String,Map<String, String>> params) {
-        userToken.init(token);
-        String userCode = userToken.getUserCode();
-
+    public void saveSearches(String prefix, String name,String value) {
         String attCode = ATT_PREF + SAVED_SEARCHES;
         Attribute attrFound = saveAttribute(attCode);
-        String json = jsonb.toJson(params);
-        saveBaseEntity(attrFound, prefix,name,json);
+        BaseEntity base = saveBaseEntity(attrFound, prefix,name,value);
+
+        //update filter existing group
+        log.info(base);
+        //get the latest of filter
+//        searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,listFilterParams);
+
+        String fltCond = FLT_PREF + "%";
+        String queCode = QUE_PREF + SAVED_SEARCHES;
+        searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,"queGroup",queCode,GennyConstants.PRI_NAME,
+                                GennyConstants.VALUE,fltCond);
     }
 
     /**
@@ -548,25 +555,23 @@ public class FilterUtils {
      * @param prefix Definition prefix
      * @param name Search name
      */
-    public void saveBaseEntity(Attribute att, String prefix,String name,String params) {
+    public BaseEntity saveBaseEntity(Attribute att, String prefix,String name,String params) {
+        BaseEntity baseEntity = null;
         BaseEntity defBE = new BaseEntity(prefix);
         String baseCode = prefix + UUID.randomUUID().toString();
 
-        //first attribute
         Attribute attr = new Attribute(PRI_PREFIX, prefix, DataTypeStr);
-        EntityAttribute ea = new EntityAttribute(defBE, attr, 1.0);
-        ea.setValue(prefix);
-        ea.setValueBoolean(true);
         defBE.addAttribute(attr, 1.0, prefix);
         try {
-            BaseEntity baseEntity = beUtils.create(defBE, name, baseCode);
+            baseEntity = beUtils.create(defBE, name, baseCode);
 
-            //get current list of filter parameters and add new filter
             baseEntity.addAttribute(att, 1.0, params);
             beUtils.updateBaseEntity(baseEntity);
         }catch (Exception ex) {
             log.error(ex);
         }
+
+        return baseEntity;
     }
 
 
@@ -576,13 +581,13 @@ public class FilterUtils {
      * @return Return attribute
      */
     public Attribute saveAttribute(String attCode) {
-        //add list filter parameter
         Attribute attrFound = null;
         try {
-            attrFound = qwandaUtils.getAttribute(attCode);
+            attrFound = databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
         }catch (Exception ex) {
             AttributeLink newAtt = new AttributeLink(attCode, attCode);
-            attrFound = qwandaUtils.saveAttribute(newAtt);
+            qwandaUtils.saveAttribute(newAtt);
+            attrFound =  databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
         }
 
         return attrFound;
@@ -618,30 +623,21 @@ public class FilterUtils {
     /**
      * Get the table of filter parameters
      * @param sbeCode Search base entity
-     * @param code Filter code
+     * @param filterCode Filter code
      * @return Get the table of filter parameters
      */
-    public Map<String,Map<String, String>> getFilterParamByBaseCode(String sbeCode,String code) {
+    public Map<String,Map<String, String>> getFilterParamByBaseCode(String sbeCode,String filterCode) {
         Map<String,Map<String, String>>  result =  new HashMap<>();
 
         String value = "";
         String attCode = ATT_PREF + SAVED_SEARCHES;
         try {
-            //get the latest filter of current base entity
-            if(code.isEmpty()) {
-                String latestCode = getLatestFilterCode(sbeCode);
-                BaseEntity base = beUtils.getBaseEntityByCode(latestCode);
-                value = getValueStringByAttCode(base, attCode);
-            } else {
-                // get the filter by base entity code
-                BaseEntity base = beUtils.getBaseEntityByCode(code);
-                value = getValueStringByAttCode(base,attCode);
-            }
+            // get the filter by base entity code
+            BaseEntity base = beUtils.getBaseEntityByCode(filterCode);
+            value = getValueStringByAttCode(base,attCode);
 
             result = jsonb.fromJson(value, Map.class);
-        }catch(Exception ex) {
-            log.info(ex);
-        }
+        }catch(Exception ex) {}
 
         return result;
     }
@@ -672,18 +668,21 @@ public class FilterUtils {
      * @param queGroup Question group
      * @param sbeCode Search base entity code
      */
-    public void sendFilterAndQuickSearch(String code,String queGroup, String sbeCode) {
+    public void sendFilterAndQuickSearch(String code,String queGroup, String sbeCode, String filterCode) {
         searchService.sendQuickSearch(queGroup,GennyConstants.QUE_SELECT_INTERN,
                 GennyConstants.LNK_PERSON, GennyConstants.BKT_APPLICATIONS);
+        //get the latest filter code if filterCode is empty
+        if(filterCode.isEmpty()) {
+            filterCode = getLatestFilterCode(sbeCode);
+        }
 
-        String currentFilter = "";
-        Map<String,Map<String, String>> listFilterParams = getFilterParamByBaseCode(sbeCode,currentFilter);
+        Map<String,Map<String, String>> filterParams = getFilterParamByBaseCode(sbeCode,filterCode);
 
         //get the latest of filter
-        searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,listFilterParams);
+        searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,filterParams);
 
         String fltCond = FLT_PREF + "%";
-        String queCode = QUE_PREF + SAVED_SEARCHES;
+        String queCode = GennyConstants.QUE_SAVED_SEARCHES_LIST;
 
         //send saved searches
         searchService.sendDropdownOptions(sbeCode,queGroup,queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE,fltCond);
@@ -717,9 +716,7 @@ public class FilterUtils {
                 sbeCode =  SearchCaching.SBE_APPLIED_APPLICATIONS;
                 queGroup = GennyConstants.QUE_BUCKET_INTERNS_GRP;
             } else if(isFilterSubmit(code)) {
-                //TODO
-                String strMap ="";
-                Map<String,Map<String, String>> listParams = EventMessageUtils.parseFilterMessage(strMap);
+                Map<String,Map<String, String>> listParams = EventMessageUtils.parseFilterMessage(value);
                 sbeCode = EventMessageUtils.getCleanSBECode(targetCode);
                 searchService.handleFilter(sbeCode, listParams);
             } else if(isQuickSearchSelectOptions(code,targetCode, value)) {
@@ -727,9 +724,18 @@ public class FilterUtils {
                         ,GennyConstants.QUE_SELECT_INTERN,GennyConstants.PRI_NAME, value);
             }
 
+//            if(isSavedSearch(code)) {
+////                String name =  EventMessageUtils.getName(event);
+//                String name = "test name 1";
+//                value = "{\"ROW_0\":{\"questionCode\":\"QUE_FILTER_VALUE_COUNTRY\",\"column\":\"SEL_FILTER_COLUMN_FLC_PRI_ADDRESS_COUNTRY\",\"value\":\"SEL_AUSTRALIA\",\"option\":\"SEL_EQUAL_TO\"},\"ROW_1\":{\"questionCode\":\"QUE_FILTER_VALUE_TEXT\",\"column\":\"SEL_FILTER_COLUMN_FLC_PRI_NAME\",\"value\":\"alex\",\"option\":\"SEL_LIKE\"}}";
+//
+//                saveSearches(FLT_PREF,name,value);
+//            }
+
             //send back quick search dropdown and filter group
             if(isNeededFilterAndQuickSearch(code)) {
-                sendFilterAndQuickSearch(code,queGroup,sbeCode);
+                String filterCode = "";
+                sendFilterAndQuickSearch(code,queGroup,sbeCode,filterCode);
             }
 
         } catch(Exception ex) {}
@@ -769,15 +775,11 @@ public class FilterUtils {
                 selectQuickSearch(token, attrCode, attrName, value);
             } else if(isSavedSearch(code)) {
                 String name =  EventMessageUtils.getName(event);
-                //TODO
-                String strMap = "";
-                Map<String,Map<String, String>> paramMap = EventMessageUtils.parseFilterMessage(strMap);
+                value = "{\"ROW_0\":{\"questionCode\":\"QUE_FILTER_VALUE_COUNTRY\",\"column\":\"SEL_FILTER_COLUMN_FLC_PRI_ADDRESS_COUNTRY\",\"value\":\"SEL_AUSTRALIA\",\"option\":\"SEL_EQUAL_TO\"},\"ROW_1\":{\"questionCode\":\"QUE_FILTER_VALUE_TEXT\",\"column\":\"SEL_FILTER_COLUMN_FLC_PRI_NAME\",\"value\":\"alex\",\"option\":\"SEL_LIKE\"}}";
+//                Map<String,Map<String, String>> paramMap = EventMessageUtils.parseFilterMessage(value);
 
-                saveSearches(token, FLT_PREF,name,paramMap);
+                saveSearches(FLT_PREF,name,value);
 
-                String fltCond = FLT_PREF + "%";
-                String queCode = QUE_PREF + SAVED_SEARCHES;
-                searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,"queGroup",queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE,fltCond);
             }
 
         } catch (Exception ex){}
