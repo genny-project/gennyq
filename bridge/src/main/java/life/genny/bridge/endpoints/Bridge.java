@@ -66,6 +66,9 @@ public class Bridge {
     @ConfigProperty(name = "bridge.id", defaultValue = "false")
     String bridgeId;
 
+    @ConfigProperty(name = "genny.keycloak.realm", defaultValue = "internmatch")
+    String keycloakRealm;
+
     /**
      * The entrypoint for external clients who wants to establish a connection with
      * the backend. The client will need be informed after calling this endpoint
@@ -75,7 +78,7 @@ public class Bridge {
      *            used to retrieve information in cache and verify there is a realm
      *            associated with the url
      * @return InitProperties object will all required information so the clients
-     * gets informed about the protocol for future communication
+     *         gets informed about the protocol for future communication
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -88,7 +91,7 @@ public class Bridge {
         try {
             // init config properties
             InitProperties props = new InitProperties();
-            props.setRealm("internmatch");
+            props.setRealm(keycloakRealm);
             props.setKeycloakRedirectUri(CommonUtils.getSystemEnv("ENV_KEYCLOAK_REDIRECTURI"));
             props.setMediaProxyUrl(url);
             props.setApiUrl(url);
@@ -114,7 +117,8 @@ public class Bridge {
         } catch (Exception e) {
             log.error("The configuration does not exist or cannot be found please check the ENVs");
             String productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES");
-            log.error(productCodes != null ? ("Product Codes: " + productCodes) : "UNDEFINED PRODUCT CODES. Please define PRODUCT_CODES as an env (a ':' delimited string of product codes)");
+            log.error(productCodes != null ? ("Product Codes: " + productCodes)
+                    : "UNDEFINED PRODUCT CODES. Please define PRODUCT_CODES as an env (a ':' delimited string of product codes)");
             e.printStackTrace();
         }
 
@@ -132,7 +136,7 @@ public class Bridge {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({"user"})
+    @RolesAllowed({ "user" })
     @Path("/api/events/init")
     @Deprecated(since = "9.9.0", forRemoval = true)
     public JsonObject initChannelSession(@HeaderParam("Authorization") String auth) {
@@ -147,7 +151,7 @@ public class Bridge {
      * @return 200
      */
     @DELETE
-    @RolesAllowed({"ptest,test"})
+    @RolesAllowed({ "ptest,test" })
     @Path("/admin/blacklist")
     public Response deleteAllBlackListedRecords() {
 
@@ -165,7 +169,7 @@ public class Bridge {
      * @return 200
      */
     @DELETE
-    @RolesAllowed({"ptest,test"})
+    @RolesAllowed({ "ptest,test" })
     @Path("/admin/blacklist/{uuid}")
     public Response deleteBlackListedRecord(@PathParam UUID uuid) {
 
@@ -186,7 +190,7 @@ public class Bridge {
      */
 
     @PUT
-    @RolesAllowed({"ptest", "test", "admin"})
+    @RolesAllowed({ "ptest", "test", "admin" })
     @Path("/admin/blacklist/{protocol}")
     public Response addBlackListedRecord(@PathParam String protocol) {
 
@@ -202,7 +206,7 @@ public class Bridge {
      * @return An array of uniques UUIDs
      */
     @GET
-    @RolesAllowed({"service,test"})
+    @RolesAllowed({ "service,test" })
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/admin/blacklists")
     public Set<String> getBlackListedRecords() {
@@ -218,7 +222,7 @@ public class Bridge {
      * @return An array of uniques UUIDs
      */
     @GET
-    @RolesAllowed({"user"})
+    @RolesAllowed({ "user" })
     @Produces(MediaType.APPLICATION_JSON)
     // @Path("/admin/blacklists")
     public Set<String> getB2BHandler() {
@@ -235,7 +239,7 @@ public class Bridge {
      * @return An array of uniques UUIDs
      */
     @GET
-    @RolesAllowed({"test", "b2b"})
+    @RolesAllowed({ "test", "b2b" })
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/api/b2bdata")
     public Response apiB2BHandlerGet() {
@@ -290,7 +294,7 @@ public class Bridge {
         dataMsg.setToken(userToken.getToken());
         dataMsg.setAliasCode("STATELESS");
 
-//		Jsonb jsonb = JsonbBuilder.create();
+        // Jsonb jsonb = JsonbBuilder.create();
         // String dataMsgJson = jsonb.toJson(dataMsg);
         String dataMsgJsonStr = jsonb.toJson(dataMsg);
         String jti = userToken.getJTI();
@@ -314,14 +318,14 @@ public class Bridge {
      * @return Success
      */
     @POST
-    @RolesAllowed({"test", "b2b"})
+    @RolesAllowed({ "test", "b2b" })
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/api/b2bdata")
     public Response apiB2BHandlerPost(QDataB2BMessage dataMsg) {
 
         log.info("B2B POST received..");
 
-//		Jsonb jsonb = JsonbBuilder.create();
+        // Jsonb jsonb = JsonbBuilder.create();
         dataMsg.setToken(userToken.getToken());
         dataMsg.setAliasCode("STATELESS");
 
@@ -344,7 +348,7 @@ public class Bridge {
     }
 
     @POST
-    @RolesAllowed({"test", "b2b"})
+    @RolesAllowed({ "test", "b2b" })
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/api/service")
     public Response apiServiceHandlerPost(QDataB2BMessage dataMsg) {
