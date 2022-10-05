@@ -3,7 +3,7 @@ version: '2.3'
 services:
 
   mysql:
-    image:  gennyproject/mysql:8x 
+    image: gennyproject/mysql:8x
     container_name: mysql
     environment:
       - MYSQL_URL=mysql
@@ -16,8 +16,8 @@ services:
       - MYSQL_ROOT_PASSWORD=password
       - ADMIN_USERNAME=admin
       - ADMIN_PASSWORD=password
-#    env_file:
-#      - ${ENV_FILE}
+    #    env_file:
+    #      - ${ENV_FILE}
     volumes:
       - mysql_data:/var/lib/mysql:delegated
     networks:
@@ -26,7 +26,7 @@ services:
       - ${MYSQL_PORT}:${MYSQL_INTERNAL_PORT}
     command: --sql_mode=""
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
     restart: unless-stopped
@@ -36,18 +36,20 @@ services:
       mysql:
         condition: service_healthy
     image: gennyproject/fyodor:latest
-#    container_name: bootq 
+    #    container_name: bootq 
+    #    container_name: bootq 
+    #    container_name: bootq 
     volumes:
       - ./google_credentials:/root/.genny/sheets.googleapis.com-java-quickstart
     env_file:
       - ${ENV_FILE}
     environment:
-#      - VIRTUAL_HOST=bootq.*
+      #      - VIRTUAL_HOST=bootq.*
       - VIRTUAL_PORT=${FYODOR_INTERNAL_PORT}
       - VIRTUAL_PROTO=http
       - CERT_NAME=genny.life
       - DEBUG_SUSPEND=n
-  #    - DDT_URL=http://bridge:8089
+      #    - DDT_URL=http://bridge:8089
       - FULL_MYSQL_URL=jdbc:mysql://mysql/gennydb
       - GENNY_KAFKA_URL=http://localhost:${KAFKA_PORT}
       - GENNY_REALM=internmatch
@@ -55,7 +57,7 @@ services:
       - GENNY_CLIENT_SECRET=${GENNY_CLIENT_SECRET}
       - GENNY_SERVICE_USERNAME=${GENNY_SERVICE_USERNAME}
       - GENNY_SERVICE_PASSWORD=${GENNY_SERVICE_PASSWORD}
-      - GENNY_KEYCLOAK_URL=https://keycloak.gada.io
+      - GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io}
       - GENNY_API_URL=http://localhost:${FYODOR_INTERNAL_PORT}
       - GENNY_MYSQL_FULL_URL=alyson.genny.life:${MYSQL_PORT}/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
     ports:
@@ -64,15 +66,19 @@ services:
     links:
       - mysql:mysql
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${FYODOR_INTERNAL_PORT}/version"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "http://localhost:${FYODOR_INTERNAL_PORT}/version"
+        ]
       interval: 10s
       timeout: 10s
-      retries: 100    
+      retries: 100
     restart: unless-stopped
     networks:
       - mainproxy
-
-
 
 volumes:
   abn_tmp:
@@ -86,5 +92,3 @@ volumes:
 networks:
   mainproxy:
     driver: bridge
-
-
