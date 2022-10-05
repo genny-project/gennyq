@@ -1,6 +1,7 @@
 package life.genny.qwandaq.entity.search.trait;
 
 import java.util.Set;
+import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
