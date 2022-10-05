@@ -14,7 +14,7 @@ public abstract class Trait {
 	private String code;
 	private String name;
 
-	private Set<CapabilityTrait> capabilityRequirements = new HashSet<>();
+	private Set<CapabilityRequirement> capabilityRequirements = new HashSet<>();
 
 	public Trait() {
 	}
@@ -40,15 +40,15 @@ public abstract class Trait {
 		this.name = name;
 	}
 
-	public Set<CapabilityTrait> getCapabilityRequirements() {
+	public Set<CapabilityRequirement> getCapabilityRequirements() {
 		return capabilityRequirements;
 	}
 
-	public void setCapabilityRequirements(Set<CapabilityTrait> capabilities) {
+	public void setCapabilityRequirements(Set<CapabilityRequirement> capabilities) {
 		this.capabilityRequirements = capabilities;
 	}
 
-	public Trait addCapabilityRequirement(CapabilityTrait capability) {
+	public Trait addCapabilityRequirement(CapabilityRequirement capability) {
 		this.capabilityRequirements.add(capability);
 		return this;
 	}

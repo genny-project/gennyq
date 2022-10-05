@@ -1,27 +1,22 @@
 package life.genny.qwandaq.managers.capabilities.role;
 
-
-import static life.genny.qwandaq.datatype.capability.CapabilityMode.VIEW;
-
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.capability.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.utils.CommonUtils;
 
 public class RoleBuilder {
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
@@ -104,25 +99,23 @@ public class RoleBuilder {
         return this;
     }
 
-    public RoleBuilder addView(String capabilityCode) {
-        return addCapability(capabilityCode, VIEW);
-    }
-
-    @Deprecated
-    public RoleBuilder addCapability(String capabilityCode, CapabilityMode... capModes) {
-        CapabilityNode[] capabilities = Arrays.asList(capModes).stream().map((CapabilityMode mode) -> new CapabilityNode(mode)).collect(Collectors.toList()).toArray(new CapabilityNode[0]);
-        return addCapability(capabilityCode, capabilities);
-    }
-
-    public RoleBuilder addCapability(String capabilityCode, CapabilityNode... capabilities) {
-        capabilityCode = CommonUtils.safeStripPrefix(capabilityCode);
-        roleCapabilities.put(capabilityCode, capabilities);
-        return this;
+    /**
+     * Start creating a capability and add it when it is finished building
+     * @param capabilityCode
+     * @return
+     */
+    public CapabilityBuilder addCapability(String capabilityCode) {
+        fetch(capabilityCode);
+        return new CapabilityBuilder(this, capabilityCode);
     }
 
     public RoleBuilder addChildren(String... roleCodes) {
         this.childrenCodes.addAll(Arrays.asList(roleCodes));
         return this;
+    }
+
+    public Map<String, CapabilityNode[]> getCapabilities() {
+        return roleCapabilities;
     }
 
     public BaseEntity build() throws RoleException {
@@ -150,6 +143,7 @@ public class RoleBuilder {
     }
 
 	private Attribute fetch(String attrCode) throws ItemNotFoundException {
+        attrCode = CapabilitiesManager.cleanCapabilityCode(attrCode);
 		Attribute attribute = capabilityMap.get(attrCode);
 		if(attribute == null) {
 			log.error("Could not find capability in map: " + attrCode);

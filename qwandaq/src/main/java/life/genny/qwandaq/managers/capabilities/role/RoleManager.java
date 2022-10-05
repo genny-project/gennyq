@@ -347,7 +347,7 @@ public class RoleManager extends Manager {
 			values.add(role.getCode());
 			value = CommonUtils.getArrayString(values, (String v) -> v);			
 		} else {
-			value = "[" + role.getCode() + "]";
+			value = "[\"" + role.getCode() + "\"]";
 		}
 
 		lnkRoleEA.setValue(value);

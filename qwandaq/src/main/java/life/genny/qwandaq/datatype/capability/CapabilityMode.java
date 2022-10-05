@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * An enum to declare what mode this capability concerns
+ * An enum to declare what mode a capability concerns
  * @author Bryn Meachem
  */
 public enum CapabilityMode {
@@ -14,6 +14,10 @@ public enum CapabilityMode {
     ADD('A'),
     DELETE('D');
 
+    /**
+     * Cached map to speed up identifier lookup
+     * 
+     */
     private static Map<Character, CapabilityMode> idMap = new HashMap<>(values().length);
 
     static {
@@ -22,6 +26,9 @@ public enum CapabilityMode {
         }
     }
 
+    /**
+     * Single character identifier to help with processing
+     */
     private final char identifier;
 
     private CapabilityMode(char identifier) {

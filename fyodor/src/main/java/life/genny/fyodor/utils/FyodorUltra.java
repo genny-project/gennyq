@@ -702,7 +702,9 @@ public class FyodorUltra {
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			return getRecursiveColumnLink(entity, code);
+			if(entity != null) {
+				return getRecursiveColumnLink(entity, code);
+			} else return null;
 		}
 
 		// find value

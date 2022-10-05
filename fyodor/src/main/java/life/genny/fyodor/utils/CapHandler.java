@@ -11,7 +11,7 @@ import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
-import life.genny.qwandaq.entity.search.trait.CapabilityTrait;
+import life.genny.qwandaq.entity.search.trait.CapabilityRequirement;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
@@ -94,7 +94,7 @@ public class CapHandler extends Manager {
 		}
 
 		Set<Capability> capabilities = capMan.getUserCapabilities();
-		for(CapabilityTrait capTrait : trait.getCapabilityRequirements()) {
+		for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
 			if(!capTrait.meetsRequirements(capabilities)) {
 				return false;
 			}
