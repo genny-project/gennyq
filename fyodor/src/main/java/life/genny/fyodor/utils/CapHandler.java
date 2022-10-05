@@ -92,7 +92,7 @@ public class CapHandler extends Manager {
 			error("[!] No UserToken, cannot verify capabilities");
 		}
 
-		Set<Capability> capabilities = userToken.getUserCapabilities();
+		Set<Capability> capabilities = capMan.getUserCapabilities();
 		for(CapabilityTrait capTrait : trait.getCapabilityRequirements()) {
 			if(!capTrait.meetsRequirements(capabilities)) {
 				return false;
