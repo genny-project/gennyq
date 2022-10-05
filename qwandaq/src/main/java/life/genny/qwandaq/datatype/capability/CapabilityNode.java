@@ -1,75 +1,17 @@
-package life.genny.qwandaq.datatype;
+package life.genny.qwandaq.datatype.capability;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
-/*
+/**
  * Capability Class to encapsulate necessary data to determine capabilities 
  * @author Bryn Meachem
  */
 @RegisterForReflection
-public class Capability {
+public class CapabilityNode {
 	// Leave this here please
 	public static final String DELIMITER = ":";
-
-	/**
-	 * An enum to declare what mode this capability concerns
-	 */
-	public static enum CapabilityMode {
-		// Priority to be determined by .ordinal()
-		VIEW('V'),
-		EDIT('E'),
-		ADD('A'),
-		DELETE('D');
-
-		private final char identifier;
-
-		private CapabilityMode(char identifier) {
-			this.identifier = identifier;
-		}
-
-		public char getIdentifier() {
-			return this.identifier;
-		}
-
-		public static CapabilityMode getByIdentifier(char identifier) {
-			for(CapabilityMode mode : values()) {
-				if(mode.identifier == identifier)
-					return mode;
-			}
-
-			return null;
-		}
-	}
-
-	/**
-	 * An enum to declare what permissions this capability has
-	 */
-	public static enum PermissionMode {
-		ALL('A'),
-		SELF('S'),
-		NONE('N');
-
-		private final char identifier;
-
-		private PermissionMode(char identifier) {
-			this.identifier = identifier;
-		}
-
-		public char getIdentifier() {
-			return this.identifier;
-		}
-
-		public static PermissionMode getByIdentifier(char identifier) {
-			for(PermissionMode mode : values()) {
-				if(mode.identifier == identifier)
-					return mode;
-			}
-
-			return null;
-		}
-	}
 
 	/**
 	 * This capability's mode
@@ -83,7 +25,7 @@ public class Capability {
 
 	/**
 	 * Create a new capability with the given mode and permissions
-	 * @param capMode the {@link Capability} to assign 
+	 * @param capMode the {@link CapabilityNode} to assign 
 	 * @param permMode the {@link PermissionMode} to assign
 	 * <p>
 	 * <pre>
@@ -94,7 +36,7 @@ public class Capability {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public Capability(CapabilityMode capMode, PermissionMode permMode) {
+	public CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
 		this.capMode = capMode;
 		this.permMode = permMode;
 	}
@@ -105,8 +47,40 @@ public class Capability {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public Capability(CapabilityMode capMode) {
+	public CapabilityNode(CapabilityMode capMode) {
 		this(capMode, PermissionMode.SELF);
+	}
+
+	/**
+	 * Get the most permissive node between this and another Node
+	 * @param other - the other node to compare
+	 * @return the most permissive node between this and the other node or this if the two modes are different
+	 */
+	public CapabilityNode compareNodes(CapabilityNode other, boolean mostPermissive) {
+		if(!this.capMode.equals(other.capMode))
+			return this;
+		// if -1 then this is less permissive
+		// if 0 then they are equal
+		// if 1 then this is more permissive
+		int ord = this.permMode.compareTo(other.permMode);
+		if(ord > 0)
+			return mostPermissive ? other : this;
+		else
+			return mostPermissive ? this : other;
+	}
+
+	/**
+	 * Get all CapabilityNodes with less permissions than this one for it's given Mode
+	 * @return
+	 */
+	public CapabilityNode[] getLesserNodes() {
+		int size = this.permMode.ordinal();
+		CapabilityNode[] lesserNodes = new CapabilityNode[size];
+		for(int i = 0; i < size; i++) {
+			lesserNodes[i] = new CapabilityNode(capMode, PermissionMode.getByOrd(size - (i + 1)));
+		}
+
+		return lesserNodes;
 	}
 
 	/**
@@ -115,14 +89,14 @@ public class Capability {
 	 * VIEW:ALL
 	 * </pre>
 	 * 
-	 * Each component of the string is to be separated by {@link Capability#DELIMITER} (currently ':')
+	 * Each component of the string is to be separated by {@link CapabilityNode#DELIMITER} (currently ':')
 	 * @param capabilityString - the capabilityString to deserialize
 	 * @return a new Capability based on the CapabilityMode and PermissionMode in the String
 	 * @throws BadDataException if the capabilityString is malformed in some way/the corresponding CapabilityMode or PermissionMode could not be found
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public static Capability parseCapability(String capabilityString) 
+	public static CapabilityNode parseCapability(String capabilityString) 
 		throws BadDataException {
 		CapabilityMode capMode;
 		PermissionMode permMode;
@@ -130,12 +104,20 @@ public class Capability {
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
 		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));
 
-		return new Capability(capMode, permMode);
+		return new CapabilityNode(capMode, permMode);
+	}
+
+	public String toString(boolean verbose) {
+		if(verbose) {
+			return capMode.name() + DELIMITER + permMode.name();
+		} else {
+			return capMode.getIdentifier() + DELIMITER + permMode.getIdentifier();
+		}
 	}
 
 	@Override
 	public String toString() {
-		return capMode.identifier + DELIMITER + permMode.identifier;
+		return toString(false);
 	}
 
 	@Override
@@ -143,11 +125,11 @@ public class Capability {
 		if(!this.getClass().equals(other.getClass())) {
 			return false;
 		}
-		Capability cap = (Capability)other;
-		if(cap.capMode.identifier != this.capMode.identifier) {
+		CapabilityNode cap = (CapabilityNode)other;
+		if(cap.capMode.getIdentifier() != this.capMode.getIdentifier()) {
 			return false;
 		}
-		if(cap.permMode.identifier != this.permMode.identifier) {
+		if(cap.permMode.getIdentifier() != this.permMode.getIdentifier()) {
 			return false;
 		}
 
@@ -157,8 +139,8 @@ public class Capability {
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder()
-			.append(capMode.identifier)
-			.append(permMode.identifier)
+			.append(capMode.getIdentifier())
+			.append(permMode.getIdentifier())
 			.build();
 	}
 }

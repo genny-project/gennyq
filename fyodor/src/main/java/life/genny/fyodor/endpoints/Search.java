@@ -86,6 +86,7 @@ public class Search {
 			return Response.ok().entity(json).build();
 
 		} catch (ItemNotFoundException e) {
+			log.error("Got ItemNotFound! " + e.getMessage());
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
 	}
