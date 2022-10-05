@@ -90,6 +90,7 @@ public class CapHandler extends Manager {
 	public Boolean traitCapabilitiesMet(Trait trait) {
 		if(userToken == null) {
 			error("[!] No UserToken, cannot verify capabilities");
+			return false;
 		}
 
 		Set<Capability> capabilities = capMan.getUserCapabilities();
