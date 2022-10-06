@@ -14,6 +14,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -487,7 +488,6 @@ public class SearchService {
 				filter = new Filter(field, operator, value);
 			}
 
-			log.info("searchBE.getClauseContainers().size() :" + searchBE.getClauseContainers().size());
 			searchBE.remove(filter);
 			searchBE.add(filter);
 		}
@@ -715,4 +715,57 @@ public class SearchService {
 		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
 		return bases;
 	}
+
+	/**
+	 * Send ask by question code and Search base entity code
+	 * @param code Question code
+	 * @param sbeCode Search base entity code
+	 */
+	public void sendAsk(String code, String sbeCode, Pair<String, String>... childCodes) {
+		Ask ask = new Ask();
+
+		ask.setQuestionCode(code);
+		ask.setName(code);
+		ask.setTargetCode(sbeCode);
+
+		Question question = new Question();
+		question.setCode(code);
+		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+		ask.setQuestion(question);
+
+		for(Pair<String,String> pair  : childCodes) {
+			Ask childAsk = new Ask();
+			childAsk.setQuestionCode(pair.getKey());
+			childAsk.setName(pair.getKey());
+			childAsk.setTargetCode(sbeCode);
+
+			Question childQuestion = new Question();
+			childQuestion.setCode(pair.getKey());
+			childQuestion.setAttributeCode(pair.getKey());
+			childQuestion.setPlaceholder(pair.getValue());
+			childAsk.setQuestion(childQuestion);
+			ask.addChildAsk(childAsk);
+		}
+
+		QDataAskMessage msg = new QDataAskMessage(ask);
+		msg.setToken(userToken.getToken());
+		msg.setTargetCode(sbeCode);
+		msg.setQuestionCode(code);
+		msg.setMessage(code);
+		msg.setReplace(true);
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
+	/**
+	 * Return search base entity code with jti
+	 *
+	 * @param sbeCode Search Base entity
+	 * @return Search base entity with jti
+	 */
+	public String getSearchBaseEntityCodeByJTI(String sbeCode) {
+		String newSbeCode = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
+		return newSbeCode;
+	}
+
 }

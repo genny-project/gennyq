@@ -25,12 +25,33 @@ public class EventMessageUtils {
     public static final String ITEMS = "items";
     public static final String DATA = "data";
 
+    public static final String FILTER_CODE = "user_input";
+
     /**
      * Get name attribute of message
      * @param data Data
      * @return name attribute of message
      */
     public static String getName(String data) {
+        return getValueByCode(data, NAME);
+    }
+
+
+    /**
+     * Get name attribute of message
+     * @param data Data
+     * @return name attribute of message
+     */
+    public static String getFilterCode(String data) {
+        return getValueByCode(data, FILTER_CODE);
+    }
+
+    /**
+     * Get name attribute of message
+     * @param data Data
+     * @return name attribute of message
+     */
+    public static String getValueByCode(String data,String code) {
         JsonObject json = jsonb.fromJson(data, JsonObject.class);
         String result = getSafeValueByCode(json,NAME);
         if(result.isEmpty()) {
@@ -40,7 +61,7 @@ public class EventMessageUtils {
                 JsonObject first = items.getJsonObject(0);
                 String value  = first.getString(GennyConstants.VALUE);
                 JsonObject valJson = jsonb.fromJson(value, JsonObject.class);
-                result = valJson.getString(NAME);
+                result = valJson.getString(code);
                 return result;
             }
         }

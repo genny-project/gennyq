@@ -139,8 +139,11 @@ public final class GennyConstants {
 
 	//saved searches
 	public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
-	public static final String QUE_SAVED_SEARCHES_LIST = "QUE_SAVED_SEARCHES_LIST";
-	public static final String QUE_CODE_SAVED_SEARCH = "QUE_CODE_SAVED_SEARCH";
+	public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
+	public static final String QUE_SAVED_SEARCH_LIST = "QUE_SAVED_SEARCH_LIST";
+	public static final String QUE_SAVED_SEARCH_CODE = "QUE_SAVED_SEARCH_CODE";
+
+	public static final String QUE_FILTER_APPLY = "QUE_FILTER_APPLY";
 
 }
 

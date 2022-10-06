@@ -816,11 +816,11 @@ public class SearchUtils {
 									   		Map<String, Map<String, String>> listFilParams) {
 		//current filter state
 		Ask curAsk = new Ask();
-		curAsk.setQuestionCode(GennyConstants.QUE_CODE_SAVED_SEARCH);
-		curAsk.setAttributeCode(GennyConstants.QUE_CODE_SAVED_SEARCH);
+		curAsk.setQuestionCode(GennyConstants.QUE_SAVED_SEARCH_CODE);
+		curAsk.setAttributeCode(GennyConstants.QUE_SAVED_SEARCH_CODE);
 		curAsk.setName(filterCode);
 		Question curQue = new Question();
-		curQue.setCode(GennyConstants.QUE_CODE_SAVED_SEARCH);
+		curQue.setCode(GennyConstants.QUE_SAVED_SEARCH_CODE);
 		curAsk.setQuestion(curQue);
 
 		ask.addChildAsk(curAsk);
@@ -837,6 +837,7 @@ public class SearchUtils {
 
 			childAsk.setName(param.getValue().get(GennyConstants.COLUMN));
 			childAsk.setHidden(false);
+			childAsk.setDisabled(false);
 			childAsk.setQuestionCode(param.getValue().get(GennyConstants.QUESTIONCODE));
 			childAsk.setQuestion(question);
 			childAsk.setTargetCode(getSearchBaseEntityCodeByJTI(sbeCode));
@@ -957,6 +958,7 @@ public class SearchUtils {
 		String targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
 		ask.setSourceCode(userToken.getUserCode());
 		ask.setTargetCode(targetCode);
+		ask.setHidden(true);
 
 		Question question = new Question();
 		question.setCode(GennyConstants.FILTER_QUE_EXIST);
