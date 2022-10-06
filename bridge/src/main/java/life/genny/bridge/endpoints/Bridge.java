@@ -79,6 +79,9 @@ public class Bridge {
 	@ConfigProperty(name = "bridge.id", defaultValue = "false")
 	String bridgeId;
 
+	@ConfigProperty(name = "genny.keycloak.realm", defaultValue = "internmatch")
+	String keycloakRealm;
+
 	/**
 	 * The entrypoint for external clients who wants to establish a connection with
 	 * the backend. The client will need be informed after calling this endpoint
@@ -101,7 +104,7 @@ public class Bridge {
 		try {
 			// init config properties
 			InitProperties props = new InitProperties();
-			props.setRealm("internmatch");
+			props.setRealm(keycloakRealm);
 			props.setKeycloakRedirectUri(CommonUtils.getSystemEnv("ENV_KEYCLOAK_REDIRECTURI"));
 			props.setMediaProxyUrl(url);
 			props.setApiUrl(url);
