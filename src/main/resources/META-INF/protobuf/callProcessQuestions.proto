@@ -42,19 +42,23 @@ message S2SData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string events = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string pcmCode = 3; 
+	optional string location = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string productCode = 4; 
+	optional string parent = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 5; 
+	optional string pcmCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 6; 
+	optional string productCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 7; 
+	optional string questionCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional TimerData timerData = 8; 
+	optional string sourceCode = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 9; 
+	optional string targetCode = 9; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional TimerData timerData = 10; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 11; 
 }
 /* @Indexed */ 
 message TimerData { 

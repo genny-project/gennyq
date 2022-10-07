@@ -1,1 +1,1 @@
-["createBaseEntity.proto","callProcessQuestions.proto","personLifecycle.proto","processQuestions.proto","updatepcm.proto","testQuestion.proto","view.proto","receiveQuestionRequest.proto","edit.proto","authInit.proto","sendData.proto","sendmessage.proto"]
+["callProcessQuestions.proto","sendmessage.proto","personLifecycle.proto","processQuestions.proto","receiveQuestionRequest.proto","authInit.proto","createBaseEntity.proto","testQuestion.proto","edit.proto"]
