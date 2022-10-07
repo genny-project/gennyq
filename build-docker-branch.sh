@@ -2,14 +2,13 @@
 VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 echo "Project Version: $VERSION"
 
-echo ${#}
 if [ "$#" -lt 1 ]; then
 	echo "Must supply the TAG as the first arg!"
 	exit 1;
 elif [ "$#" -ge 2 ]; then
 	TAG=$1
 	dependencies=( )
-	projects=( ${@:3} )
+	projects=( ${@:2} )
 else
 	TAG=$1
 	dependencies=( qwandaq serviceq kogito-common )

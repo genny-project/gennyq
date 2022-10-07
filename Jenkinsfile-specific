@@ -29,46 +29,25 @@ pipeline {
             steps {
                 parallel (
                     "Build GadaQ" : {
-                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                            sh ". ./ports"
-                            sh "./build-docker-branch.sh ${TAG} gadaq"
-                        }
+						sh "./build-docker-branch.sh ${TAG} gadaq"
                     },
                     "Build Bridge" : {
-                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                            sh ". ./ports"
-                            sh "./build-docker-branch.sh ${TAG} bridge"
-                        }
+						sh "./build-docker-branch.sh ${TAG} bridge"
                     },
                     "Build Fyodor" : {
-                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                            sh ". ./ports"
-                            sh "./build-docker-branch.sh ${TAG} fyodor"
-                        }
+						sh "./build-docker-branch.sh ${TAG} fyodor"
                     },
                     "Build Dropkick" : {
-                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                            sh ". ./ports"
-                            sh "./build-docker-branch.sh ${TAG} dropkick"
-                        }
+						sh "./build-docker-branch.sh ${TAG} dropkick"
                     },
                     "Build Lauchy" : {
-                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                            sh ". ./ports"
-                            sh "./build-docker-branch.sh ${TAG} lauchy"
-                        }
+						sh "./build-docker-branch.sh ${TAG} lauchy"
                     },
                     "Build Messages" : {
-                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                            sh ". ./ports"
-                            sh "./build-docker-branch.sh ${TAG} messages"
-                        }
+						sh "./build-docker-branch.sh ${TAG} messages"
                     },
                     "Build Shleemy" : {
-                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
-                            sh ". ./ports"
-                            sh "./build-docker-branch.sh ${TAG} shleemy"
-                        }
+						sh "./build-docker-branch.sh ${TAG} shleemy"
                     }
                 )
             }
