@@ -1,0 +1,82 @@
+pipeline {
+    agent any
+    options {
+        ansiColor('xterm')
+    }
+    stages {
+        stage('Add Config files') {
+            steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                }
+            }
+        }
+        stage("Clone") {
+            steps {
+                git branch: "${BRANCH}",
+                    url: 'https://github.com/genny-project/gennyq'
+            }
+        }
+        stage("Build Dependencies") {
+            steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                }
+                sh "./build.sh"
+            }
+        }
+        stage("Build Services") {
+            steps {
+                parallel (
+                    "Build GadaQ" : {
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker-branch.sh ${BRANCH} gadaq"
+                        }
+                    },
+                    "Build Bridge" : {
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker-branch.sh ${BRANCH} bridge"
+                        }
+                    },
+                    "Build Fyodor" : {
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker-branch.sh ${BRANCH} fyodor"
+                        }
+                    },
+                    "Build Dropkick" : {
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker-branch.sh ${BRANCH} dropkick"
+                        }
+                    },
+                    "Build Lauchy" : {
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker-branch.sh ${BRANCH} lauchy"
+                        }
+                    },
+                    "Build Messages" : {
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker-branch.sh ${BRANCH} messages"
+                        }
+                    },
+                    "Build Shleemy" : {
+                        configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                            sh ". ./ports"
+                            sh "./build-docker-branch.sh ${BRANCH} shleemy"
+                        }
+                    }
+                )
+            }
+        }
+        stage("Push Docker Images") {
+            steps {
+                sh "./push-docker-branch.sh ${BRANCH}"
+            }
+        }
+    }
+}
