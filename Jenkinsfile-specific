@@ -75,7 +75,7 @@ pipeline {
         }
         stage("Push Docker Images") {
             steps {
-                sh "./push-docker-branch.sh ${BRANCH}"
+                sh "./push-docker-branch.sh ${TAG}"
             }
         }
     }
