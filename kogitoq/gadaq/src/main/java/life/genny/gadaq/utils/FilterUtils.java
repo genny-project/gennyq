@@ -1,5 +1,6 @@
 package life.genny.gadaq.utils;
 
+import jdk.jfr.Event;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeLink;
@@ -14,6 +15,7 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
@@ -72,14 +74,14 @@ public class FilterUtils {
 
     public static final String FLT_PREF = "FLT_";
     public static final String PRI_PREFIX = "PRI_PREFIX";
-    public static final String ATT_PREF = "LNK_";
-    public static final String SAVED_SEARCHES = "SAVED_SEARCHES";
+    public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
 
     public static final String SAVE = "Save";
     public static final String APPLY = "Apply";
     public static final String SELECT_SAVED_SEARCH = "Select Saved Search";
     public static final String DELETE = "Delete";
+
 
 
     /**
@@ -129,9 +131,9 @@ public class FilterUtils {
      * @param code Message Code
      * @return Being filter submit
      */
-    public  boolean isFilterSubmit(String code) {
+    public  boolean isFilterApply(String code) {
         boolean result = false;
-        if(code.equalsIgnoreCase(GennyConstants.QUE_SUBMIT))
+        if(code.equalsIgnoreCase(GennyConstants.QUE_FILTER_APPLY))
             return true;
 
         return result;
@@ -153,15 +155,15 @@ public class FilterUtils {
 
     /**
      * Return value by event code in safe way
-     * @param attrMap Attribute Map
+     * @param msg Attribute Map
      * @param eventCode Event code
      * @return Return value by event code
      */
-    public String getSafeValueByCode(Map<String, Object> attrMap, String eventCode) {
+    public String getSafeValueByCode(JsonObject msg, String eventCode) {
         String value = "";
-        if(attrMap == null) return value;
-        if(attrMap.containsKey(eventCode)) {
-            value = attrMap.get(eventCode).toString();
+        if(msg == null) return value;
+        if(msg.containsKey(eventCode)) {
+            value = msg.get(eventCode).toString();
         }
         return value;
     }
@@ -281,12 +283,12 @@ public class FilterUtils {
 
     /**
      * Being whether event is pagination event or not
-     * @param attrs Attribute Map
+     * @param code Question code
      * @return Being whether event is pagination event or not
      */
-    public boolean isPaginationEvent(Map<String, Object> attrs) {
-        if(attrs != null && (attrs.get(GennyConstants.CODE).toString().equalsIgnoreCase(GennyConstants.PAGINATION_NEXT)
-                || attrs.get(GennyConstants.CODE).toString().equalsIgnoreCase(GennyConstants.PAGINATION_PREV))) {
+    public boolean isPaginationEvent(String code) {
+        if(code.equalsIgnoreCase(GennyConstants.PAGINATION_NEXT)
+                || code.equalsIgnoreCase(GennyConstants.PAGINATION_PREV)) {
             return true;
         }
 
@@ -393,60 +395,7 @@ public class FilterUtils {
     }
 
 
-    /**
-     * Get message token
-     * @param msg Message
-     * @return Token
-     */
-    public String getToken(Map<String, Object> msg) {
-        return getSafeValueByCode(msg, GennyConstants.TOKEN);
-    }
 
-    /**
-     * Get message code
-     * @param msg Message
-     * @return Code
-     */
-    public String getCode(Map<String, Object> msg) {
-        return getSafeValueByCode(msg,GennyConstants.CODE);
-    }
-
-
-    /**
-     * Get message target code
-     * @param msg Message
-     * @return Target code
-     */
-    public String getTargetCode(Map<String, Object> msg) {
-        return getSafeValueByCode(msg, GennyConstants.TARGETCODE);
-    }
-
-    /**
-     * Get message target codes
-     * @param msg Message
-     * @return Target code
-     */
-    public List getTargetCodes(Map<String, Object> msg) {
-        return (List) msg.get(GennyConstants.TARGETCODES);
-    }
-
-    /**
-     * Get message value
-     * @param msg Message
-     * @return Message Value
-     */
-    public String getValue(Map<String, Object> msg) {
-        return getSafeValueByCode(msg, GennyConstants.VALUE);
-    }
-
-    /**
-     * Get attribute code
-     * @param msg Message
-     * @return Attribute code
-     */
-    public String getAttributeCode(Map<String, Object> msg) {
-        return getSafeValueByCode(msg, GennyConstants.ATTRIBUTECODE);
-    }
 
     /**
      * Check code whether is quesion showing filter box or not
@@ -470,7 +419,7 @@ public class FilterUtils {
 
     public boolean isNeededFilterAndQuickSearch(String code) {
         boolean result = isValidFilterBox(code) || isValidBucketFilterBox(code)
-                || isFilterSubmit(code);
+                || isFilterApply(code);
 
         return result;
     }
@@ -481,11 +430,11 @@ public class FilterUtils {
      * @param value Message value
      * @param targetCode Target code
      */
-    public void searchQuickText(Map<String, Object> msg, String value, String targetCode) {
+    public void searchQuickText(JsonObject msg, String value, String targetCode) {
         String attrCode = Attribute.PRI_NAME;
         String attrName = Operator.LIKE.toString();
         String text =  "%" + value.replaceFirst("!","") + "%";
-        List<String> targetCodes = getTargetCodes(msg);
+        List<String> targetCodes =  EventMessageUtils.getTargetCodes(msg);
 
             // Go to bucket
         if (targetCodes.size() > 1) {
@@ -562,24 +511,27 @@ public class FilterUtils {
 
 
     /**
-     * Save searches
+     * Save search
+     * @param code Event name
+     * @param queGrp Event name
+     * @param sbeCode Event name
      * @param name Event name
+     * @param value Event value
      */
-    public void saveSearch(String sbeCode,String code, String name,String value) {
-        String attCode = ATT_PREF + SAVED_SEARCHES;
-        String prefix = FLT_PREF;
-        Attribute attrFound = saveAttribute(attCode);
-        BaseEntity base = saveBaseEntity(attrFound, prefix,name,value);
+    public void saveSearch(String code,String queGrp,String sbeCode, String name,String value) {
+        Attribute attrFound = saveAttribute(LNK_SAVED_SEARCHES);
+        String cleanParams = EventMessageUtils.getCleanFilterParamsByString(value);
+        BaseEntity base = saveBaseEntity(attrFound, FLT_PREF,name,cleanParams);
         String filterCode = base.getCode();
 
-        Map<String,Map<String, String>> params = EventMessageUtils.parseFilterMessage(value);
-        //update filter existing group
+        Map<String,Map<String, String>> params = EventMessageUtils.parseFilterMessage(cleanParams);
+
+        /* update filter existing group */
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,params);
 
-        String fltCond = FLT_PREF + "%";
-        String queCode = QUE_PREF + SAVED_SEARCHES;
-        searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,"queGroup",queCode,GennyConstants.PRI_NAME,
-                                GennyConstants.VALUE,fltCond);
+        searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,queGrp,
+                                GennyConstants.QUE_SAVED_SEARCH_LIST, GennyConstants.PRI_NAME,
+                                GennyConstants.VALUE,FLT_PREF + "%");
     }
 
     /**
@@ -637,22 +589,21 @@ public class FilterUtils {
     /**
      * Save searches
      * @param sbeCode Search base entity code
-     * @param value Event value
+     * @param msg Message object
      */
-    public void handleDeleteSearch(String sbeCode,String code, String value) {
+    public void handleDeleteSearch(String sbeCode,String code, JsonObject msg) {
         Map<String,Map<String, String>> params = new HashMap<>();
 
-        Map<String,Map<String, String>>  parsed =  EventMessageUtils.parseFilterMessage(value);
-        String filterCode = parsed.get("user_input").toString();
-        deleteBaseEntity(filterCode);
+        String searchCode = EventMessageUtils.getSearchCode(msg);
+        deleteBaseEntity(searchCode);
 
         //update filter existing group
-        searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,params);
+        searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,searchCode,params);
 
         String fltCond = FLT_PREF + "%";
-        String queCode = QUE_PREF + SAVED_SEARCHES;
-        searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,"queGroup",queCode,GennyConstants.PRI_NAME,
-                GennyConstants.VALUE,fltCond);
+        String queGroup = EventMessageUtils.getParentCode(msg) ;
+        searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,queGroup,GennyConstants.QUE_SAVED_SEARCH_LIST,
+                                GennyConstants.PRI_NAME, GennyConstants.VALUE,fltCond);
     }
 
     /**
@@ -684,11 +635,10 @@ public class FilterUtils {
         Map<String,Map<String, String>>  result =  new HashMap<>();
 
         String value = "";
-        String attCode = ATT_PREF + SAVED_SEARCHES;
         try {
             // get the filter by base entity code
             BaseEntity base = beUtils.getBaseEntityByCode(filterCode);
-            value = getValueStringByAttCode(base,attCode);
+            value = getValueStringByAttCode(base,LNK_SAVED_SEARCHES);
 
             result = jsonb.fromJson(value, Map.class);
         }catch(Exception ex) {}
@@ -761,10 +711,10 @@ public class FilterUtils {
      * Handle saved search selected
      * @param target Target code or sbe code
      * @param eventCode Event code
-     * @param value Event Value
+     * @param msg Message Object
      */
-    public void handleSearchSelected(String target, String eventCode,String value) {
-        String filterCode =  EventMessageUtils.getFilterCode(value);
+    public void handleSearchSelected(String target, String eventCode,JsonObject msg) {
+        String filterCode =  EventMessageUtils.getFilterCode(msg);
         Map<String,Map<String, String>>  params = getFilterParamByBaseCode(target,filterCode);
         searchService.sendFilterGroup(target,GennyConstants.QUE_FILTER_GRP,eventCode,true,filterCode,params);
     }
@@ -800,40 +750,57 @@ public class FilterUtils {
      */
     public void handleFilterEvent(String event) {
         try {
-            Map<String, Object> msg = EventMessageUtils.parseEventMessage(event,SearchService.SearchOptions.FILTER);
+            JsonObject msg = jsonb.fromJson(event, JsonObject.class);;
 
-            String token = getToken(msg);
-            String code = getCode(msg);
-            String targetCode = getTargetCode(msg);
-            String value = getValue(msg);
-            String sbeCode = "";
-            String queGroup = "";
+            String token = EventMessageUtils.getToken(msg);
+            String code = EventMessageUtils.getCode(msg);
+            String targetCode = EventMessageUtils.getTargetCode(msg);
+            String value = EventMessageUtils.getValue(msg);
+            String queGroup = EventMessageUtils.getParentCode(msg);
             Map<String,Map<String, String>> filterParams = new HashMap<>();
             boolean isSubmitted = false;
 
-            //init user token
+            /* init user token */
             if(!token.isEmpty()) { userToken.init(token);}
 
+            /* bucket pagination */
             if(isBucketPagination(code)) {
                 searchService.handleSortAndSearch(code,code,"",targetCode, SearchService.SearchOptions.PAGINATION_BUCKET);
+
+            /* Show saved search for table */
             } else if(isValidFilterBox(code)) {
-                sbeCode =  getSearchEntityCodeByMsgCode(code);
+                targetCode =  getSearchEntityCodeByMsgCode(code);
                 queGroup = GennyConstants.QUE_TABLE_FILTER_GRP;
+
+            /* Show saved search for bucket */
             } else if(isValidBucketFilterBox(code))  {
-                sbeCode =  SearchCaching.SBE_APPLIED_APPLICATIONS;
+                targetCode =  SearchCaching.SBE_APPLIED_APPLICATIONS;
                 queGroup = GennyConstants.QUE_BUCKET_INTERNS_GRP;
-            } else if(isFilterSubmit(code)) {
+
+            /* apply filter */
+            } else if(isFilterApply(code)) {
                 handleFilter(targetCode,value);
                 isSubmitted = true;
+                filterParams = EventMessageUtils.getCleanFilterParamsByMap(value);
+            /* quick search is selected */
             } else if(isQuickSearchSelectOptions(code,targetCode, value)) {
                 searchService.sendQuickSearchItems(GennyConstants.SBE_DROPDOWN,GennyConstants.QUE_BUCKET_INTERNS_GRP
                         ,GennyConstants.QUE_SELECT_INTERN,GennyConstants.PRI_NAME, value);
+
+            /* Button save search */
+            } else if(isButtonSaveSearch(code)) {
+                String searchName = EventMessageUtils.getSearchName(msg);
+                saveSearch(code,queGroup, targetCode,searchName, value);
+            }
+            /* Button delete search */
+            else if(isButtonDeleteSearch(code)) {
+                handleDeleteSearch(targetCode, code,msg);
             }
 
-            //send back quick search dropdown and filter group
+            /* send back quick search dropdown and filter group */
             if(isNeededFilterAndQuickSearch(code)) {
-                String filterCode = "";
-                sendFilterAndQuickSearch(code,queGroup,sbeCode,filterCode,filterParams,isSubmitted);
+                String filterCode = EventMessageUtils.getFilterCode(msg);
+                sendFilterAndQuickSearch(code,queGroup,targetCode,filterCode,filterParams,isSubmitted);
             }
 
         } catch(Exception ex) {}
@@ -846,36 +813,44 @@ public class FilterUtils {
      */
     public void handleFilterEventData(String event) {
         try {
-            Map<String, Object> msg = EventMessageUtils.parseEventMessage(event, SearchService.SearchOptions.SEARCH);
+            JsonObject msg = jsonb.fromJson(event, JsonObject.class);
 
-            String token = getToken(msg);;
-            String code = getCode(msg);
-            String attrCode = getAttributeCode(msg);
+            String token = EventMessageUtils.getToken(msg);;
+            String code = EventMessageUtils.getCode(msg);
+            String attrCode = EventMessageUtils.getAttributeCode(msg);
             String attrName = "";
-            String value = getValue(msg);
-            String targetCode = getTargetCode(msg);
+            String value = EventMessageUtils.getValue(msg);
+            String targetCode = EventMessageUtils.getTargetCode(msg);
 
-            //init user token
+            /* init user token */
             if(!token.isEmpty()) { userToken.init(token);}
 
-            // Go to sorting
+            /* Go to sorting */
             if (isSorting(attrCode, targetCode)) {
-                handleSorting(attrCode,attrName,value,targetCode);
-            } else if (isSearchText(attrCode)) { //Go searching text
+                handleSorting(attrCode, attrName, value, targetCode);
+            /* pagination */
+            } else if(isPaginationEvent(code)) {
+                    String sbeCode = getSafeValueByCode(msg,GennyConstants.TARGETCODE);
+                    searchService.handleSortAndSearch(code,code,"",sbeCode, SearchService.SearchOptions.PAGINATION);
+            /* Go searching text */
+            } else if (isSearchText(attrCode)) {
                 searchQuickText(msg, value, targetCode);
-            } else if(isFilerColumnSelected(code, attrCode)) { // Go to filter column selected
+
+            /* Go to filter column selected */
+            } else if(isFilerColumnSelected(code, attrCode)) {
                 selectFilerColumn(targetCode, value);
-            } else if(isFilerOptionSelected(code, attrCode)) { // Go to filter option selected
+
+            /* Go to filter option selected */
+            } else if(isFilerOptionSelected(code, attrCode)) {
 //                setFilterOption(value);
+
+            /* Go to list of searches selected */
             } else if(isSearchSelected(code)) {
-                handleSearchSelected(targetCode,code,value);
+                handleSearchSelected(targetCode,code,msg);
+
+            /*Quick search selected*/
             } else if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
                 selectQuickSearch(token, attrCode, attrName, value);
-            } else if(isButtonSaveSearch(code)) {
-                String name =  EventMessageUtils.getName(event);
-                saveSearch(targetCode,code,name,value);
-            } else if(isButtonDeleteSearch(code)) {
-                handleDeleteSearch(targetCode, code,value);
             }
 
         } catch (Exception ex){}

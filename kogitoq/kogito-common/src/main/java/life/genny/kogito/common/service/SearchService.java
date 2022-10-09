@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jboss.logging.Logger;
@@ -450,6 +451,8 @@ public class SearchService {
 
 		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCodeJti, SearchEntity.class);
 
+		excludeExtraFilterBySearchBE(searchBE);
+
 		//add conditions by filter parameters
 		setFilterParamsToSearchBE(searchBE,listFilterParams);
 
@@ -457,6 +460,20 @@ public class SearchService {
 
 		sendMessageBySearchEntity(searchBE);
 		sendSearchPCM(GennyConstants.PCM_TABLE, sbeCodeJti);
+	}
+
+	/**
+	 * Remove extra filter parameters to search base entity
+	 * @param searchBE Search base entity
+	 */
+	public void excludeExtraFilterBySearchBE(SearchEntity searchBE) {
+		List<ClauseContainer> clauses = searchBE.getClauseContainers();
+		for(ClauseContainer clause : clauses){
+			if(!clause.getFilter().getCode().startsWith(GennyConstants.PRI_CODE) &&
+					!clause.getFilter().getCode().startsWith(GennyConstants.PRI_IS_PREFIX)) {
+				searchBE.getClauseContainers().remove(clause);
+			}
+		}
 	}
 
 	/**

@@ -3,10 +3,12 @@ package life.genny.gadaq.utils;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
@@ -24,47 +26,152 @@ public class EventMessageUtils {
     public static final String NAME = "name";
     public static final String ITEMS = "items";
     public static final String DATA = "data";
-
-    public static final String FILTER_CODE = "user_input";
+    public static final String VALUE = "value";
+    public static final String PARENT_CODE = "parentCode";
+    public static final String SELECTED_OPTION = "selectedOption";
+    public static final String SEARCH_NAME = "SEARCH_NAME";
+    public static final String SEARCH_CODE = "SEARCH_CODE";
 
     /**
      * Get name attribute of message
-     * @param data Data
+     * @param msg Message object
      * @return name attribute of message
      */
-    public static String getName(String data) {
-        return getValueByCode(data, NAME);
+    public static String getName(JsonObject msg) {
+        return getValueByCode(msg, NAME);
+    }
+
+    /**
+     * Get message token
+     * @param msg Message object
+     * @return Token
+     */
+    public static String getToken(JsonObject msg) {
+        return getValueByCode(msg, GennyConstants.TOKEN);
+    }
+
+    /**
+     * Get message code
+     * @param msg Message
+     * @return Code
+     */
+    public static String getCode(JsonObject msg) {
+        return getValueByCode(msg,GennyConstants.CODE);
     }
 
 
     /**
-     * Get name attribute of message
-     * @param data Data
-     * @return name attribute of message
+     * Get message target code
+     * @param msg Message
+     * @return Target code
      */
-    public static String getFilterCode(String data) {
-        return getValueByCode(data, FILTER_CODE);
+    public static String getTargetCode(JsonObject msg) {
+        return getValueByCode(msg, GennyConstants.TARGETCODE);
     }
 
     /**
-     * Get name attribute of message
-     * @param data Data
-     * @return name attribute of message
+     * Get message target codes
+     * @param msg Message
+     * @return Target code
      */
-    public static String getValueByCode(String data,String code) {
-        JsonObject json = jsonb.fromJson(data, JsonObject.class);
-        String result = getSafeValueByCode(json,NAME);
-        if(result.isEmpty()) {
-            //check items
-            JsonArray items = json.getJsonArray(ITEMS);
-            if(items.size() > 0) {
-                JsonObject first = items.getJsonObject(0);
-                String value  = first.getString(GennyConstants.VALUE);
-                JsonObject valJson = jsonb.fromJson(value, JsonObject.class);
-                result = valJson.getString(code);
-                return result;
-            }
+    public static List getTargetCodes(JsonObject msg) {
+        if(msg.containsKey(GennyConstants.TARGETCODES)) {
+            return (List) msg.get(GennyConstants.TARGETCODES);
         }
+        return new ArrayList();
+    }
+
+    /**
+     * Get message value
+     * @param msg Message
+     * @return Message Value
+     */
+    public static String getValue(JsonObject msg) {
+        return getValueByCode(msg, GennyConstants.VALUE);
+    }
+
+    /**
+     * Get attribute code
+     * @param msg Message
+     * @return Attribute code
+     */
+    public static String getAttributeCode(JsonObject msg) {
+        return getValueByCode(msg, GennyConstants.ATTRIBUTECODE);
+    }
+
+    /**
+     * Get name attribute of message
+     * @param msg Message object
+     * @return name attribute of message
+     */
+    public static String getSearchName(JsonObject msg) {
+        return getValueByCode(msg, SEARCH_NAME);
+    }
+
+    /**
+     * Get name attribute of message
+     * @param msg Message object
+     * @return name attribute of message
+     */
+    public static String getSearchCode(JsonObject msg) {
+        return getValueByCode(msg, SEARCH_CODE);
+    }
+
+    /**
+     * Get name attribute of message
+     * @param msg Message object
+     * @return name attribute of message
+     */
+    public static String getFilterCode(JsonObject msg) {
+        return getValueByCode(msg, SELECTED_OPTION);
+    }
+
+    /**
+     * Get Parent code
+     * @param msg Message object
+     * @return name attribute of message
+     */
+    public static String getParentCode(JsonObject msg) {
+        return getValueByCode(msg, PARENT_CODE);
+    }
+
+    /**
+     * Get name attribute of message
+     * @param json Json object
+     * @return name attribute of message
+     */
+    public static String getValueByCode(JsonObject json,String code) {
+        String result = "";
+        try {
+            result = getSafeValueByCode(json, code);
+            if (result.isEmpty()) {
+                /* check items */
+                JsonArray items = json.getJsonArray(ITEMS);
+                JsonObject dataJson = null;
+                if (items!=null && items.size() > 0) {
+                    dataJson = items.getJsonObject(0);
+                }
+                /* check data */
+                if(dataJson == null) {
+                    dataJson = json.getJsonObject(DATA);
+                }
+                /* Check value */
+                if(!dataJson.containsKey(code)) {
+                    if(dataJson.get(VALUE).getValueType().equals(JsonValue.ValueType.STRING)) {
+                        String attValue = dataJson.getString(VALUE);
+                        dataJson = jsonb.fromJson(attValue, JsonObject.class);
+                    } else if(dataJson.get(VALUE).getValueType().equals(JsonValue.ValueType.OBJECT)) {
+                        dataJson = dataJson.getJsonObject(VALUE);
+                    }
+                }
+
+                if(dataJson.containsKey(code)) {
+                    result = dataJson.getString(code);
+                }
+            }
+
+        }catch(Exception ex) {}
+
         return result;
     }
 
@@ -80,6 +187,8 @@ public class EventMessageUtils {
         if(json.containsKey(eventCode)) {
             value = json.get(eventCode).toString();
         }
+        value = StringUtils.stripStart(value,"\"");
+        value = StringUtils.stripEnd(value,"\"");
         return value;
     }
 
@@ -266,6 +375,31 @@ public class EventMessageUtils {
         }
 
         return false;
+    }
+
+    /**
+     * Return clean map  of filter parameters
+     * @param value Event value
+     * @return clean map  of filter parameters
+     */
+    public static Map<String, Map<String, String>> getCleanFilterParamsByMap(String value) {
+        Map<String,Map<String, String>> params  = parseFilterMessage(value);
+        params.remove(SEARCH_NAME);
+        params.remove(SEARCH_CODE);
+        return params;
+    }
+
+
+    /**
+     * Return clean string  of filter parameters
+     * @param value Event value
+     * @return clean string  of filter parameters
+     */
+    public static String getCleanFilterParamsByString(String value) {
+        Map<String,Map<String, String>> params  = parseFilterMessage(value);
+        params.remove(SEARCH_NAME);
+        params.remove(SEARCH_CODE);
+        return jsonb.toJson(params);
     }
 
 }
