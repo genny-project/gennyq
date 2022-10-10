@@ -75,15 +75,15 @@ message TimerData {
 message TimerEvent { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string statusCode = 1; 
+	optional int64 timeStamp = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 timeStamp = 2; 
+	optional string uniqueCode = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string uniqueCode = 3; 
+	optional string updatePairs = 3; 
 }
 enum EAbortReason { 
 	option java_package = "life.genny.kogito.common.models.S2SData";
-	CANCEL = 1;
+	CANCEL = 0;
 	TIMEOUT = 2;
-	NONE = 0;
+	NONE = 1;
 }
