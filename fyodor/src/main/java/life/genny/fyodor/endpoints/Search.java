@@ -72,10 +72,7 @@ public class Search {
 	public Response search(SearchEntity searchEntity) {
 
 		log.info("Search POST received..");
-		log.error(CommonUtils.equalsBreak(100));
-		log.error(jsonb.toJson(searchEntity));
-		log.info("Got " + searchEntity.getFilters().size() + " filters");
-
+		
 		if (userToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();

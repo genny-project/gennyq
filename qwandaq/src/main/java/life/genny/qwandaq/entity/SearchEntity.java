@@ -105,15 +105,6 @@ public class SearchEntity extends BaseEntity {
 		return (List<T>) traitList;
 	}
 
-	public List<Filter> getFilters() {
-		return getTraits(Filter.class);
-	}
-
-	public SearchEntity setFilters(List<Filter> filters) {
-		this.traits.put(Filter.class, filters);
-		return this;
-	}
-
 	public List<Sort> getSorts() {
 		return getTraits(Sort.class);
 	}
