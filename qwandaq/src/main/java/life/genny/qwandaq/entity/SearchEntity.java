@@ -1,7 +1,9 @@
 package life.genny.qwandaq.entity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -17,16 +19,17 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
+
 import life.genny.qwandaq.entity.search.trait.Action;
-import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
-import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.entity.search.trait.Trait;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
  * different filters/search to the baseEntity and its attributes.
  */
+@SuppressWarnings("unchecked")
 @RegisterForReflection
 public class SearchEntity extends BaseEntity {
 
@@ -34,10 +37,13 @@ public class SearchEntity extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
+	// TODO: Polish this
+	private Map<Class<? extends Trait>, List<? extends Trait>> traits = new HashMap<>();
+
 	private List<ClauseContainer> clauseContainers = new ArrayList<>();
-	private List<Sort> sorts = new ArrayList<>();
-	private List<Column> columns = new ArrayList<>();
-	private List<Action> actions = new ArrayList<>();
+	// private List<Sort> sorts = new ArrayList<>();
+	// private List<Column> columns = new ArrayList<>();
+	// private List<Action> actions = new ArrayList<>();
 	private Boolean allColumns = false;
 
 	// TODO: redesign filters
@@ -88,28 +94,42 @@ public class SearchEntity extends BaseEntity {
 		this.clauseContainers = clauseContainers;
 	}
 
-	public List<Sort> getSorts() {
-		return sorts;
+	public <T extends Trait> List<T> getTraits(Class<T> traitType) {
+		List<? extends Trait> traitList = traits.get(traitType);
+		System.out.println("[!] Retrieving: " + traitType.getSimpleName());
+		if(traitList == null) {
+			traitList = new ArrayList<>();
+			traits.put(traitType, traitList);
+		}
+		return (List<T>)traitList;
 	}
 
-	public void setSorts(List<Sort> sorts) {
-		this.sorts = sorts;
+	public List<Sort> getSorts() {
+		return getTraits(Sort.class);
+	}
+
+	public SearchEntity setSorts(List<Sort> sorts) {
+		this.traits.put(Sort.class, sorts);
+		return this;
 	}
 
 	public List<Column> getColumns() {
-		return columns;
+		System.out.println("retrieving columns");
+		return getTraits(Column.class);
 	}
 
-	public void setColumns(List<Column> columns) {
-		this.columns = columns;
+	public SearchEntity setColumns(List<Column> columns) {
+		this.traits.put(Column.class, columns);
+		return this;
 	}
 
 	public List<Action> getActions() {
-		return actions;
+		return getTraits(Action.class);
 	}
 
-	public void setActions(List<Action> actions) {
-		this.actions = actions;
+	public SearchEntity setActions(List<Action> actions) {
+		this.traits.put(Action.class, actions);
+		return this;
 	}
 
 	public Boolean getAllColumns() {
@@ -118,71 +138,6 @@ public class SearchEntity extends BaseEntity {
 
 	public SearchEntity setAllColumns(Boolean allColumns) {
 		this.allColumns = allColumns;
-		return this;
-	}
-
-	/*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#toString()
-   */
-	@Override
-	public String toString() {
-		return "SearchEntity[ code = " + this.getCode() + "]";
-	}
-
-	/**
-   * Add an column to the search results
-   * 
-   * @param column Column object
-   * @return SearchEntity
-   */
-	public SearchEntity add(Column column) {
-		this.columns.add(column);
-		return this;
-	}
-
-	/**
-   * Add an associated entity column to the search results
-   * 
-   * @param associatedColumn AssociatedColumn object
-   * @return SearchEntity
-   */
-	public SearchEntity add(AssociatedColumn associatedColumn) {
-		this.columns.add(associatedColumn);
-		return this;
-	}
-
-	/**
-   * Add an attribute sort order to a search
-   * 
-   * @param sort Sort object
-   * @return SearchEntity
-   */
-	public SearchEntity add(Sort sort) {
-		sorts.add(sort);
-		return this;
-	}
-
-	/**
-   * Add an Action to each search result
-   * 
-   * @param action
-   * @return SearchEntity
-   */
-	public SearchEntity add(Action action) {
-		this.actions.add(action);
-		return this;
-	}
-
-	/**
-   * Add a search filter
-   * 
-   * @param filter Filter object
-   * @return SearchEntity
-   */
-	public SearchEntity add(Filter filter) {
-		this.clauseContainers.add(new ClauseContainer(filter));
 		return this;
 	}
 
@@ -568,7 +523,7 @@ public class SearchEntity extends BaseEntity {
    * @return Set
    */
 	public Set<String> allowedColumns() {
-		return this.columns.stream()
+		return getTraits(Column.class).stream()
 		.map(c -> c.getCode())
 		.collect(Collectors.toSet());
 	}
@@ -588,9 +543,13 @@ public class SearchEntity extends BaseEntity {
    * @return SearchEntity
    */
 	public SearchEntity convertToSendable() {
-
+		List<Column> columns = getTraits(Column.class);
+		List<Action> actions = getTraits(Action.class);
+		log.info("Converting SBE: " + this.getCode() + " to sendable");
+		log.info("Columns: " + columns.size());
+		log.info("Actions: " + actions.size());
 		// add action attributes
-		IntStream.range(0, this.columns.size())
+		IntStream.range(0, columns.size())
 			.forEach(i -> {
 				Column column = columns.get(i);
 				Attribute attribute = new Attribute(Column.PREFIX + column.getCode(), column.getName(),
@@ -600,7 +559,7 @@ public class SearchEntity extends BaseEntity {
 			});
 
 		// add action attributes
-		IntStream.range(0, this.actions.size())
+		IntStream.range(0, actions.size())
 			.forEach(i -> {
 				Action action = actions.get(i);
 				Attribute attribute = new Attribute(Action.PREFIX + action.getCode(), action.getName(),
@@ -627,5 +586,23 @@ public class SearchEntity extends BaseEntity {
 
 		return this;
 	}
+
+	/*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
+  @Override
+  public String toString() {
+	  return "SearchEntity[ code = " + this.getCode() + "]";
+  }
+
+  public <T extends Trait> SearchEntity add(Trait trait) {
+	  boolean change = ((List<T>)getTraits(trait.getClass())).add((T)trait);
+	  log.info("Adding " + trait.getCode() + " to " + getCode() + ":" + trait.getClass().getSimpleName() + ". " + (change ? "success" : "failed"));
+
+	  log.info(trait.getClass().getSimpleName() + " Count: " + getTraits(trait.getClass()).size());
+	  return this;
+  }
 
 }

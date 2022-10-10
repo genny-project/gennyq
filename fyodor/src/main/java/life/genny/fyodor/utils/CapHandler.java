@@ -35,12 +35,14 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineColumnsFromCapabilities(SearchEntity searchEntity) {
-		info("Filtering columns");
 
-		List<Column> columns = searchEntity.getColumns().stream()
+		List<Column> columns = searchEntity.getColumns();
+		info("Filtering " + columns.size() + " columns");
+		columns = columns.stream()
 				.filter(column -> traitCapabilitiesMet(column))
 				.collect(Collectors.toList());
 
+		info("Filtered down to " + columns.size() + " columns");
 		searchEntity.setColumns(columns);
 	}
 
@@ -48,12 +50,13 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineSortsFromCapabilities(SearchEntity searchEntity) {
-		info("Filtering sorts");
+		List<Sort> sorts = searchEntity.getSorts();
+		info("Filtering " + sorts.size() + " sorts");
 
-		List<Sort> sorts = searchEntity.getSorts().stream()
+		sorts = sorts.stream()
 				.filter(sort -> traitCapabilitiesMet(sort))
 				.collect(Collectors.toList());
-
+		info("Filtered down to " + sorts.size() + " sorts");
 		searchEntity.setSorts(sorts);
 	}
 	
@@ -61,12 +64,14 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineFiltersFromCapabilities(SearchEntity searchEntity) {
-		info("Filtering filters");
 		// TODO: Handle filters and clauses
-		List<ClauseContainer> containers = searchEntity.getClauseContainers().stream()
+		List<ClauseContainer> containers = searchEntity.getClauseContainers();
+		info("Filtering " + containers.size() + " filters"); 
+		containers = searchEntity.getClauseContainers().stream()
 				// .filter(container -> traitCapabilitiesMet(container))
 				.collect(Collectors.toList());
 
+		info("Filtered down to " + containers.size() + " clause containers");
 		searchEntity.setClauseContainers(containers);
 	}
 
@@ -74,12 +79,15 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineActionsFromCapabilities(SearchEntity searchEntity) {
-		info("Filtering actions");
 
-		List<Action> actions = searchEntity.getActions().stream()
+		List<Action> actions = searchEntity.getActions();
+		info("Filtering " + actions.size() + " actions");
+		
+		actions = actions.stream()
 				.filter(action -> traitCapabilitiesMet(action))
 				.collect(Collectors.toList());
 
+		info("Filtered down to " + actions.size() + " actions");
 		searchEntity.setActions(actions);
 	}
 
