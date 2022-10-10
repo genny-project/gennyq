@@ -21,7 +21,6 @@ import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.NotInitializedException;
 import life.genny.qwandaq.validation.Validation;
 
 /*
@@ -39,7 +38,7 @@ public class DatabaseUtils {
 
 	@Inject
 	EntityManager entityManager;
-
+	
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
@@ -47,9 +46,8 @@ public class DatabaseUtils {
 	 * @param prefix      - Prefix to check for
 	 * @return A list of attributes
 	 */
-	// TODO: Lint this against accepted prefixes
 	public List<Attribute> findAttributesWithPrefix(String productCode, String prefix) {
-		return findAttributes(productCode, null, null, "PRM_");
+		return findAttributes(productCode, null, null, prefix);
 	}
 
 	/**
@@ -67,7 +65,6 @@ public class DatabaseUtils {
 	public List<Validation> findValidations(String realm, Integer pageSize, Integer pageNumber,
 			String wildcard) {
 
-		
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM Validation WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
 		Query query = entityManager.createQuery(queryStr, Validation.class)
@@ -91,7 +88,7 @@ public class DatabaseUtils {
 	 * @return A Long representing the number of attributes
 	 */
 	public Long countAttributes(String realm) {
-		
+
 		return (Long) entityManager
 				.createQuery("SELECT count(1) FROM Attribute WHERE realm=:realmStr AND name not like 'App\\_%'")
 				.setParameter("realmStr", realm)
@@ -112,7 +109,6 @@ public class DatabaseUtils {
 	 */
 	public List<Attribute> findAttributes(String realm, Integer startIdx, Integer pageSize, String wildcard) {
 
-		
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM Attribute WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "")
 				+ " AND name not like 'App\\_%' order by id";
@@ -147,7 +143,6 @@ public class DatabaseUtils {
 	public List<BaseEntity> findBaseEntitys(String realm, Integer pageSize, Integer pageNumber,
 			String wildcard) {
 
-		
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM BaseEntity WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
 		Query query = entityManager.createQuery(queryStr, BaseEntity.class)
@@ -179,7 +174,6 @@ public class DatabaseUtils {
 	 */
 	public List<Question> findQuestions(String realm, Integer pageSize, Integer pageNumber, String wildcard) {
 
-		
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM Question WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
 		Query query = entityManager.createQuery(queryStr, Question.class)
@@ -213,7 +207,6 @@ public class DatabaseUtils {
 	public List<QuestionQuestion> findQuestionQuestions(String realm, Integer pageSize, Integer pageNumber,
 			String wildcard) {
 
-		
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
 		String queryStr = "FROM QuestionQuestion WHERE realm=:realmStr"
 				+ (isWildcard ? " AND sourceCode like :code" : "");
@@ -241,7 +234,6 @@ public class DatabaseUtils {
 
 	public Validation findValidationByCode(String realm, String code) {
 
-		
 		return entityManager
 				.createQuery("FROM Validation WHERE realm=:realmStr AND code=:code", Validation.class)
 				.setParameter("realmStr", realm)
@@ -259,7 +251,6 @@ public class DatabaseUtils {
 
 	public Attribute findAttributeByCode(String realm, String code) {
 
-		
 		return entityManager
 				.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
 				.setParameter("realmStr", realm)
@@ -276,7 +267,6 @@ public class DatabaseUtils {
 	 */
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 
-		
 		return entityManager
 				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
 				.setParameter("realmStr", realm)
@@ -294,7 +284,6 @@ public class DatabaseUtils {
 
 	public Question findQuestionByCode(String realm, String code) {
 
-		
 		return entityManager
 				.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
 				.setParameter("realmStr", realm)
@@ -314,7 +303,6 @@ public class DatabaseUtils {
 	public QuestionQuestion findQuestionQuestionBySourceAndTarget(String realm,
 			String sourceCode, String targetCode) {
 
-		
 		return entityManager
 				.createQuery(
 						"FROM QuestionQuestion WHERE realm=:realmStr AND sourceCode = :sourceCode AND targetCode = :targetCode",
@@ -334,7 +322,6 @@ public class DatabaseUtils {
 	 */
 	public List<QuestionQuestion> findQuestionQuestionsBySourceCode(String realm, String sourceCode) {
 
-		
 		return entityManager
 				.createQuery(
 						"FROM QuestionQuestion WHERE realm=:realmStr AND sourceCode = :sourceCode order by weight ASC",
@@ -356,7 +343,6 @@ public class DatabaseUtils {
 	public List<Ask> findAsksByQuestionCode(String realm, String questionCode,
 			String sourceCode, String targetCode) {
 
-		
 		return entityManager
 				.createQuery("FROM Ask WHERE realm=:realmStr AND sourceCode=:sourceCode"
 						+ " AND targetCode=:targetCode AND questionCode=:questionCode", Ask.class)
@@ -375,7 +361,7 @@ public class DatabaseUtils {
 	 * @return A list of Links
 	 */
 	public List<Link> findParentLinks(String realm, String targetCode) {
-		
+
 		return entityManager.createQuery("SELECT ee.link FROM EntityEntity ee"
 				+ " where ee.pk.targetCode=:targetCode and ee.pk.source.realm=:realmStr", Link.class)
 				.setParameter("targetCode", targetCode)
@@ -392,7 +378,7 @@ public class DatabaseUtils {
 	public void saveValidation(Validation validation) {
 
 		log.info("Saving Validation " + validation.getCode());
-		
+
 		Validation existingValidation = null;
 		try {
 			existingValidation = findValidationByCode(validation.getRealm(), validation.getCode());
@@ -417,7 +403,7 @@ public class DatabaseUtils {
 	public void saveAttribute(Attribute attribute) {
 
 		log.info("Saving Attribute " + attribute.getCode());
-		
+
 		Attribute existingAttribute = null;
 		try {
 			existingAttribute = findAttributeByCode(attribute.getRealm(), attribute.getCode());
@@ -442,7 +428,7 @@ public class DatabaseUtils {
 	public void saveBaseEntity(BaseEntity entity) {
 
 		log.debug("Saving BaseEntity " + entity.getRealm() + ":" + entity.getCode());
-		
+
 		BaseEntity existingEntity = null;
 		try {
 			existingEntity = findBaseEntityByCode(entity.getRealm(), entity.getCode());
@@ -451,9 +437,11 @@ public class DatabaseUtils {
 		}
 
 		if (existingEntity == null) {
+			log.debug("New BaseEntity being saved to DB" + entity.getCode());
 			entityManager.persist(entity);
 		} else {
-			if(entity.getId() == null) entity.setId(existingEntity.getId());
+			if (entity.getId() == null)
+				entity.setId(existingEntity.getId());
 			entityManager.merge(entity);
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
@@ -468,7 +456,7 @@ public class DatabaseUtils {
 	public void saveQuestion(Question question) {
 
 		log.info("Saving Question " + question.getCode());
-		
+
 		Question existingQuestion = null;
 		try {
 			existingQuestion = findQuestionByCode(question.getRealm(), question.getCode());
@@ -494,7 +482,6 @@ public class DatabaseUtils {
 
 		QuestionQuestionId pk = questionQuestion.getPk();
 		log.info("Saving QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
-		
 
 		QuestionQuestion existingQuestionQuestion = null;
 		try {
@@ -526,7 +513,7 @@ public class DatabaseUtils {
 	public void deleteValidation(String realm, String code) {
 
 		log.info("Deleting Validation " + code);
-		
+
 		entityManager.createQuery("DELETE Validation WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
@@ -545,7 +532,7 @@ public class DatabaseUtils {
 	public void deleteAttribute(String realm, String code) {
 
 		log.info("Deleting Attribute " + code);
-		
+
 		entityManager.createQuery("DELETE Attribute WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
@@ -564,7 +551,7 @@ public class DatabaseUtils {
 	public void deleteBaseEntity(String realm, String code) {
 
 		log.info("Deleting BaseEntity " + code);
-		
+
 		entityManager.createQuery("DELETE BaseEntity WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
@@ -583,7 +570,7 @@ public class DatabaseUtils {
 	public void deleteQuestion(String realm, String code) {
 
 		log.info("Deleting Question " + code);
-		
+
 		entityManager.createQuery("DELETE Question WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
@@ -603,7 +590,7 @@ public class DatabaseUtils {
 	public void deleteQuestionQuestion(String realm, String sourceCode, String targetCode) {
 
 		log.info("Deleting QuestionQuestion " + sourceCode + ":" + targetCode + " in realm " + realm);
-		
+
 		entityManager.createQuery(
 				"DELETE QuestionQuestion WHERE realm=:realmStr AND sourceCode=:sourceCode AND targetCode=:targetCode")
 				.setParameter("realmStr", realm)
@@ -622,5 +609,4 @@ public class DatabaseUtils {
 		this.entityManager = entityManager;
 	}
 
-	
 }

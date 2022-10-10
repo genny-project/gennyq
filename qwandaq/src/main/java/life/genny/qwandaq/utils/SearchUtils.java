@@ -29,7 +29,6 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.CapabilityMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -185,55 +184,6 @@ public class SearchUtils {
 		}
 
 		return null;
-	}
-
-	/**
-	 * Evaluate any conditional filters for a {@link SearchEntity}
-	 *
-	 * @param searchBE the SearchEntity to evaluate filters of
-	 * @return SearchEntity
-	 */
-	public SearchEntity evaluateConditionalFilters(SearchEntity searchBE) {
-
-		List<String> shouldRemove = new ArrayList<>();
-
-		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
-
-			if (!ea.getAttributeCode().startsWith("CND_")) {
-				// find Conditional Filters
-				EntityAttribute cnd = searchBE.findEntityAttribute("CND_" + ea.getAttributeCode()).orElse(null);
-
-				if (cnd != null) {
-
-					log.info("Condition found for " + ea.getAttributeCode() + " with value: "
-							+ cnd.getValue().toString());
-					String[] condition = cnd.getValue().toString().split(":");
-
-					String capability = condition[0];
-					String mode = condition[1];
-
-					// check for NOT operator
-					Boolean not = capability.startsWith("!");
-					capability = not ? capability.substring(1) : capability;
-
-					// check for Capability
-					Boolean hasCap = capabilityUtils.hasCapabilityThroughPriIs(capability,
-							CapabilityMode.getMode(mode));
-
-					// XNOR operator
-					if (!(hasCap ^ not)) {
-						shouldRemove.add(ea.getAttributeCode());
-					}
-				}
-			}
-		}
-
-		// remove unwanted attrs
-		shouldRemove.stream().forEach(item -> {
-			searchBE.removeAttribute(item);
-		});
-
-		return searchBE;
 	}
 
 	/**
@@ -1030,14 +980,15 @@ public class SearchUtils {
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
 		base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
+		questionCode = questionCode.toUpperCase();
 
-		if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATETIME)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_TIME)) {
+		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATETIME)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_TIME)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN_OR_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LESS_THAN));
@@ -1045,11 +996,11 @@ public class SearchUtils {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_STATE)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
-				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_STATE)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
+				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;

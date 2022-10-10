@@ -24,12 +24,11 @@ public final class GennyConstants {
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
-	// TODO: Confirm we want DEFs to have capabilities as well
 	public static final String[] ACCEPTED_CAP_PREFIXES = { ROLE_BE_PREFIX, PER_BE_PREFIX, "DEF_" };
 
 	public static final String ROLE_LINK_CODE = "LNK_ROLE";
     public static final String CHILDREN_LINK_CODE = "LNK_CHILDREN";
-    public static final String DEF_ROLE_CODE = "DEF_ROLE";
+	public static final String DEF_ROLE_CODE = "DEF_ROLE";
 	
 	// =====================================================================================================
 

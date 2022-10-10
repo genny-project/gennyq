@@ -33,6 +33,7 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
@@ -127,7 +128,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntity(String code) {
 
-		return getBaseEntity(userToken.getProductCode(), code);
+		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
 	}
 
 	/**
@@ -181,7 +182,7 @@ public class BaseEntityUtils {
 		if (userToken == null) {
 			throw new NullParameterException("User Token");
 		}
-		return getBaseEntityByCode(userToken.getProductCode(), code);
+		return getBaseEntityByCode(serviceToken.getProductCode(), code);
 	}
 
 	/**
@@ -194,16 +195,19 @@ public class BaseEntityUtils {
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
 
-		if (productCode == null)
-			throw new NullParameterException("productCode");
-		if (code == null)
-			throw new NullParameterException("code");
 		if (StringUtils.isBlank(productCode))
-			throw new DebugException("productCode is empty");
+			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(code))
-			throw new DebugException("code is empty");
+			throw new NullParameterException("code");
 
 		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+		// check for entity in the cache
+		// BaseEntityKey key = new BaseEntityKey(productCode, code);
+		// BaseEntity entity = (BaseEntity)
+		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+
+		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
+		// updates are working.
 
 		// check in database if not in cache
 		if (entity == null) {
@@ -243,14 +247,14 @@ public class BaseEntityUtils {
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
-		return updateBaseEntity(userToken.getProductCode(), baseEntity);
+		return updateBaseEntity(baseEntity.getRealm(), baseEntity);
 	}
 
 	/**
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
 	 * @param productCode The productCode to cache into
-	 * @param baseEntity The BaseEntity to update
+	 * @param baseEntity  The BaseEntity to update
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(String productCode, BaseEntity baseEntity) {
@@ -307,8 +311,13 @@ public class BaseEntityUtils {
 		if (StringUtils.isEmpty(newBaseEntityCode)) {
 			return null;
 		}
-		BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
-		return newBe;
+		try {
+			BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
+			return newBe;
+		} catch(ItemNotFoundException e) {
+			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
+			return null;
+		}
 	}
 
 	/**
@@ -557,11 +566,11 @@ public class BaseEntityUtils {
 		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
 
-		if(entity.getCreated() == null) {
+		if (entity.getCreated() == null) {
 			log.error("NPE for PRI_CREATED. Generating created date");
 			entity.autocreateCreated();
 		}
-		
+
 		// Ensure createdDate is not null
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
@@ -596,7 +605,7 @@ public class BaseEntityUtils {
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
-		
+
 		return entity;
 	}
 
@@ -660,15 +669,24 @@ public class BaseEntityUtils {
 				name = defBE.getName();
 
 			// create entity and set realm
-			item = new BaseEntity(code.toUpperCase(), name);
-			item.setRealm(userToken.getProductCode());
+			// check if code already exists
+			try {
+				item = this.getBaseEntity(defBE.getRealm(), code);
+				item.setName(name);
+			} catch (ItemNotFoundException e) {
+				item = new BaseEntity(code.toUpperCase(), name);
+			}
+
+			item.setRealm(defBE.getRealm());
 		}
 
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		// TODO: Surely we don't have to fetch attribute from attribute code if the attribute
+		// TODO: Surely we don't have to fetch attribute from attribute code if the
+		// attribute
 		// is already stored in the entity attribute?
+		// ACC: not quite, it is the DEF 'ATT' attribute, not the real one
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());

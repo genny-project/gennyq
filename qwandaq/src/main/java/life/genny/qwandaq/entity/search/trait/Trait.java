@@ -1,6 +1,7 @@
 package life.genny.qwandaq.entity.search.trait;
 
-import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
@@ -13,7 +14,7 @@ public abstract class Trait {
 	private String code;
 	private String name;
 
-	private List<Capability> capabilities;
+	private Set<CapabilityRequirement> capabilityRequirements = new HashSet<>();
 
 	public Trait() {
 	}
@@ -39,16 +40,16 @@ public abstract class Trait {
 		this.name = name;
 	}
 
-	public List<Capability> getCapabilities() {
-		return capabilities;
+	public Set<CapabilityRequirement> getCapabilityRequirements() {
+		return capabilityRequirements;
 	}
 
-	public void setCapabilities(List<Capability> capabilities) {
-		this.capabilities = capabilities;
+	public void setCapabilityRequirements(Set<CapabilityRequirement> capabilities) {
+		this.capabilityRequirements = capabilities;
 	}
 
-	public Trait add(Capability capability) {
-		this.capabilities.add(capability);
+	public Trait addCapabilityRequirement(CapabilityRequirement capability) {
+		this.capabilityRequirements.add(capability);
 		return this;
 	}
 

@@ -26,6 +26,7 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.CriteriaBuilder.Case;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -63,24 +64,24 @@ public class FyodorUltra {
 	private static final Logger log = Logger.getLogger(FyodorUltra.class);
 
 	@Inject
-	EntityManager entityManager;
+	private EntityManager entityManager;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	private QwandaUtils qwandaUtils;
 
 	@Inject
-	Service service;
+	private Service service;
 
 	@Inject
-	UserToken userToken;
+	private UserToken userToken;
 
 	@Inject
-	BaseEntityUtils beUtils;
+	private BaseEntityUtils beUtils;
 
 	@Inject
-	CapHandler capHandler;
+	private CapHandler capHandler;
 
-	static Jsonb jsonb = JsonbBuilder.create();
+	private static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.
@@ -701,7 +702,9 @@ public class FyodorUltra {
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			return getRecursiveColumnLink(entity, code);
+			if(entity != null) {
+				return getRecursiveColumnLink(entity, code);
+			} else return null;
 		}
 
 		// find value

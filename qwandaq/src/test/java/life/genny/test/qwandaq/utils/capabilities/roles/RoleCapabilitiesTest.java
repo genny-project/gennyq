@@ -19,7 +19,7 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.test.qwandaq.utils.BaseTestCase;
 
 import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
-import static life.genny.qwandaq.datatype.CapabilityMode.*;
+import static life.genny.qwandaq.datatype.capability.PermissionMode.ALL;
 
 import java.util.Map;
 
@@ -70,15 +70,15 @@ public class RoleCapabilitiesTest extends BaseTestCase {
         }
 
         log.info("Generating Capabilities Map!");
-        Map<String, Attribute> capabilitiesMap = capMan.getCapabilityMap(PRODUCT_CODE, capData);
+        Map<String, Attribute> capabilitiesMap = capMan.getCapabilityAttributeMap(PRODUCT_CODE, capData);
         log.info("Done");
 
         log.info("Creating new test role");
-        BaseEntity role = new RoleBuilder(capMan,"ROL_TEST", "Test Role", PRODUCT_CODE)
-            .setCapabilityMap(capabilitiesMap)
-            .addCapability("CAP_TEST_1", ADD, EDIT, DELETE)
-            .addChildren("ROL_TEST_2")
-            .build();
+        // BaseEntity role = new RoleBuilder("ROL_TEST", "Test Role", PRODUCT_CODE)
+        //     .setCapabilityMap(capabilitiesMap)
+        //     .addCapability("CAP_TEST_1").add(ALL).view(ALL).delete(ALL)
+        //     .addChildren("ROL_TEST_2")
+        //     .build();
         log.info("Done");
     }
     
