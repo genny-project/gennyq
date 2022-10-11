@@ -2,13 +2,9 @@ package life.genny.kogito.common.messages;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QMessageGennyMSG;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import org.jboss.logging.Logger;
 
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
+import java.util.HashMap;
 import java.util.Map;
 
 public class SendMessage extends MessageSendingStrategy {
@@ -17,25 +13,36 @@ public class SendMessage extends MessageSendingStrategy {
     private BaseEntity recipientBE;
     private Map<String, String> ctxMap = null;
 
+    static final Logger log = Logger.getLogger(SendMessage.class);
+
     public SendMessage(String templateCode, String recipientBECode) {
+        super();
         this.templateCode = templateCode;
         this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
     }
 
     public SendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
+        super();
         this.templateCode = templateCode;
         if (beUtils == null) {
             log.warn("beUtils is NULL --> no userToken");
-            beUtils = new BaseEntityUtils(serviceToken);
         }
         this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
         this.ctxMap = ctxMap;
     }
 
     public SendMessage(String templateCode, BaseEntity recipientBE, Map<String, String> ctxMap) {
+        super();
         this.templateCode = templateCode;
         this.recipientBE = recipientBE;
         this.ctxMap = ctxMap;
+    }
+
+    public SendMessage(String templateCode, BaseEntity recipientBE, String url) {
+        super();
+        this.templateCode = templateCode;
+        this.recipientBE = recipientBE;
+        this.ctxMap = (Map<String, String>) new HashMap<>().put("URL:ENCODE", url);
     }
 
     @Override
