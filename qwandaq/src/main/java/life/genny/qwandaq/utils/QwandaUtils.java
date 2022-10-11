@@ -93,11 +93,11 @@ public class QwandaUtils {
 
 	@PostConstruct
 	private void init() {
-		Attribute submit = getAttribute("EVT_SUBMIT");
-		if (submit == null) {
-			log.error("Could not find Attribute: EVT_SUBMIT");
-		}
-		DTT_EVENT = submit.getDataType();
+		// Attribute submit = getAttribute("EVT_SUBMIT");
+		// if (submit == null) {
+		// log.error("Could not find Attribute: EVT_SUBMIT");
+		// }
+		// DTT_EVENT = submit.getDataType();
 	}
 
 	public Attribute saveAttribute(final Attribute attribute) {
