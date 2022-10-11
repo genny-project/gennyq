@@ -35,6 +35,9 @@ public class QDataAttributeMessage extends QDataMessage{
 		this.items = items;
 	}
 
+	public void setItems(List<Attribute> items) {
+		this.setItems(items.toArray(new Attribute[items.size()]));
+	}
 
 	public void add(List<Attribute> attributes) {
 		List<Attribute> items = this.getItems() != null ? new CopyOnWriteArrayList<>(this.getItems())

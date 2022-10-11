@@ -93,6 +93,7 @@ public class Question extends CodedEntity {
 	@JsonbTransient
 	private Set<QuestionQuestion> childQuestions = new HashSet<QuestionQuestion>(0);
 
+	@JsonbTransient
 	@XmlTransient
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "attribute_id", nullable = false)

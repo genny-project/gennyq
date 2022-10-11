@@ -133,7 +133,18 @@ public class GraphQLUtils {
 				.map(e -> String.format("%s : { equal: \"%s\" }", e.getKey(), e.getValue()))
 				.collect(Collectors.joining(", "));
 
-		// create full query string
+
+		// create full query string in this format (String.format is incredibly slow)
+		// "query { <table> ( where: { <queryFields> }){ <returns> }}"
+		// String query = new StringBuilder("query { ")
+		// 	.append(table)
+		// 	.append(" ( where: { ")
+		// 	.append(queryFields)
+		// 	.append(" }){ ")
+		// 	.append(String.join(" ", returns))
+		// 	.append(" }}")
+		// 	.toString();
+		
 		String query = String.format("query { %s ( where: { %s }){ %s }}",
 				table, queryFields, String.join(" ", returns));
 
