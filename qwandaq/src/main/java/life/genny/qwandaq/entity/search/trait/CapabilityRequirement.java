@@ -22,10 +22,15 @@ public class CapabilityRequirement extends Trait {
 		super();
 	}
 
-	public CapabilityRequirement(String code, boolean requiresAll, CapabilityNode... caps) {
+	
+	public CapabilityRequirement(String code, boolean requiresAll, Set<CapabilityNode> caps) {
 		super(code, code);
 		this.requiresAll = requiresAll;
 		setNodes(caps);
+	}
+
+	public CapabilityRequirement(String code, boolean requiresAll, CapabilityNode... caps) {
+		this(code, requiresAll, new HashSet<>(Arrays.asList(caps)));
 	}
 	
 	public boolean meetsRequirements(Set<Capability> capabilities) {
@@ -39,6 +44,14 @@ public class CapabilityRequirement extends Trait {
 
 	public void setNodes(CapabilityNode... caps) {
 		this.nodes = new HashSet<>(Arrays.asList(caps));
+	}
+
+	public void setNodes(Set<CapabilityNode> caps) {
+		this.nodes = caps;
+	}
+
+	public static CapabilityRequirement fromCapability(Capability capability, boolean requiresAll) {
+		return new CapabilityRequirement(capability.code, requiresAll, capability.nodes);
 	}
 
 }
