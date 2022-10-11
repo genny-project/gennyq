@@ -36,6 +36,16 @@ public class CapabilityBuilder {
     }
 
     /**
+     * <p>Create a new Capability Builder for the given capabilityCode and link this to a given RoleBuilder</p>
+     * <p>this constructor cleans the capability code as per {@link CapabilitiesManager#cleanCapabilityCode(String)}</p>
+     * @param rb - parent {@link RoleBuilder}
+     * @param capabilityCode - Capability Code of capability to create
+     */
+    public CapabilityBuilder(String capabilityCode) {
+        this(null, capabilityCode);
+    }
+
+    /**
      * Set the permission of this Capability with regards to the ADD mode
      * 
      * @see CapabilityMode#ADD
@@ -113,6 +123,9 @@ public class CapabilityBuilder {
      * @see CapabilityBuilder#roleBuilder
      */
     public RoleBuilder build() {
+        
+        if(roleBuilder == null)
+            throw new UnsupportedOperationException("Cannot call build() on a CapabilityBuilder that was instantiated with new CapabilityBuilder(String code). Use .buildCap() instead");
         roleBuilder.getCapabilities().put(capabilityCode, nodes.toArray(new CapabilityNode[0]));
         return roleBuilder;
     }
