@@ -16,8 +16,8 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
+
 import life.genny.qwandaq.entity.search.clause.And;
-import life.genny.qwandaq.entity.search.clause.ClauseArgument;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
 
@@ -43,9 +43,7 @@ public class SearchEntity extends BaseEntity {
 	private Map<Class<? extends Trait>, List<? extends Trait>> traits = new HashMap<>();
 
 	private List<ClauseContainer> clauseContainers = new ArrayList<>();
-	// private List<Sort> sorts = new ArrayList<>();
-	// private List<Column> columns = new ArrayList<>();
-	// private List<Action> actions = new ArrayList<>();
+	
 	private Boolean allColumns = false;
 
 	// TODO: redesign filters
