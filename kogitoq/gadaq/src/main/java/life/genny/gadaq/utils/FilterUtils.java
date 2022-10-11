@@ -535,19 +535,9 @@ public class FilterUtils {
         Map<String,Map<String, String>> params = EventMessageUtils.parseFilterMessage(cleanParams);
 
         //save each attribute as the row of filter table
-        for(int i=0; i<= params.entrySet().size();i++) {
-            String attName = getAttributeName(i);
-            if(i == 0) {
-                //Save the first attribute to identify lnk saved search
-                saveAttribute(attName,GennyConstants.YES);
-            } else {
-                saveAttribute(attName);
-            }
-        }
-
         saveAttribute(GennyConstants.LNK_SAVED_SEARCHES);
 
-        BaseEntity base = saveBaseEntity(GennyConstants.CACHING_SBE,name,params);
+        BaseEntity base = saveBaseEntity(GennyConstants.CACHING_SBE,sbeCode,name,params);
         String filterCode = base.getCode();
 
         /* update filter existing group */
@@ -564,34 +554,42 @@ public class FilterUtils {
      * @param name Search name
      * @param params Parameters
      */
-    public BaseEntity saveBaseEntity(String prefix,String name,Map<String, Map<String,String>> params) {
+    public BaseEntity saveBaseEntity(String prefix,String sbeCode,String name,Map<String, Map<String,String>> params) {
         BaseEntity baseEntity = null;
-        BaseEntity defBE = new BaseEntity(prefix);
-        String baseCode = prefix + UUID.randomUUID().toString();
 
         try {
-            //add each attribute to definition
-            for(int i=0; i<= params.entrySet().size();i++) {
-                String attName = getAttributeName(i);;
-                Attribute attr = new Attribute(PRI_PREFIX, attName, DataTypeStr);
-                defBE.addAttribute(attr, 1.0, prefix);
-            }
+            BaseEntity defBE = new BaseEntity(GennyConstants.CACHING_SBE);
+            String baseCode = GennyConstants.CACHING_SBE + UUID.randomUUID().toString();
 
+            //create the main base entity
+            String attCode = GennyConstants.LNK_SAVED_SEARCHES;
+            Attribute attr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
+            defBE.addAttribute(attr, 1.0, GennyConstants.CACHING_SBE);
             baseEntity = beUtils.create(defBE, name, baseCode);
+            Attribute attrFound = databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
 
-            //add each attribute to base entity
-            for(int i=0; i<= params.entrySet().size();i++) {
-                String attName = getAttributeName(i);
-                Attribute attrFound = databaseUtils.findAttributeByCode(userToken.getRealm(),attName);
-                String value = GennyConstants.YES;
-                if(i != 0) {
-                    value = jsonb.toJson(params.values().toArray()[i - 1]);
-                }
+            List<String> listUUID = getListUUID(params.entrySet().size());
 
-                baseEntity.addAttribute(attrFound, 1.0, value);
+            String strLnkArr = getLnkArrayString(listUUID);
+            baseEntity.addAttribute(attrFound, 1.0, strLnkArr);
+            beUtils.updateBaseEntity(baseEntity);
+
+            Attribute childAttr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
+            BaseEntity childDefBE = new BaseEntity(GennyConstants.CACHING_SBE);
+            childDefBE.addAttribute(childAttr, 1.0, GennyConstants.CACHING_SBE);
+
+            //create other base entities based on the main base entity
+            int index = 0;
+            for(Map.Entry<String,Map<String,String>> entry : params.entrySet()) {
+                String childBaseCode = listUUID.get(index);
+
+                BaseEntity childBase = beUtils.create(childDefBE, name, childBaseCode);
+                String childVal = jsonb.toJson(entry.getValue());
+                childBase.addAttribute(attrFound, 1.0,childVal);
+                beUtils.updateBaseEntity(childBase);
+                index++;
             }
 
-            beUtils.updateBaseEntity(baseEntity);
         }catch (Exception ex) {
             log.error(ex);
         }
@@ -599,6 +597,42 @@ public class FilterUtils {
         return baseEntity;
     }
 
+    /**
+     * Return list of UUID
+     * @param size Size
+     * @return list of UUID
+     */
+    public List<String> getListUUID(int size) {
+        List<String> list = new ArrayList<>();
+        for(int i=0; i< size;i++) {
+            String uuid =   GennyConstants.CACHING_SBE + UUID.randomUUID().toString().toUpperCase();
+            list.add(uuid);
+        }
+        return list;
+    }
+
+    /**
+     * Get string of link array
+     * @param params Parameters
+     * @return string of link array
+     */
+    public String getLnkArrayString(List<String> params) {
+        String result = "";
+        for(int i=0; i< params.size();i++) {
+            if(params.size() == 1) {
+                return "[" + "\"" + params.get(i) + "\"" + "]";
+            }
+
+            if(i == 0) {
+                result = "[" + "\"" + params.get(i) + "\"" + ",";
+            }else if(i == params.size() - 1) {
+                result = result + "\"" + params.get(i) + "\"" + "]";
+            } else {
+                result = result + "\"" + params.get(i) + "\"" + ",";
+            }
+        }
+        return result;
+    }
 
     /**
      * Save attribute code
