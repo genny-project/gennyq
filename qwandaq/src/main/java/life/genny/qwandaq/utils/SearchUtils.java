@@ -1134,13 +1134,18 @@ public class SearchUtils {
 	 * @param lnkValue Link value
 	 * @param likeCond Like condition
 	 * @param isSortedDate being sorted by date
+	 * @param userCode User code
 	 * @return Search entity
 	 */
 	public SearchEntity getBaseDropdownOptions(String sbeCode,String lnkCode, String lnkValue,String likeCond,
-											   boolean isSortedDate) {
+											   boolean isSortedDate,String userCode) {
 		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
 		searchBE.add(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, likeCond))
+//				.add(new Filter(GennyConstants.LNK_SAVED_SEARCHES,Operator.EQUALS,GennyConstants.YES))
 				.add(new Column(lnkCode, lnkValue));
+		if(!userCode.isEmpty()) {
+			searchBE.add(new Filter(GennyConstants.LNK_AUTHOR,Operator.EQUALS,userCode));
+		}
 
 		if(isSortedDate) {
 			searchBE.add(new Sort("PRI_CREATED_DATE", Ord.DESC));

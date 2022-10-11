@@ -144,6 +144,10 @@ public final class GennyConstants {
 	public static final String QUE_SAVED_SEARCH_CODE = "QUE_SAVED_SEARCH_CODE";
 
 	public static final String QUE_FILTER_APPLY = "QUE_FILTER_APPLY";
+	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
+	public static final String YES = "YES";
+	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+
 
 }
 

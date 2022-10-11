@@ -15,6 +15,7 @@ import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jboss.logging.Logger;
 
@@ -467,11 +468,10 @@ public class SearchService {
 	 * @param searchBE Search base entity
 	 */
 	public void excludeExtraFilterBySearchBE(SearchEntity searchBE) {
-		List<ClauseContainer> clauses = searchBE.getClauseContainers();
+		List<ClauseContainer> clauses = new ArrayList<>(searchBE.getClauseContainers());
 		for(ClauseContainer clause : clauses){
-			if(!clause.getFilter().getCode().startsWith(GennyConstants.PRI_CODE) &&
-					!clause.getFilter().getCode().startsWith(GennyConstants.PRI_IS_PREFIX)) {
-				searchBE.getClauseContainers().remove(clause);
+			if(clause.getFilter().getType() == Filter.FILTER_TYPE.EXTRA) {
+				searchBE.remove(clause.getFilter());
 			}
 		}
 	}
@@ -500,9 +500,9 @@ public class SearchService {
 
 			if (isDate) {
 				LocalDateTime dateTime = parseStringToDate(value);
-				filter = new Filter(field, operator, dateTime);
+				filter = new Filter(field, operator, dateTime, Filter.FILTER_TYPE.EXTRA);
 			} else {
-				filter = new Filter(field, operator, value);
+				filter = new Filter(field, operator, value, Filter.FILTER_TYPE.EXTRA);
 			}
 
 			searchBE.remove(filter);
@@ -684,8 +684,10 @@ public class SearchService {
 	 * @param lnkValue Link value
 	 * @param likeCond Like condition of searching data
 	 */
-	public void sendDropdownOptions(String sbeCode,String group,String code,String lnkCode,String lnkValue,String likeCond) {
-		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, true);
+	public void sendDropdownOptions(String sbeCode,String group,String code,String lnkCode,String lnkValue,
+									String likeCond,String userCode) {
+		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond,
+										true,userCode);
 		QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
@@ -706,6 +708,9 @@ public class SearchService {
 
 		List<BaseEntity> basesSorted =  bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
 												.collect(Collectors.toList());
+		if(bases.size() == 0) {
+			bases = new ArrayList<>();
+		}
 
 		msg.setToken(userToken.getToken());
 		msg.setItems(basesSorted);
@@ -725,10 +730,12 @@ public class SearchService {
 	 * @param lnkValue Link value
 	 * @param likeCond Like condition
 	 * @param isSortedDate sorted by date
+	 * @param userCode User code
 	 * @return The list of dropdown items
 	 */
-	public List<BaseEntity> getListDropdownItems(String sbeCode,String lnkCode,String lnkValue,String likeCond, boolean isSortedDate) {
-		SearchEntity search = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, true);
+	public List<BaseEntity> getListDropdownItems(String sbeCode,String lnkCode,String lnkValue,String likeCond,
+												 boolean isSortedDate,String userCode) {
+		SearchEntity search = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, true,userCode);
 		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
 		return bases;
 	}
@@ -774,6 +781,7 @@ public class SearchService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
+
 	/**
 	 * Return search base entity code with jti
 	 *
@@ -784,5 +792,6 @@ public class SearchService {
 		String newSbeCode = searchUtils.getSearchBaseEntityCodeByJTI(sbeCode);
 		return newSbeCode;
 	}
+
 
 }

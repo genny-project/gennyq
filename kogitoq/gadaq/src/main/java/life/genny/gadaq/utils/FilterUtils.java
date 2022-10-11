@@ -72,7 +72,6 @@ public class FilterUtils {
     public static final String QUE_TAB_BUCKET_VIEW = "QUE_TAB_BUCKET_VIEW";
     public static final String QUE_PREF = "QUE_";
 
-    public static final String FLT_PREF = "FLT_";
     public static final String PRI_PREFIX = "PRI_PREFIX";
     public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
@@ -81,6 +80,7 @@ public class FilterUtils {
     public static final String APPLY = "Apply";
     public static final String SELECT_SAVED_SEARCH = "Select Saved Search";
     public static final String DELETE = "Delete";
+    public static final String EDIT = "Edit";
 
 
 
@@ -509,7 +509,19 @@ public class FilterUtils {
         return result;
     }
 
+    /**
+     * Get attribute name
+     * @param index Index
+     * @return Attribute Name
+     */
+    public String getAttributeName(int index) {
+        String attName = LNK_SAVED_SEARCHES;
+        if(index != 0) {
+            attName = LNK_SAVED_SEARCHES + "_" + index;
+        }
 
+        return attName;
+    }
     /**
      * Save search
      * @param code Event name
@@ -519,38 +531,66 @@ public class FilterUtils {
      * @param value Event value
      */
     public void saveSearch(String code,String queGrp,String sbeCode, String name,String value) {
-        Attribute attrFound = saveAttribute(LNK_SAVED_SEARCHES);
         String cleanParams = EventMessageUtils.getCleanFilterParamsByString(value);
-        BaseEntity base = saveBaseEntity(attrFound, FLT_PREF,name,cleanParams);
-        String filterCode = base.getCode();
-
         Map<String,Map<String, String>> params = EventMessageUtils.parseFilterMessage(cleanParams);
+
+        //save each attribute as the row of filter table
+        for(int i=0; i<= params.entrySet().size();i++) {
+            String attName = getAttributeName(i);
+            if(i == 0) {
+                //Save the first attribute to identify lnk saved search
+                saveAttribute(attName,GennyConstants.YES);
+            } else {
+                saveAttribute(attName);
+            }
+        }
+
+        saveAttribute(GennyConstants.LNK_SAVED_SEARCHES);
+
+        BaseEntity base = saveBaseEntity(GennyConstants.CACHING_SBE,name,params);
+        String filterCode = base.getCode();
 
         /* update filter existing group */
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,params);
 
         searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,queGrp,
                                 GennyConstants.QUE_SAVED_SEARCH_LIST, GennyConstants.PRI_NAME,
-                                GennyConstants.VALUE,FLT_PREF + "%");
+                                GennyConstants.VALUE,GennyConstants.CACHING_SBE + "%",userToken.getUserCode());
     }
 
     /**
      * Save base entity
-     * @param att Attribute
      * @param prefix Definition prefix
      * @param name Search name
+     * @param params Parameters
      */
-    public BaseEntity saveBaseEntity(Attribute att, String prefix,String name,String params) {
+    public BaseEntity saveBaseEntity(String prefix,String name,Map<String, Map<String,String>> params) {
         BaseEntity baseEntity = null;
         BaseEntity defBE = new BaseEntity(prefix);
         String baseCode = prefix + UUID.randomUUID().toString();
 
-        Attribute attr = new Attribute(PRI_PREFIX, prefix, DataTypeStr);
-        defBE.addAttribute(attr, 1.0, prefix);
         try {
+            //add each attribute to definition
+            for(int i=0; i<= params.entrySet().size();i++) {
+                String attName = getAttributeName(i);;
+                Attribute attr = new Attribute(PRI_PREFIX, attName, DataTypeStr);
+                defBE.addAttribute(attr, 1.0, prefix);
+            }
+
             baseEntity = beUtils.create(defBE, name, baseCode);
 
-            baseEntity.addAttribute(att, 1.0, params);
+            //add each attribute to base entity
+            for(int i=0; i<= params.entrySet().size();i++) {
+                String attName = getAttributeName(i);
+                Attribute attrFound = databaseUtils.findAttributeByCode(userToken.getRealm(),attName);
+                String value = GennyConstants.YES;
+                if(i != 0) {
+                    value = jsonb.toJson(params.values().toArray()[i - 1]);
+                }
+
+                baseEntity.addAttribute(attrFound, 1.0, value);
+            }
+
             beUtils.updateBaseEntity(baseEntity);
         }catch (Exception ex) {
             log.error(ex);
@@ -579,11 +619,32 @@ public class FilterUtils {
     }
 
     /**
+     * Save attribute code
+     * @param attCode Attribute code
+     * @param defaultValue Attribute default value
+     * @return Return attribute
+     */
+    public Attribute saveAttribute(String attCode, String defaultValue) {
+        Attribute attrFound = null;
+        try {
+            attrFound = databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
+        }catch (Exception ex) {
+            AttributeLink newAtt = new AttributeLink(attCode, attCode);
+            newAtt.setDefaultValue(defaultValue);
+
+            qwandaUtils.saveAttribute(newAtt);
+            attrFound =  databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
+        }
+
+        return attrFound;
+    }
+
+    /**
      * Delete base entity
      * @param code Base entity
      */
     public void deleteBaseEntity(String code) {
-        databaseUtils.deleteBaseEntity(userToken.getRealm(), code);
+        databaseUtils.deleteBaseEntityAndAttribute(userToken.getRealm(), code);
     }
 
     /**
@@ -600,10 +661,10 @@ public class FilterUtils {
         //update filter existing group
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,searchCode,params);
 
-        String fltCond = FLT_PREF + "%";
-        String queGroup = EventMessageUtils.getParentCode(msg) ;
+        String fltCond = GennyConstants.CACHING_SBE + "%";
+        String queGroup = EventMessageUtils.getParentCode(msg);
         searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,queGroup,GennyConstants.QUE_SAVED_SEARCH_LIST,
-                                GennyConstants.PRI_NAME, GennyConstants.VALUE,fltCond);
+                                GennyConstants.PRI_NAME, GennyConstants.VALUE,fltCond,userToken.getUserCode());
     }
 
     /**
@@ -653,9 +714,9 @@ public class FilterUtils {
      */
     public String getLatestFilterCode(String sbeCode) {
         String filterCode = "";
-        String fltCond = FLT_PREF + "%";
+        String fltCond = GennyConstants.CACHING_SBE + "%";
         List<BaseEntity> bases = searchService.getListDropdownItems(sbeCode,GennyConstants.PRI_NAME,
-                                                    GennyConstants.VALUE,fltCond,true);
+                                GennyConstants.VALUE,fltCond,true, userToken.getUserCode());
         List<BaseEntity> basesSorted =  bases.stream()
                 .sorted(Comparator.comparing(BaseEntity::getId).reversed())
                 .collect(Collectors.toList());
@@ -693,7 +754,7 @@ public class FilterUtils {
         //get the latest of filter
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,filterParams);
 
-        String fCond = FLT_PREF + "%";
+        String fCond = GennyConstants.CACHING_SBE + "%";
         String queCode = GennyConstants.QUE_SAVED_SEARCH_LIST;
 
         //send saved searches
@@ -704,8 +765,12 @@ public class FilterUtils {
                 new MutablePair(GennyConstants.QUE_SAVED_SEARCH_LIST,SELECT_SAVED_SEARCH),
                 new MutablePair(GennyConstants.QUE_SAVED_SEARCH_DELETE, DELETE));
 
-        searchService.sendDropdownOptions(newSbe,queGroup,queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE,fCond);
+        //send saved search list
+        searchService.sendDropdownOptions(newSbe,queGroup,queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE,
+                                            fCond,userToken.getUserCode());
+
     }
+
 
     /**
      * Handle saved search selected

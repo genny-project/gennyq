@@ -631,5 +631,34 @@ public class DatabaseUtils {
 		this.entityManager = entityManager;
 	}
 
+	/**
+	 * Delete a BaseEntity from the database.
+	 *
+	 * @param realm realm to delete in
+	 * @param code  Code of the BaseEntity to delete.
+	 */
+	@Transactional
+	public void deleteBaseEntityAndAttribute(String realm, String code) {
+
+		try {
+			log.info("Deleting baseEntity attribute  " + code);
+			checkEntityManager();
+			entityManager.createQuery("DELETE EntityAttribute WHERE realm=:realm AND baseEntityCode=:baseCode")
+					.setParameter("realm", realm)
+					.setParameter("baseCode", code)
+					.executeUpdate();
+
+			log.info("Deleting baseEntity " + code);
+
+			entityManager.createQuery("DELETE BaseEntity WHERE realm=:realmStr AND code=:code")
+					.setParameter("realmStr", realm)
+					.setParameter("code", code)
+					.executeUpdate();
+
+			log.info("Successfully deleted BaseEntity " + code + " in realm " + realm);
+		} catch (Exception ex) {
+			log.error(ex);
+		}
+	}
 	
 }
