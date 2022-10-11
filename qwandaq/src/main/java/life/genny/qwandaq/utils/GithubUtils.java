@@ -4,55 +4,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import javax.json.JsonReader;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.net.ssl.HttpsURLConnection;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
-import org.keycloak.representations.account.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.ServiceToken;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
@@ -75,23 +45,16 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 
 import io.vertx.mutiny.sqlclient.Tuple;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 
 /**
@@ -235,102 +198,103 @@ public class GithubUtils {
 
         // now use a TreeWalk to iterate over all files in the Tree recursively
         // you can set Filters to narrow down the results if needed
-        TreeWalk treeWalk = new TreeWalk(repo);
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
-        // treeWalk.setFilter(AndTreeFilter.create(TreeFilter.ANY_DIFF,
-        // PathFilter.ANY_DIFF));
+        try(TreeWalk treeWalk = new TreeWalk(repo)) {
+            treeWalk.addTree(tree);
+            treeWalk.setRecursive(true);
+            // treeWalk.setFilter(AndTreeFilter.create(TreeFilter.ANY_DIFF,
+            // PathFilter.ANY_DIFF));
 
-        treeWalk.setFilter(AndTreeFilter.create(PathFilter.create(realmFilter), PathSuffixFilter.create(".html")));
-        while (treeWalk.next()) {
+            treeWalk.setFilter(AndTreeFilter.create(PathFilter.create(realmFilter), PathSuffixFilter.create(".html")));
+            while (treeWalk.next()) {
 
-            final ObjectId objectId = treeWalk.getObjectId(0);
-            final ObjectLoader loader = repo.open(objectId);
-            FileMode fileMode = treeWalk.getFileMode(0);
-            // and then one can the loader to read the file
+                final ObjectId objectId = treeWalk.getObjectId(0);
+                final ObjectLoader loader = repo.open(objectId);
+                FileMode fileMode = treeWalk.getFileMode(0);
+                // and then one can the loader to read the file
 
-            String layoutCode = "";
-            String name = "";
-            String uri = "";
-            String fullpath = "";
+                String layoutCode = "";
+                String name = "";
+                String uri = "";
+                String fullpath = "";
 
-            fullpath = treeWalk.getPathString(); // .substring(realmFilter.length()+1); // get rid of
-                                                 // realm+"-new/sublayouts/"
+                fullpath = treeWalk.getPathString(); // .substring(realmFilter.length()+1); // get rid of
+                                                    // realm+"-new/sublayouts/"
 
-            if (fullpath.equals("internmatch-new/sublayouts/home/agent/bucket/index.json")) {
-                log.info("hello");
-                // continue;
-            }
-
-            // only allow genny/<filename> or genny/sublayouts
-
-            if (((!recursive) && (StringUtils.countMatches(fullpath, "/") == 1)) || (recursive)) {
-
-                Path p = Paths.get(fullpath);
-
-                if (p.getParent() != null) {
-                    uri = ("genny".equals(gitrealm) ? "/" : "") + p.getParent().toString();
+                if (fullpath.equals("internmatch-new/sublayouts/home/agent/bucket/index.json")) {
+                    log.info("hello");
+                    // continue;
                 }
-                name = p.getFileName().toString().replaceFirst("[.][^.]+$", "");
-                String nameCode = name.replaceAll("\\-", "");
 
-                if (!name.equals(gitrealm)) { // avoid root folder
-                    String content = new String(loader.getBytes());
+                // only allow genny/<filename> or genny/sublayouts
 
-                    if ("genny".equals(gitrealm)) {
-                        uri = uri + name;
-                    } else {
-                        uri = fullpath.replaceFirst("[.][^.]+$", "");
-                        uri = uri.substring(gitrealm.length() + 1);
-                        if (uri.startsWith("sublayouts")) {
-                            uri = uri.substring("sublayouts/".length());
+                if (((!recursive) && (StringUtils.countMatches(fullpath, "/") == 1)) || (recursive)) {
+
+                    Path p = Paths.get(fullpath);
+
+                    if (p.getParent() != null) {
+                        uri = ("genny".equals(gitrealm) ? "/" : "") + p.getParent().toString();
+                    }
+                    name = p.getFileName().toString().replaceFirst("[.][^.]+$", "");
+                    String nameCode = name.replaceAll("\\-", "");
+
+                    if (!name.equals(gitrealm)) { // avoid root folder
+                        String content = new String(loader.getBytes());
+
+                        if ("genny".equals(gitrealm)) {
+                            uri = uri + name;
+                        } else {
+                            uri = fullpath.replaceFirst("[.][^.]+$", "");
+                            uri = uri.substring(gitrealm.length() + 1);
+                            if (uri.startsWith("sublayouts")) {
+                                uri = uri.substring("sublayouts/".length());
+                            }
                         }
+                        uri = StringUtils.removeEndIgnoreCase(uri, "index");
+                        if (StringUtils.endsWith(uri, "bucket/")) {
+                            uri = StringUtils.removeEndIgnoreCase(uri, "/");
+                        }
+
+                        String precode = String.valueOf(uri.replaceAll("[^a-zA-Z0-9\\-]", "").toUpperCase().hashCode());
+                        layoutCode = ("DOT_" + nameCode).toUpperCase();
+
+                        String existingUrl = lays.get(layoutCode);
+                        BaseEntity layout = null;
+                        try {
+                            layout = beUtils.getBaseEntityOrNull(realm, layoutCode);
+                        } catch (ItemNotFoundException e) {
+                            log.info("No be found for " + layoutCode);
+                        }
+
+                        if ((existingUrl != null) || (layout != null)) {
+                            log.info("DUPLICATE - " + layoutCode + ":" + existingUrl + "--->" + fullpath);
+
+                        } else {
+                            lays.put(layoutCode, fullpath);
+                            layout = new BaseEntity(layoutCode, name);
+                        }
+
+                        layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_HTML_MERGE", "Layout Data"),
+                                content));
+
+                        layout.addAnswer(
+                                new Answer(layout, layout, new AttributeText("PRI_NAME", "Document Name"), name));
+                        long secs = commit.getCommitTime();
+                        LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
+                                TimeZone.getDefault().toZoneId());
+
+                        // String lastCommitDateTimeString =
+                        // commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                        // layout.addAnswer(new Answer(layout, layout,
+                        // new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"),
+                        // lastCommitDateTimeString)); // if
+                        // // new
+                        layout.setRealm(realm);
+                        layout.setUpdated(commitDateTime);
+                        layouts.add(layout);
                     }
-                    uri = StringUtils.removeEndIgnoreCase(uri, "index");
-                    if (StringUtils.endsWith(uri, "bucket/")) {
-                        uri = StringUtils.removeEndIgnoreCase(uri, "/");
-                    }
-
-                    String precode = String.valueOf(uri.replaceAll("[^a-zA-Z0-9\\-]", "").toUpperCase().hashCode());
-                    layoutCode = ("DOT_" + nameCode).toUpperCase();
-
-                    String existingUrl = lays.get(layoutCode);
-                    BaseEntity layout = null;
-                    try {
-                        layout = beUtils.getBaseEntityOrNull(realm, layoutCode);
-                    } catch (ItemNotFoundException e) {
-                        log.info("No be found for " + layoutCode);
-                    }
-
-                    if ((existingUrl != null) || (layout != null)) {
-                        log.info("DUPLICATE - " + layoutCode + ":" + existingUrl + "--->" + fullpath);
-
-                    } else {
-                        lays.put(layoutCode, fullpath);
-                        layout = new BaseEntity(layoutCode, name);
-                    }
-
-                    layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_HTML_MERGE", "Layout Data"),
-                            content));
-
-                    layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_NAME", "Document Name"), name));
-                    long secs = commit.getCommitTime();
-                    LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
-                            TimeZone.getDefault().toZoneId());
-
-                    // String lastCommitDateTimeString =
-                    // commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                    // layout.addAnswer(new Answer(layout, layout,
-                    // new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"),
-                    // lastCommitDateTimeString)); // if
-                    // // new
-                    layout.setRealm(realm);
-                    layout.setUpdated(commitDateTime);
-                    layouts.add(layout);
                 }
-            }
 
+            }
         }
 
         return layouts;
