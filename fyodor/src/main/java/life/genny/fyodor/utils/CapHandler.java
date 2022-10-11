@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
@@ -101,10 +102,12 @@ public class CapHandler extends Manager {
 			return false;
 		}
 
-		Set<Capability> capabilities = capMan.getUserCapabilities();
-		for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
-			if(!capTrait.meetsRequirements(capabilities)) {
-				return false;
+		if(!GennyConstants.SERVICE_CODE.equals(userToken.getCode())) {
+			Set<Capability> capabilities = capMan.getUserCapabilities();
+			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
+				if(!capTrait.meetsRequirements(capabilities)) {
+					return false;
+				}
 			}
 		}
 		// TODO: implement capabilities
