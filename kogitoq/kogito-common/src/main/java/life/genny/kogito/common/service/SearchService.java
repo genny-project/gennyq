@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
+import static life.genny.qwandaq.entity.PCM.PCM_PROCESS;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -70,16 +72,16 @@ public class SearchService {
 	@Inject
 	TaskService tasks;
 
-	public static enum SearchOptions {
-		PAGINATION,
-		SEARCH,
-		FILTER,
-		PAGINATION_BUCKET
-	}
-
 	private Map<String, String> filterParams = new HashMap<>();
-
 	private Map<String, Map<String, String>> listFilterParams = new HashMap<>();
+
+	/**
+	 * Perform a Bucket search.
+	 */
+	public void sendBuckets() {
+		String userCode = userToken.getUserCode();
+		tasks.dispatch(userCode, userCode, PCM_PROCESS, PCM_CONTENT, "PRI_LOC1");
+	}
 
 	/**
 	 * Perform a Detail View search.
@@ -126,12 +128,6 @@ public class SearchService {
 	}
 
 	/**
-	 * Perform a Bucket search.
-	 */
-	public void sendBuckets() {
-	}
-
-	/**
 	 * Perform a named search from search bar
 	 * 
 	 * @param searchCode
@@ -152,100 +148,28 @@ public class SearchService {
 	}
 
 	/**
-	 * Send a search PCM with the correct search code.
-	 *
-	 * @param pcmCode The code of pcm to send
-	 * @param searchCode The code of the searhc to send
+	 * @param code
+	 * @param targetCode
 	 */
-	public void sendSearchPCM(String pcmCode, String searchCode) {
+	public void handleSearchPagination(String code, String targetCode) {
 
-		// update content
-		BaseEntity content = beUtils.getBaseEntity(PCM_CONTENT);
-		Attribute attribute = qwandaUtils.getAttribute("PRI_LOC1");
-		EntityAttribute ea = new EntityAttribute(content, attribute, 1.0, pcmCode);
-		content.addAttribute(ea);
+		if (!(GennyConstants.PAGINATION_NEXT.equals(code)) && !(GennyConstants.PAGINATION_PREV.equals(code)))
+			throw new DebugException("Incorrect question code for pagination: " + code);
 
-		// update target pcm
-		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
-		ea = new EntityAttribute(pcm, attribute, 1.0, searchCode);
-		pcm.addAttribute(ea);
+		// fetch search from cache
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
 
-		// send to alyson
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(content);
-		msg.add(pcm);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-	}
+		// find direction
+		Integer diff = searchEntity.getPageSize();
+		if (GennyConstants.PAGINATION_PREV.equals(code))
+			diff = diff * -1;
 
-	/**
-	 * Get bucket data with bucket event
-	 * @param code Bucket event code
-	 */
-	public void getBuckets(String code) {
-		try {
-			String searchCode = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.SBE);
+		// calculate new pageStart
+		Integer pageStart = searchEntity.getPageStart() + diff;
+		searchEntity.setPageStart(pageStart);
 
-			List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
-			List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
-			sendBucketCodes(bucketCodes);
-
-			originBucketCodes.stream().forEach(e -> {
-				searchUtils.searchTable(e);
-				sendSearchPCM("PCM_PROCESS", e);
-			});
-		}catch (Exception ex){
-			log.error(ex);
-		}
-	}
-
-	/**
-	 * Send the list of bucket codes to frond-end
-	 * @param bucketCodes The list of bucket codes
-	 */
-	public void sendBucketCodes(List<String> bucketCodes) {
-		QCmdMessage msgProcess = new QCmdMessage(GennyConstants.BUCKET_DISPLAY,GennyConstants.BUCKET_PROCESS);
-		msgProcess.setToken(userToken.getToken());
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgProcess);
-
-		QCmdMessage msgCodes = new QCmdMessage(GennyConstants.BUCKET_CODES,GennyConstants.BUCKET_CODES);
-		msgCodes.setToken(userToken.getToken());
-		msgCodes.setSourceCode(GennyConstants.BUCKET_CODES);
-		msgCodes.setTargetCodes(bucketCodes);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgCodes);
-
-		sendBucketFilter(GennyConstants.QUE_BUCKET_INTERNS_GRP,GennyConstants.QUE_SELECT_INTERN,
-				GennyConstants.LNK_PERSON, GennyConstants.BKT_APPLICATIONS);
-
-		sendBucketFilterOptions(GennyConstants.SBE_HOST_COMPANIES_VIEW,GennyConstants.QUE_BUCKET_INTERNS_GRP
-				,GennyConstants.QUE_SELECT_INTERN,GennyConstants.LNK_PERSON, GennyConstants.ITEMS);
-	}
-
-	/**
-	 * Get the list of bucket codes with session id
-	 * @param originBucketCodes List of bucket codes
-	 * @return The list of bucket code with session id
-	 */
-	public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes){
-		List<String> bucketCodes = new ArrayList<>();
-		originBucketCodes.stream().forEach(e -> {
-			SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),e, SearchEntity.class);
-			String searchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
-			bucketCodes.add(searchCode);
-		});
-
-		return bucketCodes;
-	}
-
-
-	/**
-	 * Send search message to front-end
-	 * @param searchBE Search base entity from cache
-	 */
-	public void sendMessageBySearchEntity(SearchEntity searchBE) {
-		QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
-		searchBeMsg.setToken(userToken.getToken());
-		KafkaUtils.writeMsg(KafkaTopic.SEARCH_EVENTS, searchBeMsg);
+		// send updated search
+		searchUtils.searchTable(searchEntity);
 	}
 
 	/**
@@ -276,91 +200,6 @@ public class SearchService {
 			log.error(ex);
 		}
 		return ea;
-	}
-
-	/**
-	 * handle sorting, searching in the table
-	 * @param code Attribute code
-	 * @param attrName Attribute name
-	 * @param value  Value String
-	 * @param targetCode Target code
-	 */
-	public void handleSortAndSearch(String code, String attrName,String value, String targetCode, SearchOptions ops) {
-		SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
-
-		if(ops.equals(SearchOptions.SEARCH)) {
-			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, attrName, value);
-
-			if (ea != null && attrName.isBlank()) { //sorting
-				searchBE.removeAttribute(code);
-				searchBE.addAttribute(ea);
-			}
-
-			if (!attrName.isBlank()) { //searching text
-				searchBE.add(new Filter(code, Operator.LIKE, value));
-			}
-
-		}else if(ops.equals(SearchOptions.PAGINATION) || ops.equals(SearchOptions.PAGINATION_BUCKET)) { //pagination
-			Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(Attribute.PRI_INDEX);
-			Integer pageSize = searchBE.getPageSize();
-			Integer indexVal = 0;
-			Integer pagePos = 0;
-
-			if(aeIndex.isPresent() && pageSize !=null) {
-				if(code.equalsIgnoreCase(GennyConstants.PAGINATION_NEXT) ||
-						code.equalsIgnoreCase(GennyConstants.QUE_TABLE_LAZY_LOAD)) {
-					indexVal = aeIndex.get().getValueInteger() + 1;
-				} else if (code.equalsIgnoreCase(GennyConstants.PAGINATION_PREV)) {
-					indexVal = aeIndex.get().getValueInteger() - 1;
-				}
-
-				pagePos = (indexVal - 1) * pageSize;
-			}
-			//initial stage of bucket pagination
-			else if (aeIndex.isEmpty() && code.equalsIgnoreCase(GennyConstants.QUE_TABLE_LAZY_LOAD)) {
-				indexVal = 2;
-				pagePos = pageSize;
-			}
-
-			searchBE.setPageStart(pagePos);
-			searchBE.setPageIndex(indexVal);
-		}
-		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
-
-
-		if(ops.equals(SearchOptions.PAGINATION_BUCKET)) {
-			sendCmdMsgByCodeType(GennyConstants.BUCKET_DISPLAY, GennyConstants.NONE);
-			sendMessageBySearchEntity(searchBE);
-		} else {
-			sendMessageBySearchEntity(searchBE);
-			sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
-		}
-	}
-
-
-	/**
-	 * Handle search text in bucket page
-	 * @param code Message code
-	 * @param name Message name
-	 * @param value Search text
-	 * @param targetCodes List of target codes
-	 */
-	public void handleBucketSearch(String code, String name,String value, List<String> targetCodes) {
-		sendBucketCodes(targetCodes);
-
-		for(String targetCode : targetCodes) {
-			SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), targetCode, SearchEntity.class);
-			EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
-
-			if (!name.isBlank()) { //searching text
-				searchBE.add(new Filter(code, Operator.LIKE, value));
-			}
-
-			CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
-
-			sendMessageBySearchEntity(searchBE);
-			sendSearchPCM(GennyConstants.PCM_PROCESS, targetCode);
-		}
 	}
 
 	/**
@@ -460,7 +299,6 @@ public class SearchService {
 		this.filterParams = filterParams;
 	}
 
-
 	/**
 	 * handle filter by string in the table
 	 * @param que Question code
@@ -480,9 +318,7 @@ public class SearchService {
 		searchBE.add(new Filter(attrCode, oper, value));
 
 		CacheUtils.putObject(userToken.getRealm(), sbeCodeJti, searchBE);
-
-		sendMessageBySearchEntity(searchBE);
-		sendSearchPCM(GennyConstants.PCM_TABLE, sbeCodeJti);
+		searchUtils.searchTable(searchBE);
 	}
 
 	/**
@@ -499,9 +335,7 @@ public class SearchService {
 		searchBE.add(new Filter(attrCode, oper, value));
 
 		CacheUtils.putObject(userToken.getRealm(), targetCode, searchBE);
-
-		sendMessageBySearchEntity(searchBE);
-		sendSearchPCM(GennyConstants.PCM_TABLE, targetCode);
+		searchUtils.searchTable(searchBE);
 	}
 
 	/**

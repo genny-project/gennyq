@@ -95,20 +95,20 @@ public class Events {
 		}
 
 		// dashboard
-		if ("QUE_DASHBOARD_VIEW".equals(code)) {
+		if ("QUE_DASHBOARD".equals(code)) {
 			navigation.sendSummary();
+			return;
+		}
+
+		// bucket view
+		if ("QUE_PROCESS".equals(code)) {
+			search.sendBuckets();
 			return;
 		}
 
 		// detail view
 		if ("ACT_VIEW".equals(code)) {
 			search.sendDetailView(targetCode);
-			return;
-		}
-
-		// bucket view
-		if ("QUE_TAB_BUCKET_VIEW".equals(code)) {
-			search.getBuckets(code);
 			return;
 		}
 

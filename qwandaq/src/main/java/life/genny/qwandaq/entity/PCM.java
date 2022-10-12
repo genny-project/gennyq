@@ -22,8 +22,8 @@ public class PCM extends BaseEntity {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	public static final String PCM_VERT = "PCM_VERT";
-	public static final String PCM_HORI = "PCM_HORI";
+	public static final String TPL_VERT = "TPL_VERT";
+	public static final String TPL_HORI = "TPL_HORI";
 
 	public static final String PCM_TREE = "PCM_TREE";
 	public static final String PCM_ROOT = "PCM_ROOT";
@@ -32,6 +32,7 @@ public class PCM extends BaseEntity {
 	public static final String PCM_SIDEBAR = "PCM_SIDEBAR";
 	public static final String PCM_TABLE = "PCM_TABLE";
 	public static final String PCM_DETAIL_VIEW = "PCM_DETAIL_VIEW";
+	public static final String PCM_PROCESS = "PCM_PROCESS";
 
 	public PCM(String code, String name) {
 		super(code, name);

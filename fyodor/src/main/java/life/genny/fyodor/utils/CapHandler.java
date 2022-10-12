@@ -93,6 +93,9 @@ public class CapHandler extends Manager {
 			return false;
 		}
 
+		if (userToken.getUserCode().equals("PER_SERVICE"))
+			return true;
+
 		Set<Capability> capabilities = capMan.getUserCapabilities();
 		for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
 			if(!capTrait.meetsRequirements(capabilities)) {
