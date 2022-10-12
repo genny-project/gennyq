@@ -15,6 +15,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.gadaq.utils.EventMessageUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -123,10 +124,13 @@ public class InternalConsumer {
 		}
 		log.info("Received Event : " + obfuscate(eventJson));
 
+		String code = EventMessageUtils.getCode(eventJson);
+
 		// init scope and process msg
 		scope.init(event);
 		kogitoUtils.routeEvent(event);
 		scope.destroy();
+
 
 		//handle filter
 		filterUtils.handleFilterEvent(event);

@@ -682,12 +682,10 @@ public class SearchService {
 	 * @param code Question code
 	 * @param lnkCode Link code
 	 * @param lnkValue Link value
-	 * @param likeCond Like condition of searching data
 	 */
-	public void sendDropdownOptions(String sbeCode,String group,String code,String lnkCode,String lnkValue,
-									String likeCond,String userCode) {
-		SearchEntity searchEntity = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond,
-										true,userCode);
+	public void sendListSavedSearches(String sbeCode,String group,String code,String lnkCode,String lnkValue) {
+		String sbeJti = getSearchBaseEntityCodeByJTI(GennyConstants.SBE_SAVED_SEARCH);
+		SearchEntity searchEntity = searchUtils.getListSavedSearch(sbeJti,lnkCode,lnkValue, true);
 		QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
@@ -701,16 +699,14 @@ public class SearchService {
 	 * @param search Search entity
 	 * @return Message of list base entity
 	 */
-	public QDataBaseEntityMessage getBaseItemsMsg(String group,String code,String lnkCode, String lnkValue,SearchEntity search) {
+	public QDataBaseEntityMessage getBaseItemsMsg(String group,String code,String lnkCode,String lnkValue,
+												  	SearchEntity search) {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
 		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
 
 		List<BaseEntity> basesSorted =  bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
 												.collect(Collectors.toList());
-		if(bases.size() == 0) {
-			bases = new ArrayList<>();
-		}
 
 		msg.setToken(userToken.getToken());
 		msg.setItems(basesSorted);
@@ -728,14 +724,11 @@ public class SearchService {
 	 * @param sbeCode Search base entity code
 	 * @param lnkCode Link code
 	 * @param lnkValue Link value
-	 * @param likeCond Like condition
-	 * @param isSortedDate sorted by date
-	 * @param userCode User code
 	 * @return The list of dropdown items
 	 */
-	public List<BaseEntity> getListDropdownItems(String sbeCode,String lnkCode,String lnkValue,String likeCond,
-												 boolean isSortedDate,String userCode) {
-		SearchEntity search = searchUtils.getBaseDropdownOptions(sbeCode,lnkCode,lnkValue,likeCond, true,userCode);
+	public List<BaseEntity> getListSavedSearches(String sbeCode,String lnkCode,String lnkValue) {
+		String sbeJti = getSearchBaseEntityCodeByJTI(GennyConstants.SBE_SAVED_SEARCH);
+		SearchEntity search = searchUtils.getListSavedSearch(sbeJti,lnkCode,lnkValue, true);
 		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
 		return bases;
 	}
@@ -793,5 +786,34 @@ public class SearchService {
 		return newSbeCode;
 	}
 
+	/**
+	 * Send a search PCM with the correct search code.
+	 *
+	 * @param pcmCode The code of pcm to send
+	 * @param searchCode The code of the searhc to send
+	 */
+	public void sendPCM(String searchCode,String pcmCode,Pair<String,String> ... pcmAndTargets) {
+
+		// update content
+		BaseEntity base = beUtils.getBaseEntity(pcmCode);
+		for(Pair<String, String> pair :pcmAndTargets) {
+			Attribute attribute = qwandaUtils.getAttribute(pair.getKey());
+			EntityAttribute ea = new EntityAttribute(base, attribute, 1.0, pcmCode);
+			base.addAttribute(ea);
+		}
+
+		// update target pcm
+		Attribute attribute = qwandaUtils.getAttribute(pcmCode);
+		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, searchCode);
+		pcm.addAttribute(ea);
+
+		// send to alyson
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(base);
+		msg.add(pcm);
+		msg.setToken(userToken.getToken());
+		msg.setReplace(true);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
 
 }

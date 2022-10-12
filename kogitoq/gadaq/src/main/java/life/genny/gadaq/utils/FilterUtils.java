@@ -1,6 +1,5 @@
 package life.genny.gadaq.utils;
 
-import jdk.jfr.Event;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeLink;
@@ -80,8 +79,14 @@ public class FilterUtils {
     public static final String APPLY = "Apply";
     public static final String SELECT_SAVED_SEARCH = "Select Saved Search";
     public static final String DELETE = "Delete";
-    public static final String EDIT = "Edit";
 
+    //PCM
+    public static final String PRI_LOC1 = "PRI_LOC1";
+    public static final String PRI_LOC2 = "PRI_LOC2";
+    public static final String PRI_LOC3 = "PRI_LOC3";
+
+    public static final String PCM_TABLE = "PCM_TABLE";
+    public static final String PCM_SAVED_SEARCH = "PCM_SAVED_SEARCH";
 
 
     /**
@@ -104,10 +109,10 @@ public class FilterUtils {
      */
     public  boolean isFilterSelectQuestion(String filterValue) {
         boolean result = false;
-        if(filterValue.indexOf(PRI_ADDRESS_COUNTRY) > -1
-            || filterValue.indexOf(PRI_ASSOC_COMP_INTERNSHIP) > -1
-            || filterValue.indexOf(PRI_DJP_AGREE) > -1
-            || filterValue.indexOf(PRI_INTERNSHIP_TYPE) > -1)
+        if(filterValue.contains(PRI_ADDRESS_COUNTRY)
+            || filterValue.contains(PRI_ASSOC_COMP_INTERNSHIP)
+            || filterValue.contains(PRI_DJP_AGREE)
+            || filterValue.contains(PRI_INTERNSHIP_TYPE))
             return true;
 
         return result;
@@ -220,13 +225,13 @@ public class FilterUtils {
         String questionCode = "";
         String suffix = getLastSuffixCodeByFilterValue(filterVal);
 
-        if(filterVal.indexOf(PRI_ADDRESS_COUNTRY) > -1){
+        if(filterVal.contains(PRI_ADDRESS_COUNTRY)){
             return GennyConstants.QUE_FILTER_VALUE_COUNTRY;
-        } else if(filterVal.indexOf(PRI_ASSOC_COMP_INTERNSHIP) > -1){
+        } else if(filterVal.contains(PRI_ASSOC_COMP_INTERNSHIP)){
             return GennyConstants.QUE_FILTER_VALUE_ACADEMY;
-        } else if(filterVal.indexOf(PRI_DJP_AGREE) > -1){
+        } else if(filterVal.contains(PRI_DJP_AGREE)){
             return GennyConstants.QUE_FILTER_VALUE_DJP_HC;
-        } else if(filterVal.indexOf(PRI_INTERNSHIP_TYPE) > -1){
+        } else if(filterVal.contains(PRI_INTERNSHIP_TYPE)){
             return GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE;
         }
         //date,time
@@ -252,13 +257,13 @@ public class FilterUtils {
      */
     public String getLinkVal(String value) {
         String lnkVal = "";
-        if(value.indexOf(PRI_ADDRESS_COUNTRY) > -1){
+        if(value.contains(PRI_ADDRESS_COUNTRY)){
             lnkVal = COUNTRY;
-        } else if(value.indexOf(PRI_ASSOC_COMP_INTERNSHIP) > -1){
+        } else if(value.contains(PRI_ASSOC_COMP_INTERNSHIP)){
             lnkVal = COMPLETE_INTERNSHIP;
-        } else if(value.indexOf(PRI_DJP_AGREE) > -1){
+        } else if(value.contains(PRI_DJP_AGREE)){
             lnkVal = YES_NO;
-        } else if(value.indexOf(PRI_INTERNSHIP_TYPE) > -1){
+        } else if(value.contains(PRI_INTERNSHIP_TYPE)){
             lnkVal = INTERNSHIP_TYPE;
         }
 
@@ -486,7 +491,7 @@ public class FilterUtils {
     /**
      * Being whether saved search or not
      * @param eventCode Event Code
-     * @return
+     * @return Being whether save button  or not
      */
     public boolean isButtonSaveSearch(String eventCode) {
         boolean result = false;
@@ -499,7 +504,7 @@ public class FilterUtils {
     /**
      * Being whether saved search or not
      * @param eventCode Event Code
-     * @return
+     * @return Being whether delete button  or not
      */
     public boolean isButtonDeleteSearch(String eventCode) {
         boolean result = false;
@@ -537,15 +542,15 @@ public class FilterUtils {
         //save each attribute as the row of filter table
         saveAttribute(GennyConstants.LNK_SAVED_SEARCHES);
 
-        BaseEntity base = saveBaseEntity(GennyConstants.CACHING_SBE,sbeCode,name,params);
+        String prefix = GennyConstants.SBE_SAVED_SEARCH + "_";
+        BaseEntity base = saveBaseEntity(prefix,name,params);
         String filterCode = base.getCode();
 
         /* update filter existing group */
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,params);
 
-        searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,queGrp,
-                                GennyConstants.QUE_SAVED_SEARCH_LIST, GennyConstants.PRI_NAME,
-                                GennyConstants.VALUE,GennyConstants.CACHING_SBE + "%",userToken.getUserCode());
+        searchService.sendListSavedSearches(GennyConstants.SBE_DROPDOWN,queGrp,
+                                GennyConstants.QUE_SAVED_SEARCH_LIST, GennyConstants.PRI_NAME,GennyConstants.VALUE);
     }
 
     /**
@@ -554,12 +559,12 @@ public class FilterUtils {
      * @param name Search name
      * @param params Parameters
      */
-    public BaseEntity saveBaseEntity(String prefix,String sbeCode,String name,Map<String, Map<String,String>> params) {
+    public BaseEntity saveBaseEntity(String prefix,String name,Map<String, Map<String,String>> params) {
         BaseEntity baseEntity = null;
 
         try {
-            BaseEntity defBE = new BaseEntity(GennyConstants.CACHING_SBE);
-            String baseCode = GennyConstants.CACHING_SBE + UUID.randomUUID().toString();
+            BaseEntity defBE = new BaseEntity(prefix);
+            String baseCode = prefix + UUID.randomUUID().toString();
 
             //create the main base entity
             String attCode = GennyConstants.LNK_SAVED_SEARCHES;
@@ -568,15 +573,15 @@ public class FilterUtils {
             baseEntity = beUtils.create(defBE, name, baseCode);
             Attribute attrFound = databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
 
-            List<String> listUUID = getListUUID(params.entrySet().size());
+            List<String> listUUID = getListUUID(prefix,params.entrySet().size());
 
-            String strLnkArr = getLnkArrayString(listUUID);
+            String strLnkArr = convertLnkArrayToString(listUUID);
             baseEntity.addAttribute(attrFound, 1.0, strLnkArr);
             beUtils.updateBaseEntity(baseEntity);
 
             Attribute childAttr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
-            BaseEntity childDefBE = new BaseEntity(GennyConstants.CACHING_SBE);
-            childDefBE.addAttribute(childAttr, 1.0, GennyConstants.CACHING_SBE);
+            BaseEntity childDefBE = new BaseEntity(prefix);
+            childDefBE.addAttribute(childAttr, 1.0, prefix);
 
             //create other base entities based on the main base entity
             int index = 0;
@@ -602,10 +607,10 @@ public class FilterUtils {
      * @param size Size
      * @return list of UUID
      */
-    public List<String> getListUUID(int size) {
+    public List<String> getListUUID(String prefix,int size) {
         List<String> list = new ArrayList<>();
         for(int i=0; i< size;i++) {
-            String uuid =   GennyConstants.CACHING_SBE + UUID.randomUUID().toString().toUpperCase();
+            String uuid =   prefix + UUID.randomUUID().toString().toUpperCase();
             list.add(uuid);
         }
         return list;
@@ -616,7 +621,7 @@ public class FilterUtils {
      * @param params Parameters
      * @return string of link array
      */
-    public String getLnkArrayString(List<String> params) {
+    public String convertLnkArrayToString(List<String> params) {
         String result = "";
         for(int i=0; i< params.size();i++) {
             if(params.size() == 1) {
@@ -653,32 +658,27 @@ public class FilterUtils {
     }
 
     /**
-     * Save attribute code
-     * @param attCode Attribute code
-     * @param defaultValue Attribute default value
-     * @return Return attribute
+     * Delete base entity
+     * @param code Base entity
      */
-    public Attribute saveAttribute(String attCode, String defaultValue) {
-        Attribute attrFound = null;
-        try {
-            attrFound = databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
-        }catch (Exception ex) {
-            AttributeLink newAtt = new AttributeLink(attCode, attCode);
-            newAtt.setDefaultValue(defaultValue);
-
-            qwandaUtils.saveAttribute(newAtt);
-            attrFound =  databaseUtils.findAttributeByCode(userToken.getRealm(),attCode);
-        }
-
-        return attrFound;
+    public void deleteSearch(String code) {
+        databaseUtils.deleteBaseEntityAndAttribute(userToken.getRealm(), code);
     }
 
     /**
      * Delete base entity
      * @param code Base entity
      */
-    public void deleteBaseEntity(String code) {
-        databaseUtils.deleteBaseEntityAndAttribute(userToken.getRealm(), code);
+    public void deleteSearches(String code) {
+        String codes = beUtils.getBaseEntityValueAsString(code,LNK_SAVED_SEARCHES);
+        List<BaseEntity> bases = beUtils.convertCodesToBaseEntityArray(codes);
+        /* delete primary search */
+        deleteSearch(code);
+
+        /* delete other searchs */
+        for(BaseEntity base : bases) {
+            deleteSearch(base.getCode());
+        }
     }
 
     /**
@@ -690,15 +690,14 @@ public class FilterUtils {
         Map<String,Map<String, String>> params = new HashMap<>();
 
         String searchCode = EventMessageUtils.getSearchCode(msg);
-        deleteBaseEntity(searchCode);
+        deleteSearches(searchCode);
 
         //update filter existing group
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,searchCode,params);
 
-        String fltCond = GennyConstants.CACHING_SBE + "%";
         String queGroup = EventMessageUtils.getParentCode(msg);
-        searchService.sendDropdownOptions(GennyConstants.SBE_DROPDOWN,queGroup,GennyConstants.QUE_SAVED_SEARCH_LIST,
-                                GennyConstants.PRI_NAME, GennyConstants.VALUE,fltCond,userToken.getUserCode());
+        searchService.sendListSavedSearches(GennyConstants.SBE_DROPDOWN,queGroup,GennyConstants.QUE_SAVED_SEARCH_LIST,
+                                GennyConstants.PRI_NAME, GennyConstants.VALUE);
     }
 
     /**
@@ -722,11 +721,10 @@ public class FilterUtils {
 
     /**
      * Get the table of filter parameters
-     * @param sbeCode Search base entity
      * @param filterCode Filter code
      * @return Get the table of filter parameters
      */
-    public Map<String,Map<String, String>> getFilterParamByBaseCode(String sbeCode,String filterCode) {
+    public Map<String,Map<String, String>> getFilterParamByBaseCode(String filterCode) {
         Map<String,Map<String, String>>  result =  new HashMap<>();
 
         String value = "";
@@ -742,15 +740,36 @@ public class FilterUtils {
     }
 
     /**
+     * Get the table of filter parameters
+     * @param filterCode Filter code
+     * @return Get the table of filter parameters
+     */
+    public Map<String,Map<String, String>> getFilterParamsByBaseCode(String filterCode) {
+        Map<String,Map<String, String>>  result =  new HashMap<>();
+
+        try {
+            // get the filter by base entity code
+            String codes = beUtils.getBaseEntityValueAsString(filterCode,LNK_SAVED_SEARCHES);
+            List<BaseEntity> bases = beUtils.convertCodesToBaseEntityArray(codes);
+
+            for(BaseEntity base : bases) {
+                String value = getValueStringByAttCode(base,LNK_SAVED_SEARCHES);
+                result.put(base.getCode(),jsonb.fromJson(value, Map.class));
+            }
+        }catch(Exception ex) {}
+
+        return result;
+    }
+
+    /**
      * Get the latest filter code
      * @param sbeCode Search base entity code
      * @return The latest filter code
      */
     public String getLatestFilterCode(String sbeCode) {
         String filterCode = "";
-        String fltCond = GennyConstants.CACHING_SBE + "%";
-        List<BaseEntity> bases = searchService.getListDropdownItems(sbeCode,GennyConstants.PRI_NAME,
-                                GennyConstants.VALUE,fltCond,true, userToken.getUserCode());
+        List<BaseEntity> bases = searchService.getListSavedSearches(sbeCode,GennyConstants.PRI_NAME,
+                                                    GennyConstants.VALUE);
         List<BaseEntity> basesSorted =  bases.stream()
                 .sorted(Comparator.comparing(BaseEntity::getId).reversed())
                 .collect(Collectors.toList());
@@ -770,6 +789,7 @@ public class FilterUtils {
      */
     public void sendFilterAndQuickSearch(String code,String queGroup, String sbeCode, String filterCode,
                                          Map<String,Map<String, String>> filters, boolean isSubmitted) {
+
         searchService.sendQuickSearch(queGroup,GennyConstants.QUE_SELECT_INTERN, GennyConstants.LNK_PERSON,
                                 GennyConstants.BKT_APPLICATIONS);
 
@@ -782,29 +802,45 @@ public class FilterUtils {
         if(isSubmitted) {
             filterParams = filters;
         } else {
-            filterParams = getFilterParamByBaseCode(sbeCode, filterCode);
+            filterParams = getFilterParamsByBaseCode(filterCode);
         }
 
         //get the latest of filter
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,filterParams);
 
-        String fCond = GennyConstants.CACHING_SBE + "%";
         String queCode = GennyConstants.QUE_SAVED_SEARCH_LIST;
 
         //send saved searches
         String newSbe = searchService.getSearchBaseEntityCodeByJTI(sbeCode);
-        searchService.sendAsk(queGroup,newSbe,
-                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_SAVE,SAVE),
-                new MutablePair(GennyConstants.QUE_FILTER_APPLY,APPLY),
-                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_LIST,SELECT_SAVED_SEARCH),
-                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_DELETE, DELETE));
+
+//        searchService.sendAsk(queGroup,newSbe,
+//                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_SAVE,SAVE),
+//                new MutablePair(GennyConstants.QUE_FILTER_APPLY,APPLY),
+//                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_LIST,SELECT_SAVED_SEARCH),
+//                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_DELETE, DELETE));
 
         //send saved search list
-        searchService.sendDropdownOptions(newSbe,queGroup,queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE,
-                                            fCond,userToken.getUserCode());
+        searchService.sendListSavedSearches(newSbe,queGroup,queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE);
 
     }
 
+    /**
+     * Send pcm
+     * @param sbeCode Search base entity code
+     * @param queGroup Question group
+     */
+    public void sendPCM(String sbeCode, String queGroup) {
+        //Send PCM
+        searchService.sendPCM(sbeCode,PCM_TABLE,new MutablePair(PRI_LOC1,sbeCode),
+                new MutablePair(PRI_LOC2,queGroup),
+                new MutablePair(PRI_LOC3,PCM_SAVED_SEARCH));
+
+        searchService.sendPCM(sbeCode,PCM_SAVED_SEARCH,
+                new MutablePair(PCM_SAVED_SEARCH,GennyConstants.QUE_SAVED_SEARCH_GRP),
+                new MutablePair(PCM_SAVED_SEARCH,GennyConstants.QUE_SAVED_SEARCH_DETAIL_GRP),
+                new MutablePair(PCM_SAVED_SEARCH,GennyConstants.QUE_SAVED_SEARCH_SAVE_GRP));
+
+    }
 
     /**
      * Handle saved search selected
@@ -814,7 +850,7 @@ public class FilterUtils {
      */
     public void handleSearchSelected(String target, String eventCode,JsonObject msg) {
         String filterCode =  EventMessageUtils.getFilterCode(msg);
-        Map<String,Map<String, String>>  params = getFilterParamByBaseCode(target,filterCode);
+        Map<String,Map<String, String>>  params = getFilterParamsByBaseCode(filterCode);
         searchService.sendFilterGroup(target,GennyConstants.QUE_FILTER_GRP,eventCode,true,filterCode,params);
     }
 
@@ -929,8 +965,8 @@ public class FilterUtils {
                 handleSorting(attrCode, attrName, value, targetCode);
             /* pagination */
             } else if(isPaginationEvent(code)) {
-                    String sbeCode = getSafeValueByCode(msg,GennyConstants.TARGETCODE);
-                    searchService.handleSortAndSearch(code,code,"",sbeCode, SearchService.SearchOptions.PAGINATION);
+                String sbeCode = getSafeValueByCode(msg,GennyConstants.TARGETCODE);
+                searchService.handleSortAndSearch(code,code,"",sbeCode, SearchService.SearchOptions.PAGINATION);
             /* Go searching text */
             } else if (isSearchText(attrCode)) {
                 searchQuickText(msg, value, targetCode);

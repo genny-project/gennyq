@@ -138,16 +138,21 @@ public final class GennyConstants {
 	public static final String PRI_IS_EDU_PRO="PRI_IS_EDU_PRO";
 
 	//saved searches
+	public static final String QUE_SAVED_SEARCH_GRP = "QUE_SAVED_SEARCH_GRP";
 	public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
 	public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
 	public static final String QUE_SAVED_SEARCH_LIST = "QUE_SAVED_SEARCH_LIST";
 	public static final String QUE_SAVED_SEARCH_CODE = "QUE_SAVED_SEARCH_CODE";
+	public static final String QUE_SAVED_SEARCH_DETAIL_GRP = "QUE_SAVED_SEARCH_DETAIL_GRP";
+	public static final String QUE_SAVED_SEARCH_SAVE_GRP = "QUE_SAVED_SEARCH_SAVE_GRP";
 
 	public static final String QUE_FILTER_APPLY = "QUE_FILTER_APPLY";
 	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
 	public static final String YES = "YES";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+//	public static final String SBE_SEARCH = "SBE_SEARCH_";
 
+	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
 
 }
 
