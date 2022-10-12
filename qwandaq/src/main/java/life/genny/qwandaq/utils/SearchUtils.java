@@ -1,11 +1,35 @@
 package life.genny.qwandaq.utils;
 
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
+
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.constants.GennyConstants;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -17,28 +41,11 @@ import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
+import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.core.Response;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
 /**
  * A utility class used for performing table
@@ -179,55 +186,6 @@ public class SearchUtils {
 
 		return null;
 	}
-
-	/**
-	 * Evaluate any conditional filters for a {@link SearchEntity}
-	 *
-	 * @param searchBE the SearchEntity to evaluate filters of
-	 * @return SearchEntity
-	 */
-	/*public SearchEntity evaluateConditionalFilters(SearchEntity searchBE) {
-
-		List<String> shouldRemove = new ArrayList<>();
-
-		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
-
-			if (!ea.getAttributeCode().startsWith("CND_")) {
-				// find Conditional Filters
-				EntityAttribute cnd = searchBE.findEntityAttribute("CND_" + ea.getAttributeCode()).orElse(null);
-
-				if (cnd != null) {
-
-					log.info("Condition found for " + ea.getAttributeCode() + " with value: "
-							+ cnd.getValue().toString());
-					String[] condition = cnd.getValue().toString().split(":");
-
-					String capability = condition[0];
-					String mode = condition[1];
-
-					// check for NOT operator
-					Boolean not = capability.startsWith("!");
-					capability = not ? capability.substring(1) : capability;
-
-					// check for Capability
-					Boolean hasCap = capabilityUtils.hasCapabilityThroughPriIs(capability,
-							Capability.CapabilityMode.getMode(mode));
-
-					// XNOR operator
-					if (!(hasCap ^ not)) {
-						shouldRemove.add(ea.getAttributeCode());
-					}
-				}
-			}
-		}
-
-		// remove unwanted attrs
-		shouldRemove.stream().forEach(item -> {
-			searchBE.removeAttribute(item);
-		});
-
-		return searchBE;
-	}*/
 
 	/**
 	 * Perform a table like search in Genny using a {@link SearchEntity} code.
@@ -829,7 +787,7 @@ public class SearchUtils {
 
 	/**
 	 * Return filter tag key
-	 *
+	 * 
 	 * @param filterParams Filter Parameters
 	 * @param index        Index of list filter
 	 * @return Filter tag key
@@ -843,7 +801,7 @@ public class SearchUtils {
 
 	/**
 	 * Return Html value by filter parameters
-	 *
+	 * 
 	 * @param filterParams
 	 * @return Html value by filter parameters
 	 */
@@ -865,7 +823,7 @@ public class SearchUtils {
 
 	/**
 	 * Return the last word
-	 *
+	 * 
 	 * @param str String
 	 * @return The last word
 	 */
@@ -873,7 +831,7 @@ public class SearchUtils {
 		String word = "";
 		int lastIndex = str.lastIndexOf("_");
 		if (lastIndex > -1) {
-			word = str.substring(lastIndex + 1);
+			word = str.substring(lastIndex + 1, str.length());
 			return word;
 		}
 		return str;
@@ -881,7 +839,7 @@ public class SearchUtils {
 
 	/**
 	 * Get parameter value by key
-	 *
+	 * 
 	 * @param key Parameter Key
 	 */
 	public String getFilterParamValByKey(Map<String, String> filterParams, String key) {
@@ -900,7 +858,7 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with add filter group content
-	 *
+	 * 
 	 * @param sbeCode      Search Base Entity Code
 	 * @param questionCode Question code
 	 * @return Ask

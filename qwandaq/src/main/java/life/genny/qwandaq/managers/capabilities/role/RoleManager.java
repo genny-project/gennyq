@@ -3,7 +3,7 @@ package life.genny.qwandaq.managers.capabilities.role;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.Capability;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -258,7 +258,7 @@ public class RoleManager extends Manager {
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
-			List<Capability> capabilities = capManager.deserializeCapArray(permissionEA.getValue());
+			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
 			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);
@@ -334,7 +334,7 @@ public class RoleManager extends Manager {
 			values.add(role.getCode());
 			value = CommonUtils.getArrayString(values, (String v) -> v);			
 		} else {
-			value = "[" + role.getCode() + "]";
+			value = "[\"" + role.getCode() + "\"]";
 		}
 
 		lnkRoleEA.setValue(value);
@@ -358,12 +358,13 @@ public class RoleManager extends Manager {
 		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, ROLE_LINK_CODE);
 
 		if (roles == null || roles.isEmpty())
-			throw new RoleException(String.format("No roles found for base entity: ", personBaseEntity.getCode()));
+			return new ArrayList<String>();// throw new RoleException(String.format("No roles found for base entity: ", personBaseEntity.getCode()));
 		return roles;
 	}
 
 	public List<BaseEntity> getRoles(BaseEntity personBaseEntity) {
 		List<String> roles = getRoleCodes(personBaseEntity);
+		
 		return roles.stream().map((String roleCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(roleCode);
 			if(be == null) {

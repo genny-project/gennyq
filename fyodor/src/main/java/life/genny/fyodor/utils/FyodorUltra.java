@@ -66,7 +66,7 @@ public class FyodorUltra {
 	@Inject
 	private CapHandler capHandler;
 
-	static Jsonb jsonb = JsonbBuilder.create();
+	private static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.
@@ -671,7 +671,9 @@ public class FyodorUltra {
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			return getRecursiveColumnLink(entity, code);
+			if(entity != null) {
+				return getRecursiveColumnLink(entity, code);
+			} else return null;
 		}
 
 		// find value

@@ -53,6 +53,10 @@ public class SendMessageService {
 		new SendMessage(templateCode, recipientBE, ctxMap).sendMessage();
 	}
 
+	public void sendMessage(String templateCode, BaseEntity recipientBE, String url) {
+		new SendMessage(templateCode, recipientBE, url).sendMessage();
+	}
+
 	/**
 	 * Send all genny messages for a given milestone code and coreBE code but check
 	 * Injects.

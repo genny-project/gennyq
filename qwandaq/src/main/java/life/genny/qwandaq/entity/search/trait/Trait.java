@@ -1,8 +1,11 @@
 package life.genny.qwandaq.entity.search.trait;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
+import java.util.Set;
+import java.util.HashSet;
 
-import java.util.List;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
 
 /**
  * Trait
@@ -13,7 +16,7 @@ public abstract class Trait {
 	private String code;
 	private String name;
 
-	private List<CapabilityTrait> capabilities;
+	private Set<CapabilityRequirement> capabilityRequirements = new HashSet<>();
 
 	public Trait() {
 	}
@@ -39,17 +42,27 @@ public abstract class Trait {
 		this.name = name;
 	}
 
-	public List<CapabilityTrait> getCapabilities() {
-		return capabilities;
+	public Set<CapabilityRequirement> getCapabilityRequirements() {
+		return capabilityRequirements;
 	}
 
-	public void setCapabilities(List<CapabilityTrait> capabilities) {
-		this.capabilities = capabilities;
-	}
-
-	public Trait addCapability(CapabilityTrait capability) {
-		this.capabilities.add(capability);
+	public Trait setCapabilityRequirements(Set<CapabilityRequirement> capabilities) {
+		this.capabilityRequirements = capabilities;
 		return this;
+	}
+
+	public Trait addCapabilityRequirement(CapabilityRequirement capability) {
+		this.capabilityRequirements.add(capability);
+		return this;
+	}
+
+	public Trait addCapabilityRequirement(Capability capability, boolean requiresAll) {
+		return addCapabilityRequirement(CapabilityRequirement.fromCapability(capability, requiresAll));
+	}
+
+	public Trait addCapabilityRequirement(String code, boolean requiresAll, CapabilityNode... nodes) {
+		CapabilityRequirement req = new CapabilityRequirement(code, requiresAll, nodes);
+		return addCapabilityRequirement(req);
 	}
 
 }

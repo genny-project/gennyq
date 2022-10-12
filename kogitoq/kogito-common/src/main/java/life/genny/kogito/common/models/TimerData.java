@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class TimerData implements Serializable {
 
     static final Long DEFAULT_TIMER_INTERVAL_MIN = 1L;
-    static final Long OFFSET_EXPIRY_SECONDS = 60L;// 24L * 60L * 60L; // Add a day
+    static final Long OFFSET_EXPIRY_SECONDS = 7L * 24L * 60L * 60L; // Add a week
     static final Integer PRIORITY_QUEUE_INITIAL_SIZE = 3;
     static final Long DEFAULT_TIMER_EXPIRY_SECONDS = 12448167224L; // This must be set during init, default to 20th June
                                                                    // 2364

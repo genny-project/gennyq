@@ -26,6 +26,7 @@ import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 
 /**
@@ -71,7 +72,7 @@ public class Search {
 	public Response search(SearchEntity searchEntity) {
 
 		log.info("Search POST received..");
-
+		
 		if (userToken == null) {
 			log.error("Bad or no header token in Search POST provided");
 			return Response.status(Response.Status.BAD_REQUEST).build();
@@ -86,6 +87,7 @@ public class Search {
 			return Response.ok().entity(json).build();
 
 		} catch (ItemNotFoundException e) {
+			log.error("Got ItemNotFound! " + e.getMessage());
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
 	}

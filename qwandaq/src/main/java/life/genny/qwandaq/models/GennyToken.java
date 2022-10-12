@@ -1,29 +1,51 @@
 package life.genny.qwandaq.models;
 
-import life.genny.qwandaq.utils.CommonUtils;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.annotation.JsonbTransient;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTransient;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 @RegisterForReflection
 public class GennyToken implements Serializable {
+
+	@Inject
+	protected BaseEntityUtils beUtils;
+
+	@Inject
+	protected CapabilitiesManager capMan;
 
 	private static final long serialVersionUID = 1L;
 	static final Logger log = Logger.getLogger(GennyToken.class);
@@ -134,7 +156,7 @@ public class GennyToken implements Serializable {
 				log.info("Overriding Product code with: " + productCodes[0]);
 				this.productCode = productCodes[0];
 			}
-		}
+		} 
 
 		// add realm name to the decoded token
 		this.adecodedTokenMap.put("realm", this.realm);

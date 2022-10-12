@@ -1,5 +1,31 @@
 package life.genny.qwandaq.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import java.util.Optional;
+import java.util.regex.Pattern;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
@@ -21,23 +47,9 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.validation.Validation;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import life.genny.qwandaq.validation.Validation;
+import life.genny.qwandaq.datatype.DataType;
 
 import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 
@@ -81,17 +93,17 @@ public class QwandaUtils {
 
 	@PostConstruct
 	private void init() {
-		Attribute submit = getAttribute("EVT_SUBMIT");
-		if(submit == null) {
-			log.error("Could not find Attribute: EVT_SUBMIT");
-		}
-		DTT_EVENT = submit.getDataType();
+		// Attribute submit = getAttribute("EVT_SUBMIT");
+		// if (submit == null) {
+		// log.error("Could not find Attribute: EVT_SUBMIT");
+		// }
+		// DTT_EVENT = submit.getDataType();
 	}
 
 	public Attribute saveAttribute(final Attribute attribute) {
 		return saveAttribute(userToken.getProductCode(), attribute);
 	}
-	
+
 	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
 		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
 
@@ -224,7 +236,7 @@ public class QwandaUtils {
 	}
 
 	public Attribute createEvent(String code, final String name) {
-		if(!code.startsWith(EVENT_PREFIX)) {
+		if (!code.startsWith(EVENT_PREFIX)) {
 			code = EVENT_PREFIX.concat(code);
 		}
 		code = code.toUpperCase();
@@ -408,14 +420,14 @@ public class QwandaUtils {
 			if(targetAsk == null) {
 				continue;
 			}
-			
+
 			String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
 
 			boolean depsAnswered = hasDepsAnswered(target, dependencies);
 			targetAsk.setDisabled(!depsAnswered);
 			targetAsk.setHidden(!depsAnswered);
 		}
-		
+
 		return ask;
 	}
 
@@ -487,7 +499,7 @@ public class QwandaUtils {
 
 	/**
 	 * Fill the flat set of asks using recursion.
-	 *
+	 * 
 	 * @param set The set to fill
 	 * @param ask The ask to traverse
 	 * @return The filled set
@@ -814,7 +826,7 @@ public class QwandaUtils {
 
 		for (EntityAttribute entityAttribute : uniques) {
 			// fetch list of unique code combo
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, 
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,
 					entityAttribute.getAttribute().getCode());
 
 			// skip if no value found
@@ -880,34 +892,36 @@ public class QwandaUtils {
 
 	/**
 	 * Send a baseentity with a feedback message to be displayed.
-	 * @param parentCode The parentCode of the question group
-	 * @param questionCode The questionCode of the bad answer
+	 * 
+	 * @param parentCode    The parentCode of the question group
+	 * @param questionCode  The questionCode of the bad answer
 	 * @param attributeCode The attributeCode of the bad answer
-	 * @param feedback The feedback to provide the user
+	 * @param feedback      The feedback to provide the user
 	 */
 	public void sendAttributeErrorMessage(String parentCode, String questionCode, String attributeCode,
 			String feedback) {
 
 		// send a special FIELDMSG
 		JsonObject json = Json.createObjectBuilder()
-			.add("token", userToken.getToken())
-			.add("cmd_type", "FIELDMSG")
-			.add("msg_type", "CMD_MSG")
-			.add("code", parentCode)
-			.add("attributeCode", attributeCode)
-			.add("questionCode", questionCode)
-			.add("message", Json.createObjectBuilder()
-				.add("value", "This field must be unique and not have already been selected")
-			).build();
+				.add("token", userToken.getToken())
+				.add("cmd_type", "FIELDMSG")
+				.add("msg_type", "CMD_MSG")
+				.add("code", parentCode)
+				.add("attributeCode", attributeCode)
+				.add("questionCode", questionCode)
+				.add("message", Json.createObjectBuilder()
+						.add("value", "This field must be unique and not have already been selected"))
+				.build();
 
 		// send to commands topic
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
-		log.info("Sent error message to frontend : " + json);
+		log.info("Sent error message to frontend : " + json.toString());
 	}
 
 	/**
 	 * Return attribute relied on base entity object and attribute code
-	 * @param baseEntity Base entity
+	 * 
+	 * @param baseEntity    Base entity
 	 * @param attributeCode Attribute code
 	 * @return Return attribute object
 	 */
@@ -924,8 +938,8 @@ public class QwandaUtils {
 
 	/**
 	 * Check if all validations are met for an attribute and value.
-	 *
-	 *
+	 * 
+	 * 
 	 * @param attribute The Attribute of the answer
 	 * @param value     The value to check
 	 * @return Boolean representing whether the validation conditions have been met

@@ -19,7 +19,7 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 @ApplicationScoped
 public abstract class Manager {
-	private static Logger log;
+	private Logger log;
 
 	protected static Jsonb jsonb = JsonbBuilder.create();
 
