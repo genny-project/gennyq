@@ -91,8 +91,8 @@ public class ExternalConsumerConfig {
                                 http://localhost:\\d\\d\\d\\d|
                                 https://localhost:\\d\\d\\d\\d|
                                 https://.*.genny.life|https://.*.gada.io|
-                                System.getenv("CORS_URLS")
-                                """
+                                """ + System.getenv("CORS_URLS")
+
                 ).allowCredentials(true)
                 .allowedMethod(HttpMethod.GET)
                 .allowedMethod(HttpMethod.POST)
