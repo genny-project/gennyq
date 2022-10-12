@@ -126,11 +126,12 @@ public class InternalConsumer {
 
 		String code = EventMessageUtils.getCode(eventJson);
 
-		// init scope and process msg
-		scope.init(event);
-		kogitoUtils.routeEvent(event);
-		scope.destroy();
-
+		if(!filterUtils.isValidTable(code)) {
+			// init scope and process msg
+			scope.init(event);
+			kogitoUtils.routeEvent(event);
+			scope.destroy();
+		}
 
 		//handle filter
 		filterUtils.handleFilterEvent(event);

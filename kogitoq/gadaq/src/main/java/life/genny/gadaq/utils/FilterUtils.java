@@ -149,7 +149,7 @@ public class FilterUtils {
      * @param code Message Code
      * @return Being question showing filter box
      */
-    public  boolean isValidFilterBox(String code) {
+    public  boolean isValidTable(String code) {
         boolean result = false;
 
         if(code.startsWith(EVT_QUE_TREE_PREFIX) || code.startsWith(EVT_QUE_TABLE_PREFIX))
@@ -407,7 +407,7 @@ public class FilterUtils {
      * @param code Message Code
      * @return Being question showing filter box
      */
-    public  boolean isValidBucketFilterBox(String code) {
+    public  boolean isValidBucket(String code) {
         boolean result = false;
 
         if(code.startsWith(QUE_TAB_BUCKET_VIEW))
@@ -423,7 +423,7 @@ public class FilterUtils {
      */
 
     public boolean isNeededFilterAndQuickSearch(String code) {
-        boolean result = isValidFilterBox(code) || isValidBucketFilterBox(code)
+        boolean result = isValidTable(code) || isValidBucket(code)
                 || isFilterApply(code);
 
         return result;
@@ -813,12 +813,6 @@ public class FilterUtils {
         //send saved searches
         String newSbe = searchService.getSearchBaseEntityCodeByJTI(sbeCode);
 
-//        searchService.sendAsk(queGroup,newSbe,
-//                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_SAVE,SAVE),
-//                new MutablePair(GennyConstants.QUE_FILTER_APPLY,APPLY),
-//                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_LIST,SELECT_SAVED_SEARCH),
-//                new MutablePair(GennyConstants.QUE_SAVED_SEARCH_DELETE, DELETE));
-
         //send saved search list
         searchService.sendListSavedSearches(newSbe,queGroup,queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE);
 
@@ -831,15 +825,8 @@ public class FilterUtils {
      */
     public void sendPCM(String sbeCode, String queGroup) {
         //Send PCM
-        searchService.sendPCM(sbeCode,PCM_TABLE,new MutablePair(PRI_LOC1,sbeCode),
-                new MutablePair(PRI_LOC2,queGroup),
-                new MutablePair(PRI_LOC3,PCM_SAVED_SEARCH));
-
-        searchService.sendPCM(sbeCode,PCM_SAVED_SEARCH,
-                new MutablePair(PCM_SAVED_SEARCH,GennyConstants.QUE_SAVED_SEARCH_GRP),
-                new MutablePair(PCM_SAVED_SEARCH,GennyConstants.QUE_SAVED_SEARCH_DETAIL_GRP),
-                new MutablePair(PCM_SAVED_SEARCH,GennyConstants.QUE_SAVED_SEARCH_SAVE_GRP));
-
+        searchService.searchTable(sbeCode);
+        searchService.sendPCM(sbeCode,PCM_TABLE, queGroup);
     }
 
     /**
@@ -903,12 +890,13 @@ public class FilterUtils {
                 searchService.handleSortAndSearch(code,code,"",targetCode, SearchService.SearchOptions.PAGINATION_BUCKET);
 
             /* Show saved search for table */
-            } else if(isValidFilterBox(code)) {
+            } else if(isValidTable(code)) {
                 targetCode =  getSearchEntityCodeByMsgCode(code);
                 queGroup = GennyConstants.QUE_TABLE_FILTER_GRP;
+                sendPCM(targetCode,queGroup);
 
             /* Show saved search for bucket */
-            } else if(isValidBucketFilterBox(code))  {
+            } else if(isValidBucket(code))  {
                 targetCode =  SearchCaching.SBE_APPLIED_APPLICATIONS;
                 queGroup = GennyConstants.QUE_BUCKET_INTERNS_GRP;
 

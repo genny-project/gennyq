@@ -827,7 +827,7 @@ public class SearchUtils {
 
 		for (Map.Entry<String, Map<String, String>> param : listFilParams.entrySet()) {
 			Ask childAsk = new Ask();
-			childAsk.setAttributeCode(GennyConstants.PRI_EVENT);
+			childAsk.setAttributeCode(param.getKey());
 
 			Question question = new Question();
 			question.setAttributeCode(param.getValue().get(GennyConstants.COLUMN));

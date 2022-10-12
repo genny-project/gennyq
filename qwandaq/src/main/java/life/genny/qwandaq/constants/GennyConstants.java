@@ -14,7 +14,11 @@ public final class GennyConstants {
     public static final String PRI_NAME="PRI_NAME";
     public static final String PRI_CODE="PRI_CODE";
     public static final String  PRI_PREFIX = "PRI_";
+	public static final String PCM_CONTENT = "PCM_CONTENT";
     public static final String PCM_TABLE = "PCM_TABLE";
+	public static final String PRI_LOC1 = "PRI_LOC1";
+	public static final String PRI_LOC2 = "PRI_LOC2";
+	public static final String PRI_LOC3 = "PRI_LOC3";
     public static final String PCM_PROCESS = "PCM_PROCESS";
     public static final String BUCKET_CODES = "BUCKET_CODES";
     public static final String BUCKET_DISPLAY = "DISPLAY";
@@ -108,7 +112,7 @@ public final class GennyConstants {
 	public static final String CACHING_SBE = "SBE_";
 	public static final String SBE_HOST_COMPANIES_VIEW = "SBE_HOST_COMPANIES_VIEW";
 
-	// bucket filte
+	// bucket filter
 	public static final String QUE_BUCKET_INTERNS_GRP = "QUE_BUCKET_INTERNS_GRP";
 	public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
 	public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
@@ -137,15 +141,13 @@ public final class GennyConstants {
 	public static final String PRI_IS_INTERN="PRI_IS_INTERN";
 	public static final String PRI_IS_EDU_PRO="PRI_IS_EDU_PRO";
 
-	//saved searches
+	/* saved searches */
 	public static final String QUE_SAVED_SEARCH_GRP = "QUE_SAVED_SEARCH_GRP";
 	public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
 	public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
 	public static final String QUE_SAVED_SEARCH_LIST = "QUE_SAVED_SEARCH_LIST";
 	public static final String QUE_SAVED_SEARCH_CODE = "QUE_SAVED_SEARCH_CODE";
-	public static final String QUE_SAVED_SEARCH_DETAIL_GRP = "QUE_SAVED_SEARCH_DETAIL_GRP";
-	public static final String QUE_SAVED_SEARCH_SAVE_GRP = "QUE_SAVED_SEARCH_SAVE_GRP";
-
+	public static final String PCM_SAVED_SEARCH = "PCM_SAVED_SEARCH";
 	public static final String QUE_FILTER_APPLY = "QUE_FILTER_APPLY";
 	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
 	public static final String YES = "YES";
