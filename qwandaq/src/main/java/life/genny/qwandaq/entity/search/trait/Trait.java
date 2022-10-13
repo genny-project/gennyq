@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
 
 /**
  * Trait
@@ -44,13 +46,23 @@ public abstract class Trait {
 		return capabilityRequirements;
 	}
 
-	public void setCapabilityRequirements(Set<CapabilityRequirement> capabilities) {
+	public Trait setCapabilityRequirements(Set<CapabilityRequirement> capabilities) {
 		this.capabilityRequirements = capabilities;
+		return this;
 	}
 
 	public Trait addCapabilityRequirement(CapabilityRequirement capability) {
 		this.capabilityRequirements.add(capability);
 		return this;
+	}
+
+	public Trait addCapabilityRequirement(Capability capability, boolean requiresAll) {
+		return addCapabilityRequirement(CapabilityRequirement.fromCapability(capability, requiresAll));
+	}
+
+	public Trait addCapabilityRequirement(String code, boolean requiresAll, CapabilityNode... nodes) {
+		CapabilityRequirement req = new CapabilityRequirement(code, requiresAll, nodes);
+		return addCapabilityRequirement(req);
 	}
 
 }

@@ -2,7 +2,6 @@ package life.genny.qwandaq.constants;
 
 public final class GennyConstants {
 
-	// ================================== CAPABILITY CONSTANTS =============================================
     public static final String CACHE_NAME_BASEENTITY = "baseentity";
     public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
     public static final String PACKAGE_PREFIX = "life.genny";
@@ -22,6 +21,8 @@ public final class GennyConstants {
 	
 	// =====================================================================================================
 
+	// Service user
+	public static final String SERVICE_CODE = "PER_SERVICE";
 	// question
 	public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
 	public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";

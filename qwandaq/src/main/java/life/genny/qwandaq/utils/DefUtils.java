@@ -95,7 +95,7 @@ public class DefUtils {
 		log.info("########  PRODUCT CODE ===== " + productCode);
 		searchEntity.setRealm(productCode);
 
-		log.info(jsonb.toJson(searchEntity));
+		log.info("Search Entity: " + jsonb.toJson(searchEntity));
 
 		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
 
