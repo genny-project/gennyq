@@ -147,14 +147,16 @@ public final class GennyConstants {
 	public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
 	public static final String QUE_SAVED_SEARCH_LIST = "QUE_SAVED_SEARCH_LIST";
 	public static final String QUE_SAVED_SEARCH_CODE = "QUE_SAVED_SEARCH_CODE";
+	public static final String PCM_SAVED_SEARCH_POPUP = "PCM_SAVED_SEARCH_POPUP";
 	public static final String PCM_SAVED_SEARCH = "PCM_SAVED_SEARCH";
+	public static final String PRI_QUESTION_CODE = "PRI_QUESTION_CODE";
 	public static final String QUE_FILTER_APPLY = "QUE_FILTER_APPLY";
 	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
 	public static final String YES = "YES";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
-//	public static final String SBE_SEARCH = "SBE_SEARCH_";
 
 	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
+	public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
 
 }
 

@@ -792,9 +792,9 @@ public class SearchService {
 	 * @param pcmCode The code of pcm to send
 	 * @param queQuickSearch The code of quick search
 	 */
-	public void sendPCM(String searchCode, String pcmCode,String queQuickSearch) {
+	public void sendPCM(String searchCode, String pcmCode,String queQuickGp) {
 		BaseEntity main = beUtils.getBaseEntity(GennyConstants.PCM_CONTENT);
-		BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+		BaseEntity pcmTable = beUtils.getBaseEntity(pcmCode);
 
 		/* loc 1 */
 		Attribute mainAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC1);
@@ -802,32 +802,44 @@ public class SearchService {
 		main.addAttribute(mainEA);
 
 		Attribute pcmAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC1);
-		EntityAttribute pcmEA = new EntityAttribute(pcm, pcmAtt, 1.0, searchCode);
-		pcm.addAttribute(pcmEA);
+		EntityAttribute pcmEA = new EntityAttribute(pcmTable, pcmAtt, 1.0, searchCode);
+		pcmTable.addAttribute(pcmEA);
 
 		/* loc 2 */
-		mainAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC2);
-		mainEA = new EntityAttribute(main, mainAtt, 1.0, queQuickSearch);
-		main.addAttribute(mainEA);
+		pcmAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC2);
+		pcmEA = new EntityAttribute(pcmTable, pcmAtt, 1.0, GennyConstants.LNK_PERSON);
+		pcmTable.addAttribute(pcmEA);
+
+		Attribute priCode = qwandaUtils.getAttribute(GennyConstants.PRI_QUESTION_CODE);
+		mainEA = new EntityAttribute(main, priCode, 1.0, queQuickGp);
+		pcmTable.addAttribute(mainEA);
+
+		/* loc 3 - saved search popup */
+		mainAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC3);
+		mainEA = new EntityAttribute(main, mainAtt, 1.0, GennyConstants.PCM_SAVED_SEARCH_POPUP);
+		pcmTable.addAttribute(mainEA);
+
+		BaseEntity pcm3 = beUtils.getBaseEntity(GennyConstants.PCM_SAVED_SEARCH_POPUP);
+		pcmAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC2);
+		pcmEA = new EntityAttribute(pcm3, pcmAtt, 1.0, GennyConstants.PCM_SAVED_SEARCH);
+		pcm3.addAttribute(pcmEA);
+
+		/* loc 3a - saved search inside popup */
+		BaseEntity pcm3a = beUtils.getBaseEntity(GennyConstants.PCM_SAVED_SEARCH);
+
+		pcmAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC1);
+		pcmEA = new EntityAttribute(pcm3a, pcmAtt, 1.0, "");
+		pcm3a.addAttribute(pcmEA);
 
 		pcmAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC2);
-		pcmEA = new EntityAttribute(pcm, pcmAtt, 1.0, queQuickSearch);
-		pcm.addAttribute(pcmEA);
-
-		/* loc 3 */
-		BaseEntity pcm3 = beUtils.getBaseEntity(GennyConstants.PCM_SAVED_SEARCH);
-		mainAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC3);
-		mainEA = new EntityAttribute(main, mainAtt, 1.0, GennyConstants.PCM_SAVED_SEARCH);
-		main.addAttribute(mainEA);
-
-		pcmAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC3);
-		pcmEA = new EntityAttribute(pcm3, pcmAtt, 1.0, GennyConstants.QUE_FILTER_GRP);
-		pcm3.addAttribute(pcmEA);
+		pcmEA = new EntityAttribute(pcm3a, pcmAtt, 1.0, GennyConstants.PCM_SBE_DETAIL_VIEW);
+		pcm3a.addAttribute(pcmEA);
 
 		/* send messages */
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(main);
-		msg.add(pcm);
+		msg.add(pcmTable);
 		msg.add(pcm3);
+		msg.add(pcm3a);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
