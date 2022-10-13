@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -23,15 +24,13 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import java.util.Optional;
-import java.util.regex.Pattern;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -47,11 +46,7 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
-
 import life.genny.qwandaq.validation.Validation;
-import life.genny.qwandaq.datatype.DataType;
-
-import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -236,8 +231,8 @@ public class QwandaUtils {
 	}
 
 	public Attribute createEvent(String code, final String name) {
-		if (!code.startsWith(EVENT_PREFIX)) {
-			code = EVENT_PREFIX.concat(code);
+		if (!code.startsWith(Prefix.EVT)) {
+			code = Prefix.EVT.concat(code);
 		}
 		code = code.toUpperCase();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
@@ -292,7 +287,7 @@ public class QwandaUtils {
 		}
 
 		// check if it is a question group
-		if (question.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
+		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
 
 			log.info("[*] Parent Question: " + question.getCode());
 

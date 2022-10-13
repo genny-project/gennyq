@@ -874,7 +874,7 @@ public class SearchUtils {
 		ask.getChildAsks().stream().forEach(e -> {
 			if (e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_COLUMN)
 					|| e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
-					|| e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_SUBMIT)) {
+					|| e.getQuestion().getCode().equalsIgnoreCase(Question.QUE_SUBMIT)) {
 				e.setHidden(false);
 			} else if (e.getQuestion().getCode().equalsIgnoreCase(questionCode)) {
 				e.setHidden(false);
@@ -888,7 +888,7 @@ public class SearchUtils {
 		String targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
 		ask.setTargetCode(targetCode);
 
-		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_SUBMIT, source, target);
+		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(Question.QUE_SUBMIT, source, target);
 		ask.setTargetCode(targetCode);
 
 		ask.add(askSubmit);

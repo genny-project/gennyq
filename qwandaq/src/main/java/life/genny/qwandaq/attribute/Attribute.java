@@ -89,7 +89,7 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_CODE = "PRI_CODE";
 	public static final String PRI_UUID = "PRI_UUID";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
-	public static final String PRI_EVENT = "LNK_AUTHOR";
+	public static final String PRI_EVENT = "PRI_EVENT";
 
 	// links
 	public static final String LNK_CORE = "LNK_CORE";
