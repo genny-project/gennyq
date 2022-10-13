@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.gadaq.cache.SearchCaching;
-import org.apache.commons.lang3.tuple.MutablePair;
 
 @ApplicationScoped
 public class FilterUtils {
@@ -53,20 +52,20 @@ public class FilterUtils {
     public static final String DATETIME = "DATETIME";
     public static final String TIME = "TIME";
 
-    //select box option
+    /* select box option */
     public static final String PRI_ADDRESS_COUNTRY = "PRI_ADDRESS_COUNTRY";
     public static final String PRI_ASSOC_COMP_INTERNSHIP = "PRI_ASSOC_COMP_INTERNSHIP";
     public static final String PRI_INTERNSHIP_TYPE = "PRI_INTERNSHIP_TYPE";
     public static final String PRI_DJP_AGREE = "PRI_DJP_AGREE";
 
-    //Dropdown links
+    /* Dropdown links */
     public static final String LNK_CORE = "LNK_CORE";
     public static final String COUNTRY = "COUNTRY";
     public static final String COMPLETE_INTERNSHIP = "COMPLETE_INTERNSHIP";
     public static final String YES_NO = "YES_NO";
     public static final String INTERNSHIP_TYPE = "INTERNSHIP_TYPE";
 
-    //bucket
+    /* Bucket */
     public static final String PREF_CPY = "CPY_";
     public static final String QUE_TAB_BUCKET_VIEW = "QUE_TAB_BUCKET_VIEW";
     public static final String QUE_PREF = "QUE_";
@@ -441,10 +440,10 @@ public class FilterUtils {
         String text =  "%" + value.replaceFirst("!","") + "%";
         List<String> targetCodes =  EventMessageUtils.getTargetCodes(msg);
 
-            // Go to bucket
+        /* Go to bucket */
         if (targetCodes.size() > 1) {
             searchService.handleBucketSearch(attrCode, attrName, text, targetCodes);
-            // Go to search text
+        /* Go to search text */
         }else {
             searchService.handleSortAndSearch(attrCode, attrName, text, targetCode, SearchService.SearchOptions.SEARCH);
             searchService.sendQuickSearch(GennyConstants.QUE_TABLE_FILTER_GRP,GennyConstants.QUE_SELECT_INTERN,
@@ -692,7 +691,7 @@ public class FilterUtils {
         String searchCode = EventMessageUtils.getSearchCode(msg);
         deleteSearches(searchCode);
 
-        //update filter existing group
+        /* update filter existing group */
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,searchCode,params);
 
         String queGroup = EventMessageUtils.getParentCode(msg);
@@ -793,7 +792,7 @@ public class FilterUtils {
         searchService.sendQuickSearch(queGroup,GennyConstants.QUE_SELECT_INTERN, GennyConstants.LNK_PERSON,
                                 GennyConstants.BKT_APPLICATIONS);
 
-        //get the latest filter code if filterCode is empty
+        /* get the latest filter code if filterCode is empty */
         if(filterCode.isEmpty()) {
             filterCode = getLatestFilterCode(sbeCode);
         }
@@ -805,15 +804,15 @@ public class FilterUtils {
             filterParams = getFilterParamsByBaseCode(filterCode);
         }
 
-        //get the latest of filter
+        /* get the latest of filter */
         searchService.sendFilterGroup(sbeCode,GennyConstants.QUE_FILTER_GRP,code,true,filterCode,filterParams);
 
         String queCode = GennyConstants.QUE_SAVED_SEARCH_LIST;
 
-        //send saved searches
+        /* send saved searches */
         String newSbe = searchService.getSearchBaseEntityCodeByJTI(sbeCode);
 
-        //send saved search list
+        /* send saved search list */
         searchService.sendListSavedSearches(newSbe,queGroup,queCode,GennyConstants.PRI_NAME,GennyConstants.VALUE);
 
     }
@@ -824,7 +823,7 @@ public class FilterUtils {
      * @param queGroup Question group
      */
     public void sendPCM(String sbeCode, String queGroup) {
-        //Send PCM
+        /* Send PCM */
         searchService.searchTable(sbeCode);
         searchService.sendPCM(sbeCode,PCM_TABLE, queGroup);
     }
@@ -962,10 +961,6 @@ public class FilterUtils {
             /* Go to filter column selected */
             } else if(isFilerColumnSelected(code, attrCode)) {
                 selectFilerColumn(targetCode, value);
-
-            /* Go to filter option selected */
-            } else if(isFilerOptionSelected(code, attrCode)) {
-//                setFilterOption(value);
 
             /* Go to list of searches selected */
             } else if(isSearchSelected(code)) {

@@ -15,8 +15,6 @@ import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -734,48 +732,6 @@ public class SearchService {
 	}
 
 	/**
-	 * Send ask by question code and Search base entity code
-	 * @param code Question code
-	 * @param sbeCode Search base entity code
-	 */
-	public void sendAsk(String code, String sbeCode, Pair<String, String>... childCodes) {
-		Ask ask = new Ask();
-
-		ask.setQuestionCode(code);
-		ask.setName(code);
-		ask.setTargetCode(sbeCode);
-
-		Question question = new Question();
-		question.setCode(code);
-		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
-		ask.setQuestion(question);
-
-		for(Pair<String,String> pair  : childCodes) {
-			Ask childAsk = new Ask();
-			childAsk.setQuestionCode(pair.getKey());
-			childAsk.setName(pair.getKey());
-			childAsk.setTargetCode(sbeCode);
-
-			Question childQuestion = new Question();
-			childQuestion.setCode(pair.getKey());
-			childQuestion.setAttributeCode(pair.getKey());
-			childQuestion.setPlaceholder(pair.getValue());
-			childAsk.setQuestion(childQuestion);
-			ask.addChildAsk(childAsk);
-		}
-
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setTargetCode(sbeCode);
-		msg.setQuestionCode(code);
-		msg.setMessage(code);
-		msg.setReplace(true);
-
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-	}
-
-
-	/**
 	 * Return search base entity code with jti
 	 *
 	 * @param sbeCode Search Base entity
@@ -790,7 +746,7 @@ public class SearchService {
 	 * Send a search PCM with the correct search code.
 	 * @param searchCode Search base entity code
 	 * @param pcmCode The code of pcm to send
-	 * @param queQuickSearch The code of quick search
+	 * @param queQuickGp The code of quick search
 	 */
 	public void sendPCM(String searchCode, String pcmCode,String queQuickGp) {
 		BaseEntity main = beUtils.getBaseEntity(GennyConstants.PCM_CONTENT);

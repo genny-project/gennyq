@@ -42,7 +42,7 @@ public final class GennyConstants {
 	
 	// =====================================================================================================
 
-	// question
+	/* Question */
 	public static final String QUE_QQQ_GROUP = "QQQ_QUESTION_GROUP";
 	public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
 	public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
@@ -61,7 +61,7 @@ public final class GennyConstants {
 	public static final String QUE_FILTER_VALUE_DATETIME = "QUE_FILTER_VALUE_DATETIME";
 	public static final String QUE_FILTER_VALUE_TIME = "QUE_FILTER_VALUE_TIME";
 
-	// link
+	/* Link */
 	public static final String LNK_FILTER_COLUMN = "LNK_FILTER_COLUMN";
 	public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
 
@@ -70,7 +70,7 @@ public final class GennyConstants {
 	public static final String LNK_ITEMS = "LNK_ITEMS";
 	public static final String ITEMS = "ITEMS";
 
-	// filter
+	/* Filter */
 	public static final String FILTERS = "Filters";
 	public static final String FILTER_QUE_EXIST = "QUE_EXISTING_FILTERS_GRP";
 	public static final String FILTER_QUE_EXIST_NAME = "Existing Filters";
@@ -83,10 +83,10 @@ public final class GennyConstants {
 	public static final String SEL_NOT_LIKE = "SEL_NOT_LIKE";
 	public static final String SEL_FILTER_COLUMN_FLC = "SEL_FILTER_COLUMN_FLC_";
 
-	// filter columns
+	/* Filter columns */
 	public static final String FILTER_DATE = "DATE";
 
-	// filter academy
+	/* Filter academy */
 	public static final String SEL_OA_WRP = "SEL_OA_WRP";
 	public static final String SEL_OA_WIL = "SEL_OA_WIL";
 	public static final String SEL_OA_CARRERBOX = "SEL_OA_CARRERBOX";
@@ -94,33 +94,32 @@ public final class GennyConstants {
 	public static final String SEL_COURSE_CREDIT = "SEL_COURSE_CREDIT";
 	public static final String SEL_DIGITAL_JOBS = "SEL_DIGITAL_JOBS";
 
-	// filter date
+	/* Filter date */
 	public static final String SEL_GREATER_THAN = "SEL_GREATER_THAN";
 	public static final String SEL_GREATER_THAN_OR_EQUAL_TO = "SEL_GREATER_THAN_OR_EQUAL_TO";
 	public static final String SEL_LESS_THAN = "SEL_LESS_THAN";
 	public static final String SEL_LESS_THAN_OR_EQUAL_TO = "SEL_LESS_THAN_OR_EQUAL_TO";
 
-	// dropdown
+	/* Dropdown */
 	public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
 	public static final String PRI_CODE_LABEL = "CODE";
 	public static final String PRI_NAME_LABEL = "NAME";
 
-	// event
+	/* Event */
 	public static final String EVENT_WEBCMDS = "webcmds";
 
-	// caching
+	/* Caching */
 	public static final String CACHING_SBE = "SBE_";
 	public static final String SBE_HOST_COMPANIES_VIEW = "SBE_HOST_COMPANIES_VIEW";
 
-	// bucket filter
+	/* Bucket filter */
 	public static final String QUE_BUCKET_INTERNS_GRP = "QUE_BUCKET_INTERNS_GRP";
 	public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
 	public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
 	public static final String BKT_APPLICATIONS = "BKT_APPLICATIONS";
-
 	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
 
-	// event
+	/* Event */
 	public static final String PRI_EVENT = "PRI_EVENT";
 	public static final String CODE = "code";
 	public static final String TARGETCODE = "targetCode";
@@ -132,7 +131,7 @@ public final class GennyConstants {
 	public static final String OPTION = "option";
 	public static final String QUESTIONCODE = "questionCode";
 
-	//Bucket filter values
+	/* Bucket filter values */
 	public static final String PRI_IS_HOST_CPY="PRI_IS_HOST_CPY";
 	public static final String PRI_ASSOC_HC="PRI_ASSOC_HC";
 	public static final String PRI_STATUS="PRI_STATUS";
@@ -141,7 +140,7 @@ public final class GennyConstants {
 	public static final String PRI_IS_INTERN="PRI_IS_INTERN";
 	public static final String PRI_IS_EDU_PRO="PRI_IS_EDU_PRO";
 
-	/* saved searches */
+	/* Saved searches */
 	public static final String QUE_SAVED_SEARCH_GRP = "QUE_SAVED_SEARCH_GRP";
 	public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
 	public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
@@ -154,7 +153,6 @@ public final class GennyConstants {
 	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
 	public static final String YES = "YES";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
-
 	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
 	public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
 
