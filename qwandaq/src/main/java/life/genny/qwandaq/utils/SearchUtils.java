@@ -22,6 +22,8 @@ import javax.ws.rs.core.Response;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -739,7 +741,7 @@ public class SearchUtils {
 		ask.setName(GennyConstants.FILTERS);
 
 		Question question = new Question();
-		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+		question.setAttributeCode(Attribute.QQQ_QUESTION_GROUP);
 		ask.setQuestion(question);
 
 		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
@@ -810,7 +812,7 @@ public class SearchUtils {
 
 		String attrName = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_OPTION);
 		String value = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_VALUE);
-		String attrNameStrip = attrName.replaceFirst(GennyConstants.SEL_PREF, "")
+		String attrNameStrip = attrName.replaceFirst(Prefix.SEL, "")
 				.replace("_", " ");
 
 		String finalAttCode = StringUtils.capitalize(getLastWord(attrCode).toLowerCase());
@@ -910,7 +912,7 @@ public class SearchUtils {
 
 		Question question = new Question();
 		question.setCode(GennyConstants.FILTER_QUE_EXIST);
-		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+		question.setAttributeCode(Attribute.QQQ_QUESTION_GROUP);
 
 		// change exist filter group
 		if (listFilParams.size() > 0) {
@@ -932,24 +934,24 @@ public class SearchUtils {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
 		msg.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
-		msg.setLinkCode(GennyConstants.LNK_CORE);
-		msg.setLinkValue(GennyConstants.LNK_ITEMS);
+		msg.setLinkCode(Attribute.LNK_CORE);
+		msg.setLinkValue(Attribute.LNK_ITEMS);
 		msg.setQuestionCode(GennyConstants.QUE_FILTER_COLUMN);
 
 		List<BaseEntity> baseEntities = new ArrayList<>();
 
 		searchBE.getBaseEntityAttributes().stream()
-				.filter(e -> e.getAttributeCode().startsWith(GennyConstants.FILTER_COL))
+				.filter(e -> e.getAttributeCode().startsWith(Prefix.FLC))
 				.forEach(e -> {
 					BaseEntity baseEntity = new BaseEntity();
 					List<EntityAttribute> entityAttributes = new ArrayList<>();
 
 					EntityAttribute ea = new EntityAttribute();
-					String attrCode = e.getAttributeCode().replaceFirst(GennyConstants.FILTER_COL, "");
+					String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC, "");
 					ea.setAttributeName(e.getAttributeName());
 					ea.setAttributeCode(attrCode);
 
-					String baseCode = GennyConstants.FILTER_SEL + GennyConstants.FILTER_COL + attrCode;
+					String baseCode = GennyConstants.FILTER_SEL + Prefix.FLC + attrCode;
 					ea.setBaseEntityCode(baseCode);
 					ea.setValueString(e.getAttributeName());
 
@@ -977,8 +979,8 @@ public class SearchUtils {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
 		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
-		base.setLinkCode(GennyConstants.LNK_CORE);
-		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setLinkCode(Attribute.LNK_CORE);
+		base.setLinkValue(Attribute.LNK_ITEMS);
 		base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
 		questionCode = questionCode.toUpperCase();
 
@@ -1028,8 +1030,8 @@ public class SearchUtils {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
 		base.setParentCode(queGrp);
-		base.setLinkCode(GennyConstants.LNK_CORE);
-		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setLinkCode(Attribute.LNK_CORE);
+		base.setLinkValue(Attribute.LNK_ITEMS);
 		base.setQuestionCode(queCode);
 
 		SearchEntity searchBE = new SearchEntity(GennyConstants.SBE_DROPDOWN, GennyConstants.SBE_DROPDOWN)

@@ -257,8 +257,8 @@ public class SearchService {
 
 		msg.setToken(userToken.getToken());
 		msg.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
-		msg.setLinkCode(GennyConstants.LNK_CORE);
-		msg.setLinkValue(GennyConstants.LNK_ITEMS);
+		msg.setLinkCode(Attribute.LNK_CORE);
+		msg.setLinkValue(Attribute.LNK_ITEMS);
 		msg.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
 		msg.setTargetCode(sbeCodeJti);
 		msg.setReplace(true);
@@ -348,7 +348,7 @@ public class SearchService {
 		ask.setName(GennyConstants.FILTERS);
 		Question question = new Question();
 		question.setCode(queGroup);
-		question.setAttributeCode(GennyConstants.QUE_QQQ_GROUP);
+		question.setAttributeCode(Attribute.QQQ_QUESTION_GROUP);
 		ask.setQuestion(question);
 
 		Ask childAsk = new Ask();

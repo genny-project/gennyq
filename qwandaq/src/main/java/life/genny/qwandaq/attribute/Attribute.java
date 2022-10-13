@@ -92,6 +92,8 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_EVENT = "LNK_AUTHOR";
 
 	// links
+	public static final String LNK_CORE = "LNK_CORE";
+	public static final String LNK_ITEMS = "LNK_ITEMS";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
 	public static final String LNK_SUMMARY = "LNK_SUMMARY";
 
@@ -101,6 +103,7 @@ public class Attribute extends CodedEntity {
 
 	// roles
 	public static final String LNK_ROLE = "LNK_ROLE";
+	public static final String LNK_CHILDREN = "LNK_CHILDREN";
 
 	// pcm
 	public static final String PRI_LOC = "PRI_LOC";
