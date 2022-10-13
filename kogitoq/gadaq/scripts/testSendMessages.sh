@@ -13,5 +13,5 @@ echo ''
 echo $TOKEN
 echo ''
 CTX_MAP='{"templateCode": "'$messageTemplateCode'", "recipientBeCode":"'$recipientBeCode'"}'
-curl -v -H "Content-Type: application/json"  -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -X POST http://alyson2.genny.life:${port}/sendmessage -d "$CTX_MAP"
+curl -v -H "Content-Type: application/json"  -H "Accept: application/json" -H "Authorization: Bearer $TOKEN" -X POST http://${realm}.genny.life:${port}/sendmessage -d "$CTX_MAP"
 echo ""
