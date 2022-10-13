@@ -24,6 +24,10 @@ public class SearchCaching {
 	@Inject
 	Service service;
 
+	/* bucket */
+	public static final String SBE_TAB_BUCKET_VIEW = "SBE_TAB_BUCKET_VIEW";
+	public static final String SBE_APPLIED_APPLICATIONS = "SBE_APPLIED_APPLICATIONS";
+
 	public void saveToCache() {
 
 		// DEF_ADDRESS

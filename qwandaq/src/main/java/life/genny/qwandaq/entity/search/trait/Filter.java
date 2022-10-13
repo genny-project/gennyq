@@ -23,6 +23,13 @@ public class Filter extends Trait implements ClauseArgument {
 	private Class<?> c;
 	private String className;
 
+	public enum FILTER_TYPE {
+		PRIMARY,
+		EXTRA
+	}
+
+	private FILTER_TYPE type;
+
 	public Filter() {
 		super();
 	}
@@ -65,6 +72,15 @@ public class Filter extends Trait implements ClauseArgument {
 		this.value = value;
 		this.c = c;
 		this.className = c.getName();
+	}
+
+	public Filter(String code, Operator operator, Object value, FILTER_TYPE type) {
+		super(code, code);
+		this.operator = operator;
+		this.value = value;
+		this.c = value.getClass();
+		this.className = value.getClass().getName();
+		this.type = type;
 	}
 
 	public Operator getOperator() {
@@ -110,4 +126,11 @@ public class Filter extends Trait implements ClauseArgument {
 		this.className = className;
 	}
 
+	public FILTER_TYPE getType() {
+		return type;
+	}
+
+	public void setType(FILTER_TYPE type) {
+		this.type = type;
+	}
 }

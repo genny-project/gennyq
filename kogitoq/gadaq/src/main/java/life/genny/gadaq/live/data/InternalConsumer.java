@@ -29,6 +29,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import life.genny.gadaq.utils.FilterUtils;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -51,6 +52,9 @@ public class InternalConsumer {
 
 	@Inject
 	SearchService search;
+
+	@Inject
+	FilterUtils filterUtils;
 
 	/**
 	 * Execute on start up.
@@ -123,5 +127,25 @@ public class InternalConsumer {
 		scope.init(event);
 		kogitoUtils.routeEvent(event);
 		scope.destroy();
+
+		/* Handle filter */
+		filterUtils.handleFilterEvent(event);
+	}
+
+	/**
+	 * This method is used for sorting,searching and pagination in the table
+	 * @param data message data
+	 */
+	@Incoming("data")
+	@Blocking
+	public void getDataFromExternalBridge(String data) {
+		Instant start = Instant.now();
+
+		/* Handle filter */
+		filterUtils.handleFilterEventData(data);
+
+		log.info("Received Data : " + data);
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 }
