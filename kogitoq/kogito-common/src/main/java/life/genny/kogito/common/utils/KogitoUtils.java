@@ -299,6 +299,7 @@ public class KogitoUtils {
 		// Insert Extras
 		session.insert(gqlUtils);
 		session.insert(qwandaUtils);
+		log.info("Inserting importGithubService into facts");
 		session.insert(importGithubService);
 		session.insert(msg);
 
