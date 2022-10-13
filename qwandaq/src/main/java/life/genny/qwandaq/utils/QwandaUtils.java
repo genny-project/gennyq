@@ -1,31 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import java.util.Optional;
-import java.util.regex.Pattern;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
@@ -47,9 +21,23 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
-
 import life.genny.qwandaq.validation.Validation;
-import life.genny.qwandaq.datatype.DataType;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 
@@ -915,7 +903,7 @@ public class QwandaUtils {
 
 		// send to commands topic
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
-		log.info("Sent error message to frontend : " + json.toString());
+		log.info("Sent error message to frontend : " + json);
 	}
 
 	/**
