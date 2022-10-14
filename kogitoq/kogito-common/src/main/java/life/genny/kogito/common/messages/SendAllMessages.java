@@ -73,7 +73,8 @@ public class SendAllMessages extends MessageSendingStrategy {
 
         }
         if (searchUtils == null) {
-            Arc.container().instance(SearchUtils.class);
+
+            searchUtils = Arc.container().select(SearchUtils.class).get();
         }
         List<String> messageCodes = searchUtils.searchBaseEntityCodes(searchEntity);
 
