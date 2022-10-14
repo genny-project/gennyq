@@ -211,8 +211,14 @@ public class SearchUtils {
 
 		log.info("SBE CODE   ::   " + searchCode);
 
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
-				searchCode, SearchEntity.class);
+		SearchEntity searchEntity = null;
+
+		try {
+			searchEntity = CacheUtils.getObject(userToken.getProductCode(),
+					searchCode, SearchEntity.class);
+		} catch (Exception e) {
+			searchEntity = null;
+		}
 
 		if (searchEntity == null) {
 			log.error("Could not fetch " + searchCode + " from cache!!!");
