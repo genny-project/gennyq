@@ -78,8 +78,14 @@ when
 	msg: QEventMessage( data.code matches "QUE_.*_VIEW" || data.code == "ACT_VIEW" || data.code matches "QUE_TREE_ITEM_.*" )
 	kogitoUtils : KogitoUtils()
 then
+String code = msg.getData().getCode();
+
+System.out.println("Gadaq: Incoming view code = " + code);
+
 	JsonObjectBuilder builder = Json.createObjectBuilder()
-			.add("code", CommonUtils.removePrefix(msg.getData().getCode()));
+			.add("code", CommonUtils.removePrefix(code));
+
+			
 
 	if (msg.getData().getTargetCode() != null)
 		builder.add("targetCode", msg.getData().getTargetCode());
