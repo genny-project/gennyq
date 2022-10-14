@@ -82,18 +82,18 @@ public class NavigationService {
 
 	/**
 	 * Trigger a redirect based on a code.
+	 * 
 	 * @param code
 	 */
 	public void redirect(String code) {
 		// route using code if specified
 		if (code != null) {
 			log.infof("Performing redirect with code %s", code);
-			kogitoUtils.triggerWorkflow(GADAQ, "view", 
-				Json.createObjectBuilder()
-				.add("code", code)
-				.add("targetCode", userToken.getUserCode())
-				.build()
-			);
+			kogitoUtils.triggerWorkflow(GADAQ, "view",
+					Json.createObjectBuilder()
+							.add("code", code)
+							.add("targetCode", userToken.getUserCode())
+							.build());
 		}
 
 		// check for outstanding tasks
@@ -112,11 +112,10 @@ public class NavigationService {
 		try {
 			String redirectCode = roleManager.getUserRoleRedirectCode();
 			log.infof("Role Redirect found: %s", redirectCode);
-			kogitoUtils.triggerWorkflow(GADAQ, "view", 
-				Json.createObjectBuilder()
-				.add("code", redirectCode)
-				.build()
-			);
+			kogitoUtils.triggerWorkflow(GADAQ, "view",
+					Json.createObjectBuilder()
+							.add("code", redirectCode)
+							.build());
 			log.info("Role Redirect sent");
 			return;
 		} catch (RoleException e) {
@@ -124,11 +123,10 @@ public class NavigationService {
 		}
 
 		// default to dashboard
-		kogitoUtils.triggerWorkflow(GADAQ, "view", 
-			Json.createObjectBuilder()
-			.add("code", "DASHBOARD_VIEW")
-			.build()
-		);
+		kogitoUtils.triggerWorkflow(GADAQ, "view",
+				Json.createObjectBuilder()
+						.add("code", "DASHBOARD_VIEW")
+						.build());
 		log.info("Dashboard View triggered");
 	}
 
@@ -265,7 +263,7 @@ public class NavigationService {
 	public void showProcessPage(final String targetCode) {
 		String sourceCode = userToken.getUserCode();
 		String eventJson = "{\"data\":{\"targetCode\":\"" + targetCode + "\",\"sourceCode\":\"" + sourceCode
-				+ "\",\"parentCode\":\"QUE_SIDEBAR_GRP\",\"code\":\"QUE_TAB_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
+				+ "\",\"parentCode\":\"QUE_SIDEBAR_GRP\",\"code\":\"QUE_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
 				+ userToken.getToken() + "\"}";
 
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, eventJson);
@@ -273,6 +271,7 @@ public class NavigationService {
 
 	/**
 	 * Redirect by question code
+	 * 
 	 * @param questionCode Question code
 	 */
 	public void redirectByQuestionCode(String questionCode) {
@@ -289,37 +288,39 @@ public class NavigationService {
 
 	/**
 	 * Return definition code by question code
+	 * 
 	 * @param questionCode question code
 	 * @return Definition code
 	 */
-	public String getDefCodeByQuestionCode(String questionCode){
-		String defCode = "DEF_" + questionCode.replaceFirst("QUE_QA_","")
-				.replaceFirst("QUE_ADD_","")
-				.replaceFirst("QUE_","")
-				.replace("_GRP","");
+	public String getDefCodeByQuestionCode(String questionCode) {
+		String defCode = "DEF_" + questionCode.replaceFirst("QUE_QA_", "")
+				.replaceFirst("QUE_ADD_", "")
+				.replaceFirst("QUE_", "")
+				.replace("_GRP", "");
 
 		return defCode;
 	}
 
 	/**
 	 * return redirect question code
+	 * 
 	 * @param questionCode Question code
 	 * @return redirect question code
 	 */
-	public String getRedirectCodeByQuestionCode(String questionCode){
+	public String getRedirectCodeByQuestionCode(String questionCode) {
 		String defaultRedirectCode = "";
-		String defCode =  getDefCodeByQuestionCode(questionCode);
-		//firstly, check question code
+		String defCode = getDefCodeByQuestionCode(questionCode);
+		// firstly, check question code
 		try {
 			BaseEntity target = beUtils.getBaseEntity(defCode);
 
 			defaultRedirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
 			log.info("Actioning redirect for question: " + target.getCode() + " : " + defaultRedirectCode);
-		}catch (Exception ex){
+		} catch (Exception ex) {
 			log.error(ex);
 		}
 
-		//Secondly, check user to get redirect code
+		// Secondly, check user to get redirect code
 		if (defaultRedirectCode == null || defaultRedirectCode.isEmpty()) {
 			defaultRedirectCode = getRedirectCodeByUser();
 		}
@@ -334,9 +335,10 @@ public class NavigationService {
 
 	/**
 	 * return redirect code by user
+	 * 
 	 * @return redirect code
 	 */
-	public String getRedirectCodeByUser(){
+	public String getRedirectCodeByUser() {
 		String redirectCode = "";
 		String defCode = "";
 		try {
@@ -349,7 +351,7 @@ public class NavigationService {
 
 			BaseEntity target = beUtils.getBaseEntity(defCode);
 			redirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
-		} catch (Exception ex){
+		} catch (Exception ex) {
 			log.error(ex);
 		}
 
