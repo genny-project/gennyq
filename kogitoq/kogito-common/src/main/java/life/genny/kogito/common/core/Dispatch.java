@@ -168,6 +168,7 @@ public class Dispatch {
 		// TODO: implement new bulk message in alyson
 		QDataAskMessage asksMessage = new QDataAskMessage(msg.getAsks());
 		asksMessage.setToken(userToken.getToken());
+		asksMessage.setReplace(true);
 		QDataBaseEntityMessage baseEntityMessage = new QDataBaseEntityMessage(msg.getEntities());
 		baseEntityMessage.setToken(userToken.getToken());
 		baseEntityMessage.setReplace(true);
