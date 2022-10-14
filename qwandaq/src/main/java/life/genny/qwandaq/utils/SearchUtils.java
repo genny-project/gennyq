@@ -233,19 +233,10 @@ public class SearchUtils {
 			return;
 		}
 
-		// update code to session search code
-		searchEntity = getSessionSearch(searchEntity);
-
-		// // Add any necessary extra filters
-		// List<EntityAttribute> filters = getUserFilters(searchEntity);
-
-		// if (!filters.isEmpty()) {
-		// log.info("Found " + filters.size() + " additional filters for " +
-		// searchEntity.getCode());
-
-		// for (EntityAttribute filter : filters) {
-		// searchEntity.getBaseEntityAttributes().add(filter);
-		// }
+		// if (!searchEntity.getCode().contains(userToken.getJTI().toUpperCase())) {
+		// 	// we need to set the searchEntity's code to session search code
+		// 	String sessionSearchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
+		// 	log.info("sessionSearchCode  ::  " + searchEntity.getCode());
 		// }
 
 		CacheUtils.putObject(userToken.getProductCode(),
@@ -362,38 +353,6 @@ public class SearchUtils {
 		}
 
 		return ans;
-	}
-
-	/**
-	 * Get a session search for a given SearchEntity
-	 *
-	 * @param searchEntity the searchEntity
-	 * @return SearchEntity
-	 */
-	public SearchEntity getSessionSearch(SearchEntity searchEntity) {
-
-		// don't bother if the code is already a session search
-		if (searchEntity.getCode().contains(userToken.getJTI().toUpperCase())) {
-			return searchEntity;
-		}
-
-		// we need to set the searchEntity's code to session search code
-		String sessionSearchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
-		log.info("sessionSearchCode  ::  " + searchEntity.getCode());
-
-		// update code and any nested codes
-		searchEntity.setCode(sessionSearchCode);
-
-		searchEntity.getBaseEntityAttributes().stream()
-				.filter(ea -> ea.getAttributeCode().startsWith("SBE_"))
-				.forEach(ea -> {
-					ea.setAttributeCode(ea.getAttributeCode() + "_" + userToken.getJTI().toUpperCase());
-				});
-
-		// put/update in the cache
-		CacheUtils.putObject(userToken.getProductCode(), searchEntity.getCode(), searchEntity);
-
-		return searchEntity;
 	}
 
 	/**
