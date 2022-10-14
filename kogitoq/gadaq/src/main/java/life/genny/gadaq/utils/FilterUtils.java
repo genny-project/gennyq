@@ -926,6 +926,9 @@ public class FilterUtils {
             }
 
         } catch(Exception ex) {}
+
+        CDIContext cdiContext = new CDIContext();
+        log.info(cdiContext);
     }
 
 
@@ -970,6 +973,9 @@ public class FilterUtils {
             } else if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
                 selectQuickSearch(token, attrCode, attrName, value);
             }
+
+            CDIContext cdiContext = new CDIContext();
+            log.info(cdiContext);
 
         } catch (Exception ex){}
     }

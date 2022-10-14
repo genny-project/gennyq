@@ -40,7 +40,7 @@ public final class GennyConstants {
     public static final String CHILDREN_LINK_CODE = "LNK_CHILDREN";
 	
 	public static final String DEF_ROLE_CODE = "DEF_ROLE";
-
+	public static final String SERVICE_CODE = "SERVICE_CODE";
 	
 	// =====================================================================================================
 
