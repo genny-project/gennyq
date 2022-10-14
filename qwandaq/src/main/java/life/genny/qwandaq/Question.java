@@ -87,6 +87,7 @@ public class Question extends CodedEntity {
 
 	// core
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
+	public static final String QUE_EVENTS = "QUE_EVENTS";
 	public static final String QUE_NAME = "QUE_NAME";
 	public static final String QUE_EMAIL = "QUE_EMAIL";
 	public static final String QUE_MOBILE = "QUE_MOBILE";

@@ -240,10 +240,6 @@ public class Dispatch {
 	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
 			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
 
-		// TODO: make this location empty in original PCM_CONTENT
-		if ("PCM_DASHBOARD".equals(code))
-			return;
-
 		// add pcm to bulk message
 		PCM pcm = beUtils.getPCM(code);
 		traversePCM(pcm, source, target, map, msg, processData);
@@ -334,7 +330,7 @@ public class Dispatch {
 
 		// fetch attributes and create group
 		Attribute groupAttribute = qwandaUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP);
-		Question groupQuestion = new Question("QUE_EVENTS", "", groupAttribute);
+		Question groupQuestion = new Question(Question.QUE_EVENTS, "", groupAttribute);
 
 		// init ask
 		Ask ask = new Ask(groupQuestion, sourceCode, targetCode);

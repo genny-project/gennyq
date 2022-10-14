@@ -5,14 +5,6 @@ import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 import static life.genny.qwandaq.entity.PCM.PCM_PROCESS;
 
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -22,10 +14,6 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -34,16 +22,10 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.DebugException;
-import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 
@@ -112,7 +94,7 @@ public class SearchService {
 		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF);
 
 		// construct template and question codes from type
-		String template = "TPL_" + type + "_DETAIL_VIEW";
+		String template = Prefix.TPL + type + "_DETAIL_VIEW";
 		String questionCode = Prefix.QUE + type;
 
 		// send pcm with correct info

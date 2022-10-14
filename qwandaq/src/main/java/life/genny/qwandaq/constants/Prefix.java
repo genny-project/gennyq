@@ -27,10 +27,13 @@ public class Prefix {
 	public static final String DFT = "DFT_";
 	public static final String SER = "SER_";
 
+	// pcm
+	public static final String TPL = "TPL_";
+
 	// capability
 	public static final String CAP = "CAP_";
 
-	// searchEntity
+	// search entity
 	public static final String SBE = "SBE_";
 	public static final String FLC = "FLC_";
 }
