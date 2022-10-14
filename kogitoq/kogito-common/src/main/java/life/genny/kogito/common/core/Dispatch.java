@@ -170,6 +170,7 @@ public class Dispatch {
 		asksMessage.setToken(userToken.getToken());
 		QDataBaseEntityMessage baseEntityMessage = new QDataBaseEntityMessage(msg.getEntities());
 		baseEntityMessage.setToken(userToken.getToken());
+		baseEntityMessage.setReplace(true);
 
 		// send to user
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, asksMessage);
