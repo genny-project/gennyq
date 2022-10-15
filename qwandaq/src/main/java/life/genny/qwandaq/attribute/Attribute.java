@@ -90,6 +90,7 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_UUID = "PRI_UUID";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
 	public static final String PRI_EVENT = "PRI_EVENT";
+	public static final String PRI_SUBMIT = "PRI_SUBMIT";
 
 	// links
 	public static final String LNK_CORE = "LNK_CORE";
@@ -146,8 +147,8 @@ public class Attribute extends CodedEntity {
 	public Attribute() {
 	}
 
-	public Attribute(String aCode, String aName, DataType dataType) {
-		super(aCode, aName);
+	public Attribute(String code, String name, DataType dataType) {
+		super(code, name);
 		setDataType(dataType);
 	}
 
@@ -165,6 +166,11 @@ public class Attribute extends CodedEntity {
 		this.dataType = dataType;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
 	/**
 	 * @return String
 	 */
@@ -249,18 +255,6 @@ public class Attribute extends CodedEntity {
 	public void setDefaultValue(String defaultValue) {
 		this.defaultValue = defaultValue;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
-	/*
-	 * @Override
-	 * public String toString() {
-	 * return "Attribute:"+getCode()+"(" + getDataType()+") ";
-	 * }
-	 */
 
 	public void setIcon(String icon) {
 		this.icon = icon;
