@@ -60,17 +60,7 @@ public class DefUtils {
 	@Inject
 	UserToken userToken;
 
-	public static final String PREF_QQQ_QUE_GRP = "QQQ_QUESTION_GROUP";
 	public static final String PREF_QUE_BASE_GRP = "QUE_BASEENTITY_GRP";
-	public static final String PREF_QUE = "QUE_";
-	public static final String PREF_ATT = "ATT_";
-	public static final String PREF_DEP = "DEP_";
-	public static final String PREF_DFT = "DFT_";
-	public static final String PREF_UNQ = "UNQ_";
-	public static final String PREF_PRI = "PRI_";
-	public static final String PREF_LNK = "LNK_";
-	public static final String PREF_SER = "SER_";
-	public static final String PREF_CAP = "CAP_";
 
 	public DefUtils() {
 	}

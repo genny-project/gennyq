@@ -30,6 +30,7 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
@@ -127,7 +128,7 @@ public class TopologyProducer {
 	public String handleDependentDropdowns(String data) {
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
-		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_"))
+		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith(Prefix.LNK))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
 					ProcessData processData = qwandaUtils.fetchProcessData(processId); // TODO: Wondering if we can just

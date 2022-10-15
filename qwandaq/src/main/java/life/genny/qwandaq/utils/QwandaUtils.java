@@ -740,7 +740,7 @@ public class QwandaUtils {
 		String targetCode = baseEntity.getCode();
 
 		// create GRP ask
-		Attribute questionAttribute = getAttribute(DefUtils.PREF_QQQ_QUE_GRP);
+		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
 				"Edit " + targetCode + " : " + baseEntity.getName(),
 				questionAttribute);
@@ -753,14 +753,14 @@ public class QwandaUtils {
 
 		// create a child ask for every valid atribute
 		defBE.getBaseEntityAttributes().stream()
-				.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
+				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
 				.forEach((ea) -> {
-					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
+					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
 					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-					String questionCode = DefUtils.PREF_QUE
+					String questionCode = Prefix.QUE
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-									DefUtils.PREF_PRI), DefUtils.PREF_LNK);
+									Prefix.PRI), Prefix.LNK);
 
 					Question childQues = new Question(questionCode, attribute.getName(), attribute);
 					Ask childAsk = new Ask(childQues, sourceCode, targetCode);

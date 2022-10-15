@@ -18,6 +18,7 @@ public class Prefix {
 	public static final String CPY = "CPY_";
 
 	// attribute
+	public static final String PRI = "PRI_";
 	public static final String LNK = "LNK_";
 	public static final String LOCATION = "PRI_LOC";
 
