@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 
 /**
@@ -21,6 +22,8 @@ public class PCM extends BaseEntity {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	public static final String PREFIX = Prefix.PCM;
 
 	public static final String TPL_VERT = "TPL_VERT";
 	public static final String TPL_HORI = "TPL_HORI";

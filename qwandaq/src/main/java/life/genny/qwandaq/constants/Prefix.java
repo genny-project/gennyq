@@ -37,5 +37,9 @@ public class Prefix {
 	// search entity
 	public static final String SBE = "SBE_";
 	public static final String FLC = "FLC_";
+	public static final String COL = "COL_";
+	public static final String ACT = "ACT_";
+	public static final String SRT = "SRT_";
+
 }
 
