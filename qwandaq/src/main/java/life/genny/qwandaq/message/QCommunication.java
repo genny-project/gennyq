@@ -16,13 +16,13 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 
 @RegisterForReflection
-public class QMessageGennyMSG extends QMessage {
+public class QCommunication extends QMessage {
 
-	private static final Logger log = Logger.getLogger(QMessageGennyMSG.class);
+	private static final Logger log = Logger.getLogger(QCommunication.class);
 	private static final long serialVersionUID = 1L;
-	private static final String MESSAGE_TYPE = "MSG_MESSAGE";
+	private static final String MSG_TYPE = "COMMUNICATION";
 	private String templateCode;
-	private QBaseMSGMessageType[] messageTypeArr;
+	private QCommunicationType[] messageTypeArr;
 	private String[] recipientArr;
 	private Map<String, String> messageContextMap;
 	
@@ -43,14 +43,14 @@ public class QMessageGennyMSG extends QMessage {
 	/**
 	 * @return QBaseMSGMessageType the messageTypeArr
 	 */
-	public QBaseMSGMessageType[] getMessageTypeArr() {
+	public QCommunicationType[] getMessageTypeArr() {
 		return messageTypeArr;
 	}
 
 	/**
 	 * @param messageTypeArr the messageTypeArr to set
 	 */
-	public void setMessageTypeArr(QBaseMSGMessageType[] messageTypeArr) {
+	public void setMessageTypeArr(QCommunicationType[] messageTypeArr) {
 		this.messageTypeArr = messageTypeArr;
 	}
 
@@ -82,29 +82,29 @@ public class QMessageGennyMSG extends QMessage {
 		this.messageContextMap = messageContextMap;
 	}
 	
-	public QMessageGennyMSG() {
+	public QCommunication() {
 		super("COM_MSG");
-		this.messageTypeArr = new QBaseMSGMessageType[0];
+		this.messageTypeArr = new QCommunicationType[0];
 		this.messageContextMap = new HashMap<String, String>();
 		this.recipientArr = new String[0];
 	}
 
-	public QMessageGennyMSG(String templateCode) {
+	public QCommunication(String templateCode) {
 		super("COM_MSG");
 		this.templateCode = templateCode;
-		this.messageTypeArr = new QBaseMSGMessageType[0];
+		this.messageTypeArr = new QCommunicationType[0];
 		this.messageContextMap = new HashMap<String, String>();
 		this.recipientArr = new String[0];
 	}
 
-	public QMessageGennyMSG(QBaseMSGMessageType messageType) {
+	public QCommunication(QCommunicationType messageType) {
 		super("COM_MSG");
-		this.messageTypeArr = new QBaseMSGMessageType[]{ messageType };
+		this.messageTypeArr = new QCommunicationType[]{ messageType };
 		this.messageContextMap = new HashMap<String, String>();
 		this.recipientArr = new String[0];
 	}
 
-	public QMessageGennyMSG(String msg_type, QBaseMSGMessageType[] messageType, String templateCode, Map<String, String> contextMap, String[] recipientArr) {
+	public QCommunication(String msg_type, QCommunicationType[] messageType, String templateCode, Map<String, String> contextMap, String[] recipientArr) {
 		super(msg_type);
 		this.templateCode = templateCode;
 		this.messageTypeArr = messageType;
@@ -115,11 +115,11 @@ public class QMessageGennyMSG extends QMessage {
 	/** 
 	 * @param messageType the type of message to set
 	 */
-	public void addMessageType(QBaseMSGMessageType messageType) {
+	public void addMessageType(QCommunicationType messageType) {
 		
-		List<QBaseMSGMessageType> list = this.getMessageTypeArr() != null ? new CopyOnWriteArrayList<>(Arrays.asList(this.getMessageTypeArr())) : new CopyOnWriteArrayList<>();
+		List<QCommunicationType> list = this.getMessageTypeArr() != null ? new CopyOnWriteArrayList<>(Arrays.asList(this.getMessageTypeArr())) : new CopyOnWriteArrayList<>();
 		list.add(messageType);
-		this.setMessageTypeArr(list.toArray(new QBaseMSGMessageType[0]));
+		this.setMessageTypeArr(list.toArray(new QCommunicationType[0]));
 	}
 
 	/** 
@@ -183,7 +183,7 @@ public class QMessageGennyMSG extends QMessage {
 	 * Thought it unnecessary to rewrite all of these methods, 
 	 * so the builder re-uses them instead.
 	 */
-	public QMessageGennyMSG(Builder builder) {
+	public QCommunication(Builder builder) {
 		super("COM_MSG");
 		this.templateCode = builder.msg.templateCode;
 		this.messageTypeArr = builder.msg.messageTypeArr;
@@ -193,15 +193,15 @@ public class QMessageGennyMSG extends QMessage {
 
 	public static class Builder {
 
-		public QMessageGennyMSG msg;
+		public QCommunication msg;
 		public BaseEntityUtils beUtils;
 
 		public Builder(final String templateCode) {
-			this.msg = new QMessageGennyMSG(templateCode);
+			this.msg = new QCommunication(templateCode);
 		}
 
 		public Builder(final String templateCode, BaseEntityUtils beUtils) {
-			this.msg = new QMessageGennyMSG(templateCode);
+			this.msg = new QCommunication(templateCode);
 			this.beUtils = beUtils;
 		}
 
@@ -225,7 +225,7 @@ public class QMessageGennyMSG extends QMessage {
 			return this;
 		}
 
-		public Builder addMessageType(QBaseMSGMessageType messageType) {
+		public Builder addMessageType(QCommunicationType messageType) {
 			this.msg.addMessageType(messageType);
 			return this;
 		}
@@ -246,7 +246,7 @@ public class QMessageGennyMSG extends QMessage {
 			return this;
 		}
 
-		public QMessageGennyMSG send() {
+		public QCommunication send() {
 
 			if (this.msg.getToken() == null) {
 				log.error("No token set for message. Cannot send!!!");
@@ -286,7 +286,7 @@ public class QMessageGennyMSG extends QMessage {
 
 			// Set Msg Type to DEFAULT if none set already
 			if (this.msg.messageTypeArr.length == 0) {
-				this.msg.addMessageType(QBaseMSGMessageType.DEFAULT);
+				this.msg.addMessageType(QCommunicationType.DEFAULT);
 			}
 
 			KafkaUtils.writeMsg(KafkaTopic.MESSAGES, this.msg);
