@@ -132,7 +132,7 @@ public class Ask extends CoreEntity {
 	 * @return
 	 */
 	public boolean hasChildren() {
-		return !this.childAsks.isEmpty();
+		return !(this.childAsks == null || this.childAsks.isEmpty());
 	}
 
 	/**
