@@ -59,6 +59,7 @@ public class TaskService {
 	public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
 		
 		// check if task exists
+		log.info("Checking if task exists...");
 
 		// re-questions if it does
 	}
@@ -132,6 +133,9 @@ public class TaskService {
 	 */
 	public ProcessData dispatch(String sourceCode, String targetCode, String questionCode, String processId, 
 			String pcmCode, String parent, String location, String events) {
+
+		log.info("Dispatching...");
+		System.out.println("Dispatching...");
 
 		if (sourceCode == null)
 			throw new NullParameterException("sourceCode");
