@@ -134,9 +134,6 @@ public class Dispatch {
 			ask.add(events);
 			msg.add(ask);
 			// update pcm accordingly
-			log.info("setting question code for pcm");
-			pcm.setQuestionCode(questionCode);
-			log.info("Q: " + pcm.getQuestionCode());
 		}
 
 		// init if null to stop null pointers
@@ -147,6 +144,9 @@ public class Dispatch {
 
 		// traverse pcm to build data
 		traversePCM(pcm, source, target, msg, processData);
+		if (questionCode != null)
+			pcm.setQuestionCode(questionCode);
+
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
 		List<Ask> asks = msg.getAsks();
 		buildAskFlatMap(flatMapOfAsks, asks);
