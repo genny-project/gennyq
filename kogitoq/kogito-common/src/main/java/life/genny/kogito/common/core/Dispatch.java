@@ -117,6 +117,9 @@ public class Dispatch {
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
+		// ensure pcm is not null
+		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
+
 		QBulkMessage msg = new QBulkMessage();
 
 		// check for a provided question code
@@ -127,8 +130,11 @@ public class Dispatch {
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
 			Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
+			// add ask to msg with events
 			ask.add(events);
 			msg.add(ask);
+			// update pcm accordingly
+			pcm.setQuestionCode(questionCode);
 		}
 
 		// init if null to stop null pointers
@@ -139,7 +145,6 @@ public class Dispatch {
 
 		// traverse pcm to build data
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
-		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
 		traversePCM(pcm, source, target, flatMapOfAsks, msg, processData);
 		List<Ask> asks = msg.getAsks();
 
@@ -162,6 +167,7 @@ public class Dispatch {
 		if (parent != null && !PCM_TREE.equals(parent)) {
 			PCM parentPCM = beUtils.getPCM(parent);
 			Integer location = PCM.findLocation(processData.getLocation());
+			log.info("Updating " + parentPCM.getCode() + " : Location " + location + " -> " + processData.getPcmCode());
 			parentPCM.setLocation(location, processData.getPcmCode());
 			msg.add(parentPCM);
 		}
