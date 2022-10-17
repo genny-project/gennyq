@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -49,6 +50,10 @@ public class PCM extends BaseEntity {
 		pcm.setBaseEntityAttributes(entity.getBaseEntityAttributes());
 
 		return pcm;
+	}
+
+	public static Integer findLocation(String location) {
+		return Integer.parseInt(StringUtils.removeStart(location, Attribute.PRI_LOC));
 	}
 
 	public void setLocation(Integer index, String value) {
