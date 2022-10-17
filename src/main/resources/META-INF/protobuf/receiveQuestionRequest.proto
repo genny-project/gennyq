@@ -197,33 +197,39 @@ message ReceiveQuestionRequest {
 	optional string intervalStr = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional bool mandatoryFieldsCompleted = 7; 
+	optional string location = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional QEventMessage milestoneMessage = 8; 
+	optional bool mandatoryFieldsCompleted = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string pcmCode = 9; 
+	optional QEventMessage milestoneMessage = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional ProcessData processData = 10; 
+	optional string parent = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string productCode = 11; 
+	optional string pcmCode = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string questionCode = 12; 
+	optional ProcessData processData = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string sourceCode = 13; 
+	optional string productCode = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string targetCode = 14; 
+	optional string questionCode = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional TimerData timerData = 15; 
+	optional string sourceCode = 15; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string targetCode = 16; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional TimerData timerData = 17; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 16; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 18; 
 }
 /* @Indexed */ 
 message S2SData { 
