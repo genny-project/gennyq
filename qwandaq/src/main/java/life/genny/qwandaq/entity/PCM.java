@@ -56,20 +56,28 @@ public class PCM extends BaseEntity {
 		return Integer.parseInt(StringUtils.removeStart(location, Attribute.PRI_LOC));
 	}
 
-	public void setLocation(Integer index, String value) {
+	public void addStringAttribute(String code, String name, String value) {
+		addStringAttribute(code, name, 1.0, value);
+	}
 
-		String code = Attribute.PRI_LOC + index;
-		Optional<EntityAttribute> location = getValue(code);
+	public void addStringAttribute(String code, String name, Double weight, String value) {
 
-		if (location.isEmpty()) {
-			Attribute attribute = new Attribute(code, "Location " + index, new DataType(String.class));
-			EntityAttribute ea = new EntityAttribute();
-			ea.setAttribute(attribute);
-			ea.setWeight(Double.valueOf(index));
-			ea.setValue(value);
-			addAttribute(ea);
-		} else
+		if (getValue(code).isPresent()) {
 			setValue(code, value);
+			return;
+		}
+
+		Attribute attribute = new Attribute(code, name, new DataType(String.class));
+		EntityAttribute ea = new EntityAttribute();
+		ea.setAttribute(attribute);
+		ea.setWeight(weight);
+		ea.setValue(value);
+		addAttribute(ea);
+	}
+
+	public void setLocation(Integer index, String value) {
+		String code = Attribute.PRI_LOC + index;
+		addStringAttribute(Attribute.PRI_TEMPLATE_CODE, "Template Code", Double.valueOf(index), code);
 	}
 
 	public String getLocation(Integer index) {
@@ -77,7 +85,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setTemplateCode(String code) {
-		setValue(Attribute.PRI_TEMPLATE_CODE, code);
+		addStringAttribute(Attribute.PRI_TEMPLATE_CODE, "Template Code", code);
 	}
 
 	public String getTemplateCode() {
@@ -85,7 +93,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setQuestionCode(String code) {
-		setValue(Attribute.PRI_QUESTION_CODE, code);
+		addStringAttribute(Attribute.PRI_QUESTION_CODE, "Question Code", code);
 	}
 
 	public String getQuestionCode() {
@@ -93,7 +101,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setTargetCode(String code) {
-		setValue(Attribute.PRI_TARGET_CODE, code);
+		addStringAttribute(Attribute.PRI_TARGET_CODE, "Target Code", code);
 	}
 
 	public String getTargetCode() {
