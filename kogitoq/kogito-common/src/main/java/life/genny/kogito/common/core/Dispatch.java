@@ -151,6 +151,7 @@ public class Dispatch {
 		List<Ask> asks = msg.getAsks();
 
 		// only build processEntity if answers are expected
+		findReadonlyAttributeCodes(flatMapOfAsks, processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
 		log.info("Non-Readonly Attributes: " + attributeCodes);
 		if (!attributeCodes.isEmpty())
@@ -238,6 +239,19 @@ public class Dispatch {
 	}
 
 	/**
+	 * @param map
+	 * @param processData
+	 */
+	public void findReadonlyAttributeCodes(Map<String, Ask> map, ProcessData processData) {
+
+		for (Ask ask : map.values()) {
+			// add to active attrbute codes if answer expected
+			if (!ask.getReadonly())
+				processData.getAttributeCodes().add(ask.getQuestion().getAttribute().getCode());
+		}
+	}
+
+	/**
 	 * Fetch a PCM to traverse, looking for a non-readonly question.
 	 *
 	 * @param code
@@ -307,24 +321,8 @@ public class Dispatch {
 				continue;
 			}
 
-			// cannot check asks if not existant
-			if (ask == null)
-				continue;
-
-			// find appropriate ask (could use map instead)
-			Optional<Ask> opt = ask.getChildAsks().stream()
-					.filter(a -> a.getQuestion().getAttributeCode().equals(value))
-					.findFirst();
-			if (opt.isEmpty()) {
-				log.warn("No corresponding child for pcm location " + value);
-				continue;
-			}
-
-			// add to active attrbute codes if answer expected
-			Ask child = opt.get();
-			if (!child.getReadonly())
-				processData.getAttributeCodes().add(child.getQuestion().getAttribute().getCode());
 		}
+
 
 	}
 
