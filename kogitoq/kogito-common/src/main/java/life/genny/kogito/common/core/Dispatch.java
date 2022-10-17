@@ -121,6 +121,7 @@ public class Dispatch {
 
 		// check for a provided question code
 		String questionCode = processData.getQuestionCode();
+		log.info("questionCode: " + questionCode);
 		if (questionCode != null) {
 			// fetch question from DB
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());

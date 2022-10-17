@@ -131,7 +131,7 @@ public class TaskService {
 	 * @param events
 	 * @return
 	 */
-	public ProcessData dispatch(String sourceCode, String targetCode, String questionCode, String processId, 
+	public ProcessData dispatchFull(String sourceCode, String targetCode, String questionCode, String processId, 
 			String pcmCode, String parent, String location, String events) {
 
 		log.info("Dispatching...");
