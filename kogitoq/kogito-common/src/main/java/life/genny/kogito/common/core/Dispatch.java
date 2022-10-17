@@ -244,7 +244,9 @@ public class Dispatch {
 	 */
 	public void findReadonlyAttributeCodes(Map<String, Ask> map, ProcessData processData) {
 
+		log.info("Finding non readonlys");
 		for (Ask ask : map.values()) {
+			log.info("Looking at ask: " + ask.getQuestion().getCode() + ", readonly: " + ask.getReadonly());
 			// add to active attrbute codes if answer expected
 			if (!ask.getReadonly())
 				processData.getAttributeCodes().add(ask.getQuestion().getAttribute().getCode());

@@ -291,6 +291,9 @@ public class QwandaUtils {
 
 			log.info("[*] Parent Question: " + question.getCode());
 
+			// groups always readonly
+			ask.setReadonly(true);
+
 			// fetch questionQuestions from the DB
 			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode,
 					question.getCode());
@@ -322,6 +325,8 @@ public class QwandaUtils {
 
 				ask.add(child);
 			}
+		} else {
+			ask.setReadonly(question.getReadonly());
 		}
 
 		return ask;
