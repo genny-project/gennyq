@@ -21,8 +21,9 @@ public final class GennyConstants {
 	
 	// =====================================================================================================
 
-	// Service user
-	public static final String SERVICE_CODE = "PER_SERVICE";
+	// service user
+	public static final String PER_SERVICE = "PER_SERVICE";
+
 	// question
 	public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
 	public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";

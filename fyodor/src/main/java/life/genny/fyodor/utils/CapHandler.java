@@ -103,7 +103,7 @@ public class CapHandler extends Manager {
 			return false;
 		}
 
-		if ("PER_SERVICE".equals(userToken.getUserCode()))
+		if (GennyConstants.PER_SERVICE.equals(userToken.getUserCode()))
 			return true;
 
 		Set<Capability> capabilities = capMan.getUserCapabilities();
