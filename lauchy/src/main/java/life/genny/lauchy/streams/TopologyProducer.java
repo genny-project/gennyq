@@ -128,7 +128,8 @@ public class TopologyProducer {
 	public String handleDependentDropdowns(String data) {
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
-		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith(Prefix.LNK))
+		Arrays.asList(msg.getItems()).stream()
+				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
 					ProcessData processData = qwandaUtils.fetchProcessData(processId); // TODO: Wondering if we can just
