@@ -37,6 +37,9 @@ import javax.json.bind.annotation.JsonbTransient;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
+import io.vertx.core.Vertx;
+import io.vertx.core.Context;
+import io.smallrye.common.vertx.ContextLocals;
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
@@ -102,6 +105,12 @@ public class GennyToken implements Serializable {
 	 * @param token The token string to init with
 	 */
 	public void init(String token) {
+
+//		Context context = Vertx.currentContext();
+//		log.info(context);
+//		log.info(context);
+//		ContextLocals.put("message", "hello");
+
 
 		if (token == null || token.isEmpty()) {
 			log.error("Token must not be null or empty!");

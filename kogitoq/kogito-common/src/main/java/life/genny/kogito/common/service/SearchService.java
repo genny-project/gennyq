@@ -757,10 +757,10 @@ public class SearchService {
 	 * Send a search PCM with the correct search code.
 	 * @param searchCode Search base entity code
 	 * @param pcmCode The code of pcm to send
-	 * @param queQuickGp The code of quick search
+	 * @param queSaveSearchGrp The code of quick search
 	 * TODO : Temporary solution
 	 */
-	public void sendPCM(String searchCode, String pcmCode,String queQuickGp) {
+	public void sendPCM(String searchCode, String pcmCode,String queSaveSearchGrp) {
 		BaseEntity main = beUtils.getBaseEntity(GennyConstants.PCM_CONTENT);
 		BaseEntity pcmTable = beUtils.getBaseEntity(pcmCode);
 
@@ -779,7 +779,7 @@ public class SearchService {
 		pcmTable.addAttribute(pcmEA);
 
 		Attribute priCode = qwandaUtils.getAttribute(GennyConstants.PRI_QUESTION_CODE);
-		mainEA = new EntityAttribute(main, priCode, 1.0, queQuickGp);
+		mainEA = new EntityAttribute(main, priCode, 1.0, queSaveSearchGrp);
 		pcmTable.addAttribute(mainEA);
 
 		/* loc 3 - saved search popup */
@@ -800,11 +800,11 @@ public class SearchService {
 		BaseEntity pcm31 = beUtils.getBaseEntity(GennyConstants.PCM_SAVED_SEARCH_POPUP_TEXT);
 
 		pcmAtt = qwandaUtils.getAttribute(GennyConstants.PRI_LOC1);
-		pcmEA = new EntityAttribute(pcmTable, pcmAtt, 1.0, GennyConstants.SAVED_SEARCHES);
+		pcmEA = new EntityAttribute(pcm31, pcmAtt, 1.0, GennyConstants.SAVED_SEARCHES);
 		pcm31.addAttribute(pcmEA);
 
 		priCode = qwandaUtils.getAttribute(GennyConstants.PRI_QUESTION_CODE);
-		mainEA = new EntityAttribute(main, priCode, 1.0, queQuickGp);
+		mainEA = new EntityAttribute(pcm31, priCode, 1.0, queSaveSearchGrp);
 		pcm31.addAttribute(mainEA);
 
 		/* loc 3.2 - saved search inside popup */
@@ -834,7 +834,7 @@ public class SearchService {
 		pcm311.addAttribute(pcmEA);
 
 		priCode = qwandaUtils.getAttribute(GennyConstants.PRI_QUESTION_CODE);
-		mainEA = new EntityAttribute(pcm311, priCode, 1.0, queQuickGp);
+		mainEA = new EntityAttribute(pcm311, priCode, 1.0, queSaveSearchGrp);
 		pcm311.addAttribute(mainEA);
 
 		/* send messages */

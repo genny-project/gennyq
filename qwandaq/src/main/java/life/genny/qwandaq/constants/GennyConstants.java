@@ -42,6 +42,8 @@ public final class GennyConstants {
 
 	
 	// =====================================================================================================
+	// Service user
+	public static final String SERVICE_CODE = "PER_SERVICE";
 
 	/* Question */
 	public static final String QUE_QQQ_GROUP = "QQQ_QUESTION_GROUP";
