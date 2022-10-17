@@ -79,7 +79,7 @@ public class PCM extends BaseEntity {
 
 	public void setLocation(Integer index, String value) {
 		String code = Attribute.PRI_LOC + index;
-		addStringAttribute(Attribute.PRI_TEMPLATE_CODE, "Template Code", Double.valueOf(index), code);
+		addStringAttribute(code, "Location " + index, Double.valueOf(index), code);
 	}
 
 	public String getLocation(Integer index) {
