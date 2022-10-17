@@ -5,13 +5,15 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -23,6 +25,8 @@ import javax.ws.rs.core.Response;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.entity.search.clause.Or;
+import life.genny.qwandaq.entity.search.trait.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -32,9 +36,6 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
@@ -707,7 +708,7 @@ public class SearchUtils {
 
 	/**
 	 * Strip search base entity code without jti
-	 * 
+	 *
 	 * @param orgSbe Original search base entity code
 	 * @return Search base entity code without jti
 	 */
@@ -726,7 +727,7 @@ public class SearchUtils {
 
 	/**
 	 * Return search base entity code with jti
-	 * 
+	 *
 	 * @param sbeCode Search Base entity
 	 * @return Search base entity with jti
 	 */
@@ -738,14 +739,14 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter group content
-	 * 
+	 *
 	 * @param sbeCode      Search Base Entity Code
 	 * @param questionCode Question code
 	 * @param listParam    List o filter parameters
 	 * @return Ask
 	 */
-	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode,
-			Map<String, Map<String, String>> listParam) {
+	public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode,String filterCode,
+										Map<String, Map<String, String>> listParam) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTERS);
 
@@ -756,7 +757,7 @@ public class SearchUtils {
 		Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
 		ask.addChildAsk(addFilterAsk);
 
-		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode, listParam);
+		Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode,filterCode,listParam);
 
 		ask.addChildAsk(existFilterAsk);
 
@@ -765,62 +766,57 @@ public class SearchUtils {
 
 	/**
 	 * Change existing filter group
-	 * 
+	 *
 	 * @param sbeCode       Search base entity code
 	 * @param ask           Ask existing group
+	 * @param filterCode    Filter code
 	 * @param listFilParams List of filter parameters
 	 */
-	public void setExistingFilterGroup(String sbeCode, Ask ask, Map<String, Map<String, String>> listFilParams) {
-		int index = 0;
-		for (Map.Entry<String, Map<String, String>> filterParams : listFilParams.entrySet()) {
-			Ask childAsk = new Ask();
-			childAsk.setAttributeCode(GennyConstants.PRI_EVENT);
+	public void setExistingFilterGroup(String sbeCode, Ask ask, String filterCode,
+									   Map<String, Map<String, String>> listFilParams) {
+		//current filter state
+		Ask curAsk = new Ask();
+		curAsk.setQuestionCode(GennyConstants.QUE_SAVED_SEARCH_CODE);
+		curAsk.setAttributeCode(GennyConstants.QUE_SAVED_SEARCH_CODE);
+		curAsk.setName(filterCode);
+		Question curQue = new Question();
+		curQue.setCode(GennyConstants.QUE_SAVED_SEARCH_CODE);
+		curAsk.setQuestion(curQue);
 
-			String html = getHtmlByFilterParam(filterParams.getValue());
+		ask.addChildAsk(curAsk);
+
+		for (Map.Entry<String, Map<String, String>> param : listFilParams.entrySet()) {
+			Ask childAsk = new Ask();
+			childAsk.setAttributeCode(param.getKey());
 
 			Question question = new Question();
-			question.setCode(filterParams.getKey());
-			question.setName(html);
-			question.setHtml(html);
+			question.setAttributeCode(param.getValue().get(GennyConstants.COLUMN));
+			question.setCode(param.getValue().get(GennyConstants.QUESTIONCODE));
+			question.setName(param.getValue().get(GennyConstants.OPTION));
+			question.setHtml(param.getValue().get(GennyConstants.VALUE));
 
-			childAsk.setName(html);
+			childAsk.setName(param.getValue().get(GennyConstants.COLUMN));
 			childAsk.setHidden(false);
-			childAsk.setQuestionCode(filterParams.getKey());
+			childAsk.setDisabled(false);
+			childAsk.setQuestionCode(param.getValue().get(GennyConstants.QUESTIONCODE));
 			childAsk.setQuestion(question);
 			childAsk.setTargetCode(getSearchBaseEntityCodeByJTI(sbeCode));
 
 			ask.addChildAsk(childAsk);
-
-			index++;
 		}
 	}
 
 	/**
-	 * Return filter tag key
-	 * 
-	 * @param filterParams Filter Parameters
-	 * @param index        Index of list filter
-	 * @return Filter tag key
-	 */
-	public String getFilterTagKey(Map<String, String> filterParams, int index) {
-		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE);
-		String partKey = getLastWord(attrCode).toUpperCase();
-		String filterTagKey = GennyConstants.QUE_TAG_PREF + partKey + "_" + index;
-		return filterTagKey;
-	}
-
-	/**
 	 * Return Html value by filter parameters
-	 * 
-	 * @param filterParams
+	 * @param filterParams Filter parameters
 	 * @return Html value by filter parameters
 	 */
 	public String getHtmlByFilterParam(Map<String, String> filterParams) {
-		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE)
+		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.COLUMN)
 				.replaceFirst(GennyConstants.PRI_PREFIX, "");
 
-		String attrName = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_OPTION);
-		String value = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_VALUE);
+		String attrName = getFilterParamValByKey(filterParams, GennyConstants.OPTION);
+		String value = getFilterParamValByKey(filterParams, GennyConstants.VALUE);
 		String attrNameStrip = attrName.replaceFirst(GennyConstants.SEL_PREF, "")
 				.replace("_", " ");
 
@@ -833,7 +829,7 @@ public class SearchUtils {
 
 	/**
 	 * Return the last word
-	 * 
+	 *
 	 * @param str String
 	 * @return The last word
 	 */
@@ -849,7 +845,7 @@ public class SearchUtils {
 
 	/**
 	 * Get parameter value by key
-	 * 
+	 * @param filterParams Filter Parameters
 	 * @param key Parameter Key
 	 */
 	public String getFilterParamValByKey(Map<String, String> filterParams, String key) {
@@ -868,7 +864,7 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with add filter group content
-	 * 
+	 *
 	 * @param sbeCode      Search Base Entity Code
 	 * @param questionCode Question code
 	 * @return Ask
@@ -898,6 +894,8 @@ public class SearchUtils {
 		ask.setTargetCode(targetCode);
 
 		Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(GennyConstants.QUE_SUBMIT, source, target);
+//		askSubmit.setDisabled(true);
+
 		ask.setTargetCode(targetCode);
 
 		ask.addChildAsk(askSubmit);
@@ -907,17 +905,20 @@ public class SearchUtils {
 
 	/**
 	 * Construct existing filter group object in Add Filter group form
-	 * 
+	 *
 	 * @param sbeCode       Search Base Entity Code
+	 * @param filterCode    Filter code
 	 * @param listFilParams List of Filter parameters
 	 * @return return existing filter group object
 	 */
-	public Ask getExistingFilterGroupBySearchBE(String sbeCode, Map<String, Map<String, String>> listFilParams) {
+	public Ask getExistingFilterGroupBySearchBE(String sbeCode,String filterCode,
+												Map<String, Map<String, String>> listFilParams) {
 		Ask ask = new Ask();
 		ask.setName(GennyConstants.FILTER_QUE_EXIST_NAME);
 		String targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
 		ask.setSourceCode(userToken.getUserCode());
 		ask.setTargetCode(targetCode);
+		ask.setHidden(true);
 
 		Question question = new Question();
 		question.setCode(GennyConstants.FILTER_QUE_EXIST);
@@ -925,7 +926,7 @@ public class SearchUtils {
 
 		// change exist filter group
 		if (listFilParams.size() > 0) {
-			setExistingFilterGroup(sbeCode, ask, listFilParams);
+			setExistingFilterGroup(sbeCode, ask,filterCode, listFilParams);
 		}
 
 		ask.setQuestion(question);
@@ -935,7 +936,7 @@ public class SearchUtils {
 
 	/**
 	 * Return Message of filter column
-	 * 
+	 *
 	 * @param searchBE Search Base Entity
 	 * @return Message of Filter column
 	 */
@@ -973,14 +974,18 @@ public class SearchUtils {
 					baseEntities.add(baseEntity);
 				});
 
-		msg.setItems(baseEntities);
+		List<BaseEntity> basesSorted =  baseEntities.stream()
+				.sorted(Comparator.comparing(BaseEntity::getName))
+				.collect(Collectors.toList());
+
+		msg.setItems(basesSorted);
 
 		return msg;
 	}
 
 	/**
 	 * Return ask with filter option
-	 * 
+	 *
 	 * @param questionCode Question code
 	 * @return Ask
 	 */
@@ -991,15 +996,14 @@ public class SearchUtils {
 		base.setLinkCode(GennyConstants.LNK_CORE);
 		base.setLinkValue(GennyConstants.LNK_ITEMS);
 		base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
-		questionCode = questionCode.toUpperCase();
 
-		if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATE)
-				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DATETIME)
-				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_TIME)) {
+		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATE)
+				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DATETIME)
+				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_TIME)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_GREATER_THAN_OR_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_LESS_THAN));
@@ -1007,11 +1011,11 @@ public class SearchUtils {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
-		} else if (questionCode.equals(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
-				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
-				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_STATE)
-				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
-				|| questionCode.equals(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
+		} else if (questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_COUNTRY)
+				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
+				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_STATE)
+				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_ACADEMY)
+				|| questionCode.equalsIgnoreCase(GennyConstants.QUE_FILTER_VALUE_DJP_HC)) {
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_EQUAL_TO));
 			base.add(beUtils.getBaseEntityByCode(GennyConstants.SEL_NOT_EQUAL_TO));
 			return base;
@@ -1027,7 +1031,7 @@ public class SearchUtils {
 
 	/**
 	 * Return ask with filter select option values
-	 * 
+	 *
 	 * @param queGrp  Question Group
 	 * @param queCode Question code
 	 * @param lnkCode Link code
@@ -1035,7 +1039,7 @@ public class SearchUtils {
 	 * @return Data message of filter select box
 	 */
 	public QDataBaseEntityMessage getFilterSelectBoxValueByCode(String queGrp, String queCode, String lnkCode,
-			String lnkVal) {
+																String lnkVal) {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
 		base.setParentCode(queGrp);
@@ -1051,25 +1055,66 @@ public class SearchUtils {
 		searchBE.setPageStart(0).setPageSize(1000);
 
 		List<BaseEntity> baseEntities = searchBaseEntitys(searchBE);
-		base.setItems(baseEntities);
+		List<BaseEntity> basesSorted =  baseEntities.stream()
+				.sorted(Comparator.comparing(BaseEntity::getName))
+				.collect(Collectors.toList());
+
+		base.setItems(basesSorted);
 
 		return base;
 	}
 
 	/**
 	 * Return ask with bucket filter options
-	 * 
-	 * @param queCode  Question Code
-	 * @param lnkCode  Link Code
+	 * @param sbeCode Search entity code
+	 * @param lnkCode Link Code
 	 * @param lnkValue Link Value
 	 * @return Bucket filter options
 	 */
-	public SearchEntity getBucketFilterOptions(String sbeCode, String queCode, String lnkCode, String lnkValue) {
-		SearchEntity searchBE = new SearchEntity(sbeCode, GennyConstants.SBE_DROPDOWN)
-				.add(new Column(lnkCode, lnkValue));
+	public SearchEntity getQuickOptions(String sbeCode,String lnkCode, String lnkValue) {
+		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
+		searchBE.add(new Or(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "CPY_%")
+						,new Filter(GennyConstants.PRI_CODE, Operator.LIKE, "PER_%")))
+				.add(new Column(lnkCode, lnkCode));
+
+		if(!lnkValue.isEmpty()) {
+			searchBE.add(new Filter(GennyConstants.PRI_NAME, Operator.LIKE, "%" + lnkValue + "%"));
+		}
+
 		searchBE.setRealm(userToken.getProductCode());
-		searchBE.setPageStart(0).setPageSize(100);
+		searchBE.setPageStart(0).setPageSize(20);
 
 		return searchBE;
 	}
+
+	/**
+	 * Get search base entity
+	 * @param sbeCode Search base entity
+	 * @param lnkCode link code
+	 * @param lnkValue Link value
+	 * @param isSortedDate being sorted by date
+	 * @return Search entity
+	 */
+	public SearchEntity getListSavedSearch(String sbeCode,String lnkCode, String lnkValue, boolean isSortedDate) {
+		SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
+		searchBE.add(new Filter(GennyConstants.PRI_CODE, Operator.LIKE, GennyConstants.SBE_SAVED_SEARCH + "%"))
+				.add(new Column(lnkCode, lnkValue));
+
+		String startWith = "[\"" + GennyConstants.SBE_SAVED_SEARCH;
+		searchBE.add(new Filter(GennyConstants.LNK_SAVED_SEARCHES,Operator.STARTS_WITH,startWith));
+		searchBE.add(new Filter(GennyConstants.LNK_AUTHOR,Operator.CONTAINS,userToken.getUserCode()));
+
+		if(isSortedDate) {
+			searchBE.add(new Sort("PRI_CREATED_DATE", Ord.DESC));
+		} else {
+			searchBE.add(new Sort("PRI_CREATED_DATE", Ord.ASC));
+		}
+
+		searchBE.setRealm(userToken.getProductCode());
+		searchBE.setPageStart(0).setPageSize(20);
+
+		return searchBE;
+	}
+
+
 }
