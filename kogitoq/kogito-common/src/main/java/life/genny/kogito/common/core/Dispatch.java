@@ -133,7 +133,6 @@ public class Dispatch {
 			// add ask to msg with events
 			ask.add(events);
 			msg.add(ask);
-			// update pcm accordingly
 		}
 
 		// init if null to stop null pointers
@@ -144,6 +143,7 @@ public class Dispatch {
 
 		// traverse pcm to build data
 		traversePCM(pcm, source, target, msg, processData);
+		// update questionCode after traversing
 		if (questionCode != null)
 			pcm.setQuestionCode(questionCode);
 
@@ -250,7 +250,7 @@ public class Dispatch {
 
 		// handle initial dropdown selections
 		// TODO: change to use flatMap
-		recursivelyHandleDropdownAttributes(asks, processEntity, msg);
+		//recursivelyHandleDropdownAttributes(asks, processEntity, msg);
 
 		// only cache for non-readonly invocation
 		cacheAsks(processData, asks);
@@ -300,7 +300,7 @@ public class Dispatch {
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 
-		log.debug("Traversing " + pcm.getCode());
+		log.info("Traversing " + pcm.getCode());
 		log.info(jsonb.toJson(pcm));
 		msg.add(pcm);
 
@@ -312,6 +312,7 @@ public class Dispatch {
 		} else {
 			// use pcm target if one is specified
 			String targetCode = pcm.getValueAsString(Attribute.PRI_TARGET_CODE);
+			log.info("Target = (" + targetCode + ")");
 			if (targetCode != null && !targetCode.equals(target.getCode())) {
 				// merge targetCode
 				Map<String, Object> ctxMap = new HashMap<>();
