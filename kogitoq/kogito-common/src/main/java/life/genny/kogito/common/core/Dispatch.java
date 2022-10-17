@@ -134,7 +134,9 @@ public class Dispatch {
 			ask.add(events);
 			msg.add(ask);
 			// update pcm accordingly
+			log.info("setting question code for pcm");
 			pcm.setQuestionCode(questionCode);
+			log.info("Q: " + pcm.getQuestionCode());
 		}
 
 		// init if null to stop null pointers

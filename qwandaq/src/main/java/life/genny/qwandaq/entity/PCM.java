@@ -62,13 +62,13 @@ public class PCM extends BaseEntity {
 
 	public void addStringAttribute(String code, String name, Double weight, String value) {
 
-		if (getValue(code).isPresent()) {
-			log.info("[/] Attribute Present");
+		if (findEntityAttribute(code).isPresent()) {
+			log.info("[/] Attribute Present for " + code);
 			setValue(code, value);
 			return;
 		}
 
-		log.info("[X] Attribute NOT Present");
+		log.info("[X] Attribute NOT Present for " + code);
 		Attribute attribute = new Attribute(code, name, new DataType(String.class));
 		EntityAttribute ea = new EntityAttribute();
 		ea.setAttribute(attribute);
