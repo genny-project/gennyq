@@ -146,9 +146,10 @@ public class Dispatch {
 			processData.setSearches(new ArrayList<String>());
 
 		// traverse pcm to build data
+		traversePCM(pcm, source, target, msg, processData);
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
-		traversePCM(pcm, source, target, flatMapOfAsks, msg, processData);
 		List<Ask> asks = msg.getAsks();
+		buildAskFlatMap(flatMapOfAsks, asks);
 
 		// only build processEntity if answers are expected
 		findReadonlyAttributeCodes(flatMapOfAsks, processData);
@@ -192,6 +193,23 @@ public class Dispatch {
 		for (String code : processData.getSearches()) {
 			log.info("Sending search: " + code);
 			search.searchTable(code);
+		}
+	}
+
+	/**
+	 * @param map
+	 * @param asks
+	 */
+	public void buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
+
+		if (asks == null)
+			return;
+
+		for (Ask ask : asks) {
+			if (ask.hasChildren())
+				buildAskFlatMap(map, ask.getChildAsks());
+			else
+				map.put(ask.getQuestion().getAttribute().getCode(), ask);
 		}
 	}
 
@@ -264,11 +282,11 @@ public class Dispatch {
 	 * @param processData
 	 */
 	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
-			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
+			QBulkMessage msg, ProcessData processData) {
 
 		// add pcm to bulk message
 		PCM pcm = beUtils.getPCM(code);
-		traversePCM(pcm, source, target, map, msg, processData);
+		traversePCM(pcm, source, target, msg, processData);
 	}
 
 	/**
@@ -280,7 +298,7 @@ public class Dispatch {
 	 * @return
 	 */
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
-			Map<String, Ask> map, QBulkMessage msg, ProcessData processData) {
+			QBulkMessage msg, ProcessData processData) {
 
 		log.debug("Traversing " + pcm.getCode());
 		log.info(jsonb.toJson(pcm));
@@ -316,7 +334,7 @@ public class Dispatch {
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
-				traversePCM(value, source, target, map, msg, processData);
+				traversePCM(value, source, target, msg, processData);
 				continue;
 			} else if (value.startsWith(Prefix.SBE)) {
 				processData.getSearches().add(value);
@@ -324,8 +342,6 @@ public class Dispatch {
 			}
 
 		}
-
-
 	}
 
 	/**
