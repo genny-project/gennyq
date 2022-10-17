@@ -1,36 +1,5 @@
 package life.genny.fyodor.utils;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.criteria.CriteriaBuilder.Case;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.fyodor.models.TolstoysCauldron;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
@@ -44,11 +13,7 @@ import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
-import life.genny.qwandaq.entity.search.trait.Column;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.entity.search.trait.*;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
@@ -56,7 +21,29 @@ import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.ickle.IckleCriteriaBuilder;
+import life.genny.qwandaq.utils.ickle.IckleQueryBuilder;
+import life.genny.qwandaq.utils.ickle.expression.IckleExpression;
+import life.genny.qwandaq.utils.ickle.predicate.IcklePredicate;
 import life.genny.serviceq.Service;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.query.internal.QueryImpl;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder.Case;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class FyodorUltra {
@@ -80,6 +67,12 @@ public class FyodorUltra {
 
 	@Inject
 	CapHandler capHandler;
+
+	@Inject
+	IckleQueryBuilder ickleQueryBuilder;
+
+	@Inject
+	IckleCriteriaBuilder ickleCriteriaBuilder;
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -199,6 +192,8 @@ public class FyodorUltra {
 				.createQuery(count)
 				.getSingleResult();
 
+		log.info("$$$$$$$$$$$$$$$$$$ Query: " + ((QueryImpl)entityManager.createQuery(count)).getQueryString());
+
 		Page page = new Page();
 		page.setCodes(codes);
 		page.setTotal(total);
@@ -209,6 +204,73 @@ public class FyodorUltra {
 		// page.setPageNumber();
 
 		return page;
+	}
+
+	public Page search27(SearchEntity searchEntity) {
+		if (searchEntity == null)
+			throw new NullParameterException("searchEntity");
+
+		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
+		log.info("Applying capabilities...");
+
+		// apply capabilities to traits
+		capHandler.refineFiltersFromCapabilities(searchEntity);
+		capHandler.refineSortsFromCapabilities(searchEntity);
+		capHandler.refineColumnsFromCapabilities(searchEntity);
+		capHandler.refineActionsFromCapabilities(searchEntity);
+
+		String ickleQuery = getIckleQueryForSearchEntity(searchEntity, new TolstoysCauldron());
+		log.info("############# Ickle query: " + ickleQuery);
+		List<life.genny.qwandaq.serialization.baseentity.BaseEntity> baseEntities =
+				beUtils.getBaseEntityUsingIckleQuery(ickleQuery);
+		List<BaseEntity> persistableBaseEntities = new LinkedList<>();
+		baseEntities.stream().forEach(be -> persistableBaseEntities.add((BaseEntity) be.toPersistableCoreEntity()));
+
+		Integer defaultPageSize = 20;
+		Integer pageSize = searchEntity.getPageSize() != null ? searchEntity.getPageSize() : defaultPageSize;
+		Integer pageStart = searchEntity.getPageStart() != null ? searchEntity.getPageStart() : 0;
+		Page page = new Page();
+		page.setItems(persistableBaseEntities);
+		page.setTotal((long) baseEntities.size());
+		page.setPageSize(pageSize);
+		page.setPageStart(Long.valueOf(pageStart));
+		return page;
+	}
+
+	private String getIckleQueryForSearchEntity(SearchEntity searchEntity, TolstoysCauldron cauldron) {
+		List<IcklePredicate> icklePredicates = new LinkedList<>();
+		searchEntity.getClauseContainers().stream().forEach(cont -> {
+			icklePredicates.add(findClausePredicateForIckle(cauldron, cont));
+		});
+
+		return ickleQueryBuilder.selectClause().
+				fromClause("life.genny.qwandaq.serialization.baseentity.BaseEntity").
+				whereClause((IcklePredicate[]) cauldron.getIcklePredicates().toArray()).
+						toIckleQueryString();
+				//concat("where realm : '" + searchEntity.getRealm() + "' and code like '" + prefix + "%'");
+	}
+
+	private IcklePredicate findClausePredicateForIckle(TolstoysCauldron cauldron, ClauseContainer clauseContainer) {
+
+		/*Filter filter = clauseContainer.getFilter();
+		if (filter != null)
+			return findFilterPredicate(cauldron, filter);*/
+
+		And and = clauseContainer.getAnd();
+		Or or = clauseContainer.getOr();
+
+		Clause clause = (and != null ? and : or);
+
+		// find predicate for each clause argument
+		IcklePredicate predicateA = findClausePredicateForIckle(cauldron, clause.getA());
+		IcklePredicate predicateB = findClausePredicateForIckle(cauldron, clause.getB());
+
+		if (and != null)
+			return ickleCriteriaBuilder.and(predicateA, predicateB);
+		else if (or != null)
+			return ickleCriteriaBuilder.or(predicateA, predicateB);
+		else
+			throw new QueryBuilderException("Invalid ClauseContainer: " + clauseContainer);
 	}
 
 	/**
@@ -270,6 +332,29 @@ public class FyodorUltra {
 		cauldron.add(cb.le(sc, status.ordinal()));
 	}
 
+	public IcklePredicate findClauseIcklePredicate(TolstoysCauldron cauldron, ClauseContainer clauseContainer) {
+
+		/*Filter filter = clauseContainer.getFilter();
+		if (filter != null)
+			return findFilterIcklePredicate(cauldron, filter);*/
+
+		And and = clauseContainer.getAnd();
+		Or or = clauseContainer.getOr();
+
+		Clause clause = (and != null ? and : or);
+
+		// find predicate for each clause argument
+		IcklePredicate predicateA = findClauseIcklePredicate(cauldron, clause.getA());
+		IcklePredicate predicateB = findClauseIcklePredicate(cauldron, clause.getB());
+
+		if (and != null)
+			return ickleCriteriaBuilder.and(predicateA, predicateB);
+		else if (or != null)
+			return ickleCriteriaBuilder.or(predicateA, predicateB);
+		else
+			throw new QueryBuilderException("Invalid ClauseContainer: " + clauseContainer);
+	}
+
 	/**
 	 * Find predicates for a clause.
 	 * 
@@ -301,6 +386,47 @@ public class FyodorUltra {
 		else
 			throw new QueryBuilderException("Invalid ClauseContainer: " + clauseContainer);
 	}
+
+	/*public IcklePredicate findFilterIcklePredicate(TolstoysCauldron cauldron, Filter filter) {
+
+		Class<?> c = filter.getC();
+		if (isChronoClass(c))
+			return findChronoIcklePredicate(cauldron, filter);
+
+		IckleExpression<?> expression = findExpression(cauldron, filter.getCode());
+
+		Operator operator = filter.getOperator();
+		Object value = filter.getValue();
+
+		switch (operator) {
+			case LIKE:
+				return ickleCriteriaBuilder.like((IckleExpression<String>) expression, String.class.cast(value));
+			case NOT_LIKE:
+				return ickleCriteriaBuilder.notLike((IckleExpression<String>) expression, String.class.cast(value));
+			case CONTAINS:
+				return ickleCriteriaBuilder.like((IckleExpression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
+			case NOT_CONTAINS:
+				return ickleCriteriaBuilder.notLike((IckleExpression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
+			case STARTS_WITH:
+				return ickleCriteriaBuilder.like((IckleExpression<String>) expression, String.class.cast(value) + "%");
+			case NOT_STARTS_WITH:
+				return ickleCriteriaBuilder.notLike((IckleExpression<String>) expression, String.class.cast(value) + "%");
+			case EQUALS:
+				return ickleCriteriaBuilder.equal(expression, value);
+			case NOT_EQUALS:
+				return ickleCriteriaBuilder.notEqual(expression, value);
+			case GREATER_THAN:
+				return ickleCriteriaBuilder.gt((IckleExpression<Number>) expression, Number.class.cast(value));
+			case LESS_THAN:
+				return ickleCriteriaBuilder.lt((IckleExpression<Number>) expression, Number.class.cast(value));
+			case GREATER_THAN_OR_EQUAL:
+				return ickleCriteriaBuilder.ge((IckleExpression<Number>) expression, Number.class.cast(value));
+			case LESS_THAN_OR_EQUAL:
+				return ickleCriteriaBuilder.le((IckleExpression<Number>) expression, Number.class.cast(value));
+			default:
+				throw new QueryBuilderException("Invalid Operator: " + operator);
+		}
+	}*/
 
 	/**
 	 * Find a predicate of a filter.
@@ -353,6 +479,55 @@ public class FyodorUltra {
 				throw new QueryBuilderException("Invalid Operator: " + operator);
 		}
 	}
+
+	/*public IcklePredicate findChronoIcklePredicate(TolstoysCauldron cauldron, Filter filter) {
+
+		IckleExpression<?> expression = findExpression(cauldron, filter.getCode());
+
+		Operator operator = filter.getOperator();
+		Object value = filter.getValue();
+		Class<?> c = filter.getC();
+
+		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+
+		switch (operator) {
+			case EQUALS:
+				return cb.equal(expression, value);
+			case NOT_EQUALS:
+				return cb.notEqual(expression, value);
+			case GREATER_THAN:
+				// TODO: Remove triple ifs (Bryn)
+				if (c == LocalDateTime.class)
+					return cb.greaterThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.greaterThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.greaterThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+			case LESS_THAN:
+				if (c == LocalDateTime.class)
+					return cb.lessThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.lessThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.lessThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+			case GREATER_THAN_OR_EQUAL:
+				if (c == LocalDateTime.class)
+					return cb.greaterThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.greaterThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.greaterThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+			case LESS_THAN_OR_EQUAL:
+				if (c == LocalDateTime.class)
+					return cb.lessThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+				if (c == LocalDate.class)
+					return cb.lessThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+				if (c == LocalTime.class)
+					return cb.lessThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+			default:
+				throw new QueryBuilderException("Invalid Chrono Operator: " + operator + ", class: " + c);
+		}
+	}*/
 
 	/**
 	 * Find a predicate of a DateTime type filter.
@@ -534,6 +709,54 @@ public class FyodorUltra {
 		else
 			throw new QueryBuilderException("Invalid sort order " + order + " for code " + code);
 	}
+
+	/*public IckleExpression<?> findIckleExpression(TolstoysCauldron cauldron, String code) {
+
+		Root<BaseEntity> root = cauldron.getRoot();
+
+		if (code.startsWith("PRI_CREATED"))
+			return root.<LocalDateTime>get("created");
+		else if (code.startsWith("PRI_UPDATED"))
+			return root.<LocalDateTime>get("updated");
+		else if (code.equals("PRI_CODE"))
+			return root.<String>get("code");
+		else if (code.equals("PRI_NAME"))
+			return root.<String>get("name");
+
+		Join<BaseEntity, EntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
+
+		Attribute attr = qwandaUtils.getAttribute(cauldron.getProductCode(), code);
+		DataType dtt = attr.getDataType();
+		String className = dtt.getClassName();
+		Class<?> c = null;
+		try {
+			if (className.contains("BaseEntity"))
+				c = String.class;
+			else
+				c = Class.forName(dtt.getClassName());
+		} catch (Exception e) {
+			throw new DebugException("Could not form class from path: " + e.getMessage());
+		}
+
+		if (c == String.class)
+			return entityAttribute.<String>get("valueString");
+		else if (c == Boolean.class)
+			return entityAttribute.<Boolean>get("valueBoolean");
+		else if (c == Integer.class)
+			return entityAttribute.<Integer>get("valueInteger");
+		else if (c == Long.class)
+			return entityAttribute.<Long>get("valueLong");
+		else if (c == Double.class)
+			return entityAttribute.<Double>get("valueDouble");
+		else if (c == LocalDateTime.class)
+			return entityAttribute.get("valueDateTime");
+		else if (c == LocalDate.class)
+			return entityAttribute.get("valueDate");
+		else if (c == LocalTime.class)
+			return entityAttribute.get("valueTime");
+		else
+			throw new QueryBuilderException("Invalid path for " + c);
+	}*/
 
 	/**
 	 * Find the expression for an attribute code.

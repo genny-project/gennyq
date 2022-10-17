@@ -1,9 +1,6 @@
 package life.genny.fyodor.models;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.criteria.Join;
@@ -16,6 +13,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.EntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.utils.ickle.predicate.IcklePredicate;
 
 /**
  * TolstoysCauldron - A cauldron of query ingredients.
@@ -31,6 +29,9 @@ public class TolstoysCauldron {
 	private Map<String, Subquery<BaseEntity>> subqueryMap = new HashMap<>();
 
 	private List<Predicate> predicates = new ArrayList<>();
+
+	private List<IcklePredicate> icklePredicates = new LinkedList<>();
+
 	private List<Order> orders = new ArrayList<>();
 
 	public TolstoysCauldron() {
@@ -86,6 +87,14 @@ public class TolstoysCauldron {
 
 	public void setPredicates(List<Predicate> predicates) {
 		this.predicates = predicates;
+	}
+
+	public List<IcklePredicate> getIcklePredicates() {
+		return icklePredicates;
+	}
+
+	public void setIcklePredicates(List<IcklePredicate> icklePredicates) {
+		this.icklePredicates = icklePredicates;
 	}
 
 	public List<Order> getOrders() {
