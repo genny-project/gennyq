@@ -241,22 +241,13 @@ public class TaskService {
 
 	public void addAsksToMap(Map<String, Ask> map, List<Ask> askList) {
 
-		List<Ask> askss = null;
-		if (askList instanceof HashMap) {
-			Ask[] askArray = ((HashMap<String, Ask>) askList).values().toArray(Ask[]::new);
-			askss = Arrays.asList(askArray);
-			log.info("Hashmap");
-		} else {
-			askss = askList;
-		}
-
-		for (Ask askInList : askss) {
-			String code = askInList.getQuestion().getAttribute().getCode();
-			map.put(code, askInList);
-			if (askInList != null && askInList.getChildAsks() != null) {
-				addAsksToMap(map, askInList.getChildAsks());
+		askList.stream().forEach(a -> {
+			String code = a.getQuestion().getAttribute().getCode();
+			map.put(code, a);
+			if (a != null && a.getChildAsks() != null) {
+				addAsksToMap(map, a.getChildAsks());
 			}
-		}
+		});
 	}
 
 	/**
