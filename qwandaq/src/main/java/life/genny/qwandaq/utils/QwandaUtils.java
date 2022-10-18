@@ -465,7 +465,11 @@ public class QwandaUtils {
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 
 			String attributeCode = ea.getAttributeCode();
-			Boolean mandatory = map.get(attributeCode).getMandatory();
+			Ask ask = map.get(attributeCode);
+			if (ask == null)
+				continue;
+
+			Boolean mandatory = ask.getMandatory();
 			if (mandatory == null)
 				continue;
 
