@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -238,9 +239,18 @@ public class TaskService {
 		return processData;
 	}
 
-	public void addAsksToMap(Map<String, Ask> map, List<Ask> asks) {
+	public void addAsksToMap(Map<String, Ask> map, List<Ask> askList) {
 
-		for (Ask askInList : asks) {
+		List<Ask> askss = null;
+		if (askList instanceof HashMap) {
+			Ask[] askArray = ((HashMap<String, Ask>) askList).values().toArray(Ask[]::new);
+			askss = Arrays.asList(askArray);
+			log.info("Hashmap");
+		} else {
+			askss = askList;
+		}
+
+		for (Ask askInList : askss) {
 			String code = askInList.getQuestion().getAttribute().getCode();
 			map.put(code, askInList);
 			if (askInList != null && askInList.getChildAsks() != null) {
