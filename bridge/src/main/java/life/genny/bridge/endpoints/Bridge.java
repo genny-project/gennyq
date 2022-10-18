@@ -66,7 +66,7 @@ public class Bridge {
     @ConfigProperty(name = "bridge.id", defaultValue = "false")
     String bridgeId;
 
-    @ConfigProperty(name = "genny.keycloak.realm", defaultValue = "internmatch")
+    @ConfigProperty(name = "genny.keycloak.realm", defaultValue = "gadatron")
     String keycloakRealm;
 
     /**
