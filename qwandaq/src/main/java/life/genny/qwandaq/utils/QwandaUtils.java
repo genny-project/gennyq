@@ -425,21 +425,10 @@ public class QwandaUtils {
 	 * @param asks
 	 * @param target
 	 * @param defBE
-	 * @return
-	 */
-	public Map<String, Ask> updateDependentAsks(List<Ask> asks, BaseEntity target, BaseEntity defBE) {
-		Map<String, Ask> flatMapAsks = getAllAsksRecursively(asks);
-		return updateDependentAsks(asks, target, defBE, flatMapAsks);
-	}
-
-	/**
-	 * @param asks
-	 * @param target
-	 * @param defBE
 	 * @param flatMapAsks
 	 * @return
 	 */
-	public Map<String, Ask> updateDependentAsks(List<Ask> asks, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
+	public Map<String, Ask> updateDependentAsks(BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
 
 		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
 
@@ -467,24 +456,18 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(List<Ask> asks, BaseEntity baseEntity) {
+	public Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
-		Map<String, Boolean> map = new HashMap<String, Boolean>();
-		for (Ask ask : asks)
-			map = recursivelyFillMandatoryMap(map, ask);
-
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 
 			String attributeCode = ea.getAttributeCode();
-			Boolean mandatory = map.get(attributeCode);
-
-			if (mandatory == null) {
+			Boolean mandatory = map.get(attributeCode).getMandatory();
+			if (mandatory == null)
 				continue;
-			}
 
 			String value = ea.getAsString();
 

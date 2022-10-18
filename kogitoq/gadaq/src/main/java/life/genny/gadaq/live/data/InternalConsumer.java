@@ -22,6 +22,7 @@ import life.genny.gadaq.route.Events;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
@@ -86,7 +87,7 @@ public class InternalConsumer {
 		// kogitoUtils.funnelAnswers(answers);
 
 		Optional<Answer> searchText = answers.stream()
-				.filter(ans -> ans.getAttributeCode().equals("PRI_SEARCH_TEXT"))
+				.filter(ans -> ans.getAttributeCode().equals(Attribute.PRI_SEARCH_TEXT))
 				.findFirst();
 
 		if (searchText.isPresent()) {

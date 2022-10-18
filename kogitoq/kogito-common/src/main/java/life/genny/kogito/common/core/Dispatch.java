@@ -155,9 +155,9 @@ public class Dispatch {
 		findReadonlyAttributeCodes(flatMapOfAsks, processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
 		log.info("Non-Readonly Attributes: " + attributeCodes);
-		if (!attributeCodes.isEmpty())
+		if (!attributeCodes.isEmpty()) {
 			handleNonReadonly(processData, asks, flatMapOfAsks, msg);
-		else
+		} else
 			msg.add(target);
 
 		/**
@@ -222,8 +222,8 @@ public class Dispatch {
 	 * @param flatMapOfAsks
 	 * @param msg
 	 */
-	public void handleNonReadonly(ProcessData processData, List<Ask> asks,
-			Map<String, Ask> flatMapOfAsks, QBulkMessage msg) {
+	public void handleNonReadonly(ProcessData processData, List<Ask> asks, Map<String, Ask> flatMapOfAsks, 
+			QBulkMessage msg) {
 
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -234,11 +234,11 @@ public class Dispatch {
 
 		// check mandatory fields
 		// TODO: change to use flatMap
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(asks, processEntity);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
 
 		// pre-send ask updates
 		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		qwandaUtils.updateDependentAsks(asks, processEntity, defBE, flatMapOfAsks);
+		qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapOfAsks);
 		flatMapOfAsks.get(Attribute.EVT_SUBMIT).setDisabled(!answered);
 
 		// filter unwanted attributes
@@ -250,7 +250,7 @@ public class Dispatch {
 
 		// handle initial dropdown selections
 		// TODO: change to use flatMap
-		//recursivelyHandleDropdownAttributes(asks, processEntity, msg);
+		handleDropdownAttributes(flatMapOfAsks, processEntity, msg);
 
 		// only cache for non-readonly invocation
 		cacheAsks(processData, asks);
@@ -402,14 +402,9 @@ public class Dispatch {
 	 * @param target The target entity used in finding values
 	 * @param asks    The msg to add entities to
 	 */
-	public void recursivelyHandleDropdownAttributes(List<Ask> asks, BaseEntity target, QBulkMessage msg) {
+	public void handleDropdownAttributes(Map<String, Ask> map, BaseEntity target, QBulkMessage msg) {
 
-		for (Ask ask : asks) {
-
-			// recursively handle any child asks
-			if (ask.getChildAsks() != null) {
-				recursivelyHandleDropdownAttributes(ask.getChildAsks(), target, msg);
-			}
+		for (Ask ask : map.values()) {
 
 			// check for dropdown attribute
 			if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {

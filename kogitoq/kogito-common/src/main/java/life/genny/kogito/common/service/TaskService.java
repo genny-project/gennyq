@@ -2,7 +2,9 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -19,11 +21,14 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QBulkMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
@@ -206,12 +211,25 @@ public class TaskService {
 	 */
 	public ProcessData answer(Answer answer, ProcessData processData) {
 
+		log.info("[$$$$] Received answer, dispatching");
+
 		// validate answer
 		if (!processAnswers.isValid(answer, processData))
 			return processData;
 
 		processData.getAnswers().add(answer);
-		dispatch.buildAndSend(processData);
+		//dispatch.buildAndSend(processData);
+		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
+		List<Ask> asks = dispatch.fetchAsks(processData);
+		dispatch.buildAskFlatMap(flatMapOfAsks, asks);
+
+		QBulkMessage msg = new QBulkMessage();
+		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+
+		QDataBaseEntityMessage baseEntityMessage = new QDataBaseEntityMessage(msg.getEntities());
+		baseEntityMessage.setToken(userToken.getToken());
+		baseEntityMessage.setReplace(true);
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, baseEntityMessage);
 
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
@@ -227,10 +245,12 @@ public class TaskService {
 		
 		// construct bulk message
 		List<Ask> asks = dispatch.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
+		dispatch.buildAskFlatMap(flatMapOfAsks, asks);
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		if (qwandaUtils.mandatoryFieldsAreAnswered(asks, processEntity))
+		if (qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
 			return false;
 
 		// check uniqueness
