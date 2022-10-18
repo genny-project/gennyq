@@ -222,6 +222,7 @@ public class TaskService {
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
 		List<Ask> asks = dispatch.fetchAsks(processData);
 		// dispatch.buildAskFlatMap(flatMapOfAsks, asks);
+		addAsksToMap(flatMapOfAsks, asks);
 
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
@@ -235,6 +236,17 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		return processData;
+	}
+
+	public void addAsksToMap(Map<String, Ask> map, List<Ask> asks) {
+
+		for (Ask askInList : asks) {
+			String code = askInList.getQuestion().getAttribute().getCode();
+			map.put(code, askInList);
+			if (askInList != null && askInList.getChildAsks() != null) {
+				addAsksToMap(map, askInList.getChildAsks());
+			}
+		}
 	}
 
 	/**
