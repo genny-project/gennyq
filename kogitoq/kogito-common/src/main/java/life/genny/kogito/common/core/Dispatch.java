@@ -78,6 +78,7 @@ public class Dispatch {
 
 		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
 		CacheUtils.putObject(userToken.getProductCode(), key, asks);
+		log.info("Asks cached for " + processData.getProcessId());
 	}
 
 	/**
@@ -90,6 +91,7 @@ public class Dispatch {
 
 		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
 		List<Ask> asks = CacheUtils.getObject(userToken.getProductCode(), key, List.class);
+		log.info("Asks fetched for " + processData.getProcessId());
 
 		return asks;
 	}
@@ -225,6 +227,9 @@ public class Dispatch {
 	public void handleNonReadonly(ProcessData processData, List<Ask> asks, Map<String, Ask> flatMapOfAsks, 
 			QBulkMessage msg) {
 
+		// only cache for non-readonly invocation
+		cacheAsks(processData, asks);
+
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		for (Ask ask : flatMapOfAsks.values()) {
@@ -251,9 +256,6 @@ public class Dispatch {
 		// handle initial dropdown selections
 		// TODO: change to use flatMap
 		handleDropdownAttributes(flatMapOfAsks, processEntity, msg);
-
-		// only cache for non-readonly invocation
-		cacheAsks(processData, asks);
 	}
 
 	/**

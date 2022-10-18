@@ -221,7 +221,7 @@ public class TaskService {
 		//dispatch.buildAndSend(processData);
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
 		List<Ask> asks = dispatch.fetchAsks(processData);
-		dispatch.buildAskFlatMap(flatMapOfAsks, asks);
+		// dispatch.buildAskFlatMap(flatMapOfAsks, asks);
 
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
