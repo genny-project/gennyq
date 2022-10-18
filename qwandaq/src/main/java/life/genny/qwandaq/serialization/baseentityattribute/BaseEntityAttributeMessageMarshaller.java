@@ -1,9 +1,7 @@
 package life.genny.qwandaq.serialization.baseentityattribute;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
@@ -68,7 +66,7 @@ public class BaseEntityAttributeMessageMarshaller implements MessageMarshaller<B
 		bea.setValueString(reader.readString("valueString"));
 		Long valueTimeLong = reader.readLong("valueTime");
 		if (valueTimeLong != null) {
-			bea.setUpdated(LocalDateTime.ofEpochSecond(valueTimeLong / 1000, 0, ZoneOffset.UTC));
+			bea.setValueTime(LocalTime.ofInstant(Instant.ofEpochSecond(valueTimeLong / 1000), ZoneOffset.UTC));
 		}
 		bea.setWeight(reader.readDouble("weight"));
 		bea.setAttributeId(reader.readLong("attribute_id"));

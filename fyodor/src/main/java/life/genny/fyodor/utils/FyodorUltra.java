@@ -243,9 +243,11 @@ public class FyodorUltra {
 			icklePredicates.add(findClausePredicateForIckle(cauldron, cont));
 		});
 
+		cauldron.setIcklePredicates(icklePredicates);
+
 		return ickleQueryBuilder.selectClause().
 				fromClause("life.genny.qwandaq.serialization.baseentity.BaseEntity").
-				whereClause((IcklePredicate[]) cauldron.getIcklePredicates().toArray()).
+				whereClause(cauldron.getIcklePredicates()).
 						toIckleQueryString();
 				//concat("where realm : '" + searchEntity.getRealm() + "' and code like '" + prefix + "%'");
 	}

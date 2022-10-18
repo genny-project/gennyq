@@ -266,9 +266,8 @@ public class CacheUtils {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
+				.create("from life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
 						+ "' and baseEntityCode : '" + baseEntityCode + "'");
-		queryFactory.from("");
 		QueryResult<BaseEntityAttribute> queryResult = query.execute();
 		return queryResult.list();
 	}

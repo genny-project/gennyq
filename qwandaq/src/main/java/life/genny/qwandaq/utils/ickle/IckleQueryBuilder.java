@@ -1,16 +1,18 @@
 package life.genny.qwandaq.utils.ickle;
 
-import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.utils.ickle.predicate.IcklePredicate;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.criteria.Order;
+import java.util.List;
 
 @ApplicationScoped
 public class IckleQueryBuilder {
+
+    private static final Logger log = Logger.getLogger(IckleQueryBuilder.class);
 
     public static final char SPACE = ' ';
 
@@ -73,6 +75,18 @@ public class IckleQueryBuilder {
             /*for(Predicate predicate : restrictions) {
                 predicate.
             }*/
+        }
+        return this;
+    }
+
+    public IckleQueryBuilder whereClause(List<IcklePredicate> restrictions) {
+        if(!restrictions.isEmpty()) {
+            for(IcklePredicate predicate : restrictions) {
+                log.info("$$$$$$$$$$$$$$$$ expression alias: " + predicate.getAlias());
+                predicate.getExpressions().stream().forEach(expression -> {
+                    log.info("$$$$$$$$$$$$$$$$ expression alias: " + expression.getAlias());
+                });
+            }
         }
         return this;
     }
