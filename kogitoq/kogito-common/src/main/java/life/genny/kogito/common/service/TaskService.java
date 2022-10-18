@@ -222,6 +222,10 @@ public class TaskService {
 		//dispatch.buildAndSend(processData);
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
 		List<Ask> asks = dispatch.fetchAsks(processData);
+		log.info("List: " + asks.getClass());
+		for (Ask ask : asks) {
+			log.info("Ask: " + ask.getClass());
+		}
 		// dispatch.buildAskFlatMap(flatMapOfAsks, asks);
 		addAsksToMap(flatMapOfAsks, asks);
 
