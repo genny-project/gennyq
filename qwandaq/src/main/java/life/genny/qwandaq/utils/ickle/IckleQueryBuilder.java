@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils.ickle;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.utils.ickle.predicate.IcklePredicate;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -120,10 +121,18 @@ public class IckleQueryBuilder {
         StringBuilder queryBuilder = new StringBuilder();
         queryBuilder.append(selectClause).append(SPACE);
         queryBuilder.append(fromClause).append(SPACE);
-        queryBuilder.append(whereClause).append(SPACE);
-        queryBuilder.append(groupByClause).append(SPACE);
-        queryBuilder.append(havingClause).append(SPACE);
-        queryBuilder.append(orderByClause).append(SPACE);
+        if (!StringUtils.isEmpty(whereClause)) {
+            queryBuilder.append(whereClause).append(SPACE);
+        }
+        if (!StringUtils.isEmpty(groupByClause)) {
+            queryBuilder.append(groupByClause).append(SPACE);
+        }
+        if (!StringUtils.isEmpty(havingClause)) {
+            queryBuilder.append(havingClause).append(SPACE);
+        }
+        if (!StringUtils.isEmpty(orderByClause)) {
+            queryBuilder.append(orderByClause).append(SPACE);
+        }
         return queryBuilder.toString();
     }
 

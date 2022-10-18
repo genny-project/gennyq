@@ -239,14 +239,14 @@ public class FyodorUltra {
 
 	private String getIckleQueryForSearchEntity(SearchEntity searchEntity, TolstoysCauldron cauldron) {
 		List<IcklePredicate> icklePredicates = new LinkedList<>();
-		searchEntity.getClauseContainers().stream().forEach(cont -> {
+		/*searchEntity.getClauseContainers().stream().forEach(cont -> {
 			icklePredicates.add(findClausePredicateForIckle(cauldron, cont));
-		});
+		});*/
 
 		cauldron.setIcklePredicates(icklePredicates);
 
 		return ickleQueryBuilder.selectClause().
-				fromClause("life.genny.qwandaq.serialization.baseentity.BaseEntity").
+				fromClause("life.genny.qwandaq.persistence.baseentity.BaseEntity").
 				whereClause(cauldron.getIcklePredicates()).
 						toIckleQueryString();
 				//concat("where realm : '" + searchEntity.getRealm() + "' and code like '" + prefix + "%'");

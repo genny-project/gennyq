@@ -249,6 +249,7 @@ public class CacheUtils {
 
 	public static List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesUsingIckle(String ickleQuery) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCache(GennyConstants.CACHE_NAME_BASEENTITY));
+		log.info("##################### got here......");
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory.create(ickleQuery);
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.execute();
 		return queryResult.list();
@@ -266,7 +267,7 @@ public class CacheUtils {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
+				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
 						+ "' and baseEntityCode : '" + baseEntityCode + "'");
 		QueryResult<BaseEntityAttribute> queryResult = query.execute();
 		return queryResult.list();
