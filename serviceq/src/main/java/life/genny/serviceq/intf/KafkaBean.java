@@ -117,6 +117,9 @@ public class KafkaBean implements KafkaInterface {
 			case WEBDATA:
 				producer.getToWebData().send(Message.of(payload).addMetadata(metadata));
 				break;
+			case JTI_EVENTS:
+				producer.getJtiEvent().send(payload);
+				break;
 			default:
 				log.error("Producer unable to write to channel " + topic);
 				break;

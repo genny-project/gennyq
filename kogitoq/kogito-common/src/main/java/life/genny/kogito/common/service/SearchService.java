@@ -20,6 +20,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -32,7 +33,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -84,7 +84,7 @@ public class SearchService {
 
 		// trim TREE_ITEM_ from code if present
 		code = StringUtils.removeStart(code, "TREE_ITEM_");
-		String searchCode = "SBE_" + code;
+		String searchCode = "SBE_"+code;
 		log.info("Sending Table :: " + searchCode);
 
 		searchUtils.searchTable(searchCode);
@@ -130,13 +130,13 @@ public class SearchService {
 
 		log.info("Sending Name Search :: " + searchCode);
 
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
 				searchCode, SearchEntity.class);
 
 		// TODO: remove this from alyson
 		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
 
-		searchEntity.add(new Filter(PRI_NAME, Operator.LIKE, "%" + nameWildcard + "%"));
+		searchEntity.add(new Filter(PRI_NAME, Operator.LIKE, "%"+nameWildcard+"%"));
 
 		searchUtils.searchTable(searchEntity);
 		// sendSearchPCM("PCM_TABLE", searchCode);
@@ -145,7 +145,7 @@ public class SearchService {
 	/**
 	 * Send a search PCM with the correct search code.
 	 *
-	 * @param pcmCode    The code of pcm to send
+	 * @param pcmCode The code of pcm to send
 	 * @param searchCode The code of the searhc to send
 	 */
 	public void sendSearchPCM(String pcmCode, String searchCode) {
@@ -171,37 +171,35 @@ public class SearchService {
 
 	/**
 	 * Get bucket data with bucket event
-	 * 
 	 * @param code Bucket event code
 	 */
 	public void getBuckets(String code) {
 		try {
 			String searchCode = "SBE_" + code;
-			log.info("Fetching Buckets for code = " + code);
+
 			List<String> originBucketCodes = CacheUtils.getObject(userToken.getRealm(), searchCode, List.class);
-			List<String> bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
+			List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
 			sendBucketCodes(bucketCodes);
 
 			originBucketCodes.stream().forEach(e -> {
 				searchUtils.searchTable(e);
 				sendSearchPCM("PCM_PROCESS", e);
 			});
-		} catch (Exception ex) {
+		}catch (Exception ex){
 			log.error(ex);
 		}
 	}
 
 	/**
 	 * Send the list of bucket codes to frond-end
-	 * 
 	 * @param bucketCodes The list of bucket codes
 	 */
 	public void sendBucketCodes(List<String> bucketCodes) {
-		QCmdMessage msgProcess = new QCmdMessage(GennyConstants.BUCKET_DISPLAY, GennyConstants.BUCKET_PROCESS);
+		QCmdMessage msgProcess = new QCmdMessage(GennyConstants.BUCKET_DISPLAY,GennyConstants.BUCKET_PROCESS);
 		msgProcess.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgProcess);
 
-		QCmdMessage msgCodes = new QCmdMessage(GennyConstants.BUCKET_CODES, GennyConstants.BUCKET_CODES);
+		QCmdMessage msgCodes = new QCmdMessage(GennyConstants.BUCKET_CODES,GennyConstants.BUCKET_CODES);
 		msgCodes.setToken(userToken.getToken());
 		msgCodes.setSourceCode(GennyConstants.BUCKET_CODES);
 		msgCodes.setTargetCodes(bucketCodes);
@@ -210,14 +208,13 @@ public class SearchService {
 
 	/**
 	 * Get the list of bucket codes with session id
-	 * 
 	 * @param originBucketCodes List of bucket codes
 	 * @return The list of bucket code with session id
 	 */
-	public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes) {
+	public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes){
 		List<String> bucketCodes = new ArrayList<>();
 		originBucketCodes.stream().forEach(e -> {
-			SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), e, SearchEntity.class);
+			SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),e, SearchEntity.class);
 			String searchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
 			bucketCodes.add(searchCode);
 		});
@@ -225,9 +222,9 @@ public class SearchService {
 		return bucketCodes;
 	}
 
+
 	/**
 	 * Send search message to front-end
-	 * 
 	 * @param searchBE Search base entity from cache
 	 */
 	public void sendMessageBySearchEntity(SearchEntity searchBE) {
@@ -238,30 +235,29 @@ public class SearchService {
 
 	/**
 	 * create new entity attribute by attribute code, name and value
-	 * 
 	 * @param attrCode Attribute code
 	 * @param attrName Attribute name
-	 * @param value    Attribute value
+	 * @param value Attribute value
 	 * @return return json object
 	 */
-	public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, Object value) {
+	public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, Object value){
 		EntityAttribute ea = null;
 		try {
 			BaseEntity base = beUtils.getBaseEntity(attrCode);
 			Attribute attribute = qwandaUtils.getAttribute(attrCode);
 			ea = new EntityAttribute(base, attribute, 1.0, attrCode);
-			if (!attrName.isEmpty()) {
+			if(!attrName.isEmpty()) {
 				ea.setAttributeName(attrName);
 			}
-			if (value instanceof String) {
+			if(value instanceof String) {
 				ea.setValueString(value.toString());
 			}
-			if (value instanceof Integer) {
+			if(value instanceof Integer) {
 				ea.setValueInteger((Integer) value);
 			}
 
 			base.addAttribute(ea);
-		} catch (Exception ex) {
+		} catch(Exception ex){
 			log.error(ex);
 		}
 		return ea;
@@ -497,7 +493,7 @@ public class SearchService {
 			String value = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.VALUE)
 					.replaceFirst(GennyConstants.SEL_PREF, "");
 			String field = searchUtils.getFilterParamValByKey(e.getValue(), GennyConstants.COLUMN)
-					.replaceFirst(GennyConstants.SEL_FILTER_COLUMN_FLC, "");
+											.replaceFirst(GennyConstants.SEL_FILTER_COLUMN_FLC, "");
 			Operator operator = getOperatorByVal(operatorCode);
 
 			if (operator.equals(Operator.LIKE)) {
@@ -709,13 +705,13 @@ public class SearchService {
 	 * @return Message of list base entity
 	 */
 	public QDataBaseEntityMessage getBaseItemsMsg(String group,String code,String lnkCode,String lnkValue,
-												  SearchEntity search) {
+												  	SearchEntity search) {
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
 		List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
 
 		List<BaseEntity> basesSorted =  bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
-				.collect(Collectors.toList());
+												.collect(Collectors.toList());
 
 		msg.setToken(userToken.getToken());
 		msg.setItems(basesSorted);
@@ -855,4 +851,5 @@ public class SearchService {
 	public void searchTable(String sbeCode) {
 		searchUtils.searchTable(sbeCode);
 	}
+
 }

@@ -8,9 +8,13 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.jti.JtiKafkaProducer;
+import life.genny.qwandaq.utils.jti.JtiUserUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -45,6 +49,9 @@ public class FilterUtils {
     @Inject
     DatabaseUtils databaseUtils;
 
+    @Inject
+    JtiKafkaProducer jtiKafkaProducer;
+
     public static final String EVT_QUE_TREE_PREFIX = "QUE_TREE_ITEM_";
     public static final String EVT_QUE_TABLE_PREFIX = "QUE_TABLE_";
 
@@ -73,19 +80,9 @@ public class FilterUtils {
     public static final String PRI_PREFIX = "PRI_PREFIX";
     public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
-
-    public static final String SAVE = "Save";
-    public static final String APPLY = "Apply";
-    public static final String SELECT_SAVED_SEARCH = "Select Saved Search";
     public static final String DELETE = "Delete";
-
-    //PCM
-    public static final String PRI_LOC1 = "PRI_LOC1";
-    public static final String PRI_LOC2 = "PRI_LOC2";
-    public static final String PRI_LOC3 = "PRI_LOC3";
-
     public static final String PCM_TABLE = "PCM_TABLE";
-    public static final String PCM_SAVED_SEARCH = "PCM_SAVED_SEARCH";
+    public static final String JTI_EVENTS = "jti-events";
 
 
     /**
@@ -112,19 +109,6 @@ public class FilterUtils {
             || filterValue.contains(PRI_ASSOC_COMP_INTERNSHIP)
             || filterValue.contains(PRI_DJP_AGREE)
             || filterValue.contains(PRI_INTERNSHIP_TYPE))
-            return true;
-
-        return result;
-    }
-
-    /**
-     * Check code whether is filter value or not
-     * @param code Message Code
-     * @return Being filter value
-     */
-    public  boolean isFilterValue(String code) {
-        boolean result = false;
-        if(code.startsWith(GennyConstants.VALUE))
             return true;
 
         return result;
@@ -733,7 +717,9 @@ public class FilterUtils {
             value = getValueStringByAttCode(base,LNK_SAVED_SEARCHES);
 
             result = jsonb.fromJson(value, Map.class);
-        }catch(Exception ex) {}
+        }catch(Exception ex) {
+            log.info(ex);
+        }
 
         return result;
     }
@@ -871,7 +857,7 @@ public class FilterUtils {
      */
     public void handleFilterEvent(String event) {
         try {
-            JsonObject msg = jsonb.fromJson(event, JsonObject.class);;
+            JsonObject msg = jsonb.fromJson(event, JsonObject.class);
 
             String token = EventMessageUtils.getToken(msg);
             String code = EventMessageUtils.getCode(msg);
@@ -882,7 +868,11 @@ public class FilterUtils {
             boolean isSubmitted = false;
 
             /* init user token */
-            if(!token.isEmpty()) { userToken.init(token);}
+            if(!token.isEmpty()) {
+                userToken.init(token);
+
+                KafkaUtils.writeMsg(KafkaTopic.JTI_EVENTS,jsonb.toJson(userToken));
+            }
 
             /* bucket pagination */
             if(isBucketPagination(code)) {
@@ -933,13 +923,13 @@ public class FilterUtils {
 
     /**
      * Handle filter data event
-     * @param event
+     * @param event Event
      */
     public void handleFilterEventData(String event) {
         try {
             JsonObject msg = jsonb.fromJson(event, JsonObject.class);
 
-            String token = EventMessageUtils.getToken(msg);;
+            String token = EventMessageUtils.getToken(msg);
             String code = EventMessageUtils.getCode(msg);
             String attrCode = EventMessageUtils.getAttributeCode(msg);
             String attrName = "";

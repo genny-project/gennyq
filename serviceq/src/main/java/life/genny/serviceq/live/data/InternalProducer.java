@@ -78,4 +78,8 @@ public class InternalProducer {
     return blacklist;
   }
 
+  @Inject @Channel("jti_events") Emitter<String> jtiEvents;
+  public Emitter<String> getJtiEvent() {
+    return jtiEvents;
+  }
 }
