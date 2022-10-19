@@ -254,7 +254,8 @@ public class Dispatch {
 
 		// handle initial dropdown selections
 		// TODO: change to use flatMap
-		handleDropdownAttributes(flatMapOfAsks, processEntity, msg);
+		for (Ask ask : asks)
+			handleDropdownAttributes(ask, processEntity, msg);
 	}
 
 	/**
@@ -399,25 +400,30 @@ public class Dispatch {
 	/**
 	 * Recursively traverse the asks and add any entity selections to the msg.
 	 *
+	 * NOTE: This needs optimisation. Ultimately we would like 
+	 * to make use of a flat map, or tree map.
+	 *
 	 * @param asks    The ask to traverse
 	 * @param target The target entity used in finding values
 	 * @param asks    The msg to add entities to
 	 */
-	public void handleDropdownAttributes(Map<String, Ask> map, BaseEntity target, QBulkMessage msg) {
+	public void handleDropdownAttributes(Ask ask, BaseEntity target, QBulkMessage msg) {
 
-		for (Ask ask : map.values()) {
+		if (ask.hasChildren()) {
+			for (Ask child : ask.getChildAsks())
+				handleDropdownAttributes(child, target, msg);
+		}
 
-			// check for dropdown attribute
-			if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
+		// check for dropdown attribute
+		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
 
-				// get list of value codes
-				List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ask.getQuestion().getAttribute().getCode());
+			// get list of value codes
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ask.getQuestion().getAttribute().getCode());
 
-				if (codes == null || codes.isEmpty())
-					sendDropdownItems(ask, target);
-				else
-					collectSelections(codes, msg);
-			}
+			if (codes == null || codes.isEmpty())
+				sendDropdownItems(ask, target, ask.getQuestion().getCode());
+			else
+				collectSelections(codes, msg);
 		}
 	}
 
@@ -442,7 +448,7 @@ public class Dispatch {
 	 * @param target The target entity used in processing
 	 * @param rootCode The code of the root question used in sending DD messages
 	*/
-	public void sendDropdownItems(Ask ask, BaseEntity target) {
+	public void sendDropdownItems(Ask ask, BaseEntity target, String parentCode) {
 
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
@@ -487,6 +493,7 @@ public class Dispatch {
 				.add("questionCode", question.getCode())
 				.add("sourceCode", ask.getSourceCode())
 				.add("targetCode", ask.getTargetCode())
+				.add("parentCode", parentCode)
 				.add("value", "")
 				.add("processId", ask.getProcessId()))
 			.add("attributeCode", attribute.getCode())

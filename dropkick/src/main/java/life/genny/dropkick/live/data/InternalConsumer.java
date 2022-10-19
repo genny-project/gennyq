@@ -114,6 +114,7 @@ public class InternalConsumer {
 		String attrCode = jsonStr.getString("attributeCode");
 		String sourceCode = dataJson.getString("sourceCode");
 		String targetCode = dataJson.getString("targetCode");
+		String parentCode = dataJson.getString("parentCode");
 		String searchText = dataJson.getString("value");
 		String questionCode = dataJson.getString("questionCode");
 		String processId = dataJson.getString("processId");
@@ -189,6 +190,7 @@ public class InternalConsumer {
 		// Set all required message fields and return msg
 		msg.setQuestionCode(questionCode);
 		msg.setToken(userToken.getToken());
+		msg.setParentCode(parentCode);
 		msg.setLinkCode("LNK_CORE");
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);

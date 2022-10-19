@@ -113,7 +113,7 @@ public class Events {
 		}
 
 		// table view (Default View Mode)
-		if (code.startsWith("QUE_") && code.endsWith("_VIEW")) {
+		if (code.startsWith("QUE_TABLE_")) {
 			search.sendTable(code);
 			return;
 		}
