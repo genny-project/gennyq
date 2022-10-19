@@ -22,6 +22,7 @@ import org.kie.api.runtime.KieRuntimeBuilder;
 import org.kie.api.runtime.KieSession;
 import org.apache.commons.lang3.StringUtils;
 
+import life.genny.kogito.common.service.BaseEntityService;
 import life.genny.kogito.common.service.ImportGithubService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
@@ -69,6 +70,9 @@ public class KogitoUtils {
 
 	@Inject
 	ImportGithubService importGithubService;
+
+	@Inject
+	BaseEntityService baseEntityService;
 
 	public static enum UseService {
 		SELF,
@@ -301,8 +305,8 @@ public class KogitoUtils {
 		// Insert Extras
 		session.insert(gqlUtils);
 		session.insert(qwandaUtils);
-		log.info("Inserting importGithubService into facts");
 		session.insert(importGithubService);
+		session.insert(baseEntityService);
 		session.insert(msg);
 
 		// trigger EventRoutes rules
@@ -471,6 +475,7 @@ public class KogitoUtils {
 		session.insert(defUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
+		session.insert(baseEntityService);
 		session.insert(importGithubService);
 	}
 
@@ -490,6 +495,7 @@ public class KogitoUtils {
 		session.insert(defUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
+		session.insert(baseEntityService);
 		session.insert(importGithubService);
 
 		session.fireAllRules();
