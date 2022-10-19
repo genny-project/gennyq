@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -21,24 +20,17 @@ import life.genny.qwandaq.datatype.capability.PermissionMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 import life.genny.test.qwandaq.utils.BaseTestCase;
-import life.genny.test.utils.callbacks.test.FITestCallback;
-import life.genny.test.utils.callbacks.test.FITestVerificationCallback;
 import life.genny.test.utils.suite.JUnitTester;
-import life.genny.test.utils.suite.TestCase;
 
 import static life.genny.qwandaq.datatype.capability.CapabilityMode.*;
 import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
 
 import static life.genny.test.utils.suite.TestCase.Builder;
-import static life.genny.test.utils.suite.TestCase.Input;
 import static life.genny.test.utils.suite.TestCase.Expected;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CapabilityUtilsTest extends BaseTestCase {
-
-	static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
     @InjectMocks
     CapabilitiesManager capManager;
