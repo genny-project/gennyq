@@ -12,13 +12,22 @@ public class JtiEntity {
     public String browserAgent;
     public int numLogins;
     public String active;
+    public String jti;
+    public String productCode;
+    public String realm;
 
-    public JtiEntity(String userCode,String bridges,String browserAgent,int numLogins,String active){
+    public JtiEntity() {
+    }
+
+    public JtiEntity(String userCode,String bridges,String browserAgent,int numLogins,String active,String jti,
+                     String productCode){
         this.userCode = userCode;
         this.bridges = bridges;
         this.browserAgent = browserAgent;
         this.numLogins = numLogins;
         this.active = active;
+        this.jti = jti;
+        this.productCode = productCode;
     }
 
     public static JtiEntity from(JtiAggregation aggregation) {
@@ -32,7 +41,8 @@ public class JtiEntity {
                 aggregation.bridges,
                 aggregation.browserAgent,
                 aggregation.count,
-                active);
+                active,
+                "", "");
     }
 }
 

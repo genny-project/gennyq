@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.arc.Arc;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -35,6 +36,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
 
+import life.genny.qwandaq.utils.DatabaseUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import io.vertx.core.Vertx;
@@ -106,11 +108,7 @@ public class GennyToken implements Serializable {
 	 */
 	public void init(String token) {
 
-//		Context context = Vertx.currentContext();
-//		log.info(context);
-//		log.info(context);
-//		ContextLocals.put("message", "hello");
-
+		reInitializeBean();
 
 		if (token == null || token.isEmpty()) {
 			log.error("Token must not be null or empty!");
@@ -649,6 +647,21 @@ public class GennyToken implements Serializable {
 		JsonObject json = jsonb.fromJson(payload, JsonObject.class);
 
 		return json;
+	}
+
+	public void reInitializeBean() {
+		//TODO : JTI
+
+		if(beUtils == null) {
+			beUtils = Arc.container().select(BaseEntityUtils.class).get();
+		}
+
+		if(capMan == null) {
+			capMan = Arc.container().select(CapabilitiesManager.class).get();
+		}
+
+		log.info(beUtils);
+		log.info(capMan);
 	}
 
 }

@@ -18,7 +18,8 @@ public enum KafkaTopic {
 	MESSAGES,
 	SCHEDULE,
 	BLACKLIST,
-	JTI_EVENTS;
+	JTI_EVENTS,
+	JTI_MAIN;
 
 	public String toValidTopicName() {
 		return this.name().toLowerCase();

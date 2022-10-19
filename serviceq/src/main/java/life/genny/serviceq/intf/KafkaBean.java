@@ -120,6 +120,9 @@ public class KafkaBean implements KafkaInterface {
 			case JTI_EVENTS:
 				producer.getJtiEvent().send(payload);
 				break;
+			case JTI_MAIN:
+				producer.getJtiEvent().send(payload);
+				break;
 			default:
 				log.error("Producer unable to write to channel " + topic);
 				break;

@@ -13,8 +13,8 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.gadaq.utils.EventMessageUtils;
 import life.genny.qwandaq.utils.jti.JtiKafkaProducer;
-import life.genny.qwandaq.utils.jti.JtiUserUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;

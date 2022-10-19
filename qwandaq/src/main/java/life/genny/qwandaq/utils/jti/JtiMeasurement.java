@@ -10,6 +10,10 @@ public class JtiMeasurement {
     public Instant timestamp;
     public double value;
 
+    public JtiMeasurement(String userCode) {
+        this.userCode = userCode;
+    }
+
     public JtiMeasurement(String userCode, Instant timestamp, double value) {
         this.userCode = userCode;
         this.timestamp = timestamp;

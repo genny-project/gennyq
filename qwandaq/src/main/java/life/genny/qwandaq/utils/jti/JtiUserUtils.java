@@ -29,7 +29,7 @@ public class JtiUserUtils {
     private ReadOnlyKeyValueStore<String, JtiAggregation> getJtiStore() {
         while (true) {
             try {
-                return streams.store(StoreQueryParameters.fromNameAndType(JtiTopology.JTI_STORE,
+                return streams.store(StoreQueryParameters.fromNameAndType(JtiTopology.JTI_EVENTS,
                         QueryableStoreTypes.keyValueStore()));
 
             } catch (InvalidStateStoreException e) {

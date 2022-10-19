@@ -39,6 +39,10 @@
   </dependencyManagement>
   <dependencies>
     <dependency>
+      <groupId>org.kie.kogito</groupId>
+      <artifactId>kogito-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>life.genny</groupId>
       <artifactId>kogito-common</artifactId>
 	  <version>${genny.version}</version>
