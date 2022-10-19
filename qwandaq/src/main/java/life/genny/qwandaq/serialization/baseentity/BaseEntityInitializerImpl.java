@@ -12,7 +12,6 @@ public class BaseEntityInitializerImpl implements SerializationContextInitialize
 
 	@Override
 	public String getProtoFileName() {
-		// return "/life/genny/qwandaq/serialization/protos/baseentity.proto";
 		return "baseentity.proto";
 	}
 

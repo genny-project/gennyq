@@ -223,6 +223,7 @@ public class FyodorUltra {
 		log.info("############# Ickle query: " + ickleQuery);
 		List<life.genny.qwandaq.serialization.baseentity.BaseEntity> baseEntities =
 				beUtils.getBaseEntityUsingIckleQuery(ickleQuery);
+		log.info("############# got these many BEs as output: " + baseEntities.size());
 		List<BaseEntity> persistableBaseEntities = new LinkedList<>();
 		baseEntities.stream().forEach(be -> persistableBaseEntities.add((BaseEntity) be.toPersistableCoreEntity()));
 

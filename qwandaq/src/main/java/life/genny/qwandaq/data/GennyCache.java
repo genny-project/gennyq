@@ -178,7 +178,7 @@ public class GennyCache {
 			initRemoteCacheManager();
 		}
 
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheName);
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}

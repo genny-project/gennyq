@@ -239,7 +239,7 @@ public class CacheUtils {
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
 	public static List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCache(GennyConstants.CACHE_NAME_BASEENTITY));
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm : '" + productCode
 						+ "' and code like '" + prefix + "%'");
@@ -248,7 +248,7 @@ public class CacheUtils {
 	}
 
 	public static List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesUsingIckle(String ickleQuery) {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCache(GennyConstants.CACHE_NAME_BASEENTITY));
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
 		log.info("##################### got here......");
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory.create(ickleQuery);
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.execute();
