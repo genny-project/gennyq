@@ -13,7 +13,6 @@ import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
 import static life.genny.test.utils.suite.TestCase.Builder;
 import static life.genny.test.utils.suite.TestCase.Input;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.ArrayList;
 import java.util.List;
