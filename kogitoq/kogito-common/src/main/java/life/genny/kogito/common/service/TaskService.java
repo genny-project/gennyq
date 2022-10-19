@@ -2,7 +2,6 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -219,15 +218,11 @@ public class TaskService {
 			return processData;
 
 		processData.getAnswers().add(answer);
+
 		//dispatch.buildAndSend(processData);
 		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
 		List<Ask> asks = dispatch.fetchAsks(processData);
-		log.info("List: " + asks.getClass());
-		for (Ask ask : asks) {
-			log.info("Ask: " + ask.getClass());
-		}
-		// dispatch.buildAskFlatMap(flatMapOfAsks, asks);
-		addAsksToMap(flatMapOfAsks, asks);
+		dispatch.buildAskFlatMap(flatMapOfAsks, asks);
 
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
@@ -241,17 +236,6 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		return processData;
-	}
-
-	public void addAsksToMap(Map<String, Ask> map, List<Ask> askList) {
-
-		askList.stream().forEach(a -> {
-			String code = a.getQuestion().getAttribute().getCode();
-			map.put(code, a);
-			if (a != null && a.getChildAsks() != null) {
-				addAsksToMap(map, a.getChildAsks());
-			}
-		});
 	}
 
 	/**

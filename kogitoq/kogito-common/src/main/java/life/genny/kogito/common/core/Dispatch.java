@@ -4,6 +4,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +78,7 @@ public class Dispatch {
 	public void cacheAsks(ProcessData processData, List<Ask> asks) {
 
 		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
-		CacheUtils.putObject(userToken.getProductCode(), key, asks);
+		CacheUtils.putObject(userToken.getProductCode(), key, asks.toArray());
 		log.info("Asks cached for " + processData.getProcessId());
 	}
 
@@ -90,10 +91,8 @@ public class Dispatch {
 	public List<Ask> fetchAsks(ProcessData processData) {
 
 		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
-		List<Ask> asks = CacheUtils.getObject(userToken.getProductCode(), key, List.class);
-		log.info("Asks fetched for " + processData.getProcessId());
-
-		return asks;
+		Ask[] asks = CacheUtils.getObject(userToken.getProductCode(), key, Ask[].class);
+		return Arrays.asList(asks);
 	}
 
 	/**
