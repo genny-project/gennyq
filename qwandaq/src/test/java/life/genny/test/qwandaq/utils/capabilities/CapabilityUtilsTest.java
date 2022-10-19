@@ -68,7 +68,8 @@ public class CapabilityUtilsTest extends BaseTestCase {
         );
 
         for(TestCase<String, String> test : tests) {
-            assertEquals(test.getExpected(), test.test());
+            // assertEquals(test.getExpected(), test.test());
+            test.verify();
         }
 
     }
@@ -149,7 +150,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
 
     @Test
     public void mostPermissiveTest() {
-        Capability capability1 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, NONE), new CapabilityNode(EDIT, SELF));
+        Capability capability1 = new Capability("CAP_ADMIN", new CapabilityNode(EDIT, SELF));
         Capability capability2 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, SELF));
         Capability capability3 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, ALL));
     }
@@ -168,7 +169,6 @@ public class CapabilityUtilsTest extends BaseTestCase {
                     .setInput(new CapabilityNode(ADD, ALL))
                     .setExpected(new CapabilityNode[] {
                         new CapabilityNode(ADD, SELF),
-                        new CapabilityNode(ADD, NONE)
                     })
                     .setTest(testFunc)
                     .build()
@@ -186,8 +186,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         Set<CapabilityNode> capabilitySet = new HashSet<>(Arrays.asList(
             new CapabilityNode[] {
                 new CapabilityNode(ADD, ALL),
-                new CapabilityNode(EDIT, SELF),
-                new CapabilityNode(VIEW, NONE)
+                new CapabilityNode(EDIT, SELF)
             }
         ));
 

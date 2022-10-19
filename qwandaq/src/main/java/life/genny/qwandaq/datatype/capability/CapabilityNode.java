@@ -98,6 +98,7 @@ public class CapabilityNode {
 	 */
 	public static CapabilityNode parseCapability(String capabilityString) 
 		throws BadDataException {
+		System.out.println("Parsing: " + capabilityString);
 		CapabilityMode capMode;
 		PermissionMode permMode;
 

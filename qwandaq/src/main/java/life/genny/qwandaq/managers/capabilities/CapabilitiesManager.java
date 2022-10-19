@@ -462,7 +462,7 @@ public class CapabilitiesManager extends Manager {
 		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
 	}
 
-	public static String getModeString(List<CapabilityNode> capabilities) {
+	public static String getModeString(Collection<CapabilityNode> capabilities) {
 		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
 	}
 

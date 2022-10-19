@@ -50,7 +50,9 @@ import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.converter.MoneyConverter;
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 
 @Entity
@@ -184,7 +186,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	private Boolean confirmationFlag = false;
 
+	// // please do not send this out to frontend no matter what
+	// @JsonbTransient
+	// @JsonIgnore
+	@Column(name = "requirement")
+	@Convert(converter = CapabilityConverter.class)
+	private Capability requirement;
+
 	public EntityAttribute() {
+
 	}
 
 	/**
@@ -200,15 +210,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 *                   attributes)
 	 */
 	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
-		autocreateCreated();
-		setBaseEntity(baseEntity);
-		setAttribute(attribute);
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-							// attribute from scoring.
-		}
-		setWeight(weight);
-		setReadonly(false);
+		this(baseEntity, attribute, weight, null);
 	}
 
 	/**
@@ -238,7 +240,9 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		if (value != null) {
 			setValue(value);
 		}
+		setReadonly(false);
 	}
+
 
 	/**
 	 * @return EntityAttributeId
@@ -1315,4 +1319,8 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		this.confirmationFlag = confirmationFlag;
 	}
 
+
+	public boolean isLocked() {
+		return requirement != null;
+	}
 }

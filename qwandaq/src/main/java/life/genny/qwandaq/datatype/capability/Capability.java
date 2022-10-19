@@ -1,5 +1,6 @@
 package life.genny.qwandaq.datatype.capability;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +20,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * @author Bryn Meachem
  */
 @RegisterForReflection
-public class Capability {
+public class Capability implements Serializable {
     
     public final String code;
 
@@ -29,6 +30,10 @@ public class Capability {
     public Capability(String capabilityCode, Set<CapabilityNode> nodes) {
         this.code = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
         this.nodes = nodes;
+    }
+
+    public Capability(String capabilityCode, String capNodes) {
+        this(capabilityCode, CapabilitiesManager.deserializeCapArray(capNodes));
     }
 
     public Capability(String capabilityCode, CapabilityNode... nodes) {
