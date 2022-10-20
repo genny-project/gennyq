@@ -1,5 +1,6 @@
 package life.genny.test.utils.suite;
 
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.callbacks.test.FITestVerificationCallback;
 
@@ -10,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Bryn Meachem
  */
 public class TestCase<I, E> {
+    public static final int EQUALS_LENGTH = 50;
     private final Input<I> input;
     private final Expected<E> expected;
 
@@ -29,11 +31,31 @@ public class TestCase<I, E> {
     }
 
     public E test() {
-        return testCallback.test(input).expected;
+        System.out.println(CommonUtils.equalsBreak(EQUALS_LENGTH) + "\n[!] Running test: " + this);
+        E result = testCallback.test(input).expected;
+        printData("Input", input.input);
+        printData("Expected", expected.expected);
+        printData("Result", result);
+        return result;
+    }
+    
+    private void printData(String tag, Object object) {
+        if(!object.getClass().isArray()) {
+            System.out.println("       "+ tag +": " + object);
+        } else {
+            Object[] objects = (Object[])object;
+            System.out.println("       "+ tag +": " + CommonUtils.getArrayString(objects));
+        }
     }
 
     public void verify() {
-        verificationCallback.assertFunction(test(), expected.expected);
+        E result = test();
+        try { 
+            verificationCallback.assertFunction(result, expected.expected);
+        } catch(AssertionError e) {
+            System.err.println("TEST FAILED: " + this);
+            assert(false);
+        }
     }
 
     public E getExpected() {
@@ -89,8 +111,10 @@ public class TestCase<I, E> {
         
         public Builder(JUnitTester<I, E> tester) {
             this.tester = tester;
-            testCallback = tester.testCallback;
-            verificationCallback = tester.verificationCallback;
+            if(tester != null) {
+                testCallback = tester.testCallback;
+                verificationCallback = tester.verificationCallback;
+            }
         }
 
         public Builder<I, E> setTest(FITestCallback<Input<I>, Expected<E>> testCallback) {
@@ -132,7 +156,20 @@ public class TestCase<I, E> {
             return tester;
         }
 
-        public TestCase<I, E> buildTest() {
+        public TestCase<I, E> buildTest() 
+            throws IllegalArgumentException {
+            if(testCallback == null) {
+                throw new IllegalArgumentException("No test function set for test: " + name);
+            }
+
+            if(input == null) {
+                throw new IllegalArgumentException("No input set for test: " + name);
+            }
+
+            if(expected == null) {
+                throw new IllegalArgumentException("No Expected result set for test: " + name);
+            }
+
             return new TestCase<I, E>(name, input, expected, testCallback, verificationCallback != null ? verificationCallback : TestCase::defaultAssertion);
         }
     }

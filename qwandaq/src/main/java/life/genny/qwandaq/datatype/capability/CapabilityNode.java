@@ -1,6 +1,8 @@
 package life.genny.qwandaq.datatype.capability;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.jboss.logging.Logger;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
@@ -10,6 +12,8 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
  */
 @RegisterForReflection
 public class CapabilityNode {
+	private static final Logger log = Logger.getLogger(CapabilityNode.class);
+	
 	// Leave this here please
 	public static final String DELIMITER = ":";
 
@@ -62,11 +66,15 @@ public class CapabilityNode {
 		// if -1 then this is less permissive
 		// if 0 then they are equal
 		// if 1 then this is more permissive
-		int ord = this.permMode.compareTo(other.permMode);
+		int ord = other.permMode.compareTo(this.permMode);
+		
+		CapabilityNode result;
 		if(ord > 0)
-			return mostPermissive ? other : this;
+			result = mostPermissive ? other : this;
 		else
-			return mostPermissive ? this : other;
+			result = mostPermissive ? this : other;
+
+		return result;
 	}
 
 	/**
@@ -98,9 +106,13 @@ public class CapabilityNode {
 	 */
 	public static CapabilityNode parseCapability(String capabilityString) 
 		throws BadDataException {
-		System.out.println("Parsing: " + capabilityString);
 		CapabilityMode capMode;
 		PermissionMode permMode;
+
+		if(capabilityString.length() != 3) {
+			log.error("Expected length 3. Got: " + capabilityString.length());
+			throw new BadDataException("Could not deserialize capability node: " + capabilityString);
+		}
 
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
 		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));

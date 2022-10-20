@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
 import life.genny.qwandaq.datatype.capability.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.PermissionMode;
@@ -119,11 +120,51 @@ public class CapabilityUtilsTest extends BaseTestCase {
         unitTester.assertAll();
     }
 
+    private String mergeTestName(Capability c1, Capability c2, boolean mostPermissive) {
+        return (mostPermissive ? "Most" : "Least")
+             + " Permissive Test "
+             + c1.nodeString() + " & " + c2.nodeString();
+    }
+
     @Test
-    public void mostPermissiveTest() {
-        Capability capability1 = new Capability("CAP_ADMIN", new CapabilityNode(EDIT, SELF));
-        Capability capability2 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, SELF));
-        Capability capability3 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, ALL));
+    public void mergeTest() {
+        JUnitTester<Capability, Capability> tester = new JUnitTester<Capability, Capability>();
+        
+        Capability capability1 = new CapabilityBuilder("CAP_ADMIN").add(SELF).buildCap();
+        Capability capability2 = new CapabilityBuilder("CAP_ADMIN").edit(SELF).buildCap();
+        Capability capability3 = new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap();
+
+        tester.setTest((input) -> {
+            return new Expected<Capability>(capability1.merge(input.input, true)); // most permissive test
+        })
+        
+        .createTest(mergeTestName(capability1, capability2, true))
+        .setInput(capability2)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(SELF).edit(SELF).buildCap())
+        .build()
+        
+        .createTest(mergeTestName(capability1, capability3, true))
+        .setInput(capability3)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap())
+        .build()
+        
+        .assertAll()
+
+        .setTest((input) -> {
+            return new Expected<Capability>(capability1.merge(input.input, false)); // least permissive test
+        })
+
+        .createTest(mergeTestName(capability1, capability2, false))
+        .setInput(capability2)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(SELF).edit(SELF).buildCap())
+        .build()
+
+        .createTest(mergeTestName(capability1, capability3, false))
+        .setInput(capability3)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(SELF).buildCap())
+        .build()
+
+        .assertAll();
     }
 
     @Test
@@ -139,6 +180,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         .setInput(new CapabilityNode(ADD, ALL))
         .setExpected(new CapabilityNode[] {
             new CapabilityNode(ADD, SELF),
+            new CapabilityNode(ADD, NONE)
         }).build()
         .assertAll();
 

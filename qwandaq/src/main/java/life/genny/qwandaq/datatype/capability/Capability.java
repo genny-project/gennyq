@@ -3,6 +3,7 @@ package life.genny.qwandaq.datatype.capability;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,11 +38,11 @@ public class Capability implements Serializable {
     }
 
     public Capability(String capabilityCode, CapabilityNode... nodes) {
-        this(capabilityCode, new HashSet<>(Arrays.asList(nodes)));
+        this(capabilityCode, new LinkedHashSet<>(Arrays.asList(nodes)));
     }
 
     public Capability(String capabilityCode, List<CapabilityNode> nodes) {
-        this(capabilityCode, new HashSet<>(nodes));
+        this(capabilityCode, new LinkedHashSet<>(nodes));
     }
 
     /**
@@ -65,11 +66,15 @@ public class Capability implements Serializable {
         if(this.nodes.isEmpty()) {
             return other;
         }
+       
         // For each node, find the most permissive nodes
         for(CapabilityNode node : this.nodes) {
             for(CapabilityNode otherNode : other.nodes) {
                 if(node.capMode.equals(otherNode.capMode)) {
                     newNodes.add(node.compareNodes(otherNode, mostPermissive));
+                } else {
+                    newNodes.add(otherNode);
+                    newNodes.add(node);
                 }
             }
         }
@@ -123,6 +128,10 @@ public class Capability implements Serializable {
         }
 
         return true;
+    }
+
+    public String nodeString() {
+        return CommonUtils.getArrayString(nodes);
     }
 
     @Override

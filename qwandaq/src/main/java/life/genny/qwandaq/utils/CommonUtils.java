@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
@@ -168,17 +169,20 @@ public class CommonUtils {
     public static <T> String getArrayString(Collection<T> list, FIGetStringCallBack<T> stringCallback) {
         StringBuilder result = new StringBuilder("[");
         Iterator<T> iterator = list.iterator();
-        for(int i = 0; i < list.size() - 1; i++) {
+        for(int i = 0; i < list.size(); i++) {
             T object = iterator.next();
             result.append("\"")
-                .append(stringCallback.getString(object))
-                .append("\",");
+                .append(stringCallback.getString(object));
+            if(iterator.hasNext())
+                result.append("\",");
+            else
+                result.append("\"");
         }
 
-        T object = iterator.next();
-        result.append("\"")
-            .append(stringCallback.getString(object))
-            .append("\"]");
+        // T object = iterator.next();
+        // result.append("\"")
+        //     .append(stringCallback.getString(object))
+        result.append("]");
         return result.toString();
     }
 
@@ -229,7 +233,13 @@ public class CommonUtils {
      * @return
      */
     public static <T> List<T> getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        String[] components = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").split(",");
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        
+
+		if(StringUtils.isBlank(arrayString))
+            return new ArrayList<>(0);
+
+        String components[] = arrayString.split(",");
         List<T> newList = new ArrayList<>(components.length);
         for(String component : components) {
             newList.add(objectCallback.getObject(component));

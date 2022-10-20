@@ -10,8 +10,6 @@ import life.genny.test.utils.suite.JUnitTester;
 
 import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
 
-import static life.genny.test.utils.suite.TestCase.Builder;
-
 import static life.genny.test.utils.suite.TestCase.Expected;
 
 public class CapabilitiesColumnTests extends BaseTestCase {
@@ -48,7 +46,6 @@ public class CapabilitiesColumnTests extends BaseTestCase {
 
     @Test
     public void deserialize() {
-        Builder<String, Capability> builder = new Builder<>();
         new JUnitTester<String, Capability>()
         .setTest((input) -> {
             return new Expected<>(CapTester.convertToEntityAttribute(input.input));

@@ -31,7 +31,6 @@ public class CapabilityConverter implements AttributeConverter<Capability, Strin
             log.error("Delimiter: " + ARRAY_START);
             throw new BadDataException("dbData: " + dbData);
         }
-
         String code = dbData.substring(0, delimIndex);
         String nodes = dbData.substring(delimIndex);
         return new Capability(code, nodes);
