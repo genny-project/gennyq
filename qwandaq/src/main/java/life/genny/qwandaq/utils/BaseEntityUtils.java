@@ -189,7 +189,7 @@ public class BaseEntityUtils {
 		// updates are working.
 		BaseEntity entity = null;
 		try {
-			// entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
+			entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
 		} catch (NullPointerException e) {
 			log.error("Error getting BaseEntity from Cache, trying db");
 		}
@@ -217,6 +217,7 @@ public class BaseEntityUtils {
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode + " but "
 						+ (entity == null ? "not found in db" : "found in db"));
+				CacheUtils.putObject(productCode, code, entity);
 			} catch (NoResultException e) {
 				throw new ItemNotFoundException(productCode, code);
 			}
@@ -299,7 +300,7 @@ public class BaseEntityUtils {
 		try {
 			BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
 			return newBe;
-		} catch(ItemNotFoundException e) {
+		} catch (ItemNotFoundException e) {
 			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
 			return null;
 		}
@@ -388,7 +389,7 @@ public class BaseEntityUtils {
 	 * @return A clean string
 	 */
 	public String cleanUpAttributeValue(String value) throws NullParameterException {
-		if(value == null) 
+		if (value == null)
 			throw new NullParameterException("value");
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
