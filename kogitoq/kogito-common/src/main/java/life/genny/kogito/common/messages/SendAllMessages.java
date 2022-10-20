@@ -17,6 +17,8 @@ import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.models.ServiceToken;
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
+
 public class SendAllMessages extends MessageSendingStrategy {
 
     @Inject
@@ -67,6 +69,14 @@ public class SendAllMessages extends MessageSendingStrategy {
 
         searchEntity.setRealm(productCode);
 
+        if (searchUtils == null) {
+            log.info("searchUtils is null");
+
+        }
+        if (searchUtils == null) {
+
+            searchUtils = Arc.container().select(SearchUtils.class).get();
+        }
         List<String> messageCodes = searchUtils.searchBaseEntityCodes(searchEntity);
 
         if (messageCodes != null) {

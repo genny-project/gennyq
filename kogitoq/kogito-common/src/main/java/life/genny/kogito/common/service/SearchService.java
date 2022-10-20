@@ -116,7 +116,7 @@ public class SearchService {
 
 		log.info("Sending Name Search :: " + searchCode);
 
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), 
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
 				searchCode, SearchEntity.class);
 
 		// TODO: remove this from alyson
