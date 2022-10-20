@@ -23,6 +23,7 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QBulkMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -30,6 +31,7 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class TaskService {
@@ -49,6 +51,8 @@ public class TaskService {
 	BaseEntityUtils beUtils;
 	@Inject
 	DefUtils defUtils;
+	@Inject
+	SearchUtils search;
 
 	@Inject
 	NavigationService navigationService;
@@ -120,7 +124,14 @@ public class TaskService {
 		processData.setLocation(location);
 
 		// build and send data
-		dispatch.buildAndSend(processData, pcm);
+		QBulkMessage msg = dispatch.build(processData, pcm);
+		dispatch.sendData(msg);
+
+		// send searches
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
+			search.searchTable(code);
+		}
 	}
 
 	/**
@@ -192,12 +203,41 @@ public class TaskService {
 		BaseEntity definition = defUtils.getDEF(target);
 		processData.setDefinitionCode(definition.getCode());
 
-		// dispatch data
-		if (sourceCode.equals(userCode))
-			dispatch.buildAndSend(processData);
-
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
+
+		// dispatch data
+		if (!sourceCode.equals(userCode))
+			return processData;
+
+		// build data
+		QBulkMessage msg = dispatch.build(processData);
+		List<Ask> asks = msg.getAsks();
+		Map<String, Ask> flatMapOfAsks = dispatch.buildAskFlatMap(asks);
+
+		// handle non-readonly if necessary
+		if (dispatch.containsNonReadonly(flatMapOfAsks, processData)) {
+			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+			msg.add(processEntity);
+
+			qwandaUtils.storeProcessData(processData);
+			// only cache for non-readonly invocation
+			dispatch.cacheAsks(processData, asks);
+
+			// handle initial dropdown selections
+			// TODO: change to use flatMap
+			for (Ask ask : asks)
+				dispatch.handleDropdownAttributes(ask, processEntity, msg);
+		} else
+			msg.add(target);
+
+		dispatch.sendData(msg);
+
+		// send searches
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
+			search.searchTable(code);
+		}
 
 		return processData;
 	}
@@ -211,26 +251,20 @@ public class TaskService {
 	 */
 	public ProcessData answer(Answer answer, ProcessData processData) {
 
-		log.info("[$$$$] Received answer, dispatching");
-
 		// validate answer
 		if (!processAnswers.isValid(answer, processData))
 			return processData;
 
 		processData.getAnswers().add(answer);
 
-		//dispatch.buildAndSend(processData);
-		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
 		List<Ask> asks = dispatch.fetchAsks(processData);
-		dispatch.buildAskFlatMap(flatMapOfAsks, asks);
+		Map<String, Ask> flatMapOfAsks = dispatch.buildAskFlatMap(asks);
 
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 
-		QDataBaseEntityMessage baseEntityMessage = new QDataBaseEntityMessage(msg.getEntities());
-		baseEntityMessage.setToken(userToken.getToken());
-		baseEntityMessage.setReplace(true);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, baseEntityMessage);
+		// send data to FE
+		dispatch.sendData(msg);
 
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
@@ -246,22 +280,22 @@ public class TaskService {
 		
 		// construct bulk message
 		List<Ask> asks = dispatch.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
-		dispatch.buildAskFlatMap(flatMapOfAsks, asks);
+		Map<String, Ask> flatMapOfAsks = dispatch.buildAskFlatMap(asks);
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		if (qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
+		if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
 			return false;
 
-		// check uniqueness
-		if (processAnswers.checkUniqueness(processData))
+		// check uniqueness in answers
+		if (!processAnswers.checkUniqueness(processData))
 			return false;
+
+		// save answer
+		processAnswers.saveAllAnswers(processData);
 
 		// clear cache entry
 		qwandaUtils.clearProcessData(processData.getProcessId());
-		// save answer
-		processAnswers.saveAllAnswers(processData);
 
 		return true;
 	}
@@ -277,7 +311,7 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		// resend BaseEntities
-		dispatch.buildAndSend(processData);
+		dispatch.build(processData);
 
 		return processData;
 	}

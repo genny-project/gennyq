@@ -8,6 +8,7 @@ public class S2SData implements Serializable {
 
     public enum EAbortReason {
         NONE,
+        ERROR,
         CANCEL,
         TIMEOUT,
     }
@@ -34,7 +35,7 @@ public class S2SData implements Serializable {
 
     @JsonIgnore
     public Boolean isAborted() {
-        return !abortReason.equals(EAbortReason.NONE);
+        return !abortReason.equals(EAbortReason.ERROR);
     }
 
     @JsonIgnore

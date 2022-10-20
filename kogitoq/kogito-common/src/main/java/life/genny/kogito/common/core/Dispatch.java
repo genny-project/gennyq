@@ -73,7 +73,7 @@ public class Dispatch {
 	 * Cache an ask for a processId and questionCode combination.
 	 * 
 	 * @param processData The processData to cache for
-	 * @param asks        e ask to cache
+	 * @param asks        ask to cache
 	 */
 	public void cacheAsks(ProcessData processData, List<Ask> asks) {
 
@@ -96,12 +96,38 @@ public class Dispatch {
 	}
 
 	/**
+	 * @param asks
+	 */
+	public Map<String, Ask> buildAskFlatMap(List<Ask> asks) {
+		return buildAskFlatMap(new HashMap<String, Ask>(), asks);
+	}
+
+	/**
+	 * @param map
+	 * @param asks
+	 */
+	public Map<String, Ask> buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
+
+		if (asks == null)
+			return map;
+
+		for (Ask ask : asks) {
+			if (ask.hasChildren())
+				buildAskFlatMap(map, ask.getChildAsks());
+			else
+				map.put(ask.getQuestion().getAttribute().getCode(), ask);
+		}
+
+		return map;
+	}
+
+	/**
 	 * Send Asks, PCMs and Searches
 	 *
 	 * @param processData
 	 */
-	public void buildAndSend(ProcessData processData) {
-		buildAndSend(processData, null);
+	public QBulkMessage build(ProcessData processData) {
+		return build(processData, null);
 	}
 
 	/**
@@ -110,7 +136,7 @@ public class Dispatch {
 	 * @param processData
 	 * @param pcm
 	 */
-	public void buildAndSend(ProcessData processData, PCM pcm) {
+	public QBulkMessage build(ProcessData processData, PCM pcm) {
 
 		// fetch source and target entities
 		String sourceCode = processData.getSourceCode();
@@ -148,19 +174,6 @@ public class Dispatch {
 		if (questionCode != null)
 			pcm.setQuestionCode(questionCode);
 
-		Map<String, Ask> flatMapOfAsks = new HashMap<String, Ask>();
-		List<Ask> asks = msg.getAsks();
-		buildAskFlatMap(flatMapOfAsks, asks);
-
-		// only build processEntity if answers are expected
-		findReadonlyAttributeCodes(flatMapOfAsks, processData);
-		List<String> attributeCodes = processData.getAttributeCodes();
-		log.info("Non-Readonly Attributes: " + attributeCodes);
-		if (!attributeCodes.isEmpty()) {
-			handleNonReadonly(processData, asks, flatMapOfAsks, msg);
-		} else
-			msg.add(target);
-
 		/**
 		 * update parent pcm
 		 * NOTE: the null check protects from cases where 
@@ -177,41 +190,25 @@ public class Dispatch {
 			msg.add(parentPCM);
 		}
 
-		// seperate into msgs
-		// TODO: implement new bulk message in alyson
-		QDataAskMessage asksMessage = new QDataAskMessage(msg.getAsks());
-		asksMessage.setToken(userToken.getToken());
-		asksMessage.setReplace(true);
-		QDataBaseEntityMessage baseEntityMessage = new QDataBaseEntityMessage(msg.getEntities());
-		baseEntityMessage.setToken(userToken.getToken());
-		baseEntityMessage.setReplace(true);
-
-		// send to user
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, asksMessage);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, baseEntityMessage);
-
-		// send searches
-		for (String code : processData.getSearches()) {
-			log.info("Sending search: " + code);
-			search.searchTable(code);
-		}
+		return msg;
 	}
 
 	/**
-	 * @param map
-	 * @param asks
+	 * @param processData
+	 * @param msg
+	 * @return
 	 */
-	public void buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
+	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks, ProcessData processData) {
 
-		if (asks == null)
-			return;
+		// only build processEntity if answers are expected
+		findReadonlyAttributeCodes(flatMapOfAsks, processData);
+		List<String> attributeCodes = processData.getAttributeCodes();
+		log.info("Non-Readonly Attributes: " + attributeCodes);
 
-		for (Ask ask : asks) {
-			if (ask.hasChildren())
-				buildAskFlatMap(map, ask.getChildAsks());
-			else
-				map.put(ask.getQuestion().getAttribute().getCode(), ask);
-		}
+		if (!attributeCodes.isEmpty())
+			return true;
+
+		return false;
 	}
 
 	/**
@@ -223,11 +220,7 @@ public class Dispatch {
 	 * @param flatMapOfAsks
 	 * @param msg
 	 */
-	public void handleNonReadonly(ProcessData processData, List<Ask> asks, Map<String, Ask> flatMapOfAsks, 
-			QBulkMessage msg) {
-
-		// only cache for non-readonly invocation
-		cacheAsks(processData, asks);
+	public BaseEntity handleNonReadonly(ProcessData processData, List<Ask> asks, Map<String, Ask> flatMapOfAsks, QBulkMessage msg) {
 
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -244,18 +237,15 @@ public class Dispatch {
 		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapOfAsks);
 		flatMapOfAsks.get(Attribute.EVT_SUBMIT).setDisabled(!answered);
+		// this is ok since flatmap is referencing asks
+		msg.getAsks().addAll(asks);
 
 		// filter unwanted attributes
 		List<String> attributeCodes = processData.getAttributeCodes();
 		privacyFilter(processEntity, attributeCodes);
+		log.info("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
 
-		log.info("Sending " + processEntity.getBaseEntityAttributes().size() + " processBE attributes");
-		msg.add(processEntity);
-
-		// handle initial dropdown selections
-		// TODO: change to use flatMap
-		for (Ask ask : asks)
-			handleDropdownAttributes(ask, processEntity, msg);
+		return processEntity;
 	}
 
 	/**
@@ -314,7 +304,6 @@ public class Dispatch {
 		} else {
 			// use pcm target if one is specified
 			String targetCode = pcm.getValueAsString(Attribute.PRI_TARGET_CODE);
-			log.info("Target = (" + targetCode + ")");
 			if (targetCode != null && !targetCode.equals(target.getCode())) {
 				// merge targetCode
 				Map<String, Object> ctxMap = new HashMap<>();
@@ -502,6 +491,46 @@ public class Dispatch {
 
 			KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
 		}
+	}
+
+	/**
+	 * @param msg
+	 */
+	public void sendData(QBulkMessage msg) {
+
+		if (!msg.getEntities().isEmpty())
+			sendBaseEntities(msg.getEntities());
+		else
+			log.error("No BEs to send!");
+
+		if (!msg.getAsks().isEmpty())
+			sendAsks(msg.getAsks());
+		else
+			log.error("No Asks to send!");
+	}
+
+	/**
+	 * @param baseEntities
+	 */
+	public void sendBaseEntities(List<BaseEntity> baseEntities) {
+
+		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntities);
+		msg.setReplace(true);
+		msg.setToken(userToken.getToken());
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
+
+	/**
+	 * @param asks
+	 */
+	public void sendAsks(List<Ask> asks) {
+
+		QDataAskMessage msg = new QDataAskMessage(asks);
+		msg.setReplace(true);
+		msg.setToken(userToken.getToken());
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
 }

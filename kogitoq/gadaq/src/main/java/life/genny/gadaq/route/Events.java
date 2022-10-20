@@ -89,7 +89,7 @@ public class Events {
 		}
 
 		// reset
-		if ("QUE_CANCEL".equals(code)) {
+		if ("QUE_RESET".equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
 			return;
 		}
@@ -132,19 +132,20 @@ public class Events {
 
 		// add item
 		if (code.startsWith("QUE_ADD_.*")) {
+			log.info("Add Item received");
 			code = StringUtils.removeStart(code, "QUE_ADD_");
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
 
-			if (!"PER".equals(prefix))
+			if ("PER".equals(prefix)) {
+				log.info("Adding Person " + code);
+				JsonObject json = Json.createObjectBuilder()
+						.add("definitionCode", "DEF_"+code)
+						.add("sourceCode", userToken.getUserCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
-
-			JsonObject json = Json.createObjectBuilder()
-					.add("definitionCode", "DEF_"+code)
-					.add("sourceCode", userToken.getUserCode())
-					.build();
-
-			kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
-			return;
+			}
 		}
 
 		// edit item

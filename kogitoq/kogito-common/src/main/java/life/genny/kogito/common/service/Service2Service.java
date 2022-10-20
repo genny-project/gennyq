@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.S2SData;
+import life.genny.kogito.common.models.S2SData.EAbortReason;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.ServiceToken;
@@ -57,6 +58,9 @@ public class Service2Service {
 	 * @return The updated data object
 	 */
 	public S2SData addToken(S2SData data) {
+		log.info("Adding token to data before sending");
+		log.info("AbortReason = " + data.getAbortReason().toString());
+		data.setAbortReason(EAbortReason.NONE);
 		if (userToken == null) {
 			// We need to fetch the latest token for the sourceUser
 			log.debug(data.getSourceCode() + ": No token found, fetching latest token");
@@ -81,6 +85,7 @@ public class Service2Service {
 				}
 				userToken = new UserToken(userTokenStr);
 			}
+			log.info("Token Added");
 			data.setToken(userToken.getToken());
 			//log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 		}

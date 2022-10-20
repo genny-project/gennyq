@@ -243,6 +243,11 @@ public class TopologyProducer {
 			return false;
 		}
 
+		if (processData.getAttributeCodes() == null) {
+			log.error("AttributeCodes null");
+			return blacklist();
+		}
+
 		if (!processData.getAttributeCodes().contains(attributeCode)) {
 			log.error("AttributeCode " + attributeCode + " does not existing");
 			return blacklist();
