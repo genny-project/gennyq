@@ -118,7 +118,6 @@ public class ExternalConsumerConfig {
      * @param router {@link Router } Vertx router to set the routes
      */
     public void init(@Observes Router router) {
-        log.info("route : " + router.route().getPath());
         SockJSHandlerOptions sockOptions = new SockJSHandlerOptions().setHeartbeatInterval(2000);
         SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
         sockJSHandler.bridge(setBridgeOptions(), handler::handleConnectionTypes);
