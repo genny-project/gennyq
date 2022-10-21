@@ -67,6 +67,8 @@ export CORS_URL=http://localhost:3000|http://localhost:5000|http://alyson.genny.
 
 set
 
+echo "mysql full url $GENNY_MYSQL_FULL_URL"
+echo "mysql url $MYSQL_URL"
 echo "infinispan url $GENNY_INFINISPAN_URL"
 echo "infinispan username $GENNY_INFINISPAN_CLIENT_AUTH_USERNAME"
 echo "infinispan password $GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD"
