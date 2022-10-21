@@ -103,7 +103,9 @@ public class Bridge {
             if ("internmatch".equals(cid)) {
                 cid = "alyson";
             }
-            props.setClientId(cid);
+//            props.setClientId(cid);
+            log.info("We force the client id to 'backend'");
+            props.setClientId("backend");
 
             // init colours
             String primary = project.getValueAsString("PRI_COLOR_PRIMARY");
