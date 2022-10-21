@@ -12,11 +12,14 @@ echo "raw host (target system) = ${rawhost}"
 
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
-export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
+#export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
+export GENNY_KEYCLOAK_URL=https://keycloak-office.gada.io
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
-export GENNY_CLIENT_ID=kogito-console-quarkus
-export GENNY_REALM=internmatch
+#export GENNY_CLIENT_ID=kogito-console-quarkus
+export GENNY_CLIENT_ID=backend
+#export GENNY_REALM=internmatch
+export GENNY_REALM=gadatron
 export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
 export GENNY_KOGITO_DATAINDEX_WS_URL=ws://${rawhost}:8582
@@ -62,5 +65,8 @@ echo "genny data-index http $GENNY_KOGITO_DATAINDEX_HTTP_URL"
 echo "genny data-index ws $GENNY_KOGITO_DATAINDEX_WS_URL"
 echo "jobservice $GENNY_KOGITO_JOBSERVICE_URL"
 echo "kogito service $GENNY_KOGITO_SERVICE_URL"
+export MYSQL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
+export CORS_URL=http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|http://0.0.0.0:3000
+
 ./mvnw clean  quarkus:dev -Ddebug=5480 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
 
