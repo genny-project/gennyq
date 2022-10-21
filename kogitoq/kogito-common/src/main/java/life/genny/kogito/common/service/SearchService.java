@@ -95,7 +95,7 @@ public class SearchService {
 
 		// construct template and question codes from type
 		String template = Prefix.TPL + type + "_DETAIL_VIEW";
-		String questionCode = Prefix.QUE + type;
+		String questionCode = Prefix.QUE + type + "_PROFILE";
 
 		// send pcm with correct info
 		String userCode = userToken.getUserCode();
