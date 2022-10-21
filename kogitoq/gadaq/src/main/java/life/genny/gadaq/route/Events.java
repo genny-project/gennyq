@@ -131,13 +131,12 @@ public class Events {
 		}
 
 		// add item
-		if (code.startsWith("QUE_ADD_.*")) {
-			log.info("Add Item received");
+		if (code.startsWith("QUE_ADD_")) {
 			code = StringUtils.removeStart(code, "QUE_ADD_");
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
 
+			log.info("Prefix: " + code);
 			if ("PER".equals(prefix)) {
-				log.info("Adding Person " + code);
 				JsonObject json = Json.createObjectBuilder()
 						.add("definitionCode", "DEF_"+code)
 						.add("sourceCode", userToken.getUserCode())
