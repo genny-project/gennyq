@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.time.ZoneId;
 import java.util.PriorityQueue;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
 
 import org.jboss.logging.Logger;
@@ -19,13 +22,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class TimerData implements Serializable {
 
+    private static final Logger log = Logger.getLogger(TimerData.class);
+
+    static Jsonb jsonb = JsonbBuilder.create();
+
     static final Long DEFAULT_TIMER_INTERVAL_MIN = 1L;
     static final Long OFFSET_EXPIRY_SECONDS = 7L * 24L * 60L * 60L; // Add a week
     static final Integer PRIORITY_QUEUE_INITIAL_SIZE = 3;
     static final Long DEFAULT_TIMER_EXPIRY_SECONDS = 12448167224L; // This must be set during init, default to 20th June
                                                                    // 2364
-
-    static final Logger log = Logger.getLogger(TimerData.class);
 
     private Long intervalMin = DEFAULT_TIMER_INTERVAL_MIN; //
     private Long elapsedMin = 0L;
@@ -36,6 +41,10 @@ public class TimerData implements Serializable {
 
     private TimerEvent currentMilestone = null;
 
+    private TimerEvent[] timereventsArray = new TimerEvent[0];
+
+    @JsonbTransient
+    @JsonIgnore
     private List<TimerEvent> events = new ArrayList<>(PRIORITY_QUEUE_INITIAL_SIZE);
 
     public TimerData() {
@@ -138,6 +147,8 @@ public class TimerData implements Serializable {
         return expiryMin;
     }
 
+    @JsonbTransient
+    @JsonIgnore
     public void setExpiryMin(Long expiryMin) {
         this.expiryMin = expiryMin;
     }
@@ -146,7 +157,10 @@ public class TimerData implements Serializable {
         return expiryTimeStamp;
     }
 
+    @JsonbTransient
+    @JsonIgnore
     public List<TimerEvent> getEvents() {
+        // events = new ArrayList<>(Arrays.asList(timereventsArray));
         return events;
     }
 
@@ -155,6 +169,8 @@ public class TimerData implements Serializable {
     }
 
     public void setEvents(List<TimerEvent> events) {
+        timereventsArray = new TimerEvent[events.size()];
+        this.timereventsArray = events.toArray(timereventsArray);
         this.events = events;
     }
 
@@ -210,6 +226,14 @@ public class TimerData implements Serializable {
     public String getNowUTC() {
         return LocalDateTime.now().atZone(
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toString();
+    }
+
+    public TimerEvent[] getTimereventsArray() {
+        return timereventsArray;
+    }
+
+    public void setTimereventsArray(TimerEvent[] timereventsArray) {
+        this.timereventsArray = timereventsArray;
     }
 
     @Override
