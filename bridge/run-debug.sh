@@ -9,7 +9,7 @@ echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 
-export GENNY_SHOW_VALUES="TRUE"
+#export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=wayan.mastra@gada.io
 #export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
 export GENNY_KEYCLOAK_URL=https://keycloak-office.gada.io
@@ -21,7 +21,6 @@ export GENNY_CLIENT_ID=backend
 export GENNY_BACKEND_SECRET=zOdX04jHLY5lqoQ8zmMMTYDqZlYBnhLe
 export GENNY_CLIENT_SECRET=zOdX04jHLY5lqoQ8zmMMTYDqZlYBnhLe
 export GENNY_REALM=gadatron
-
 export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
 export GENNY_KOGITO_DATAINDEX_WS_URL=ws://${rawhost}:8582
@@ -60,10 +59,11 @@ export ENV_KEYCLOAK_REDIRECTURI=https://keycloak-office.gada.io/auth
 export RULESSERVICE_URL=http://wildfly-rulesservice
 export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
 
-export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
-export MYSQL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
-export CORS_URL=http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:3000|
+export GENNY_MYSQL_FULL_URL=$(echo "alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC")
+export MYSQL_URL=$(echo "alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC")
+export CORS_URL=$( echo "http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:3000|")
 
+echo "cors: $CORS_URL"
 echo "mysql full url $GENNY_MYSQL_FULL_URL"
 echo "mysql url $MYSQL_URL"
 echo "infinispan url $GENNY_INFINISPAN_URL"
@@ -75,6 +75,4 @@ echo "genny data-index ws $GENNY_KOGITO_DATAINDEX_WS_URL"
 echo "jobservice $GENNY_KOGITO_JOBSERVICE_URL"
 echo "kogito service $GENNY_KOGITO_SERVICE_URL"
 
-
 ./mvnw clean  quarkus:dev -Ddebug=5480 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
-

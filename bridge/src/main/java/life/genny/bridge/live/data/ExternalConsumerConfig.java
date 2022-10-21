@@ -1,14 +1,5 @@
 package life.genny.bridge.live.data;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.bridge.PermittedOptions;
@@ -17,6 +8,14 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * ExternalConsumerConfig --- This class contains configurations for {@link CorsHandler}
@@ -34,6 +33,8 @@ public class ExternalConsumerConfig {
     ExternalConsumer handler;
     @ConfigProperty(name = "environment")
     Optional<String> environment;
+
+    private static final Logger log = Logger.getLogger(ExternalConsumerConfig.class.getSimpleName());
 
 
     /**
@@ -117,6 +118,7 @@ public class ExternalConsumerConfig {
      * @param router {@link Router } Vertx router to set the routes
      */
     public void init(@Observes Router router) {
+        log.info("route : " + router.route().getPath());
         SockJSHandlerOptions sockOptions = new SockJSHandlerOptions().setHeartbeatInterval(2000);
         SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
         sockJSHandler.bridge(setBridgeOptions(), handler::handleConnectionTypes);
