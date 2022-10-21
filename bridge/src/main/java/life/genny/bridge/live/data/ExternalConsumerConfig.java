@@ -87,16 +87,15 @@ public class ExternalConsumerConfig {
     }
 
     public static CorsHandler cors() {
-        return CorsHandler.create(
-                        """
-                                http://localhost:\\d\\d|
-                                https://localhost:\\d\\d|
-                                http://localhost:\\d\\d\\d\\d|
-                                https://localhost:\\d\\d\\d\\d|
-                                https://.*.genny.life|https://.*.gada.io|
-                                """ + System.getenv("CORS_URLS")
-
-                ).allowCredentials(true)
+        String allowedUrl = """
+                http://localhost:\\d\\d|
+                https://localhost:\\d\\d|
+                http://localhost:\\d\\d\\d\\d|
+                https://localhost:\\d\\d\\d\\d|
+                https://.*.genny.life|https://.*.gada.io|
+                """ + System.getenv("CORS_URLS");
+        log.info("allowed url: " + allowedUrl);
+        return CorsHandler.create(allowedUrl).allowCredentials(true)
                 .allowedMethod(HttpMethod.GET)
                 .allowedMethod(HttpMethod.POST)
                 .allowedMethod(HttpMethod.PUT)
