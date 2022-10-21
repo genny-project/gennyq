@@ -61,10 +61,10 @@ export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
 
 export GENNY_MYSQL_FULL_URL=$(echo "alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC")
 export MYSQL_URL=$(echo "alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC")
-export CORS_URL=$( echo "http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:10020|")
-export INFINISPAN_URL=https://alyson.genny.life:11222
+export CORS_URLS=$(echo "http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:10020|https://172.17.0.1:10020|http://172.17.0.1:10020")
+export INFINISPAN_URL=alyson.genny.life:11222
 
-echo "cors: $CORS_URL"
+echo "cors: $CORS_URLS"
 echo "mysql full url $GENNY_MYSQL_FULL_URL"
 echo "mysql url $MYSQL_URL"
 echo "infinispan url $GENNY_INFINISPAN_URL"
