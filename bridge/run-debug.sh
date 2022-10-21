@@ -10,8 +10,11 @@ echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 
 
+export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
+export MYSQL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
+export CORS_URL=http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:3000
 export GENNY_SHOW_VALUES="TRUE"
-export GENNY_SERVICE_USERNAME=service
+export GENNY_SERVICE_USERNAME=wayan.mastra@gada.io
 #export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
 export GENNY_KEYCLOAK_URL=https://keycloak-office.gada.io
 export GENNY_API_URL=${gennyhost}:8280
@@ -60,10 +63,6 @@ export GENNY_MYSQL_DB=gennydb
 export ENV_KEYCLOAK_REDIRECTURI=https://keycloak-office.gada.io/auth
 export RULESSERVICE_URL=http://wildfly-rulesservice
 export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
-
-export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
-export MYSQL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
-export CORS_URL=http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:3000
 
 set
 
