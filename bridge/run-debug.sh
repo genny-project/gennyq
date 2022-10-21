@@ -60,6 +60,7 @@ export GENNY_MYSQL_DB=gennydb
 export ENV_KEYCLOAK_REDIRECTURI=https://keycloak-office.gada.io/auth
 export RULESSERVICE_URL=http://wildfly-rulesservice
 export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
+
 echo "infinispan url $GENNY_INFINISPAN_URL"
 echo "infinispan username $GENNY_INFINISPAN_CLIENT_AUTH_USERNAME"
 echo "infinispan password $GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD"
@@ -72,6 +73,7 @@ echo "kogito service $GENNY_KOGITO_SERVICE_URL"
 export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 export MYSQL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 export CORS_URL=http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:3000
+
 set
 
 ./mvnw clean  quarkus:dev -Ddebug=5480 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
