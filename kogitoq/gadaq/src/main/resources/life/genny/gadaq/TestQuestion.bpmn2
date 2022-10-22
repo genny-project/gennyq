@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_LGerADPZEDu_EOg7vBE29Q" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_frctoDQKEDu_EOg7vBE29Q" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_userCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_pcmCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_dataItem" structureRef="life.genny.kogito.common.models.S2SData"/>
+  <bpmn2:itemDefinition id="_buttonEventsItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_questionCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_targetCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_pcmCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_buttonEventsInputXItem" structureRef="String"/>
-  <bpmn2:collaboration id="_006574E8-6467-4973-9253-CB271D454B4B" name="Default Collaboration">
-    <bpmn2:participant id="_51594198-02A5-4956-993D-819859282122" name="Pool Participant" processRef="testQuestion"/>
+  <bpmn2:collaboration id="_6F4C8F0B-16C5-4C7B-9F07-321E4E8487E0" name="Default Collaboration">
+    <bpmn2:participant id="_29980A96-7785-4BC8-AFB2-A0F201C0816F" name="Pool Participant" processRef="testQuestion"/>
   </bpmn2:collaboration>
   <bpmn2:process id="testQuestion" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="TestQuestion" isExecutable="true" processType="Public">
     <bpmn2:property id="userCode" itemSubjectRef="_userCodeItem" name="userCode">
@@ -33,6 +34,7 @@
     </bpmn2:property>
     <bpmn2:property id="pcmCode" itemSubjectRef="_pcmCodeItem" name="pcmCode"/>
     <bpmn2:property id="data" itemSubjectRef="_dataItem" name="data"/>
+    <bpmn2:property id="buttonEvents" itemSubjectRef="_buttonEventsItem" name="buttonEvents"/>
     <bpmn2:sequenceFlow id="_A832089B-3865-42D6-B256-58009A73DD77" sourceRef="_761EC653-4739-4BBA-88A7-1FB0AA42E7F1" targetRef="_496161DE-DAA2-4912-A8CD-C8B49AA0FDB4"/>
     <bpmn2:sequenceFlow id="_99007DC9-6A6E-48E8-9E37-A4296F77988D" sourceRef="_496161DE-DAA2-4912-A8CD-C8B49AA0FDB4" targetRef="_D9E264A6-71A2-41B7-B9B4-1E89DF81CD2F"/>
     <bpmn2:sequenceFlow id="_E68BA3BA-49A5-46F6-9FE9-FF2FF63C16E4" sourceRef="_95D34FBC-5FED-45C7-B24F-59B03477DCA4" targetRef="_761EC653-4739-4BBA-88A7-1FB0AA42E7F1"/>
@@ -185,7 +187,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_LGerADPZEDu_EOg7vBE29Q</bpmn2:source>
-    <bpmn2:target>_LGerADPZEDu_EOg7vBE29Q</bpmn2:target>
+    <bpmn2:source>_frctoDQKEDu_EOg7vBE29Q</bpmn2:source>
+    <bpmn2:target>_frctoDQKEDu_EOg7vBE29Q</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

@@ -108,8 +108,8 @@ public class TaskService {
 
 		// fetch question from DB
 		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-		Ask events = createEvents(processData.getButtonEvents(), sourceCode, targetCode);
-		ask.addChildAsk(events);
+		Ask askEvents = createEvents(processData.getButtonEvents(), sourceCode, targetCode);
+		ask.addChildAsk(askEvents);
 		qwandaUtils.recursivelySetProcessId(ask, processId);
 
 		// cache them for fast fetching
