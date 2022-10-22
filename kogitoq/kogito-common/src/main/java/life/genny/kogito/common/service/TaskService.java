@@ -162,10 +162,10 @@ public class TaskService {
 	 * @param targetCode The target entity code
 	 * @return The events ask group
 	 */
-	public Ask createEvents(String events, String sourceCode, String targetCode) {
+	public Ask createEvents(String buttonEvents, String sourceCode, String targetCode) {
 
-		if (events == null)
-			throw new NullParameterException("events");
+		if (buttonEvents == null)
+			throw new NullParameterException("buttonEvents");
 
 		// fetch attributes and create group
 		// Attribute submit = qwandaUtils.getAttribute("EVT_SUBMIT");
@@ -177,11 +177,13 @@ public class TaskService {
 		ask.setRealm(userToken.getProductCode());
 
 		// split events string by comma
-		for (String event : events.split(",")) {
+		for (String buttonEvent : buttonEvents.split(",")) {
 			// create child and add to ask
-			Attribute attribute = qwandaUtils.createEvent(event, event);// new Attribute("EVT_" + event, event,
-																		// submit.getDataType());
-			Question question = new Question("QUE_" + event, event, attribute);
+			buttonEvent = buttonEvent.trim();
+			Attribute attribute = qwandaUtils.createEvent(buttonEvent, buttonEvent);// new Attribute("EVT_" + event,
+																					// event,
+			// submit.getDataType());
+			Question question = new Question("QUE_" + buttonEvent.toUpperCase(), buttonEvent, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.addChildAsk(child);
 		}
