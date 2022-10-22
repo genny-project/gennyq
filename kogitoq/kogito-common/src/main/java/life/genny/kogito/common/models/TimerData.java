@@ -165,7 +165,7 @@ public class TimerData implements Serializable {
 
     @JsonbTransient
     @JsonIgnore
-    public List<TimerEvent> getEvents() {
+    public List<TimerEvent> getTimerEvents() {
         return new ArrayList<>(Arrays.asList(timerEventsArray));
 
     }
@@ -174,7 +174,7 @@ public class TimerData implements Serializable {
         this.expiryTimeStamp = expiryTimeStamp;
     }
 
-    public void setEvents(List<TimerEvent> events) {
+    public void setTimerEvents(List<TimerEvent> events) {
         timerEventsArray = new TimerEvent[events.size()];
         this.timerEventsArray = events.toArray(timerEventsArray);
     }

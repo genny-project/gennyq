@@ -17,11 +17,9 @@ public class S2SData implements Serializable {
     private String targetCode;
     private String sourceCode;
     private String pcmCode;
-    private String events;
+    private String buttonEvents;
     private String token;
 
-    // NOTE: This is removed temporarily because it is messing with data-index
-    private TimerData timerData;
     private EAbortReason abortReason = EAbortReason.NONE;
 
     public S2SData() {
@@ -59,12 +57,12 @@ public class S2SData implements Serializable {
         this.pcmCode = pcmCode;
     }
 
-    public String getEvents() {
-        return events;
+    public String getButtonEvents() {
+        return buttonEvents;
     }
 
-    public void setEvents(String events) {
-        this.events = events;
+    public void setButtonEvents(String events) {
+        this.buttonEvents = events;
     }
 
     public String getToken() {
@@ -73,14 +71,6 @@ public class S2SData implements Serializable {
 
     public void setToken(String token) {
         this.token = token;
-    }
-
-    public TimerData getTimerData() {
-        return timerData;
-    }
-
-    public void setTimerData(TimerData timerData) {
-        this.timerData = timerData;
     }
 
     public String getProductCode() {
@@ -93,10 +83,10 @@ public class S2SData implements Serializable {
 
     @Override
     public String toString() {
-        return "S2SData (" + getProductCode() + ") [abortReason=" + abortReason + ", events=" + events + ", pcmCode="
+        return "S2SData (" + getProductCode() + ") [abortReason=" + abortReason + ", buttonEvents=" + buttonEvents
+                + ", pcmCode="
                 + pcmCode + ", questionCode="
-                + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + ", timerData="
-                + timerData + "]";
+                + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + "]";
     }
 
     public EAbortReason getAbortReason() {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_YjRMQO75EDqOA86kPayNTg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_LGerADPZEDu_EOg7vBE29Q" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_userCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
@@ -10,9 +10,9 @@
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_targetCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_pcmCodeInputXItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_eventsInputXItem" structureRef="String"/>
-  <bpmn2:collaboration id="_2AE4EFE9-250B-4FDA-B43C-28FA465F3D15" name="Default Collaboration">
-    <bpmn2:participant id="_FA9E6DB8-762A-41EF-8C23-DA338B54F4F4" name="Pool Participant" processRef="testQuestion"/>
+  <bpmn2:itemDefinition id="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_buttonEventsInputXItem" structureRef="String"/>
+  <bpmn2:collaboration id="_006574E8-6467-4973-9253-CB271D454B4B" name="Default Collaboration">
+    <bpmn2:participant id="_51594198-02A5-4956-993D-819859282122" name="Pool Participant" processRef="testQuestion"/>
   </bpmn2:collaboration>
   <bpmn2:process id="testQuestion" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="TestQuestion" isExecutable="true" processType="Public">
     <bpmn2:property id="userCode" itemSubjectRef="_userCodeItem" name="userCode">
@@ -59,13 +59,13 @@
         <bpmn2:dataInput id="_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_sourceCodeInputX" drools:dtype="String" itemSubjectRef="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_sourceCodeInputXItem" name="sourceCode"/>
         <bpmn2:dataInput id="_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_targetCodeInputX" drools:dtype="String" itemSubjectRef="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_targetCodeInputXItem" name="targetCode"/>
         <bpmn2:dataInput id="_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_pcmCodeInputX" drools:dtype="String" itemSubjectRef="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_pcmCodeInputXItem" name="pcmCode"/>
-        <bpmn2:dataInput id="_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_eventsInputX" drools:dtype="String" itemSubjectRef="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_eventsInputXItem" name="events"/>
+        <bpmn2:dataInput id="_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_buttonEventsInputX" drools:dtype="String" itemSubjectRef="__761EC653-4739-4BBA-88A7-1FB0AA42E7F1_buttonEventsInputXItem" name="buttonEvents"/>
         <bpmn2:inputSet>
           <bpmn2:dataInputRefs>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_questionCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_sourceCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_targetCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_pcmCodeInputX</bpmn2:dataInputRefs>
-          <bpmn2:dataInputRefs>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_eventsInputX</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_buttonEventsInputX</bpmn2:dataInputRefs>
         </bpmn2:inputSet>
       </bpmn2:ioSpecification>
       <bpmn2:dataInputAssociation>
@@ -88,10 +88,10 @@
         </bpmn2:assignment>
       </bpmn2:dataInputAssociation>
       <bpmn2:dataInputAssociation>
-        <bpmn2:targetRef>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_eventsInputX</bpmn2:targetRef>
+        <bpmn2:targetRef>_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_buttonEventsInputX</bpmn2:targetRef>
         <bpmn2:assignment>
           <bpmn2:from xsi:type="bpmn2:tFormalExpression"><![CDATA[Cancel,Update,Submit]]></bpmn2:from>
-          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_eventsInputX]]></bpmn2:to>
+          <bpmn2:to xsi:type="bpmn2:tFormalExpression"><![CDATA[_761EC653-4739-4BBA-88A7-1FB0AA42E7F1_buttonEventsInputX]]></bpmn2:to>
         </bpmn2:assignment>
       </bpmn2:dataInputAssociation>
     </bpmn2:callActivity>
@@ -185,7 +185,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_YjRMQO75EDqOA86kPayNTg</bpmn2:source>
-    <bpmn2:target>_YjRMQO75EDqOA86kPayNTg</bpmn2:target>
+    <bpmn2:source>_LGerADPZEDu_EOg7vBE29Q</bpmn2:source>
+    <bpmn2:target>_LGerADPZEDu_EOg7vBE29Q</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

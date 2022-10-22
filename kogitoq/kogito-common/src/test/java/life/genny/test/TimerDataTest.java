@@ -14,25 +14,25 @@ import io.quarkus.test.junit.QuarkusTest;
 import life.genny.kogito.common.models.TimerData;
 import life.genny.kogito.common.models.TimerEvent;
 
-@QuarkusTest
+//@QuarkusTest
 public class TimerDataTest {
     private static final Logger log = Logger.getLogger(TimerDataTest.class);
 
     Jsonb jsonb = JsonbBuilder.create();
 
-    @Test
+    // @Test
     public void TimerEventTest() {
-        log.info("This is the TimerEventTest");
-        log.info("This is the TimerEventTest2");
+        System.out.println("This is the TimerEventTest");
+        System.out.println("This is the TimerEventTest2");
 
         TimerEvent t1 = new TimerEvent(0L, "TEST_TIMER_1", "LNK_WARNING");
-        log.info("TimerEvent1 = " + t1);
+        System.out.println("TimerEvent1 = " + t1);
 
         TimerEvent t2 = new TimerEvent(5L, "TEST_TIMER_2", "LNK_DANGER");
-        log.info("TimerEvent2 = " + t2);
+        System.out.println("TimerEvent2 = " + t2);
 
         TimerEvent t3 = new TimerEvent(7L, "TEST_TIMER_3", "LNK_DEAD");
-        log.info("TimerEvent3 = " + t3);
+        System.out.println("TimerEvent3 = " + t3);
 
         TimerData timerData = new TimerData();
         // test sorting
@@ -40,7 +40,7 @@ public class TimerDataTest {
         timerData.add(t3);
         timerData.add(t2);
 
-        log.info("Timer Data = " + timerData);
+        System.out.println("Timer Data = " + timerData);
 
         timerData.updateElapsed();
 
@@ -48,19 +48,19 @@ public class TimerDataTest {
             Long currentTimeStampUTC = LocalDateTime.now().atZone(
                     ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
             if (timerData.isMilestone()) {
-                log.info(currentTimeStampUTC + " , elapsed:" + timerData.getElapsedMin() + ", isMilestone is "
+                System.out.println(currentTimeStampUTC + " , elapsed:" + timerData.getElapsedMin() + ", isMilestone is "
                         + (timerData.isMilestone() ? "TRUE" : "FALSE")
                         + ",isExpired is " + (timerData.hasExpired() ? "TRUE" : "FALSE") + ", "
                         + timerData.getNextMilestone());
 
                 timerData.updateMilestone();
-                log.info("");
+                System.out.println("");
             }
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            } catch (InterruptedException e) {
+            // try {
+            // TimeUnit.SECONDS.sleep(10);
+            // } catch (InterruptedException e) {
 
-            }
+            // }
             timerData.updateElapsed();
         }
 

@@ -7,6 +7,7 @@ import life.genny.qwandaq.Answer;
 
 /**
  * TODO: We need to document this
+ * 
  * @author Jasper Robison
  */
 @RegisterForReflection
@@ -16,30 +17,30 @@ public class ProcessData extends ProcessInstanceVariables {
 	private String sourceCode;
 	private String pcmCode;
 	private String definitionCode;
-	private String events;
+	private String buttonEvents;
 	private String processEntityCode;
 	private List<String> attributeCodes;
 	private List<Answer> answers;
 
 	public ProcessData() {
 		super();
-    }
+	}
 
-    public String getQuestionCode() {
-        return questionCode;
-    }
+	public String getQuestionCode() {
+		return questionCode;
+	}
 
-    public void setQuestionCode(String questionCode) {
-        this.questionCode = questionCode;
-    }
+	public void setQuestionCode(String questionCode) {
+		this.questionCode = questionCode;
+	}
 
-    public String getSourceCode() {
-        return sourceCode;
-    }
+	public String getSourceCode() {
+		return sourceCode;
+	}
 
-    public void setSourceCode(String sourceCode) {
-        this.sourceCode = sourceCode;
-    }
+	public void setSourceCode(String sourceCode) {
+		this.sourceCode = sourceCode;
+	}
 
 	public String getPcmCode() {
 		return pcmCode;
@@ -50,20 +51,20 @@ public class ProcessData extends ProcessInstanceVariables {
 	}
 
 	public String getDefinitionCode() {
-        return definitionCode;
-    }
+		return definitionCode;
+	}
 
-    public void setDefinitionCode(String definitionCode) {
-        this.definitionCode = definitionCode;
-    }
+	public void setDefinitionCode(String definitionCode) {
+		this.definitionCode = definitionCode;
+	}
 
-    public String getEvents() {
-        return events;
-    }
+	public String getButtonEvents() {
+		return buttonEvents;
+	}
 
-    public void setEvents(String events) {
-        this.events = events;
-    }
+	public void setButtonEvents(String buttonEvents) {
+		this.buttonEvents = buttonEvents;
+	}
 
 	public String getProcessEntityCode() {
 		return processEntityCode;

@@ -34,19 +34,26 @@ public class TaskService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject UserToken userToken;
+	@Inject
+	UserToken userToken;
 
-	@Inject QwandaUtils qwandaUtils;
-	@Inject DatabaseUtils databaseUtils;
-	@Inject BaseEntityUtils beUtils;
-	@Inject DefUtils defUtils;
+	@Inject
+	QwandaUtils qwandaUtils;
+	@Inject
+	DatabaseUtils databaseUtils;
+	@Inject
+	BaseEntityUtils beUtils;
+	@Inject
+	DefUtils defUtils;
 
-	@Inject NavigationService navigationService;
+	@Inject
+	NavigationService navigationService;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:%s";
 
 	/**
 	 * Get the user code of the current user.
+	 * 
 	 * @return The user code
 	 */
 	public String getCurrentUserCode() {
@@ -55,8 +62,9 @@ public class TaskService {
 
 	/**
 	 * Cache an ask for a processId and questionCode combination.
+	 * 
 	 * @param processData The processData to cache for
-	 * @param ask The ask to cache
+	 * @param ask         The ask to cache
 	 */
 	public void cacheAsks(ProcessData processData, Ask ask) {
 
@@ -66,6 +74,7 @@ public class TaskService {
 
 	/**
 	 * Fetch an ask from cache for a processId and questionCode combination.
+	 * 
 	 * @param processData The processData to fetch for
 	 * @return
 	 */
@@ -82,6 +91,7 @@ public class TaskService {
 
 	/**
 	 * Generate the asks and save them to the cache
+	 * 
 	 * @param processData The process data
 	 */
 	public Ask generateAsks(ProcessData processData) {
@@ -98,7 +108,7 @@ public class TaskService {
 
 		// fetch question from DB
 		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-		Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
+		Ask events = createEvents(processData.getButtonEvents(), sourceCode, targetCode);
 		ask.addChildAsk(events);
 		qwandaUtils.recursivelySetProcessId(ask, processId);
 
@@ -118,7 +128,7 @@ public class TaskService {
 	 * @return The processData json
 	 */
 	public ProcessData inputs(String questionCode, String sourceCode, String targetCode,
-			String pcmCode, String events, String processId) {
+			String pcmCode, String buttonEvents, String processId) {
 
 		log.info("==========================================");
 		log.info("processId : " + processId);
@@ -126,7 +136,7 @@ public class TaskService {
 		log.info("sourceCode : " + sourceCode);
 		log.info("targetCode : " + targetCode);
 		log.info("pcmCode : " + pcmCode);
-		log.info("events : " + events);
+		log.info("buttonEvents : " + buttonEvents);
 		log.info("==========================================");
 
 		ProcessData processData = new ProcessData();
@@ -134,7 +144,7 @@ public class TaskService {
 		processData.setSourceCode(sourceCode);
 		processData.setTargetCode(targetCode);
 		processData.setPcmCode(pcmCode);
-		processData.setEvents(events);
+		processData.setButtonEvents(buttonEvents);
 		processData.setProcessId(processId);
 		processData.setAnswers(new ArrayList<Answer>());
 
@@ -169,7 +179,8 @@ public class TaskService {
 		// split events string by comma
 		for (String event : events.split(",")) {
 			// create child and add to ask
-			Attribute attribute = qwandaUtils.createEvent(event, event);//new Attribute("EVT_" + event, event, submit.getDataType());
+			Attribute attribute = qwandaUtils.createEvent(event, event);// new Attribute("EVT_" + event, event,
+																		// submit.getDataType());
 			Question question = new Question("QUE_" + event, event, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.addChildAsk(child);
@@ -196,7 +207,6 @@ public class TaskService {
 		}
 	}
 
-
 	/**
 	 * Work out the DEF for the baseentity .
 	 *
@@ -219,6 +229,7 @@ public class TaskService {
 
 	/**
 	 * Find the involved attribute codes.
+	 * 
 	 * @param processData The process data json
 	 * @return process json
 	 */

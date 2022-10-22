@@ -65,14 +65,14 @@ public class Service2Service {
 
 			String userTokenStr = KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project);
 			userToken = new UserToken(userTokenStr);
-			//log.debug("generated userToken " + userToken);
+			// log.debug("generated userToken " + userToken);
 			data.setToken(userToken.getToken());
 			log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 
 		} else {
 			try {
 				String username = userToken.getUsername();
-				//log.debug("username is " + username); // flush out timer based npe
+				// log.debug("username is " + username); // flush out timer based npe
 			} catch (NullPointerException npe) {
 				String userTokenStr = KeycloakUtils.getImpersonatedToken(serviceToken, data.getSourceCode());
 				if (StringUtils.isBlank(userTokenStr)) {
@@ -81,12 +81,13 @@ public class Service2Service {
 				userToken = new UserToken(userTokenStr);
 			}
 			data.setToken(userToken.getToken());
-			//log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+			// log.infof("USER [%s] : [%s]", userToken.getUserCode(),
+			// userToken.getUsername());
 		}
 
 		// if (data.isAborted()) {
-		// 	log.info("Sending aborted message " + data.getAbortReason());
-		// 	return data;
+		// log.info("Sending aborted message " + data.getAbortReason());
+		// return data;
 		// }
 		return data;
 	}
@@ -99,8 +100,8 @@ public class Service2Service {
 	public void initialiseScope(S2SData data) {
 		log.info(data.toString());
 		// if (data.isAborted()) {
-		// 	log.info("Handle aborted message " + data.getAbortReason());
-		// 	userToken = new UserToken(data.getToken());
+		// log.info("Handle aborted message " + data.getAbortReason());
+		// userToken = new UserToken(data.getToken());
 		// }
 		scope.init(jsonb.toJson(data));
 
