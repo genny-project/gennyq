@@ -130,17 +130,14 @@ public class SearchService {
 	 * @param code
 	 * @param targetCode
 	 */
-	public void handleSearchPagination(String code, String targetCode) {
-
-		if (!(GennyConstants.PAGINATION_NEXT.equals(code)) && !(GennyConstants.PAGINATION_PREV.equals(code)))
-			throw new DebugException("Incorrect question code for pagination: " + code);
+	public void handleSearchPagination(String targetCode, Boolean reverse) {
 
 		// fetch search from cache
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
 
 		// find direction
 		Integer diff = searchEntity.getPageSize();
-		if (GennyConstants.PAGINATION_PREV.equals(code))
+		if (reverse)
 			diff = diff * -1;
 
 		// calculate new pageStart

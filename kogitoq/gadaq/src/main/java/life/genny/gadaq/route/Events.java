@@ -18,6 +18,7 @@ import life.genny.kogito.common.service.NavigationService;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
@@ -109,6 +110,15 @@ public class Events {
 		// detail view
 		if ("ACT_VIEW".equals(code)) {
 			search.sendDetailView(targetCode);
+			return;
+		}
+
+		// search pagination
+		if (GennyConstants.PAGINATION_NEXT.equals(code)) {
+			search.handleSearchPagination(targetCode, false);
+			return;
+		} else if (GennyConstants.PAGINATION_PREV.equals(code)) {
+			search.handleSearchPagination(targetCode, true);
 			return;
 		}
 

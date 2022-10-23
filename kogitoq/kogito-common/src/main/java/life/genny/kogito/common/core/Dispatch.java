@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -151,15 +150,18 @@ public class Dispatch {
 
 		// check for a provided question code
 		String questionCode = processData.getQuestionCode();
-		log.info("questionCode: " + questionCode);
 		if (questionCode != null) {
 			// fetch question from DB
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-			Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
-			// add ask to msg with events
-			ask.add(events);
 			msg.add(ask);
+		}
+
+		// generate events if specified
+		String events = processData.getEvents();
+		if (events != null) {
+			Ask eventsAsk = createEvents(events, sourceCode, targetCode);
+			msg.add(eventsAsk);
 		}
 
 		// init if null to stop null pointers
@@ -513,6 +515,13 @@ public class Dispatch {
 	 * @param baseEntities
 	 */
 	public void sendBaseEntities(List<BaseEntity> baseEntities) {
+
+		Map<String, Object> contexts = new HashMap<>();
+		contexts.put("USER", beUtils.getUserBaseEntity());
+
+		baseEntities.stream().forEach(entity -> {
+			 MergeUtils.mergeBaseEntity(entity, contexts);
+		});
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntities);
 		msg.setReplace(true);
