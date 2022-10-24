@@ -193,9 +193,11 @@ public class InitService {
 			if(!question.requirementsMet(capabilities, true)) {
 				log.warn("[!] User does not meet capability requirements for question: " + questionCode);
 				return null;
+			} else {
+				log.info("Passed Capabilities check: " + CommonUtils.getArrayString(question.getCapabilityRequirements()));
 			}
 
-			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, user);
+			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, user, capabilities);
 			if (ask == null) {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + question.getCode());
 			}

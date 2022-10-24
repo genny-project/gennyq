@@ -10,7 +10,6 @@ import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.utils.CommonUtils;
 
 public interface ICapabilityFilterable {
     
@@ -43,6 +42,9 @@ public interface ICapabilityFilterable {
     public default boolean requirementsMet(Set<Capability> userCapabilities, boolean requiresAllCaps, boolean requiresAllModes) {
         Set<Capability> checkCaps = getCapabilityRequirements();
 
+        if(checkCaps.isEmpty())
+            return true;
+
         // foreach capability in the object requirements
             // scan through user capabilities to find capability with same code
             // check the nodes
@@ -53,25 +55,25 @@ public interface ICapabilityFilterable {
             Optional<Capability> optCap = userCapabilities.parallelStream()
                 .filter(cap -> cap.code.equals(reqCap.code)).findFirst();
             if(!optCap.isPresent()) {
-                System.err.println("Could not find cap in user caps: " + reqCap.code);
+                getLogger().warn("Could not find cap in user caps: " + reqCap.code);
                 return false;
             }
-            System.out.println("Checking " + optCap.get().code);
             // a set of user capabilities should only have 1 entry per capability code
             if(!optCap.get().checkPerms(requiresAllModes, reqCap)) {
                 if(requiresAllCaps) {
-                    getLogger().warn("Capability requirements: " + CommonUtils.getArrayString(checkCaps));
+                    getLogger().warn("Missing cap permissions " + (requiresAllModes ? "allModes " : "") + reqCap);
                     return false;
                 }
             } else {
                 if(!requiresAllCaps)
                     return true;
             }
-
         }
 
-        getLogger().warn("Capability requirements: " + CommonUtils.getArrayString(checkCaps));
-		return false;
+        if(requiresAllCaps) {
+            return true;
+        } else
+            return false;
     }
 
 

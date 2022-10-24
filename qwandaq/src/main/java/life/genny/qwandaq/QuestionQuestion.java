@@ -26,6 +26,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
@@ -39,7 +40,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 })
 @Cacheable
 @RegisterForReflection
-public class QuestionQuestion implements java.io.Serializable, Comparable<Object> {
+public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -585,6 +586,11 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	public String getIcon() {
 		return this.icon;
+	}
+
+	@Override
+	public Set<Capability> getCapabilityRequirements() {
+		return capabilityRequirements;
 	}
 
 }

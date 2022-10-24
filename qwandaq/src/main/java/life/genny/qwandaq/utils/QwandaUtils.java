@@ -32,6 +32,7 @@ import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
@@ -251,7 +252,7 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target) {
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target, Set<Capability> userCapabilities) {
 		if (question == null)
 			throw new NullParameterException("question");
 		if (source == null)
@@ -293,7 +294,10 @@ public class QwandaUtils {
 
 				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
-
+				if(userCapabilities != null) {
+					if(!questionQuestion.requirementsMet(userCapabilities, true)) // For now all caps are needed. I'll make this more comprehensive later
+						continue;
+				}
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 
 				// Do not include PRI_SUBMIT
@@ -320,6 +324,10 @@ public class QwandaUtils {
 		return ask;
 	}
 
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target) {
+		return generateAskFromQuestion(question, source, target, null);
+	}
+
 	/**
 	 * Generate an ask for a question using the question code, the
 	 * source and the target. This operation is recursive if the
@@ -330,7 +338,7 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target, Set<Capability> userCapabilities) {
 
 		if (code == null)
 			throw new NullParameterException("code");
@@ -352,7 +360,12 @@ public class QwandaUtils {
 			throw new ItemNotFoundException(code, e);
 		}
 
-		return generateAskFromQuestion(question, source, target);
+		return generateAskFromQuestion(question, source, target, userCapabilities);
+	}
+
+
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
+		return generateAskFromQuestionCode(code, source, target, null);
 	}
 
 	/**

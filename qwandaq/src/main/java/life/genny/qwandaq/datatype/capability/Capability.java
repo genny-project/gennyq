@@ -106,7 +106,13 @@ public class Capability implements Serializable {
     }
 
 	public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
-		return CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]));
+		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]))) {
+            System.out.println("Passed Capability check: " + CommonUtils.getArrayString(checkSet));
+            return true;
+        } else {
+            System.out.println("Failed cap check: " + CommonUtils.getArrayString(checkSet));
+            return false;
+        }
 	}
 
     public boolean checkPerms(boolean hasAll, CapabilityNode... nodes) {
