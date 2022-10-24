@@ -157,6 +157,8 @@ public class InitService {
 		BaseEntity user = beUtils.getUserBaseEntity();
 		Set<Capability> capabilities = capMan.getUserCapabilities();
 
+		System.out.println("[!][!][!][!][!][!] USER CAPS: " + CommonUtils.getArrayString(capabilities));
+
 		// get pcms using search
 		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
 				.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "PCM_%"))
