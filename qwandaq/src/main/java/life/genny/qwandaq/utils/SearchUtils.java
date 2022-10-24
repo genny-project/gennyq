@@ -37,6 +37,7 @@ import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
@@ -197,31 +198,17 @@ public class SearchUtils {
 	 */
 	public void searchTable(String code) {
 
-		String searchCode = code;
-		if (searchCode.startsWith("CNS_")) {
-			searchCode = searchCode.substring(4);
-		} else if (!searchCode.startsWith("SBE_")) {
-			searchCode = "SBE_" + searchCode;
-		}
+		if (!code.startsWith(Prefix.SBE))
+			throw new DebugException("Code " + code + " does not represent a SearchEntity");
 
-		log.info("SBE CODE   ::   " + searchCode);
+		log.info("SBE CODE   ::   " + code);
 
-		SearchEntity searchEntity = null;
-
-		try {
-			searchEntity = CacheUtils.getObject(userToken.getProductCode(),
-					searchCode, SearchEntity.class);
-		} catch (Exception e) {
-			searchEntity = null;
-		}
-
+		// fetch search from cache
+		String sessionCode = sessionSearchCode(code);
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			log.error("Could not fetch " + searchCode + " from cache!!!");
-			return;
-		}
-
-		if (code.startsWith("CNS_")) {
-			searchEntity.setCode(code);
+			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			searchEntity.setCode(sessionCode);
 		}
 
 		searchTable(searchEntity);
@@ -234,20 +221,14 @@ public class SearchUtils {
 	 */
 	public void searchTable(SearchEntity searchEntity) {
 
-		if (searchEntity == null) {
-			log.error("SearchBE is null (searchTable)");
-			return;
-		}
+		if (searchEntity == null)
+			throw new NullPointerException("searchEntity");
 
-		// if (!searchEntity.getCode().contains(userToken.getJTI().toUpperCase())) {
-		// 	// we need to set the searchEntity's code to session search code
-		// 	String sessionSearchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
-		// 	log.info("sessionSearchCode  ::  " + searchEntity.getCode());
-		// }
-
-		CacheUtils.putObject(userToken.getProductCode(),
-				"LAST-SEARCH:" + searchEntity.getCode(),
+		CacheUtils.putObject(userToken.getProductCode(), "LAST-SEARCH:" + searchEntity.getCode(),
 				searchEntity);
+
+		// remove JTI from code
+		searchEntity.setCode(removeJTI(searchEntity.getCode()));
 
 		// package and send search message to fyodor
 		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
@@ -257,25 +238,37 @@ public class SearchUtils {
 	}
 
 	/**
-	 * A method to fetch any additional {@link EntityAttribute} filters for a given
-	 * {@link SearchEntity}
-	 * from the SearchFilters rulegroup.
-	 *
-	 * @param searchBE the SearchEntity to get additional filters for
-	 * @return List
+	 * @param searchEntity
+	 * @return
 	 */
-	public List<EntityAttribute> getUserFilters(SearchEntity searchBE) {
+	public String sessionSearchCode(SearchEntity searchEntity) {
+		return sessionSearchCode(searchEntity.getCode());
+	}
 
-		List<EntityAttribute> filters = new ArrayList<>();
+	/**
+	 * @param code
+	 * @return
+	 */
+	public String sessionSearchCode(String code) {
+		String jti = userToken.getJTI();
+		return (code.contains(jti) ? code : new StringBuilder(code).append("_").append(jti).toString());
+	}
 
-		Map<String, Object> facts = new ConcurrentHashMap<>();
-		facts.put("serviceToken", serviceToken);
-		facts.put("userToken", userToken);
-		facts.put("searchBE", searchBE);
+	/**
+	 * @param searchEntity
+	 * @return
+	 */
+	public String removeJTI(SearchEntity searchEntity) {
+		return removeJTI(searchEntity.getCode());
+	}
 
-		// TODO: get the filters
-
-		return filters;
+	/**
+	 * @param code
+	 * @return
+	 */
+	public String removeJTI(String code) {
+		String jti = userToken.getJTI();
+		return code.replace(jti, "");
 	}
 
 	/**
@@ -505,19 +498,6 @@ public class SearchUtils {
 					log.error("Null SBE in cache for " + targetedBucketCode);
 					continue;
 				}
-
-				// // Attach any extra filters from SearchFilters rulegroup
-				// List<EntityAttribute> filters = getUserFilters(searchBE);
-
-				// if (!filters.isEmpty()) {
-				// log.info("User Filters are NOT empty");
-				// log.info("Adding User Filters to searchBe :: " + searchBE.getCode());
-				// for (EntityAttribute filter : filters) {
-				// searchBE.getBaseEntityAttributes().add(filter);
-				// }
-				// } else {
-				// log.info("User Filters are empty");
-				// }
 
 				// process the associated columns
 				List<EntityAttribute> cals = searchBE.findPrefixEntityAttributes("COL__");

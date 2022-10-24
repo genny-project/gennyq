@@ -365,10 +365,11 @@ public class Dispatch {
 		ask.setRealm(userToken.getProductCode());
 
 		// split events string by comma
-		for (String event : events.split(",")) {
+		for (String name : events.split(",")) {
+			String code = name.toUpperCase();
 			// create child and add to ask
-			Attribute attribute = qwandaUtils.createEvent(event, event);
-			Question question = new Question(Prefix.QUE + event, event, attribute);
+			Attribute attribute = qwandaUtils.createEvent(code, name);
+			Question question = new Question(Prefix.QUE + code, name, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.add(child);
 		}

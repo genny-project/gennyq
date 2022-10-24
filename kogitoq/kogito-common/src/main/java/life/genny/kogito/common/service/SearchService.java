@@ -14,14 +14,12 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -109,15 +107,15 @@ public class SearchService {
 	/**
 	 * Perform a named search from search bar
 	 * 
-	 * @param searchCode
+	 * @param code
 	 * @param nameWildcard
 	 */
-	public void sendNameSearch(String searchCode, String nameWildcard) {
+	public void sendNameSearch(String code, String nameWildcard) {
 
-		log.info("Sending Name Search :: " + searchCode);
+		log.info("Sending Name Search :: " + code);
 
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
-				searchCode, SearchEntity.class);
+				code, SearchEntity.class);
 
 		// TODO: remove this from alyson
 		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
@@ -128,12 +126,17 @@ public class SearchService {
 
 	/**
 	 * @param code
-	 * @param targetCode
+	 * @param code
 	 */
-	public void handleSearchPagination(String targetCode, Boolean reverse) {
+	public void handleSearchPagination(String code, Boolean reverse) {
 
 		// fetch search from cache
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
+		String sessionCode = searchUtils.sessionSearchCode(code);
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
+		if (searchEntity == null) {
+			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			searchEntity.setCode(sessionCode);
+		}
 
 		// find direction
 		Integer diff = searchEntity.getPageSize();
