@@ -15,19 +15,18 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
-import life.genny.qwandaq.datatype.capability.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.PermissionMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.suite.JUnitTester;
+import life.genny.test.utils.suite.Expected;
 
 import static life.genny.qwandaq.datatype.capability.CapabilityMode.*;
 import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
 
-import static life.genny.test.utils.suite.TestCase.Builder;
-import static life.genny.test.utils.suite.TestCase.Expected;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -234,15 +233,15 @@ public class CapabilityUtilsTest extends BaseTestCase {
         .assertAll();
     }
 
-    @Test
-    public void getCapModeArrayTest() {
-        // TODO: Write tests for this
-        Builder<String, CapabilityNode[]> builder = new Builder<String, CapabilityNode[]>();
-    }
+//     @Test
+//     public void getCapModeArrayTest() {
+//         // TODO: Write tests for this
+//         TestBuilder<String, CapabilityNode[]> builder = new TestBuilder<String, CapabilityNode[]>();
+//     }
 
-    @Test
-    public void getCapModeStringTest() {
-        // TODO: Write tests for this
-        Builder<CapabilityNode[], String> builder = new Builder<CapabilityNode[], String>();
-    }
+//     @Test
+//     public void getCapModeStringTest() {
+//         // TODO: Write tests for this
+//         TestBuilder<CapabilityNode[], String> builder = new TestBuilder<CapabilityNode[], String>();
+//     }
 }

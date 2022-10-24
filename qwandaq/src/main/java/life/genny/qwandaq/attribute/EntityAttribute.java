@@ -707,7 +707,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
@@ -893,7 +892,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient

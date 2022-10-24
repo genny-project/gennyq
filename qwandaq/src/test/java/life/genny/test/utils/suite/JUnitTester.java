@@ -1,14 +1,10 @@
 package life.genny.test.utils.suite;
 
-import static life.genny.test.utils.suite.TestCase.Builder;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import life.genny.test.utils.callbacks.test.FITestCallback;
 import life.genny.test.utils.callbacks.test.FITestVerificationCallback;
-import life.genny.test.utils.suite.TestCase.Input;
-import life.genny.test.utils.suite.TestCase.Expected;
 
 public class JUnitTester<I, E> {
     public FITestCallback<Input<I>, Expected<E>> testCallback;
@@ -26,8 +22,8 @@ public class JUnitTester<I, E> {
         return this;
     }
 
-    public Builder<I, E> createTest(String name) {
-        Builder<I, E> jUnitBuilder = new Builder<I,E>(this).setName(name);
+    public TestBuilder<I, E> createTest(String name) {
+        TestBuilder<I, E> jUnitBuilder = new TestBuilder<I,E>(this).setName(name);
         return jUnitBuilder;
     }
 

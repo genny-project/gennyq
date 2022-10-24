@@ -14,7 +14,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 public class CapabilityConverter implements AttributeConverter<Set<Capability>, String> {
-    private static final String CAPABILITY_DELIMITER = "$_$";
+    private static final String CAPABILITY_DELIMITER = "  ";
 	private static final String ARRAY_START = "[";
 	private static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
@@ -66,3 +66,12 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
         return sb.append(capability.code).append(CapabilitiesManager.getModeString(capability.nodes));
     }
 }
+
+/**
+ * 
+ * 3 Capability reqs
+ * CAP_ADMIN["A:A"]
+ * CAP_TENANT["E:A"]
+ * 
+ * CAP_ADMIN[A:A]  CAP_TENANT[E:A]
+ */
