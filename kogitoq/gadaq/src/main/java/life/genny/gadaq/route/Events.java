@@ -18,6 +18,7 @@ import life.genny.kogito.common.service.NavigationService;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -72,37 +73,31 @@ public class Events {
 		}
 
 		// submit
-		if ("QUE_SUBMIT".equals(code)) {
+		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
 			return;
 		}
 
-		// update
-		if ("QUE_UPDATE".equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "update", "");
-			return;
-		}
-
 		// cancel
-		if ("QUE_CANCEL".equals(code)) {
+		if (Question.QUE_CANCEL.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
 			return;
 		}
 
 		// reset
-		if ("QUE_RESET".equals(code)) {
+		if (Question.QUE_RESET.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
 			return;
 		}
 
 		// dashboard
-		if ("QUE_DASHBOARD".equals(code)) {
+		if (Question.QUE_DASHBOARD.equals(code)) {
 			navigation.sendSummary();
 			return;
 		}
 
 		// bucket view
-		if ("QUE_PROCESS".equals(code)) {
+		if (Question.QUE_PROCESS.equals(code)) {
 			search.sendBuckets();
 			return;
 		}

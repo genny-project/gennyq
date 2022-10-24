@@ -87,10 +87,22 @@ public class Question extends CodedEntity {
 
 	// core
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
+	public static final String QUE_CANCEL = "QUE_CANCEL";
+	public static final String QUE_RESET = "QUE_RESET";
+
+	public static final String QUE_NEXT = "QUE_NEXT";
+	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";
+
 	public static final String QUE_EVENTS = "QUE_EVENTS";
+
+	// entity
 	public static final String QUE_NAME = "QUE_NAME";
 	public static final String QUE_EMAIL = "QUE_EMAIL";
 	public static final String QUE_MOBILE = "QUE_MOBILE";
+
+	// navigation
+	public static final String QUE_PROCESS = "QUE_PROCESS";
+	public static final String QUE_DASHBOARD = "QUE_DASHBOARD";
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)

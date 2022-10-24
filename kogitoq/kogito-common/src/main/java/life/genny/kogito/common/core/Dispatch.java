@@ -53,6 +53,8 @@ public class Dispatch {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
+	public static final String[] SUBMIT_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT };
+
 	@Inject
 	UserToken userToken;
 
@@ -238,7 +240,13 @@ public class Dispatch {
 		// pre-send ask updates
 		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapOfAsks);
-		flatMapOfAsks.get(Attribute.EVT_SUBMIT).setDisabled(!answered);
+		
+		// update any submit events
+		for (String event : SUBMIT_EVENTS) {
+			Ask evt = flatMapOfAsks.get(event);
+			if (evt != null)
+				evt.setDisabled(!answered);
+		}
 		// this is ok since flatmap is referencing asks
 		msg.getAsks().addAll(asks);
 
