@@ -1,5 +1,8 @@
 package life.genny.qwandaq.datatype.capability;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.jboss.logging.Logger;
 
@@ -16,6 +19,21 @@ public class CapabilityNode {
 	
 	// Leave this here please
 	public static final String DELIMITER = ":";
+
+	// Some optimisation through statics
+	private static final Map<CapabilityMode, Map<PermissionMode, CapabilityNode>> NODE_MAP = new EnumMap<>(CapabilityMode.class);
+	static {
+		for(CapabilityMode mode : CapabilityMode.values()) {
+			Map<PermissionMode, CapabilityNode> scopeMap = new EnumMap<>(PermissionMode.class);
+			for(PermissionMode scope : PermissionMode.values()) {
+				scopeMap.put(scope, new CapabilityNode(mode, scope));
+			}
+			NODE_MAP.put(mode, scopeMap);
+		}
+	}
+	public static CapabilityNode fetch(CapabilityMode mode, PermissionMode scope) {
+		return NODE_MAP.get(mode).get(scope);
+	}
 
 	/**
 	 * This capability's mode

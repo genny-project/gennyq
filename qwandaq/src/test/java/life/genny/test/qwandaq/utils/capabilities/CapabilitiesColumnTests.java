@@ -8,7 +8,6 @@ import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
 import life.genny.qwandaq.utils.SetBuilder;
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.suite.JUnitTester;
-import life.genny.test.utils.suite.Expected;
 
 import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
 
@@ -32,7 +31,7 @@ public class CapabilitiesColumnTests extends BaseTestCase {
     public void serialize() {
         new JUnitTester<Set<Capability>, String>()
         .setTest((input) -> {
-            return new Expected<>(CapTester.convertToDatabaseColumn(input.input));
+            return Expected(CapTester.convertToDatabaseColumn(input.input));
         })
         .createTest("Serialize Database Capability 1")
         .setInput(
@@ -60,7 +59,7 @@ public class CapabilitiesColumnTests extends BaseTestCase {
     public void deserialize() {
         new JUnitTester<String, Set<Capability>>()
         .setTest((input) -> {
-            return new Expected<>(CapTester.convertToEntityAttribute(input.input));
+            return Expected(CapTester.convertToEntityAttribute(input.input));
         })
         .createTest("Serialize Database Capability 1")
         .setInput("CAP_ADMIN[\"A:A\",\"E:S\"]  CAP_ADMIN2[\"A:S\",\"E:N\"]")

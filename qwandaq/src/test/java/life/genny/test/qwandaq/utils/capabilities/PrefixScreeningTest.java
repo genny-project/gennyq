@@ -1,7 +1,5 @@
 package life.genny.test.qwandaq.utils.capabilities;
 
-import org.junit.Test;
-
 import life.genny.test.utils.suite.JUnitTester;
 
 

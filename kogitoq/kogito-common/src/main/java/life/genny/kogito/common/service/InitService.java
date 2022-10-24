@@ -1,8 +1,9 @@
 package life.genny.kogito.common.service;
 
 import java.util.List;
-import java.util.Optional;
+
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -145,11 +146,6 @@ public class InitService {
 		}
 	}
 
-	private BaseEntity configureSidebar(BaseEntity sidebarPCM) {
-		
-		return sidebarPCM;
-	}
-
 	/**
 	 * Send PCM BaseEntities.
 	 */
@@ -159,6 +155,7 @@ public class InitService {
 
 		String productCode = userToken.getProductCode();
 		BaseEntity user = beUtils.getUserBaseEntity();
+		Set<Capability> capabilities = capMan.getUserCapabilities();
 
 		// get pcms using search
 		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
@@ -175,19 +172,6 @@ public class InitService {
 			return;
 		}
 
-		// TODO: Find a better way of doing this. This does not feel elegant
-		// Perhaps we have a flag on whether or not to check capabilities on a question / BaseEntity?
-		Optional<BaseEntity> sidebarPCMOpt = pcms.stream().filter((BaseEntity pcm) -> {
-			return "PCM_SIDEBAR".equals(pcm.getCode());
-		}).findFirst();
-
-		if(!sidebarPCMOpt.isPresent())
-			throw new ItemNotFoundException("PCM_SIDEBAR");
-		BaseEntity sidebarPcm = sidebarPCMOpt.get();
-		// Replace sidebar pcm
-		pcms.remove(sidebarPcm);
-		pcms.add(configureSidebar(sidebarPcm));
-
 		log.info("Sending "+pcms.size()+" PCMs");
 
 		// configure ask msg
@@ -196,21 +180,33 @@ public class InitService {
 		askMsg.setReplace(true);
 		askMsg.setAliasCode("PCM_INIT_ASK_MESSAGE");
 
-		for (BaseEntity pcm : pcms) {
-			log.info("Processing " + pcm.getCode());
+		List<Ask> asks = pcms.stream()
+		.peek((pcm) -> log.info("Processing ".concat(pcm.getCode())))
+		.map((pcm) -> {
 			String questionCode = pcm.getValue("PRI_QUESTION_CODE", null);
 			if (questionCode == null) {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") null PRI_QUESTION_CODE");
-				continue;
+				return null;
 			}
 
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, user);
-			if (ask == null) {
-				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + questionCode);
-				continue;
+			Question question = databaseUtils.findQuestionByCode(productCode, questionCode);
+			if(!question.requirementsMet(capabilities, true)) {
+				log.warn("[!] User does not meet capability requirements for question: " + questionCode);
+				return null;
 			}
-			askMsg.add(ask);
-		}
+
+			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, user);
+			if (ask == null) {
+				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + question.getCode());
+			}
+
+			return ask;
+		})
+		// filter all pcms set to null by the map (this stops us having to query for questionCode twice, saving processing
+		.filter((pcm) -> pcm != null) 
+		.collect(Collectors.toList());
+
+		askMsg.setItems(asks);
 
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, askMsg);
 
@@ -257,7 +253,7 @@ public class InitService {
 			// Create the ask (there is a def and we have the capability)
 			String baseCode = CommonUtils.safeStripPrefix(capability.code);
 
-			String eventCode = "EVT_ADD".concat(baseCode);
+			String eventCode = "EVT_ADD_".concat(baseCode);
 			String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
 			Attribute event = qwandaUtils.createEvent(eventCode, name);
 

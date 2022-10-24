@@ -1,7 +1,4 @@
 package life.genny.test.utils.suite;
-
-
-
     // Helper classes
 public class Input<T> {
     public T input;

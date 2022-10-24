@@ -23,7 +23,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 import life.genny.qwandaq.Answer;
@@ -49,7 +48,6 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 
 import life.genny.qwandaq.validation.Validation;
-import life.genny.qwandaq.datatype.DataType;
 
 import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 
@@ -244,40 +242,24 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Generate an ask for a question using the question code, the
+	 * Generate an ask for a question, the
 	 * source and the target. This operation is recursive if the
 	 * question is a group.
 	 *
-	 * @param code   The code of the question
+	 * @param question The question to generate from
 	 * @param source The source entity
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
-
-		if (code == null)
-			throw new NullParameterException("code");
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target) {
+		if (question == null)
+			throw new NullParameterException("question");
 		if (source == null)
 			throw new NullParameterException("source");
 		if (target == null)
 			throw new NullParameterException("target");
 
-		// if the code is QUE_BASEENTITY_GRP then display all the attributes
-		if ("QUE_BASEENTITY_GRP".equals(code)) {
-			return generateAskGroupUsingBaseEntity(target);
-		}
-
 		String productCode = userToken.getProductCode();
-		log.debug("Fetching Question: " + code);
-
-		// find the question in the database
-		Question question;
-		try {
-			question = databaseUtils.findQuestionByCode(productCode, code);
-		} catch (NoResultException e) {
-			throw new ItemNotFoundException(code, e);
-		}
-
 		// init new parent ask
 		Ask ask = new Ask(question);
 		ask.setSourceCode(source.getCode());
@@ -285,6 +267,10 @@ public class QwandaUtils {
 		ask.setRealm(productCode);
 
 		Attribute attribute = question.getAttribute();
+		if ("QUE_BASEENTITY_GRP".equals(question.getCode())) {
+			return generateAskGroupUsingBaseEntity(target);
+		}
+
 
 		// override with Attribute icon if question icon is null
 		if (attribute != null && attribute.getIcon() != null) {
@@ -332,6 +318,41 @@ public class QwandaUtils {
 		}
 
 		return ask;
+	}
+
+	/**
+	 * Generate an ask for a question using the question code, the
+	 * source and the target. This operation is recursive if the
+	 * question is a group.
+	 *
+	 * @param code   The code of the question
+	 * @param source The source entity
+	 * @param target The target entity
+	 * @return The generated Ask
+	 */
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+		// don't need to check source, target since they are checked in generateAskFromQuestion
+
+		// if the code is QUE_BASEENTITY_GRP then display all the attributes
+		if ("QUE_BASEENTITY_GRP".equals(code)) {
+			return generateAskGroupUsingBaseEntity(target);
+		}
+
+		String productCode = userToken.getProductCode();
+		log.debug("Fetching Question: " + code);
+
+		// find the question in the database
+		Question question;
+		try {
+			question = databaseUtils.findQuestionByCode(productCode, code);
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException(code, e);
+		}
+
+		return generateAskFromQuestion(question, source, target);
 	}
 
 	/**

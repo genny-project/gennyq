@@ -22,7 +22,6 @@ import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.suite.JUnitTester;
-import life.genny.test.utils.suite.Expected;
 
 import static life.genny.qwandaq.datatype.capability.CapabilityMode.*;
 import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
@@ -40,7 +39,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         
          new JUnitTester<String, String>()
         .setTest((input) -> {
-            return new Expected<>(CapabilitiesManager.cleanCapabilityCode(input.input));
+            return Expected(CapabilitiesManager.cleanCapabilityCode(input.input));
         }).createTest("Clean Cap 1")
         .setInput("OWN_APPLE")
         .setExpected("CAP_OWN_APPLE")
@@ -71,7 +70,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         
         JUnitTester<CapabilityNode, String> unitTester = new JUnitTester<CapabilityNode, String>()
         .setTest((input) -> {
-            return new Expected<>(input.input.toString());
+            return Expected(input.input.toString());
         });
 
         // Create Tests
@@ -106,7 +105,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         // Create tester
         JUnitTester<String, CapabilityNode> unitTester = new JUnitTester<String, CapabilityNode>()
         .setTest((input) -> {
-            return new Expected<>(CapabilityNode.parseCapability(input.input));
+            return Expected(CapabilityNode.parseCapability(input.input));
         });
 
         for(int i = 0; i < expected.size(); i++) {
@@ -134,7 +133,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         Capability capability3 = new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap();
 
         tester.setTest((input) -> {
-            return new Expected<Capability>(capability1.merge(input.input, true)); // most permissive test
+            return Expected(capability1.merge(input.input, true)); // most permissive test
         })
         
         .createTest(mergeTestName(capability1, capability2, true))
@@ -150,7 +149,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         .assertAll()
 
         .setTest((input) -> {
-            return new Expected<Capability>(capability1.merge(input.input, false)); // least permissive test
+            return Expected(capability1.merge(input.input, false)); // least permissive test
         })
 
         .createTest(mergeTestName(capability1, capability2, false))
@@ -170,7 +169,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
     public void getLesserNodesTest() { 
         new JUnitTester<CapabilityNode, CapabilityNode[]>()
         .setTest((input) -> {
-            return new Expected<>(input.input.getLesserNodes());
+            return Expected(input.input.getLesserNodes());
         })
         .setVerification((result, expected) -> {
             assertArrayEquals(expected, result);
@@ -197,7 +196,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
 
         new JUnitTester<CapabilityNode[], Boolean>()
         .setTest((input) -> {
-            return new Expected<>(CapabilitiesManager.checkCapability(capabilitySet, false, input.input));
+            return Expected(CapabilitiesManager.checkCapability(capabilitySet, false, input.input));
         })
         .createTest("Has Any One Capability 1")
         .setInput(new CapabilityNode[] {
@@ -215,7 +214,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         
         // Next test
         .setTest((input) -> {
-            return new Expected<>(CapabilitiesManager.checkCapability(capabilitySet, true, input.input));
+            return Expected(CapabilitiesManager.checkCapability(capabilitySet, true, input.input));
         })
         
         .createTest("Has All Capabilities 1")

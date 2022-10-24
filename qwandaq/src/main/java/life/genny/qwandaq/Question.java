@@ -19,7 +19,10 @@ package life.genny.qwandaq;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
@@ -78,7 +81,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 
 @RegisterForReflection
-public class Question extends CodedEntity {
+public class Question extends CodedEntity implements ICapabilityFilterable {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 
@@ -97,6 +100,11 @@ public class Question extends CodedEntity {
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "attribute_id", nullable = false)
 	private Attribute attribute;
+
+
+	@Column(name = "capabilityRequirements")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
 
 	@Embedded
 	@Valid
@@ -120,20 +128,6 @@ public class Question extends CodedEntity {
 	private String helper = "";
 
 	private String icon;
-
-	/**
-	 * @return String
-	 */
-	public String getHelper() {
-		return helper;
-	}
-
-	/**
-	 * @param helper the helper to set
-	 */
-	public void setHelper(String helper) {
-		this.helper = helper;
-	}
 
 	/**
 	 * Constructor.
@@ -245,6 +239,11 @@ public class Question extends CodedEntity {
 		}
 		this.attribute = null;
 		this.attributeCode = QUESTION_GROUP_ATTRIBUTE_CODE;
+	}
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
 	}
 
 	/**
@@ -504,10 +503,14 @@ public class Question extends CodedEntity {
 	 *
 	 * @param childQuestionCode the code of the child Question used to remove the
 	 *                          child Question
+	 * @return <b>true</b> if child question was present, <b>false</b> otherwise
 	 */
-	public void removeChildQuestion(final String childQuestionCode) {
+	public boolean removeChildQuestion(final String childQuestionCode) {
 		final Optional<QuestionQuestion> optQuestionQuestion = findQuestionLink(childQuestionCode);
-		getChildQuestions().remove(optQuestionQuestion);
+		boolean isPresent = optQuestionQuestion.isPresent();
+		if(isPresent)
+			getChildQuestions().remove(optQuestionQuestion.get());
+		return isPresent;
 	}
 
 	/**
@@ -622,5 +625,20 @@ public class Question extends CodedEntity {
 	public void setIcon(String icon) {
 		this.icon = icon;
 	}
+
+	/**
+	 * @return String
+	 */
+	public String getHelper() {
+		return helper;
+	}
+
+	/**
+	 * @param helper the helper to set
+	 */
+	public void setHelper(String helper) {
+		this.helper = helper;
+	}
+
 
 }
