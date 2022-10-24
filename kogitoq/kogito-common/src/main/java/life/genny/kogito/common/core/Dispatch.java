@@ -314,7 +314,7 @@ public class Dispatch {
 				// providing a null parent & location since it is already set in the parent
 				tasks.dispatch(source.getCode(), targetCode, pcm, null, null);
 				return;
-			} else {
+			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 				// add ask to bulk message
 				ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
 				msg.add(ask);

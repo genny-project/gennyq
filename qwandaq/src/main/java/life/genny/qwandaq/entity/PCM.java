@@ -1,6 +1,7 @@
 package life.genny.qwandaq.entity;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.Optional;
 
 import javax.json.bind.Jsonb;
@@ -84,6 +85,10 @@ public class PCM extends BaseEntity {
 
 	public String getLocation(Integer index) {
 		return getValueAsString(Attribute.PRI_LOC+index);
+	}
+
+	public List<EntityAttribute> getLocations() {
+		return findPrefixEntityAttributes(Attribute.PRI_LOC);
 	}
 
 	public void setTemplateCode(String code) {

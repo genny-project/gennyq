@@ -13,6 +13,7 @@ import org.jboss.logging.Logger;
 import life.genny.kogito.common.models.TimerData;
 import life.genny.kogito.common.models.TimerEvent;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -50,11 +51,8 @@ public class TimerEventService {
 	 */
 	public TimerData fetchTimerData(final String productCode, String questionCode, String pcmCode) {
 
-		if (questionCode == null) {
-			log.info("Using QuestionCode from " + pcmCode);
-			PCM pcm = beUtils.getPCM(pcmCode);
-			questionCode = pcm.getQuestionCode();
-		}
+		if (questionCode == null)
+			return new TimerData();
 
 		log.debug("Fetching TimerEvents " + productCode + " and " + questionCode);
 
