@@ -31,8 +31,13 @@ public class CapabilityNode {
 			NODE_MAP.put(mode, scopeMap);
 		}
 	}
-	public static CapabilityNode fetch(CapabilityMode mode, PermissionMode scope) {
+
+	public static CapabilityNode get(CapabilityMode mode, PermissionMode scope) {
 		return NODE_MAP.get(mode).get(scope);
+	}
+
+	public static CapabilityNode get(CapabilityMode mode) {
+		return get(mode, PermissionMode.SELF);
 	}
 
 	/**
@@ -58,7 +63,7 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
+	CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
 		this.capMode = capMode;
 		this.permMode = permMode;
 	}
@@ -69,7 +74,7 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public CapabilityNode(CapabilityMode capMode) {
+	CapabilityNode(CapabilityMode capMode) {
 		this(capMode, PermissionMode.SELF);
 	}
 

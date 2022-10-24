@@ -243,7 +243,7 @@ public class InitService {
 		// Check if there is a def first
 		for(Capability capability : capabilities) {
 			// If they don't have the capability then don't bother finding the def
-			if(!capability.checkPerms(false, new CapabilityNode(CapabilityMode.ADD, PermissionMode.ALL)))
+			if(!capability.checkPerms(false, CapabilityNode.get(CapabilityMode.ADD, PermissionMode.ALL)))
 				continue;
 
 			String defCode = CommonUtils.substitutePrefix(capability.code, "DEF");

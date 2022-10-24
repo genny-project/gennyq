@@ -88,7 +88,7 @@ public class CapabilityBuilder {
      * @return this
      */
     public CapabilityBuilder addNode(CapabilityMode mode, PermissionMode scope) {
-        nodes.add(CapabilityNode.fetch(mode, scope));
+        nodes.add(CapabilityNode.get(mode, scope));
         return this;
     }
 

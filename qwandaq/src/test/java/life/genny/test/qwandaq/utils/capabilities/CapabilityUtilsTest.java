@@ -59,7 +59,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         List<CapabilityNode> caps = new ArrayList<>();
         for(CapabilityMode mode : CapabilityMode.values()) {
             for(PermissionMode permMode : PermissionMode.values()) {
-                caps.add(new CapabilityNode(mode, permMode));
+                caps.add(CapabilityNode.get(mode, permMode));
             }
         }
         
@@ -99,7 +99,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         List<CapabilityNode> expected = capString.stream().map((String caps) -> {
             CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(0));
             PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(2));
-            return new CapabilityNode(mode, permMode);
+            return CapabilityNode.get(mode, permMode);
         }).collect(Collectors.toList());
         
         // Create tester
@@ -175,10 +175,10 @@ public class CapabilityUtilsTest extends BaseTestCase {
             assertArrayEquals(expected, result);
         })
         .createTest("Lesser Nodes Test 1")
-        .setInput(new CapabilityNode(ADD, ALL))
+        .setInput(CapabilityNode.get(ADD, ALL))
         .setExpected(new CapabilityNode[] {
-            new CapabilityNode(ADD, SELF),
-            new CapabilityNode(ADD, NONE)
+            CapabilityNode.get(ADD, SELF),
+            CapabilityNode.get(ADD, NONE)
         }).build()
         .assertAll();
 
@@ -189,8 +189,8 @@ public class CapabilityUtilsTest extends BaseTestCase {
         // testing checkCapability
         Set<CapabilityNode> capabilitySet = new HashSet<>(Arrays.asList(
             new CapabilityNode[] {
-                new CapabilityNode(ADD, ALL),
-                new CapabilityNode(EDIT, SELF)
+                CapabilityNode.get(ADD, ALL),
+                CapabilityNode.get(EDIT, SELF)
             }
         ));
 
@@ -200,13 +200,13 @@ public class CapabilityUtilsTest extends BaseTestCase {
         })
         .createTest("Has Any One Capability 1")
         .setInput(new CapabilityNode[] {
-            new CapabilityNode(ADD, ALL)
+            CapabilityNode.get(ADD, ALL)
         }).setExpected(true)
         .build()
 
         .createTest("Has Any One Capability 2")
         .setInput(new CapabilityNode[] {
-            new CapabilityNode(ADD, SELF), new CapabilityNode(DELETE, ALL)
+            CapabilityNode.get(ADD, SELF), CapabilityNode.get(DELETE, ALL)
         }).setExpected(true)
         .build()
 
@@ -219,13 +219,13 @@ public class CapabilityUtilsTest extends BaseTestCase {
         
         .createTest("Has All Capabilities 1")
         .setInput(new CapabilityNode[] {
-            new CapabilityNode(ADD, SELF)
+            CapabilityNode.get(ADD, SELF)
         }).setExpected(true)
         .build()
 
         .createTest("Has All Capabilities 2")
         .setInput(new CapabilityNode[] {
-            new CapabilityNode(ADD, SELF), new CapabilityNode(DELETE, ALL)
+            CapabilityNode.get(ADD, SELF), CapabilityNode.get(DELETE, ALL)
         }).setExpected(false)
         .build()
 
