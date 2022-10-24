@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -191,7 +192,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	// @JsonIgnore
 	@Column(name = "requirement")
 	@Convert(converter = CapabilityConverter.class)
-	private Capability requirement;
+	private Set<Capability> requirement;
 
 	public EntityAttribute() {
 
