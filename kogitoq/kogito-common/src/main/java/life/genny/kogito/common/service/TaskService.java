@@ -2,7 +2,6 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,15 +20,11 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 
@@ -151,20 +146,18 @@ public class TaskService {
 			String pcmCode, String parent, String location, String events) {
 
 		log.info("Dispatching...");
-		System.out.println("Dispatching...");
 
 		if (sourceCode == null)
 			throw new NullParameterException("sourceCode");
 		if (targetCode == null)
 			throw new NullParameterException("targetCode");
-		if (questionCode == null)
-			throw new NullParameterException("questionCode");
 		if (processId == null)
 			throw new NullParameterException("processId");
 		if (pcmCode == null)
 			throw new NullParameterException("pcmCode");
 		if (events == null)
 			throw new NullParameterException("events");
+
 		/*
 		 * no need to check parent and location as they can sometimes be null
 		 */
