@@ -127,15 +127,6 @@ public class MultipleRequirementsTests extends BaseRequirementsTest {
         .build()
 
         .assertAll();
-
-        setTestCaps(
-            CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
-            CapabilityBuilder("CAP_TENANT").edit(SELF).buildCap()
-        );
-        
-        ICapabilityFilterable secondFilterable =createFilterable(    CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
-            CapabilityBuilder("CAP_TENANT").add(ALL).buildCap()
-        );
     }
 
     @Test
@@ -184,6 +175,61 @@ public class MultipleRequirementsTests extends BaseRequirementsTest {
 
         // Test 4
         .createTest("Force Lockout Multiple Non Empty Reqs Filterable test 1 REQ ALL CAPS: true, REQ ALL MODES: true")
+        .setTest((input) -> {
+            return Expected(filterable.requirementsMet(input.input, true, true));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(false)
+        .build()
+
+        .assertAll();
+    }
+    
+
+    @Test
+    public void multipleRequirementsTestNoCaps() {
+        setTestCaps();
+
+        ICapabilityFilterable filterable = createFilterable(
+            CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
+            CapabilityBuilder("CAP_TENANT").add(ALL).buildCap()
+        );
+
+
+        new JUnitTester<Set<Capability>, Boolean>()
+
+        // Test 1
+        .createTest("No Caps Multiple Reqs Filterable test 1 REQ ALL CAPS: false, REQ ALL MODES: false")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, false, false));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(false)
+        .build()
+
+        // Test 2
+        .createTest("No Caps Multiple Reqs Filterable test 1 REQ ALL CAPS: true, REQ ALL MODES: false")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, true, false));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(false)
+        .build()
+
+        // Test 3
+        .createTest("No Caps Multiple Reqs Filterable test 1 REQ ALL CAPS: false, REQ ALL MODES: true")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, false, true));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(false)
+        .build()
+
+        // Test 4
+        .createTest("No Caps Multiple Reqs Filterable test 1 REQ ALL CAPS: true, REQ ALL MODES: true")
         .setTest((input) -> {
             return Expected(filterable.requirementsMet(input.input, true, true));
         })
