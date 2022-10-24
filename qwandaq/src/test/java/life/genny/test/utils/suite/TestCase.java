@@ -62,6 +62,10 @@ public class TestCase<I, E> {
         return expected.expected;
     }
 
+    public String getName() {
+        return name;
+    }
+
     // TODO: Elaborate on this to string
     @Override
     public String toString() {
