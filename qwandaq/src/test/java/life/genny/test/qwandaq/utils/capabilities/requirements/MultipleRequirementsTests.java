@@ -85,7 +85,7 @@ public class MultipleRequirementsTests extends BaseRequirementsTest {
         );
 
 
-        JUnitTester<Set<Capability>, Boolean> unitTester = new JUnitTester<Set<Capability>, Boolean>()
+        new JUnitTester<Set<Capability>, Boolean>()
 
         // Test 1
         .createTest("Lockout Multiple Non Empty Reqs Filterable test 1 REQ ALL CAPS: false, REQ ALL MODES: false")
