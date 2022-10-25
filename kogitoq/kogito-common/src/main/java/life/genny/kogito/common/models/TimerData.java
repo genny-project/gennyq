@@ -33,7 +33,7 @@ public class TimerData implements Serializable {
                                                                    // 2364
 
     private Long intervalMin = DEFAULT_TIMER_INTERVAL_MIN; //
-    private Long elapsedMin = 0L;
+    private Long elapsedMin = -1L; // This is the elapsed time in minutes since the last timer event
     private Long expiryMin = 3L;// 7L * 24L * 60L; // 7 days
     private Long expiryTimeStamp = DEFAULT_TIMER_EXPIRY_SECONDS; // This must be set during init, default to 20th June
                                                                  // 2364
@@ -43,6 +43,9 @@ public class TimerData implements Serializable {
 
     private TimerEvent[] timerEventsArray = new TimerEvent[0];
 
+    private Boolean testMode = false;
+    private Long startEpoch = 0L;
+
     // @JsonbTransient
     // @JsonIgnore
     // private List<TimerEvent> timerevents = new
@@ -50,6 +53,10 @@ public class TimerData implements Serializable {
 
     public TimerData() {
         // TODO document why this constructor is empty
+    }
+
+    public TimerData(Boolean testMode) {
+        this.testMode = testMode;
     }
 
     public TimerData(final Long intervalMin) {
@@ -65,7 +72,12 @@ public class TimerData implements Serializable {
     }
 
     public Long updateElapsed() {
+        Long now = getNow();
+        if (this.elapsedMin < 0) { // This triggers the actual start time
+            this.startEpoch = now;
+        }
         this.elapsedMin = this.elapsedMin + this.intervalMin;
+        this.elapsedMin = (now - this.startEpoch) / 60L;
         return this.elapsedMin;
     }
 
@@ -86,7 +98,7 @@ public class TimerData implements Serializable {
         if ((this.timerEventsArray != null) && (this.timerEventsArray.length > 0)) {
             TimerEvent firstEvent = this.timerEventsArray[0];
             if (firstEvent != null) {
-                log.info("Current UTC is " + currentTimeStampUTC + ", First event is " +
+                log.debug("Current UTC is " + currentTimeStampUTC + ", First event is " +
                         firstEvent);
                 return firstEvent.getTimeStamp() <= currentTimeStampUTC;
             }
@@ -197,6 +209,7 @@ public class TimerData implements Serializable {
     }
 
     public void add(TimerEvent timerEvent) {
+
         // check if the same eventCode is already in the queue. If so then replace
         Boolean replaced = false;
         for (int j = 0; j < this.timerEventsArray.length; j++) {
@@ -250,6 +263,14 @@ public class TimerData implements Serializable {
 
     public void setTimerEventsArray(TimerEvent[] timerEventsArray) {
         this.timerEventsArray = timerEventsArray;
+    }
+
+    public Boolean getTestMode() {
+        return testMode;
+    }
+
+    public void setTestMode(Boolean testMode) {
+        this.testMode = testMode;
     }
 
     @Override

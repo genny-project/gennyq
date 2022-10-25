@@ -10,7 +10,6 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
-import io.quarkus.test.junit.QuarkusTest;
 import life.genny.kogito.common.models.TimerData;
 import life.genny.kogito.common.models.TimerEvent;
 
@@ -23,14 +22,16 @@ public class TimerDataTest {
     @Test
     public void TimerEventTest() {
         System.out.println("This is the TimerEventTest");
+        Long startTime = LocalDateTime.now().atZone(
+                ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
 
-        TimerEvent t1 = new TimerEvent(0L, "TEST_TIMER_1", "LNK_WARNING");
+        TimerEvent t1 = new TimerEvent(startTime + 1L, "TEST_TIMER_1", "LNK_WARNING");
         System.out.println("TimerEvent1 = " + t1);
 
-        TimerEvent t2 = new TimerEvent(1L, "TEST_TIMER_2", "LNK_DANGER");
+        TimerEvent t2 = new TimerEvent(startTime + 2L, "TEST_TIMER_2", "LNK_DANGER");
         System.out.println("TimerEvent2 = " + t2);
 
-        TimerEvent t3 = new TimerEvent(2L, "TEST_TIMER_3", "LNK_DEAD");
+        TimerEvent t3 = new TimerEvent(startTime + 3L, "TEST_TIMER_3", "LNK_DEAD");
         System.out.println("TimerEvent3 = " + t3);
 
         TimerData timerData = new TimerData();
@@ -40,7 +41,7 @@ public class TimerDataTest {
         timerData.add(t2);
 
         // Force expiry time
-        timerData.setExpiryMin(3L);
+        timerData.setExpiryTimeStamp(startTime + 4L);
 
         System.out.println("Timer Data = " + timerData);
 
@@ -72,7 +73,7 @@ public class TimerDataTest {
                 System.out.flush();
             }
             try {
-                TimeUnit.MILLISECONDS.sleep(1000);
+                TimeUnit.MILLISECONDS.sleep(500);
             } catch (InterruptedException e) {
 
             }
