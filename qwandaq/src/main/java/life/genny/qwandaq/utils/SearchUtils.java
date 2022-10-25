@@ -268,8 +268,7 @@ public class SearchUtils {
 	 */
 	public String removeJTI(String code) {
 		String jti = userToken.getJTI().toUpperCase();
-		String clean = code.replace("_".concat(jti), "");
-		return clean;
+		return code.replace("_".concat(jti), "");
 	}
 
 	/**
