@@ -250,7 +250,7 @@ public class SearchUtils {
 	 * @return
 	 */
 	public String sessionSearchCode(String code) {
-		String jti = userToken.getJTI();
+		String jti = userToken.getJTI().toUpperCase();
 		return (code.contains(jti) ? code : new StringBuilder(code).append("_").append(jti).toString());
 	}
 
@@ -267,8 +267,9 @@ public class SearchUtils {
 	 * @return
 	 */
 	public String removeJTI(String code) {
-		String jti = userToken.getJTI();
-		return code.replace(jti, "");
+		String jti = userToken.getJTI().toUpperCase();
+		String clean = code.replace(jti, "");
+		return clean;
 	}
 
 	/**
