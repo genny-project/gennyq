@@ -101,7 +101,7 @@ public class SearchService {
 		pcm.setTemplateCode(template);
 		pcm.setQuestionCode(questionCode);
 
-		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, "PRI_LOC1");
+		tasks.dispatch(userCode, targetCode, pcm, PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**
