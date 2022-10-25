@@ -2,15 +2,11 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.time.ZoneId;
-import java.util.PriorityQueue;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -43,7 +39,6 @@ public class TimerData implements Serializable {
 
     private TimerEvent[] timerEventsArray = new TimerEvent[0];
 
-    private Boolean testMode = false;
     private Long startEpoch = 0L;
 
     // @JsonbTransient
@@ -53,10 +48,6 @@ public class TimerData implements Serializable {
 
     public TimerData() {
         // TODO document why this constructor is empty
-    }
-
-    public TimerData(Boolean testMode) {
-        this.testMode = testMode;
     }
 
     public TimerData(final Long intervalMin) {
@@ -265,12 +256,12 @@ public class TimerData implements Serializable {
         this.timerEventsArray = timerEventsArray;
     }
 
-    public Boolean getTestMode() {
-        return testMode;
+    public Long getStartEpoch() {
+        return startEpoch;
     }
 
-    public void setTestMode(Boolean testMode) {
-        this.testMode = testMode;
+    public void setStartEpoch(Long startEpoch) {
+        this.startEpoch = startEpoch;
     }
 
     @Override
