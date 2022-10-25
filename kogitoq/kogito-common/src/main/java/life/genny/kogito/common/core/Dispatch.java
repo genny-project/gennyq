@@ -68,60 +68,6 @@ public class Dispatch {
 	@Inject
 	TaskService tasks;
 
-	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
-
-	/**
-	 * Cache an ask for a processId and questionCode combination.
-	 * 
-	 * @param processData The processData to cache for
-	 * @param asks        ask to cache
-	 */
-	public void cacheAsks(ProcessData processData, List<Ask> asks) {
-
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
-		CacheUtils.putObject(userToken.getProductCode(), key, asks.toArray());
-		log.info("Asks cached for " + processData.getProcessId());
-	}
-
-	/**
-	 * Fetch an ask from cache for a processId and questionCode combination.
-	 * 
-	 * @param processData The processData to fetch for
-	 * @return
-	 */
-	public List<Ask> fetchAsks(ProcessData processData) {
-
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId());
-		Ask[] asks = CacheUtils.getObject(userToken.getProductCode(), key, Ask[].class);
-		return Arrays.asList(asks);
-	}
-
-	/**
-	 * @param asks
-	 */
-	public Map<String, Ask> buildAskFlatMap(List<Ask> asks) {
-		return buildAskFlatMap(new HashMap<String, Ask>(), asks);
-	}
-
-	/**
-	 * @param map
-	 * @param asks
-	 */
-	public Map<String, Ask> buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
-
-		if (asks == null)
-			return map;
-
-		for (Ask ask : asks) {
-			if (ask.hasChildren())
-				buildAskFlatMap(map, ask.getChildAsks());
-			else
-				map.put(ask.getQuestion().getAttribute().getCode(), ask);
-		}
-
-		return map;
-	}
-
 	/**
 	 * Send Asks, PCMs and Searches
 	 *

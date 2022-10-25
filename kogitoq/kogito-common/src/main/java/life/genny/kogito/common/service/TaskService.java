@@ -206,7 +206,7 @@ public class TaskService {
 		// build data
 		QBulkMessage msg = dispatch.build(processData);
 		List<Ask> asks = msg.getAsks();
-		Map<String, Ask> flatMapOfAsks = dispatch.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
 
 		// handle non-readonly if necessary
 		if (dispatch.containsNonReadonly(flatMapOfAsks, processData)) {
@@ -215,7 +215,7 @@ public class TaskService {
 
 			qwandaUtils.storeProcessData(processData);
 			// only cache for non-readonly invocation
-			dispatch.cacheAsks(processData, asks);
+			qwandaUtils.cacheAsks(processData, asks);
 
 			// handle initial dropdown selections
 			// TODO: change to use flatMap
@@ -250,8 +250,8 @@ public class TaskService {
 
 		processData.getAnswers().add(answer);
 
-		List<Ask> asks = dispatch.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = dispatch.buildAskFlatMap(asks);
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
 
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
@@ -272,8 +272,8 @@ public class TaskService {
 	public Boolean submit(ProcessData processData) {
 		
 		// construct bulk message
-		List<Ask> asks = dispatch.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = dispatch.buildAskFlatMap(asks);
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
