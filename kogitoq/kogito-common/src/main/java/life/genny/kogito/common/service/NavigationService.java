@@ -139,37 +139,6 @@ public class NavigationService {
 	}
 
 	/**
-	 * Send a view event.
-	 *
-	 * @param code       The code of the view event.
-	 * @param targetCode The targetCode of the view event.
-	 */
-	public void sendViewEvent(final String code, final String targetCode) {
-
-		JsonObject json = Json.createObjectBuilder()
-				.add("event_type", "VIEW")
-				.add("msg_type", "EVT_MSG")
-				.add("token", userToken.getToken())
-				.add("data", Json.createObjectBuilder()
-						.add("code", code)
-						.add("targetCode", targetCode))
-				.build();
-
-		log.info("Sending View Event -> " + code + " : " + targetCode);
-
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
-	}
-
-	public void showProcessPage(final String targetCode) {
-		String sourceCode = userToken.getUserCode();
-		String eventJson = "{\"data\":{\"targetCode\":\"" + targetCode + "\",\"sourceCode\":\"" + sourceCode
-				+ "\",\"parentCode\":\"QUE_SIDEBAR\",\"code\":\"QUE_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
-				+ userToken.getToken() + "\"}";
-
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, eventJson);
-	}
-
-	/**
 	 * Redirect by question code
 	 * 
 	 * @param questionCode Question code
@@ -256,50 +225,6 @@ public class NavigationService {
 		}
 
 		return redirectCode;
-	}
-
-	public static Logger getLog() {
-		return log;
-	}
-
-	public Jsonb getJsonb() {
-		return jsonb;
-	}
-
-	public UserToken getUserToken() {
-		return userToken;
-	}
-
-	public QwandaUtils getQwandaUtils() {
-		return qwandaUtils;
-	}
-
-	public BaseEntityUtils getBeUtils() {
-		return beUtils;
-	}
-
-	public SearchService getSearchService() {
-		return searchService;
-	}
-
-	public KogitoUtils getKogitoUtils() {
-		return kogitoUtils;
-	}
-
-	public SearchUtils getSearchUtils() {
-		return searchUtils;
-	}
-
-	public RoleManager getRoleManager() {
-		return roleManager;
-	}
-
-	public TaskService getTasks() {
-		return tasks;
-	}
-
-	public static String getPriIsPrefix() {
-		return PRI_IS_PREFIX;
 	}
 
 }
