@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -191,7 +192,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	// // please do not send this out to frontend no matter what
 	// @JsonbTransient
 	// @JsonIgnore
-	@Column(name = "requirement")
+	@Column(name = "capabilityRequirements")
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 
@@ -301,6 +302,12 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		getPk().setBaseEntity(baseEntity);
 		this.baseEntityCode = baseEntity.getCode();
 		this.realm = baseEntity.getRealm();
+	}
+
+	@Transient
+	@JsonbTransient
+	public BaseEntity getBaseEntity() {
+		return getPk().getBaseEntity();
 	}
 
 	/**
@@ -1327,5 +1334,12 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 
 	public boolean isLocked() {
 		return capabilityRequirements != null;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;		
 	}
 }

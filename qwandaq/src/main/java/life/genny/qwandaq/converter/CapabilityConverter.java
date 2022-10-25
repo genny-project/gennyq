@@ -18,9 +18,8 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
 	private static final String ARRAY_START = "[";
 	private static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
-    @Override
-    public String convertToDatabaseColumn(Set<Capability> attributeSet) {
-        if(attributeSet.isEmpty()) {
+    public static String convertToDBColumn(Set<Capability> attributeSet) {
+        if(attributeSet == null || attributeSet.isEmpty()) {
             return "";
         }
 
@@ -36,8 +35,7 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
         return data.toString();
     }
 
-    @Override
-    public Set<Capability> convertToEntityAttribute(String dbData) {
+    public static Set<Capability> convertToEA(String dbData) {
         if(StringUtils.isBlank(dbData))
             return new HashSet<>();
         Set<Capability> capSet = new HashSet<>();
@@ -50,7 +48,7 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
         return capSet;
     }
 
-    private Capability deserializeOneCapability(String capData) {
+    private static Capability deserializeOneCapability(String capData) {
         int delimIndex = capData.indexOf(ARRAY_START);
         if(delimIndex == -1) {
             log.error("Could not find array start in capability string: " + capData);
@@ -62,16 +60,17 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
         return new Capability(code, nodes);
     }
 
-    private StringBuilder serializeOneCapability(StringBuilder sb, Capability capability) {
+    private static StringBuilder serializeOneCapability(StringBuilder sb, Capability capability) {
         return sb.append(capability.code).append(CapabilitiesManager.getModeString(capability.nodes));
     }
-}
 
-/**
- * 
- * 3 Capability reqs
- * CAP_ADMIN["A:A"]
- * CAP_TENANT["E:A"]
- * 
- * CAP_ADMIN[A:A]  CAP_TENANT[E:A]
- */
+
+    // Converter handles
+    public String convertToDatabaseColumn(Set<Capability> attribute) {
+        return convertToDBColumn(attribute);
+    }
+
+    public Set<Capability> convertToEntityAttribute(String dbData) {
+        return convertToEA(dbData);
+    }
+}

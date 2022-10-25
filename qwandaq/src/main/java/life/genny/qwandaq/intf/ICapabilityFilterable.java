@@ -1,5 +1,7 @@
 package life.genny.qwandaq.intf;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -17,6 +19,17 @@ public interface ICapabilityFilterable {
     @JsonbTransient
     @JsonIgnore
     public Set<Capability> getCapabilityRequirements();
+
+    @JsonbTransient
+    @JsonIgnore
+    public default void setCapabilityRequirements(Capability... requirements) {
+        setCapabilityRequirements(new HashSet<>(Arrays.asList(requirements)));
+    }
+
+
+    @JsonbTransient
+    @JsonIgnore
+    public void setCapabilityRequirements(Set<Capability> requirements);
 
     public default Logger getLogger() {
         return Logger.getLogger(ICapabilityFilterable.class);

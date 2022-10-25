@@ -240,10 +240,19 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 		this.attribute = null;
 		this.attributeCode = QUESTION_GROUP_ATTRIBUTE_CODE;
 	}
+
+
     @JsonbTransient
     @JsonIgnore
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;		
 	}
 
 	/**

@@ -63,7 +63,7 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
+	private CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
 		this.capMode = capMode;
 		this.permMode = permMode;
 	}
@@ -74,7 +74,7 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	CapabilityNode(CapabilityMode capMode) {
+	private CapabilityNode(CapabilityMode capMode) {
 		this(capMode, PermissionMode.SELF);
 	}
 

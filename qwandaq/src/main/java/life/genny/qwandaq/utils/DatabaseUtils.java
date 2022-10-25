@@ -10,6 +10,7 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.persistence.Table;
 import javax.transaction.Transactional;
 
 import org.jboss.logging.Logger;
@@ -20,7 +21,12 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.validation.Validation;
 
 /*
@@ -38,6 +44,9 @@ public class DatabaseUtils {
 
 	@Inject
 	EntityManager entityManager;
+
+	@Inject
+	BaseEntityUtils beUtils;
 	
 	/**
 	 * Get all attributes with a specific Prefix
@@ -601,12 +610,80 @@ public class DatabaseUtils {
 		log.info("Successfully deleted QuestionQuestion " + sourceCode + ":" + targetCode + " in realm " + realm);
 	}
 
-	public EntityManager getEntityManager() {
-		return entityManager;
-	}
-
 	public void setEntityManager(EntityManager entityManager) {
 		this.entityManager = entityManager;
+	}
+
+
+	/**
+	 * @param filterable
+	 * @param capabilityRequirements
+	 * @return
+	 */
+	@Transactional
+	public boolean updateCapabilityRequirements(String realm, ICapabilityFilterable filterable, Capability... capabilityRequirements) {
+		if(capabilityRequirements == null) {
+			log.error("Attempted to set Capability Requirements to null. Call updateCapabilityRequirements(filterable) instead of updateCapabilityRequirements(filterable, null)");
+			throw new NullParameterException("capabilityRequirements");
+		}
+
+		filterable.setCapabilityRequirements(capabilityRequirements);
+
+		// TODO: Turn this into a sustainable solution
+
+		if(filterable instanceof BaseEntity) {
+			BaseEntity be = (BaseEntity)filterable;
+			saveBaseEntity(be);
+			return true;
+		}
+
+		if(filterable instanceof QuestionQuestion) {
+			QuestionQuestion qq = (QuestionQuestion)filterable;
+			saveQuestionQuestion(qq);
+			return true;
+		}
+		
+		if(filterable instanceof Question) {
+			Question q = (Question)filterable;
+			saveQuestion(q);
+			return true;
+		}
+		
+		if(filterable instanceof EntityAttribute) {
+			EntityAttribute ea = (EntityAttribute)filterable;
+			BaseEntity be = ea.getBaseEntity();
+			saveBaseEntity(be);
+			return true;
+			
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the database table name of anything annotated with {@link javax.persistence.Table}
+	 * @param tableObject - object to retrieve table name of
+	 * @return the SQL Table name
+	 */
+	public String getTableName(Object tableObject) {
+		Class<?> clazz = tableObject.getClass();
+		Table table = clazz.getAnnotation(Table.class);
+		if(table == null)
+			throw new BadDataException("Class: " + clazz + " is not annotated with javax.persistence.Table!");
+		return table.name();
+	}
+
+	/**
+	 * Get the database table name of anything annotated with {@link javax.persistence.Table}
+	 * @param tableObject - object to retrieve table name of
+	 * @return the HQL Table name
+	 */
+	public String getHQLTableName(Object tableObject) {
+		Class<?> clazz = tableObject.getClass();
+		Table table = clazz.getAnnotation(Table.class);
+		if(table == null)
+			throw new BadDataException("Class: " + clazz + " is not annotated with javax.persistence.Table!");
+		return clazz.getSimpleName();
 	}
 
 }

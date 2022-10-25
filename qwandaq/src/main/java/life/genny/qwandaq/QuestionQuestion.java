@@ -2,9 +2,12 @@ package life.genny.qwandaq;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
+import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.Cacheable;
@@ -22,6 +25,8 @@ import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.converter.CapabilityConverter;
@@ -588,9 +593,17 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		return this.icon;
 	}
 
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+	
 	@Override
-	public Set<Capability> getCapabilityRequirements() {
-		return capabilityRequirements;
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;		
 	}
 
 }

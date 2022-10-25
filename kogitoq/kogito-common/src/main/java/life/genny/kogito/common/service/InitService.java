@@ -1,5 +1,6 @@
 package life.genny.kogito.common.service;
 
+import java.util.Arrays;
 import java.util.List;
 
 import java.util.Set;
@@ -18,6 +19,7 @@ import life.genny.qwandaq.Ask;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.datatype.capability.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
@@ -139,6 +141,13 @@ public class InitService {
 			QDataAttributeMessage msg = CacheUtils.getObject(productCode,
 					"ATTRIBUTES_P" + currentPage, QDataAttributeMessage.class);
 
+			Attribute[] attributes = Arrays.asList(msg.getItems()).stream()
+				// Filter capability attributes
+				.filter((attribute) -> !attribute.getCode().startsWith(GennyConstants.CAP_CODE_PREFIX))
+				.collect(Collectors.toList())
+				.toArray(new Attribute[0]);
+
+			msg.setItems(attributes);
 			// set token and send
 			msg.setToken(userToken.getToken());
 			msg.setAliasCode("ATTRIBUTE_MESSAGE_" + (currentPage + 1) + "_OF_" + (TOTAL_PAGES + 1));

@@ -39,6 +39,11 @@ public class BaseRequirementsTest extends BaseTestCase {
             public Set<Capability> getCapabilityRequirements() {
                 return requirements;
             }
+
+            @Override
+            public void setCapabilityRequirements(Set<Capability> requirements) {
+                // TODO Auto-generated method stub
+            }
         };
     }
 

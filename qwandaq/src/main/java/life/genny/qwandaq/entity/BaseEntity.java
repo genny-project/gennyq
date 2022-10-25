@@ -34,6 +34,8 @@ import java.util.stream.Collectors;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
@@ -52,7 +54,10 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
@@ -103,7 +108,7 @@ import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 @Cacheable
 @RegisterForReflection
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabilityFilterable {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -161,21 +166,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@XmlTransient
 	@Transient
 	private transient Map<String, EntityAttribute> attributeMap = null;
-
-	/**
-	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
-	 */
-	public Map<String, EntityAttribute> getAttributeMap() {
-		return attributeMap;
-	}
-
-	/**
-	 * @param attributeMap the attributeMap to set
-	 */
-	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
-		this.attributeMap = attributeMap;
-	}
-
 	/**
 	 * Constructor.
 	 */
@@ -204,8 +194,26 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@ProtoFactory
 	public BaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
-
 	}
+
+
+	@Column(name = "capabilityRequirements")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
+
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;		
+	}
+	
 
 	/**
 	 * @return Set The Answers.
@@ -1166,6 +1174,21 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		}
 
 	}
+
+	/**
+	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
+	 */
+	public Map<String, EntityAttribute> getAttributeMap() {
+		return attributeMap;
+	}
+
+	/**
+	 * @param attributeMap the attributeMap to set
+	 */
+	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
+		this.attributeMap = attributeMap;
+	}
+
 
 	@JsonbTransient
 	public boolean isPerson() {
