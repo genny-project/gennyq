@@ -86,8 +86,8 @@ public class TimerData implements Serializable {
         if ((this.timerEventsArray != null) && (this.timerEventsArray.length > 0)) {
             TimerEvent firstEvent = this.timerEventsArray[0];
             if (firstEvent != null) {
-                // log.info("Current UTC is " + currentTimeStampUTC + ", First event is " +
-                // firstEvent);
+                log.info("Current UTC is " + currentTimeStampUTC + ", First event is " +
+                        firstEvent);
                 return firstEvent.getTimeStamp() <= currentTimeStampUTC;
             }
         }
@@ -157,6 +157,7 @@ public class TimerData implements Serializable {
     @JsonIgnore
     public void setExpiryMin(Long expiryMin) {
         this.expiryMin = expiryMin;
+        this.expiryTimeStamp = getNow() + (expiryMin * 60L);
     }
 
     public Long getExpiryTimeStamp() {

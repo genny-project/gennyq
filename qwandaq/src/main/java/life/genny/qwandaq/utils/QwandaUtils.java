@@ -284,6 +284,24 @@ public class QwandaUtils {
 		ask.setTargetCode(target.getCode());
 		ask.setRealm(productCode);
 
+		if ("QUE_DOT".equals(code.trim())) {
+			log.info("QUE_DOT DETECTED!!");
+			String dotValue = target.getValueAsString("LNK_DOT");
+			if (dotValue != null) {
+				log.info("LNK_DOT value: " + dotValue);
+				BaseEntity dotBE = beUtils.getBaseEntityByCode(dotValue);
+				if (dotBE != null) {
+					String html = dotBE.getValueAsString("PRI_HTML");
+					if (html != null) {
+						log.info("DOT HTML = " + html);
+						ask.setName(html);
+					}
+				}
+			} else {
+				log.error("No value for LNK_DOT ");
+			}
+		}
+
 		Attribute attribute = question.getAttribute();
 
 		// override with Attribute icon if question icon is null

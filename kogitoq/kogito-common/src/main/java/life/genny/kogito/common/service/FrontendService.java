@@ -44,15 +44,22 @@ public class FrontendService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject UserToken userToken;
+	@Inject
+	UserToken userToken;
 
-	@Inject QwandaUtils qwandaUtils;
-	@Inject DatabaseUtils databaseUtils;
-	@Inject BaseEntityUtils beUtils;
-	@Inject DefUtils defUtils;
+	@Inject
+	QwandaUtils qwandaUtils;
+	@Inject
+	DatabaseUtils databaseUtils;
+	@Inject
+	BaseEntityUtils beUtils;
+	@Inject
+	DefUtils defUtils;
 
-	@Inject NavigationService navigationService;
-	@Inject TaskService taskService;
+	@Inject
+	NavigationService navigationService;
+	@Inject
+	TaskService taskService;
 
 	/**
 	 * Control main content navigation using a pcm and a question
@@ -99,16 +106,17 @@ public class FrontendService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 	}
 
-  public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
-    return recursivelyUpdateAskTarget(ask, target, new HashMap<String, Ask>());
-  }
+	public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
+		return recursivelyUpdateAskTarget(ask, target, new HashMap<String, Ask>());
+	}
 
 	/**
 	 * Recursively update the ask target.
 	 *
 	 * @param ask    The ask to traverse
 	 * @param target The target entity to set
-   	 * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and prevent further unnecessary recursion
+	 * @return a Map of AttrbuteCode -> Ask to be used to handle dependent asks and
+	 *         prevent further unnecessary recursion
 	 */
 	public Map<String, Ask> recursivelyUpdateAskTarget(Ask ask, BaseEntity target, Map<String, Ask> asks) {
 
@@ -117,12 +125,12 @@ public class FrontendService {
 		// recursively update children
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-        		asks.put(child.getAttributeCode(), child);
+				asks.put(child.getAttributeCode(), child);
 				asks = recursivelyUpdateAskTarget(child, target, asks);
 			}
 		}
 
-    	return asks;
+		return asks;
 	}
 
 	/**
@@ -143,6 +151,21 @@ public class FrontendService {
 		Set<EntityAttribute> entityAttributes = ConcurrentHashMap
 				.newKeySet(processEntity.getBaseEntityAttributes().size());
 		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
+			log.info("processEntity EA Sent attribute Code: " + ea.getAttributeCode());
+			if ("LNK_DOT".equals(ea.getAttributeCode())) {
+				String docCode = ea.getValueString();
+				log.info("Document Template Code: " + docCode);
+				BaseEntity docBE = beUtils.getBaseEntity(docCode);
+				if (docBE != null) {
+					log.info("Document Template: " + docBE);
+					String rawHtml = docBE.getValue("PRI_HTML", null);
+					// Now merge in the data
+					String html = rawHtml;// qwandaUtils.mergeHtml(rawHtml, processEntity);
+					log.info("Merged HTML: " + html);
+					// Now substitute the value of the LNK_DOT with the merged HTML
+					ea.setValueString(html);
+				}
+			}
 			entityAttributes.add(ea);
 		}
 
@@ -199,7 +222,8 @@ public class FrontendService {
 						continue;
 					}
 					if ((code.startsWith("{startDate")) || (code.startsWith("endDate"))) {
-						log.error("BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
+						log.error(
+								"BE:" + target.getCode() + ":attribute :" + attribute.getCode() + ":BAD code " + code);
 						continue;
 					}
 

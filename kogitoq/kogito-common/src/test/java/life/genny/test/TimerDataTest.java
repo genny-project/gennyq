@@ -20,18 +20,17 @@ public class TimerDataTest {
 
     Jsonb jsonb = JsonbBuilder.create();
 
-    // @Test
+    @Test
     public void TimerEventTest() {
         System.out.println("This is the TimerEventTest");
-        System.out.println("This is the TimerEventTest2");
 
         TimerEvent t1 = new TimerEvent(0L, "TEST_TIMER_1", "LNK_WARNING");
         System.out.println("TimerEvent1 = " + t1);
 
-        TimerEvent t2 = new TimerEvent(5L, "TEST_TIMER_2", "LNK_DANGER");
+        TimerEvent t2 = new TimerEvent(1L, "TEST_TIMER_2", "LNK_DANGER");
         System.out.println("TimerEvent2 = " + t2);
 
-        TimerEvent t3 = new TimerEvent(7L, "TEST_TIMER_3", "LNK_DEAD");
+        TimerEvent t3 = new TimerEvent(2L, "TEST_TIMER_3", "LNK_DEAD");
         System.out.println("TimerEvent3 = " + t3);
 
         TimerData timerData = new TimerData();
@@ -40,28 +39,44 @@ public class TimerDataTest {
         timerData.add(t3);
         timerData.add(t2);
 
+        // Force expiry time
+        timerData.setExpiryMin(3L);
+
         System.out.println("Timer Data = " + timerData);
 
-        timerData.updateElapsed();
+        for (int t = 0; t < 200; t++) {
+            timerData.updateElapsed();
 
-        for (int t = 0; t < 100; t++) {
+            if (timerData.hasExpired()) {
+                System.out.println("TimerData is expired");
+                break;
+            }
+
             Long currentTimeStampUTC = LocalDateTime.now().atZone(
                     ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toEpochSecond();
             if (timerData.isMilestone()) {
-                System.out.println(currentTimeStampUTC + " , elapsed:" + timerData.getElapsedMin() + ", isMilestone is "
-                        + (timerData.isMilestone() ? "TRUE" : "FALSE")
-                        + ",isExpired is " + (timerData.hasExpired() ? "TRUE" : "FALSE") + ", "
-                        + timerData.getNextMilestone());
-
                 timerData.updateMilestone();
-                System.out.println("");
-            }
-            // try {
-            // TimeUnit.SECONDS.sleep(10);
-            // } catch (InterruptedException e) {
+                System.out.println(
+                        "\n current epoch: " + currentTimeStampUTC + " , elapsed:" + timerData.getElapsedMin()
+                                + " minutes, current Milestone is: " + timerData.getCurrentMilestone().getUniqueCode()
+                                + ", isMilestone is "
+                                + (timerData.isMilestone() ? "TRUE" : "FALSE")
+                                + ",isExpired is " + (timerData.hasExpired() ? "TRUE" : "FALSE")
+                                + ", next Milestone at : "
+                                + timerData.getNextMilestone());
 
-            // }
-            timerData.updateElapsed();
+                System.out.println("");
+                System.out.flush();
+            } else {
+                System.out.print(".");
+                System.out.flush();
+            }
+            try {
+                TimeUnit.MILLISECONDS.sleep(1000);
+            } catch (InterruptedException e) {
+
+            }
+
         }
 
     }
