@@ -2,7 +2,6 @@ package life.genny.test.qwandaq.utils.capabilities.requirements;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import life.genny.qwandaq.datatype.capability.Capability;
@@ -40,44 +39,6 @@ public class BaseRequirementsTest extends BaseTestCase {
             public Set<Capability> getCapabilityRequirements() {
                 return requirements;
             }
-
-            public boolean requirementsMet(Set<Capability> userCapabilities, boolean requiresAllCaps, boolean requiresAllModes) {
-                Set<Capability> checkCaps = getCapabilityRequirements();
-
-                if(checkCaps.isEmpty())
-                    return true;
-        
-                // foreach capability in the object requirements
-                    // scan through user capabilities to find capability with same code
-                    // check the nodes
-        
-                // TODO: Can optimize this into two separate loops if necessary, to save on
-                // if checks
-                for(Capability reqCap : checkCaps) {
-                    Optional<Capability> optCap = userCapabilities.parallelStream()
-                        .filter(cap -> cap.code.equals(reqCap.code)).findFirst();
-                    if(!optCap.isPresent()) {
-                        error("Could not find cap in user caps: " + reqCap.code);
-                        return false;
-                    }
-                    // a set of user capabilities should only have 1 entry per capability code
-                    if(!optCap.get().checkPerms(requiresAllModes, reqCap)) {
-                        if(requiresAllCaps) {
-                            error("Missing cap permissions " + (requiresAllModes ? "allModes " : "") + reqCap);
-                            return false;
-                        }
-                    } else {
-                        if(!requiresAllCaps)
-                            return true;
-                    }
-                }
-
-                if(requiresAllCaps) {
-                    return true;
-                } else
-                    return false;
-            }
-        
         };
     }
 

@@ -22,11 +22,111 @@ public class RequirementsTest extends BaseRequirementsTest {
         );
     }
 
+    @Test 
+    public void testNoRequirementsFilterableCaps() {
+
+        ICapabilityFilterable filterable = createFilterable();
+        setTestCaps(
+            CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
+        );
+
+        new JUnitTester<Set<Capability>, Boolean>()
+
+        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, doesn't require all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, false, false));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+        .createTest("No requirements test1 - User has Caps. Requires all caps, doesn't require all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, true, false));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, requires all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, false, true));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+
+        .createTest("No requirements test1 - User has Caps. Requires all caps, requires all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, true, true));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+        .assertAll();
+    }
+
+    @Test
+    public void testNoRequirementsFilterableNoCaps() {
+        ICapabilityFilterable filterable = createFilterable();
+        setTestCaps();
+
+        new JUnitTester<Set<Capability>, Boolean>()
+
+        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, doesn't require all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, false, false));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+        .createTest("No requirements test1 - User has Caps. Requires all caps, doesn't require all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, true, false));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, requires all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, false, true));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+
+        .createTest("No requirements test1 - User has Caps. Requires all caps, requires all modes")
+        .setTest((input) -> {
+            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
+            return Expected(filterable.requirementsMet(input.input, true, true));
+        })
+        .setInput(USER_TEST_CAPS)
+        .setExpected(true)
+        .build()
+
+        .assertAll();
+    }
 
     @Test
     public void testNonEmptyReqsFilterable() {
         ICapabilityFilterable filterable = createFilterable(
             new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
+        );
+        
+        setTestCaps(
+            CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
 
 
@@ -77,6 +177,9 @@ public class RequirementsTest extends BaseRequirementsTest {
     @Test
     public void testEmptyReqsFilterable() {
         ICapabilityFilterable filterable = createFilterable();
+        setTestCaps(
+            CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
+        );
 
         new JUnitTester<Set<Capability>, Boolean>()
 
