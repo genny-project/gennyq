@@ -263,7 +263,7 @@ public class NavigationService {
 	public void showProcessPage(final String targetCode) {
 		String sourceCode = userToken.getUserCode();
 		String eventJson = "{\"data\":{\"targetCode\":\"" + targetCode + "\",\"sourceCode\":\"" + sourceCode
-				+ "\",\"parentCode\":\"QUE_SIDEBAR_GRP\",\"code\":\"QUE_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
+				+ "\",\"parentCode\":\"QUE_SIDEBAR\",\"code\":\"QUE_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
 				+ userToken.getToken() + "\"}";
 
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, eventJson);
