@@ -276,11 +276,17 @@ public class DatabaseUtils {
 	 */
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 
-		return entityManager
-				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
-				.setParameter("realmStr", realm)
-				.setParameter("code", code)
-				.getSingleResult();
+		try {
+			return entityManager
+					.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
+					.setParameter("realmStr", realm)
+					.setParameter("code", code)
+					.getSingleResult();
+		} catch(NoResultException e) {
+			log.error("Could not find BaseEntity: " + realm + ":" + code);
+			log.error(e.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -293,11 +299,17 @@ public class DatabaseUtils {
 
 	public Question findQuestionByCode(String realm, String code) {
 
-		return entityManager
-				.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
-				.setParameter("realmStr", realm)
-				.setParameter("code", code)
-				.getSingleResult();
+		try {
+			return entityManager
+					.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
+					.setParameter("realmStr", realm)
+					.setParameter("code", code)
+					.getSingleResult();
+		} catch(NoResultException e) {
+			log.error("Could not find Question: " + realm + ":" + code);
+			log.error(e.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -337,6 +349,17 @@ public class DatabaseUtils {
 						QuestionQuestion.class)
 				.setParameter("realmStr", realm)
 				.setParameter("sourceCode", sourceCode)
+				.getResultList();
+	}
+
+	public List<QuestionQuestion> findParentQuestionQuestionsByTargetCode(String realm, String targetCode) {
+
+		return entityManager
+				.createQuery(
+						"FROM QuestionQuestion WHERE realm=:realmStr AND targetCode = :targetCode order by weight ASC",
+						QuestionQuestion.class)
+				.setParameter("realmStr", realm)
+				.setParameter("targetCode", targetCode)
 				.getResultList();
 	}
 
@@ -633,24 +656,31 @@ public class DatabaseUtils {
 
 		if(filterable instanceof BaseEntity) {
 			BaseEntity be = (BaseEntity)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to BaseEntity: " + realm + ":" + be.getCode());
 			saveBaseEntity(be);
 			return true;
 		}
 
 		if(filterable instanceof QuestionQuestion) {
 			QuestionQuestion qq = (QuestionQuestion)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getSourceCode() + ":" + qq.getTargetCode());
+			// TODO: Potentially update sub questions
 			saveQuestionQuestion(qq);
 			return true;
 		}
 		
 		if(filterable instanceof Question) {
 			Question q = (Question)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
 			saveQuestion(q);
+			List<QuestionQuestion> qqList = findParentQuestionQuestionsByTargetCode(realm, q.getCode());
+			qqList.stream().forEach(qq -> updateCapabilityRequirements(realm, qq, capabilityRequirements));
 			return true;
 		}
 		
 		if(filterable instanceof EntityAttribute) {
 			EntityAttribute ea = (EntityAttribute)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
 			BaseEntity be = ea.getBaseEntity();
 			saveBaseEntity(be);
 			return true;

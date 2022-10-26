@@ -102,9 +102,9 @@ public class CapHandler extends Manager {
 			return false;
 		}
 
-		//  TODO: Potentially get rid of this service code check. Not ideal
-
-		if(!GennyConstants.SERVICE_CODE.equals(userToken.getCode())) {
+		//  TODO: Get rid of this service code check. Not ideal
+		boolean isService = GennyConstants.SERVICE_CODE.equals(userToken.getUserCode()) || GennyConstants.SERVICE_CODE.equals(userToken.getCode()) || userToken.hasRole("service");
+		if(!isService) {
 			Set<Capability> capabilities = capMan.getUserCapabilities();
 			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
 				if(!capTrait.meetsRequirements(capabilities)) {
