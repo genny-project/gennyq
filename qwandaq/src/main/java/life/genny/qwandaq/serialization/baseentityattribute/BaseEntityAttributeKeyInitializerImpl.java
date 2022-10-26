@@ -12,7 +12,7 @@ public class BaseEntityAttributeKeyInitializerImpl implements SerializationConte
 
 	@Override
 	public String getProtoFileName() {
-		return "baseentity_attribute_key.proto";
+		return "baseentity_attribute-persistence.proto";
 	}
 
 	@Override

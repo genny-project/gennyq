@@ -12,7 +12,7 @@ public class BaseEntityKeyInitializerImpl implements SerializationContextInitial
 
 	@Override
 	public String getProtoFileName() {
-		return "baseentity_key.proto";
+		return "baseentity-persistence.proto";
 	}
 
 	@Override

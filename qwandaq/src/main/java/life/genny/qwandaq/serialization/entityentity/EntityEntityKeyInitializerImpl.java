@@ -12,7 +12,7 @@ public class EntityEntityKeyInitializerImpl implements SerializationContextIniti
 
 	@Override
 	public String getProtoFileName() {
-		return "entity_entity_key.proto";
+		return "entity_entity-persistence.proto";
 	}
 
 	@Override
