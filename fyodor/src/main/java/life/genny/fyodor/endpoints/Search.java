@@ -1,21 +1,5 @@
 package life.genny.fyodor.endpoints;
 
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.FyodorUltra;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -26,8 +10,17 @@ import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
+import org.jboss.logging.Logger;
+
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * Search - Endpoints providing classic Genny Search functionality
@@ -37,8 +30,8 @@ public class Search {
 
 	private static final Logger log = Logger.getLogger(Search.class);
 
-	@ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak.gada.io")
-	String baseKeycloakUrl;
+//	@ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak.gada.io")
+//	String baseKeycloakUrl;
 
 	@Context
 	HttpServerRequest request;

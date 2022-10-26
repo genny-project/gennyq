@@ -57,7 +57,7 @@ services:
       - GENNY_CLIENT_SECRET=${GENNY_CLIENT_SECRET}
       - GENNY_SERVICE_USERNAME=${GENNY_SERVICE_USERNAME}
       - GENNY_SERVICE_PASSWORD=${GENNY_SERVICE_PASSWORD}
-      - GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io}
+      - GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io/auth}
       - GENNY_API_URL=http://localhost:${FYODOR_INTERNAL_PORT}
       - GENNY_MYSQL_FULL_URL=alyson.genny.life:${MYSQL_PORT}/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
     ports:
