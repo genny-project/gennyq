@@ -3,6 +3,7 @@ package life.genny.kogito.common.service;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -25,6 +26,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class TaskService {
@@ -44,6 +46,8 @@ public class TaskService {
 	BaseEntityUtils beUtils;
 	@Inject
 	DefUtils defUtils;
+	@Inject
+	SearchUtils search;
 
 	@Inject
 	NavigationService navigationService;
@@ -59,6 +63,7 @@ public class TaskService {
 	public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
 		
 		// check if task exists
+		log.info("Checking if task exists...");
 
 		// re-questions if it does
 	}
@@ -114,7 +119,14 @@ public class TaskService {
 		processData.setLocation(location);
 
 		// build and send data
-		dispatch.buildAndSend(processData, pcm);
+		QBulkMessage msg = dispatch.build(processData, pcm);
+		dispatch.sendData(msg);
+
+		// send searches
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
+			search.searchTable(code);
+		}
 	}
 
 	/**
@@ -130,21 +142,22 @@ public class TaskService {
 	 * @param events
 	 * @return
 	 */
-	public ProcessData dispatch(String sourceCode, String targetCode, String questionCode, String processId, 
+	public ProcessData dispatchFull(String sourceCode, String targetCode, String questionCode, String processId, 
 			String pcmCode, String parent, String location, String events) {
+
+		log.info("Dispatching...");
 
 		if (sourceCode == null)
 			throw new NullParameterException("sourceCode");
 		if (targetCode == null)
 			throw new NullParameterException("targetCode");
-		if (questionCode == null)
-			throw new NullParameterException("questionCode");
 		if (processId == null)
 			throw new NullParameterException("processId");
 		if (pcmCode == null)
 			throw new NullParameterException("pcmCode");
 		if (events == null)
 			throw new NullParameterException("events");
+
 		/*
 		 * no need to check parent and location as they can sometimes be null
 		 */
@@ -183,12 +196,41 @@ public class TaskService {
 		BaseEntity definition = defUtils.getDEF(target);
 		processData.setDefinitionCode(definition.getCode());
 
-		// dispatch data
-		if (sourceCode.equals(userCode))
-			dispatch.buildAndSend(processData);
-
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
+
+		// dispatch data
+		if (!sourceCode.equals(userCode))
+			return processData;
+
+		// build data
+		QBulkMessage msg = dispatch.build(processData);
+		List<Ask> asks = msg.getAsks();
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+
+		// handle non-readonly if necessary
+		if (dispatch.containsNonReadonly(flatMapOfAsks, processData)) {
+			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+			msg.add(processEntity);
+
+			qwandaUtils.storeProcessData(processData);
+			// only cache for non-readonly invocation
+			qwandaUtils.cacheAsks(processData, asks);
+
+			// handle initial dropdown selections
+			// TODO: change to use flatMap
+			for (Ask ask : asks)
+				dispatch.handleDropdownAttributes(ask, processEntity, msg);
+		} else
+			msg.add(target);
+
+		dispatch.sendData(msg);
+
+		// send searches
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
+			search.searchTable(code);
+		}
 
 		return processData;
 	}
@@ -207,7 +249,15 @@ public class TaskService {
 			return processData;
 
 		processData.getAnswers().add(answer);
-		dispatch.buildAndSend(processData);
+
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+
+		QBulkMessage msg = new QBulkMessage();
+		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+
+		// send data to FE
+		dispatch.sendData(msg);
 
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
@@ -222,21 +272,23 @@ public class TaskService {
 	public Boolean submit(ProcessData processData) {
 		
 		// construct bulk message
-		List<Ask> asks = dispatch.fetchAsks(processData);
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		if (qwandaUtils.mandatoryFieldsAreAnswered(asks, processEntity))
+		if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
 			return false;
 
-		// check uniqueness
-		if (processAnswers.checkUniqueness(processData))
+		// check uniqueness in answers
+		if (!processAnswers.checkUniqueness(processData))
 			return false;
+
+		// save answer
+		processAnswers.saveAllAnswers(processData);
 
 		// clear cache entry
 		qwandaUtils.clearProcessData(processData.getProcessId());
-		// save answer
-		processAnswers.saveAllAnswers(processData);
 
 		return true;
 	}
@@ -252,7 +304,7 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		// resend BaseEntities
-		dispatch.buildAndSend(processData);
+		dispatch.build(processData);
 
 		return processData;
 	}

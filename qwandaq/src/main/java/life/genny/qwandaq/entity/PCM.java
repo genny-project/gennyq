@@ -1,16 +1,19 @@
 package life.genny.qwandaq.entity;
 
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 import java.util.Optional;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 
 /**
@@ -22,8 +25,10 @@ public class PCM extends BaseEntity {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	public static final String PCM_VERT = "PCM_VERT";
-	public static final String PCM_HORI = "PCM_HORI";
+	public static final String PREFIX = Prefix.PCM;
+
+	public static final String TPL_VERT = "TPL_VERT";
+	public static final String TPL_HORI = "TPL_HORI";
 
 	public static final String PCM_TREE = "PCM_TREE";
 	public static final String PCM_ROOT = "PCM_ROOT";
@@ -32,6 +37,7 @@ public class PCM extends BaseEntity {
 	public static final String PCM_SIDEBAR = "PCM_SIDEBAR";
 	public static final String PCM_TABLE = "PCM_TABLE";
 	public static final String PCM_DETAIL_VIEW = "PCM_DETAIL_VIEW";
+	public static final String PCM_PROCESS = "PCM_PROCESS";
 
 	public PCM(String code, String name) {
 		super(code, name);
@@ -47,28 +53,46 @@ public class PCM extends BaseEntity {
 		return pcm;
 	}
 
-	public void setLocation(Integer index, String value) {
+	public static Integer findLocation(String location) {
+		return Integer.parseInt(StringUtils.removeStart(location, Attribute.PRI_LOC));
+	}
 
-		String code = Attribute.PRI_LOC + index;
-		Optional<EntityAttribute> location = getValue(code);
+	public void addStringAttribute(String code, String name, String value) {
+		addStringAttribute(code, name, 1.0, value);
+	}
 
-		if (location.isEmpty()) {
-			Attribute attribute = new Attribute(code, "Location " + index, new DataType(String.class));
-			EntityAttribute ea = new EntityAttribute();
-			ea.setAttribute(attribute);
-			ea.setWeight(Double.valueOf(index));
-			ea.setValue(value);
-			addAttribute(ea);
-		} else
+	public void addStringAttribute(String code, String name, Double weight, String value) {
+
+		if (findEntityAttribute(code).isPresent()) {
+			log.info("[/] Attribute Present for " + code);
 			setValue(code, value);
+			return;
+		}
+
+		log.info("[X] Attribute NOT Present for " + code);
+		Attribute attribute = new Attribute(code, name, new DataType(String.class));
+		EntityAttribute ea = new EntityAttribute();
+		ea.setAttribute(attribute);
+		ea.setWeight(weight);
+		ea.setValue(value);
+		addAttribute(ea);
+	}
+
+	public void setLocation(Integer index, String value) {
+		String code = Attribute.PRI_LOC + index;
+		addStringAttribute(code, "Location " + index, Double.valueOf(index), value);
 	}
 
 	public String getLocation(Integer index) {
-		return getValueAsString("PRI_LOC"+index);
+		return getValueAsString(Attribute.PRI_LOC+index);
+	}
+
+	public List<EntityAttribute> getLocations() {
+		return findPrefixEntityAttributes(Attribute.PRI_LOC);
 	}
 
 	public void setTemplateCode(String code) {
-		setValue(Attribute.PRI_TEMPLATE_CODE, code);
+		addStringAttribute(Attribute.PRI_TEMPLATE_CODE, "Template Code", code);
 	}
 
 	public String getTemplateCode() {
@@ -76,7 +100,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setQuestionCode(String code) {
-		setValue(Attribute.PRI_QUESTION_CODE, code);
+		addStringAttribute(Attribute.PRI_QUESTION_CODE, "Question Code", code);
 	}
 
 	public String getQuestionCode() {
@@ -84,7 +108,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setTargetCode(String code) {
-		setValue(Attribute.PRI_TARGET_CODE, code);
+		addStringAttribute(Attribute.PRI_TARGET_CODE, "Target Code", code);
 	}
 
 	public String getTargetCode() {

@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.concurrent.TimeUnit;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -34,26 +35,35 @@ public class KogitoService {
 	 * @param processId
 	 */
 	public void deleteProcess(final String workflowCode, final String processId) {
+		log.info(
+				"Pretending to delete the process, but really allowing the workflow to go through to a terminating end");
 
-		final String url = "http://localhost:8080/" + workflowCode + "/" + processId;
-		log.debug("Deleting process " + url);
-		log.debug("token=" + serviceToken.getToken());
-
-		HttpClient client = HttpClient.newHttpClient();
-		HttpRequest request = HttpRequest.newBuilder()
-				.uri(URI.create(url))
-				.header("Authorization", "Bearer " + serviceToken.getToken())
-				.DELETE()
-				.build();
-
-		HttpResponse<String> response = null;
 		try {
-			response = client.send(request,
-					HttpResponse.BodyHandlers.ofString());
-			log.debug(response.statusCode() + ":" + response.body());
-		} catch (IOException | InterruptedException e) {
-			log.error(e.getLocalizedMessage());
-		}
+			TimeUnit.MINUTES.sleep(1);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // wait a minute to let workflow finish
+
+		// final String url = "http://localhost:8080/" + workflowCode + "/" + processId;
+		// log.debug("Deleting process " + url);
+		// log.debug("token=" + serviceToken.getToken());
+
+		// HttpClient client = HttpClient.newHttpClient();
+		// HttpRequest request = HttpRequest.newBuilder()
+		// .uri(URI.create(url))
+		// .header("Authorization", "Bearer " + serviceToken.getToken())
+		// .DELETE()
+		// .build();
+
+		// HttpResponse<String> response = null;
+		// try {
+		// response = client.send(request,
+		// HttpResponse.BodyHandlers.ofString());
+		// log.debug(response.statusCode() + ":" + response.body());
+		// } catch (IOException | InterruptedException e) {
+		// log.error(e.getLocalizedMessage());
+		// }
 		// return response.statusCode() == 200 ? Response.ok().build() :
 		// Response.serverError().build();
 	}

@@ -239,6 +239,30 @@ public class BaseEntityService {
 	}
 
 	/**
+	 * Update entityAttributes using updatePairs
+	 */
+	public void updatePairsBaseEntity(String baseEntityCode, String updatePairs) {
+
+		// Now split up the updatePairs
+
+		String[] pairs = updatePairs.split(";");
+		for (String pair : pairs) {
+			String[] elements = pair.split(":");
+			if (elements.length == 1) {
+				updateBaseEntity(baseEntityCode, "PRI_PQ_STAGE", elements[0]); // assume valid due to initial
+																				// construction
+			} else if (elements.length == 2) {
+				updateBaseEntity(baseEntityCode, elements[0], elements[1]); // assume valid due to initial
+																			// construction
+			} else if (elements.length == 3) {
+				updateBaseEntity(elements[0], elements[1], elements[2]); // assume valid due to initial
+																			// construction
+			}
+		}
+
+	}
+
+	/**
 	 * Update entityAttributes
 	 */
 	public void updateBaseEntity(String baseEntityCode, String attributeCode, String value) {

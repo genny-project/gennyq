@@ -82,8 +82,10 @@ public class InternalConsumer {
 
 		Page page = fyodor.fetch26(searchEntity);
 
-		Attribute attribute = qwandaUtils.getAttribute("PRI_TOTAL_RESULTS");
-		searchEntity.addAnswer(new Answer(searchEntity, searchEntity, attribute, String.valueOf(page.getTotal())));
+		Attribute totalResults = qwandaUtils.getAttribute(Attribute.PRI_TOTAL_RESULTS);
+		searchEntity.addAnswer(new Answer(searchEntity, searchEntity, totalResults, String.valueOf(page.getTotal())));
+		Attribute index = qwandaUtils.getAttribute(Attribute.PRI_INDEX);
+		searchEntity.addAnswer(new Answer(searchEntity, searchEntity, index, String.valueOf(page.getPageNumber())));
 
 		// convert to sendable
 		searchEntity = searchEntity.convertToSendable();

@@ -1,10 +1,15 @@
 package life.genny.qwandaq.entity.search.clause;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 
 /**
  * Clause
@@ -14,30 +19,19 @@ public class Clause implements ClauseArgument {
 
 	private static final Logger log = Logger.getLogger(SearchEntity.class);
 
-	private ClauseContainer a, b;
+	private List<ClauseContainer> clauseContainers;
 
 	public Clause() {
 	}
 
-	public Clause(ClauseArgument a, ClauseArgument b) {
-		this.a = createContainer(a);
-		this.b = createContainer(b);
-	}
+	public Clause(ClauseArgument... clauseArguments) {
 
-	public ClauseContainer getA() {
-		return a;
-	}
+		if (clauseArguments.length <= 1)
+			throw new QueryBuilderException("Clause must have at least two arguments");
 
-	public void setA(ClauseContainer a) {
-		this.a = a;
-	}
-
-	public ClauseContainer getB() {
-		return b;
-	}
-
-	public void setB(ClauseContainer b) {
-		this.b = b;
+		this.clauseContainers = Arrays.asList(clauseArguments).stream()
+				.map(ca -> createContainer(ca))
+				.collect(Collectors.toList());
 	}
 
 	private ClauseContainer createContainer(ClauseArgument clauseArgument) {
@@ -51,6 +45,14 @@ public class Clause implements ClauseArgument {
 			container.setFilter((Filter) clauseArgument);
 
 		return container;
+	}
+
+	public List<ClauseContainer> getClauseContainers() {
+		return clauseContainers;
+	}
+
+	public void setClauseContainers(List<ClauseContainer> clauseContainers) {
+		this.clauseContainers = clauseContainers;
 	}
 
 }

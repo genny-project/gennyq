@@ -52,6 +52,7 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -61,8 +62,6 @@ import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
-
-import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -86,20 +85,19 @@ import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
-	@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { 
-	"code",
-	"realm" 
-	}
-))
+		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
+				"code",
+				"realm"
+		}))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @FilterDefs({
-	@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
-		@ParamDef(name = "attributeCodes", type = "string") 
+		@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
+				@ParamDef(name = "attributeCodes", type = "string")
 		}),
-	@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
-		@ParamDef(name = "attributeCode", type = "string") 
-	}) 
+		@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
+				@ParamDef(name = "attributeCode", type = "string")
+		})
 })
 @Cacheable
 @RegisterForReflection
@@ -120,7 +118,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
 	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade=CascadeType.ALL)
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)
 	@JsonBackReference(value = "entityAttribute")
 	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
 	@Filters({
@@ -140,11 +138,17 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@JsonbTransient
 	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
-	/*@JsonIgnore
-	@XmlTransient
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
-	@Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	@JsonbTransient*/
+	/*
+	 * @JsonIgnore
+	 * 
+	 * @XmlTransient
+	 * 
+	 * @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
+	 * 
+	 * @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
+	 * 
+	 * @JsonbTransient
+	 */
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
 
 	@XmlTransient
@@ -373,8 +377,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 		try {
 			foundEntity = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().equals(attributeCode)))
-				.findFirst();
+					.filter(x -> (x.getAttributeCode().equals(attributeCode)))
+					.findFirst();
 		} catch (Exception e) {
 			log.error("Error in fetching attribute value: " + attributeCode);
 		}
@@ -479,7 +483,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
-			if(value != null)
+			if (value != null)
 				existing.get().setValue(value);
 			existing.get().setWeight(weight);
 			// removeAttribute(existing.get().getAttributeCode());
@@ -1161,6 +1165,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(PER_BE_PREFIX);
+		return getCode().startsWith(Prefix.PER);
 	}
 }

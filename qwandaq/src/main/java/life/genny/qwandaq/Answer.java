@@ -762,9 +762,12 @@ public class Answer {
 	 */
 	public void setAttribute(final Attribute attribute) {
 		this.attribute = attribute;
-		if (this.dataType == null) {
+		if (attribute == null)
+			return;
+		if (attribute.getDataType() == null)
+			return;
+		if (this.dataType == null)
 			setDataType(attribute.getDataType().getClassName());
-		}
 	}
 
 	/**

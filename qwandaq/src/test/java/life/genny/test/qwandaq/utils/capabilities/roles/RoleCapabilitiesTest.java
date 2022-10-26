@@ -1,5 +1,7 @@
 package life.genny.test.qwandaq.utils.capabilities.roles;
 
+import java.util.Map;
+
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -10,20 +12,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 import io.quarkus.test.junit.mockito.InjectMock;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.managers.capabilities.role.RoleBuilder;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.test.qwandaq.utils.BaseTestCase;
-
-import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
-import static life.genny.qwandaq.datatype.CapabilityMode.*;
-
-import java.util.Map;
-
-import static life.genny.qwandaq.constants.GennyConstants.CHILDREN_LINK_CODE;;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RoleCapabilitiesTest extends BaseTestCase {
@@ -41,8 +34,8 @@ public class RoleCapabilitiesTest extends BaseTestCase {
     @InjectMocks
     RoleManager roleMan;
 
-    private static final Attribute LNK_ROLE = new Attribute(ROLE_LINK_CODE, "Role Link", dtt);
-    private static final Attribute LNK_CHILDREN = new Attribute(CHILDREN_LINK_CODE, "Children Link", dtt);
+    private static final Attribute LNK_ROLE = new Attribute(Attribute.LNK_ROLE, "Role Link", dtt);
+    private static final Attribute LNK_CHILDREN = new Attribute(Attribute.LNK_CHILDREN, "Children Link", dtt);
 
     private static final String PRODUCT_CODE = "lojing";
 
@@ -56,8 +49,8 @@ public class RoleCapabilitiesTest extends BaseTestCase {
     public void testRoleCreation() {
 		
         QwandaUtils qwandaUtils = Mockito.mock(QwandaUtils.class);
-		Mockito.when(qwandaUtils.getAttribute(PRODUCT_CODE, ROLE_LINK_CODE)).thenReturn(LNK_ROLE);
-		Mockito.when(qwandaUtils.getAttribute(PRODUCT_CODE, CHILDREN_LINK_CODE)).thenReturn(LNK_CHILDREN);
+		Mockito.when(qwandaUtils.getAttribute(PRODUCT_CODE, Attribute.LNK_ROLE)).thenReturn(LNK_ROLE);
+		Mockito.when(qwandaUtils.getAttribute(PRODUCT_CODE, Attribute.LNK_CHILDREN)).thenReturn(LNK_CHILDREN);
         
         String[][] capData = {
             {"CAP_TEST_1", "Capability Test 1"},
@@ -70,15 +63,15 @@ public class RoleCapabilitiesTest extends BaseTestCase {
         }
 
         log.info("Generating Capabilities Map!");
-        Map<String, Attribute> capabilitiesMap = capMan.getCapabilityMap(PRODUCT_CODE, capData);
+        Map<String, Attribute> capabilitiesMap = capMan.getCapabilityAttributeMap(PRODUCT_CODE, capData);
         log.info("Done");
 
         log.info("Creating new test role");
-        BaseEntity role = new RoleBuilder(capMan,"ROL_TEST", "Test Role", PRODUCT_CODE)
-            .setCapabilityMap(capabilitiesMap)
-            .addCapability("CAP_TEST_1", ADD, EDIT, DELETE)
-            .addChildren("ROL_TEST_2")
-            .build();
+        // BaseEntity role = new RoleBuilder("ROL_TEST", "Test Role", PRODUCT_CODE)
+        //     .setCapabilityMap(capabilitiesMap)
+        //     .addCapability("CAP_TEST_1").add(ALL).view(ALL).delete(ALL)
+        //     .addChildren("ROL_TEST_2")
+        //     .build();
         log.info("Done");
     }
     

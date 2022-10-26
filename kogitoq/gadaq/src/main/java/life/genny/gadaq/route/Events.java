@@ -18,6 +18,8 @@ import life.genny.kogito.common.service.NavigationService;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
@@ -71,32 +73,32 @@ public class Events {
 		}
 
 		// submit
-		if ("QUE_SUBMIT".equals(code)) {
+		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
 			return;
 		}
 
-		// update
-		if ("QUE_UPDATE".equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "update", "");
-			return;
-		}
-
 		// cancel
-		if ("QUE_CANCEL".equals(code)) {
+		if (Question.QUE_CANCEL.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
 			return;
 		}
 
 		// reset
-		if ("QUE_CANCEL".equals(code)) {
+		if (Question.QUE_RESET.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
 			return;
 		}
 
 		// dashboard
-		if ("QUE_DASHBOARD_VIEW".equals(code)) {
+		if (Question.QUE_DASHBOARD.equals(code)) {
 			navigation.sendSummary();
+			return;
+		}
+
+		// bucket view
+		if (Question.QUE_PROCESS.equals(code)) {
+			search.sendBuckets();
 			return;
 		}
 
@@ -106,14 +108,17 @@ public class Events {
 			return;
 		}
 
-		// bucket view
-		if ("QUE_TAB_BUCKET_VIEW".equals(code)) {
-			search.getBuckets(code);
+		// search pagination
+		if (GennyConstants.PAGINATION_NEXT.equals(code)) {
+			search.handleSearchPagination(targetCode, false);
+			return;
+		} else if (GennyConstants.PAGINATION_PREV.equals(code)) {
+			search.handleSearchPagination(targetCode, true);
 			return;
 		}
 
 		// table view (Default View Mode)
-		if (code.startsWith("QUE_") && code.endsWith("_VIEW")) {
+		if (code.startsWith("QUE_TABLE_")) {
 			search.sendTable(code);
 			return;
 		}
@@ -131,20 +136,20 @@ public class Events {
 		}
 
 		// add item
-		if (code.startsWith("QUE_ADD_.*")) {
+		if (code.startsWith("QUE_ADD_")) {
 			code = StringUtils.removeStart(code, "QUE_ADD_");
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
 
-			if (!"PER".equals(prefix))
+			log.info("Prefix: " + code);
+			if ("PER".equals(prefix)) {
+				JsonObject json = Json.createObjectBuilder()
+						.add("definitionCode", "DEF_"+code)
+						.add("sourceCode", userToken.getUserCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
-
-			JsonObject json = Json.createObjectBuilder()
-					.add("definitionCode", "DEF_"+code)
-					.add("sourceCode", userToken.getUserCode())
-					.build();
-
-			kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
-			return;
+			}
 		}
 
 		// edit item

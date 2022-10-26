@@ -55,6 +55,24 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 
 /**
  * A static utility class used for standard requests and
@@ -62,6 +80,7 @@ import life.genny.qwandaq.entity.BaseEntity;
  * 
  * @author Adam Crow
  */
+
 public class GithubUtils {
 
     static final Logger log = Logger.getLogger(GithubUtils.class);
@@ -139,7 +158,8 @@ public class GithubUtils {
         return jsonb.toJson(response.build());
     }
 
-    public List<BaseEntity> getLayoutBaseEntitys(final String remoteUrl, final String branch, final String realm,
+    public List<BaseEntity> getLayoutBaseEntitys(BaseEntityUtils beUtils, final String remoteUrl, final String branch,
+            final String realm,
             final String gitrealm, boolean recursive)
             throws InvalidRemoteException, TransportException, GitAPIException,
             RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException {
@@ -157,8 +177,6 @@ public class GithubUtils {
         log.info("realm=" + realm);
         log.info("gitFolder=" + gitFolder);
         log.info("realmFilter=" + realmFilter);
-
-
 
         String tmpDir = "/tmp/git";
         try {
@@ -205,7 +223,7 @@ public class GithubUtils {
         // treeWalk.setFilter(AndTreeFilter.create(TreeFilter.ANY_DIFF,
         // PathFilter.ANY_DIFF));
 
-        treeWalk.setFilter(AndTreeFilter.create(PathFilter.create(realmFilter), PathSuffixFilter.create(".json")));
+        treeWalk.setFilter(AndTreeFilter.create(PathFilter.create(realmFilter), PathSuffixFilter.create(".html")));
         while (treeWalk.next()) {
 
             final ObjectId objectId = treeWalk.getObjectId(0);
@@ -236,6 +254,7 @@ public class GithubUtils {
                     uri = ("genny".equals(gitrealm) ? "/" : "") + p.getParent().toString();
                 }
                 name = p.getFileName().toString().replaceFirst("[.][^.]+$", "");
+                String nameCode = name.replaceAll("\\-", "");
 
                 if (!name.equals(gitrealm)) { // avoid root folder
                     String content = new String(loader.getBytes());
@@ -254,20 +273,28 @@ public class GithubUtils {
                         uri = StringUtils.removeEndIgnoreCase(uri, "/");
                     }
 
-                    String precode = String.valueOf(uri.replaceAll("[^a-zA-Z0-9]", "").toUpperCase().hashCode());
-                    layoutCode = ("LAY_" + realm + "_" + precode).toUpperCase();
+                    String precode = String.valueOf(uri.replaceAll("[^a-zA-Z0-9\\-]", "").toUpperCase().hashCode());
+                    layoutCode = ("DOT_" + nameCode).toUpperCase();
 
                     String existingUrl = lays.get(layoutCode);
-                    if (existingUrl != null) {
-                        log.info("DUPLICATE - " + layoutCode + ":" + existingUrl + "--->" + fullpath);
-                        // continue;
-                    } else {
-                        lays.put(layoutCode, fullpath);
+                    BaseEntity layout = null;
+                    try {
+                        layout = beUtils.getBaseEntityOrNull(realm, layoutCode);
+                    } catch (ItemNotFoundException e) {
+                        log.info("No be found for " + layoutCode);
                     }
 
-                    BaseEntity layout = new BaseEntity(layoutCode, name);
+                    if ((existingUrl != null) || (layout != null)) {
+                        log.info("DUPLICATE - " + layoutCode + ":" + existingUrl + "--->" + fullpath);
+
+                    } else {
+                        lays.put(layoutCode, fullpath);
+                        layout = new BaseEntity(layoutCode, name);
+                    }
+
                     layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt),
                             content));
+
                     layout.addAnswer(
                             new Answer(layout, layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), uri));
                     layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt),
