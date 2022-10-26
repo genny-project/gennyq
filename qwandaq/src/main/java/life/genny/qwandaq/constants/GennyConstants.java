@@ -155,6 +155,11 @@ public final class GennyConstants {
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
 	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
 	public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
+	public static final String PCM_SAVED_SEARCH_POPUP_TEXT = "PCM_SAVED_SEARCH_POPUP_TEXT";
+	public static final String SAVED_SEARCHES = "Saved Searches";
+	public static final String PCM_SAVED_SEARCH_SELECT = "PCM_SAVED_SEARCH_SELECT";
+	public static final String EVT_SAVED_SEARCH_DELETE = "EVT_SAVED_SEARCH_DELETE";
+	public static final String EVT_SAVED_SEARCH_SAVE = "EVT_SAVED_SEARCH_SAVE";
 
 }
 
