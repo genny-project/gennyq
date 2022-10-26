@@ -15,7 +15,7 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.serialization.attribute.Attribute";
+		return "life.genny.qwandaq.persistence.attribute.Attribute";
 	}
 
 	// @Override

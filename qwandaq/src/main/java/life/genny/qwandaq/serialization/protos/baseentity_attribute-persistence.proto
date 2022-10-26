@@ -8,15 +8,15 @@ message BaseEntityAttributeKey {
 
 /* @Indexed */
 message BaseEntityAttribute {
-  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.YES, analyzer = @Analyzer(definition = "keyword")) */
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
   optional string attributeCode = 1;
-  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.YES, analyzer = @Analyzer(definition = "keyword")) */
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
   optional string baseEntityCode = 2;
   optional int64 created = 3;
   optional bool inferred = 4;
   optional bool privacyFlag = 5;
   optional bool readonly = 6;
-  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.YES, analyzer = @Analyzer(definition = "keyword")) */
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
   optional string realm = 7;
   optional int64 updated = 8;
   optional bool valueBoolean = 9;

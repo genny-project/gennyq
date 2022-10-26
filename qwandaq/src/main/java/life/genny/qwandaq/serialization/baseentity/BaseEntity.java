@@ -6,6 +6,8 @@ import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.infinispan.protostream.annotations.ProtoField;
 
 /*
  * A representation of BaseEntity in the cache
@@ -13,23 +15,32 @@ import life.genny.qwandaq.serialization.CoreEntitySerializable;
  * @author Varun Shastry
  */
 public class BaseEntity implements CoreEntitySerializable {
-	
+
+	@ProtoField(1)
 	private String dtype;
-	
+
+	@ProtoField(2)
 	private Long id;
-	
+
+	@ProtoField(3)
 	private LocalDateTime created;
-	
+
+	@ProtoField(4)
 	private String name;
-	
+
+	@ProtoField(5)
 	private String realm;
-	
+
+	@ProtoField(6)
 	private LocalDateTime updated;
-	
+
+	@ProtoField(7)
 	private String code;
-	
+
+	@ProtoField(8)
 	private Integer status;
 
+	@ProtoFactory
 	public BaseEntity(String dtype, Long id, LocalDateTime created, String name, String realm, LocalDateTime updated,
 			String code, Integer status) {
 		super();

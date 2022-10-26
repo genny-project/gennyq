@@ -13,7 +13,7 @@ public class AttributeKeyMessageMarshaller implements MessageMarshaller<Attribut
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.serialization.attribute.AttributeKey";
+		return "life.genny.qwandaq.persistence.attribute.AttributeKey";
 	}
 
 	@Override

@@ -13,7 +13,7 @@ public class EntityEntityKeyMessageMarshaller implements MessageMarshaller<Entit
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.serialization.entityentity.EntityEntityKey";
+		return "life.genny.qwandaq.persistence.entityentity.EntityEntityKey";
 	}
 
 	@Override
