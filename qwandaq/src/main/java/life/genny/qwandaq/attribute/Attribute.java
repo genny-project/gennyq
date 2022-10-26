@@ -87,6 +87,8 @@ public class Attribute extends CodedEntity {
 	public static final String QQQ_QUESTION_GROUP = "QQQ_QUESTION_GROUP";
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_CODE = "PRI_CODE";
+	public static final String PRI_CREATED = "PRI_CREATED";
+	public static final String PRI_UPDATED = "PRI_UPDATED";
 	public static final String PRI_UUID = "PRI_UUID";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
 	public static final String PRI_EVENT = "PRI_EVENT";
@@ -128,6 +130,7 @@ public class Attribute extends CodedEntity {
 
 	// search
 	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
+	public static final String PRI_TOTAL_RESULTS = "PRI_TOTAL_RESULTS";
 	public static final String PRI_INDEX = "PRI_INDEX";
 
 	@Embedded

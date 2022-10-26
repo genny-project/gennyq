@@ -512,13 +512,13 @@ public class FyodorUltra {
 
 		Root<BaseEntity> root = cauldron.getRoot();
 
-		if (code.startsWith("PRI_CREATED"))
+		if (code.startsWith(Attribute.PRI_CREATED))
 			expression = root.<LocalDateTime>get("created");
-		else if (code.startsWith("PRI_UPDATED"))
+		else if (code.startsWith(Attribute.PRI_UPDATED))
 			expression = root.<LocalDateTime>get("updated");
-		else if (code.equals("PRI_CODE"))
+		else if (code.equals(Attribute.PRI_CODE))
 			expression = root.<String>get("code");
-		else if (code.equals("PRI_NAME"))
+		else if (code.equals(Attribute.PRI_NAME))
 			expression = root.<String>get("name");
 		else {
 			expression = findExpression(cauldron, code);
@@ -544,15 +544,13 @@ public class FyodorUltra {
 
 		Root<BaseEntity> root = cauldron.getRoot();
 
-		if (code.startsWith("PRI_CREATED")) {
-			log.info("Returning created");
+		if (code.startsWith(Attribute.PRI_CREATED))
 			return root.<LocalDateTime>get("created");
-		}
-		else if (code.startsWith("PRI_UPDATED"))
+		else if (code.startsWith(Attribute.PRI_UPDATED))
 			return root.<LocalDateTime>get("updated");
-		else if (code.equals("PRI_CODE"))
+		else if (code.equals(Attribute.PRI_CODE))
 			return root.<String>get("code");
-		else if (code.equals("PRI_NAME"))
+		else if (code.equals(Attribute.PRI_NAME))
 			return root.<String>get("name");
 
 		Join<BaseEntity, EntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);

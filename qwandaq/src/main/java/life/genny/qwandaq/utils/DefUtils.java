@@ -127,15 +127,12 @@ public class DefUtils {
 		}
 
 		// save processing time on particular entities
-		if (entity.getCode().startsWith(Prefix.DEF)) {
+		if (entity.getCode().startsWith(Prefix.DEF))
 			return entity;
-		}
-		if (entity.getCode().startsWith(Prefix.PRJ)) {
+		if (entity.getCode().startsWith(Prefix.PRJ))
 			return beUtils.getBaseEntity("DEF_PROJECT");
-		}
-		if (entity.getCode().startsWith("DOT_")) {
+		if (entity.getCode().startsWith("DOT_"))
 			return beUtils.getBaseEntity("DEF_DOCUMENT_TEMPLATE");
-		}
 
 		// NOTE: temporary special check for internmatch
 		String productCode = userToken.getProductCode();
