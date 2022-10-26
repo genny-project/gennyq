@@ -89,7 +89,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 
 	private String icon;
 	
-	@Column(name = "capabilityRequirements")
+	@Column(name = "capreqs")
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 

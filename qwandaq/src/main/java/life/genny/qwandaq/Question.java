@@ -102,7 +102,7 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 	private Attribute attribute;
 
 
-	@Column(name = "capabilityRequirements")
+	@Column(name = "capreqs")
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 

@@ -197,7 +197,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	}
 
 
-	@Column(name = "capabilityRequirements")
+	@Column(name = "capreqs")
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 

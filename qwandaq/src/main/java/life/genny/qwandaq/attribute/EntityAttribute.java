@@ -192,7 +192,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	// // please do not send this out to frontend no matter what
 	// @JsonbTransient
 	// @JsonIgnore
-	@Column(name = "capabilityRequirements")
+	@Column(name = "capreqs")
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 
