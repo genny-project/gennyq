@@ -56,6 +56,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 
@@ -66,8 +67,6 @@ import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
-
-import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -169,7 +168,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public BaseEntity() {
 		// super();
 		// dummy
@@ -182,7 +180,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 */
 	public BaseEntity(final String aName) {
 		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
-
 	}
 
 	/**
@@ -1192,6 +1189,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(PER_BE_PREFIX);
+		return getCode().startsWith(Prefix.PER);
 	}
 }

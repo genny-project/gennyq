@@ -14,12 +14,12 @@ import javax.persistence.NoResultException;
 
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Ask;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.datatype.capability.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
@@ -48,7 +48,6 @@ import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.serviceq.Service;
 
 /**
  * A Service class used for Auth Init operations.
@@ -64,9 +63,6 @@ public class InitService {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	private Service service;
-
-	@Inject
 	private DatabaseUtils databaseUtils;
 
 	@Inject
@@ -77,12 +73,6 @@ public class InitService {
 
 	@Inject
 	private QwandaUtils qwandaUtils;
-
-	@Inject
-	private KogitoUtils kogitoUtils;
-
-	@Inject
-	private GraphQLUtils gqlUtils;
 
 	@Inject
 	private SearchUtils searchUtils;
@@ -143,7 +133,7 @@ public class InitService {
 
 			Attribute[] attributes = Arrays.asList(msg.getItems()).stream()
 				// Filter capability attributes
-				.filter((attribute) -> !attribute.getCode().startsWith(GennyConstants.CAP_CODE_PREFIX))
+				.filter((attribute) -> !attribute.getCode().startsWith(Prefix.CAP))
 				.collect(Collectors.toList())
 				.toArray(new Attribute[0]);
 
@@ -241,9 +231,7 @@ public class InitService {
 			throw new ItemNotFoundException("QUE_ADD_ITEMS_GRP", e);
 		}
 
-		Ask parentAsk = new Ask(groupQuestion);
-		parentAsk.setSourceCode(user.getCode());
-		parentAsk.setTargetCode(user.getCode());
+		Ask parentAsk = new Ask(groupQuestion, user.getCode(), user.getCode());
 		parentAsk.setRealm(productCode);
 
 		Set<Capability> capabilities = capMan.getUserCapabilities();
@@ -272,12 +260,10 @@ public class InitService {
 
 			Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
 
-			Ask addAsk = new Ask(question);
-			addAsk.setSourceCode(user.getCode());
-			addAsk.setTargetCode(user.getCode());
+			Ask addAsk = new Ask(question, user.getCode(), user.getCode());
 			addAsk.setRealm(productCode);
 
-			parentAsk.addChildAsk(addAsk);
+			parentAsk.add(addAsk);
 		}
 		return parentAsk;
 	}
@@ -286,6 +272,7 @@ public class InitService {
 	 * Send Add Items Menu
 	 */
 	public void sendAddItems() {
+
 		BaseEntity user = beUtils.getUserBaseEntity();
 		
 		Ask ask = generateAddItemsAsk(userToken.getProductCode(), user);
@@ -294,7 +281,7 @@ public class InitService {
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+		// KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	public void sendDrafts() {

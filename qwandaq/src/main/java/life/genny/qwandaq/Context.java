@@ -78,7 +78,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Inheritance(strategy = InheritanceType.JOINED)
 
-public class Context extends CoreEntity implements Serializable {
+public class Context extends CoreEntity {
 	/**
 	 *
 	 */

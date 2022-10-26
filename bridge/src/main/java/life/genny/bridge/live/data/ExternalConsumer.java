@@ -2,6 +2,7 @@ package life.genny.bridge.live.data;
 
 import java.util.UUID;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -34,18 +35,22 @@ import life.genny.serviceq.Service;
  *
  * @author hello@gada.io
  */
-@Singleton
+@ApplicationScoped
 public class ExternalConsumer {
 
 	private static final Logger log = Logger.getLogger(ExternalConsumer.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject RoleBasedPermission permissions;
-	@Inject BlackListInfo blacklist;
-	@Inject Service service;
+	@Inject
+	RoleBasedPermission permissions;
+	@Inject
+	BlackListInfo blacklist;
+	@Inject
+	Service service;
 
-	@Inject InternalConsumer consumer;
+	@Inject
+	InternalConsumer consumer;
 	
 	@ConfigProperty(name = "bridge.id", defaultValue = "false")
 	String bridgeId;

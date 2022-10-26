@@ -1,7 +1,5 @@
 package life.genny.gadaq.live.data;
 
-import static life.genny.qwandaq.utils.SecurityUtils.obfuscate;
-
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
@@ -11,7 +9,6 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -20,13 +17,17 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
+import life.genny.gadaq.route.Events;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -38,19 +39,19 @@ public class InternalConsumer {
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	Service service;
-
-	@Inject
 	GennyScopeInit scope;
-
+	@Inject
+	Service service;
 	@Inject
 	UserToken userToken;
 
 	@Inject
 	KogitoUtils kogitoUtils;
-
 	@Inject
 	SearchService search;
+
+	@Inject
+	Events events;
 
 	/**
 	 * Execute on start up.
@@ -59,8 +60,6 @@ public class InternalConsumer {
 	 */
 	void onStart(@Observes StartupEvent ev) {
 		service.fullServiceInit();
-
-
 	}
 
 	/**
@@ -73,7 +72,7 @@ public class InternalConsumer {
 	public void getData(String data) {
 
 		Instant start = Instant.now();
-		log.info("Received Data : " + obfuscate(data));
+		log.info("Received Data : " + SecurityUtils.obfuscate(data));
 
 		// init scope and process msg
 		scope.init(data);
@@ -84,7 +83,7 @@ public class InternalConsumer {
 		// kogitoUtils.funnelAnswers(answers);
 
 		Optional<Answer> searchText = answers.stream()
-				.filter(ans -> ans.getAttributeCode().equals("PRI_SEARCH_TEXT"))
+				.filter(ans -> ans.getAttributeCode().equals(Attribute.PRI_SEARCH_TEXT))
 				.findFirst();
 
 		if (searchText.isPresent()) {
@@ -112,18 +111,30 @@ public class InternalConsumer {
 	@Blocking
 	public void getEvent(String event) {
 
-		Instant start = Instant.now();
-		JsonObject eventJson = jsonb.fromJson(event, JsonObject.class);
-		if (eventJson.containsKey("event_type")) {
-			if ("DD".equals(eventJson.getString("event_type"))) {
-				return; // Don't process Dropdowns
-			}
-		}
-		log.info("Received Event : " + obfuscate(eventJson));
-
 		// init scope and process msg
+		Instant start = Instant.now();
 		scope.init(event);
-		kogitoUtils.routeEvent(event);
+
+		// check if event is a valid event
+		QEventMessage msg = null;
+		try {
+			msg = jsonb.fromJson(event, QEventMessage.class);
+		} catch (Exception e) {
+			log.error("Cannot parse this event! " + event);
+			e.printStackTrace();
+			return;
+		}
+
+		log.info("Received Event : " + SecurityUtils.obfuscate(event));
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type())) {
+			return;
+		}
+		events.route(msg);
 		scope.destroy();
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
+
 }

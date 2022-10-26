@@ -18,9 +18,11 @@ package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 
@@ -87,8 +89,24 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String DEFAULT_CODE_PREFIX = "QUE_";
-	public static final String QUESTION_GROUP_ATTRIBUTE_CODE = "QQQ_QUESTION_GROUP";
+	// core
+	public static final String QUE_SUBMIT = "QUE_SUBMIT";
+	public static final String QUE_CANCEL = "QUE_CANCEL";
+	public static final String QUE_RESET = "QUE_RESET";
+
+	public static final String QUE_NEXT = "QUE_NEXT";
+	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";
+
+	public static final String QUE_EVENTS = "QUE_EVENTS";
+
+	// entity
+	public static final String QUE_NAME = "QUE_NAME";
+	public static final String QUE_EMAIL = "QUE_EMAIL";
+	public static final String QUE_MOBILE = "QUE_MOBILE";
+
+	// navigation
+	public static final String QUE_PROCESS = "QUE_PROCESS";
+	public static final String QUE_DASHBOARD = "QUE_DASHBOARD";
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
@@ -221,7 +239,7 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 			throw new InvalidParameterException("QuestionList must not be null");
 		}
 		this.attribute = null;
-		this.attributeCode = QUESTION_GROUP_ATTRIBUTE_CODE;
+		this.attributeCode = Attribute.QQQ_QUESTION_GROUP;
 
 		initialiseChildQuestions(childQuestions);
 	}
@@ -238,7 +256,7 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 			throw new InvalidParameterException("QuestionList must not be null");
 		}
 		this.attribute = null;
-		this.attributeCode = QUESTION_GROUP_ATTRIBUTE_CODE;
+		this.attributeCode = Attribute.QQQ_QUESTION_GROUP;
 	}
 
 
@@ -350,7 +368,7 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 	 * @return the default Code prefix for this class.
 	 */
 	static public String getDefaultCodePrefix() {
-		return DEFAULT_CODE_PREFIX;
+		return Prefix.QUE;
 	}
 
 	/**
@@ -569,7 +587,7 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 		List<QuestionQuestion> qqList = new CopyOnWriteArrayList<QuestionQuestion>(getChildQuestions());
 		Collections.sort(qqList);
 		String ret = "";
-		if (getAttributeCode().equals(QUESTION_GROUP_ATTRIBUTE_CODE)) {
+		if (getAttributeCode().equals(Attribute.QQQ_QUESTION_GROUP)) {
 			for (QuestionQuestion childQuestion : qqList) {
 				ret += childQuestion.getPk().getTargetCode() + ",";
 			}

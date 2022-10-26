@@ -55,7 +55,7 @@
 		<jackson-datatype-money.version>1.0.0</jackson-datatype-money.version>
 		<version.moneta>1.1</version.moneta>
 		<jwt.version>0.10.7</jwt.version>
-		<testcontainers.version>1.17.0</testcontainers.version>
+		<testcontainers.version>1.17.3</testcontainers.version>
 	</properties>
 
 	<distributionManagement>
@@ -185,10 +185,6 @@
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency> -->
-		<!--   <groupId>io.quarkus</groupId> -->
-		<!--   <artifactId>quarkus-oidc</artifactId> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-shared-utils</artifactId>

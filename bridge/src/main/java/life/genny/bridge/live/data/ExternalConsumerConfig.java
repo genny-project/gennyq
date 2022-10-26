@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -25,14 +26,17 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
  * path also.
  *
  * @author    hello@gada.io
- *
  */
+@ApplicationScoped
 public class ExternalConsumerConfig {
 
-	@Inject Vertx vertx;
-	@Inject ExternalConsumer handler;
-        @ConfigProperty(name = "environment") Optional<String> environment;
+	@Inject
+	Vertx vertx;
+	@Inject
+	ExternalConsumer handler;
 
+	@ConfigProperty(name = "environment")
+	Optional<String> environment;
 
 	/**
 	 * This method is used to set all the types of addresses that will be allowed 
@@ -89,6 +93,7 @@ public class ExternalConsumerConfig {
 				"https://localhost:\\d\\d|"+
 				"http://localhost:\\d\\d\\d\\d|"+
 				"https://localhost:\\d\\d\\d\\d|"+
+				"http://.*.genny.life|http://.*.gada.io|"+
 				"https://.*.genny.life|https://.*.gada.io|"+
 				System.getenv("CORS_URLS")
 				).allowCredentials(true)

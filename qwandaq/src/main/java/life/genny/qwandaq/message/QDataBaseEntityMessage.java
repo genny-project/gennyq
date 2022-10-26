@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.WeightedItem;
 import life.genny.qwandaq.entity.BaseEntity;
 
 @RegisterForReflection
@@ -15,8 +14,6 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	private static final long serialVersionUID = 1L;
 
 	private List<BaseEntity> items;
-
-	private List<WeightedItem> weightedItems;
 
 	private static final String DATATYPE_BASEENTITY = BaseEntity.class.getSimpleName();
 	private String parentCode;
@@ -153,38 +150,6 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 		setTotal(total);
 	}
 
-	public QDataBaseEntityMessage(final WeightedItem item, final String alias) {
-		super(DATATYPE_BASEENTITY);
-		weightedItems = new ArrayList<>();
-		weightedItems.add(item);
-		setAliasCode(alias);
-		setTotal(1L);
-	}
-
-	public QDataBaseEntityMessage(final WeightedItem item) {
-		this(item, null);
-	}
-
-	public QDataBaseEntityMessage(final WeightedItem[] items) {
-		super(DATATYPE_BASEENTITY);
-		setWeightedItems(items);
-		setTotal(-1L);
-	}
-
-	public QDataBaseEntityMessage(final WeightedItem[] items, final String parentCode,
-			final String linkCode) {
-		this(items, parentCode, linkCode, -1L);
-	}
-
-	public QDataBaseEntityMessage(final WeightedItem[] items, final String parentCode,
-			final String linkCode, final Long total) {
-		super(DATATYPE_BASEENTITY);
-		setWeightedItems(items);
-		this.linkCode = linkCode;
-		this.parentCode = parentCode;
-		setTotal(total);
-	}
-
 	/**
 	 * @param item the entity to add
 	 */
@@ -282,27 +247,6 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	 */
 	public void setReturnCount(final Long returnCount) {
 		this.returnCount = returnCount;
-	}
-
-	/**
-	 * @return the weightedItems
-	 */
-	public List<WeightedItem> getWeightedItems() {
-		return weightedItems;
-	}
-
-	/**
-	 * @param weightedItems the weightedItems to set
-	 */
-	public void setWeightedItems(WeightedItem[] weightedItems) {
-		this.weightedItems = Arrays.asList(weightedItems);
-	}
-
-	/**
-	 * @param weightedItems the list weighted items to set
-	 */
-	public void setWeightedItems(List<WeightedItem> weightedItems) {
-		this.weightedItems = weightedItems;
 	}
 
 	/**

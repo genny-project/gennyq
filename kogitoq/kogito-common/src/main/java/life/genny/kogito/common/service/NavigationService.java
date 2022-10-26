@@ -1,12 +1,10 @@
 package life.genny.kogito.common.service;
 
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
+import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -16,29 +14,26 @@ import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
-
-import life.genny.qwandaq.utils.CommonUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.exception.checked.RoleException;
-import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class NavigationService {
@@ -57,9 +52,6 @@ public class NavigationService {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	SummaryService summaryService;
-
-	@Inject
 	SearchService searchService;
 
 	@Inject
@@ -70,6 +62,9 @@ public class NavigationService {
 
 	@Inject
 	RoleManager roleManager;
+
+	@Inject
+	TaskService tasks;
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
@@ -112,161 +107,35 @@ public class NavigationService {
 		try {
 			String redirectCode = roleManager.getUserRoleRedirectCode();
 			log.infof("Role Redirect found: %s", redirectCode);
-			kogitoUtils.triggerWorkflow(GADAQ, "view",
-					Json.createObjectBuilder()
-							.add("code", redirectCode)
-							.build());
+			// send event to gadaq
+			QEventMessage msg = new QEventMessage("EVT_MSG", redirectCode);
+			msg.getData().setTargetCode(userToken.getUserCode());
+			msg.setToken(userToken.getToken());
+			KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
 			log.info("Role Redirect sent");
 			return;
 		} catch (RoleException e) {
 			log.warn(e.getMessage());
 		}
 
-		// default to dashboard
-		kogitoUtils.triggerWorkflow(GADAQ, "view",
-				Json.createObjectBuilder()
-						.add("code", "DASHBOARD_VIEW")
-						.build());
-		log.info("Dashboard View triggered");
+		// default to summary
+		sendSummary();
 	}
 
 	/**
-	 * Control main content navigation using a pcm and a question
-	 *
-	 * @param pcmCode      The code of the PCM baseentity
-	 * @param questionCode The code of the question
+	 * Send a user's dashboard summary
 	 */
-	public void navigateContent(final String pcmCode, final String questionCode) {
+	public void sendSummary() {
 
-		// fetch and update content pcm
-		BaseEntity content = beUtils.getBaseEntityByCode("PCM_CONTENT");
-		try {
-			content.setValue("PRI_LOC1", pcmCode);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
+		BaseEntity user = beUtils.getUserBaseEntity();
+		BaseEntity summary = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY);
+		if (summary == null)
+			throw new ItemNotFoundException("LNK_SUMMARY for " + user.getCode());
 
-		// fetch and update desired pcm
-		BaseEntity pcm = beUtils.getBaseEntityByCode(pcmCode);
-		Attribute attribute = qwandaUtils.getAttribute("PRI_QUESTION_CODE");
-		EntityAttribute ea = new EntityAttribute(pcm, attribute, 1.0, questionCode);
-		try {
-			pcm.addAttribute(ea);
-		} catch (BadDataException e) {
-			e.printStackTrace();
-		}
+		PCM pcm = PCM.from(summary);
 
-		// package all and send
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
-		msg.add(content);
-		msg.add(pcm);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		log.info("Sending PCMs for " + questionCode);
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
-
-		recursivelyPerformPcmSearches(pcm);
-	}
-
-	/**
-	 * Recuresively traverse a pcm tree and send out any nested searches.
-	 * 
-	 * @param pcm The pcm to begin raversing
-	 */
-	public void recursivelyPerformPcmSearches(BaseEntity pcm) {
-
-		log.info("(0) running recursive function for " + pcm.getCode());
-
-		// filter location attributes
-		Set<EntityAttribute> locs = pcm.getBaseEntityAttributes()
-				.stream()
-				.filter(ea -> ea.getAttributeCode().startsWith("PRI_LOC"))
-				.collect(Collectors.toSet());
-
-		// perform searches
-		locs.stream()
-				.filter(ea -> ea.getValueString().startsWith("SBE"))
-				.map(ea -> CacheUtils.getObject(userToken.getProductCode(), ea.getValueString(), SearchEntity.class))
-				.peek(sbe -> log.info("Sending Search " + sbe.getCode()))
-				.forEach(sbe -> searchUtils.searchBaseEntitys(sbe));
-
-		// run function for nested pcms
-		locs.stream()
-				.filter(ea -> ea.getValueString().startsWith("PCM"))
-				.map(ea -> beUtils.getBaseEntity(ea.getValueString()))
-				.peek(ent -> recursivelyPerformPcmSearches(ent));
-
-	}
-
-	/**
-	 * Send a view event.
-	 *
-	 * @param code       The code of the view event.
-	 * @param targetCode The targetCode of the view event.
-	 */
-	public void sendViewEvent(final String code, final String targetCode) {
-
-		JsonObject json = Json.createObjectBuilder()
-				.add("event_type", "VIEW")
-				.add("msg_type", "EVT_MSG")
-				.add("token", userToken.getToken())
-				.add("data", Json.createObjectBuilder()
-						.add("code", code)
-						.add("targetCode", targetCode))
-				.build();
-
-		log.info("Sending View Event -> " + code + " : " + targetCode);
-
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
-	}
-
-	/**
-	 * Function to update a pcm location
-	 */
-	public void updatePcm(String pcmCode, String loc, String newValue) {
-
-		log.info("Replacing " + pcmCode + ":" + loc + " with " + newValue);
-
-		String cachedCode = userToken.getJTI() + ":" + pcmCode;
-		BaseEntity pcm = CacheUtils.getObject(userToken.getProductCode(), cachedCode, BaseEntity.class);
-
-		if (pcm == null) {
-			log.info("Couldn't find " + cachedCode + " in cache, grabbing from db!");
-			pcm = beUtils.getBaseEntity(pcmCode);
-		}
-
-		log.info("Found PCM " + pcm);
-
-		Optional<EntityAttribute> locOptional = pcm.findEntityAttribute(loc);
-		if (!locOptional.isPresent()) {
-			log.error("Couldn't find base entity attribute " + loc);
-			throw new NullPointerException("Couldn't find base entity attribute " + loc);
-		}
-
-		EntityAttribute locAttribute = locOptional.get();
-		log.info(locAttribute.getAttributeCode() + " has valueString " + locAttribute.getValueString());
-		locAttribute.setValueString(newValue);
-
-		Set<EntityAttribute> attributes = pcm.getBaseEntityAttributes();
-		attributes.removeIf(att -> att.getAttributeCode().equals(loc));
-		attributes.add(locAttribute);
-		pcm.setBaseEntityAttributes(attributes);
-
-		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcm);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
-
-		CacheUtils.putObject(userToken.getProductCode(), cachedCode, pcm);
-	}
-
-	public void showProcessPage(final String targetCode) {
-		String sourceCode = userToken.getUserCode();
-		String eventJson = "{\"data\":{\"targetCode\":\"" + targetCode + "\",\"sourceCode\":\"" + sourceCode
-				+ "\",\"parentCode\":\"QUE_SIDEBAR_GRP\",\"code\":\"QUE_BUCKET_VIEW\",\"attributeCode\":\"QQQ_QUESTION_GROUP\",\"processId\":\"no-idq\"},\"msg_type\":\"EVT_MSG\",\"event_type\":\"BTN_CLICK\",\"redirect\":true,\"token\":\""
-				+ userToken.getToken() + "\"}";
-
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, eventJson);
+		log.infof("Dispatching Summary %s for user %s", user.getCode(), pcm.getCode());
+		tasks.dispatch(user.getCode(), user.getCode(), pcm, PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**

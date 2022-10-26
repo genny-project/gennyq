@@ -44,10 +44,9 @@ public class DatabaseUtils {
 
 	@Inject
 	EntityManager entityManager;
-
+	
 	@Inject
 	BaseEntityUtils beUtils;
-	
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
@@ -469,7 +468,7 @@ public class DatabaseUtils {
 		}
 
 		if (existingEntity == null) {
-			log.debug("New BaseEntity being saved to DB" + entity.getCode());
+			log.debug("New BaseEntity being saved to DB -> " + entity.getCode());
 			entityManager.persist(entity);
 		} else {
 			if (entity.getId() == null)
