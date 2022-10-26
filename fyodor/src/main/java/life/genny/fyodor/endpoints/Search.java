@@ -37,7 +37,7 @@ public class Search {
 
 	private static final Logger log = Logger.getLogger(Search.class);
 
-	@ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak.gada.io")
+	@ConfigProperty(name = "genny.keycloak.url", defaultValue = "https://keycloak-bali.gada.io")
 	String baseKeycloakUrl;
 
 	@Context

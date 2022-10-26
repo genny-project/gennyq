@@ -12,7 +12,7 @@ echo "raw host (target system) = ${rawhost}"
 
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
-export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
+export GENNY_KEYCLOAK_URL=https://keycloak-bali.gada.io
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus
@@ -51,7 +51,7 @@ export GENNY_MYSQL_PASSWORD=password
 export GENNY_MYSQL_URL=alyson.genny.life
 export GENNY_MYSQL_PORT=3310
 export GENNY_MYSQL_DB=gennydb
-export ENV_KEYCLOAK_REDIRECTURI=https://keycloak.gada.io/auth
+export ENV_KEYCLOAK_REDIRECTURI=https://keycloak-bali.gada.io/auth
 export RULESSERVICE_URL=http://wildfly-rulesservice
 export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
 echo "infinispan url $GENNY_INFINISPAN_URL"

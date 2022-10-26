@@ -17,7 +17,7 @@ export GENNY_CLIENT_ID=backend
 export GENNY_CLIENT_SECRET=${GENNY_CLIENT_SECRET}
 export GENNY_SERVICE_USERNAME=${GENNY_SERVICE_USERNAME}
 export GENNY_SERVICE_PASSWORD=${GENNY_SERVICE_PASSWORD}
-export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
+export GENNY_KEYCLOAK_URL=https://keycloak-bali.gada.io
 export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 export MYSQL_USER=genny
 export MYSQL_PASSWORD=password
