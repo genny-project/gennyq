@@ -12,7 +12,7 @@ public class AttributeInitializerImpl implements SerializationContextInitializer
 
 	@Override
 	public String getProtoFileName() {
-		return "attribute.proto";
+		return "attribute-persistence.proto";
 	}
 
 	@Override
