@@ -46,6 +46,18 @@ public class CapabilityBuilder {
     }
 
     /**
+     * Set multiple CapabilityModes to the same scope
+     * @param scope - scope to set the modes to
+     * @param modes - modes to set
+     */
+    public CapabilityBuilder setModes(PermissionMode scope, CapabilityMode... modes) {
+        for(CapabilityMode mode : modes) {
+            addNode(mode, scope);
+        }
+        return this;
+    }
+
+    /**
      * Set the permission of this Capability with regards to the ADD mode
      * 
      * @see CapabilityMode#ADD
