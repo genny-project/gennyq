@@ -221,16 +221,18 @@ public class FyodorUltra {
 
 		String ickleQuery = getIckleQueryForSearchEntity(searchEntity, new TolstoysCauldron());
 		log.info("############# Ickle query: " + ickleQuery);
-		List<BaseEntity> persistableBaseEntities =
+		List<life.genny.qwandaq.serialization.baseentity.BaseEntity> baseEntities =
 				beUtils.getBaseEntityUsingIckleQuery(ickleQuery);
-		log.info("############# got these many BEs as output: " + persistableBaseEntities.size());
+		log.info("############# got these many BEs as output: " + baseEntities.size());
+		List<BaseEntity> persistableBaseEntities = new LinkedList<>();
+		baseEntities.stream().forEach(be -> persistableBaseEntities.add((BaseEntity) be.toPersistableCoreEntity()));
 
 		Integer defaultPageSize = 20;
 		Integer pageSize = searchEntity.getPageSize() != null ? searchEntity.getPageSize() : defaultPageSize;
 		Integer pageStart = searchEntity.getPageStart() != null ? searchEntity.getPageStart() : 0;
 		Page page = new Page();
 		page.setItems(persistableBaseEntities);
-		page.setTotal((long) persistableBaseEntities.size());
+		page.setTotal((long) baseEntities.size());
 		page.setPageSize(pageSize);
 		page.setPageStart(Long.valueOf(pageStart));
 		return page;
@@ -248,6 +250,7 @@ public class FyodorUltra {
 				fromClause("life.genny.qwandaq.persistence.baseentity.BaseEntity").
 				whereClause(cauldron.getIcklePredicates()).
 						toIckleQueryString();
+				//concat("where realm : '" + searchEntity.getRealm() + "' and code like '" + prefix + "%'");
 	}
 
 	private IcklePredicate findClausePredicateForIckle(TolstoysCauldron cauldron, ClauseContainer clauseContainer) {
