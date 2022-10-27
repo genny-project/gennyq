@@ -52,6 +52,7 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -61,8 +62,6 @@ import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
-
-import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -179,7 +178,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public BaseEntity() {
 		// super();
 		// dummy
@@ -192,7 +190,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 */
 	public BaseEntity(final String aName) {
 		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
-
 	}
 
 	/**
@@ -204,7 +201,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@ProtoFactory
 	public BaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
-
 	}
 
 	/**
@@ -1169,6 +1165,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(PER_BE_PREFIX);
+		return getCode().startsWith(Prefix.PER);
 	}
 }

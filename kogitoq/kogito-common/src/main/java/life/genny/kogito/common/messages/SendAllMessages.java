@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
@@ -130,12 +131,11 @@ public class SendAllMessages extends MessageSendingStrategy {
             if (recipientLnkValue.startsWith(SELF)) { // The coreBE is the recipient
                 ctxMap.put(RECIPIENT, coreBE.getCode());
                 recipientBECode = coreBE.getCode();
-            } else if (recipientLnkValue.startsWith("PER_")) {
+            } else if (recipientLnkValue.startsWith(Prefix.PER)) {
                 ctxMap.put(RECIPIENT, recipientLnkValue);
                 recipientBECode = recipientLnkValue;
             } else {
                 // check if it is a LNK path (of the coreBE)
-                // "LNK_INTERN"
                 if (recipientLnkValue.startsWith("LNK_")) {
                     String[] splitStr = recipientLnkValue.split(":");
                     BaseEntity lnkBe = coreBE; // seed
@@ -154,7 +154,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             // check the various formats to get the senderBECode
             if (senderLnkValue.startsWith(USER)) { // The user is the sender
                 ctxMap.put(SENDER, userToken.getUserCode());
-            } else if (senderLnkValue.startsWith("PER_")) {
+            } else if (senderLnkValue.startsWith(Prefix.PER)) {
                 ctxMap.put(SENDER, senderLnkValue);
             } else {
                 // check if it is a LNK path (of the coreBE)

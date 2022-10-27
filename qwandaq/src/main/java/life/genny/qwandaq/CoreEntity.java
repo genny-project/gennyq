@@ -35,7 +35,6 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.cdi.crud.infra.model.CoreEntityInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.jboss.logging.Logger;
@@ -62,10 +61,9 @@ import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
  * @version %I%, %G%
  * @since 1.0
  */
-
 @MappedSuperclass
 @RegisterForReflection
-public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Comparable<Object> {
+public abstract class CoreEntity implements Comparable<Object> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -130,10 +128,8 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	/**
 	 * Constructor.
 	 * 
-	 * @param realm
-	 *              the security realm of the core entity
-	 * @param name
-	 *              the name of the core entity
+	 * @param realm The security realm of the core entity
+	 * @param name The name of the core entity
 	 */
 	public CoreEntity(final String realm, final String name) {
 		super();
@@ -145,8 +141,7 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	/**
 	 * Constructor.
 	 * 
-	 * @param name
-	 *             the summary name of the core entity
+	 * @param name the summary name of the core entity
 	 */
 	public CoreEntity(final String name) {
 		super();
@@ -163,8 +158,7 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	}
 
 	/**
-	 * @param id
-	 *           the id to set
+	 * @param id The id to set
 	 */
 	public void setId(final Long id) {
 		this.id = id;
@@ -178,12 +172,10 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	}
 
 	/**
-	 * 
-	 * @param aName
-	 *              human readable text representing the question
+	 * @param name human readable text representing the question
 	 */
-	public void setName(final String aName) {
-		this.name = aName;
+	public void setName(final String name) {
+		this.name = name;
 	}
 
 	/**
@@ -196,10 +188,8 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	}
 
 	/**
-	 * @param created
-	 *                the created to set
+	 * @param created The created to set
 	 */
-	@Override
 	public void setCreated(final LocalDateTime created) {
 		this.created = created;
 	}
@@ -213,8 +203,7 @@ public abstract class CoreEntity implements CoreEntityInterface, CreatedIntf, Co
 	}
 
 	/**
-	 * @param updated
-	 *                the updated to set
+	 * @param updated The updated to set
 	 */
 	public void setUpdated(final LocalDateTime updated) {
 		this.updated = updated;

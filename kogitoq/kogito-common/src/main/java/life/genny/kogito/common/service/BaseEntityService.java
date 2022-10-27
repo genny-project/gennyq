@@ -10,6 +10,7 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -47,6 +48,19 @@ public class BaseEntityService {
 	@Inject
 	DefUtils defUtils;
 
+	/**
+	 * Send a message to perform an update of a persons summary
+	 */
+	public void updateSummary(String personCode, String summaryCode) {
+
+		qwandaUtils.saveAnswer(new Answer(personCode, personCode, Attribute.LNK_SUMMARY, summaryCode));
+		log.info("Summary updated -> " + personCode + " : " + summaryCode);
+	}
+
+	/**
+	 * @param definitionCode
+	 * @return
+	 */
 	public String commission(String definitionCode) {
 		// TODO
 		// String randomCode = UUID.randomUUID().toString().substring(0,

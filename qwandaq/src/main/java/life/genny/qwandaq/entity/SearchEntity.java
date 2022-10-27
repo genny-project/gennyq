@@ -8,12 +8,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 
@@ -36,6 +38,7 @@ import life.genny.qwandaq.entity.search.trait.Trait;
 public class SearchEntity extends BaseEntity {
 
 	private static final Logger log = Logger.getLogger(SearchEntity.class);
+	static Jsonb jsonb = JsonbBuilder.create();
 
 	private static final long serialVersionUID = 1L;
 
@@ -538,6 +541,32 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity convertToSaveable() {
+
+		convertToSendable();
+
+		// add clause container attributes
+		IntStream.range(0, this.clauseContainers.size())
+			.forEach(i -> {
+				ClauseContainer clauseContainer = clauseContainers.get(i);
+				Attribute attribute = new Attribute("", "",
+					new DataType(String.class));
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+				ea.setIndex(i);
+				ea.setValue(jsonb.toJson(clauseContainer));
+			});
+
+		// add sort attributes
+		List<Sort> sorts = getTraits(Sort.class);
+		IntStream.range(0, sorts.size())
+			.forEach(i -> {
+				Sort sort = sorts.get(i);
+				Attribute attribute = new Attribute(Sort.PREFIX + sort.getCode(), sort.getName(),
+					new DataType(String.class));
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+				ea.setIndex(i);
+				ea.setValue(sort.getOrder().toString());
+			});
+
 		return this;
 	}
 
@@ -586,7 +615,7 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity addFilterableColumn(final String attributeCode, final String fName) {
 
 		// TODO: redesign filters
-		AttributeText attributeFLC = new AttributeText("FLC_" + attributeCode, fName);
+		Attribute attributeFLC = new Attribute("FLC_" + attributeCode, fName, new DataType(String.class));
 		addAttribute(attributeFLC, flcIndex);
 		flcIndex += 1.0;
 

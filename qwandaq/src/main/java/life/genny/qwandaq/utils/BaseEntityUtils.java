@@ -29,6 +29,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -107,8 +108,20 @@ public class BaseEntityUtils {
 	}
 
 	/**
+	 * Get a PCM using a code, but throw an
+	 * ItemNotFoundException if the entity does not exist.
+
+	 * @param code
+	 * @return
+	 */
+	public PCM getPCM(String code) {
+
+		return PCM.from(getBaseEntity(code));
+	}
+
+	/**
 	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entitiy does not exist.
+	 * ItemNotFoundException if the entity does not exist.
 	 * 
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity
@@ -181,11 +194,13 @@ public class BaseEntityUtils {
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code) {
+
 		if (StringUtils.isBlank(productCode))
 			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(code))
 			throw new NullParameterException("code");
 
+		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
 		// check for entity in the cache
 		// BaseEntityKey key = new BaseEntityKey(productCode, code);
 		// BaseEntity entity = (BaseEntity)
@@ -193,12 +208,6 @@ public class BaseEntityUtils {
 
 		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
 		// updates are working.
-		BaseEntity entity = null;
-		try {
-			entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-		} catch (NullPointerException e) {
-			log.error("Error getting BaseEntity from Cache, trying db");
-		}
 
 		// check in database if not in cache
 		if (entity == null) {

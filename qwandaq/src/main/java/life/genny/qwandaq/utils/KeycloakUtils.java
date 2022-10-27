@@ -38,6 +38,7 @@ import org.jboss.logging.Logger;
 import org.keycloak.representations.account.UserRepresentation;
 import org.keycloak.util.JsonSerialization;
 
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
@@ -220,7 +221,7 @@ public class KeycloakUtils {
         String keycloakUrl = serviceToken.getKeycloakUrl().replace(":-1", "");
 
         // grab uuid to fetch token
-        String uuid = userCode.substring("PER_".length()).toLowerCase();
+        String uuid = userCode.substring(Prefix.PER.length()).toLowerCase();
 
         // setup param map
         HashMap<String, String> params = new HashMap<>();

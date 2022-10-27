@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.Optional;
-import java.util.regex.Pattern;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,6 +18,7 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -61,17 +60,7 @@ public class DefUtils {
 	@Inject
 	UserToken userToken;
 
-	public static final String PREF_QQQ_QUE_GRP = "QQQ_QUESTION_GROUP";
 	public static final String PREF_QUE_BASE_GRP = "QUE_BASEENTITY_GRP";
-	public static final String PREF_QUE = "QUE_";
-	public static final String PREF_ATT = "ATT_";
-	public static final String PREF_DEP = "DEP_";
-	public static final String PREF_DFT = "DFT_";
-	public static final String PREF_UNQ = "UNQ_";
-	public static final String PREF_PRI = "PRI_";
-	public static final String PREF_LNK = "LNK_";
-	public static final String PREF_SER = "SER_";
-	public static final String PREF_CAP = "CAP_";
 
 	public DefUtils() {
 	}
@@ -86,8 +75,8 @@ public class DefUtils {
 	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
-				.add(new Sort("PRI_NAME", Ord.ASC))
-				.add(new Filter("PRI_CODE", Operator.LIKE, "DEF_%"))
+				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
+				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF))
 				.setPageStart(0)
 				.setPageSize(10000);
 
@@ -114,7 +103,7 @@ public class DefUtils {
 			}
 			BaseEntity def = beUtils.getBaseEntity(productCode, code);
 
-			String prefix = def.getValue("PRI_PREFIX", null);
+			String prefix = def.getValue(Attribute.PRI_PREFIX, null);
 			if (prefix == null) {
 				continue;
 			}
@@ -138,15 +127,12 @@ public class DefUtils {
 		}
 
 		// save processing time on particular entities
-		if (entity.getCode().startsWith("DEF_")) {
+		if (entity.getCode().startsWith(Prefix.DEF))
 			return entity;
-		}
-		if (entity.getCode().startsWith("PRJ_")) {
+		if (entity.getCode().startsWith(Prefix.PRJ))
 			return beUtils.getBaseEntity("DEF_PROJECT");
-		}
-		if (entity.getCode().startsWith("DOT_")) {
+		if (entity.getCode().startsWith("DOT_"))
 			return beUtils.getBaseEntity("DEF_DOCUMENT_TEMPLATE");
-		}
 
 		// NOTE: temporary special check for internmatch
 		String productCode = userToken.getProductCode();
@@ -154,7 +140,7 @@ public class DefUtils {
 			return getInternmatchDEF(entity);
 		}
 
-		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, "LNK_DEF");
+		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
 		// null/empty check the role attribute
 		if (codes == null) {
