@@ -1,19 +1,22 @@
 package life.genny.test.qwandaq.utils.capabilities.requirements;
 
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.test.qwandaq.utils.BaseTestCase;
 
-import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
-
 public class BaseRequirementsTest extends BaseTestCase {
     
-    protected static Set<Capability> USER_TEST_CAPS;
+    protected static CapabilitySet USER_TEST_CAPS;
+    private static final BaseEntity DUMMY_BASE_ENTITY = new BaseEntity("DUMMY_CAP_USER", "Idiot Capabilities User");
 
     static {
         setTestCaps(
@@ -22,7 +25,7 @@ public class BaseRequirementsTest extends BaseTestCase {
     }
 
     protected static Set<Capability> setTestCaps(Capability... capabilities) {
-        Set<Capability> capSet = new HashSet<>(Arrays.asList(capabilities));
+        CapabilitySet capSet = new CapabilitySet(DUMMY_BASE_ENTITY, Arrays.asList(capabilities));
         USER_TEST_CAPS = capSet;
         return capSet;
     }

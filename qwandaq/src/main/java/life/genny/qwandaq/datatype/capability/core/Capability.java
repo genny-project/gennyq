@@ -1,4 +1,4 @@
-package life.genny.qwandaq.datatype.capability;
+package life.genny.qwandaq.datatype.capability.core;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -11,6 +11,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
 

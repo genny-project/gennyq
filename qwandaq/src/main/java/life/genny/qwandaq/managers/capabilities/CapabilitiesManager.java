@@ -27,10 +27,12 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityMode;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.PermissionMode;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -69,20 +71,20 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	@Deprecated(forRemoval = false)
-	public Set<Capability> getUserCapabilities() {
+	public ReqConfig getUserCapabilities(boolean requiresAllCaps, boolean requiresAllModes) {
 		// this is a necessary log, since we are trying to minimize how often this function is called
 		// it is good to see how often it comes up
 		info("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		BaseEntity userBE = beUtils.getUserBaseEntity();
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
-		Set<Capability> capabilities;
+		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
 			BaseEntity role = roles.get(0);
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
-				Set<Capability> roleCaps = getEntityCapabilities(role);
+				CapabilitySet roleCaps = getEntityCapabilities(role);
 				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
 				for(Capability cap : roleCaps) {
@@ -97,11 +99,11 @@ public class CapabilitiesManager extends Manager {
 				}
 			}
 		} else {
-			capabilities = new HashSet<>();
+			capabilities = new CapabilitySet(userBE);
 		}
 
 		// Now overwrite with user capabilities
-		Set<Capability> userCapabilities = getEntityCapabilities(userBE);
+		CapabilitySet userCapabilities = getEntityCapabilities(userBE);
 		for(Capability capability : userCapabilities) {
 			// Try and find a preexisting capability to overwrite.
 			// If it exists, remove so we can override the role-based capability
@@ -113,7 +115,15 @@ public class CapabilitiesManager extends Manager {
 			capabilities.add(capability);
 		}
 
-		return capabilities;
+		return new ReqConfig(capabilities, requiresAllCaps, requiresAllModes);
+	}
+
+	public ReqConfig getUserCapabilities(boolean requiresAllCaps) {
+		return getUserCapabilities(requiresAllCaps, ReqConfig.DEFAULT_ALL_MODES);
+	}
+
+	public ReqConfig getUserCapabilities() {
+		return getUserCapabilities(ReqConfig.DEFAULT_ALL_CAPS);
 	}
 	
 	/**
@@ -122,14 +132,16 @@ public class CapabilitiesManager extends Manager {
 	 * @param target
 	 * @return
 	 */
-	public Set<Capability> getEntityCapabilities(final BaseEntity target) {
+	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
 		if(capabilities.isEmpty()) {
-			return new HashSet<>();
+			return new CapabilitySet(target);
 		}
-		return capabilities.stream()
+		CapabilitySet cSet = new CapabilitySet(target);
+		cSet.addAll(capabilities.stream()
 			.map((EntityAttribute ea) -> Capability.getFromEA(ea))
-			.collect(Collectors.toSet());
+			.collect(Collectors.toSet()));
+		return cSet;
 	}
 
 	/**

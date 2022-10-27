@@ -3,7 +3,6 @@ package life.genny.kogito.common.service;
 import java.util.Arrays;
 import java.util.List;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -18,12 +17,12 @@ import life.genny.qwandaq.Ask;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityMode;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.PermissionMode;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 
@@ -44,7 +43,6 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 
-import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
@@ -154,9 +152,7 @@ public class InitService {
 
 		String productCode = userToken.getProductCode();
 		BaseEntity user = beUtils.getUserBaseEntity();
-		Set<Capability> capabilities = capMan.getUserCapabilities();
-
-		System.out.println("[!][!][!][!][!][!] USER CAPS: " + CommonUtils.getArrayString(capabilities));
+		ReqConfig userReqConfig = capMan.getUserCapabilities();
 
 		// get pcms using search
 		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
@@ -191,14 +187,14 @@ public class InitService {
 			}
 
 			Question question = databaseUtils.findQuestionByCode(productCode, questionCode);
-			if(!question.requirementsMet(capabilities, true)) {
+			if(!question.requirementsMet(userReqConfig)) {
 				log.warn("[!] User does not meet capability requirements for question: " + questionCode);
 				return null;
 			} else {
 				log.info("Passed Capabilities check: " + CommonUtils.getArrayString(question.getCapabilityRequirements()));
 			}
 
-			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, user, capabilities);
+			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, user, userReqConfig);
 			if (ask == null) {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + question.getCode());
 			}
@@ -234,11 +230,11 @@ public class InitService {
 		Ask parentAsk = new Ask(groupQuestion, user.getCode(), user.getCode());
 		parentAsk.setRealm(productCode);
 
-		Set<Capability> capabilities = capMan.getUserCapabilities();
+		ReqConfig userConfig = capMan.getUserCapabilities();
 		
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
-		for(Capability capability : capabilities) {
+		for(Capability capability : userConfig.userCapabilities) {
 			// If they don't have the capability then don't bother finding the def
 			if(!capability.checkPerms(false, CapabilityNode.get(CapabilityMode.ADD, PermissionMode.ALL)))
 				continue;

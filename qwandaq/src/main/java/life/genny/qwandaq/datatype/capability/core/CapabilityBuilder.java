@@ -1,12 +1,15 @@
-package life.genny.qwandaq.datatype.capability;
+package life.genny.qwandaq.datatype.capability.core;
+
+import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleBuilder;
-
-import static life.genny.qwandaq.datatype.capability.CapabilityMode.*;
 
 /**
  * Builder class to make adding capability nodes to Capabilities easier

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.converter.CapabilityConverter;
-import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;

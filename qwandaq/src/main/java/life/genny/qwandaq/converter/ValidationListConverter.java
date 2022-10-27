@@ -1,9 +1,8 @@
 package life.genny.qwandaq.converter;
 
 
-import java.lang.invoke.MethodHandles;
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.StringReader;
 
@@ -11,14 +10,12 @@ import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
 import javax.json.JsonReader;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.validation.Validation;
-import life.genny.qwandaq.validation.ValidationList;
 
 @Converter
 public class ValidationListConverter implements AttributeConverter<List<Validation>, String> {
@@ -127,7 +124,7 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 		if (joined.startsWith("[") || joined.startsWith("{")) {
 			JsonReader reader = Json.createReader(new StringReader(joined));
 			JsonArray array = reader.readArray();
-			list = (List) array;
+			list = Arrays.asList(array.toArray(new String[0]));
 		} else {
 			list.add(joined);
 		}

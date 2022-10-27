@@ -1,14 +1,13 @@
 package life.genny.fyodor.utils;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
@@ -106,9 +105,9 @@ public class CapHandler extends Manager {
 		//  TODO: Get rid of this service code check. Not ideal
 		boolean isService = GennyConstants.PER_SERVICE.equals(userToken.getUserCode()) || GennyConstants.PER_SERVICE.equals(userToken.getCode()) || userToken.hasRole("service");
 		if(!isService) {
-			Set<Capability> capabilities = capMan.getUserCapabilities();
+			ReqConfig reqConfig = capMan.getUserCapabilities();
 			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
-				if(!capTrait.meetsRequirements(capabilities)) {
+				if(!capTrait.meetsRequirements(reqConfig)) {
 					return false;
 				}
 			}

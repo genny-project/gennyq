@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.converter.CapabilityConverter;
-import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;

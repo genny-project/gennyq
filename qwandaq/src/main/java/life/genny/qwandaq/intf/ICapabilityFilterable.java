@@ -11,9 +11,14 @@ import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 
 public interface ICapabilityFilterable {
+
+    public static Logger getLogger() {
+        return Logger.getLogger(ICapabilityFilterable.class);
+    }
     
     // Please please PLEASE! Do not send these out
     @JsonbTransient
@@ -31,36 +36,19 @@ public interface ICapabilityFilterable {
     @JsonIgnore
     public void setCapabilityRequirements(Set<Capability> requirements);
 
-    public default Logger getLogger() {
-        return Logger.getLogger(ICapabilityFilterable.class);
+    public default boolean requirementsMet(ReqConfig requirementsConfig) {
+        return requirementsMetImpl(getCapabilityRequirements(), requirementsConfig);
     }
 
-    /**
-     * 
-     * @param userCaps
-     * @param requiresAllCaps
-     * @return
-     */
-    public default boolean requirementsMet(Set<Capability> userCaps, boolean requiresAllCaps) {
-        return requirementsMet(userCaps, requiresAllCaps, true);
-    }
-
-    /**
-     * 
-     * @param userCapabilities
-     * @param requiresAllCaps
-     * @param requiresAllModes
-     * @return
-     */
-    public default boolean requirementsMet(Set<Capability> userCapabilities, boolean requiresAllCaps, boolean requiresAllModes) {
-        Set<Capability> checkCaps = getCapabilityRequirements();
+    public static boolean requirementsMetImpl(Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
+        Set<Capability> checkCaps = capabilityRequirements;
 
         if(checkCaps.isEmpty())
             return true;
 
-        // foreach capability in the object requirements
-            // scan through user capabilities to find capability with same code
-            // check the nodes
+        Set<Capability> userCapabilities = requirementsConfig.getUserCaps();
+        boolean requiresAllCaps = requirementsConfig.requiresAllCaps;
+        boolean requiresAllModes = requirementsConfig.requiresAllModes;
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks
@@ -83,11 +71,7 @@ public interface ICapabilityFilterable {
             }
         }
 
-        if(requiresAllCaps) {
-            return true;
-        } else
-            return false;
+        return requiresAllCaps;
     }
-
 
 }

@@ -9,7 +9,7 @@ import javax.persistence.AttributeConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 

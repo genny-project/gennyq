@@ -3,14 +3,13 @@ package life.genny.test.qwandaq.utils.capabilities;
 import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.converter.CapabilityConverter;
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.utils.SetBuilder;
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.utils.suite.JUnitTester;
 
-import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
-
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 
 import java.util.Set;
 

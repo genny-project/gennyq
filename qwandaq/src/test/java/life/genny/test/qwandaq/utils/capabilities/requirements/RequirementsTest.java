@@ -1,17 +1,15 @@
 package life.genny.test.qwandaq.utils.capabilities.requirements;
 
-import java.util.Set;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 
 import org.junit.jupiter.api.Test;
 
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.utils.CommonUtils;
 
 import life.genny.test.utils.suite.JUnitTester;
-
-import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
 
 public class RequirementsTest extends BaseRequirementsTest {
 
@@ -22,6 +20,22 @@ public class RequirementsTest extends BaseRequirementsTest {
         );
     }
 
+    private static final boolean[][] combinations = new boolean[][] {
+        {false, false},
+        {false, true},
+        {true, false},
+        {true, true}
+    };
+
+    private static String testName(String tag, boolean[] reqCombinations) {
+        return new StringBuilder(tag)
+        .append(reqCombinations[0] ? "Requires " : "Doesn't require ")
+        .append("all caps, ")
+        .append(reqCombinations[1] ? "Requires " : "Doesn't require ")
+        .append("all modes")
+        .toString();
+    }
+
     @Test 
     public void testNoRequirementsFilterableCaps() {
 
@@ -30,46 +44,28 @@ public class RequirementsTest extends BaseRequirementsTest {
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
 
-        new JUnitTester<Set<Capability>, Boolean>()
+        String[] testTags = new String[] {
+            "No requirements test1 - User has Caps. ",
+            "No requirements test2 - User has Caps. ",
+            "No requirements test3 - User has Caps. ",
+            "No requirements test4 - User has Caps. "
+        };
 
-        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, doesn't require all modes")
+
+        JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
+            return Expected(filterable.requirementsMet(input.input));
+        });
 
-        .createTest("No requirements test1 - User has Caps. Requires all caps, doesn't require all modes")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, true, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
+        for(int i = 0; i < testTags.length; i++) {
+            tester.createTest(testName(testTags[i], combinations[i]))
+            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setExpected(true)
+            .build();
+        }
 
-        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, requires all modes")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-
-        .createTest("No requirements test1 - User has Caps. Requires all caps, requires all modes")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, true, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        .assertAll();
+        tester.assertAll();
     }
 
     @Test
@@ -77,46 +73,28 @@ public class RequirementsTest extends BaseRequirementsTest {
         ICapabilityFilterable filterable = createFilterable();
         setTestCaps();
 
-        new JUnitTester<Set<Capability>, Boolean>()
+        String[] testTags = new String[] {
+            "No requirements test1 - User has No Caps. ",
+            "No requirements test2 - User has No Caps. ",
+            "No requirements test3 - User has No Caps. ",
+            "No requirements test4 - User has No Caps. "
+        };
 
-        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, doesn't require all modes")
+
+        JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
+            return Expected(filterable.requirementsMet(input.input));
+        });
 
-        .createTest("No requirements test1 - User has Caps. Requires all caps, doesn't require all modes")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, true, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        .createTest("No requirements test1 - User has Caps. Doesn't require all caps, requires all modes")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-
-        .createTest("No requirements test1 - User has Caps. Requires all caps, requires all modes")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, true, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        .assertAll();
+        for(int i = 0; i < testTags.length; i++) {
+            tester.createTest(testName(testTags[i], combinations[i]))
+            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setExpected(true)
+            .build();
+        }
+        
+        tester.assertAll();
     }
 
     @Test
@@ -129,49 +107,28 @@ public class RequirementsTest extends BaseRequirementsTest {
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
 
+        String[] testTags = new String[] {
+            "Non Empty Reqs Filterable test 1 ",
+            "Non Empty Reqs Filterable test 2 ",
+            "Non Empty Reqs Filterable test 3 ",
+            "Non Empty Reqs Filterable test 4 "
+        };
 
-        new JUnitTester<Set<Capability>, Boolean>()
 
-        // Test 1
-        .createTest("Non Empty Reqs Filterable test 1 REQ ALL CAPS: false, REQ ALL MODES: false")
+        JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
+            return Expected(filterable.requirementsMet(input.input));
+        });
 
-        // Test 2
-        .createTest("Non Empty Reqs Filterable test 1 REQ ALL CAPS: true, REQ ALL MODES: false")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, true, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        // Test 3
-        .createTest("Non Empty Reqs Filterable test 1 REQ ALL CAPS: false, REQ ALL MODES: true")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        // Test 4
-        .createTest("Non Empty Reqs Filterable test 1 REQ ALL CAPS: true, REQ ALL MODES: true")
-        .setTest((input) -> {
-            return Expected(filterable.requirementsMet(input.input, true, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        .assertAll();
+        for(int i = 0; i < testTags.length; i++) {
+            tester.createTest(testName(testTags[i], combinations[i]))
+            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setExpected(true)
+            .build();
+        }
+        
+        tester.assertAll();
     }
 
     @Test
@@ -181,49 +138,28 @@ public class RequirementsTest extends BaseRequirementsTest {
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
 
-        new JUnitTester<Set<Capability>, Boolean>()
+        // 
+        String[] testTags = new String[] {
+            "Empty Reqs Filterable test 1 ",
+            "Empty Reqs Filterable test 2 ",
+            "Empty Reqs Filterable test 3 ",
+            "Empty Reqs Filterable test 4 "
+        };
 
-        // Test 1
-        .createTest("Empty Reqs Filterable test 1 REQ ALL CAPS: false, REQ ALL MODES: false")
+        JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
+            return Expected(filterable.requirementsMet(input.input));
+        });
 
-        // Test 2
-        .createTest("Empty Reqs Filterable test 1 REQ ALL CAPS: true, REQ ALL MODES: false")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, true, false));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        // Test 3
-        .createTest("Empty Reqs Filterable test 1 REQ ALL CAPS: false, REQ ALL MODES: true")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, false, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        // Test 4
-        .createTest("Empty Reqs Filterable test 1 REQ ALL CAPS: true, REQ ALL MODES: true")
-        .setTest((input) -> {
-            log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input, true, true));
-        })
-        .setInput(USER_TEST_CAPS)
-        .setExpected(true)
-        .build()
-
-        .assertAll();
+        for(int i = 0; i < testTags.length; i++) {
+            tester.createTest(testName(testTags[i], combinations[i]))
+            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setExpected(true)
+            .build();
+        }
+        
+        tester.assertAll();
     }
 
 }
