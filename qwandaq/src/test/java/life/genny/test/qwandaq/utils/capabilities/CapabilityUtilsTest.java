@@ -229,16 +229,4 @@ public class CapabilityUtilsTest extends BaseTestCase {
 
         .assertAll();
     }
-
-//     @Test
-//     public void getCapModeArrayTest() {
-//         // TODO: Write tests for this
-//         TestBuilder<String, CapabilityNode[]> builder = new TestBuilder<String, CapabilityNode[]>();
-//     }
-
-//     @Test
-//     public void getCapModeStringTest() {
-//         // TODO: Write tests for this
-//         TestBuilder<CapabilityNode[], String> builder = new TestBuilder<CapabilityNode[], String>();
-//     }
 }

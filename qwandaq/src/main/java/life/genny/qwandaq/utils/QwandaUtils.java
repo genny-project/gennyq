@@ -81,18 +81,18 @@ public class QwandaUtils {
 	public QwandaUtils() {
 	}
 
-	private static DataType DTT_EVENT;
+	// private static DataType DTT_EVENT;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
 	@PostConstruct
 	private void init() {
-		Attribute submit = getAttribute("EVT_SUBMIT");
-		if (submit == null) {
-			log.error("Could not find Attribute: EVT_SUBMIT");
-			return;
-		}
-		DTT_EVENT = submit.getDataType();
+		// Attribute submit = getAttribute("EVT_SUBMIT");
+		// if (submit == null) {
+		// 	log.error("Could not find Attribute: EVT_SUBMIT");
+		// 	return;
+		// }
+		// DTT_EVENT = submit.getDataType();
 	}
 
 	/**
@@ -256,11 +256,16 @@ public class QwandaUtils {
 		}
 	}
 
-	public Attribute createEvent(String code, final String name) {
+	public Attribute createEvent(String code, String name) {
+		return createEvent(userToken.getProductCode(), code, name);
+	}
+
+	public Attribute createEvent(String productCode, String code, final String name) {
 		if (!code.startsWith(Prefix.EVT)) {
 			code = Prefix.EVT.concat(code);
 		}
 		code = code.toUpperCase();
+		DataType DTT_EVENT = getAttribute(productCode, "EVT_SUBMIT").getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
