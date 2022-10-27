@@ -35,6 +35,7 @@ import javax.json.JsonObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.TemporalFormat;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.converter.StringListConverter;
 import life.genny.qwandaq.datatype.DataType;
@@ -231,9 +232,7 @@ public class AnswerLink implements java.io.Serializable {
 
 			case "java.time.LocalDateTime":
 			case "LocalDateTime":
-				List<String> dateTimeFormats = Arrays.asList("yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm", 
-						"yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-				for (String format : dateTimeFormats) {
+				for (String format : TemporalFormat.DATETIME) {
 					try {
 						Date date = new SimpleDateFormat(format).parse(result);
 						LocalDateTime dateTime = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
@@ -247,8 +246,7 @@ public class AnswerLink implements java.io.Serializable {
 
 			case "java.time.LocalTime":
 			case "LocalTime":
-				List<String> timeFormats = Arrays.asList("HH:mm", "HH:mm:ss", "HH:mm:ss.SSSZ");
-				for (String format : timeFormats) {
+				for (String format : TemporalFormat.TIME) {
 					try {
 						Date date = new SimpleDateFormat(format).parse(result);
 						LocalTime dateTime = date.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
@@ -262,9 +260,7 @@ public class AnswerLink implements java.io.Serializable {
 
 			case "java.time.LocalDate":
 			case "LocalDate":
-				List<String> dateFormats = Arrays.asList("yyyy-MM-dd", "M/y", "yyyy/MM/dd", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm:ss",
-						"yyyy-MM-dd'T'HH:mm:ss.SSSZ","yyyy-MM-dd HH:mm:ss.SSSZ");
-				for (String format : dateFormats) {
+				for (String format : TemporalFormat.DATE) {
 					try {
 						Date date = new SimpleDateFormat(format).parse(result);
 						LocalDate dateTime = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
