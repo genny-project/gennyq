@@ -138,11 +138,11 @@ public class TopologyProducer {
 					List<Ask> asks = qwandaUtils.fetchAsks(processData);
 
 					BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-					BaseEntity target = beUtils.getBaseEntity(answer.getTargetCode());
 					Map<String, Ask> flatMapAsks = qwandaUtils.buildAskFlatMap(asks);
 
-					qwandaUtils.updateDependentAsks(target, defBE, flatMapAsks);
+					qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapAsks);
 					asksToSend.addAll(asks);
 				});
 
