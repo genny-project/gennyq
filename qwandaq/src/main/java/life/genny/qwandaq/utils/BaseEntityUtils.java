@@ -779,7 +779,7 @@ public class BaseEntityUtils {
 		return item;
 	}
 
-	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntityUsingIckleQuery(String ickleQuery) {
+	public List<BaseEntity> getBaseEntityUsingIckleQuery(String ickleQuery) {
 		return CacheUtils.getBaseEntitiesUsingIckle(ickleQuery);
 	}
 }
