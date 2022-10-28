@@ -102,7 +102,7 @@ public class ExternalConsumer {
 		} else {
 			log.error("A message was sent with a bad token or an unauthorized user or a token from "
 					+ "a different authority this user has not access to this request "
-					+ uuid + ", roles: " + Arrays.toString(roles));
+					+ uuid + ", allowed_roles: " + Arrays.toString(roles) + ", user_roles:" + gennyToken.getUserRoles());
 			bridgeEvent.complete(false);
 		}
 	}
