@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -101,7 +102,7 @@ public class ExternalConsumer {
 		} else {
 			log.error("A message was sent with a bad token or an unauthorized user or a token from "
 					+ "a different authority this user has not access to this request "
-					+ uuid);
+					+ uuid + ", roles: " + Arrays.toString(roles));
 			bridgeEvent.complete(false);
 		}
 	}
