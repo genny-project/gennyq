@@ -1,0 +1,61 @@
+pipeline {
+    agent any
+    options {
+        ansiColor('xterm')
+    }
+    stages {
+        stage('Add Config files') {
+            steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                }
+            }
+        }
+        stage("Clone") {
+            steps {
+                git branch: "${BRANCH}",
+                    url: 'https://github.com/genny-project/gennyq'
+            }
+        }
+        stage("Build Dependencies") {
+            steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                }
+                sh "./build.sh"
+            }
+        }
+        stage("Build Services") {
+            steps {
+                parallel (
+                    "Build GadaQ" : {
+						sh "./build-docker-branch.sh ${TAG} gadaq"
+                    },
+                    "Build Bridge" : {
+						sh "./build-docker-branch.sh ${TAG} bridge"
+                    },
+                    "Build Fyodor" : {
+						sh "./build-docker-branch.sh ${TAG} fyodor"
+                    },
+                    "Build Dropkick" : {
+						sh "./build-docker-branch.sh ${TAG} dropkick"
+                    },
+                    "Build Lauchy" : {
+						sh "./build-docker-branch.sh ${TAG} lauchy"
+                    },
+                    "Build Messages" : {
+						sh "./build-docker-branch.sh ${TAG} messages"
+                    },
+                    "Build Shleemy" : {
+						sh "./build-docker-branch.sh ${TAG} shleemy"
+                    }
+                )
+            }
+        }
+        stage("Push Docker Images") {
+            steps {
+                sh "./push-docker-branch.sh ${TAG}"
+            }
+        }
+    }
+}

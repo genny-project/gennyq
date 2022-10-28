@@ -24,8 +24,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.datatype.capability.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
@@ -39,9 +40,6 @@ import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
-import static life.genny.qwandaq.constants.GennyConstants.CAP_CODE_PREFIX;
-
-import static life.genny.qwandaq.constants.GennyConstants.ROLE_LINK_CODE;
 /*
  * A non-static utility class for managing roles and capabilities.
  * 
@@ -125,7 +123,7 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	public Set<Capability> getEntityCapabilities(final BaseEntity target) {
-		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(CAP_CODE_PREFIX));
+		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
 		if(capabilities.isEmpty()) {
 			return new HashSet<>();
 		}
@@ -189,7 +187,7 @@ public class CapabilitiesManager extends Manager {
 
 		if (attribute == null) {
 			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
-			attribute = new AttributeText(cleanCapabilityCode, name);
+			attribute = new Attribute(cleanCapabilityCode, name, new DataType(String.class));
 			qwandaUtils.saveAttribute(productCode, attribute);
 		}
 
@@ -346,7 +344,7 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// 3. Check user role capabilities
-		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, ROLE_LINK_CODE);
+		List<String> roleCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(user, Attribute.LNK_ROLE);
 
 		try {
 			for (String code : roleCodes) {
@@ -427,8 +425,8 @@ public class CapabilitiesManager extends Manager {
 	 */
 	public static String cleanCapabilityCode(final String rawCapabilityCode) {
 		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
-		if (!cleanCapabilityCode.startsWith(CAP_CODE_PREFIX)) {
-			cleanCapabilityCode = CAP_CODE_PREFIX + cleanCapabilityCode;
+		if (!cleanCapabilityCode.startsWith(Prefix.CAP)) {
+			cleanCapabilityCode = Prefix.CAP + cleanCapabilityCode;
 		}
 
 		return cleanCapabilityCode;

@@ -1,20 +1,15 @@
 package life.genny.kogito.common.service;
 
-import io.quarkus.arc.Arc;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import io.quarkus.arc.Arc;
 import life.genny.kogito.common.models.S2SData;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;

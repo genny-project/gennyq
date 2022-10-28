@@ -12,8 +12,8 @@ public class Or extends Clause {
 		super();
 	}
 
-	public Or(ClauseArgument a, ClauseArgument b) {
-		super(a, b);
+	public Or(ClauseArgument... clauseArguments) {
+		super(clauseArguments);
 	}
 
 }

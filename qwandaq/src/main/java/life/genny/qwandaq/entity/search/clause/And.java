@@ -12,8 +12,8 @@ public class And extends Clause {
     super();
   }
 
-  public And(ClauseArgument a, ClauseArgument b) {
-    super(a, b);
+  public And(ClauseArgument... clauseArguments) {
+    super(clauseArguments);
   }
 
 }

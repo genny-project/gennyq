@@ -1,6 +1,5 @@
 package life.genny.test.qwandaq.utils.capabilities;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;

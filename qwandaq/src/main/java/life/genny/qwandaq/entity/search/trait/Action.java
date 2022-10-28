@@ -1,6 +1,7 @@
 package life.genny.qwandaq.entity.search.trait;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.constants.Prefix;
 
 /**
  * Action
@@ -8,7 +9,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @RegisterForReflection
 public class Action extends Trait {
 
-	public static final String PREFIX = "ACT_";
+	public static final String PREFIX = Prefix.ACT;
 
 	public Action() {
 		super();
