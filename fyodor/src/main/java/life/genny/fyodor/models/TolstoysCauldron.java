@@ -10,8 +10,10 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.EntityEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.utils.ickle.predicate.IcklePredicate;
 
@@ -22,15 +24,13 @@ public class TolstoysCauldron {
 
 	private SearchEntity searchEntity;
 
-	private Root<BaseEntity> root;
+	private Root<HBaseEntity> root;
 	private Root<EntityEntity> link;
 
-	private Map<String, Join<BaseEntity, EntityAttribute>> joinMap = new HashMap<>();
-	private Map<String, Subquery<BaseEntity>> subqueryMap = new HashMap<>();
+	private Map<String, Join<HBaseEntity, HEntityAttribute>> joinMap = new HashMap<>();
+	private Map<String, Subquery<HBaseEntity>> subqueryMap = new HashMap<>();
 
 	private List<Predicate> predicates = new ArrayList<>();
-
-	private List<IcklePredicate> icklePredicates = new LinkedList<>();
 
 	private List<Order> orders = new ArrayList<>();
 
@@ -49,11 +49,11 @@ public class TolstoysCauldron {
 		this.searchEntity = searchEntity;
 	}
 
-	public Root<BaseEntity> getRoot() {
+	public Root<HBaseEntity> getRoot() {
 		return root;
 	}
 
-	public void setRoot(Root<BaseEntity> root) {
+	public void setRoot(Root<HBaseEntity> root) {
 		this.root = root;
 	}
 
@@ -65,19 +65,19 @@ public class TolstoysCauldron {
 		this.link = link;
 	}
 
-	public Map<String, Join<BaseEntity, EntityAttribute>> getJoinMap() {
+	public Map<String, Join<HBaseEntity, HEntityAttribute>> getJoinMap() {
 		return joinMap;
 	}
 
-	public void setJoinMap(Map<String, Join<BaseEntity, EntityAttribute>> joinMap) {
+	public void setJoinMap(Map<String, Join<HBaseEntity, HEntityAttribute>> joinMap) {
 		this.joinMap = joinMap;
 	}
 
-	public Map<String, Subquery<BaseEntity>> getSubqueryMap() {
+	public Map<String, Subquery<HBaseEntity>> getSubqueryMap() {
 		return subqueryMap;
 	}
 
-	public void setSubqueryMap(Map<String, Subquery<BaseEntity>> subqueryMap) {
+	public void setSubqueryMap(Map<String, Subquery<HBaseEntity>> subqueryMap) {
 		this.subqueryMap = subqueryMap;
 	}
 
@@ -87,14 +87,6 @@ public class TolstoysCauldron {
 
 	public void setPredicates(List<Predicate> predicates) {
 		this.predicates = predicates;
-	}
-
-	public List<IcklePredicate> getIcklePredicates() {
-		return icklePredicates;
-	}
-
-	public void setIcklePredicates(List<IcklePredicate> icklePredicates) {
-		this.icklePredicates = icklePredicates;
 	}
 
 	public List<Order> getOrders() {

@@ -79,7 +79,7 @@ public class Search {
 
 		// Process search
 		try {
-			Page page = fyodor.search27(searchEntity);
+			Page page = fyodor.search26(searchEntity);
 			String json = jsonb.toJson(page);
 			log.info("Found " + page.getTotal() + " results!");
 
@@ -141,7 +141,7 @@ public class Search {
 		}
 
 		try {
-			Page page = fyodor.search27(searchEntity);
+			Page page = fyodor.search26(searchEntity);
 
 			Long count = page.getTotal();
 			log.infof("Found %s entities", count);
