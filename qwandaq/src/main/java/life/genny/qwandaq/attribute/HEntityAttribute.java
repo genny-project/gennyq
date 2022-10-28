@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import life.genny.qwandaq.entity.HBaseEntity;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -215,7 +216,7 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 	 *                   other
 	 *                   attributes)
 	 */
-	public HEntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
+	public HEntityAttribute(final HBaseEntity baseEntity, final Attribute attribute, Double weight) {
 		autocreateCreated();
 		setBaseEntity(baseEntity);
 		setAttribute(attribute);
@@ -241,7 +242,7 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 	 * @param value
 	 *                   the value associated with this attribute
 	 */
-	public HEntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
+	public HEntityAttribute(final HBaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
 		autocreateCreated();
 		setBaseEntity(baseEntity);
 		setAttribute(attribute);
@@ -249,6 +250,18 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides
 			// attribute from scoring.
+			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
+		}
+		setWeight(weight);
+		// Assume that Attribute Validation has been performed
+		if (value != null) {
+			setValue(value);
+		}
+	}
+
+	public HEntityAttribute(Double weight, final Object value) {
+		autocreateCreated();
+		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
 		}
 		setWeight(weight);
@@ -304,7 +317,7 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 		this.pk = pk;
 	}
 
-	public void setBaseEntity(final BaseEntity baseEntity) {
+	public void setBaseEntity(final HBaseEntity baseEntity) {
 		getPk().setBaseEntity(baseEntity);
 		this.baseEntityCode = baseEntity.getCode();
 		this.realm = baseEntity.getRealm();

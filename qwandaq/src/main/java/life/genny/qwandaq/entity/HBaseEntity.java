@@ -25,7 +25,7 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.hibernate.annotations.*;
@@ -111,7 +111,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
 			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
 	})
-	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
+	private Set<HEntityAttribute> baseEntityAttributes = new HashSet<HEntityAttribute>(0);
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
@@ -124,9 +124,9 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@JsonbTransient
 	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
-	@JsonIgnore
+	/*@JsonIgnore
 	@XmlTransient
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")*/
 	// @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
 	@JsonbTransient
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
@@ -139,19 +139,19 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@JsonbTransient
 	@XmlTransient
 	@Transient
-	private transient Map<String, EntityAttribute> attributeMap = null;
+	private transient Map<String, HEntityAttribute> attributeMap = null;
 
 	/**
-	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
+	 * @return Map&lt;String, HEntityAttribute&gt; the attributeMap
 	 */
-	public Map<String, EntityAttribute> getAttributeMap() {
+	public Map<String, HEntityAttribute> getAttributeMap() {
 		return attributeMap;
 	}
 
 	/**
 	 * @param attributeMap the attributeMap to set
 	 */
-	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
+	public void setAttributeMap(Map<String, HEntityAttribute> attributeMap) {
 		this.attributeMap = attributeMap;
 	}
 
@@ -211,21 +211,21 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 * @return the baseEntityAttributes
 	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityAttribute> getBaseEntityAttributes() {
+	public Set<HEntityAttribute> getBaseEntityAttributes() {
 		return baseEntityAttributes;
 	}
 
 	/**
 	 * @param baseEntityAttributes the baseEntityAttributes to set
 	 */
-	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
+	public void setBaseEntityAttributes(final Set<HEntityAttribute> baseEntityAttributes) {
 		this.baseEntityAttributes = baseEntityAttributes;
 	}
 
 	/**
 	 * @param baseEntityAttributes the baseEntityAttributes to set
 	 */
-	public void setBaseEntityAttributes(final List<EntityAttribute> baseEntityAttributes) {
+	public void setBaseEntityAttributes(final List<HEntityAttribute> baseEntityAttributes) {
 		this.baseEntityAttributes.addAll(baseEntityAttributes);
 	}
 
@@ -351,12 +351,12 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 * @param attributeCode the attributeCode to find with
 	 * @return Optional
 	 */
-	public Optional<EntityAttribute> findEntityAttribute(final String attributeCode) {
+	public Optional<HEntityAttribute> findEntityAttribute(final String attributeCode) {
 
 		if (attributeMap != null) {
 			return Optional.ofNullable(attributeMap.get(attributeCode));
 		}
-		Optional<EntityAttribute> foundEntity = Optional.empty();
+		Optional<HEntityAttribute> foundEntity = Optional.empty();
 
 		try {
 			foundEntity = getBaseEntityAttributes().stream()
@@ -374,10 +374,10 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
 	 *
 	 * @param attributePrefix the attributePrefix to find with
-	 * @return EntityAttribute
+	 * @return HEntityAttribute
 	 */
-	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
-		List<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
+	public List<HEntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
+		List<HEntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
 				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix))).collect(Collectors.toList());
 
 		return foundEntitys;
@@ -388,10 +388,10 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
 	 *
 	 * @param attribute the attribute to find
-	 * @return EntityAttribute
+	 * @return HEntityAttribute
 	 */
-	public EntityAttribute findEntityAttribute(final Attribute attribute) {
-		final EntityAttribute foundEntity = getBaseEntityAttributes().stream()
+	public HEntityAttribute findEntityAttribute(final Attribute attribute) {
+		final HEntityAttribute foundEntity = getBaseEntityAttributes().stream()
 				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst().get();
 
 		return foundEntity;
@@ -399,14 +399,14 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 
 	/**
 	 * addAttribute This adds an attribute with default weight of 0.0 to the
-	 * baseEntity. It auto creates the EntityAttribute object. For efficiency we
+	 * baseEntity. It auto creates the HEntityAttribute object. For efficiency we
 	 * assume the attribute does not already exist
 	 *
 	 * @param ea the ea to add
-	 * @return EntityAttribute
+	 * @return HEntityAttribute
 	 * @throws BadDataException if the attribute could not be added
 	 */
-	public EntityAttribute addAttribute(final EntityAttribute ea) throws BadDataException {
+	public HEntityAttribute addAttribute(final HEntityAttribute ea) throws BadDataException {
 
 		if (ea == null) {
 			throw new BadDataException("missing Attribute");
@@ -417,45 +417,45 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 
 	/**
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
-	 * It auto creates the EntityAttribute object. For efficiency we assume the
+	 * It auto creates the HEntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
 	 *
 	 * @param attribute tha Attribute to add
 	 * @throws BadDataException if attribute could not be added
-	 * @return EntityAttribute
+	 * @return HEntityAttribute
 	 */
-	public EntityAttribute addAttribute(final Attribute attribute) throws BadDataException {
+	public HEntityAttribute addAttribute(final Attribute attribute) throws BadDataException {
 
 		return addAttribute(attribute, 1.0);
 	}
 
 	/**
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
-	 * It auto creates the EntityAttribute object. For efficiency we assume the
+	 * It auto creates the HEntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
 	 *
 	 * @param attribute tha Attribute to add
 	 * @param weight    the weight
 	 * @throws BadDataException if attribute could not be added
-	 * @return EntityAttribute
+	 * @return HEntityAttribute
 	 */
-	public EntityAttribute addAttribute(final Attribute attribute, final Double weight) throws BadDataException {
+	public HEntityAttribute addAttribute(final Attribute attribute, final Double weight) throws BadDataException {
 
 		return addAttribute(attribute, weight, null);
 	}
 
 	/**
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
-	 * It auto creates the EntityAttribute object. For efficiency we assume the
+	 * It auto creates the HEntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
 	 *
 	 * @param attribute tha Attribute to add
 	 * @param weight    the weight
 	 * @param value     of type String, LocalDateTime, Long, Integer, Boolean
 	 * @throws BadDataException if attribute could not be added
-	 * @return EntityAttribute
+	 * @return HEntityAttribute
 	 */
-	public EntityAttribute addAttribute(final Attribute attribute, final Double weight, final Object value)
+	public HEntityAttribute addAttribute(final Attribute attribute, final Double weight, final Object value)
 			throws BadDataException {
 
 		if (attribute == null)
@@ -463,11 +463,11 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityAttribute entityAttribute = new EntityAttribute(weight, value);
+		final HEntityAttribute entityAttribute = new HEntityAttribute(weight, value);
 		entityAttribute.setRealm(getRealm());
 		entityAttribute.setBaseEntityCode(getCode());
 		entityAttribute.setAttribute(attribute);
-		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
+		Optional<HEntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
 			existing.get().setValue(value);
 			existing.get().setWeight(weight);
@@ -487,16 +487,16 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 * @param weight    the weight of the omit check
 	 * @param value     of type String, LocalDateTime, Long, Integer, Boolean
 	 * @throws BadDataException if omit check could not be added
-	 * @return EntityAttribute
+	 * @return HEntityAttribute
 	 */
-	public EntityAttribute addAttributeOmitCheck(final Attribute attribute, final Double weight, final Object value)
+	public HEntityAttribute addAttributeOmitCheck(final Attribute attribute, final Double weight, final Object value)
 			throws BadDataException {
 		if (attribute == null)
 			throw new BadDataException("missing Attribute");
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityAttribute entityAttribute = new EntityAttribute(weight, value);
+		final HEntityAttribute entityAttribute = new HEntityAttribute(weight, value);
 		entityAttribute.setRealm(getRealm());
 		entityAttribute.setBaseEntityCode(getCode());
 		entityAttribute.setAttribute(attribute);
@@ -515,9 +515,9 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	public Boolean removeAttribute(final String attributeCode) {
 		Boolean removed = false;
 
-		Iterator<EntityAttribute> i = this.baseEntityAttributes.iterator();
+		Iterator<HEntityAttribute> i = this.baseEntityAttributes.iterator();
 		while (i.hasNext()) {
-			EntityAttribute ea = i.next();
+			HEntityAttribute ea = i.next();
 			if (ea.getAttributeCode().equals(attributeCode)) {
 				i.remove();
 				removed = true;
@@ -630,8 +630,8 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 			answerLink.setAskId(answer.getAskId());
 		}
 
-		// Update the EntityAttribute
-		Optional<EntityAttribute> ea = findEntityAttribute(answer.getAttributeCode());
+		// Update the HEntityAttribute
+		Optional<HEntityAttribute> ea = findEntityAttribute(answer.getAttributeCode());
 		if (ea.isPresent()) {
 			// modify
 			ea.get().setValue(answerLink.getValue());
@@ -640,7 +640,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 			ea.get().setRealm(getRealm());
 			ea.get().setBaseEntityCode(getCode());
 		} else {
-			EntityAttribute newEA = new EntityAttribute(weight, answerLink.getValue());
+			HEntityAttribute newEA = new HEntityAttribute(weight, answerLink.getValue());
 			newEA.setRealm(getRealm());
 			newEA.setBaseEntityCode(getCode());
 			newEA.setAttributeCode(answerLink.getAttributeCode());
@@ -661,14 +661,14 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@XmlTransient
 	@JsonIgnore
 	@JsonbTransient
-	public Set<EntityAttribute> merge(final HBaseEntity entity) {
-		final Set<EntityAttribute> changes = new HashSet<EntityAttribute>();
+	public Set<HEntityAttribute> merge(final HBaseEntity entity) {
+		final Set<HEntityAttribute> changes = new HashSet<HEntityAttribute>();
 
 		// go through the attributes in the entity and check if already existing , if so
 		// then check the
 		// value and override, else add new attribute
 
-		for (final EntityAttribute ea : entity.getBaseEntityAttributes()) {
+		for (final HEntityAttribute ea : entity.getBaseEntityAttributes()) {
 			final Attribute attribute = ea.getAttribute();
 			if (this.containsEntityAttribute(attribute.getCode())) {
 				// check for update value
@@ -711,7 +711,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	private <T> T getValue(final Attribute attribute) {
 		// TODO Dumb find for attribute. needs a hashMap
 
-		for (final EntityAttribute ea : this.getBaseEntityAttributes()) {
+		for (final HEntityAttribute ea : this.getBaseEntityAttributes()) {
 			if (ea.getAttribute().getCode().equalsIgnoreCase(attribute.getCode())) {
 				return getValue(ea);
 			}
@@ -728,7 +728,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	private <T> T getValue(final EntityAttribute ea) {
+	private <T> T getValue(final HEntityAttribute ea) {
 		return ea.getValue();
 
 	}
@@ -744,7 +744,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@XmlTransient
 	public <T> Optional<T> getValue(final String attributeCode) {
 
-		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> ea = this.findEntityAttribute(attributeCode);
 
 		Optional<T> result = Optional.empty();
 		if (ea.isPresent()) {
@@ -768,7 +768,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@XmlTransient
 	public <T> Optional<T> getLoopValue(final String attributeCode) {
 
-		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> ea = this.findEntityAttribute(attributeCode);
 
 		Optional<T> result = Optional.empty();
 		if (ea.isPresent()) {
@@ -787,7 +787,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@XmlTransient
 	public String getValueAsString(final String attributeCode) {
 
-		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> ea = this.findEntityAttribute(attributeCode);
 		String result = null;
 		if (ea.isPresent()) {
 			if (ea.get() != null) {
@@ -855,7 +855,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@XmlTransient
 	public Boolean is(final String attributeCode) {
 
-		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> ea = this.findEntityAttribute(attributeCode);
 		Boolean result = false;
 
 		if (ea.isPresent()) {
@@ -884,14 +884,14 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@XmlTransient
 	public <T> Optional<T> setValue(final Attribute attribute, T value, Double weight) throws BadDataException {
 
-		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attribute.getCode());
+		Optional<HEntityAttribute> oldValue = this.findEntityAttribute(attribute.getCode());
 
 		Optional<T> result = Optional.empty();
 		if (oldValue.isPresent()) {
 			if (oldValue.get().getLoopValue() != null) {
 				result = Optional.of(oldValue.get().getLoopValue());
 			}
-			EntityAttribute ea = oldValue.get();
+			HEntityAttribute ea = oldValue.get();
 			ea.setValue(value);
 			ea.setWeight(weight);
 		} else {
@@ -949,14 +949,14 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@Transient
 	@XmlTransient
 	public <T> Optional<T> setValue(final String attributeCode, T value, Double weight) throws BadDataException {
-		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> oldValue = this.findEntityAttribute(attributeCode);
 
 		Optional<T> result = Optional.empty();
 		if (oldValue.isPresent()) {
 			if (oldValue.get().getLoopValue() != null) {
 				result = Optional.of(oldValue.get().getLoopValue());
 			}
-			EntityAttribute ea = oldValue.get();
+			HEntityAttribute ea = oldValue.get();
 			ea.setValue(value);
 			ea.setWeight(weight);
 		}
@@ -1004,9 +1004,9 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 */
 	@Transient
 	public void forcePrivate(String attributeCode, Boolean state) {
-		Optional<EntityAttribute> optEa = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> optEa = this.findEntityAttribute(attributeCode);
 		if (optEa.isPresent()) {
-			EntityAttribute ea = optEa.get();
+			HEntityAttribute ea = optEa.get();
 			ea.setPrivacyFlag(state);
 		}
 	}
@@ -1019,9 +1019,9 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 */
 	@Transient
 	public void forceInferred(final String attributeCode, final Boolean state) {
-		Optional<EntityAttribute> optEa = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> optEa = this.findEntityAttribute(attributeCode);
 		if (optEa.isPresent()) {
-			EntityAttribute ea = optEa.get();
+			HEntityAttribute ea = optEa.get();
 			ea.setInferred(state);
 		}
 	}
@@ -1034,9 +1034,9 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 */
 	@Transient
 	public void forceReadonly(final String attributeCode, final Boolean state) {
-		Optional<EntityAttribute> optEa = this.findEntityAttribute(attributeCode);
+		Optional<HEntityAttribute> optEa = this.findEntityAttribute(attributeCode);
 		if (optEa.isPresent()) {
-			EntityAttribute ea = optEa.get();
+			HEntityAttribute ea = optEa.get();
 			ea.setReadonly(state);
 		}
 	}
@@ -1082,7 +1082,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		Set<String> codes = new HashSet<String>();
 		codes.addAll(new HashSet<>(Arrays.asList(initialCodes)));
 		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
-			for (EntityAttribute ea : this.baseEntityAttributes) {
+			for (HEntityAttribute ea : this.baseEntityAttributes) {
 				// if (ea.getAttributeCode().startsWith("LNK_")) {
 				String value = ea.getValueString();
 				if (value != null) {
@@ -1105,17 +1105,17 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 
 	/**
 	 * @param prefix the prefix to set
-	 * @return Optional&lt;EntityAttribute&gt;
+	 * @return Optional&lt;HEntityAttribute&gt;
 	 */
 	@Transient
 	@JsonbTransient
-	public Optional<EntityAttribute> getHighestEA(final String prefix) {
+	public Optional<HEntityAttribute> getHighestEA(final String prefix) {
 		// go through all the EA
-		Optional<EntityAttribute> highest = Optional.empty();
+		Optional<HEntityAttribute> highest = Optional.empty();
 		Double weight = -1000.0;
 
 		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
-			for (EntityAttribute ea : this.baseEntityAttributes) {
+			for (HEntityAttribute ea : this.baseEntityAttributes) {
 				if (ea.getAttributeCode().startsWith(prefix)) {
 					if (ea.getWeight() > weight) {
 						highest = Optional.of(ea);
@@ -1137,9 +1137,9 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@JsonbTransient
 	public void setFastAttributes(Boolean fastMode) {
 		if (fastMode) {
-			attributeMap = new ConcurrentHashMap<String, EntityAttribute>();
+			attributeMap = new ConcurrentHashMap<String, HEntityAttribute>();
 			// Grab all the entityAttributes and create a fast HashMap lookup
-			for (EntityAttribute ea : this.baseEntityAttributes) {
+			for (HEntityAttribute ea : this.baseEntityAttributes) {
 				attributeMap.put(ea.getAttributeCode(), ea);
 			}
 		} else {

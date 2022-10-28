@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Embeddable;
@@ -19,7 +20,7 @@ public class HEntityAttributeId implements java.io.Serializable {
 	@JsonManagedReference(value = "entityAttribute")
 	@JsonIgnoreProperties("baseEntityAttributes")
 	@JsonbTransient
-	public BaseEntity baseEntity;
+	public HBaseEntity baseEntity;
 
 	@ManyToOne
 	@JsonBackReference(value = "attribute")
@@ -29,14 +30,14 @@ public class HEntityAttributeId implements java.io.Serializable {
 	/**
 	 * @return BaseEntity
 	 */
-	public BaseEntity getBaseEntity() {
+	public HBaseEntity getBaseEntity() {
 		return baseEntity;
 	}
 
 	/**
 	 * @param baseEntity the baseentity to set
 	 */
-	public void setBaseEntity(final BaseEntity baseEntity) {
+	public void setBaseEntity(final HBaseEntity baseEntity) {
 		this.baseEntity = baseEntity;
 	}
 
