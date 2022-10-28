@@ -101,8 +101,9 @@ public class CapHandler extends Manager {
 			error("[!] No UserToken, cannot verify capabilities");
 			return false;
 		}
-
-		if(!GennyConstants.SERVICE_CODE.equals(userToken.getCode())) {
+		info("user token:" + userToken.getCode() + " CONSTANT: " + GennyConstants.SERVICE_CODE);
+		boolean isService = userToken.hasRole("service") || GennyConstants.SERVICE_CODE.equals(userToken.getCode()) || GennyConstants.SERVICE_CODE.equals(userToken.getUserCode());
+		if(!isService) {
 			Set<Capability> capabilities = capMan.getUserCapabilities();
 			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
 				if(!capTrait.meetsRequirements(capabilities)) {

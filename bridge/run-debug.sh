@@ -35,7 +35,7 @@ export QUARKUS_INFINISPAN_CLIENT_SASL_MECHANISM=DIGEST-MD5
 export QUARKUS_INFINISPAN_CLIENT_SERVER_LIST=${rawhost}:11222
 export QUARKUS_INFINISPAN_CLIENT_USE_AUTH="true"
 export INFINISPAN_PASSWORD=password
-export QUARKUS_OIDC_AUTH_SERVER_URL="${GENNY_KEYCLOAK_URL}/auth/realms/${GENNY_REALM}"
+export QUARKUS_OIDC_AUTH_SERVER_URL="${GENNY_KEYCLOAK_URL}/realms/${GENNY_REALM}"
 export QUARKUS_OIDC_CLIENT_ID=${GENNY_CLIENT_ID}
 export QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE=BASIC
 export INFINISPAN_CLIENT_HOTROD_SERVER_LIST=alyson.genny.life:11222
@@ -51,7 +51,7 @@ export GENNY_MYSQL_PASSWORD=password
 export GENNY_MYSQL_URL=alyson.genny.life
 export GENNY_MYSQL_PORT=3310
 export GENNY_MYSQL_DB=gennydb
-export ENV_KEYCLOAK_REDIRECTURI=https://keycloak-bali.gada.io/auth
+export ENV_KEYCLOAK_REDIRECTURI=https://keycloak-bali.gada.io
 export RULESSERVICE_URL=http://wildfly-rulesservice
 export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
 echo "infinispan url $GENNY_INFINISPAN_URL"

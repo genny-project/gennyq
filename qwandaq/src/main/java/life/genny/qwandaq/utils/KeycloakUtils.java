@@ -246,10 +246,10 @@ public class KeycloakUtils {
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
         // A necessary evil. I think?
-        log.info("this is the real realm: " + realm + " from configuration, and we force it use 'gadatron' realm");
-        realm = "gadatron";
+        log.info("this is the real realm: " + realm + " from configuration, and we force it use 'gada' realm");
+        realm = "gada";
 
-        String uri = keycloakUrl + "/auth/realms/" + realm + "/protocol/openid-connect/token";
+        String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
