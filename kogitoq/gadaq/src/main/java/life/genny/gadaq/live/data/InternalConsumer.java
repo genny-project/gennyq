@@ -30,6 +30,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import life.genny.gadaq.search.FilterGroupService;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -52,6 +53,9 @@ public class InternalConsumer {
 
 	@Inject
 	Events events;
+
+	@Inject
+	FilterGroupService filterService;
 
 	/**
 	 * Execute on start up.
@@ -97,6 +101,9 @@ public class InternalConsumer {
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_DATA, msg);
 
 		scope.destroy();
+
+		/* Handle filter */
+		filterService.handleFilterEventData(data);
 		// log duration
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
@@ -133,6 +140,9 @@ public class InternalConsumer {
 		}
 		events.route(msg);
 		scope.destroy();
+
+		/* Handle filter */
+		filterService.handleFilterEvent(event);
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}

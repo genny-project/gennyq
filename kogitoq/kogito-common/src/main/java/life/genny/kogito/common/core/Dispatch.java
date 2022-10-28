@@ -381,8 +381,10 @@ public class Dispatch {
 
 		// fetch entity for each and add to msg
 		for (String code : codes) {
-			BaseEntity be = beUtils.getBaseEntity(code);
-			msg.add(be);
+			if(!code.isEmpty()) {
+				BaseEntity be = beUtils.getBaseEntity(code);
+				msg.add(be);
+			}
 		}
 	}
 

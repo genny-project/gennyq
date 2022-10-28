@@ -110,4 +110,27 @@ public class Filter extends Trait implements ClauseArgument {
 		this.className = className;
 	}
 
+	public enum FILTER_TYPE {
+		PRIMARY,
+		EXTRA
+	}
+
+	private FILTER_TYPE type;
+
+	public FILTER_TYPE getType() {
+		return type;
+	}
+
+	public void setType(FILTER_TYPE type) {
+		this.type = type;
+	}
+
+	public Filter(String code, Operator operator, Object value, FILTER_TYPE type) {
+		super(code, code);
+		this.operator = operator;
+		this.value = value;
+		this.c = value.getClass();
+		this.className = value.getClass().getName();
+		this.type = type;
+	}
 }

@@ -135,22 +135,22 @@ public class Events {
 			return;
 		}
 
-		// add item
-		if (code.startsWith("QUE_ADD_")) {
-			code = StringUtils.removeStart(code, "QUE_ADD_");
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
-
-			log.info("Prefix: " + code);
-			if ("PER".equals(prefix)) {
-				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_"+code)
-						.add("sourceCode", userToken.getUserCode())
-						.build();
-
-				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
-				return;
-			}
-		}
+//		// add item TODO:Temporary closed
+//		if (code.startsWith("QUE_ADD_")) {
+//			code = StringUtils.removeStart(code, "QUE_ADD_");
+//			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
+//
+//			log.info("Prefix: " + code);
+//			if ("PER".equals(prefix)) {
+//				JsonObject json = Json.createObjectBuilder()
+//						.add("definitionCode", "DEF_"+code)
+//						.add("sourceCode", userToken.getUserCode())
+//						.build();
+//
+//				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
+//				return;
+//			}
+//		}
 
 		// edit item
 		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*") ) {
