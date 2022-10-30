@@ -18,7 +18,6 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.validation.Validation;
@@ -487,11 +486,11 @@ public class DatabaseUtils {
 		try {
 			existingQuestionQuestion = findQuestionQuestionBySourceAndTarget(
 					questionQuestion.getRealm(),
-					pk.getSourceCode(),
-					pk.getTargetCode());
+					sourceCode,
+					targetCode);
 		} catch (NoResultException e) {
 			log.debugf("%s:%s not found in database, creating new row...",
-					questionQuestion.getSourceCode(), questionQuestion.getTargetCode());
+					sourceCode, targetCode);
 		}
 
 		if (existingQuestionQuestion == null) {
@@ -500,7 +499,7 @@ public class DatabaseUtils {
 			entityManager.merge(questionQuestion);
 		}
 
-		log.info("Successfully saved QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
+		log.info("Successfully saved QuestionQuestion " + sourceCode + ":" + targetCode);
 	}
 
 	/**

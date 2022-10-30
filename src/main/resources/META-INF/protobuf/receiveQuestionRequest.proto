@@ -285,8 +285,7 @@ message TimerEvent {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string uniqueCode = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string updatePairs = 3; 
-}
+	optional string updatePairs = 3;
 /* @Indexed */ 
 message Validation { 
 	option java_package = "life.genny.qwandaq.validation";

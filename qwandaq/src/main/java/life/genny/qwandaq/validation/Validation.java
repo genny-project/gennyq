@@ -300,4 +300,5 @@ public class Validation extends CodedEntity implements Serializable {
 	static public String getDefaultCodePrefix() {
 		return DEFAULT_CODE_PREFIX;
 	}
+
 }

@@ -44,6 +44,9 @@ public class SearchService {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	CacheUtils cacheUtils;
+
+	@Inject
 	DefUtils defUtils;
 
 	@Inject

@@ -79,6 +79,9 @@ public class QwandaUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	CacheUtils cacheUtils;
+
+	@Inject
 	UserToken userToken;
 
 	public QwandaUtils() {
@@ -296,7 +299,8 @@ public class QwandaUtils {
 		// find the question in the database
 		Question question;
 		try {
-			question = databaseUtils.findQuestionByCode(productCode, code);
+			// question = databaseUtils.findQuestionByCode(productCode, code);
+			question = cacheUtils.getQuestion(productCode, code);
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);
 		}
@@ -329,10 +333,10 @@ public class QwandaUtils {
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
-						+ questionQuestion.getTargetCode());
+				log.info("   [-] Found Child Question in database:  " + questionQuestion.getParentCode() + ":"
+						+ questionQuestion.getChildCode());
 
-				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
+				Ask child = generateAskFromQuestionCode(questionQuestion.getChildCode(), source, target);
 
 				// Do not include PRI_SUBMIT
 				if ("PRI_SUBMIT".equals(child.getQuestion().getAttribute().getCode())) {
@@ -677,7 +681,11 @@ public class QwandaUtils {
 				if (className.contains("Boolean") || className.contains("bool"))
 					value = false;
 
-				return new EntityAttribute(processEntity, attribute, 1.0, value);
+				EntityAttribute entityAttribute = new EntityAttribute(1.0, value);
+				entityAttribute.setRealm(processEntity.getRealm());
+				entityAttribute.setBaseEntityCode(processEntity.getCode());
+				entityAttribute.setAttribute(attribute);
+				return entityAttribute;
 			});
 
 			processEntity.addAttribute(ea);

@@ -27,6 +27,8 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import life.genny.qwandaq.attribute.HEntityAttribute;
+import life.genny.qwandaq.entity.HBaseEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -76,7 +78,7 @@ public class FyodorUltra {
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.
-	 * 
+	 *
 	 * @param searchEntity
 	 * @return
 	 */
@@ -120,7 +122,7 @@ public class FyodorUltra {
 
 	/**
 	 * Fetch an array of BaseEntitiy codes using a SearchEntity.
-	 * 
+	 *
 	 * @param searchEntity
 	 * @return
 	 */
@@ -141,7 +143,7 @@ public class FyodorUltra {
 		// setup search query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		CriteriaQuery<Tuple> query = cb.createTupleQuery();
-		Root<BaseEntity> baseEntity = query.from(BaseEntity.class);
+		Root<HBaseEntity> baseEntity = query.from(HBaseEntity.class);
 
 		// log arguments of search
 		searchEntity.getClauseContainers().stream().forEach(cont -> {
@@ -175,7 +177,7 @@ public class FyodorUltra {
 
 		// build count query
 		CriteriaQuery<Long> count = cb.createQuery(Long.class);
-		Root<BaseEntity> countBaseEntity = count.from(BaseEntity.class);
+		Root<HBaseEntity> countBaseEntity = count.from(HBaseEntity.class);
 
 		// build the search query
 		TolstoysCauldron countCauldron = new TolstoysCauldron(searchEntity);
@@ -207,7 +209,7 @@ public class FyodorUltra {
 
 	/**
 	 * Use a cauldron to build a search query from a CriteriaQuery base.
-	 * 
+	 *
 	 * @param query
 	 * @param baseEntity
 	 * @param searchEntity
@@ -219,7 +221,7 @@ public class FyodorUltra {
 
 		String realm = cauldron.getProductCode();
 		SearchEntity searchEntity = cauldron.getSearchEntity();
-		Root<BaseEntity> root = cauldron.getRoot();
+		Root<HBaseEntity> root = cauldron.getRoot();
 
 		// find filter by predicates
 		searchEntity.getClauseContainers().stream().forEach(cont -> {
@@ -265,7 +267,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find predicates for a clause.
-	 * 
+	 *
 	 * @param cauldron
 	 * @param clauseContainer
 	 * @return
@@ -298,7 +300,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate of a filter.
-	 * 
+	 *
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param filter
@@ -350,6 +352,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate of a DateTime type filter.
+	 *
 	 * <br>
 	 * This method requires that the the incoming stringified 
 	 * chrono unit is in the most standard format, effectively 
@@ -411,13 +414,13 @@ public class FyodorUltra {
 
 	/**
 	 * Find predicates for a link related fields.
-	 * 
+	 *
 	 * @param root
 	 * @param cauldron
 	 * @param searchEntity
 	 */
 	public List<Predicate> findLinkPredicates(CriteriaQuery<?> query, TolstoysCauldron cauldron,
-			SearchEntity searchEntity) {
+											  SearchEntity searchEntity) {
 
 		String sourceCode = searchEntity.getSourceCode();
 		String targetCode = searchEntity.getTargetCode();
@@ -430,7 +433,7 @@ public class FyodorUltra {
 			return predicates;
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		Root<BaseEntity> root = cauldron.getRoot();
+		Root<HBaseEntity> root = cauldron.getRoot();
 		Root<EntityEntity> entityEntity = query.from(EntityEntity.class);
 		cauldron.setLink(entityEntity);
 
@@ -459,7 +462,7 @@ public class FyodorUltra {
 	/**
 	 * Return a clean entity code to use in query for valueString containing a
 	 * single entity code array.
-	 * 
+	 *
 	 * @param root
 	 * @return
 	 */
@@ -477,7 +480,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate for a wildcard filter.
-	 * 
+	 *
 	 * @param root
 	 * @param cauldron
 	 * @param wildcard
@@ -486,9 +489,9 @@ public class FyodorUltra {
 	public Predicate findWildcardPredicate(TolstoysCauldron cauldron, String wildcard) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		Root<BaseEntity> root = cauldron.getRoot();
+		Root<HBaseEntity> root = cauldron.getRoot();
 
-		Join<BaseEntity, EntityAttribute> join = root.join("baseEntityAttributes", JoinType.LEFT);
+		Join<HBaseEntity, HEntityAttribute> join = root.join("baseEntityAttributes", JoinType.LEFT);
 		join.on(cb.equal(root.get("id"), join.get("pk").get("baseEntity").get("id")));
 		cauldron.getJoinMap().put("WILDCARD", join);
 
@@ -497,7 +500,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a search order for a sort.
-	 * 
+	 *
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param sort
@@ -510,7 +513,7 @@ public class FyodorUltra {
 		Ord order = sort.getOrder();
 		Expression<?> expression = null;
 
-		Root<BaseEntity> root = cauldron.getRoot();
+		Root<HBaseEntity> root = cauldron.getRoot();
 
 		if (code.startsWith(Attribute.PRI_CREATED))
 			expression = root.<LocalDateTime>get("created");
@@ -535,14 +538,14 @@ public class FyodorUltra {
 
 	/**
 	 * Find the expression for an attribute code.
-	 * 
+	 *
 	 * @param cauldron
 	 * @param code
 	 * @return
 	 */
 	public Expression<?> findExpression(TolstoysCauldron cauldron, String code) {
 
-		Root<BaseEntity> root = cauldron.getRoot();
+		Root<HBaseEntity> root = cauldron.getRoot();
 
 		if (code.startsWith(Attribute.PRI_CREATED))
 			return root.<LocalDateTime>get("created");
@@ -553,7 +556,7 @@ public class FyodorUltra {
 		else if (code.equals(Attribute.PRI_NAME))
 			return root.<String>get("name");
 
-		Join<BaseEntity, EntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
+		Join<HBaseEntity, HEntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
 
 		Attribute attr = qwandaUtils.getAttribute(cauldron.getProductCode(), code);
 		DataType dtt = attr.getDataType();
@@ -591,11 +594,11 @@ public class FyodorUltra {
 	/**
 	 * Create a select case to use in status check. When used, this instructs the
 	 * search to select a status' ordinal so that number comparison can be done.
-	 * 
+	 *
 	 * @param root
 	 * @return
 	 */
-	public Case<Number> selectCaseEntityStatus(Root<BaseEntity> root) {
+	public Case<Number> selectCaseEntityStatus(Root<HBaseEntity> root) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		Path<EEntityStatus> eStatus = root.get("status");
@@ -611,7 +614,7 @@ public class FyodorUltra {
 
 	/**
 	 * Check if a class is of DateTime type
-	 * 
+	 *
 	 * @param c
 	 * @return
 	 */
@@ -622,18 +625,18 @@ public class FyodorUltra {
 	/**
 	 * Get an existing join for an attribute code, or create if not existing
 	 * already.
-	 * 
+	 *
 	 * @param cb
 	 * @param code
 	 * @return
 	 */
-	public Join<BaseEntity, EntityAttribute> createOrFindJoin(TolstoysCauldron cauldron, String code) {
+	public Join<HBaseEntity, HEntityAttribute> createOrFindJoin(TolstoysCauldron cauldron, String code) {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		// add to map if not already there
 		if (!cauldron.getJoinMap().containsKey(code)) {
-			Join<BaseEntity, EntityAttribute> join = cauldron.getRoot().join("baseEntityAttributes", JoinType.LEFT);
+			Join<HBaseEntity, HEntityAttribute> join = cauldron.getRoot().join("baseEntityAttributes", JoinType.LEFT);
 			join.on(cb.equal(join.get("pk").get("attribute").get("code"), code));
 			cauldron.getJoinMap().put(code, join);
 		}
@@ -658,7 +661,7 @@ public class FyodorUltra {
 
 	/**
 	 * Get an entity value of an associated column code.
-	 * 
+	 *
 	 * @param entity
 	 * @param code
 	 * @return
@@ -682,7 +685,7 @@ public class FyodorUltra {
 	/**
 	 * Recursively search an entity using an associated column code and return the
 	 * value.
-	 * 
+	 *
 	 * @param entity
 	 * @param code
 	 * @return

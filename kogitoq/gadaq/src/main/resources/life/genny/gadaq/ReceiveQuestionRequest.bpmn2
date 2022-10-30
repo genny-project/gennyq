@@ -160,7 +160,7 @@
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_DBA9156E-6978-4123-9B3C-73B13D1D1438" sourceRef="_6EE9EE92-B073-4D22-BE75-90E74E1717D1" targetRef="_3954F647-25C1-44B4-8A35-C26E476B3519"/>
     <bpmn2:sequenceFlow id="_7E9266FE-17AD-42E1-975B-DAECC99DDF7C" sourceRef="_8F0AEEE0-B36C-4D47-A427-B4FE96683A7E" targetRef="_6EE9EE92-B073-4D22-BE75-90E74E1717D1"/>
-    <bpmn2:sequenceFlow id="_D0AC12D3-9B7F-474F-B80B-BC849DD8FEAE" sourceRef="_3954F647-25C1-44B4-8A35-C26E476B3519" targetRef="_AE41C05D-2DFC-4811-B377-8D5E8022919B"/>
+    <bpmn2:sequenceFlow id="_DBA9156E-6978-4123-9B3C-73B13D1D1438" sourceRef="_6EE9EE92-B073-4D22-BE75-90E74E1717D1" targetRef="_AE41C05D-2DFC-4811-B377-8D5E8022919B"/>
     <bpmn2:sequenceFlow id="_3B2BC095-0254-4A9F-AE69-AB5A1F19D1FB" sourceRef="_2422032F-F19C-44D4-B164-373496BA9017" targetRef="_8F0AEEE0-B36C-4D47-A427-B4FE96683A7E"/>
     <bpmn2:sequenceFlow id="_AC7BDEF8-C6D0-406F-9554-6BE06FFCC5C1" sourceRef="_7B4FBAEC-0860-48A6-B1A6-585AB9980105" targetRef="_DBCC2C24-D936-487D-836B-53A2B80B858B"/>
     <bpmn2:sequenceFlow id="_91E5CDE9-BFC1-47B2-A7CB-4569D4B2B8F5" sourceRef="_DBCC2C24-D936-487D-836B-53A2B80B858B" targetRef="_92850423-C6A9-48F8-B96A-2FDE9CDD7B46"/>
@@ -179,7 +179,7 @@
           <drools:metaValue><![CDATA[Fully expired]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return (!timerData.isExpired())&&timerData.hasExpired();
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return timerData.hasExpired();
 ]]></bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_3B690E14-D88B-4738-B68E-371B90B4AF20" sourceRef="_413AF7A9-908A-47A9-BAA2-AE97BEEFEC19" targetRef="_2422032F-F19C-44D4-B164-373496BA9017">
@@ -409,7 +409,7 @@ kcontext.setVariable("pcmCode", pcmCode);</bpmn2:script>
       </bpmn2:dataInputAssociation>
     </bpmn2:serviceTask>
     <bpmn2:endEvent id="_AE41C05D-2DFC-4811-B377-8D5E8022919B">
-      <bpmn2:incoming>_D0AC12D3-9B7F-474F-B80B-BC849DD8FEAE</bpmn2:incoming>
+      <bpmn2:incoming>_DBA9156E-6978-4123-9B3C-73B13D1D1438</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:scriptTask id="_2422032F-F19C-44D4-B164-373496BA9017" name="Milestone Reached" scriptFormat="http://www.java.com/java">
       <bpmn2:extensionElements>
@@ -448,7 +448,7 @@ kcontext.setVariable("milestoneMessage",milestoneMessage);</bpmn2:script>
     </bpmn2:serviceTask>
     <bpmn2:exclusiveGateway id="_92850423-C6A9-48F8-B96A-2FDE9CDD7B46" drools:dg="_1DAFF0ED-0E2E-4DCF-9937-715563325100" gatewayDirection="Converging" default="_1DAFF0ED-0E2E-4DCF-9937-715563325100">
       <bpmn2:incoming>_E3EBFC1C-E2C7-4A8C-BD68-2F12E6E46FFA</bpmn2:incoming>
-      <bpmn2:incoming>_91E5CDE9-BFC1-47B2-A7CB-4569D4B2B8F5</bpmn2:incoming>
+      <bpmn2:incoming>_AC7BDEF8-C6D0-406F-9554-6BE06FFCC5C1</bpmn2:incoming>
       <bpmn2:outgoing>_1DAFF0ED-0E2E-4DCF-9937-715563325100</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
     <bpmn2:scriptTask id="_5F6FB536-32D7-464D-9680-930F134D40E7" name="Timer Log" scriptFormat="http://www.java.com/java">
@@ -457,7 +457,7 @@ kcontext.setVariable("milestoneMessage",milestoneMessage);</bpmn2:script>
           <drools:metaValue><![CDATA[Timer Log]]></drools:metaValue>
         </drools:metaData>
       </bpmn2:extensionElements>
-      <bpmn2:incoming>_7C494B8D-B365-4D6A-BFEB-7ADD32C6A826</bpmn2:incoming>
+      <bpmn2:incoming>_9321E577-A90A-4074-B5DE-6E618666FA31</bpmn2:incoming>
       <bpmn2:outgoing>_459537DF-135D-47A8-B1D0-9D05672A6BCA</bpmn2:outgoing>
       <bpmn2:script>/*System.out.println("Timer kicked in "+java.time.LocalDateTime.now());
 if (data==null) {
@@ -469,8 +469,8 @@ if (data==null) {
 
 timerData.updateElapsed();
 kcontext.setVariable("timerData",timerData);
-/*System.out.println("Timer updateElapsed "+timerData.getElapsedMin());
-System.out.println("&gt;&gt;&gt;Current TimerData="+timerData);*/
+/*System.out.println("Timer updateElapsed "+timerData.getElapsedMin());*/
+System.out.println("Current TimerData="+timerData);
 </bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:scriptTask id="_AA89502E-F1DC-4D1E-B528-6BC4B583007D" name="Initialise Timers" scriptFormat="http://www.java.com/java">
@@ -498,12 +498,12 @@ kcontext.setVariable("processId",processId);</bpmn2:script>
       </bpmn2:extensionElements>
       <bpmn2:incoming>_D65BFCA0-BC14-475A-B440-1FD3ECD77D86</bpmn2:incoming>
       <bpmn2:outgoing>_A17423DD-CE96-4A33-8952-163C3BC5020D</bpmn2:outgoing>
-      <bpmn2:script>System.out.println(timerData.getNowUTC()+": ProcessQuestions Expired");
-kcontext.setVariable("timerData",timerData);
+      <bpmn2:script>System.out.println("ProcessQuestions Expired");
+
 data.setExpired();
 data.setTimerData(timerData);
 kcontext.setVariable("data",data);
-System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
+System.out.println("Set Abort Reason to Expired");
 
 </bpmn2:script>
     </bpmn2:scriptTask>
@@ -769,7 +769,7 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <dc:Bounds height="56" width="56" x="822.5999984741211" y="536"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__15E717F9-E997-4501-84A3-969E7E00F632" bpmnElement="_15E717F9-E997-4501-84A3-969E7E00F632">
-        <dc:Bounds height="71" width="154" x="971" y="456"/>
+        <dc:Bounds height="102" width="154" x="971" y="392"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__AA89502E-F1DC-4D1E-B528-6BC4B583007D" bpmnElement="_AA89502E-F1DC-4D1E-B528-6BC4B583007D">
         <dc:Bounds height="99" width="107" x="520" y="108"/>
@@ -781,7 +781,7 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <dc:Bounds height="56" width="56" x="1020" y="132"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__7B4FBAEC-0860-48A6-B1A6-585AB9980105" bpmnElement="_7B4FBAEC-0860-48A6-B1A6-585AB9980105">
-        <dc:Bounds height="54" width="154" x="971" y="376"/>
+        <dc:Bounds height="102" width="154" x="971" y="257"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__2422032F-F19C-44D4-B164-373496BA9017" bpmnElement="_2422032F-F19C-44D4-B164-373496BA9017">
         <dc:Bounds height="102" width="154" x="775" y="729"/>
@@ -818,7 +818,7 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="edge_shape__CF147BB4-4D29-4C2E-AC81-BD6CFEE91194_to_shape__01D4F44A-7C3C-4BBF-9AD2-E47556C569B1" bpmnElement="_9321E577-A90A-4074-B5DE-6E618666FA31">
         <di:waypoint x="852.2179487179487" y="211.00639755936524"/>
-        <di:waypoint x="852" y="288"/>
+        <di:waypoint x="851" y="392"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__AA89502E-F1DC-4D1E-B528-6BC4B583007D_to_shape__DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC" bpmnElement="_399565CF-E9E7-49B2-8871-57B48902B246">
         <di:waypoint x="573.5" y="157.5"/>
@@ -877,8 +877,8 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <di:waypoint x="1048" y="527"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__15E717F9-E997-4501-84A3-969E7E00F632_to_shape__7B4FBAEC-0860-48A6-B1A6-585AB9980105" bpmnElement="_A17423DD-CE96-4A33-8952-163C3BC5020D">
-        <di:waypoint x="1048" y="491.5"/>
-        <di:waypoint x="1048" y="376"/>
+        <di:waypoint x="1048" y="443"/>
+        <di:waypoint x="1048" y="257"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__1D2DE6D0-EE70-4A66-8B4D-941C701182DA_to_shape__AA89502E-F1DC-4D1E-B528-6BC4B583007D" bpmnElement="_8785CFBA-160A-4A24-B8FD-EF000A9DAAAD">
         <di:waypoint x="426" y="159"/>
@@ -891,10 +891,6 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
       <bpmndi:BPMNEdge id="edge_shape__DBCC2C24-D936-487D-836B-53A2B80B858B_to_shape__92850423-C6A9-48F8-B96A-2FDE9CDD7B46" bpmnElement="_91E5CDE9-BFC1-47B2-A7CB-4569D4B2B8F5">
         <di:waypoint x="1046.5" y="282"/>
         <di:waypoint x="1048" y="188"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__7B4FBAEC-0860-48A6-B1A6-585AB9980105_to_shape__DBCC2C24-D936-487D-836B-53A2B80B858B" bpmnElement="_AC7BDEF8-C6D0-406F-9554-6BE06FFCC5C1">
-        <di:waypoint x="1048" y="403"/>
-        <di:waypoint x="1046.5" y="319"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__2422032F-F19C-44D4-B164-373496BA9017_to_shape__8F0AEEE0-B36C-4D47-A427-B4FE96683A7E" bpmnElement="_3B2BC095-0254-4A9F-AE69-AB5A1F19D1FB">
         <di:waypoint x="852" y="780"/>
