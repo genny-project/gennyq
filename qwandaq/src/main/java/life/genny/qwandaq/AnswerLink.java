@@ -29,13 +29,16 @@ import javax.money.Monetary;
 
 import javax.json.Json;
 import javax.json.JsonReader;
+import javax.json.bind.annotation.JsonbTransient;
 import javax.json.JsonObject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.TemporalFormat;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.converter.StringListConverter;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 
 /**
@@ -120,7 +123,7 @@ public class AnswerLink implements java.io.Serializable {
 	 * Store the BaseEntity Code value of the attribute for the baseEntity
 	 */
 	@Convert(converter = StringListConverter.class)
-	private List<String> ValueBaseEntityCodeList;
+	private List<String> valueBaseEntityCodeList;
 
 	/**
 	 * Store the Expired boolean value of the attribute for the baseEntity
@@ -198,167 +201,136 @@ public class AnswerLink implements java.io.Serializable {
 	 */
 	@JsonIgnore
 	public void setAnswer(final Answer answer) {
+
 		this.setCreated(answer.getCreated());
 		this.setExpired(answer.getExpired());
 		this.setRefused(answer.getRefused());
 		this.setInferred(answer.getInferred());
 		
-		List<String> formatStrings = null;
+		Attribute attr = this.getAttribute();
+		DataType dataType = attr.getDataType();
+		String className = dataType.getClassName();
+		String result = answer.getValue();
 
-		String className = "";
-		try {
-			className = this.getAttribute().getDataType().getClassName();
-		} catch (NullPointerException e) {
-			e.printStackTrace();
+		if (StringUtils.isBlank(result) || ("null".equals(result) && !className.contains("String"))) {
+			valuesNull();
+			return;
 		}
 
 		switch (className) {
-			case "life.genny.qwandaq.entity":
-				List<String> beCodeList = new CopyOnWriteArrayList<String>();
-				beCodeList.add(answer.getValue());
-				setValueBaseEntityCodeList(beCodeList);
+
+			// TODO: remove the qwanda version once db's are clear of it
+			case "life.genny.qwandaq.entity.BaseEntity":
+			case "life.genny.qwanda.entity.BaseEntity":
+				setValueString(result);
 				break;
+
 			case "java.lang.Integer":
 			case "Integer":
-				String result = answer.getValue();
-				if (!StringUtils.isBlank(result)) {
-
-					final Integer integer = Integer.parseInt(result);
-					setValueInteger(integer);
-				} else {
-					setValueInteger(0);
-
-				}
-
+				Integer integer = Integer.parseInt(result);
+				setValueInteger(integer);
 				break;
+
 			case "java.time.LocalDateTime":
 			case "LocalDateTime":
-				result = answer.getValue();
-				if (!StringUtils.isBlank(result)) {
-
-					formatStrings = Arrays.asList("yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm",
-							"yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-					for (String formatString : formatStrings) {
-						try {
-							Date olddate = new SimpleDateFormat(formatString).parse(result);
-							final LocalDateTime dateTime = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-							setValueDateTime(dateTime);
-							break;
-						} catch (java.text.ParseException e) {
-							continue;
-						}
-
-					}
-
-				} 
-
-				break;
-			case "java.time.LocalTime":
-			case "LocalTime":
-				result = answer.getValue();
-				formatStrings = Arrays.asList("HH:mm", "HH:mm:ss", "HH:mm:ss.SSSZ");
-				for (String formatString : formatStrings) {
-					Date olddate;
+				for (String format : TemporalFormat.DATETIME) {
 					try {
-						olddate = new SimpleDateFormat(formatString).parse(result);
-						final LocalTime dateTime = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
-						setValueTime(dateTime);
+						Date date = new SimpleDateFormat(format).parse(result);
+						LocalDateTime dateTime = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+						setValueDateTime(dateTime);
+						break;
 					} catch (java.text.ParseException e) {
 						continue;
 					}
-
-					break;
-
 				}
+				break;
 
+			case "java.time.LocalTime":
+			case "LocalTime":
+				for (String format : TemporalFormat.TIME) {
+					try {
+						Date date = new SimpleDateFormat(format).parse(result);
+						LocalTime dateTime = date.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
+						setValueTime(dateTime);
+						break;
+					} catch (java.text.ParseException e) {
+						continue;
+					}
+				}
 				break;
 
 			case "java.time.LocalDate":
 			case "LocalDate":
-				result = answer.getValue();
-				if (!StringUtils.isBlank(result)) {
-					formatStrings = Arrays.asList("yyyy-MM-dd", "M/y", "yyyy/MM/dd", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd HH:mm:ss",
-							"yyyy-MM-dd'T'HH:mm:ss.SSSZ","yyyy-MM-dd HH:mm:ss.SSSZ");
-					for (String formatString : formatStrings) {
-						Date olddate;
-						try {
-							olddate = new SimpleDateFormat(formatString).parse(result);
-							final LocalDate dateTime = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-							setValueDate(dateTime);
-						} catch (java.text.ParseException e) {
-							continue;
-						}
-
+				for (String format : TemporalFormat.DATE) {
+					try {
+						Date date = new SimpleDateFormat(format).parse(result);
+						LocalDate dateTime = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+						setValueDate(dateTime);
 						break;
-
+					} catch (java.text.ParseException e) {
+						continue;
 					}
 				}
-
 				break;
+
 			case "java.lang.Long":
 			case "Long":
-				result = answer.getValue();
-				if (!StringUtils.isBlank(result)) {
-
-					final Long l = Long.parseLong(result);
-					setValueLong(l);
-				} else {
-					setValueLong(0L);
-				}
-
+				final Long l = Long.parseLong(result);
+				setValueLong(l);
 				break;
+
 			case "java.lang.Double":
 			case "Double":
-				result = answer.getValue();
-				if (!StringUtils.isBlank(result)) {
-
-					Double d = null;
-					try {
-						d = Double.parseDouble(result);
-					} catch (NumberFormatException e) {
-						log.error("Bad double coversion for "+answer.getAttributeCode()+" for value="+answer.getValue());
-						d = 0.0;
-					}
-					setValueDouble(d);
-				} else {
-					setValueDouble(0.0);
-				}
-
+				Double d = Double.parseDouble(result);
+				setValueDouble(d);
 				break;
+
 			case "java.lang.Boolean":
 			case "Boolean":
-				result = answer.getValue();
-				if (!StringUtils.isBlank(result)) {
-
-					final Boolean b = Boolean.parseBoolean(result);
-					setValueBoolean(b);
-
-				} 
-
+				Boolean b = Boolean.parseBoolean(result);
+				setValueBoolean(b);
 				break;
+
 			case "org.javamoney.moneta.Money":
 			case "Money":
-				result = answer.getValue();
-				if (!StringUtils.isBlank(result)) {
-					JsonReader reader = Json.createReader(new StringReader(result));
-					JsonObject obj = reader.readObject();
+				JsonReader reader = Json.createReader(new StringReader(result));
+				JsonObject obj = reader.readObject();
 
-					CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
-					Double amount = Double.valueOf(obj.getString("amount"));
+				CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
+				Double amount = Double.valueOf(obj.getString("amount"));
 
-					Money money = Money.of(amount, currency);
-					setValueMoney(money);
-				} else {
-					setValueMoney(Money.zero(null));
-				}
-
+				Money money = Money.of(amount, currency);
+				setValueMoney(money);
 				break;
+
 			case "java.lang.String":
-			default:
-				setValueString(answer.getValue());
+			case "String":
+				setValueString(result);
 				break;
+
+			default:
+				throw new RuntimeException("No option for className: " + className);
 		}
 
+	}
+
+	/**
+	 * Set all values to null.
+	 *
+	 * @param answer
+	 */
+	@JsonbTransient
+	public void valuesNull() {
+
+		setValueString(null);
+		setValueInteger(null);
+		setValueLong(null);
+		setValueDouble(null);
+		setValueBoolean(null);
+		setValueMoney(null);
+		setValueDate(null);
+		setValueTime(null);
+		setValueDateTime(null);
 	}
 	
 	/** 
@@ -670,14 +642,14 @@ public class AnswerLink implements java.io.Serializable {
 	 * @return the valueBaseEntityCode
 	 */
 	public List<String> getValueBaseEntityCodeList() {
-		return ValueBaseEntityCodeList;
+		return valueBaseEntityCodeList;
 	}
 
 	/**
 	 * @param valueBaseEntityCode the valueBaseEntityCode to set
 	 */
 	public void setValueBaseEntityCodeList(List<String> valueBaseEntityCode) {
-		this.ValueBaseEntityCodeList = valueBaseEntityCode;
+		this.valueBaseEntityCodeList = valueBaseEntityCode;
 	}
 
 	/**

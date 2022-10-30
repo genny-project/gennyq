@@ -667,7 +667,6 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 			default:
 				return (T) getValueString();
 		}
-
 	}
 
 	/**
@@ -1059,6 +1058,10 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		return null;
 	}
 
+	private Object getValueAsObject() {
+		return (Object)getValue();
+	}
+
 	/**
 	 * @return int
 	 */
@@ -1069,6 +1072,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		hcb.append(realm);
 		hcb.append(baseEntityCode);
 		hcb.append(attributeCode);
+		hcb.append(getValueAsObject());
 		return hcb.toHashCode();
 	}
 
@@ -1078,10 +1082,6 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	 */
 	@Override
 	public boolean equals(Object obj) {
-
-		if (this == obj) {
-			return true;
-		}
 		if (!(obj instanceof EntityAttribute)) {
 			return false;
 		}
@@ -1090,7 +1090,7 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		eb.append(realm, that.realm);
 		eb.append(baseEntityCode, that.baseEntityCode);
 		eb.append(attributeCode, that.attributeCode);
-
+		eb.append(getValueAsObject(), getValueAsObject());
 		return eb.isEquals();
 	}
 

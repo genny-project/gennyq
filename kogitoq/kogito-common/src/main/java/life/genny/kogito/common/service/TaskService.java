@@ -2,9 +2,8 @@ package life.genny.kogito.common.service;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -13,19 +12,21 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
+import life.genny.kogito.common.core.Dispatch;
+import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class TaskService {
@@ -34,96 +35,132 @@ public class TaskService {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject UserToken userToken;
+	@Inject
+	UserToken userToken;
 
-	@Inject QwandaUtils qwandaUtils;
-	@Inject DatabaseUtils databaseUtils;
-	@Inject BaseEntityUtils beUtils;
-	@Inject CacheUtils cacheUtils;
-	@Inject DefUtils defUtils;
+	@Inject
+	QwandaUtils qwandaUtils;
+	@Inject
+	DatabaseUtils databaseUtils;
+	@Inject
+	BaseEntityUtils beUtils;
+	@Inject
+	DefUtils defUtils;
+	@Inject
+	SearchUtils search;
 
-	@Inject NavigationService navigationService;
+	@Inject
+	NavigationService navigationService;
 
-	public static String ASK_CACHE_KEY_FORMAT = "%s:%s";
+	@Inject
+	Dispatch dispatch;
+	@Inject
+	ProcessAnswers processAnswers;
 
 	/**
-	 * Get the user code of the current user.
-	 * @return The user code
+	 * @param processData
 	 */
-	public String getCurrentUserCode() {
-		return userToken.getUserCode();
+	public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
+		
+		// check if task exists
+		log.info("Checking if task exists...");
+
+		// re-questions if it does
 	}
 
 	/**
-	 * Cache an ask for a processId and questionCode combination.
-	 * @param processData The processData to cache for
-	 * @param ask The ask to cache
+	 * Fetch PCM and dispatch a readonly PCM tree update.
+	 *
+	 * @param sourceCode
+	 * @param targetCode
+	 * @param pcmCode
+	 * @param parent
+	 * @param location
 	 */
-	public void cacheAsks(ProcessData processData, Ask ask) {
+	public void dispatch(String sourceCode, String targetCode, String pcmCode, String parent, String location) {
 
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), processData.getQuestionCode());
-		CacheUtils.putObject(userToken.getProductCode(), key, ask);
+		if (pcmCode == null)
+			throw new NullParameterException("pcmCode");
+		PCM pcm = beUtils.getPCM(pcmCode);
+
+		dispatch(sourceCode, targetCode, pcm, parent, location);
+	}
+
+
+	/**
+	 * Dispatch a readonly PCM tree update.
+	 *
+	 * @param sourceCode
+	 * @param targetCode
+	 * @param pcmCode
+	 * @param parent
+	 * @param location
+	 */
+	public void dispatch(String sourceCode, String targetCode, PCM pcm, String parent, String location) {
+
+		if (sourceCode == null)
+			throw new NullParameterException("sourceCode");
+		if (targetCode == null)
+			throw new NullParameterException("targetCode");
+		if (pcm == null)
+			throw new NullParameterException("pcm");
+		/*
+		 * no need to check parent and location as they can sometimes be null
+		 */
+
+		// construct basic processData
+		ProcessData processData = new ProcessData();
+		processData.setSourceCode(sourceCode);
+		processData.setTargetCode(targetCode);
+
+		// pcm data
+		processData.setPcmCode(pcm.getCode());
+		processData.setParent(parent);
+		processData.setLocation(location);
+
+		// build and send data
+		QBulkMessage msg = dispatch.build(processData, pcm);
+		dispatch.sendData(msg);
+
+		// send searches
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
+			search.searchTable(code);
+		}
 	}
 
 	/**
-	 * Fetch an ask from cache for a processId and questionCode combination.
-	 * @param processData The processData to fetch for
+	 * Build a question group and assign to the PCM before dispatching a PCM tree update.
+	 *
+	 * @param sourceCode
+	 * @param targetCode
+	 * @param questionCode
+	 * @param processId
+	 * @param pcmCode
+	 * @param parent
+	 * @param location
+	 * @param events
 	 * @return
 	 */
-	public Ask fetchAsk(ProcessData processData) {
+	public ProcessData dispatchFull(String sourceCode, String targetCode, String questionCode, String processId, 
+			String pcmCode, String parent, String location, String events) {
 
-		String questionCode = processData.getQuestionCode();
-		String key = String.format(ASK_CACHE_KEY_FORMAT, processData.getProcessId(), questionCode);
-		Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
+		log.info("Dispatching...");
 
-		if (ask == null)
-			ask = generateAsks(processData);
+		if (sourceCode == null)
+			throw new NullParameterException("sourceCode");
+		if (targetCode == null)
+			throw new NullParameterException("targetCode");
+		if (processId == null)
+			throw new NullParameterException("processId");
+		if (pcmCode == null)
+			throw new NullParameterException("pcmCode");
+		if (events == null)
+			throw new NullParameterException("events");
 
-		Question question = cacheUtils.getQuestion(userToken.getRealm(), questionCode, true);
-		ask.setQuestion(question);
-
-		return ask;
-	}
-
-	/**
-	 * Generate the asks and save them to the cache
-	 * @param processData The process data
-	 */
-	public Ask generateAsks(ProcessData processData) {
-
-		String questionCode = processData.getQuestionCode();
-		String sourceCode = processData.getSourceCode();
-		String targetCode = processData.getTargetCode();
-		String processId = processData.getProcessId();
-
-		BaseEntity source = beUtils.getBaseEntity(sourceCode);
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-
-		// fetch question from DB
-		Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
-		Ask events = createEvents(processData.getEvents(), sourceCode, targetCode);
-		ask.addChildAsk(events);
-		qwandaUtils.recursivelySetProcessId(ask, processId);
-
-		// cache them for fast fetching
-		cacheAsks(processData, ask);
-
-		return ask;
-	}
-
-	/**
-	 * Create processData from inputs.
-	 * 
-	 * @param questionCode The code of the question to send
-	 * @param sourceCode   The source user
-	 * @param targetCode   The Target entity
-	 * @param pcmCode      The code eof the PCM to use
-	 * @return The processData json
-	 */
-	public ProcessData inputs(String questionCode, String sourceCode, String targetCode,
-			String pcmCode, String events, String processId) {
+		/*
+		 * no need to check parent and location as they can sometimes be null
+		 */
 
 		log.info("==========================================");
 		log.info("processId : " + processId);
@@ -134,11 +171,17 @@ public class TaskService {
 		log.info("events : " + events);
 		log.info("==========================================");
 
+		// init process data
 		ProcessData processData = new ProcessData();
 		processData.setQuestionCode(questionCode);
 		processData.setSourceCode(sourceCode);
 		processData.setTargetCode(targetCode);
+
+		// pcm data
 		processData.setPcmCode(pcmCode);
+		processData.setParent(parent);
+		processData.setLocation(location);
+
 		processData.setEvents(events);
 		processData.setProcessId(processId);
 		processData.setAnswers(new ArrayList<Answer>());
@@ -146,97 +189,135 @@ public class TaskService {
 		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
-		return processData;
-	}
+		String userCode = userToken.getUserCode();
 
-	/**
-	 * Create the events ask group.
-	 * 
-	 * @param events     The events string
-	 * @param sourceCode The source entity code
-	 * @param targetCode The target entity code
-	 * @return The events ask group
-	 */
-	public Ask createEvents(String events, String sourceCode, String targetCode) {
-
-		if (events == null)
-			throw new NullParameterException("events");
-
-		// fetch attributes and create group
-		Attribute submit = qwandaUtils.getAttribute("EVT_SUBMIT");
-		Attribute groupAttribute = qwandaUtils.getAttribute("QQQ_QUESTION_GROUP");
-		Question groupQuestion = new Question("QUE_EVENTS", "", groupAttribute);
-
-		// init ask
-		Ask ask = new Ask(groupQuestion, sourceCode, targetCode);
-		ask.setRealm(userToken.getProductCode());
-
-		// split events string by comma
-		for (String event : events.split(",")) {
-			// create child and add to ask
-			Attribute attribute = new Attribute("EVT_" + event, event, submit.getDataType());
-			Question question = new Question("QUE_" + event, event, attribute);
-			Ask child = new Ask(question, sourceCode, targetCode);
-			ask.addChildAsk(child);
-		}
-
-		return ask;
-	}
-
-	/**
-	 * Recursively update the ask target.
-	 *
-	 * @param ask    The ask to traverse
-	 * @param target The target entity to set
-	 */
-	public void recursivelyUpdateAskTarget(Ask ask, BaseEntity target) {
-
-		ask.setTargetCode(target.getCode());
-
-		// recursively update children
-		if (ask.getChildAsks() != null) {
-			for (Ask child : ask.getChildAsks()) {
-				recursivelyUpdateAskTarget(child, target);
-			}
-		}
-	}
-
-
-	/**
-	 * Work out the DEF for the baseentity .
-	 *
-	 * @param targetCode The code of the target entity
-	 * @return The DEF
-	 */
-	public ProcessData getDefinitionCode(ProcessData processData) {
-
-		String targetCode = processData.getTargetCode();
-
-		// Find the DEF
+		// find target and target definition
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
-		log.info("ProcessBE identified as a " + definition);
-
 		processData.setDefinitionCode(definition.getCode());
+
+		// update cached process data
+		qwandaUtils.storeProcessData(processData);
+
+		// dispatch data
+		if (!sourceCode.equals(userCode))
+			return processData;
+
+		// build data
+		QBulkMessage msg = dispatch.build(processData);
+		List<Ask> asks = msg.getAsks();
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+
+		// handle non-readonly if necessary
+		if (dispatch.containsNonReadonly(flatMapOfAsks, processData)) {
+			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+			msg.add(processEntity);
+
+			qwandaUtils.storeProcessData(processData);
+			// only cache for non-readonly invocation
+			qwandaUtils.cacheAsks(processData, asks);
+
+			// handle initial dropdown selections
+			// TODO: change to use flatMap
+			for (Ask ask : asks)
+				dispatch.handleDropdownAttributes(ask, processEntity, msg);
+		} else
+			msg.add(target);
+
+		dispatch.sendData(msg);
+
+		// send searches
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
+			search.searchTable(code);
+		}
 
 		return processData;
 	}
 
 	/**
-	 * Find the involved attribute codes.
-	 * @param processData The process data json
-	 * @return process json
+	 * Save incoming answer to the process baseentity.
+	 *
+	 * @param answerJson The incoming answer
+	 * @param processBEJson The process entity to store the answer data
+	 * @return The updated process baseentity
 	 */
-	public ProcessData findAttributeCodes(ProcessData processData) {
+	public ProcessData answer(Answer answer, ProcessData processData) {
 
-		Ask ask = fetchAsk(processData);
+		// validate answer
+		if (!processAnswers.isValid(answer, processData))
+			return processData;
 
-		// find all allowed attribute codes
-		Set<String> attributeCodes = new HashSet<>();
-		attributeCodes.addAll(qwandaUtils.recursivelyGetAttributeCodes(attributeCodes, ask));
-		processData.setAttributeCodes(Arrays.asList(attributeCodes.toArray(new String[attributeCodes.size()])));
+		processData.getAnswers().add(answer);
+
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+
+		QBulkMessage msg = new QBulkMessage();
+		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+
+		// send data to FE
+		dispatch.sendData(msg);
+
+		// update cached process data
+		qwandaUtils.storeProcessData(processData);
 
 		return processData;
+	}
+
+	/**
+	 * @param processData
+	 * @return
+	 */
+	public Boolean submit(ProcessData processData) {
+		
+		// construct bulk message
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+
+		// check mandatory fields
+		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
+			return false;
+
+		// check uniqueness in answers
+		if (!processAnswers.checkUniqueness(processData))
+			return false;
+
+		// save answer
+		processAnswers.saveAllAnswers(processData);
+
+		// clear cache entry
+		qwandaUtils.clearProcessData(processData.getProcessId());
+
+		return true;
+	}
+
+	/**
+	 * @param processData
+	 * @return
+	 */
+	public ProcessData reset(ProcessData processData) {
+		
+		// delete stored answers
+		processData.setAnswers(new ArrayList<Answer>());
+		qwandaUtils.storeProcessData(processData);
+
+		// resend BaseEntities
+		dispatch.build(processData);
+
+		return processData;
+	}
+
+	/**
+	 * @param processData
+	 */
+	public void cancel(ProcessData processData) {
+		
+		// clear cache entry
+		qwandaUtils.clearProcessData(processData.getProcessId());
+		// default redirect
+		navigationService.redirect();
 	}
 
 }

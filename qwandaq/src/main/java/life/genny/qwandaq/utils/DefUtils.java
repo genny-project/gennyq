@@ -18,6 +18,7 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -28,6 +29,7 @@ import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.AttributeCodeValueString;
 import life.genny.qwandaq.models.UserToken;
 
 /*
@@ -51,25 +53,17 @@ public class DefUtils {
 
 	@Inject
 	BaseEntityUtils beUtils;
-	
+
 	@Inject
 	SearchUtils searchUtils;
 
 	@Inject
 	UserToken userToken;
 
-	public static final String PREF_QQQ_QUE_GRP = "QQQ_QUESTION_GROUP";
 	public static final String PREF_QUE_BASE_GRP = "QUE_BASEENTITY_GRP";
-	public static final String PREF_QUE = "QUE_";
-	public static final String PREF_ATT = "ATT_";
-	public static final String PREF_DEP = "DEP_";
-	public static final String PREF_DFT = "DFT_";
-	public static final String PREF_UNQ = "UNQ_";
-	public static final String PREF_PRI = "PRI_";
-	public static final String PREF_LNK = "LNK_";
-	public static final String PREF_SER = "SER_";
 
-	public DefUtils() { }
+	public DefUtils() {
+	}
 
 	/**
 	 * Initialize the in memory DEF store
@@ -81,15 +75,15 @@ public class DefUtils {
 	public void initializeDefPrefixs(String productCode) {
 
 		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
-				.add(new Sort("PRI_NAME", Ord.ASC))
-				.add(new Filter("PRI_CODE", Operator.LIKE, "DEF_%"))
+				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
+				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF))
 				.setPageStart(0)
 				.setPageSize(10000);
 
 		log.info("########  PRODUCT CODE ===== " + productCode);
 		searchEntity.setRealm(productCode);
 
-		log.info(jsonb.toJson(searchEntity));
+		log.info("Search Entity: " + jsonb.toJson(searchEntity));
 
 		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
 
@@ -109,14 +103,14 @@ public class DefUtils {
 			}
 			BaseEntity def = beUtils.getBaseEntity(productCode, code);
 
-			String prefix = def.getValue("PRI_PREFIX", null);
+			String prefix = def.getValue(Attribute.PRI_PREFIX, null);
 			if (prefix == null) {
 				continue;
 			}
 
 			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
 			defPrefixMap.get(productCode).put(prefix, code);
-			CacheUtils.putObject(productCode, def.getCode()+":PREFIX", prefix);
+			CacheUtils.putObject(productCode, def.getCode() + ":PREFIX", prefix);
 		}
 	}
 
@@ -133,12 +127,12 @@ public class DefUtils {
 		}
 
 		// save processing time on particular entities
-		if (entity.getCode().startsWith("DEF_")) {
+		if (entity.getCode().startsWith(Prefix.DEF))
 			return entity;
-		}
-		if (entity.getCode().startsWith("PRJ_")) {
+		if (entity.getCode().startsWith(Prefix.PRJ))
 			return beUtils.getBaseEntity("DEF_PROJECT");
-		}
+		if (entity.getCode().startsWith("DOT_"))
+			return beUtils.getBaseEntity("DEF_DOCUMENT_TEMPLATE");
 
 		// NOTE: temporary special check for internmatch
 		String productCode = userToken.getProductCode();
@@ -146,7 +140,7 @@ public class DefUtils {
 			return getInternmatchDEF(entity);
 		}
 
-		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, "LNK_DEF");
+		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
 		// null/empty check the role attribute
 		if (codes == null) {
@@ -191,7 +185,7 @@ public class DefUtils {
 	}
 
 	/**
-	 * Find the corresponding definition for a given {@link BaseEntity}. 
+	 * Find the corresponding definition for a given {@link BaseEntity}.
 	 * NOTE: Temporary special method for Internmatch only.
 	 *
 	 * @param entity The {@link BaseEntity} to check
@@ -249,7 +243,7 @@ public class DefUtils {
 
 			// check for single PRI_IS
 			if (codes.size() == 1) {
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+codes.get(0).substring("PRI_IS_".length()));
+				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + codes.get(0).substring("PRI_IS_".length()));
 				return def;
 			}
 
@@ -262,7 +256,7 @@ public class DefUtils {
 			for (String code : codes) {
 
 				// get def for PRI_IS
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_"+code.substring("PRI_IS_".length()));
+				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + code.substring("PRI_IS_".length()));
 				if (def == null) {
 					continue;
 				}
@@ -353,6 +347,50 @@ public class DefUtils {
 	}
 
 	/**
+	 * A function to determine the whether or not an attribute and value is allowed
+	 * to be
+	 * saved to a {@link BaseEntity}
+	 *
+	 * @param defBE     the defBE to check with
+	 * @param attribute the attribute to check
+	 * @param value     the value to check
+	 * @return Boolean
+	 */
+	public Boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
+
+		if (defBE == null)
+			throw new NullParameterException("defBE");
+
+		if (acvs == null)
+			throw new NullParameterException("acvs");
+
+		Attribute attribute = qwandaUtils.getAttribute(acvs.getAttributeCode());
+
+		if (attribute == null)
+			throw new NullParameterException("attribute");
+
+		// allow if it is Capability saved to a Role
+		if (defBE.getCode().equals("DEF_ROLE") && attribute.getCode().startsWith("PRM_")) {
+			return true;
+		} else if (defBE.getCode().equals("DEF_SEARCH")
+				&& (attribute.getCode().startsWith("COL_") || attribute.getCode().startsWith("CAL_")
+						|| attribute.getCode().startsWith("SRT_") || attribute.getCode().startsWith("ACT_"))) {
+			return true;
+		}
+
+		// just make use of the faster attribute lookup
+		if (!defBE.containsEntityAttribute("ATT_" + attribute.getCode())) {
+			log.error(ANSIColour.RED + "Invalid attribute " + attribute.getCode() + " for "
+					+ defBE.getCode() + ANSIColour.RESET);
+			return false;
+		}
+
+		// Now do a value validation check
+		Boolean result = qwandaUtils.validationsAreMet(attribute, acvs.getValue());
+		return result;
+	}
+
+	/**
 	 * Ensure any filter values requiring merging have been handled.
 	 *
 	 * @param searchBE The {@link SearchEntity} to process
@@ -390,11 +428,12 @@ public class DefUtils {
 							if (value.getClass().equals(BaseEntity.class)) {
 								BaseEntity baseEntity = (BaseEntity) value;
 								BaseEntity savedEntity = beUtils.getBaseEntityByCode(baseEntity.getCode());
-								if(savedEntity != null) baseEntity = savedEntity;
+								if (savedEntity != null)
+									baseEntity = savedEntity;
 								ctxMap.put(key, baseEntity);
 							}
 						});
-						
+
 						// check if contexts are present
 						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper

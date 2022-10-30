@@ -81,8 +81,11 @@ public class GennyCache {
 		// create cache manager
 		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
-		remoteCacheManager = new RemoteCacheManager(config);
-		remoteCacheManager.getConfiguration().marshallerClass();
+		if (remoteCacheManager == null) {
+			remoteCacheManager = new RemoteCacheManager(config);
+			remoteCacheManager.getConfiguration().marshallerClass();
+		}
+
 	}
 
 	/**
@@ -133,9 +136,9 @@ public class GennyCache {
 	 * Return a remote cache for the given realm.
 	 *
 	 * @param realm
-	 * 		the associated realm of the desired cache
+	 *              the associated realm of the desired cache
 	 * @return RemoteCache&lt;String, String&gt;
-	 * 		the remote cache associatd with the realm
+	 *         the remote cache associatd with the realm
 	 */
 	public RemoteCache<String, String> getRemoteCache(final String realm) {
 
@@ -143,7 +146,8 @@ public class GennyCache {
 			return caches.get(realm);
 		}
 
-		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
+		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm,
+				DefaultTemplate.DIST_SYNC);
 		realms.add(realm);
 		caches.put(realm, remoteCacheManager.getCache(realm));
 
@@ -151,12 +155,11 @@ public class GennyCache {
 	}
 
 	/**
-	 * Return a remote cache for the given entity.
+	 * Get a CoreEntity from the cache.
 	 *
-	 * @param entityName
-	 * 		the name of the associated entity the desired cache
-	 * @return RemoteCache&lt;String, String&gt;
-	 * 		the remote cache associated with the entity
+	 * @param cacheName The cache to get from
+	 * @param key       The key to the entity to fetch
+	 * @return The entity
 	 */
 	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
 		if (remoteCacheManager == null) {
@@ -192,15 +195,16 @@ public class GennyCache {
 
 	/**
 	 * Put a CoreEntity into the cache.
-	 *
+	 * 
 	 * @param cacheName The cache to get from
-	 * @param key The key to put the entity under
-	 * @param value The persistable entity
-	 * @return True if the entity is successfully inserted into cache, False otherwise
+	 * @param key       The key to put the entity under
+	 * @param value     The entity
+	 * @return The Entity
 	 */
-	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
-		return putEntityIntoCache(cacheName, key, value.toSerializableCoreEntity());
-	}
+	public CoreEntity putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntity value) {
+		if (value == null) {
+			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
+		}
 
 	/**
 	 * Put a CoreEntity into the cache.

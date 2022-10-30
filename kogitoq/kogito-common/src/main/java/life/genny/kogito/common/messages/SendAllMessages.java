@@ -8,26 +8,16 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
-import life.genny.qwandaq.utils.SearchUtils;
-
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
-
-import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class SendAllMessages extends MessageSendingStrategy {
 
@@ -37,6 +27,7 @@ public class SendAllMessages extends MessageSendingStrategy {
     @Inject
     ServiceToken serviceToken;
 
+    static final Logger log = Logger.getLogger(SendAllMessages.class);
     private final String productCode;
     private final String milestoneCode;
     private final BaseEntity coreBE;
@@ -55,16 +46,14 @@ public class SendAllMessages extends MessageSendingStrategy {
     public static final String USER = "USER";
 
     public SendAllMessages(String productCode, String milestoneCode, BaseEntity coreBE) {
+        super();
         this.productCode = productCode;
         this.milestoneCode = milestoneCode;
         this.coreBE = coreBE;
     }
 
     public SendAllMessages(String milestoneCode, String coreBeCode) {
-        beUtils = Arc.container().select(BaseEntityUtils.class).get();
-        userToken = Arc.container().select(UserToken.class).get();
-        searchUtils = Arc.container().select(SearchUtils.class).get();
-
+        super();
         this.milestoneCode = milestoneCode;
         this.coreBE = beUtils.getBaseEntity(userToken.getProductCode(), coreBeCode);
         this.productCode = this.coreBE.getRealm();
@@ -80,6 +69,14 @@ public class SendAllMessages extends MessageSendingStrategy {
 
         searchEntity.setRealm(productCode);
 
+        if (searchUtils == null) {
+            log.info("searchUtils is null");
+
+        }
+        if (searchUtils == null) {
+
+            searchUtils = Arc.container().select(SearchUtils.class).get();
+        }
         List<String> messageCodes = searchUtils.searchBaseEntityCodes(searchEntity);
 
         if (messageCodes != null) {
@@ -134,12 +131,11 @@ public class SendAllMessages extends MessageSendingStrategy {
             if (recipientLnkValue.startsWith(SELF)) { // The coreBE is the recipient
                 ctxMap.put(RECIPIENT, coreBE.getCode());
                 recipientBECode = coreBE.getCode();
-            } else if (recipientLnkValue.startsWith("PER_")) {
+            } else if (recipientLnkValue.startsWith(Prefix.PER)) {
                 ctxMap.put(RECIPIENT, recipientLnkValue);
                 recipientBECode = recipientLnkValue;
             } else {
                 // check if it is a LNK path (of the coreBE)
-                // "LNK_INTERN"
                 if (recipientLnkValue.startsWith("LNK_")) {
                     String[] splitStr = recipientLnkValue.split(":");
                     BaseEntity lnkBe = coreBE; // seed
@@ -158,7 +154,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             // check the various formats to get the senderBECode
             if (senderLnkValue.startsWith(USER)) { // The user is the sender
                 ctxMap.put(SENDER, userToken.getUserCode());
-            } else if (senderLnkValue.startsWith("PER_")) {
+            } else if (senderLnkValue.startsWith(Prefix.PER)) {
                 ctxMap.put(SENDER, senderLnkValue);
             } else {
                 // check if it is a LNK path (of the coreBE)

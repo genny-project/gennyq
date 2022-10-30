@@ -77,8 +77,10 @@ public class QEmailMessageManager extends QMessageProvider {
 		String emailApiKey = projectBe.getValueAsString("ENV_SENDGRID_API_KEY");
 		String apiPath = projectBe.getValueAsString("ENV_SENDGRID_API_PATH");
 
-		log.info("The name for email sender " + emailSender);
-		log.info("The apiPath for API " + apiPath);
+		log.info("The name for email sender -> " + emailSender);
+		log.info("The apiPath for API -> " + apiPath);
+		log.info("The emailNameSender -> " + emailNameSender);
+		log.info("The emailApiKey -> " + emailApiKey);
 
 		// Build a general data map from context BEs
 		HashMap<String, Object> templateData = new HashMap<>();
@@ -161,9 +163,9 @@ public class QEmailMessageManager extends QMessageProvider {
 			log.info("Found email " + dedicatedTestEmail + " for project attribute EML_" + urlBasedAttribute);
 			tosJsonArray = Json.createArrayBuilder()
 					.add(Json
-							.createObjectBuilder()
-							.add("email", dedicatedTestEmail)
-							.build())
+						.createObjectBuilder()
+						.add("email", dedicatedTestEmail)
+						.build())
 					.build();
 		}
 
@@ -247,7 +249,13 @@ public class QEmailMessageManager extends QMessageProvider {
 		personalizationArrayBuilder.add(personalizationInnerObjectWrapper.build());
 
 		mailJsonObjectBuilder.add("personalizations", personalizationArrayBuilder.build());
-		mailJsonObjectBuilder.add("subject", subject);
+
+		if (subject != null) {
+			mailJsonObjectBuilder.add("subject", subject);
+		} else {
+			log.warn("Subject is null -> " + subject);
+		}
+
 		mailJsonObjectBuilder.add("from", fromJsonObject);
 
 		JsonArrayBuilder contentArray = Json.createArrayBuilder();

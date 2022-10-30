@@ -1,7 +1,7 @@
 #!/bin/bash
 host="${1:-http://alyson2.genny.life}"
 gennyhost="${2:-http://alyson.genny.life}"
-port="${3:-8088}"
+port="${3:-10020}"
 parser=`echo "$gennyhost" | awk -F/ '{print $3}' `
 echo "Parser = ${parser}"
 rawhost=${parser}

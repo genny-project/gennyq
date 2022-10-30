@@ -22,6 +22,8 @@ import org.kie.api.runtime.KieRuntimeBuilder;
 import org.kie.api.runtime.KieSession;
 import org.apache.commons.lang3.StringUtils;
 
+import life.genny.kogito.common.service.BaseEntityService;
+import life.genny.kogito.common.service.ImportGithubService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
@@ -42,8 +44,8 @@ import life.genny.qwandaq.exception.checked.GraphQLException;
 @ApplicationScoped
 public class KogitoUtils {
 
-    private static final Logger log = Logger.getLogger(KogitoUtils.class);
-    private static Jsonb jsonb = JsonbBuilder.create();
+	private static final Logger log = Logger.getLogger(KogitoUtils.class);
+	private static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
 	UserToken userToken;
@@ -66,6 +68,12 @@ public class KogitoUtils {
 	@Inject
 	KieRuntimeBuilder kieRuntimeBuilder;
 
+	@Inject
+	ImportGithubService importGithubService;
+
+	@Inject
+	BaseEntityService baseEntityService;
+
 	public static enum UseService {
 		SELF,
 		GADAQ,
@@ -75,29 +83,31 @@ public class KogitoUtils {
 	 * Send a workflow signal
 	 *
 	 * @param workflowId The workflow Id
-	 * @param processId The process Id
-	 * @param signal the signal code
+	 * @param processId  The process Id
+	 * @param signal     the signal code
 	 */
-    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal) {
+	public String sendSignal(final UseService useService, final String workflowId, final String processId,
+			final String signal) {
 
-        return sendSignal(useService, workflowId, processId, signal, "");
-    }
+		return sendSignal(useService, workflowId, processId, signal, "");
+	}
 
 	/**
 	 * Send a workflow signal
 	 *
 	 * @param workflowId The workflow Id
-	 * @param processId The process Id
-	 * @param signal the signal code
-	 * @param key The key of of the item to send in the payload
-	 * @param value The value of of the item to send in the payload
+	 * @param processId  The process Id
+	 * @param signal     the signal code
+	 * @param key        The key of of the item to send in the payload
+	 * @param value      The value of of the item to send in the payload
 	 */
-    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal, String key, String value) {
+	public String sendSignal(final UseService useService, final String workflowId, final String processId,
+			final String signal, String key, String value) {
 
 		// build json with key and value
 		JsonObject payload = Json.createObjectBuilder()
-			.add(key, value)
-			.build();
+				.add(key, value)
+				.build();
 
 		return sendSignal(useService, workflowId, processId, signal, payload);
 	}
@@ -106,11 +116,12 @@ public class KogitoUtils {
 	 * Send a workflow signal
 	 *
 	 * @param workflowId The workflow Id
-	 * @param processId The process Id
-	 * @param signal the signal code
-	 * @param payload the payload to send as a json object
+	 * @param processId  The process Id
+	 * @param signal     the signal code
+	 * @param payload    the payload to send as a json object
 	 */
-    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal, JsonObject payload) {
+	public String sendSignal(final UseService useService, final String workflowId, final String processId,
+			final String signal, JsonObject payload) {
 
 		// add token to JsonObject
 		JsonObjectBuilder builder = Json.createObjectBuilder();
@@ -126,57 +137,59 @@ public class KogitoUtils {
 	 * Send a workflow signal
 	 *
 	 * @param workflowId The workflow Id
-	 * @param processId The process Id
-	 * @param signal the signal code
-	 * @param payload Th payload to send
+	 * @param processId  The process Id
+	 * @param signal     the signal code
+	 * @param payload    Th payload to send
 	 */
-    public String sendSignal(final UseService useService, final String workflowId, final String processId, final String signal, final String payload) {
+	public String sendSignal(final UseService useService, final String workflowId, final String processId,
+			final String signal, final String payload) {
 
-        String uri = selectServiceURI(useService) + "/" + workflowId + "/" + processId + "/" + signal;
+		String uri = selectServiceURI(useService) + "/" + workflowId + "/" + processId + "/" + signal;
 		log.info("Sending Signal to uri: " + uri);
 
-        HttpResponse<String> response = HttpUtils.post(uri, payload, "application/json", userToken);
+		HttpResponse<String> response = HttpUtils.post(uri, payload, "application/json", userToken);
 
-        return response.body();
-    }
+		return response.body();
+	}
 
 	/**
 	 * Trigger a workflow.
 	 *
-	 * @param id The workflow id
+	 * @param id  The workflow id
 	 * @param key The key to set in the json object
 	 * @param obj The object to set as the value in the json object
 	 */
-	public String triggerWorkflow(final UseService useService, final String id, final Map<String,Object> parameters) {
+	public String triggerWorkflow(final UseService useService, final String id, final Map<String, Object> parameters) {
 
 		JsonObjectBuilder builder = Json.createObjectBuilder();
 
 		for (String key : parameters.keySet()) {
 			Object obj = parameters.get(key);
 			try {
-			builder.add(key, jsonb.fromJson(jsonb.toJson(obj), JsonObject.class));
-		} catch (Exception e) {
-			// catch standard type objects (String, Integer, etc.)
-			if (obj instanceof String) {
-				builder.add(key, (String) obj);
-			} else if (obj instanceof Integer) {
-				builder.add(key, (Integer) obj);
-			} else if (obj instanceof Long) {
-				builder.add(key, (Long) obj);
-			} else if (obj instanceof Double) {
-				builder.add(key, (Double) obj);
-			} else {
-				log.warn("Unknown type available for " + obj);
+				builder.add(key, jsonb.fromJson(jsonb.toJson(obj), JsonObject.class));
+			} catch (Exception e) {
+				// catch standard type objects (String, Integer, etc.)
+				if (obj instanceof String) {
+					builder.add(key, (String) obj);
+				} else if (obj instanceof Integer) {
+					builder.add(key, (Integer) obj);
+				} else if (obj instanceof Long) {
+					builder.add(key, (Long) obj);
+				} else if (obj instanceof Double) {
+					builder.add(key, (Double) obj);
+				} else {
+					log.warn("Unknown type available for " + obj);
+				}
 			}
-		}
 		}
 
 		return triggerWorkflow(useService, id, builder.build());
 	}
+
 	/**
 	 * Trigger a workflow.
 	 *
-	 * @param id The workflow id
+	 * @param id  The workflow id
 	 * @param key The key to set in the json object
 	 * @param obj The object to set as the value in the json object
 	 */
@@ -207,7 +220,7 @@ public class KogitoUtils {
 	/**
 	 * Trigger a workflow.
 	 *
-	 * @param id The workflow id
+	 * @param id   The workflow id
 	 * @param json The json object to send
 	 */
 	public String triggerWorkflow(final UseService useService, final String id, JsonObject json) {
@@ -224,15 +237,15 @@ public class KogitoUtils {
 		log.info("Triggering workflow with uri: " + uri);
 
 		// make post request
-        HttpResponse<String> response = HttpUtils.post(uri, json.toString(), userToken);
+		HttpResponse<String> response = HttpUtils.post(uri, json.toString(), userToken);
 		if (response == null) {
-            log.error("NULL RESPONSE from workflow endpoint");
+			log.error("NULL RESPONSE from workflow endpoint");
 			return null;
 		}
 
 		// ensure request was a success
 		if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
-            log.error("Error, Response Status: " + response.statusCode());
+			log.error("Error, Response Status: " + response.statusCode());
 			return null;
 		}
 
@@ -240,12 +253,13 @@ public class KogitoUtils {
 
 		// return the processId
 		return result.getString("id");
-    }
+	}
 
 	/**
 	 * Helper function for selecting a uri
+	 * 
 	 * @param useService The Service enum
-	 */ 
+	 */
 	public String selectServiceURI(final UseService useService) {
 
 		switch (useService) {
@@ -269,7 +283,7 @@ public class KogitoUtils {
 		try {
 			msg = jsonb.fromJson(event, QEventMessage.class);
 		} catch (Exception e) {
-			log.error("Cannot parse this event! "+event);
+			log.error("Cannot parse this event! " + event);
 			e.printStackTrace();
 			return;
 		}
@@ -291,6 +305,8 @@ public class KogitoUtils {
 		// Insert Extras
 		session.insert(gqlUtils);
 		session.insert(qwandaUtils);
+		session.insert(importGithubService);
+		session.insert(baseEntityService);
 		session.insert(msg);
 
 		// trigger EventRoutes rules
@@ -339,9 +355,9 @@ public class KogitoUtils {
 
 		// Collect all new answers from the rules
 		List<Answer> answers = session.getObjects().stream()
-			.filter(o -> (o instanceof Answer))
-			.map(o -> (Answer) o)
-			.collect(Collectors.toList());
+				.filter(o -> (o instanceof Answer))
+				.map(o -> (Answer) o)
+				.collect(Collectors.toList());
 
 		answerCount = answers.size() - answerCount;
 
@@ -352,28 +368,30 @@ public class KogitoUtils {
 
 	/**
 	 * Funnel a list of answers into ProcessQuestions.
+	 * 
 	 * @param answers List of answers
 	 */
 	public void funnelAnswers(List<Answer> answers) {
 		// feed all answers from facts into ProcessQuestions
 		answers.stream()
-			.filter(answer -> answer.getProcessId() != null)
-			.filter(answer -> !"no-id".equals(answer.getProcessId()))
-			.forEach(answer -> {
-				try  {
-					sendSignal(UseService.GADAQ, "processQuestions", answer.getProcessId(),
-							"answer", jsonb.toJson(answer));
-				} catch (Exception e) {
-					log.error("Cannot send answer!");
-					e.printStackTrace();
-					return;
-				}
-			});
+				.filter(answer -> answer.getProcessId() != null)
+				.filter(answer -> !"no-id".equals(answer.getProcessId()))
+				.forEach(answer -> {
+					try {
+						sendSignal(UseService.GADAQ, "processQuestions", answer.getProcessId(),
+								"answer", jsonb.toJson(answer));
+					} catch (Exception e) {
+						log.error("Cannot send answer!");
+						e.printStackTrace();
+						return;
+					}
+				});
 		return;
 	}
 
 	/**
 	 * Get the processId of an outstanding task in ProcessQuestions.
+	 * 
 	 * @return The processId
 	 */
 	public String getOutstandingTaskProcessId() throws GraphQLException {
@@ -448,7 +466,7 @@ public class KogitoUtils {
 	}
 
 	private void initSession(KieSession session, String focus) {
-		if(!StringUtils.isBlank(focus))
+		if (!StringUtils.isBlank(focus))
 			session.getAgenda().getAgendaGroup(focus).setFocus();
 
 		// insert utils and other beans
@@ -457,10 +475,13 @@ public class KogitoUtils {
 		session.insert(defUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
+		session.insert(baseEntityService);
+		session.insert(importGithubService);
 	}
 
 	/**
 	 * Initialise data by rule group
+	 * 
 	 * @param ruleGroupName Group rule name
 	 */
 	public void initDataByRuleGroup(String ruleGroupName) {
@@ -474,6 +495,8 @@ public class KogitoUtils {
 		session.insert(defUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
+		session.insert(baseEntityService);
+		session.insert(importGithubService);
 
 		session.fireAllRules();
 		session.dispose();

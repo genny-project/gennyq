@@ -16,32 +16,11 @@
 
 package life.genny.qwandaq;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.List;
 
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Index;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-import javax.validation.Valid;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import javax.json.bind.annotation.JsonbProperty;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
@@ -73,398 +52,66 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
  * @version %I%, %G%
  * @since 1.0
  */
-@XmlRootElement
-@XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "ask", indexes = {
-		@Index(columnList = "id", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx")
-}, uniqueConstraints = @UniqueConstraint(columnNames = {
-		"id",
-		"realm"
-}))
-@Entity
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@Inheritance(strategy = InheritanceType.JOINED)
 public class Ask extends CoreEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	@XmlTransient
-	/*@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "question_id", nullable = false)*/
 	private Question question;
-
-	private String sourceCode;
-	private String targetCode;
 	private String questionCode;
 	private String attributeCode;
 
+	private String processId = "no-idq";
+	private String sourceCode;
+	private String targetCode;
+
 	private Boolean mandatory = false;
 	private Boolean oneshot = false;
-
 	private Boolean disabled = false;
 	private Boolean hidden = false;
-
 	private Boolean readonly = false;
+
 	private Double weight = 0.0;
 
-	private Long parentId = 0L;
-
-	private Boolean formTrigger = false;
-	private Boolean createOnTrigger = false;
-
-	private Ask[] childAsks;
-
-	// @Embedded
-	// @Valid
-	// @JsonInclude(Include.NON_NULL)
-	// private AnswerList answerList;
-
-	@Embedded
-	@Valid
-	@JsonInclude(Include.NON_NULL)
-	private ContextList contextList;
-
-	@Transient
-	private String processId = "no-idq";
+	private List<Ask> childAsks;
 
 	/**
-	 * Constructor.
-	 * dummy for hibernate
+	 * Default Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public Ask() {
+		super();
 	}
 
 	/**
-	 * Constructor.
-	 * 
-	 * @param aQuestion The associated Question
+	 * @param question
+	 * @param sourceCode
+	 * @param targetCode
 	 */
-	public Ask(final Question aQuestion) {
-		super(aQuestion.getName());
-		setQuestion(aQuestion);
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
-		this.disabled = false;
-		this.hidden = false;
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aAttributeCode The associated Attribute
-	 * @param aSourceCode    The person answering the question
-	 * @param aTargetCode    The BaseEntity that the question is about
-	 * @param name           The name of the Ask
-	 */
-	public Ask(final String aAttributeCode, final String aSourceCode, final String aTargetCode, final String name) {
-		super(name);
-
-		this.sourceCode = aSourceCode;
-		this.targetCode = aTargetCode;
-		this.attributeCode = aAttributeCode;
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
-		this.disabled = false;
-		this.hidden = false;
-		this.readonly = false;
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aQuestion   The associated Question
-	 * @param aSourceCode The person answering the question
-	 * @param aTargetCode The BaseEntity that the question is about
-	 */
-	public Ask(final Question aQuestion, final String aSourceCode, final String aTargetCode) {
-		this(aQuestion, aSourceCode, aTargetCode, false);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aQuestion   The associated Question
-	 * @param aSourceCode The person answering the question
-	 * @param aTargetCode The BaseEntity that the question is about
-	 * @param aMandatory  the mandatory status
-	 */
-	public Ask(final Question aQuestion, final String aSourceCode, final String aTargetCode, final Boolean aMandatory) {
-		this(aQuestion, aSourceCode, aTargetCode, aMandatory, 0.0);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aQuestion   The associated Question
-	 * @param aSourceCode The person answering the question
-	 * @param aTargetCode The BaseEntity that the question is about
-	 * @param aMandatory  the mandatory status
-	 * @param weight      the weight
-	 */
-	public Ask(final Question aQuestion, final String aSourceCode, final String aTargetCode, final Boolean aMandatory,
-			final Double weight) {
-		this(aQuestion, aSourceCode, aTargetCode, aMandatory, weight, false, false);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aQuestion   The associated Question
-	 * @param aSourceCode The person answering the question
-	 * @param aTargetCode The BaseEntity that the question is about
-	 * @param aMandatory  the mandatory status
-	 * @param weight      the weight
-	 * @param disabled    the disabled status
-	 * @param hidden      the hidden status
-	 */
-	public Ask(final Question aQuestion, final String aSourceCode, final String aTargetCode, final Boolean aMandatory,
-			final Double weight, final Boolean disabled, final Boolean hidden) {
-
-		this(aQuestion, aSourceCode, aTargetCode, aMandatory, weight, disabled, hidden, false);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aQuestion   The associated Question
-	 * @param aSourceCode The source answering the question
-	 * @param aTargetCode The BaseEntity that the question is about
-	 * @param aMandatory  the mandatory status
-	 * @param weight      the weight
-	 * @param disabled    the disabled status
-	 * @param hidden      the hidden status
-	 * @param readonly    the readonly status
-	 */
-	public Ask(final Question aQuestion, final String aSourceCode, final String aTargetCode, final Boolean aMandatory,
-			final Double weight, final Boolean disabled, final Boolean hidden, final Boolean readonly) {
-		super(aQuestion.getName());
-		setQuestion(aQuestion);
-
-		this.sourceCode = aSourceCode;
-		this.targetCode = aTargetCode;
-		this.attributeCode = aQuestion.getAttributeCode();
-		contextList = new ContextList(new CopyOnWriteArrayList<Context>());
-		this.mandatory = aMandatory;
-		this.weight = weight;
-		this.disabled = disabled;
-		this.hidden = hidden;
-		this.readonly = readonly;
-	}
-
-	/**
-	 * @return the question
-	 */
-	public Question getQuestion() {
-		return question;
-	}
-
-	/**
-	 * @param question the question to set
-	 */
-	public void setQuestion(final Question question) {
-		this.question = question;
-		this.questionCode = question.getCode();
-		this.attributeCode = question.getAttributeCode(); // .getAttribute().getCode();
-	}
-
-	// /**
-	// * @return the answerList
-	// */
-	// public AnswerList getAnswerList() {
-	// return answerList;
-	// }
-
-	// /**
-	// * @param answerList the answerList to set
-	// */
-	// public void setAnswerList(final AnswerList answerList) {
-	// this.answerList = answerList;
-	// }
-
-	/**
-	 * @return the contextList
-	 */
-	public ContextList getContextList() {
-		return contextList;
-	}
-
-	/**
-	 * @param contextList the contextList to set
-	 */
-	public void setContextList(final ContextList contextList) {
-		this.contextList = contextList;
-	}
-
-	/**
-	 * @return the mandatory
-	 */
-	public Boolean getMandatory() {
-		return mandatory;
-	}
-
-	/**
-	 * @return the mandatory
-	 */
-	public Boolean isMandatory() {
-		return getMandatory();
-	}
-
-	/**
-	 * @param mandatory the mandatory to set
-	 */
-	public void setMandatory(Boolean mandatory) {
-		this.mandatory = mandatory;
-	}
-
-	/**
-	 * @return the weight
-	 */
-	public Double getWeight() {
-		return weight;
-	}
-
-	/**
-	 * @param weight the weight to set
-	 */
-	public void setWeight(Double weight) {
-		this.weight = weight;
-	}
-
-	/**
-	 * @return the sourceCode
-	 */
-	public String getSourceCode() {
-		return sourceCode;
-	}
-
-	/**
-	 * @param sourceCode the sourceCode to set
-	 */
-	public void setSourceCode(final String sourceCode) {
+	public Ask(Question question, String sourceCode, String targetCode) {
+		super(question.getName());
+		setQuestion(question);
 		this.sourceCode = sourceCode;
-	}
-
-	/**
-	 * @return the targetCode
-	 */
-	public String getTargetCode() {
-		return targetCode;
-	}
-
-	/**
-	 * @return the questionCode
-	 */
-	public String getQuestionCode() {
-		return questionCode;
-	}
-
-	/**
-	 * @param questionCode the questionCode to set
-	 */
-	public void setQuestionCode(final String questionCode) {
-		this.questionCode = questionCode;
-	}
-
-	/**
-	 * @return the disabled
-	 */
-	public Boolean getDisabled() {
-		return disabled;
-	}
-
-	/**
-	 * @return the disabled
-	 */
-	public Boolean isDisabled() {
-		return getDisabled();
-	}
-
-	/**
-	 * @param disabled the disabled to set
-	 */
-	public void setDisabled(Boolean disabled) {
-		this.disabled = disabled;
-	}
-
-	/**
-	 * @return the hidden
-	 */
-	public Boolean getHidden() {
-		return hidden;
-	}
-
-	/**
-	 * @return the hidden
-	 */
-	public Boolean isHidden() {
-		return getHidden();
-	}
-
-	/**
-	 * @param hidden the hidden to set
-	 */
-	public void setHidden(Boolean hidden) {
-		this.hidden = hidden;
-	}
-
-	/**
-	 * @return the parentId
-	 */
-	public Long getParentId() {
-		return parentId;
-	}
-
-	/**
-	 * @param parentId the parentId to set
-	 */
-	public void setParentId(Long parentId) {
-		this.parentId = parentId;
-	}
-
-	/**
-	 * @return the attributeCode
-	 */
-	public String getAttributeCode() {
-		return attributeCode;
-	}
-
-	/**
-	 * @param attributeCode the attributeCode to set
-	 */
-	public void setAttributeCode(final String attributeCode) {
-		this.attributeCode = attributeCode;
-	}
-
-	/**
-	 * @param targetCode the targetCode to set
-	 */
-	public void setTargetCode(final String targetCode) {
 		this.targetCode = targetCode;
 	}
 
-	public String getProcessId() {
-		return processId;
-	}
-
-	public void setProcessId(String processId) {
-		this.processId = processId;
-	}
-
 	/**
-	 * Add an Answer to an entity.
+	 * Clone an Ask
 	 *
-	 * @param answer the Answer to add to the entity
-	 * @throws BadDataException exception thrown if sourceCode, targetCode or
-	 *                          attributeCode don't match
+	 * @param ask the Ask to clone
+	 * @return Ask
 	 */
-	public void add(final Answer answer) throws BadDataException {
-		if ((answer.getSourceCode().equals(sourceCode)) && (answer.getTargetCode().equals(targetCode))
-				&& (answer.getAttributeCode().equals(attributeCode))) {
-			// getAnswerList().getAnswerList().add(new AnswerLink(source, target, answer));
-		} else {
-			throw new BadDataException("Source / Target ids do not match Ask");
-		}
+	public Ask clone() {
 
+		Ask ask = new Ask(question, sourceCode, targetCode);
+		ask.mandatory = this.getMandatory();
+		ask.oneshot = this.getOneshot();
+		ask.disabled = this.getDisabled();
+		ask.readonly = this.getReadonly();
+		ask.weight = this.getWeight();
+
+		if (this.hasChildren()) {
+			ask.childAsks = this.childAsks;
+		}
+		return ask;
 	}
 
 	/**
@@ -476,164 +123,18 @@ public class Ask extends CoreEntity {
 	@Override
 	public int compareTo(Object o) {
 		Ask myClass = (Ask) o;
-		return new CompareToBuilder().append(questionCode, myClass.getQuestionCode())
-				.append(targetCode, myClass.getTargetCode()).toComparison();
+		return new CompareToBuilder()
+				.append(question.getCode(), myClass.getQuestion().getCode())
+				.append(sourceCode, myClass.getSourceCode())
+				.append(targetCode, myClass.getTargetCode())
+				.toComparison();
 	}
 
 	/**
-	 * @return the childAsks
+	 * @return
 	 */
-	// @Transient
-	public Ask[] getChildAsks() {
-		return childAsks;
-	}
-
-	/**
-	 * @param childAsks the childAsks to set
-	 */
-	public void setChildAsks(Ask[] childAsks) {
-		this.childAsks = childAsks;
-	}
-
-	/**
-	 * @return the oneshot
-	 */
-	public Boolean getOneshot() {
-		return oneshot;
-	}
-
-	/**
-	 * @return the oneshot
-	 */
-	public Boolean isOneshot() {
-		return getOneshot();
-	}
-
-	/**
-	 * @param oneshot the oneshot to set
-	 */
-	public void setOneshot(Boolean oneshot) {
-		this.oneshot = oneshot;
-	}
-
-	/**
-	 * @return the readonly
-	 */
-	public Boolean getReadonly() {
-		return readonly;
-	}
-
-	/**
-	 * @return the readonly
-	 */
-	public Boolean isReadonly() {
-		return getReadonly();
-	}
-
-	/**
-	 * @param readonly the readonly to set
-	 */
-	public void setReadonly(Boolean readonly) {
-		this.readonly = readonly;
-	}
-
-	/**
-	 * @return the formTrigger
-	 */
-	public Boolean getFormTrigger() {
-		return formTrigger;
-	}
-
-	/**
-	 * @return the formTrigger
-	 */
-	public Boolean isFormTrigger() {
-		return getFormTrigger();
-	}
-
-	/**
-	 * @param formTrigger the formTrigger to set
-	 */
-	public void setFormTrigger(Boolean formTrigger) {
-		this.formTrigger = formTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean getCreateOnTrigger() {
-		return createOnTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean isCreateOnTrigger() {
-		return getCreateOnTrigger();
-	}
-
-	/**
-	 * @param createOnTrigger the createOnTrigger to set
-	 */
-	public void setCreateOnTrigger(Boolean createOnTrigger) {
-		this.createOnTrigger = createOnTrigger;
-	}
-
-	/**
-	 * @return Boolean
-	 */
-	@XmlTransient
-	@Transient
-	@JsonbTransient
-	@JsonIgnore
-	public Boolean hasTriggerQuestion() {
-		// recurse through the childAsks
-		// this is used to tell if intermediate BaseEntity is to be created and then
-		// copied in upon a trigger question
-		if (this.formTrigger) {
-			return true;
-		} else {
-			if ((this.childAsks != null) && (this.childAsks.length > 0)) {
-				for (Ask childAsk : this.childAsks) {
-					return childAsk.hasTriggerQuestion();
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Clone an Ask
-	 *
-	 * @param ask the Ask to clone
-	 * @return Ask
-	 */
-	public static Ask clone(Ask ask) {
-		Ask newAsk = new Ask();
-		newAsk.sourceCode = ask.getSourceCode();
-		newAsk.targetCode = ask.getTargetCode();
-		newAsk.questionCode = ask.getQuestionCode();
-		newAsk.question = ask.getQuestion();
-		newAsk.attributeCode = ask.getAttributeCode();
-		newAsk.mandatory = ask.getMandatory();
-		newAsk.oneshot = ask.getOneshot();
-		newAsk.disabled = ask.getDisabled();
-		newAsk.readonly = ask.getReadonly();
-		newAsk.weight = ask.getWeight();
-		newAsk.parentId = ask.getParentId();
-		newAsk.formTrigger = ask.getFormTrigger();
-		newAsk.createOnTrigger = ask.getCreateOnTrigger();
-		if (ask.getChildAsks() != null && ask.getChildAsks().length > 0) {
-			newAsk.childAsks = ask.getChildAsks();
-		}
-		if (ask.getContextList() != null) {
-			newAsk.contextList = ask.getContextList();
-		}
-		return newAsk;
-	}
-
 	public boolean hasChildren() {
-		return (this.getChildAsks() != null) && (this.getChildAsks().length > 0);
+		return !(this.childAsks == null || this.childAsks.isEmpty());
 	}
 
 	/**
@@ -641,19 +142,123 @@ public class Ask extends CoreEntity {
 	 *
 	 * @param child The child ask to add
 	 */
-	public void addChildAsk(Ask child) {
+	public void add(Ask child) {
+		if (this.childAsks == null)
+			this.childAsks = new ArrayList<Ask>();
+		this.childAsks.add(child);
+	}
 
-		if (child == null) {
-			return;
-		}
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
 
-		if (this.childAsks == null) {
-			setChildAsks(new Ask[0]);
-		}
+	public Question getQuestion() {
+		return question;
+	}
 
-		Ask[] children = Arrays.copyOf(this.childAsks, this.childAsks.length + 1);
-		children[children.length - 1] = child;
+	public void setQuestion(Question question) {
+		this.question = question;
+		this.questionCode = question.getCode();
+		this.attributeCode = question.getAttribute().getCode();
+	}
 
-		setChildAsks(children);
+	public String getQuestionCode() {
+		return questionCode;
+	}
+
+	public void setQuestionCode(String questionCode) {
+		this.questionCode = questionCode;
+	}
+
+	public String getAttributeCode() {
+		return attributeCode;
+	}
+
+	public void setAttributeCode(String attributeCode) {
+		this.attributeCode = attributeCode;
+	}
+
+	public String getProcessId() {
+		return processId;
+	}
+
+	public void setProcessId(String processId) {
+		this.processId = processId;
+	}
+
+	public String getSourceCode() {
+		return sourceCode;
+	}
+
+	public void setSourceCode(String sourceCode) {
+		this.sourceCode = sourceCode;
+	}
+
+	public String getTargetCode() {
+		return targetCode;
+	}
+
+	public void setTargetCode(String targetCode) {
+		this.targetCode = targetCode;
+	}
+
+	public Boolean getMandatory() {
+		return mandatory;
+	}
+
+	public void setMandatory(Boolean mandatory) {
+		this.mandatory = mandatory;
+	}
+
+	public Boolean getOneshot() {
+		return oneshot;
+	}
+
+	public void setOneshot(Boolean oneshot) {
+		this.oneshot = oneshot;
+	}
+
+	public Boolean getDisabled() {
+		return disabled;
+	}
+
+	public void setDisabled(Boolean disabled) {
+		this.disabled = disabled;
+	}
+
+	public Boolean getHidden() {
+		return hidden;
+	}
+
+	public void setHidden(Boolean hidden) {
+		this.hidden = hidden;
+	}
+
+	public Boolean getReadonly() {
+		return readonly;
+	}
+
+	public void setReadonly(Boolean readonly) {
+		this.readonly = readonly;
+	}
+
+	public Double getWeight() {
+		return weight;
+	}
+
+	public void setWeight(Double weight) {
+		this.weight = weight;
+	}
+
+	public List<Ask> getChildAsks() {
+		return childAsks;
+	}
+
+	public void setChildAsks(Ask[] children) {
+		this.setChildAsks(Arrays.asList(children));
+	}
+
+	public void setChildAsks(List<Ask> children) {
+		this.childAsks = children;
 	}
 }

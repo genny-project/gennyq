@@ -32,11 +32,11 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CapabilityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -71,7 +71,7 @@ public class InternalConsumer {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CapabilityUtils capabilityUtils;
+	CapabilitiesManager capMan;
 
 	@Inject
 	SearchUtils searchUtils;
@@ -114,12 +114,12 @@ public class InternalConsumer {
 		String attrCode = jsonStr.getString("attributeCode");
 		String sourceCode = dataJson.getString("sourceCode");
 		String targetCode = dataJson.getString("targetCode");
-		String searchText = dataJson.getString("value");
 		String parentCode = dataJson.getString("parentCode");
+		String searchText = dataJson.getString("value");
 		String questionCode = dataJson.getString("questionCode");
 		String processId = dataJson.getString("processId");
 
-		log.info(attrCode + ":" + parentCode + ":[" + searchText + "]");
+		log.info(attrCode + ":" + ":[" + searchText + "]");
 
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 
@@ -188,9 +188,9 @@ public class InternalConsumer {
 		}
 
 		// Set all required message fields and return msg
-		msg.setParentCode(parentCode);
 		msg.setQuestionCode(questionCode);
 		msg.setToken(userToken.getToken());
+		msg.setParentCode(parentCode);
 		msg.setLinkCode("LNK_CORE");
 		msg.setLinkValue("ITEMS");
 		msg.setReplace(true);
