@@ -1,15 +1,5 @@
 package life.genny.qwandaq.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
@@ -37,6 +27,18 @@ import javax.json.bind.annotation.JsonbTransient;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 
 @RegisterForReflection
 public class GennyToken implements Serializable {
@@ -162,7 +164,7 @@ public class GennyToken implements Serializable {
 		this.adecodedTokenMap.put("realm", this.realm);
 
 		String username = getString("preferred_username");
-		this.userUUID = "PER_" + this.getUuid().toUpperCase();
+		this.userUUID = Prefix.PER + this.getUuid().toUpperCase();
 
 		if ("service".equals(username)) {
 			this.userCode = "PER_SERVICE";
@@ -533,7 +535,7 @@ public class GennyToken implements Serializable {
 	public String getEmailUserCode() {
 		String username = (String) adecodedTokenMap.get("preferred_username");
 		String normalisedUsername = getNormalisedUsername(username);
-		return "PER_" + normalisedUsername.toUpperCase();
+		return Prefix.PER + normalisedUsername.toUpperCase();
 
 	}
 

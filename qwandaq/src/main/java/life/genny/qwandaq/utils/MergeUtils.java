@@ -48,6 +48,17 @@ public class MergeUtils {
     public static final String FORMAT_VARIABLE_REGEX_START = "((";
     public static final String FORMAT_VARIABLE_REGEX_END = "))";
     public static final Pattern FORMAT_PATTERN_VARIABLE = Pattern.compile(Pattern.quote(FORMAT_VARIABLE_REGEX_START) + "(.*)" + Pattern.quote(FORMAT_VARIABLE_REGEX_END));  
+
+	public static void mergeBaseEntity(BaseEntity baseEntity, Map<String, Object> contexts) {
+
+		baseEntity.getBaseEntityAttributes().stream().forEach(ea -> {
+			if (ea.getValueString() == null)
+				return;
+
+			String value = merge(ea.getValueString(), contexts);
+			ea.setValueString(value);
+		});
+	}
     
 	/** 
 	 * @param mergeStr the mergeStr to merge

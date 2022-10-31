@@ -20,30 +20,48 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Index;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import org.hibernate.annotations.*;
+
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
-
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -118,17 +136,17 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	@Transient
 	@JsonbTransient
-	private Set<EntityQuestion> questions = new HashSet<>(0);
+	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
 	/*
 	 * @JsonIgnore
-	 *
+	 * 
 	 * @XmlTransient
-	 *
+	 * 
 	 * @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
-	 *
+	 * 
 	 * @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	 *
+	 * 
 	 * @JsonbTransient
 	 */
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
@@ -160,7 +178,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public BaseEntity() {
 		// super();
 		// dummy
@@ -172,8 +189,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param aName the summary name of the core entity
 	 */
 	public BaseEntity(final String aName) {
-		super(getDefaultCodePrefix() + UUID.randomUUID(), aName);
-
+		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
 	}
 
 	/**
@@ -185,7 +201,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@ProtoFactory
 	public BaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
-
 	}
 
 	/**
@@ -319,9 +334,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return boolean
 	 */
 	public boolean containsLink(final String linkAttributeCode) {
-		boolean ret = getLinks().parallelStream().anyMatch(ti -> ti.getPk().getAttribute().getCode().equals(linkAttributeCode));
+		boolean ret = false;
 
 		// Check if this code exists in the baseEntityAttributes
+		if (getLinks().parallelStream().anyMatch(ti -> ti.getPk().getAttribute().getCode().equals(linkAttributeCode))) {
+			ret = true;
+		}
 		return ret;
 	}
 
@@ -333,8 +351,14 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return boolean
 	 */
 	public boolean containsTarget(final String targetCode, final String linkAttributeCode) {
-		return getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
-				&& (ti.getLink().getTargetCode().equals(targetCode))));
+		boolean ret = false;
+
+		// Check if this code exists in the baseEntityAttributes
+		if (getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
+				&& (ti.getLink().getTargetCode().equals(targetCode))))) {
+			ret = true;
+		}
+		return ret;
 	}
 
 	/**
@@ -370,8 +394,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @return EntityAttribute
 	 */
 	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
-		return getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix))).toList();
+		List<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix))).collect(Collectors.toList());
+
+		return foundEntitys;
 	}
 
 	/**
@@ -1139,6 +1165,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(PER_BE_PREFIX);
+		return getCode().startsWith(Prefix.PER);
 	}
 }

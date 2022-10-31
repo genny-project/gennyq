@@ -1,11 +1,36 @@
 package life.genny.qwandaq.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
@@ -22,24 +47,6 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.validation.Validation;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -50,8 +57,8 @@ import static life.genny.qwandaq.constants.GennyConstants.EVENT_PREFIX;
 @ApplicationScoped
 public class QwandaUtils {
 
-	public static final String[] ACCEPTED_PREFIXES = { "PRI_", "LNK_" };
-	public static final String[] EXCLUDED_ATTRIBUTES = { "PRI_SUBMIT" };
+	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
+	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT };
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
 
@@ -79,6 +86,8 @@ public class QwandaUtils {
 
 	private static DataType DTT_EVENT;
 
+	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
+
 	@PostConstruct
 	private void init() {
 		Attribute submit = getAttribute("EVT_SUBMIT");
@@ -86,6 +95,32 @@ public class QwandaUtils {
 			log.error("Could not find Attribute: EVT_SUBMIT");
 		}
 		DTT_EVENT = submit.getDataType();
+	}
+
+	/**
+	 * Cache an ask for a processId and questionCode combination.
+	 *
+	 * @param processData The processData to cache for
+	 * @param asks        ask to cache
+	 */
+	public void cacheAsks(ProcessData processData, List<Ask> asks) {
+
+		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
+		CacheUtils.putObject(userToken.getProductCode(), key, asks.toArray());
+		log.info("Asks cached for " + processData.getProcessId());
+	}
+
+	/**
+	 * Fetch an ask from cache for a processId and questionCode combination.
+	 *
+	 * @param processData The processData to fetch for
+	 * @return
+	 */
+	public List<Ask> fetchAsks(ProcessData processData) {
+
+		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
+		Ask[] asks = CacheUtils.getObject(userToken.getProductCode(), key, Ask[].class);
+		return Arrays.asList(asks);
 	}
 
 	public Attribute saveAttribute(final Attribute attribute) {
@@ -224,8 +259,8 @@ public class QwandaUtils {
 	}
 
 	public Attribute createEvent(String code, final String name) {
-		if (!code.startsWith(EVENT_PREFIX)) {
-			code = EVENT_PREFIX.concat(code);
+		if (!code.startsWith(Prefix.EVT)) {
+			code = Prefix.EVT.concat(code);
 		}
 		code = code.toUpperCase();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
@@ -267,9 +302,7 @@ public class QwandaUtils {
 		}
 
 		// init new parent ask
-		Ask ask = new Ask(question);
-		ask.setSourceCode(source.getCode());
-		ask.setTargetCode(target.getCode());
+		Ask ask = new Ask(question, source.getCode(), target.getCode());
 		ask.setRealm(productCode);
 
 		Attribute attribute = question.getAttribute();
@@ -282,9 +315,12 @@ public class QwandaUtils {
 		}
 
 		// check if it is a question group
-		if (question.getAttributeCode().startsWith(Question.QUESTION_GROUP_ATTRIBUTE_CODE)) {
+		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
 
 			log.info("[*] Parent Question: " + question.getCode());
+
+			// groups always readonly
+			ask.setReadonly(true);
 
 			// fetch questionQuestions from the DB
 			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode,
@@ -299,7 +335,7 @@ public class QwandaUtils {
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 
 				// Do not include PRI_SUBMIT
-				if ("PRI_SUBMIT".equals(child.getAttributeCode())) {
+				if ("PRI_SUBMIT".equals(child.getQuestion().getAttribute().getCode())) {
 					continue;
 				}
 
@@ -315,8 +351,10 @@ public class QwandaUtils {
 					child.getQuestion().setIcon(questionQuestion.getIcon());
 				}
 
-				ask.addChildAsk(child);
+				ask.add(child);
 			}
+		} else {
+			ask.setReadonly(question.getReadonly());
 		}
 
 		return ask;
@@ -348,7 +386,7 @@ public class QwandaUtils {
 	 */
 	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
 
-		String code = ask.getAttributeCode();
+		String code = ask.getQuestion().getAttribute().getCode();
 
 		// grab attribute code of current ask if conditions met
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
@@ -356,7 +394,7 @@ public class QwandaUtils {
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			log.debugf("Attribute %s in exclude list", code);
 		} else if (ask.getReadonly()) {
-			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+			log.debugf("Ask %s is set to readonly", ask.getQuestion().getCode());
 		} else {
 			codes.add(code);
 		}
@@ -370,20 +408,62 @@ public class QwandaUtils {
 		return codes;
 	}
 
-	private Map<String, Ask> getAllAsksRecursively(Ask ask) {
-		return getAllAsksRecursively(ask, new HashMap<>());
+	/**
+	 * @param asks
+	 * @return
+	 */
+	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks) {
+		return getAllAsksRecursively(asks, new HashMap<String, Ask>());
 	}
 
-	private Map<String, Ask> getAllAsksRecursively(Ask ask, Map<String, Ask> asks) {
-		if (ask.hasChildren()) {
-			for (Ask childAsk : ask.getChildAsks()) {
-				asks.put(childAsk.getAttributeCode(), childAsk);
-				asks = getAllAsksRecursively(childAsk, asks);
+	/**
+	 * @param asks
+	 * @param map
+	 * @return
+	 */
+	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks, Map<String, Ask> map) {
+
+		for (Ask ask : asks) {
+			if (ask.hasChildren()) {
+				map.put(ask.getQuestion().getAttribute().getCode(), ask);
+				map = getAllAsksRecursively(ask.getChildAsks(), map);
 			}
 		}
-		return asks;
+
+		return map;
 	}
 
+	/**
+	 * @param asks
+	 */
+	public Map<String, Ask> buildAskFlatMap(List<Ask> asks) {
+		return buildAskFlatMap(new HashMap<String, Ask>(), asks);
+	}
+
+	/**
+	 * @param map
+	 * @param asks
+	 */
+	public Map<String, Ask> buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
+
+		if (asks == null)
+			return map;
+
+		for (Ask ask : asks) {
+			if (ask.hasChildren())
+				buildAskFlatMap(map, ask.getChildAsks());
+			else
+				map.put(ask.getQuestion().getAttribute().getCode(), ask);
+		}
+
+		return map;
+	}
+
+	/**
+	 * @param target
+	 * @param dependencies
+	 * @return
+	 */
 	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
 		target.getBaseEntityAttributes().forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
 		for (String d : dependencies) {
@@ -394,12 +474,15 @@ public class QwandaUtils {
 		return true;
 	}
 
-  public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE) {
-		Map<String, Ask> flatMapAsks = getAllAsksRecursively(ask);
-    return updateDependentAsks(ask, target, defBE, flatMapAsks);
-  }
+	/**
+	 * @param asks
+	 * @param target
+	 * @param defBE
+	 * @param flatMapAsks
+	 * @return
+	 */
+	public Map<String, Ask> updateDependentAsks(BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
 
-	public Ask updateDependentAsks(Ask ask, BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
 		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
 
 		for (EntityAttribute dep : dependentAsks) {
@@ -416,33 +499,32 @@ public class QwandaUtils {
 			targetAsk.setHidden(!depsAnswered);
 		}
 
-		return ask;
+		return flatMapAsks;
 	}
 
 	/**
 	 * Check if all Ask mandatory fields are answered for a BaseEntity.
 	 *
-	 * @param ask        The ask to check
+	 * @param asks        The ask to check
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(Ask ask, BaseEntity baseEntity) {
-
-		log.info("Checking " + ask.getQuestionCode() + " mandatorys against " + baseEntity.getCode());
+	public Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
-		Map<String, Boolean> map = recursivelyFillMandatoryMap(new HashMap<>(), ask);
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 
 			String attributeCode = ea.getAttributeCode();
-			Boolean mandatory = map.get(attributeCode);
-
-			if (mandatory == null) {
+			Ask ask = map.get(attributeCode);
+			if (ask == null)
 				continue;
-			}
+
+			Boolean mandatory = ask.getMandatory();
+			if (mandatory == null)
+				continue;
 
 			String value = ea.getAsString();
 
@@ -470,7 +552,7 @@ public class QwandaUtils {
 	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
 
 		// add current ask attribute code to map
-		map.put(ask.getAttributeCode(), ask.getMandatory());
+		map.put(ask.getQuestion().getAttribute().getCode(), ask.getMandatory());
 
 		// ensure child asks is not null
 		if (ask.getChildAsks() == null) {
@@ -494,20 +576,20 @@ public class QwandaUtils {
 	 */
 	public Set<Ask> recursivelyFillFlatSet(Set<Ask> set, Ask ask) {
 
-		String code = ask.getAttributeCode();
+		String code = ask.getQuestion().getAttribute().getCode();
 		// add current ask attribute code to map
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
 			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			log.debugf("Attribute %s in exclude list", code);
 		} else if (ask.getReadonly()) {
-			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+			log.debugf("Ask %s is set to readonly", ask.getQuestion().getCode());
 		} else {
 			set.add(ask);
 		}
 
 		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
+		if (ask.hasChildren()) {
 			return set;
 		}
 
@@ -520,52 +602,8 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Find the submit ask using recursion.
-	 *
-	 * @param ask      The ask to traverse
-	 * @param disabled Should the submit ask be disabled
-	 * @return The updated ask
-	 */
-	public Ask recursivelyFindAndUpdateSubmitDisabled(Ask ask, Boolean disabled) {
-
-		// return ask if submit is found
-		if (ask.getQuestion().getAttribute().getCode().equals("EVT_SUBMIT")) {
-			log.info("[@] Setting PRI_SUBMIT disabled = " + disabled);
-			ask.setDisabled(disabled);
-		}
-
-		// recursively check child asks for submit
-		if (ask.getChildAsks() != null) {
-			for (Ask child : ask.getChildAsks()) {
-				child = recursivelyFindAndUpdateSubmitDisabled(child, disabled);
-			}
-		}
-
-		return ask;
-	}
-
-	/**
-	 * Send Submit enable/disable.
-	 *
-	 * @param ask     The ask message representing the questions
-	 * @param enable. Enable the submit button
-	 * @return Boolean representing whether the submit button was enabled
-	 */
-	public Boolean sendSubmit(Ask ask, Boolean enable) {
-
-		// find the submit ask
-		recursivelyFindAndUpdateSubmitDisabled(ask, !enable);
-
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-
-		return enable;
-	}
-
-	/**
 	 * Save process data to cache.
+	 * 
 	 * @param processData The data to save
 	 */
 	public void storeProcessData(ProcessData processData) {
@@ -579,6 +617,7 @@ public class QwandaUtils {
 
 	/**
 	 * clear process data from cache.
+	 * 
 	 * @param processId The id of the data to clear
 	 */
 	public void clearProcessData(String processId) {
@@ -746,7 +785,7 @@ public class QwandaUtils {
 		String targetCode = baseEntity.getCode();
 
 		// create GRP ask
-		Attribute questionAttribute = getAttribute(DefUtils.PREF_QQQ_QUE_GRP);
+		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
 				"Edit " + targetCode + " : " + baseEntity.getName(),
 				questionAttribute);
@@ -759,14 +798,14 @@ public class QwandaUtils {
 
 		// create a child ask for every valid atribute
 		defBE.getBaseEntityAttributes().stream()
-			.filter(ea -> ea.getAttributeCode().startsWith(DefUtils.PREF_ATT))
-			.forEach((ea) -> {
-				String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), DefUtils.PREF_ATT);
-				Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
+				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
+				.forEach((ea) -> {
+					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
+					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-				String questionCode = DefUtils.PREF_QUE
-						+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-						DefUtils.PREF_PRI), DefUtils.PREF_LNK);
+					String questionCode = Prefix.QUE
+							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+									Prefix.PRI), Prefix.LNK);
 
 				Question childQues = new Question(questionCode, attribute.getName(), attribute);
 				Ask childAsk = new Ask(childQues, sourceCode, targetCode);

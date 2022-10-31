@@ -1,23 +1,15 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.ServiceToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.keycloak.representations.account.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.net.ssl.HttpsURLConnection;
-import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -26,7 +18,32 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.net.ssl.HttpsURLConnection;
+import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+import org.keycloak.representations.account.UserRepresentation;
+import org.keycloak.util.JsonSerialization;
+
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.ServiceToken;
 
 /**
  * A static utility class used for standard requests and
@@ -204,7 +221,7 @@ public class KeycloakUtils {
         String keycloakUrl = serviceToken.getKeycloakUrl().replace(":-1", "");
 
         // grab uuid to fetch token
-        String uuid = userCode.substring("PER_".length()).toLowerCase();
+        String uuid = userCode.substring(Prefix.PER.length()).toLowerCase();
 
         // setup param map
         HashMap<String, String> params = new HashMap<>();
@@ -230,14 +247,14 @@ public class KeycloakUtils {
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
         // A necessary evil. I think?
-        log.info("This is the real realm: " + realm);
-//        realm = "gadatron";
+        // realm = "internmatch";
+        log.info("Realm is " + realm);
 
         String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
-        //log.info("encodedPostRequest:[" + str + "]");
+        // log.info("encodedPostRequest:[" + str + "]");
         JsonObject json = jsonb.fromJson(str, JsonObject.class);
         String token = json.getString("access_token");
 

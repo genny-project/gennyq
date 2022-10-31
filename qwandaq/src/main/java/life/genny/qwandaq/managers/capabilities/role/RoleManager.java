@@ -1,8 +1,16 @@
 package life.genny.qwandaq.managers.capabilities.role;
 
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.AttributeText;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
@@ -11,19 +19,22 @@ import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
-import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static life.genny.qwandaq.constants.GennyConstants.*;
+import static life.genny.qwandaq.constants.GennyConstants.DEF_ROLE_CODE;
 
 @ApplicationScoped
 public class RoleManager extends Manager {
+
+	public final static DataType dtt = new DataType(String.class);
 
     private BaseEntity roleDef;
 	private Attribute lnkRolAttribute;
@@ -43,17 +54,17 @@ public class RoleManager extends Manager {
 		if(roleDef == null)
 			throw new NullParameterException(DEF_ROLE_CODE);
 		
-		lnkRolAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), ROLE_LINK_CODE);
+		lnkRolAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), Attribute.LNK_ROLE);
 		if(lnkRolAttribute == null) {
-			error(ROLE_LINK_CODE + " is missing. Adding!");
-			lnkRolAttribute = new AttributeText(ROLE_LINK_CODE, "Role Link");
+			error(Attribute.LNK_ROLE + " is missing. Adding!");
+			lnkRolAttribute = new Attribute(Attribute.LNK_ROLE, "Role Link", dtt);
 			qwandaUtils.saveAttribute(lnkRolAttribute);
 		}
 		try {
-			lnkChildrenAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), CHILDREN_LINK_CODE);
+			lnkChildrenAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), Attribute.LNK_CHILDREN);
 		} catch(NoResultException e) {
-			error(CHILDREN_LINK_CODE + " is missing. Adding!");
-			lnkChildrenAttribute = new AttributeText(CHILDREN_LINK_CODE, "Children Role Link");
+			error(Attribute.LNK_CHILDREN + " is missing. Adding!");
+			lnkChildrenAttribute = new Attribute(Attribute.LNK_CHILDREN, "Children Role Link", dtt);
 			qwandaUtils.saveAttribute(lnkChildrenAttribute);
 		}
 	}
@@ -255,7 +266,7 @@ public class RoleManager extends Manager {
 	 */
 	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
-		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(CAP_CODE_PREFIX);
+		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
 			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
@@ -318,7 +329,7 @@ public class RoleManager extends Manager {
 	}
 
 	public BaseEntity attachRole(BaseEntity target, BaseEntity role) {
-		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(ROLE_LINK_CODE);
+		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(Attribute.LNK_ROLE);
 
 		// Create it
 		if(!eaOpt.isPresent()) {
@@ -355,7 +366,7 @@ public class RoleManager extends Manager {
 	}
 	
 	public List<String> getRoleCodes(BaseEntity personBaseEntity) {
-		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, ROLE_LINK_CODE);
+		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, Attribute.LNK_ROLE);
 
 		if (roles == null || roles.isEmpty())
 			return new ArrayList<String>();// throw new RoleException(String.format("No roles found for base entity: ", personBaseEntity.getCode()));
@@ -376,8 +387,8 @@ public class RoleManager extends Manager {
 
 	public static String cleanRoleCode(final String rawRoleCode) {
 		String cleanRoleCode = rawRoleCode.toUpperCase();
-		if (!cleanRoleCode.startsWith(ROLE_BE_PREFIX)) {
-			cleanRoleCode = ROLE_BE_PREFIX + cleanRoleCode;
+		if (!cleanRoleCode.startsWith(Prefix.ROL)) {
+			cleanRoleCode = Prefix.ROL + cleanRoleCode;
 		}
 
 		return cleanRoleCode;

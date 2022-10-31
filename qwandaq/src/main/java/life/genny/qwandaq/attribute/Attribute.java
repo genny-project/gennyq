@@ -20,18 +20,25 @@
 
 package life.genny.qwandaq.attribute;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.CodedEntity;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.utils.CommonUtils;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-
-import javax.persistence.*;
+import javax.persistence.Cacheable;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Objects;
+
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * Attribute represents a distinct abstract Fact about a target entity
@@ -50,7 +57,8 @@ import java.util.Objects;
  * <p>
  * Attributes represent facts about a target.
  * </p>
- *
+ * 
+ * 
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -61,9 +69,9 @@ import java.util.Objects;
 @XmlAccessorType(value = XmlAccessType.FIELD)
 
 @Table(name = "attribute", indexes = {
-        @Index(columnList = "code", name = "code_idx"),
-        @Index(columnList = "realm", name = "code_idx")
-}, uniqueConstraints = @UniqueConstraint(columnNames = {"code", "realm"}))
+		@Index(columnList = "code", name = "code_idx"),
+		@Index(columnList = "realm", name = "code_idx")
+}, uniqueConstraints = @UniqueConstraint(columnNames = { "code", "realm" }))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Cacheable
@@ -73,20 +81,46 @@ public class Attribute extends CodedEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String DEFAULT_CODE_PREFIX = "PRI_";
+	public static final String DEFAULT_CODE_PREFIX = "PRI_";
 
 	// core
+	public static final String QQQ_QUESTION_GROUP = "QQQ_QUESTION_GROUP";
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_CODE = "PRI_CODE";
+	public static final String PRI_CREATED = "PRI_CREATED";
+	public static final String PRI_UPDATED = "PRI_UPDATED";
 	public static final String PRI_UUID = "PRI_UUID";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
+	public static final String PRI_EVENT = "PRI_EVENT";
+	public static final String PRI_SUBMIT = "PRI_SUBMIT";
+
+	// links
+	public static final String LNK_CORE = "LNK_CORE";
+	public static final String LNK_ITEMS = "LNK_ITEMS";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+	public static final String LNK_SUMMARY = "LNK_SUMMARY";
 
 	// definition
 	public static final String LNK_DEF = "LNK_DEF";
+	public static final String PRI_PREFIX = "PRI_PREFIX";
 
 	// roles
 	public static final String LNK_ROLE = "LNK_ROLE";
+	public static final String LNK_CHILDREN = "LNK_CHILDREN";
+
+	// pcm
+	public static final String PRI_LOC = "PRI_LOC";
+	public static final String PRI_TEMPLATE_CODE = "PRI_TEMPLATE_CODE";
+	public static final String PRI_QUESTION_CODE = "PRI_QUESTION_CODE";
+	public static final String PRI_TARGET_CODE = "PRI_TARGET_CODE";
+
+	// events
+	public static final String EVT_SUBMIT = "EVT_SUBMIT";
+	public static final String EVT_CANCEL = "EVT_CANCEL";
+	public static final String EVT_RESET = "EVT_RESET";
+
+	public static final String EVT_NEXT = "EVT_NEXT";
+	public static final String EVT_PREVIOUS = "EVT_PREVIOUS";
 
 	// contact
 	public static final String PRI_MOBILE = "PRI_MOBILE";
@@ -96,23 +130,24 @@ public class Attribute extends CodedEntity {
 
 	// search
 	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
+	public static final String PRI_TOTAL_RESULTS = "PRI_TOTAL_RESULTS";
 	public static final String PRI_INDEX = "PRI_INDEX";
 
-    @Embedded
-    @NotNull
-    public DataType dataType;
+	@Embedded
+	@NotNull
+	public DataType dataType;
 
-    private Boolean defaultPrivacyFlag = false;
+	private Boolean defaultPrivacyFlag = false;
 
-    private String description;
+	private String description;
 
-    private String help;
+	private String help;
 
-    private String placeholder;
+	private String placeholder;
 
-    private String defaultValue;
+	private String defaultValue;
 
-    private String icon;
+	private String icon;
 
 	/**
 	 * Constructor.
@@ -120,145 +155,129 @@ public class Attribute extends CodedEntity {
 	public Attribute() {
 	}
 
-    public Attribute(String aCode, String aName, DataType dataType) {
-        super(aCode, aName);
-        setDataType(dataType);
-    }
+	public Attribute(String code, String name, DataType dataType) {
+		super(code, name);
+		setDataType(dataType);
+	}
 
-    /**
-     * @return the dataType
-     */
-    public DataType getDataType() {
-        return dataType;
-    }
+	/**
+	 * @return the dataType
+	 */
+	public DataType getDataType() {
+		return dataType;
+	}
 
-    /**
-     * @param dataType the dataType to set
-     */
-    public void setDataType(DataType dataType) {
-        this.dataType = dataType;
-    }
+	/**
+	 * @param dataType the dataType to set
+	 */
+	public void setDataType(DataType dataType) {
+		this.dataType = dataType;
+	}
 
-    /**
-     * getDefaultCodePrefix This method is overrides the Base class
-     *
-     * @return the default Code prefix for this class.
-     */
-    static public String getDefaultCodePrefix() {
-        return DEFAULT_CODE_PREFIX;
-    }
+	/*
+	 * (non-Javadoc)
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	/**
+	 * @return String
+	 */
+	@Override
+	public String toString() {
+		return getCode() + ",dataType=" + dataType;
+	}
 
-    /**
-     * @return String
-     */
-    @Override
-    public String toString() {
-        return getCode() + ",dataType=" + dataType;
-    }
+	/**
+	 * @return the defaultPrivacyFlag
+	 */
+	public Boolean getDefaultPrivacyFlag() {
+		return defaultPrivacyFlag;
+	}
 
-    /**
-     * @return the defaultPrivacyFlag
-     */
-    public Boolean getDefaultPrivacyFlag() {
-        return defaultPrivacyFlag;
-    }
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isDefaultPrivacyFlag() {
+		return getDefaultPrivacyFlag();
+	}
 
-    /**
-     * @return Boolean
-     */
-    public Boolean isDefaultPrivacyFlag() {
-        return getDefaultPrivacyFlag();
-    }
+	/**
+	 * @param defaultPrivacyFlag the defaultPrivacyFlag to set
+	 */
+	public void setDefaultPrivacyFlag(Boolean defaultPrivacyFlag) {
+		this.defaultPrivacyFlag = defaultPrivacyFlag;
+	}
 
-    /**
-     * @param defaultPrivacyFlag the defaultPrivacyFlag to set
-     */
-    public void setDefaultPrivacyFlag(Boolean defaultPrivacyFlag) {
-        this.defaultPrivacyFlag = defaultPrivacyFlag;
-    }
+	/**
+	 * @return the description
+	 */
+	public String getDescription() {
+		return description;
+	}
 
-    /**
-     * @return the description
-     */
-    public String getDescription() {
-        return description;
-    }
+	/**
+	 * @param description the description to set
+	 */
+	public void setDescription(String description) {
+		this.description = description;
+	}
 
-    /**
-     * @param description the description to set
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
+	/**
+	 * @return the help
+	 */
+	public String getHelp() {
+		return help;
+	}
 
-    /**
-     * @return the help
-     */
-    public String getHelp() {
-        return help;
-    }
+	/**
+	 * @param help the help to set
+	 */
+	public void setHelp(String help) {
+		this.help = help;
+	}
 
-    /**
-     * @param help the help to set
-     */
-    public void setHelp(String help) {
-        this.help = help;
-    }
+	/**
+	 * @return the placeholder
+	 */
+	public String getPlaceholder() {
+		return placeholder;
+	}
 
-    /**
-     * @return the placeholder
-     */
-    public String getPlaceholder() {
-        return placeholder;
-    }
+	/**
+	 * @param placeholder the placeholder to set
+	 */
+	public void setPlaceholder(String placeholder) {
+		this.placeholder = placeholder;
+	}
 
-    /**
-     * @param placeholder the placeholder to set
-     */
-    public void setPlaceholder(String placeholder) {
-        this.placeholder = placeholder;
-    }
+	/**
+	 * @return the defaultValue
+	 */
+	public String getDefaultValue() {
+		return defaultValue;
+	}
 
-    /**
-     * @return the defaultValue
-     */
-    public String getDefaultValue() {
-        return defaultValue;
-    }
+	/**
+	 * @param defaultValue the defaultValue to set
+	 */
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
 
-    /**
-     * @param defaultValue the defaultValue to set
-     */
-    public void setDefaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
-    }
+	public void setIcon(String icon) {
+		this.icon = icon;
+	}
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Object#toString()
-     */
-    /*
-     * @Override
-     * public String toString() {
-     * return "Attribute:"+getCode()+"(" + getDataType()+") ";
-     * }
-     */
-
-    public void setIcon(String icon) {
-        this.icon = icon;
-    }
-
-    /**
-     * @return String
-     */
-    public String getIcon() {
-        return this.icon;
-    }
+	/**
+	 * @return String
+	 */
+	public String getIcon() {
+		return this.icon;
+	}
 
 	/**
 	 * Deep-compare two attributes
-	 *
+	 * 
 	 * @param other attribute to compare against
 	 * @return true if all fields are the same. False if one is different
 	 */
@@ -268,7 +287,7 @@ public class Attribute extends CodedEntity {
 
 	/**
 	 * Deep-compare two attributes
-	 *
+	 * 
 	 * @param other   attribute to compare against
 	 * @param checkId whether to check the id or not (database equality) (default:
 	 *                false)
@@ -280,25 +299,31 @@ public class Attribute extends CodedEntity {
 			return false;
 
 		boolean samePrivacy = (defaultPrivacyFlag == other.defaultPrivacyFlag);
-		if(!samePrivacy) return false;
+		if (!samePrivacy)
+			return false;
 
 		boolean sameDTT = CommonUtils.compare(dataType, other.dataType);
-		if(!sameDTT) return false;
+		if (!sameDTT)
+			return false;
 
 		boolean sameHelp = CommonUtils.compare(help, other.help);
-		if(!sameHelp) return false;
+		if (!sameHelp)
+			return false;
 
 		boolean samePlaceholder = CommonUtils.compare(placeholder, other.placeholder);
-		if(!samePlaceholder) return false;
+		if (!samePlaceholder)
+			return false;
 
 		boolean sameDefault = CommonUtils.compare(defaultValue, other.defaultValue);
-		if(!sameDefault) return false;
+		if (!sameDefault)
+			return false;
 
 		boolean sameIcon = CommonUtils.compare(icon, other.icon);
-		if(!sameIcon) return false;
+		if (!sameIcon)
+			return false;
 
-        // Check the id if necessary
-        return !checkId || (Objects.equals(other.getId(), getId()));
-    }
+		// Check the id if necessary
+		return checkId ? (other.getId() == getId()) : true;
+	}
 
 }

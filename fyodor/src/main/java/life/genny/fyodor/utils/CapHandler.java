@@ -1,19 +1,24 @@
 package life.genny.fyodor.utils;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
-import life.genny.qwandaq.entity.search.trait.*;
+import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.CapabilityRequirement;
+import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.models.UserToken;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * CapHandler
@@ -92,18 +97,27 @@ public class CapHandler extends Manager {
 	 * @return
 	 */
 	public Boolean traitCapabilitiesMet(Trait trait) {
+
 		if(userToken == null) {
 			error("[!] No UserToken, cannot verify capabilities");
 			return false;
 		}
 		info("user token:" + userToken.getCode() + " CONSTANT: " + GennyConstants.SERVICE_CODE);
-		boolean isService = userToken.hasRole("service") || GennyConstants.SERVICE_CODE.equals(userToken.getCode()) || GennyConstants.SERVICE_CODE.equals(userToken.getUserCode());
-		if(!isService) {
-			Set<Capability> capabilities = capMan.getUserCapabilities();
-			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
-				if(!capTrait.meetsRequirements(capabilities)) {
-					return false;
-				}
+//		boolean isService = userToken.hasRole("service") || GennyConstants.SERVICE_CODE.equals(userToken.getCode()) || GennyConstants.SERVICE_CODE.equals(userToken.getUserCode());
+//		if(!isService) {
+//			Set<Capability> capabilities = capMan.getUserCapabilities();
+//			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
+//				if(!capTrait.meetsRequirements(capabilities)) {
+//					return false;
+//				}
+
+		if (GennyConstants.PER_SERVICE.equals(userToken.getUserCode()))
+			return true;
+
+		Set<Capability> capabilities = capMan.getUserCapabilities();
+		for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
+			if(!capTrait.meetsRequirements(capabilities)) {
+				return false;
 			}
 		}
 		// TODO: implement capabilities

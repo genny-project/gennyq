@@ -1,5 +1,18 @@
 package life.genny.bridge.live.data;
 
+import java.util.UUID;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
@@ -14,17 +27,6 @@ import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.util.Arrays;
-import java.util.UUID;
 
 /**
  * ExternalConsumer --- External clients can connect to the endpoint configured in {@link
@@ -33,18 +35,22 @@ import java.util.UUID;
  *
  * @author hello@gada.io
  */
-@Singleton
+@ApplicationScoped
 public class ExternalConsumer {
 
 	private static final Logger log = Logger.getLogger(ExternalConsumer.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject RoleBasedPermission permissions;
-	@Inject BlackListInfo blacklist;
-	@Inject Service service;
+	@Inject
+	RoleBasedPermission permissions;
+	@Inject
+	BlackListInfo blacklist;
+	@Inject
+	Service service;
 
-	@Inject InternalConsumer consumer;
+	@Inject
+	InternalConsumer consumer;
 	
 	@ConfigProperty(name = "bridge.id", defaultValue = "false")
 	String bridgeId;

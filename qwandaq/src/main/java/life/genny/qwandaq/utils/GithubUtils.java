@@ -1,16 +1,45 @@
 package life.genny.qwandaq.utils;
 
-import io.vertx.mutiny.sqlclient.Tuple;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.attribute.AttributeText;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRemoteException;
+import org.eclipse.jgit.api.errors.TransportException;
+import org.eclipse.jgit.errors.AmbiguousObjectException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
-import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.FileMode;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -21,22 +50,29 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 import org.jboss.logging.Logger;
 
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import io.vertx.mutiny.sqlclient.Tuple;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.BaseEntity;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 
 /**
  * A static utility class used for standard requests and
@@ -51,6 +87,8 @@ public class GithubUtils {
     static Jsonb jsonb = JsonbBuilder.create();
 
     public static final String GIT_PROP_EXTENSION = "-git.properties";
+
+	public static DataType dtt = new DataType(String.class);
 
     public String gitGet(final String branch, final String project, final String repositoryName,
             final String layoutFilename) throws IOException, GitAPIException {
@@ -208,12 +246,12 @@ public class GithubUtils {
 
             // only allow genny/<filename> or genny/sublayouts
 
-            if (recursive || (StringUtils.countMatches(fullpath, "/") == 1)) {
+            if (((!recursive) && (StringUtils.countMatches(fullpath, "/") == 1)) || (recursive)) {
 
                 Path p = Paths.get(fullpath);
 
                 if (p.getParent() != null) {
-                    uri = ("genny".equals(gitrealm) ? "/" : "") + p.getParent();
+                    uri = ("genny".equals(gitrealm) ? "/" : "") + p.getParent().toString();
                 }
                 name = p.getFileName().toString().replaceFirst("[.][^.]+$", "");
                 String nameCode = name.replaceAll("\\-", "");
@@ -254,26 +292,109 @@ public class GithubUtils {
                         layout = new BaseEntity(layoutCode, name);
                     }
 
-                    layout.addAnswer(new Answer(layout, layout, new AttributeText("PRI_HTML_MERGE", "Layout Data"),
+                    layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt),
                             content));
 
                     layout.addAnswer(
-                            new Answer(layout, layout, new AttributeText("PRI_NAME", "Document Name"), name));
+                            new Answer(layout, layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), uri));
+                    layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt),
+                            "http://layout-cache-service/" + fullpath));
+                    layout.addAnswer(
+                            new Answer(layout, layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), name));
+                    layout.addAnswer(
+                            new Answer(layout, layout, new Attribute("PRI_BRANCH", "Branch", dtt), branch));
                     long secs = commit.getCommitTime();
                     LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
                             TimeZone.getDefault().toZoneId());
 
-                    // String lastCommitDateTimeString =
-                    // commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                    // layout.addAnswer(new Answer(layout, layout,
-                    // new AttributeText("PRI_LAYOUT_MODIFIED_DATE", "Modified"),
-                    // lastCommitDateTimeString)); // if
-                    // // new
+                    String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                    layout.addAnswer(new Answer(layout, layout,
+                            new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt), lastCommitDateTimeString)); // if
+                                                                                                                   // new
                     layout.setRealm(realm);
                     layout.setUpdated(commitDateTime);
                     layouts.add(layout);
                 }
             }
+
+        }
+
+        return layouts;
+
+    }
+
+    public List<BaseEntity> getLayoutBaseEntitys2(final String remoteUrl, final String branch,
+            final String realm) throws InvalidRemoteException, TransportException, GitAPIException,
+            RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException {
+
+        List<BaseEntity> layouts = new ArrayList<BaseEntity>();
+
+        String gitFolder = realm;
+
+        log.info("remoteUrl=" + remoteUrl);
+        log.info("branch=" + branch);
+        log.info("realm=" + realm);
+
+        String tmpDir = "/tmp/git";
+        try {
+            File directory = new File(tmpDir);
+
+            // Deletes a directory recursively. When deletion process is fail an
+            // IOException is thrown and that's why we catch the exception.
+            FileUtils.deleteDirectory(directory);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Process pp = Runtime.getRuntime().exec("cd /tmp;git clone -b "+branch+"
+        // "+remoteUrl);
+
+        Git git = Git.cloneRepository()
+
+                .setURI(remoteUrl).setDirectory(new File(tmpDir)).setBranch(branch).call();
+
+        log.info("Set up Git");
+
+        git.fetch().setRemote(remoteUrl).setRefSpecs(new RefSpec("+refs/heads/*:refs/heads/*")).call();
+
+        // git show -s --format=%ct master^{commit}
+        // Process pp = Runtime.getRuntime().exec("cd /tmp;git show -s --format=%ct
+        // master^{commit}");
+
+        String commitTimeStr = execCmd("git show -s --format=%ct " + branch + "^{commit}");
+        long commitTime = Long.parseLong(commitTimeStr);
+
+        String realmFilter = tmpDir + "/" + gitFolder + "/sublayouts";
+        List<Tuple> layoutTexts = readFilenamesFromDirectory(realmFilter);
+
+        for (Tuple tupleFile : layoutTexts) {
+            String fullpath = tupleFile.getString(0).substring(realmFilter.length() + 1); // get rid of
+                                                                                          // realm+"-new/sublayouts/"
+            String content = tupleFile.getString(1);
+            Path p = Paths.get(fullpath);
+            String filepath = p.getParent().toString();
+            String name = fullpath.substring(filepath.length() + 1).replaceFirst("[.][^.]+$", "");
+            ;
+            filepath = filepath + "/" + name;
+            String precode = String.valueOf(filepath.replaceAll("[^a-zA-Z0-9]", "").toUpperCase().hashCode());
+            String layoutCode = ("LAY_" + realm + "_" + precode).toUpperCase();
+            log.info(layoutCode + " file = " + fullpath + " size=" + tupleFile.getString(1).length());
+            BaseEntity layout = new BaseEntity(layoutCode, name);
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt), content));
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), filepath));
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt),
+                    "http://layout-cache-service/" + realmFilter + "/" + fullpath));
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), name));
+            long secs = commitTime;
+            LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
+                    TimeZone.getDefault().toZoneId());
+
+            String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt),
+                    lastCommitDateTimeString)); // if new
+            layout.setRealm(realm);
+            layout.setUpdated(commitDateTime);
+            layouts.add(layout);
 
         }
 

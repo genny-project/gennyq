@@ -1,24 +1,29 @@
 package life.genny.kogito.common.service;
 
-import life.genny.kogito.common.models.TimerData;
-import life.genny.kogito.common.models.TimerEvent;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.SearchUtils;
-import org.jboss.logging.Logger;
+import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
-import java.util.List;
+
+import org.jboss.logging.Logger;
+
+import life.genny.kogito.common.models.TimerData;
+import life.genny.kogito.common.models.TimerEvent;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class TimerEventService {
@@ -34,6 +39,9 @@ public class TimerEventService {
 	DatabaseUtils databaseUtils;
 
 	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
 	SearchUtils searchUtils;
 
 	/**
@@ -41,7 +49,10 @@ public class TimerEventService {
 	 * 
 	 * @param questionCode
 	 */
-	public TimerData fetchTimerData(final String productCode, final String questionCode) {
+	public TimerData fetchTimerData(final String productCode, String questionCode, String pcmCode) {
+
+		if (questionCode == null)
+			return new TimerData();
 
 		log.debug("Fetching TimerEvents " + productCode + " and " + questionCode);
 

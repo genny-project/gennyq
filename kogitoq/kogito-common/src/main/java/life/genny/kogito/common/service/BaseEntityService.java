@@ -1,5 +1,16 @@
 package life.genny.kogito.common.service;
 
+import java.util.Optional;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -9,15 +20,11 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.*;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.util.Optional;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.KeycloakUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class BaseEntityService {
@@ -41,6 +48,19 @@ public class BaseEntityService {
 	@Inject
 	DefUtils defUtils;
 
+	/**
+	 * Send a message to perform an update of a persons summary
+	 */
+	public void updateSummary(String personCode, String summaryCode) {
+
+		qwandaUtils.saveAnswer(new Answer(personCode, personCode, Attribute.LNK_SUMMARY, summaryCode));
+		log.info("Summary updated -> " + personCode + " : " + summaryCode);
+	}
+
+	/**
+	 * @param definitionCode
+	 * @return
+	 */
 	public String commission(String definitionCode) {
 		// TODO
 		// String randomCode = UUID.randomUUID().toString().substring(0,

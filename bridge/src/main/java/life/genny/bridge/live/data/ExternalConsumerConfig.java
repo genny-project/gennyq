@@ -1,5 +1,15 @@
 package life.genny.bridge.live.data;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.bridge.PermittedOptions;
@@ -8,83 +18,74 @@ import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * ExternalConsumerConfig --- This class contains configurations for {@link CorsHandler}
- * {@link SockJSHandler} {@link SockJSBridgeOptions} and the populated setting for the
- * Router. Currently /frontend is hardcoded so external client will need to use this
+ * {@link SockJSHandler} {@link SockJSBridgeOptions} and the populated setting for the 
+ * Router. Currently /frontend is hardcoded so external client will need to use this 
  * path also.
  *
- * @author hello@gada.io
+ * @author    hello@gada.io
  */
+@ApplicationScoped
 public class ExternalConsumerConfig {
 
-    @Inject
-    Vertx vertx;
-    @Inject
-    ExternalConsumer handler;
-    @ConfigProperty(name = "environment")
-    Optional<String> environment;
+	@Inject
+	Vertx vertx;
+	@Inject
+	ExternalConsumer handler;
 
-    private static final Logger log = Logger.getLogger(ExternalConsumerConfig.class.getSimpleName());
+	@ConfigProperty(name = "environment")
+	Optional<String> environment;
 
+	/**
+	 * This method is used to set all the types of addresses that will be allowed 
+	 * normally external clients like Alyson will use address.inbound to be used to
+	 * send or publish messages to this service and handled in {@link ExternalConsumer} 
+	 * also UUID like channel addresses is used after extracting the session id of the token 
+	 *
+	 * @return the list of all inbound permitted options - Allowed addresses in the websocket channel
+	 */
+	private static List<PermittedOptions> getInbounds(){
+		List<PermittedOptions> inbounds = new ArrayList<PermittedOptions>();
+		inbounds.add(new PermittedOptions().setAddress("address.inbound"));
+		// This regex should be a uuid like 
+		inbounds.add(new PermittedOptions().setAddressRegex(".*")); 
+		return inbounds;
+	}
+	
+	/**
+	 * This method is used to set all the types of addresses that will be allowed 
+	 * to send or publish to an external client which has registered the listener with addresses 
+	 * specified in this method. Normally the messages are sent to the external client from the 
+	 * {@link InternalConsumer} which are data that have been received from the other backends and 
+	 * ready to send to the clients who requested the data
+	 *
+	 * @return the list of all outbound permitted options - Allowed addresses in the websocket channel
+	 */
+	private static List<PermittedOptions> getOutbounds(){
+		List<PermittedOptions> inbounds = new ArrayList<PermittedOptions>();
+		inbounds.add(new PermittedOptions().setAddressRegex("address.outbound"));
+		// Allowed anything but address.inbound
+		inbounds.add(new PermittedOptions().setAddressRegex("^(?!(address\\.inbound)$).*")); 
+		return inbounds;
+	}
 
-    /**
-     * This method is used to set all the types of addresses that will be allowed
-     * normally external clients like Alyson will use address.inbound to be used to
-     * send or publish messages to this service and handled in {@link ExternalConsumer}
-     * also UUID like channel addresses is used after extracting the session id of the token
-     *
-     * @return the list of all inbound permitted options - Allowed addresses in the websocket channel
-     */
-    private static List<PermittedOptions> getInbounds() {
-        List<PermittedOptions> inbounds = new ArrayList<>();
-        inbounds.add(new PermittedOptions().setAddress("address.inbound"));
-        // This regex should be a uuid like
-        inbounds.add(new PermittedOptions().setAddressRegex(".*"));
-        return inbounds;
-    }
-
-    /**
-     * This method is used to set all the types of addresses that will be allowed
-     * to send or publish to an external client which has registered the listener with addresses
-     * specified in this method. Normally the messages are sent to the external client from the
-     * {@link InternalConsumer} which are data that have been received from the other backends and
-     * ready to send to the clients who requested the data
-     *
-     * @return the list of all outbound permitted options - Allowed addresses in the websocket channel
-     */
-    private static List<PermittedOptions> getOutbounds() {
-        List<PermittedOptions> inbounds = new ArrayList<>();
-        inbounds.add(new PermittedOptions().setAddressRegex("address.outbound"));
-        // Allowed anything but address.inbound
-        inbounds.add(new PermittedOptions().setAddressRegex("^(?!(address\\.inbound)$).*"));
-        return inbounds;
-    }
-
-    /**
-     * Use of SockJSBridgeOptions such as timeouts for ping, replys etc. Also the registered addresses
-     * for inbound and outboud are obtained and set in the add method of options.
-     *
-     * @return options SockJSBridgeOptions which used and needed in the SockJSHandler
-     */
-    protected static SockJSBridgeOptions setBridgeOptions() {
-        SockJSBridgeOptions options = new SockJSBridgeOptions();
-        options.setMaxHandlersPerSocket(10);
-        options.setPingTimeout(120000); // 2 minutes
-        options.setReplyTimeout(60000);
-        getInbounds().forEach(options::addInboundPermitted);
-        getOutbounds().forEach(options::addOutboundPermitted);
-        return options;
-    }
+	/**
+	 * Use of SockJSBridgeOptions such as timeouts for ping, replys etc. Also the registered addresses
+	 * for inbound and outboud are obtained and set in the add method of options.
+	 *
+	 * @return options SockJSBridgeOptions which used and needed in the SockJSHandler
+	 */
+	protected static SockJSBridgeOptions setBridgeOptions(){
+		SockJSBridgeOptions options = new SockJSBridgeOptions();
+		options.setMaxHandlersPerSocket(10);
+		options.setPingTimeout(120000); // 2 minutes
+		options.setReplyTimeout(60000);
+		getInbounds().stream().forEach(options::addInboundPermitted);
+		getOutbounds().stream().forEach(options::addOutboundPermitted);
+		return options;
+	}
 
     public static CorsHandler cors() {
         String allowedUrl = """
@@ -92,6 +93,7 @@ public class ExternalConsumerConfig {
                 https://localhost:\\d\\d|
                 http://localhost:\\d\\d\\d\\d|
                 https://localhost:\\d\\d\\d\\d|
+                http://.*.genny.life|http://.*.gada.io|
                 https://.*.genny.life|https://.*.gada.io|
                 """ + System.getenv("CORS_URLS");
         log.info("allowed url: " + allowedUrl);
