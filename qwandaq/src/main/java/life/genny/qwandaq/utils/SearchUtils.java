@@ -1,36 +1,12 @@
 package life.genny.qwandaq.utils;
 
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.core.Response;
-
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.constants.Prefix;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -43,11 +19,27 @@ import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
-import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.core.Response;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
 /**
  * A utility class used for performing table
@@ -251,7 +243,7 @@ public class SearchUtils {
 	 */
 	public String sessionSearchCode(String code) {
 		String jti = userToken.getJTI().toUpperCase();
-		return (code.contains(jti) ? code : new StringBuilder(code).append("_").append(jti).toString());
+		return (code.contains(jti) ? code : code + "_" + jti);
 	}
 
 	/**
@@ -775,7 +767,7 @@ public class SearchUtils {
 		String word = "";
 		int lastIndex = str.lastIndexOf("_");
 		if (lastIndex > -1) {
-			word = str.substring(lastIndex + 1, str.length());
+			word = str.substring(lastIndex + 1);
 			return word;
 		}
 		return str;
@@ -819,11 +811,7 @@ public class SearchUtils {
 					|| e.getQuestion().getCode().equalsIgnoreCase(GennyConstants.QUE_FILTER_OPTION)
 					|| e.getQuestion().getCode().equalsIgnoreCase(Question.QUE_SUBMIT)) {
 				e.setHidden(false);
-			} else if (e.getQuestion().getCode().equalsIgnoreCase(questionCode)) {
-				e.setHidden(false);
-			} else {
-				e.setHidden(true);
-			}
+			} else e.setHidden(!e.getQuestion().getCode().equalsIgnoreCase(questionCode));
 
 			e.setTargetCode(sbeCodeJti);
 		});
@@ -922,8 +910,8 @@ public class SearchUtils {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
 		base.setParentCode(GennyConstants.QUE_ADD_FILTER_GRP);
-		base.setLinkCode(GennyConstants.LNK_CORE);
-		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setLinkCode(Attribute.LNK_CORE);
+		base.setLinkValue(Attribute.LNK_ITEMS);
 		base.setQuestionCode(GennyConstants.QUE_FILTER_OPTION);
 		questionCode = questionCode.toUpperCase();
 
@@ -973,8 +961,8 @@ public class SearchUtils {
 		QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
 		base.setParentCode(queGrp);
-		base.setLinkCode(GennyConstants.LNK_CORE);
-		base.setLinkValue(GennyConstants.LNK_ITEMS);
+		base.setLinkCode(Attribute.LNK_CORE);
+		base.setLinkValue(Attribute.LNK_ITEMS);
 		base.setQuestionCode(queCode);
 
 		SearchEntity searchBE = new SearchEntity(GennyConstants.SBE_DROPDOWN, GennyConstants.SBE_DROPDOWN)

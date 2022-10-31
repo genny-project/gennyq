@@ -1,12 +1,12 @@
 package life.genny.qwandaq.message;
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @RegisterForReflection
 public class QDataBaseEntityMessage extends QDataMessage implements Comparable<QDataBaseEntityMessage> {
@@ -14,8 +14,6 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	private static final long serialVersionUID = 1L;
 
 	private List<BaseEntity> items;
-
-    private List<WeightedItem> weightedItems;
 
 	private static final String DATATYPE_BASEENTITY = BaseEntity.class.getSimpleName();
 	private String parentCode;
