@@ -32,6 +32,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -152,13 +153,14 @@ public class FrontendService {
 				.newKeySet(processEntity.getBaseEntityAttributes().size());
 		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
 			log.info("processEntity EA Sent attribute Code: " + ea.getAttributeCode());
-			if ("LNK_DOT".equals(ea.getAttributeCode())) {
+			if ("LNK_DOT".equals(ea.getAttributeCode()) && false) {
 				String docCode = ea.getValueString();
+				docCode = CommonUtils.cleanUpAttributeValue(docCode);
 				log.info("Document Template Code: " + docCode);
 				BaseEntity docBE = beUtils.getBaseEntity(docCode);
 				if (docBE != null) {
 					log.info("Document Template: " + docBE);
-					String rawHtml = docBE.getValue("PRI_HTML", null);
+					String rawHtml = docBE.getValue("PRI_HTML_MERGE", null);
 					// Now merge in the data
 					String html = rawHtml;// qwandaUtils.mergeHtml(rawHtml, processEntity);
 					log.info("Merged HTML: " + html);

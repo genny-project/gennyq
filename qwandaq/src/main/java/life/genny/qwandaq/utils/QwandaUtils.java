@@ -286,14 +286,16 @@ public class QwandaUtils {
 
 		if ("QUE_DOT".equals(code.trim())) {
 			log.info("QUE_DOT DETECTED!!");
-			String dotValue = target.getValueAsString("LNK_DOT");
-			if (dotValue != null) {
-				log.info("LNK_DOT value: " + dotValue);
-				BaseEntity dotBE = beUtils.getBaseEntityByCode(dotValue);
+			String dotCode = target.getValueAsString("LNK_DOT");
+			if (dotCode != null) {
+				log.info("LNK_DOT value: " + dotCode);
+				dotCode = CommonUtils.cleanUpAttributeValue(dotCode);
+
+				BaseEntity dotBE = beUtils.getBaseEntityByCode(dotCode);
 				if (dotBE != null) {
-					String html = dotBE.getValueAsString("PRI_HTML");
+					String html = dotBE.getValueAsString("PRI_HTML_MERGE");
 					if (html != null) {
-						log.info("DOT HTML = " + html);
+						log.info("DOT PRI_HTML_MERGE = " + html);
 						ask.setName(html);
 					}
 				}
@@ -385,8 +387,9 @@ public class QwandaUtils {
 			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
 		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			log.debugf("Attribute %s in exclude list", code);
-		} else if (ask.getReadonly()) {
-			log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
+			// }
+			// else if (ask.getReadonly()) {
+			// log.debugf("Ask %s is set to readonly", ask.getQuestionCode());
 		} else {
 			codes.add(code);
 		}
