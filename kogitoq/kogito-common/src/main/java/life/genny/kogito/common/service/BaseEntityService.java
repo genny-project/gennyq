@@ -229,7 +229,7 @@ public class BaseEntityService {
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
-			ea.setBaseEntity(entity);
+			ea.setBaseEntityCode(entity.getCode());
 			entity.addAttribute(ea);
 		}
 

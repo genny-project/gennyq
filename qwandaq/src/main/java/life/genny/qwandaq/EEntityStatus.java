@@ -15,7 +15,7 @@ public enum EEntityStatus {
 	ARCHIVED,        // 5 - This means that the entity is not to be deleted , but is archived but not visible to normal operation
 	PENDING_DELETE,  // 6 - This means that the entity is pending deletion, but not yet deleted
 	DELETED;         // 7 - This means that the entity is marked deleted
-
+	
 	public static EEntityStatus valueOf(Integer value)
 	{
 		for (EEntityStatus enumValue : EEntityStatus.values()) {

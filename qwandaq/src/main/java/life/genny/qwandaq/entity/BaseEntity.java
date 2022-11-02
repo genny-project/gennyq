@@ -16,7 +16,6 @@
 
 package life.genny.qwandaq.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -32,20 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Index;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.AnswerLink;
@@ -54,6 +40,8 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
@@ -74,35 +62,36 @@ import org.jboss.logging.Logger;
  * <li>The List of attributes
  * </ul>
  *
- * 
- * 
+ *
+ *
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
  * @since 1.0
  */
 
-@XmlRootElement
+/*@XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
-				"code",
-				"realm"
-		}))
+	@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
+	"code",
+	"realm"
+	}
+))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @FilterDefs({
-		@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
-				@ParamDef(name = "attributeCodes", type = "string")
+	@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
+		@ParamDef(name = "attributeCodes", type = "string")
 		}),
-		@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
-				@ParamDef(name = "attributeCode", type = "string")
-		})
+	@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
+		@ParamDef(name = "attributeCode", type = "string")
+	})
 })
 @Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 @RegisterForReflection
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+public class BaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -124,12 +113,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@Filters({
 			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
 			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
-	})
+	})*/
 	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
 
-	@XmlTransient
+	/*@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
-	@JsonBackReference(value = "entityEntity")
+	@JsonBackReference(value = "entityEntity")*/
 	// @Cascade({ CascadeType.MERGE, CascadeType.REMOVE })
 	/* Stores the links of BaseEntity to another BaseEntity */
 	private Set<EntityEntity> links = new LinkedHashSet<>();
@@ -185,7 +174,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param aName the summary name of the core entity
 	 */
 	public BaseEntity(final String aName) {
@@ -194,7 +183,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param aCode the unique code of the core entity
 	 * @param aName the summary name of the core entity
 	 */
@@ -257,7 +246,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	/**
 	 * Sets the Links of the BaseEntity with another BaseEntity
-	 * 
+	 *
 	 * @param links the links to set
 	 */
 	public void setLinks(final Set<EntityEntity> links) {
@@ -281,7 +270,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	/**
 	 * Sets the Questions of the BaseEntity with another BaseEntity
-	 * 
+	 *
 	 * @param questions the questions to set
 	 */
 	public void setQuestions(final Set<EntityQuestion> questions) {
@@ -299,7 +288,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * getDefaultCodePrefix This method is expected to be overridden in specialised
 	 * child classes.
-	 * 
+	 *
 	 * @return the default Code prefix for this class.
 	 */
 
@@ -309,7 +298,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	/**
 	 * containsEntityAttribute This checks if an attribute exists in the baseEntity.
-	 * 
+	 *
 	 * @param attributeCode the attributeCode to check
 	 * @return boolean
 	 */
@@ -329,7 +318,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * containsLink This checks if an attribute link code is linked to the
 	 * baseEntity.
-	 * 
+	 *
 	 * @param linkAttributeCode the linkAttributeCode to check
 	 * @return boolean
 	 */
@@ -337,7 +326,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		boolean ret = false;
 
 		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> ti.getPk().getAttribute().getCode().equals(linkAttributeCode))) {
+		if (getLinks().parallelStream().anyMatch(ti -> ti.getAttribute().getCode().equals(linkAttributeCode))) {
 			ret = true;
 		}
 		return ret;
@@ -345,7 +334,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 
 	/**
 	 * containsTarget This checks if another baseEntity is linked to the baseEntity.
-	 * 
+	 *
 	 * @param targetCode        the targetCode to check
 	 * @param linkAttributeCode the linkAttributeCode to check
 	 * @return boolean
@@ -364,7 +353,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * findEntityAttribute This returns an attributeEntity if it exists in the
 	 * baseEntity.
-	 * 
+	 *
 	 * @param attributeCode the attributeCode to find with
 	 * @return Optional
 	 */
@@ -389,7 +378,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * findEntityAttribute This returns an attributeEntity if it exists in the
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
-	 * 
+	 *
 	 * @param attributePrefix the attributePrefix to find with
 	 * @return EntityAttribute
 	 */
@@ -403,7 +392,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * findEntityAttributes This returns attributeEntitys if it exists in the
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
-	 * 
+	 *
 	 * @param attribute the attribute to find
 	 * @return EntityAttribute
 	 */
@@ -418,7 +407,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * addAttribute This adds an attribute with default weight of 0.0 to the
 	 * baseEntity. It auto creates the EntityAttribute object. For efficiency we
 	 * assume the attribute does not already exist
-	 * 
+	 *
 	 * @param ea the ea to add
 	 * @return EntityAttribute
 	 * @throws BadDataException if the attribute could not be added
@@ -436,7 +425,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
 	 * It auto creates the EntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
-	 * 
+	 *
 	 * @param attribute tha Attribute to add
 	 * @throws BadDataException if attribute could not be added
 	 * @return EntityAttribute
@@ -450,7 +439,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
 	 * It auto creates the EntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
-	 * 
+	 *
 	 * @param attribute tha Attribute to add
 	 * @param weight    the weight
 	 * @throws BadDataException if attribute could not be added
@@ -465,7 +454,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
 	 * It auto creates the EntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
-	 * 
+	 *
 	 * @param attribute tha Attribute to add
 	 * @param weight    the weight
 	 * @param value     of type String, LocalDateTime, Long, Integer, Boolean
@@ -480,7 +469,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
+		final EntityAttribute entityAttribute = new EntityAttribute(weight, value);
+		entityAttribute.setRealm(getRealm());
+		entityAttribute.setBaseEntityCode(getCode());
+		entityAttribute.setAttribute(attribute);
 		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
 			if (value != null)
@@ -490,13 +482,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		} else {
 			this.getBaseEntityAttributes().add(entityAttribute);
 		}
-		return updateEntityAttributePk(entityAttribute, attribute);
-	}
-
-	private EntityAttribute updateEntityAttributePk(EntityAttribute entityAttribute, Attribute attribute) {
-		entityAttribute.setBaseEntity(this);
-		entityAttribute.setAttribute(attribute);
-
 		return entityAttribute;
 	}
 
@@ -504,7 +489,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * addAttributeOmitCheck This adds an attribute and associated weight to the
 	 * baseEntity. This method will NOT check and update any existing attributes.
 	 * Use with Caution.
-	 * 
+	 *
 	 * @param attribute tha Attribute to add the omit check to
 	 * @param weight    the weight of the omit check
 	 * @param value     of type String, LocalDateTime, Long, Integer, Boolean
@@ -518,7 +503,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
+		final EntityAttribute entityAttribute = new EntityAttribute(weight, value);
+		entityAttribute.setRealm(getRealm());
+		entityAttribute.setBaseEntityCode(getCode());
+		entityAttribute.setAttribute(attribute);
 		getBaseEntityAttributes().add(entityAttribute);
 
 		return entityAttribute;
@@ -527,7 +515,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	/**
 	 * removeAttribute This removes an attribute and associated weight from the
 	 * baseEntity. For efficiency we assume the attribute exists
-	 * 
+	 *
 	 * @param attributeCode the code of the Attribute to remove
 	 * @return Boolean
 	 */
@@ -556,7 +544,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
 	 * sets itself to be the source. For efficiency we assume the link does not
 	 * already exist
-	 * 
+	 *
 	 * @param target        the target to add
 	 * @param linkAttribute the attribute link
 	 * @param weight        the weight of the target
@@ -573,7 +561,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
 	 * sets itself to be the source. For efficiency we assume the link does not
 	 * already exist
-	 * 
+	 *
 	 * @param target        the target to add
 	 * @param linkAttribute the attribute link
 	 * @param weight        the weight of the target
@@ -582,7 +570,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @throws BadDataException if the target could not be added
 	 */
 	public EntityEntity addTarget(final BaseEntity target, final Attribute linkAttribute, final Double weight,
-			final Object value) throws BadDataException {
+								  final Object value) throws BadDataException {
 		if (target == null)
 			throw new BadDataException("missing Target Entity");
 		if (linkAttribute == null)
@@ -590,7 +578,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityEntity entityEntity = new EntityEntity(this, target, linkAttribute, value, weight);
+		final EntityEntity entityEntity = new EntityEntity(getRealm(), getCode(), target.getCode(), linkAttribute, value, weight);
 		getLinks().add(entityEntity);
 		return entityEntity;
 	}
@@ -600,7 +588,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source and assumes itself to be the target. For efficiency we assume the link
 	 * does not already exist and weight = 0
-	 * 
+	 *
 	 * @param answer the answer to add
 	 * @return AnswerLink
 	 * @throws BadDataException if answer could not be added
@@ -614,7 +602,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source and assumes itself to be the target. For efficiency we assume the link
 	 * does not already exist
-	 * 
+	 *
 	 * @param answer the answer to add
 	 * @param weight the weight of the answer
 	 * @return AnswerLink
@@ -628,7 +616,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * addAnswer This links this baseEntity to a target BaseEntity and associated
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source. For efficiency we assume the link does not already exist
-	 * 
+	 *
 	 * @param source the source entity
 	 * @param answer the answer to add
 	 * @param weight the weight of the answer
@@ -656,9 +644,13 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 			ea.get().setValue(answerLink.getValue());
 			ea.get().setInferred(answer.getInferred());
 			ea.get().setWeight(answer.getWeight());
-			ea.get().setBaseEntity(this);
+			ea.get().setRealm(getRealm());
+			ea.get().setBaseEntityCode(getCode());
 		} else {
-			EntityAttribute newEA = new EntityAttribute(this, answerLink.getAttribute(), weight, answerLink.getValue());
+			EntityAttribute newEA = new EntityAttribute(weight, answerLink.getValue());
+			newEA.setRealm(getRealm());
+			newEA.setBaseEntityCode(getCode());
+			newEA.setAttributeCode(answerLink.getAttributeCode());
 			newEA.setInferred(answerLink.getInferred());
 			this.baseEntityAttributes.add(newEA);
 		}
@@ -1166,5 +1158,30 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@JsonbTransient
 	public boolean isPerson() {
 		return getCode().startsWith(Prefix.PER);
+	}
+
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = new life.genny.qwandaq.serialization.baseentity.BaseEntity();
+		baseEntitySerializable.setCode(getCode());
+		baseEntitySerializable.setCreated(getCreated());
+		// baseEntitySerializable.setDtype();
+		baseEntitySerializable.setId(getId());
+		baseEntitySerializable.setName(getName());
+		baseEntitySerializable.setRealm(getRealm());
+		baseEntitySerializable.setStatus(getStatus().ordinal());
+		baseEntitySerializable.setUpdated(getUpdated());
+		return baseEntitySerializable;
+	}
+
+	@Override
+	public int hashCode() {
+		return (this.getRealm()+this.getCode()).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object otherObject) {
+		return this.getRealm().equals(((BaseEntity) otherObject).getRealm())
+				&& this.getCode().equals(((BaseEntity) otherObject).getCode());
 	}
 }

@@ -281,4 +281,5 @@ public abstract class CoreEntity implements Comparable<Object> {
 	public boolean hasName() {
 		return name != null && !"".equals(name.trim());
 	}
+
 }
