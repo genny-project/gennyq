@@ -1,10 +1,11 @@
 package life.genny.bridge.blacklisting;
 
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.enterprise.context.ApplicationScoped;
-import org.jboss.logging.Logger;
 
 /**
  * BlackListInfo --- Handle rules and conditions sent from different sources
@@ -34,12 +35,12 @@ public class BlackListInfo {
         this.blackListedUUIDs.remove(uuid);
     }
 
-    public void onReceived(UUID uuid){
+    public void onReceived(UUID uuid) {
         onReceived(uuid.toString());
     }
 
     /**
-     * Handle the uuid sent from a trusted source to delete clear 
+     * Handle the uuid sent from a trusted source to delete clear
      * or saved into a concurrent set where all blacklisted uuids are
      * maintained
      *
@@ -55,10 +56,7 @@ public class BlackListInfo {
             return;
         }
 
-        boolean hasDelete = false;
-        if(protocol.startsWith("-") && !protocol.subSequence(1, 2).equals("-")){
-            hasDelete = true;
-        }
+        boolean hasDelete = protocol.startsWith("-") && !protocol.subSequence(1, 2).equals("-");
 
         try {
             if (hasDelete) {
