@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_rn3AgDVjEDuy-56_O1XOPQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_gRkksDxpEDuUyYKb4iovKA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -12,32 +12,30 @@
   <bpmn2:itemDefinition id="_processDataItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
   <bpmn2:itemDefinition id="_answerItem" structureRef="life.genny.qwandaq.Answer"/>
   <bpmn2:itemDefinition id="_dataItem" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:itemDefinition id="_eventsItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_intervalStrItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_timerDataItem" structureRef="life.genny.kogito.common.models.TimerData"/>
   <bpmn2:itemDefinition id="_productCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_milestoneMessageItem" structureRef="life.genny.qwandaq.message.QEventMessage"/>
+  <bpmn2:itemDefinition id="_buttonEventsItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_parentItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_locationItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_eventOutputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
+  <bpmn2:itemDefinition id="__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_dataOutputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="start_process_questionsType" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:itemDefinition id="_6513DFF7-C78B-4C0C-9078-A83D81CF21E7" structureRef=""/>
-  <bpmn2:itemDefinition id="_78C2397D-E675-4CF9-84EF-E8946C82655C" structureRef=""/>
+  <bpmn2:itemDefinition id="_2DD2A54D-74BE-4AB8-A44F-71D29B69DD4A" structureRef=""/>
+  <bpmn2:itemDefinition id="_E69095DA-3C91-4A1A-9597-4DC37CC79B15" structureRef=""/>
   <bpmn2:itemDefinition id="__AC12C7E3-434A-424B-B220-5C9CA5382BCC_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:itemDefinition id="__36C22626-601C-4362-8679-C175698C763C_eventInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
+  <bpmn2:itemDefinition id="__36C22626-601C-4362-8679-C175698C763C_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="abort_process_questionsType" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_questionCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_targetCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_pcmCodeInputXItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_parentInputXItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_locationInputXItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_eventsInputXItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_buttonEventsInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_productCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_dataOutputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__5E941DE0-7695-414D-AFBC-1940672ECDBC_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__5E941DE0-7695-414D-AFBC-1940672ECDBC_dataOutputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
-  <bpmn2:itemDefinition id="__9F4D91BB-FD35-44EA-86E0-292A01137A71_eventsInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
+  <bpmn2:itemDefinition id="__9F4D91BB-FD35-44EA-86E0-292A01137A71_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="end_process_questionsType" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__7B4FBAEC-0860-48A6-B1A6-585AB9980105_dataInputXItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="__6EE9EE92-B073-4D22-BE75-90E74E1717D1_milestoneCodeInputXItem" structureRef="String"/>
@@ -54,15 +52,15 @@
   <bpmn2:itemDefinition id="__1D2DE6D0-EE70-4A66-8B4D-941C701182DA_questionCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__1D2DE6D0-EE70-4A66-8B4D-941C701182DA_pcmCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__1D2DE6D0-EE70-4A66-8B4D-941C701182DA_timerDataOutputXItem" structureRef="life.genny.kogito.common.models.TimerData"/>
-  <bpmn2:message id="_rn4OoDVjEDuy-56_O1XOPQ" itemRef="start_process_questionsType" name="start_process_questions"/>
+  <bpmn2:message id="_gR5U0DxpEDuUyYKb4iovKA" itemRef="start_process_questionsType" name="start_process_questions"/>
   <bpmn2:interface id="_AC12C7E3-434A-424B-B220-5C9CA5382BCC_ServiceInterface" name="life.genny.kogito.common.service.Service2Service" implementationRef="life.genny.kogito.common.service.Service2Service">
     <bpmn2:operation id="_AC12C7E3-434A-424B-B220-5C9CA5382BCC_ServiceOperation" name="initialiseScope" implementationRef="initialiseScope"/>
   </bpmn2:interface>
-  <bpmn2:message id="_rn4OoTVjEDuy-56_O1XOPQ" itemRef="abort_process_questionsType" name="abort_process_questions"/>
+  <bpmn2:message id="_gR7xEDxpEDuUyYKb4iovKA" itemRef="abort_process_questionsType" name="abort_process_questions"/>
   <bpmn2:interface id="_5E941DE0-7695-414D-AFBC-1940672ECDBC_ServiceInterface" name="life.genny.kogito.common.service.Service2Service" implementationRef="life.genny.kogito.common.service.Service2Service">
     <bpmn2:operation id="_5E941DE0-7695-414D-AFBC-1940672ECDBC_ServiceOperation" name="addToken" implementationRef="addToken"/>
   </bpmn2:interface>
-  <bpmn2:message id="_rn4OojVjEDuy-56_O1XOPQ" itemRef="end_process_questionsType" name="end_process_questions"/>
+  <bpmn2:message id="_gR7xETxpEDuUyYKb4iovKA" itemRef="end_process_questionsType" name="end_process_questions"/>
   <bpmn2:interface id="_7B4FBAEC-0860-48A6-B1A6-585AB9980105_ServiceInterface" name="life.genny.kogito.common.service.KogitoScopeInit" implementationRef="life.genny.kogito.common.service.KogitoScopeInit">
     <bpmn2:operation id="_7B4FBAEC-0860-48A6-B1A6-585AB9980105_ServiceOperation" name="init" implementationRef="init"/>
   </bpmn2:interface>
@@ -84,8 +82,8 @@
   <bpmn2:interface id="_1D2DE6D0-EE70-4A66-8B4D-941C701182DA_ServiceInterface" name="life.genny.kogito.common.service.TimerEventService" implementationRef="life.genny.kogito.common.service.TimerEventService">
     <bpmn2:operation id="_1D2DE6D0-EE70-4A66-8B4D-941C701182DA_ServiceOperation" name="fetchTimerData" implementationRef="fetchTimerData"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_CF505889-782B-4FAE-9B05-4F0BACF1620F" name="Default Collaboration">
-    <bpmn2:participant id="_73ACDDC9-659D-4632-84F8-C05EC52B027C" name="Pool Participant" processRef="receiveQuestionRequest"/>
+  <bpmn2:collaboration id="_C2EAB348-5037-4178-B81D-E06DB0826820" name="Default Collaboration">
+    <bpmn2:participant id="_64F99C9D-ED66-48D3-A155-242E32F2C8C3" name="Pool Participant" processRef="receiveQuestionRequest"/>
   </bpmn2:collaboration>
   <bpmn2:process id="receiveQuestionRequest" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Receive Question Request" isExecutable="true" processType="Public">
     <bpmn2:extensionElements>
@@ -135,11 +133,11 @@
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:property>
-    <bpmn2:property id="events" itemSubjectRef="_eventsItem" name="events"/>
     <bpmn2:property id="intervalStr" itemSubjectRef="_intervalStrItem" name="intervalStr"/>
     <bpmn2:property id="timerData" itemSubjectRef="_timerDataItem" name="timerData"/>
     <bpmn2:property id="productCode" itemSubjectRef="_productCodeItem" name="productCode"/>
     <bpmn2:property id="milestoneMessage" itemSubjectRef="_milestoneMessageItem" name="milestoneMessage"/>
+    <bpmn2:property id="buttonEvents" itemSubjectRef="_buttonEventsItem" name="buttonEvents"/>
     <bpmn2:property id="parent" itemSubjectRef="_parentItem" name="parent"/>
     <bpmn2:property id="location" itemSubjectRef="_locationItem" name="location"/>
     <bpmn2:sequenceFlow id="_14F28C98-604A-4DBC-87FF-D906DC29E70E" sourceRef="_DBA53C1E-7499-40A1-857A-A44BEBB94E4C" targetRef="_1D2DE6D0-EE70-4A66-8B4D-941C701182DA">
@@ -173,6 +171,9 @@
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="_3B690E14-D88B-4738-B68E-371B90B4AF20" sourceRef="_413AF7A9-908A-47A9-BAA2-AE97BEEFEC19" targetRef="_2422032F-F19C-44D4-B164-373496BA9017">
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return timerData.isMilestone()&&(!data.isExpired());]]></bpmn2:conditionExpression>
+    </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_D65BFCA0-BC14-475A-B440-1FD3ECD77D86" name="Fully expired" sourceRef="_413AF7A9-908A-47A9-BAA2-AE97BEEFEC19" targetRef="_15E717F9-E997-4501-84A3-969E7E00F632">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
@@ -181,9 +182,6 @@
       </bpmn2:extensionElements>
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return (!timerData.isExpired())&&timerData.hasExpired();
 ]]></bpmn2:conditionExpression>
-    </bpmn2:sequenceFlow>
-    <bpmn2:sequenceFlow id="_3B690E14-D88B-4738-B68E-371B90B4AF20" sourceRef="_413AF7A9-908A-47A9-BAA2-AE97BEEFEC19" targetRef="_2422032F-F19C-44D4-B164-373496BA9017">
-      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return timerData.isMilestone()&&(!data.isExpired());]]></bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_459537DF-135D-47A8-B1D0-9D05672A6BCA" sourceRef="_5F6FB536-32D7-464D-9680-930F134D40E7" targetRef="_413AF7A9-908A-47A9-BAA2-AE97BEEFEC19"/>
     <bpmn2:sequenceFlow id="_2E55CD6F-3CEB-4976-B88F-EEAC5E8B8A5A" sourceRef="_413AF7A9-908A-47A9-BAA2-AE97BEEFEC19" targetRef="_58DF78B6-FE26-4BDF-B820-E8C98FD0EE4C"/>
@@ -481,14 +479,11 @@ System.out.println("&gt;&gt;&gt;Current TimerData="+timerData);*/
       </bpmn2:extensionElements>
       <bpmn2:incoming>_8785CFBA-160A-4A24-B8FD-EF000A9DAAAD</bpmn2:incoming>
       <bpmn2:outgoing>_399565CF-E9E7-49B2-8871-57B48902B246</bpmn2:outgoing>
-      <bpmn2:script>System.out.println("Add Timer to Data");
-
-data.setTimerData(timerData);
-kcontext.setVariable("data",data);
+      <bpmn2:script>
 kcontext.setVariable("intervalStr",timerData.getIntervalStr());
-
 processId = kcontext.getProcessInstance().getId();
-kcontext.setVariable("processId",processId);</bpmn2:script>
+kcontext.setVariable("processId",processId);
+</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:scriptTask id="_15E717F9-E997-4501-84A3-969E7E00F632" name="Set AbortReason to EXPIRED" scriptFormat="http://www.java.com/java">
       <bpmn2:extensionElements>
@@ -501,7 +496,6 @@ kcontext.setVariable("processId",processId);</bpmn2:script>
       <bpmn2:script>System.out.println(timerData.getNowUTC()+": ProcessQuestions Expired");
 kcontext.setVariable("timerData",timerData);
 data.setExpired();
-data.setTimerData(timerData);
 kcontext.setVariable("data",data);
 System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
 
@@ -510,8 +504,8 @@ System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
     <bpmn2:exclusiveGateway id="_413AF7A9-908A-47A9-BAA2-AE97BEEFEC19" drools:dg="_2E55CD6F-3CEB-4976-B88F-EEAC5E8B8A5A" gatewayDirection="Diverging" default="_2E55CD6F-3CEB-4976-B88F-EEAC5E8B8A5A">
       <bpmn2:incoming>_459537DF-135D-47A8-B1D0-9D05672A6BCA</bpmn2:incoming>
       <bpmn2:outgoing>_2E55CD6F-3CEB-4976-B88F-EEAC5E8B8A5A</bpmn2:outgoing>
-      <bpmn2:outgoing>_3B690E14-D88B-4738-B68E-371B90B4AF20</bpmn2:outgoing>
       <bpmn2:outgoing>_D65BFCA0-BC14-475A-B440-1FD3ECD77D86</bpmn2:outgoing>
+      <bpmn2:outgoing>_3B690E14-D88B-4738-B68E-371B90B4AF20</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
     <bpmn2:endEvent id="_58DF78B6-FE26-4BDF-B820-E8C98FD0EE4C" name="Nothing to see here...">
       <bpmn2:extensionElements>
@@ -533,15 +527,15 @@ System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
         </drools:metaData>
       </bpmn2:extensionElements>
       <bpmn2:incoming>_5A9C1A15-B5AF-430E-AF29-77041298B1F3</bpmn2:incoming>
-      <bpmn2:dataInput id="_9F4D91BB-FD35-44EA-86E0-292A01137A71_eventsInputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__9F4D91BB-FD35-44EA-86E0-292A01137A71_eventsInputXItem" name="events"/>
+      <bpmn2:dataInput id="_9F4D91BB-FD35-44EA-86E0-292A01137A71_dataInputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__9F4D91BB-FD35-44EA-86E0-292A01137A71_dataInputXItem" name="data"/>
       <bpmn2:dataInputAssociation>
         <bpmn2:sourceRef>data</bpmn2:sourceRef>
-        <bpmn2:targetRef>_9F4D91BB-FD35-44EA-86E0-292A01137A71_eventsInputX</bpmn2:targetRef>
+        <bpmn2:targetRef>_9F4D91BB-FD35-44EA-86E0-292A01137A71_dataInputX</bpmn2:targetRef>
       </bpmn2:dataInputAssociation>
       <bpmn2:inputSet>
-        <bpmn2:dataInputRefs>_9F4D91BB-FD35-44EA-86E0-292A01137A71_eventsInputX</bpmn2:dataInputRefs>
+        <bpmn2:dataInputRefs>_9F4D91BB-FD35-44EA-86E0-292A01137A71_dataInputX</bpmn2:dataInputRefs>
       </bpmn2:inputSet>
-      <bpmn2:messageEventDefinition drools:msgref="end_process_questions" messageRef="_rn4OojVjEDuy-56_O1XOPQ"/>
+      <bpmn2:messageEventDefinition drools:msgref="end_process_questions" messageRef="_gR7xETxpEDuUyYKb4iovKA"/>
     </bpmn2:endEvent>
     <bpmn2:serviceTask id="_5E941DE0-7695-414D-AFBC-1940672ECDBC" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.Service2Service" drools:serviceoperation="addToken" name="Add Token" implementation="Java" operationRef="_5E941DE0-7695-414D-AFBC-1940672ECDBC_ServiceOperation">
       <bpmn2:extensionElements>
@@ -583,9 +577,7 @@ System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
         <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_sourceCodeInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_sourceCodeInputXItem" name="sourceCode"/>
         <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_targetCodeInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_targetCodeInputXItem" name="targetCode"/>
         <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_pcmCodeInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_pcmCodeInputXItem" name="pcmCode"/>
-        <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_parentInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_parentInputXItem" name="parent"/>
-        <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_locationInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_locationInputXItem" name="location"/>
-        <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_eventsInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_eventsInputXItem" name="events"/>
+        <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_buttonEventsInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_buttonEventsInputXItem" name="buttonEvents"/>
         <bpmn2:dataInput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_productCodeInputX" drools:dtype="String" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_productCodeInputXItem" name="productCode"/>
         <bpmn2:dataOutput id="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_dataOutputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__7F29E255-83EA-4D3A-B92B-1A792AECDD0F_dataOutputXItem" name="data"/>
         <bpmn2:inputSet>
@@ -593,9 +585,7 @@ System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
           <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_sourceCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_targetCodeInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_pcmCodeInputX</bpmn2:dataInputRefs>
-          <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_parentInputX</bpmn2:dataInputRefs>
-          <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_locationInputX</bpmn2:dataInputRefs>
-          <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_eventsInputX</bpmn2:dataInputRefs>
+          <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_buttonEventsInputX</bpmn2:dataInputRefs>
           <bpmn2:dataInputRefs>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_productCodeInputX</bpmn2:dataInputRefs>
         </bpmn2:inputSet>
         <bpmn2:outputSet>
@@ -619,16 +609,8 @@ System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
         <bpmn2:targetRef>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_pcmCodeInputX</bpmn2:targetRef>
       </bpmn2:dataInputAssociation>
       <bpmn2:dataInputAssociation>
-        <bpmn2:sourceRef>parent</bpmn2:sourceRef>
-        <bpmn2:targetRef>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_parentInputX</bpmn2:targetRef>
-      </bpmn2:dataInputAssociation>
-      <bpmn2:dataInputAssociation>
-        <bpmn2:sourceRef>location</bpmn2:sourceRef>
-        <bpmn2:targetRef>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_locationInputX</bpmn2:targetRef>
-      </bpmn2:dataInputAssociation>
-      <bpmn2:dataInputAssociation>
-        <bpmn2:sourceRef>events</bpmn2:sourceRef>
-        <bpmn2:targetRef>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_eventsInputX</bpmn2:targetRef>
+        <bpmn2:sourceRef>buttonEvents</bpmn2:sourceRef>
+        <bpmn2:targetRef>_7F29E255-83EA-4D3A-B92B-1A792AECDD0F_buttonEventsInputX</bpmn2:targetRef>
       </bpmn2:dataInputAssociation>
       <bpmn2:dataInputAssociation>
         <bpmn2:sourceRef>productCode</bpmn2:sourceRef>
@@ -646,15 +628,15 @@ System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
         </drools:metaData>
       </bpmn2:extensionElements>
       <bpmn2:incoming>_096327D3-5F00-4B06-B8CE-011B57D2FC12</bpmn2:incoming>
-      <bpmn2:dataInput id="_36C22626-601C-4362-8679-C175698C763C_eventInputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__36C22626-601C-4362-8679-C175698C763C_eventInputXItem" name="event"/>
+      <bpmn2:dataInput id="_36C22626-601C-4362-8679-C175698C763C_dataInputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__36C22626-601C-4362-8679-C175698C763C_dataInputXItem" name="data"/>
       <bpmn2:dataInputAssociation>
         <bpmn2:sourceRef>data</bpmn2:sourceRef>
-        <bpmn2:targetRef>_36C22626-601C-4362-8679-C175698C763C_eventInputX</bpmn2:targetRef>
+        <bpmn2:targetRef>_36C22626-601C-4362-8679-C175698C763C_dataInputX</bpmn2:targetRef>
       </bpmn2:dataInputAssociation>
       <bpmn2:inputSet>
-        <bpmn2:dataInputRefs>_36C22626-601C-4362-8679-C175698C763C_eventInputX</bpmn2:dataInputRefs>
+        <bpmn2:dataInputRefs>_36C22626-601C-4362-8679-C175698C763C_dataInputX</bpmn2:dataInputRefs>
       </bpmn2:inputSet>
-      <bpmn2:messageEventDefinition drools:msgref="abort_process_questions" messageRef="_rn4OoTVjEDuy-56_O1XOPQ"/>
+      <bpmn2:messageEventDefinition drools:msgref="abort_process_questions" messageRef="_gR7xEDxpEDuUyYKb4iovKA"/>
     </bpmn2:endEvent>
     <bpmn2:serviceTask id="_AC12C7E3-434A-424B-B220-5C9CA5382BCC" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.Service2Service" drools:serviceoperation="initialiseScope" name="Scope Init" implementation="Java" operationRef="_AC12C7E3-434A-424B-B220-5C9CA5382BCC_ServiceOperation">
       <bpmn2:documentation><![CDATA[Initialise the request scope]]></bpmn2:documentation>
@@ -683,15 +665,15 @@ System.out.println(timerData.getNowUTC()+": Set Abort Reason to Expired");
         </drools:metaData>
       </bpmn2:extensionElements>
       <bpmn2:outgoing>_0E619AC8-C3A9-40DC-85CB-ACDCF20E3F92</bpmn2:outgoing>
-      <bpmn2:dataOutput id="_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_eventOutputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_eventOutputXItem" name="event"/>
+      <bpmn2:dataOutput id="_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_dataOutputX" drools:dtype="life.genny.kogito.common.models.S2SData" itemSubjectRef="__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_dataOutputXItem" name="data"/>
       <bpmn2:dataOutputAssociation>
-        <bpmn2:sourceRef>_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_eventOutputX</bpmn2:sourceRef>
+        <bpmn2:sourceRef>_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_dataOutputX</bpmn2:sourceRef>
         <bpmn2:targetRef>data</bpmn2:targetRef>
       </bpmn2:dataOutputAssociation>
       <bpmn2:outputSet>
-        <bpmn2:dataOutputRefs>_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_eventOutputX</bpmn2:dataOutputRefs>
+        <bpmn2:dataOutputRefs>_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_dataOutputX</bpmn2:dataOutputRefs>
       </bpmn2:outputSet>
-      <bpmn2:messageEventDefinition drools:msgref="start_process_questions" messageRef="_rn4OoDVjEDuy-56_O1XOPQ"/>
+      <bpmn2:messageEventDefinition drools:msgref="start_process_questions" messageRef="_gR5U0DxpEDuUyYKb4iovKA"/>
     </bpmn2:startEvent>
     <bpmn2:scriptTask id="_DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC" name="Setup" scriptFormat="http://www.java.com/java">
       <bpmn2:extensionElements>
@@ -709,7 +691,7 @@ targetCode = data.getTargetCode();
 pcmCode = data.getPcmCode();
 parent = data.getParent();
 location = data.getLocation();
-events = data.getEvents();
+buttonEvents = data.getButtonEvents();
 productCode = data.getProductCode();
 
 kcontext.setVariable("questionCode", questionCode);
@@ -718,7 +700,7 @@ kcontext.setVariable("targetCode", targetCode);
 kcontext.setVariable("pcmCode", pcmCode);
 kcontext.setVariable("parent", parent);
 kcontext.setVariable("location", location);
-kcontext.setVariable("events", events);
+kcontext.setVariable("buttonEvents", buttonEvents);
 kcontext.setVariable("productCode",productCode);</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:boundaryEvent id="_CF147BB4-4D29-4C2E-AC81-BD6CFEE91194" drools:dockerinfo="50.717948717948715^73|" drools:boundaryca="false" name="Timers" attachedToRef="_7F29E255-83EA-4D3A-B92B-1A792AECDD0F" cancelActivity="false">
@@ -739,10 +721,10 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <dc:Bounds height="56" width="56" x="824.2179487179487" y="183.00639755936524"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC" bpmnElement="_DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC">
-        <dc:Bounds height="102" width="93" x="653.5" y="108"/>
+        <dc:Bounds height="102" width="93" x="654" y="109"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21" bpmnElement="_F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21">
-        <dc:Bounds height="56" width="56" x="33" y="131"/>
+        <dc:Bounds height="56" width="56" x="54" y="132"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__AC12C7E3-434A-424B-B220-5C9CA5382BCC" bpmnElement="_AC12C7E3-434A-424B-B220-5C9CA5382BCC">
         <dc:Bounds height="102" width="93" x="121.5" y="108"/>
@@ -790,7 +772,7 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <dc:Bounds height="56" width="56" x="1671" y="750"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__6EE9EE92-B073-4D22-BE75-90E74E1717D1" bpmnElement="_6EE9EE92-B073-4D22-BE75-90E74E1717D1">
-        <dc:Bounds height="100" width="159" x="1186" y="728.6425578245355"/>
+        <dc:Bounds height="100" width="159" x="1182.5" y="728.6425578245355"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__8F0AEEE0-B36C-4D47-A427-B4FE96683A7E" bpmnElement="_8F0AEEE0-B36C-4D47-A427-B4FE96683A7E">
         <dc:Bounds height="102" width="154" x="968" y="728.684882654725"/>
@@ -822,14 +804,14 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__AA89502E-F1DC-4D1E-B528-6BC4B583007D_to_shape__DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC" bpmnElement="_399565CF-E9E7-49B2-8871-57B48902B246">
         <di:waypoint x="573.5" y="157.5"/>
-        <di:waypoint x="653.5" y="159"/>
+        <di:waypoint x="654" y="160"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC_to_shape__7F29E255-83EA-4D3A-B92B-1A792AECDD0F" bpmnElement="_E4442815-B5A1-46E9-B9FF-C39D083BC314">
-        <di:waypoint x="700" y="159"/>
+        <di:waypoint x="700.5" y="160"/>
         <di:waypoint x="773.5" y="160.50639755936524"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__F07ACBC5-775B-4EB3-A5F2-491C4F0BFD21_to_shape__AC12C7E3-434A-424B-B220-5C9CA5382BCC" bpmnElement="_0E619AC8-C3A9-40DC-85CB-ACDCF20E3F92">
-        <di:waypoint x="61" y="159"/>
+        <di:waypoint x="82" y="160"/>
         <di:waypoint x="121.5" y="159"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__AC12C7E3-434A-424B-B220-5C9CA5382BCC_to_shape__DBA53C1E-7499-40A1-857A-A44BEBB94E4C" bpmnElement="_4465C370-6E38-4F0D-901E-7A988B700A2C">
@@ -865,16 +847,16 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         <di:waypoint x="851" y="443"/>
         <di:waypoint x="850.5999984741211" y="536"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="edge_shape__413AF7A9-908A-47A9-BAA2-AE97BEEFEC19_to_shape__2422032F-F19C-44D4-B164-373496BA9017" bpmnElement="_3B690E14-D88B-4738-B68E-371B90B4AF20">
-        <di:waypoint x="850.5999984741211" y="564"/>
-        <di:waypoint x="852" y="729"/>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__413AF7A9-908A-47A9-BAA2-AE97BEEFEC19_to_shape__15E717F9-E997-4501-84A3-969E7E00F632" bpmnElement="_D65BFCA0-BC14-475A-B440-1FD3ECD77D86">
         <di:waypoint x="850.5999984741211" y="564"/>
         <di:waypoint x="921.6000061035156" y="563.9999150923381"/>
         <di:waypoint x="975.6000061035156" y="563.9999150923381"/>
         <di:waypoint x="1048" y="564"/>
         <di:waypoint x="1048" y="527"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_shape__413AF7A9-908A-47A9-BAA2-AE97BEEFEC19_to_shape__2422032F-F19C-44D4-B164-373496BA9017" bpmnElement="_3B690E14-D88B-4738-B68E-371B90B4AF20">
+        <di:waypoint x="850.5999984741211" y="564"/>
+        <di:waypoint x="852" y="729"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__15E717F9-E997-4501-84A3-969E7E00F632_to_shape__7B4FBAEC-0860-48A6-B1A6-585AB9980105" bpmnElement="_A17423DD-CE96-4A33-8952-163C3BC5020D">
         <di:waypoint x="1048" y="491.5"/>
@@ -906,10 +888,10 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__8F0AEEE0-B36C-4D47-A427-B4FE96683A7E_to_shape__6EE9EE92-B073-4D22-BE75-90E74E1717D1" bpmnElement="_7E9266FE-17AD-42E1-975B-DAECC99DDF7C">
         <di:waypoint x="1045" y="779.684882654725"/>
-        <di:waypoint x="1186" y="778.6425578245355"/>
+        <di:waypoint x="1182.5" y="778.6425578245355"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__6EE9EE92-B073-4D22-BE75-90E74E1717D1_to_shape__3954F647-25C1-44B4-8A35-C26E476B3519" bpmnElement="_DBA9156E-6978-4123-9B3C-73B13D1D1438">
-        <di:waypoint x="1265.5" y="778.6425578245355"/>
+        <di:waypoint x="1262" y="778.6425578245355"/>
         <di:waypoint x="1380" y="777.5"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__01D4F44A-7C3C-4BBF-9AD2-E47556C569B1_to_shape__CB71D661-3802-4FD7-A716-72683CD59EAC" bpmnElement="_124D169E-AD29-4474-9B63-5FCB102FFAEB">
@@ -1254,7 +1236,7 @@ kcontext.setVariable("productCode",productCode);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_rn3AgDVjEDuy-56_O1XOPQ</bpmn2:source>
-    <bpmn2:target>_rn3AgDVjEDuy-56_O1XOPQ</bpmn2:target>
+    <bpmn2:source>_gRkksDxpEDuUyYKb4iovKA</bpmn2:source>
+    <bpmn2:target>_gRkksDxpEDuUyYKb4iovKA</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
