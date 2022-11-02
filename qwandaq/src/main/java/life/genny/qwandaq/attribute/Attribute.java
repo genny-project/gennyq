@@ -116,7 +116,10 @@ public class Attribute extends CodedEntity {
 
 	// events
 	public static final String EVT_SUBMIT = "EVT_SUBMIT";
+	public static final String EVT_UPDATE = "EVT_UPDATE";
 	public static final String EVT_CANCEL = "EVT_CANCEL";
+	public static final String EVT_UNDO = "EVT_UNDO";
+	public static final String EVT_REDO = "EVT_REDO";
 	public static final String EVT_RESET = "EVT_RESET";
 
 	public static final String EVT_NEXT = "EVT_NEXT";
