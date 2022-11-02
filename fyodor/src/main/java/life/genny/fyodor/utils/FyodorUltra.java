@@ -17,6 +17,7 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaBuilder.Case;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
@@ -25,8 +26,6 @@ import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import javax.persistence.criteria.CriteriaBuilder.Case;
 
 import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.entity.HBaseEntity;
@@ -55,10 +54,8 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.models.Page;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.serviceq.Service;
 
 @ApplicationScoped
 public class FyodorUltra {
@@ -66,24 +63,18 @@ public class FyodorUltra {
 	private static final Logger log = Logger.getLogger(FyodorUltra.class);
 
 	@Inject
-	EntityManager entityManager;
+	private EntityManager entityManager;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	private QwandaUtils qwandaUtils;
 
 	@Inject
-	Service service;
+	private BaseEntityUtils beUtils;
 
 	@Inject
-	UserToken userToken;
+	private CapHandler capHandler;
 
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	CapHandler capHandler;
-
-	static Jsonb jsonb = JsonbBuilder.create();
+	private static Jsonb jsonb = JsonbBuilder.create();
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.
@@ -158,6 +149,7 @@ public class FyodorUltra {
 		searchEntity.getClauseContainers().stream().forEach(cont -> {
 			log.info("Arg: " + jsonb.toJson(cont));
 		});
+		log.info("Search Status: [" + searchEntity.getSearchStatus().toString() + "]");
 
 		// build the search query
 		TolstoysCauldron cauldron = new TolstoysCauldron(searchEntity);
@@ -201,14 +193,16 @@ public class FyodorUltra {
 				.createQuery(count)
 				.getSingleResult();
 
+		log.info("Total Results: " + total);
+
 		Page page = new Page();
 		page.setCodes(codes);
 		page.setTotal(total);
 		page.setPageSize(pageSize);
 		page.setPageStart(Long.valueOf(pageStart));
 
-		// TODO
-		// page.setPageNumber();
+		Integer pageNumber = Math.floorDiv(pageStart, pageSize);
+		page.setPageNumber(pageNumber);
 
 		return page;
 	}
@@ -268,7 +262,6 @@ public class FyodorUltra {
 		EEntityStatus status = searchEntity.getSearchStatus();
 		Case<Number> sc = selectCaseEntityStatus(root);
 
-		log.info("Search Status: [" + status.toString() + "]");
 		cauldron.add(cb.le(sc, status.ordinal()));
 	}
 
@@ -293,13 +286,14 @@ public class FyodorUltra {
 		Clause clause = (and != null ? and : or);
 
 		// find predicate for each clause argument
-		Predicate predicateA = findClausePredicate(cauldron, clause.getA());
-		Predicate predicateB = findClausePredicate(cauldron, clause.getB());
+		List<Predicate> predicates = new ArrayList<>();
+		for (ClauseContainer child : clause.getClauseContainers())
+			predicates.add(findClausePredicate(cauldron, child));
 
 		if (and != null)
-			return cb.and(predicateA, predicateB);
+			return cb.and(predicates.toArray(Predicate[]::new));
 		else if (or != null)
-			return cb.or(predicateA, predicateB);
+			return cb.or(predicates.toArray(Predicate[]::new));
 		else
 			throw new QueryBuilderException("Invalid ClauseContainer: " + clauseContainer);
 	}
@@ -358,7 +352,11 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate of a DateTime type filter.
-	 *
+	 * <br>
+	 * This method requires that the the incoming stringified 
+	 * chrono unit is in the most standard format, effectively 
+	 * toString.
+	 * 
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param filter
@@ -369,7 +367,7 @@ public class FyodorUltra {
 		Expression<?> expression = findExpression(cauldron, filter.getCode());
 
 		Operator operator = filter.getOperator();
-		Object value = filter.getValue();
+		String value = (String) filter.getValue();
 		Class<?> c = filter.getC();
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -382,32 +380,32 @@ public class FyodorUltra {
 			case GREATER_THAN:
 				// TODO: Remove triple ifs (Bryn)
 				if (c == LocalDateTime.class)
-					return cb.greaterThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.greaterThan(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
 				if (c == LocalDate.class)
-					return cb.greaterThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.greaterThan(expression.as(LocalDate.class), LocalDate.parse(value));
 				if (c == LocalTime.class)
-					return cb.greaterThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.greaterThan(expression.as(LocalTime.class), LocalTime.parse(value));
 			case LESS_THAN:
 				if (c == LocalDateTime.class)
-					return cb.lessThan(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.lessThan(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
 				if (c == LocalDate.class)
-					return cb.lessThan(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.lessThan(expression.as(LocalDate.class), LocalDate.parse(value));
 				if (c == LocalTime.class)
-					return cb.lessThan(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.lessThan(expression.as(LocalTime.class), LocalTime.parse(value));
 			case GREATER_THAN_OR_EQUAL:
 				if (c == LocalDateTime.class)
-					return cb.greaterThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.greaterThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
 				if (c == LocalDate.class)
-					return cb.greaterThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.greaterThanOrEqualTo(expression.as(LocalDate.class), LocalDate.parse(value));
 				if (c == LocalTime.class)
-					return cb.greaterThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.greaterThanOrEqualTo(expression.as(LocalTime.class), LocalTime.parse(value));
 			case LESS_THAN_OR_EQUAL:
 				if (c == LocalDateTime.class)
-					return cb.lessThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.class.cast(value));
+					return cb.lessThanOrEqualTo(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
 				if (c == LocalDate.class)
-					return cb.lessThanOrEqualTo(expression.as(LocalDate.class), LocalDate.class.cast(value));
+					return cb.lessThanOrEqualTo(expression.as(LocalDate.class), LocalDate.parse(value));
 				if (c == LocalTime.class)
-					return cb.lessThanOrEqualTo(expression.as(LocalTime.class), LocalTime.class.cast(value));
+					return cb.lessThanOrEqualTo(expression.as(LocalTime.class), LocalTime.parse(value));
 			default:
 				throw new QueryBuilderException("Invalid Chrono Operator: " + operator + ", class: " + c);
 		}
@@ -516,13 +514,13 @@ public class FyodorUltra {
 
 		Root<HBaseEntity> root = cauldron.getRoot();
 
-		if (code.startsWith("PRI_CREATED"))
+		if (code.startsWith(Attribute.PRI_CREATED))
 			expression = root.<LocalDateTime>get("created");
-		else if (code.startsWith("PRI_UPDATED"))
+		else if (code.startsWith(Attribute.PRI_UPDATED))
 			expression = root.<LocalDateTime>get("updated");
-		else if (code.equals("PRI_CODE"))
+		else if (code.equals(Attribute.PRI_CODE))
 			expression = root.<String>get("code");
-		else if (code.equals("PRI_NAME"))
+		else if (code.equals(Attribute.PRI_NAME))
 			expression = root.<String>get("name");
 		else {
 			expression = findExpression(cauldron, code);
@@ -548,13 +546,13 @@ public class FyodorUltra {
 
 		Root<HBaseEntity> root = cauldron.getRoot();
 
-		if (code.startsWith("PRI_CREATED"))
+		if (code.startsWith(Attribute.PRI_CREATED))
 			return root.<LocalDateTime>get("created");
-		else if (code.startsWith("PRI_UPDATED"))
+		else if (code.startsWith(Attribute.PRI_UPDATED))
 			return root.<LocalDateTime>get("updated");
-		else if (code.equals("PRI_CODE"))
+		else if (code.equals(Attribute.PRI_CODE))
 			return root.<String>get("code");
-		else if (code.equals("PRI_NAME"))
+		else if (code.equals(Attribute.PRI_NAME))
 			return root.<String>get("name");
 
 		Join<HBaseEntity, HEntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
@@ -704,7 +702,9 @@ public class FyodorUltra {
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			return getRecursiveColumnLink(entity, code);
+			if(entity != null) {
+				return getRecursiveColumnLink(entity, code);
+			} else return null;
 		}
 
 		// find value

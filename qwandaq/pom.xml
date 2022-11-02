@@ -55,7 +55,7 @@
 		<jackson-datatype-money.version>1.0.0</jackson-datatype-money.version>
 		<version.moneta>1.1</version.moneta>
 		<jwt.version>0.10.7</jwt.version>
-		<testcontainers.version>1.17.0</testcontainers.version>
+		<testcontainers.version>1.17.5</testcontainers.version>
 	</properties>
 
 	<distributionManagement>
@@ -185,10 +185,6 @@
 			<version>${testcontainers.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency> -->
-		<!--   <groupId>io.quarkus</groupId> -->
-		<!--   <artifactId>quarkus-oidc</artifactId> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.apache.maven.shared</groupId>
 			<artifactId>maven-shared-utils</artifactId>
@@ -240,7 +236,17 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.12.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.eclipse.jgit</groupId>
+			<artifactId>org.eclipse.jgit</artifactId>
+			<version>5.2.1.201812262042-r</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.smallrye.reactive/smallrye-mutiny-vertx-sql-client -->
+		<dependency>
+			<groupId>io.smallrye.reactive</groupId>
+			<artifactId>smallrye-mutiny-vertx-sql-client</artifactId>
+			<version>3.0.0-milestone1</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -309,7 +315,7 @@
 				</executions>
 			</plugin>
 
-			<plugin>
+			<!-- <plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>3.3.2</version>
@@ -321,7 +327,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
+			</plugin> -->
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

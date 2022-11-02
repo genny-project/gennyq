@@ -81,8 +81,11 @@ public class GennyCache {
 		// create cache manager
 		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
-		remoteCacheManager = new RemoteCacheManager(config);
-		remoteCacheManager.getConfiguration().marshallerClass();
+		if (remoteCacheManager == null) {
+			remoteCacheManager = new RemoteCacheManager(config);
+			remoteCacheManager.getConfiguration().marshallerClass();
+		}
+
 	}
 
 	/**
@@ -143,7 +146,8 @@ public class GennyCache {
 			return caches.get(realm);
 		}
 
-		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm, DefaultTemplate.DIST_SYNC);
+		remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).getOrCreateCache(realm,
+				DefaultTemplate.DIST_SYNC);
 		realms.add(realm);
 		caches.put(realm, remoteCacheManager.getCache(realm));
 

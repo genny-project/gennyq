@@ -10,6 +10,7 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -47,6 +48,19 @@ public class BaseEntityService {
 	@Inject
 	DefUtils defUtils;
 
+	/**
+	 * Send a message to perform an update of a persons summary
+	 */
+	public void updateSummary(String personCode, String summaryCode) {
+
+		qwandaUtils.saveAnswer(new Answer(personCode, personCode, Attribute.LNK_SUMMARY, summaryCode));
+		log.info("Summary updated -> " + personCode + " : " + summaryCode);
+	}
+
+	/**
+	 * @param definitionCode
+	 * @return
+	 */
 	public String commission(String definitionCode) {
 		// TODO
 		// String randomCode = UUID.randomUUID().toString().substring(0,
@@ -222,6 +236,30 @@ public class BaseEntityService {
 		// save these answrs to db and cache
 		beUtils.updateBaseEntity(entity);
 		log.info("Saved answers for entity " + entityCode);
+	}
+
+	/**
+	 * Update entityAttributes using updatePairs
+	 */
+	public void updatePairsBaseEntity(String baseEntityCode, String updatePairs) {
+
+		// Now split up the updatePairs
+
+		String[] pairs = updatePairs.split(";");
+		for (String pair : pairs) {
+			String[] elements = pair.split(":");
+			if (elements.length == 1) {
+				updateBaseEntity(baseEntityCode, "PRI_PQ_STAGE", elements[0]); // assume valid due to initial
+																				// construction
+			} else if (elements.length == 2) {
+				updateBaseEntity(baseEntityCode, elements[0], elements[1]); // assume valid due to initial
+																			// construction
+			} else if (elements.length == 3) {
+				updateBaseEntity(elements[0], elements[1], elements[2]); // assume valid due to initial
+																			// construction
+			}
+		}
+
 	}
 
 	/**

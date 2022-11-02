@@ -1,7 +1,7 @@
 package life.genny.qwandaq.serialization.key;
 
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
-import life.genny.qwandaq.utils.capabilities.CapabilityUtils;
 
 public class CapabilityKey implements CoreEntityKey {
 
@@ -52,7 +52,7 @@ public class CapabilityKey implements CoreEntityKey {
     }
 
     public void setCapabilityCode(String capabilityCode) {
-        this.capabilityCode = CapabilityUtils.cleanCapabilityCode(capabilityCode);
+        this.capabilityCode = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
     }
 
     public String getCapabilityCode() {

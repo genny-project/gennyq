@@ -1,10 +1,9 @@
 package life.genny.lauchy.streams;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -29,24 +28,21 @@ import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.validation.Validation;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -124,36 +120,36 @@ public class TopologyProducer {
 		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
 	}
 
+	/**
+	 * @param data
+	 * @return
+	 */
 	public String handleDependentDropdowns(String data) {
-		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
 
-		Arrays.asList(msg.getItems()).stream().filter(answer -> answer.getAttributeCode().startsWith("LNK_"))
+		QDataAnswerMessage answers = jsonb.fromJson(data, QDataAnswerMessage.class);
+		List<Ask> asksToSend = new ArrayList<>();
+
+		Arrays.asList(answers.getItems()).stream()
+				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
-					ProcessData processData = qwandaUtils.fetchProcessData(processId); // TODO: Wondering if we can just
-																						// get the processData from the
-																						// first processId we get
+					// TODO: Wondering if we can just get the processData from the first processId we get
+					ProcessData processData = qwandaUtils.fetchProcessData(processId); 
+					List<Ask> asks = qwandaUtils.fetchAsks(processData);
+
 					BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-
 					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-					List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
 
-					for (EntityAttribute dep : dependentAsks) {
-						log.info("Dependent Ask: " + dep.getAttributeCode());
-						String key = String.format("%s:%s", processId, processData.getQuestionCode());
-						Ask ask = CacheUtils.getObject(userToken.getProductCode(), key, Ask.class);
-						if (ask == null) {
-							continue;
-						}
-						String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
-						log.info("Dependencies: " + CommonUtils.getArrayString(dependencies, d -> d));
+					Map<String, Ask> flatMapAsks = qwandaUtils.buildAskFlatMap(asks);
 
-						boolean depsAnswered = qwandaUtils.hasDepsAnswered(processEntity, dependencies);
-						log.info("All Deps answered: " + depsAnswered);
-						ask.setDisabled(!depsAnswered);
-						ask.setHidden(!depsAnswered);
-					}
+					qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapAsks);
+					asksToSend.addAll(asks);
 				});
+
+		QDataAskMessage msg = new QDataAskMessage(asksToSend);
+		msg.setReplace(true);
+		msg.setToken(userToken.getToken());
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
 		return data;
 	}
@@ -241,6 +237,11 @@ public class TopologyProducer {
 			return false;
 		}
 
+		if (processData.getAttributeCodes() == null) {
+			log.error("AttributeCodes null");
+			return blacklist();
+		}
+
 		if (!processData.getAttributeCodes().contains(attributeCode)) {
 			log.error("AttributeCode " + attributeCode + " does not existing");
 			return blacklist();
@@ -309,36 +310,13 @@ public class TopologyProducer {
 		}
 
 		// blacklist if none of the regex match
-		if (!validationsAreMet(answer, attribute))
+		if (!qwandaUtils.validationsAreMet(attribute, answer.getValue())) {
+			log.info("Answer Value is bad: " + answer.getValue());
 			return blacklist();
-
-		return true;
-	}
-
-	/**
-	 * Check if all validations are met for an answer.
-	 * 
-	 * @param answer    The answer to check
-	 * @param attribute The Attribute of the answer
-	 * @return Boolean representing whether the validation conditions have been met
-	 */
-	public Boolean validationsAreMet(Answer answer, Attribute attribute) {
-
-		log.info("Answer Value: " + answer.getValue());
-		DataType dataType = attribute.getDataType();
-
-		// check each validation against value
-		for (Validation validation : dataType.getValidationList()) {
-
-			String regex = validation.getRegex();
-			boolean regexOk = Pattern.compile(regex).matcher(answer.getValue()).matches();
-
-			if (!regexOk) {
-				log.error("Regex FAILED! " + regex + " ... " + validation.getErrormsg());
-				return false;
-			}
-			log.info("Regex OK! [ " + answer.getValue() + " ] for regex " + regex);
+		} else {
+			log.info("Answer Value is good: " + answer.getValue());
 		}
+
 		return true;
 	}
 

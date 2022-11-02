@@ -1,41 +1,54 @@
 package life.genny.kogito.common.service;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonArray;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
 
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
-import static life.genny.kogito.common.utils.KogitoUtils.UseService.*;
 import life.genny.qwandaq.Ask;
+
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.PermissionMode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
+
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
+
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.serviceq.Service;
 
 /**
  * A Service class used for Auth Init operations.
  *
+ * @auther Bryn Meachem
  * @author Jasper Robison
  */
 @ApplicationScoped
@@ -46,28 +59,25 @@ public class InitService {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	Service service;
+	private DatabaseUtils databaseUtils;
 
 	@Inject
-	DatabaseUtils databaseUtils;
+	private BaseEntityUtils beUtils;
 
 	@Inject
-	BaseEntityUtils beUtils;
+	private UserToken userToken;
 
 	@Inject
-	UserToken userToken;
+	private QwandaUtils qwandaUtils;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	private SearchUtils searchUtils;
 
 	@Inject
-	KogitoUtils kogitoUtils;
+	private RoleManager roleMan;
 
 	@Inject
-	GraphQLUtils gqlUtils;
-
-	@Inject
-	SearchUtils searchUtils;
+	private CapabilitiesManager capMan;
 
 	/**
 	 * Send the Project BaseEntity.
@@ -123,6 +133,11 @@ public class InitService {
 		}
 	}
 
+	private BaseEntity configureSidebar(BaseEntity sidebarPCM) {
+
+		return sidebarPCM;
+	}
+
 	/**
 	 * Send PCM BaseEntities.
 	 */
@@ -147,7 +162,22 @@ public class InitService {
 			log.info("No PCMs found for " + productCode);
 			return;
 		}
-		log.info("Sending "+pcms.size()+" PCMs");
+
+		// TODO: Find a better way of doing this. This does not feel elegant
+		// Perhaps we have a flag on whether or not to check capabilities on a question
+		// / BaseEntity?
+		Optional<BaseEntity> sidebarPCMOpt = pcms.stream().filter((BaseEntity pcm) -> {
+			return "PCM_SIDEBAR".equals(pcm.getCode());
+		}).findFirst();
+
+		if (!sidebarPCMOpt.isPresent())
+			throw new ItemNotFoundException("PCM_SIDEBAR");
+		BaseEntity sidebarPcm = sidebarPCMOpt.get();
+		// Replace sidebar pcm
+		pcms.remove(sidebarPcm);
+		pcms.add(configureSidebar(sidebarPcm));
+
+		log.info("Sending " + pcms.size() + " PCMs");
 
 		// configure ask msg
 		QDataAskMessage askMsg = new QDataAskMessage();
@@ -162,6 +192,7 @@ public class InitService {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") null PRI_QUESTION_CODE");
 				continue;
 			}
+
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, user, user);
 			if (ask == null) {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + questionCode);
@@ -181,20 +212,66 @@ public class InitService {
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
+	private Ask generateAddItemsAsk(String productCode, BaseEntity user) {
+		// find the question in the database
+		Question groupQuestion;
+		try {
+			groupQuestion = databaseUtils.findQuestionByCode(productCode, "QUE_ADD_ITEMS_GRP");
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException("QUE_ADD_ITEMS_GRP", e);
+		}
+
+		Ask parentAsk = new Ask(groupQuestion, user.getCode(), user.getCode());
+		parentAsk.setRealm(productCode);
+
+		Set<Capability> capabilities = capMan.getUserCapabilities();
+
+		// Generate the Add Items asks from the capabilities
+		// Check if there is a def first
+		for (Capability capability : capabilities) {
+			// If they don't have the capability then don't bother finding the def
+			if (!capability.checkPerms(false, new CapabilityNode(CapabilityMode.ADD, PermissionMode.ALL)))
+				continue;
+
+			String defCode = CommonUtils.substitutePrefix(capability.code, "DEF");
+			try {
+				// Check for a def
+				beUtils.getBaseEntity(productCode, defCode);
+			} catch (ItemNotFoundException e) {
+				// We don't need to handle this. We don't care if there isn't always a def
+				continue;
+			}
+			// Create the ask (there is a def and we have the capability)
+			String baseCode = CommonUtils.safeStripPrefix(capability.code);
+
+			String eventCode = "EVT_ADD".concat(baseCode);
+			String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
+			Attribute event = qwandaUtils.createButtonEvent(eventCode, name);
+
+			Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
+
+			Ask addAsk = new Ask(question, user.getCode(), user.getCode());
+			addAsk.setRealm(productCode);
+
+			parentAsk.add(addAsk);
+		}
+		return parentAsk;
+	}
+
 	/**
 	 * Send Add Items Menu
 	 */
 	public void sendAddItems() {
 
 		BaseEntity user = beUtils.getUserBaseEntity();
-		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_ADD_ITEMS_GRP", user, user);
 
+		Ask ask = generateAddItemsAsk(userToken.getProductCode(), user);
 		// configure msg and send
 		QDataAskMessage msg = new QDataAskMessage(ask);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
 
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+		// KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	public void sendDrafts() {

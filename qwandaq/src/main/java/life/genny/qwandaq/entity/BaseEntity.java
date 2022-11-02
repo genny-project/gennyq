@@ -38,6 +38,7 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
@@ -49,8 +50,6 @@ import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
-
-import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -107,8 +106,8 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	public static final String PRI_ADDRESS_FULL = "PRI_ADDRESS_FULL";
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
-	/*@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade=CascadeType.ALL)
+	@XmlTransient
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)
 	@JsonBackReference(value = "entityAttribute")
 	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
 	@Filters({
@@ -128,11 +127,17 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	@JsonbTransient
 	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
-	/*@JsonIgnore
-	@XmlTransient
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
-	@Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	@JsonbTransient*/
+	/*
+	 * @JsonIgnore
+	 * 
+	 * @XmlTransient
+	 * 
+	 * @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
+	 * 
+	 * @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
+	 * 
+	 * @JsonbTransient
+	 */
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
 
 	@XmlTransient
@@ -162,7 +167,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public BaseEntity() {
 		// super();
 		// dummy
@@ -175,7 +179,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 */
 	public BaseEntity(final String aName) {
 		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
-
 	}
 
 	/**
@@ -187,7 +190,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	@ProtoFactory
 	public BaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
-
 	}
 
 	/**
@@ -394,11 +396,11 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * @param attribute the attribute to find
 	 * @return EntityAttribute
 	 */
-	public EntityAttribute findEntityAttribute(final Attribute attribute) {
-		final EntityAttribute foundEntity = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst().get();
+	public Optional<EntityAttribute> findEntityAttribute(final Attribute attribute) {
+		final Optional<EntityAttribute> foundEntityOpt = getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst();
 
-		return foundEntity;
+		return foundEntityOpt;
 	}
 
 	/**
@@ -473,7 +475,8 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		entityAttribute.setAttribute(attribute);
 		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
-			existing.get().setValue(value);
+			if (value != null)
+				existing.get().setValue(value);
 			existing.get().setWeight(weight);
 			// removeAttribute(existing.get().getAttributeCode());
 		} else {
@@ -1154,7 +1157,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(PER_BE_PREFIX);
+		return getCode().startsWith(Prefix.PER);
 	}
 
 	@Override

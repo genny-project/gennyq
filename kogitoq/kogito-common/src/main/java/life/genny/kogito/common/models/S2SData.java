@@ -6,141 +6,163 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class S2SData implements Serializable {
 
-    public enum EAbortReason {
-        NONE,
-        CANCEL,
-        TIMEOUT,
-    }
+	public enum EAbortReason {
+		NONE,
+		CANCEL,
+		TIMEOUT,
+	}
 
-    private String productCode;
-    private String questionCode;
-    private String targetCode;
-    private String sourceCode;
-    private String pcmCode;
-    private String events;
-    private String token;
+	private String productCode;
 
-    // NOTE: This is removed temporarily because it is messing with data-index
-    private TimerData timerData;
-    private EAbortReason abortReason = EAbortReason.NONE;
+	private String sourceCode;
+	private String targetCode;
+	private String questionCode;
 
-    public S2SData() {
-    }
+	private String pcmCode;
+	private String parent;
+	private String location;
 
-    public String getQuestionCode() {
-        return questionCode;
-    }
+	private String buttonEvents;
+	private String token;
 
-    public void setQuestionCode(String questionCode) {
-        this.questionCode = questionCode;
-    }
+	// NOTE: This is removed temporarily because it is messing with data-index
+	private TimerData timerData;
+	private EAbortReason abortReason = EAbortReason.NONE;
 
-    public String getTargetCode() {
-        return targetCode;
-    }
+	public S2SData() {
+	}
 
-    public void setTargetCode(String targetCode) {
-        this.targetCode = targetCode;
-    }
+	@JsonIgnore
+	public Boolean isAborted() {
+		return !abortReason.equals(EAbortReason.NONE);
+	}
 
-    public String getSourceCode() {
-        return sourceCode;
-    }
+	@JsonIgnore
+	public Boolean isCanceled() {
+		return abortReason.equals(EAbortReason.CANCEL);
+	}
 
-    public void setSourceCode(String sourceCode) {
-        this.sourceCode = sourceCode;
-    }
+	@JsonIgnore
+	public Boolean isExpired() {
+		return abortReason.equals(EAbortReason.TIMEOUT);
+	}
 
-    public String getPcmCode() {
-        return pcmCode;
-    }
+	public Boolean setCancel() {
+		// This method makes it easier within kogito to set a state to avoid enum
+		Boolean oldState = getAbortReason().equals(EAbortReason.CANCEL);
+		setAbortReason(EAbortReason.CANCEL);
+		return oldState;
+	}
 
-    public void setPcmCode(String pcmCode) {
-        this.pcmCode = pcmCode;
-    }
+	public Boolean setExpired() {
+		// This method makes it easier within kogito to set a state to avoid enum
+		Boolean oldState = getAbortReason().equals(EAbortReason.TIMEOUT);
+		setAbortReason(EAbortReason.TIMEOUT);
+		return oldState;
+	}
 
-    public String getEvents() {
-        return events;
-    }
+	public Boolean setNone() {
+		// This method makes it easier within kogito to set a state to avoid enum
+		Boolean oldState = getAbortReason().equals(EAbortReason.NONE);
+		setAbortReason(EAbortReason.NONE);
+		return oldState;
+	}
 
-    public void setEvents(String events) {
-        this.events = events;
-    }
+	@Override
+	public String toString() {
+		return "S2SData (" + getProductCode() + ") [abortReason=" + abortReason + ", buttonEvents=" + buttonEvents
+				+ ", pcmCode="
+				+ pcmCode + ", questionCode="
+				+ questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + ", timerData="
+				+ timerData + "]";
+	}
 
-    public String getToken() {
-        return token;
-    }
+	public String getProductCode() {
+		return productCode;
+	}
 
-    public void setToken(String token) {
-        this.token = token;
-    }
+	public void setProductCode(String productCode) {
+		this.productCode = productCode;
+	}
 
-    public TimerData getTimerData() {
-        return timerData;
-    }
+	public String getSourceCode() {
+		return sourceCode;
+	}
 
-    public void setTimerData(TimerData timerData) {
-        this.timerData = timerData;
-    }
+	public void setSourceCode(String sourceCode) {
+		this.sourceCode = sourceCode;
+	}
 
-    public String getProductCode() {
-        return productCode;
-    }
+	public String getTargetCode() {
+		return targetCode;
+	}
 
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
-    }
+	public void setTargetCode(String targetCode) {
+		this.targetCode = targetCode;
+	}
 
-    @Override
-    public String toString() {
-        return "S2SData (" + getProductCode() + ") [abortReason=" + abortReason + ", events=" + events + ", pcmCode="
-                + pcmCode + ", questionCode="
-                + questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + ", timerData="
-                + timerData + "]";
-    }
+	public String getQuestionCode() {
+		return questionCode;
+	}
 
-    public EAbortReason getAbortReason() {
-        return abortReason;
-    }
+	public void setQuestionCode(String questionCode) {
+		this.questionCode = questionCode;
+	}
 
-    public void setAbortReason(EAbortReason abortReason) {
-        this.abortReason = abortReason;
-    }
+	public String getPcmCode() {
+		return pcmCode;
+	}
 
-    @JsonIgnore
-    public Boolean isAborted() {
-        return !abortReason.equals(EAbortReason.NONE);
-    }
+	public void setPcmCode(String pcmCode) {
+		this.pcmCode = pcmCode;
+	}
 
-    @JsonIgnore
-    public Boolean isCanceled() {
-        return abortReason.equals(EAbortReason.CANCEL);
-    }
+	public String getParent() {
+		return parent;
+	}
 
-    @JsonIgnore
-    public Boolean isExpired() {
-        return abortReason.equals(EAbortReason.TIMEOUT);
-    }
+	public void setParent(String parent) {
+		this.parent = parent;
+	}
 
-    public Boolean setCancel() {
-        // This method makes it easier within kogito to set a state to avoid enum
-        Boolean oldState = getAbortReason().equals(EAbortReason.CANCEL);
-        setAbortReason(EAbortReason.CANCEL);
-        return oldState;
-    }
+	public String getLocation() {
+		return location;
+	}
 
-    public Boolean setExpired() {
-        // This method makes it easier within kogito to set a state to avoid enum
-        Boolean oldState = getAbortReason().equals(EAbortReason.TIMEOUT);
-        setAbortReason(EAbortReason.TIMEOUT);
-        return oldState;
-    }
+	public void setLocation(String location) {
+		this.location = location;
+	}
 
-    public Boolean setNone() {
-        // This method makes it easier within kogito to set a state to avoid enum
-        Boolean oldState = getAbortReason().equals(EAbortReason.NONE);
-        setAbortReason(EAbortReason.NONE);
-        return oldState;
-    }
+	public String getButtonEvents() {
+		return buttonEvents;
+	}
+
+	public void setButtonEvents(String buttonEvents) {
+		this.buttonEvents = buttonEvents;
+	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+	public TimerData getTimerData() {
+		return timerData;
+	}
+
+	public void setTimerData(TimerData timerData) {
+		this.timerData = timerData;
+	}
+
+	public EAbortReason getAbortReason() {
+		return abortReason;
+	}
+
+	public void setAbortReason(EAbortReason abortReason) {
+		this.abortReason = abortReason;
+	}
 
 }

@@ -81,20 +81,49 @@ public class Attribute extends CodedEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	private static final String DEFAULT_CODE_PREFIX = "PRI_";
+	public static final String DEFAULT_CODE_PREFIX = "PRI_";
 
 	// core
+	public static final String QQQ_QUESTION_GROUP = "QQQ_QUESTION_GROUP";
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_CODE = "PRI_CODE";
+	public static final String PRI_CREATED = "PRI_CREATED";
+	public static final String PRI_UPDATED = "PRI_UPDATED";
 	public static final String PRI_UUID = "PRI_UUID";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
+	public static final String PRI_EVENT = "PRI_EVENT";
+	public static final String PRI_SUBMIT = "PRI_SUBMIT";
+
+	// links
+	public static final String LNK_CORE = "LNK_CORE";
+	public static final String LNK_ITEMS = "LNK_ITEMS";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
+	public static final String LNK_SUMMARY = "LNK_SUMMARY";
 
 	// definition
 	public static final String LNK_DEF = "LNK_DEF";
+	public static final String PRI_PREFIX = "PRI_PREFIX";
 
 	// roles
 	public static final String LNK_ROLE = "LNK_ROLE";
+	public static final String LNK_CHILDREN = "LNK_CHILDREN";
+
+	// pcm
+	public static final String PRI_LOC = "PRI_LOC";
+	public static final String PRI_TEMPLATE_CODE = "PRI_TEMPLATE_CODE";
+	public static final String PRI_QUESTION_CODE = "PRI_QUESTION_CODE";
+	public static final String PRI_TARGET_CODE = "PRI_TARGET_CODE";
+
+	// events
+	public static final String EVT_SUBMIT = "EVT_SUBMIT";
+	public static final String EVT_UPDATE = "EVT_UPDATE";
+	public static final String EVT_CANCEL = "EVT_CANCEL";
+	public static final String EVT_UNDO = "EVT_UNDO";
+	public static final String EVT_REDO = "EVT_REDO";
+	public static final String EVT_RESET = "EVT_RESET";
+
+	public static final String EVT_NEXT = "EVT_NEXT";
+	public static final String EVT_PREVIOUS = "EVT_PREVIOUS";
 
 	// contact
 	public static final String PRI_MOBILE = "PRI_MOBILE";
@@ -104,6 +133,7 @@ public class Attribute extends CodedEntity {
 
 	// search
 	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
+	public static final String PRI_TOTAL_RESULTS = "PRI_TOTAL_RESULTS";
 	public static final String PRI_INDEX = "PRI_INDEX";
 
 	@Embedded
@@ -128,8 +158,8 @@ public class Attribute extends CodedEntity {
 	public Attribute() {
 	}
 
-	public Attribute(String aCode, String aName, DataType dataType) {
-		super(aCode, aName);
+	public Attribute(String code, String name, DataType dataType) {
+		super(code, name);
 		setDataType(dataType);
 	}
 
@@ -147,15 +177,11 @@ public class Attribute extends CodedEntity {
 		this.dataType = dataType;
 	}
 
-	/**
-	 * getDefaultCodePrefix This method is overrides the Base class
+	/*
+	 * (non-Javadoc)
 	 * 
-	 * @return the default Code prefix for this class.
+	 * @see java.lang.Object#toString()
 	 */
-	static public String getDefaultCodePrefix() {
-		return DEFAULT_CODE_PREFIX;
-	}
-
 	/**
 	 * @return String
 	 */
@@ -240,18 +266,6 @@ public class Attribute extends CodedEntity {
 	public void setDefaultValue(String defaultValue) {
 		this.defaultValue = defaultValue;
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
-	/*
-	 * @Override
-	 * public String toString() {
-	 * return "Attribute:"+getCode()+"(" + getDataType()+") ";
-	 * }
-	 */
 
 	public void setIcon(String icon) {
 		this.icon = icon;
