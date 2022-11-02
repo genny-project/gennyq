@@ -258,7 +258,7 @@ public class QwandaUtils {
 		}
 	}
 
-	public Attribute createEvent(String code, final String name) {
+	public Attribute createButtonEvent(String code, final String name) {
 		if (!code.startsWith(Prefix.EVT)) {
 			code = Prefix.EVT.concat(code);
 		}

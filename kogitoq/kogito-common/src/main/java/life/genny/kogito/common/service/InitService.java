@@ -79,7 +79,6 @@ public class InitService {
 	@Inject
 	private CapabilitiesManager capMan;
 
-
 	/**
 	 * Send the Project BaseEntity.
 	 */
@@ -135,7 +134,7 @@ public class InitService {
 	}
 
 	private BaseEntity configureSidebar(BaseEntity sidebarPCM) {
-		
+
 		return sidebarPCM;
 	}
 
@@ -165,19 +164,20 @@ public class InitService {
 		}
 
 		// TODO: Find a better way of doing this. This does not feel elegant
-		// Perhaps we have a flag on whether or not to check capabilities on a question / BaseEntity?
+		// Perhaps we have a flag on whether or not to check capabilities on a question
+		// / BaseEntity?
 		Optional<BaseEntity> sidebarPCMOpt = pcms.stream().filter((BaseEntity pcm) -> {
 			return "PCM_SIDEBAR".equals(pcm.getCode());
 		}).findFirst();
 
-		if(!sidebarPCMOpt.isPresent())
+		if (!sidebarPCMOpt.isPresent())
 			throw new ItemNotFoundException("PCM_SIDEBAR");
 		BaseEntity sidebarPcm = sidebarPCMOpt.get();
 		// Replace sidebar pcm
 		pcms.remove(sidebarPcm);
 		pcms.add(configureSidebar(sidebarPcm));
 
-		log.info("Sending "+pcms.size()+" PCMs");
+		log.info("Sending " + pcms.size() + " PCMs");
 
 		// configure ask msg
 		QDataAskMessage askMsg = new QDataAskMessage();
@@ -225,19 +225,19 @@ public class InitService {
 		parentAsk.setRealm(productCode);
 
 		Set<Capability> capabilities = capMan.getUserCapabilities();
-		
+
 		// Generate the Add Items asks from the capabilities
 		// Check if there is a def first
-		for(Capability capability : capabilities) {
+		for (Capability capability : capabilities) {
 			// If they don't have the capability then don't bother finding the def
-			if(!capability.checkPerms(false, new CapabilityNode(CapabilityMode.ADD, PermissionMode.ALL)))
+			if (!capability.checkPerms(false, new CapabilityNode(CapabilityMode.ADD, PermissionMode.ALL)))
 				continue;
 
 			String defCode = CommonUtils.substitutePrefix(capability.code, "DEF");
 			try {
 				// Check for a def
 				beUtils.getBaseEntity(productCode, defCode);
-			} catch(ItemNotFoundException e) {
+			} catch (ItemNotFoundException e) {
 				// We don't need to handle this. We don't care if there isn't always a def
 				continue;
 			}
@@ -246,7 +246,7 @@ public class InitService {
 
 			String eventCode = "EVT_ADD".concat(baseCode);
 			String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
-			Attribute event = qwandaUtils.createEvent(eventCode, name);
+			Attribute event = qwandaUtils.createButtonEvent(eventCode, name);
 
 			Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
 
@@ -264,7 +264,7 @@ public class InitService {
 	public void sendAddItems() {
 
 		BaseEntity user = beUtils.getUserBaseEntity();
-		
+
 		Ask ask = generateAddItemsAsk(userToken.getProductCode(), user);
 		// configure msg and send
 		QDataAskMessage msg = new QDataAskMessage(ask);
