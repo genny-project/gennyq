@@ -2,15 +2,11 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.time.ZoneId;
-import java.util.PriorityQueue;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -33,7 +29,7 @@ public class TimerData implements Serializable {
                                                                    // 2364
 
     private Long intervalMin = DEFAULT_TIMER_INTERVAL_MIN; //
-    private Long elapsedMin = 0L;
+    private Long elapsedMin = -1L; // This is the elapsed time in minutes since the last timer event
     private Long expiryMin = 3L;// 7L * 24L * 60L; // 7 days
     private Long expiryTimeStamp = DEFAULT_TIMER_EXPIRY_SECONDS; // This must be set during init, default to 20th June
                                                                  // 2364
@@ -41,11 +37,9 @@ public class TimerData implements Serializable {
 
     private TimerEvent currentMilestone = null;
 
-    private TimerEvent[] timereventsArray = new TimerEvent[0];
+    private TimerEvent[] timerEventsArray = new TimerEvent[0];
 
-    @JsonbTransient
-    @JsonIgnore
-    private List<TimerEvent> events = new ArrayList<>(PRIORITY_QUEUE_INITIAL_SIZE);
+    private Long startEpoch = 0L;
 
     public TimerData() {
         // TODO document why this constructor is empty
@@ -64,7 +58,12 @@ public class TimerData implements Serializable {
     }
 
     public Long updateElapsed() {
+        Long now = getNow();
+        if (this.elapsedMin < 0) { // This triggers the actual start time
+            this.startEpoch = now;
+        }
         this.elapsedMin = this.elapsedMin + this.intervalMin;
+        this.elapsedMin = (now - this.startEpoch) / 60L;
         return this.elapsedMin;
     }
 
@@ -82,11 +81,11 @@ public class TimerData implements Serializable {
         // Get current UTC date time
         Long currentTimeStampUTC = getNow();
         // Now grab the first TimerEvent in the queue
-        if ((this.events != null) && (!this.events.isEmpty())) {
-            TimerEvent firstEvent = this.events.get(0);
+        if ((this.timerEventsArray != null) && (this.timerEventsArray.length > 0)) {
+            TimerEvent firstEvent = this.timerEventsArray[0];
             if (firstEvent != null) {
-                // log.info("Current UTC is " + currentTimeStampUTC + ", First event is " +
-                // firstEvent);
+                log.debug("Current UTC is " + currentTimeStampUTC + ", First event is " +
+                        firstEvent);
                 return firstEvent.getTimeStamp() <= currentTimeStampUTC;
             }
         }
@@ -94,12 +93,17 @@ public class TimerData implements Serializable {
     }
 
     public TimerEvent updateMilestone() {
-        if ((this.events != null) && (this.events.size() > 0)) {
-            this.currentMilestone = this.events.get(0);
-            this.events.remove(0);
+        if ((this.timerEventsArray != null) && (this.timerEventsArray.length > 0)) {
+            TimerEvent[] newTimerEventsArray = new TimerEvent[this.timerEventsArray.length - 1];
+            this.currentMilestone = this.timerEventsArray[0];
+            for (int j = 0; j < this.timerEventsArray.length - 1; j++) {
+                // Shift element of array by one
+                newTimerEventsArray[j] = this.timerEventsArray[j + 1];
+            }
+            this.timerEventsArray = newTimerEventsArray; // replace the array
         }
-        if ((this.events != null) && (this.events.size() > 0)) {
-            return this.events.get(0);
+        if ((this.timerEventsArray != null) && (this.timerEventsArray.length > 0)) {
+            return this.timerEventsArray[0];
         }
         return this.currentMilestone; // stay with this existing final milestone
     }
@@ -116,8 +120,8 @@ public class TimerData implements Serializable {
 
     @JsonIgnore
     public TimerEvent getNextMilestone() {
-        if ((this.events != null) && (this.events.size() > 0)) {
-            return this.events.get(0);
+        if ((this.timerEventsArray != null) && (this.timerEventsArray.length > 0)) {
+            return this.timerEventsArray[0];
         }
         return null;
     }
@@ -151,6 +155,7 @@ public class TimerData implements Serializable {
     @JsonIgnore
     public void setExpiryMin(Long expiryMin) {
         this.expiryMin = expiryMin;
+        this.expiryTimeStamp = getNow() + (expiryMin * 60L);
     }
 
     public Long getExpiryTimeStamp() {
@@ -159,19 +164,18 @@ public class TimerData implements Serializable {
 
     @JsonbTransient
     @JsonIgnore
-    public List<TimerEvent> getEvents() {
-        // events = new ArrayList<>(Arrays.asList(timereventsArray));
-        return events;
+    public List<TimerEvent> getTimerEvents() {
+        return new ArrayList<>(Arrays.asList(timerEventsArray));
+
     }
 
     public void setExpiryTimeStamp(Long expiryTimeStamp) {
         this.expiryTimeStamp = expiryTimeStamp;
     }
 
-    public void setEvents(List<TimerEvent> events) {
-        timereventsArray = new TimerEvent[events.size()];
-        this.timereventsArray = events.toArray(timereventsArray);
-        this.events = events;
+    public void setTimerEvents(List<TimerEvent> events) {
+        timerEventsArray = new TimerEvent[events.size()];
+        this.timerEventsArray = events.toArray(timerEventsArray);
     }
 
     public void add(final String timerEventString) {
@@ -191,13 +195,26 @@ public class TimerData implements Serializable {
     }
 
     public void add(TimerEvent timerEvent) {
+
         // check if the same eventCode is already in the queue. If so then replace
-        for (TimerEvent tv : this.events) {
-            if (tv.getUniqueCode().equals(timerEvent.getUniqueCode())) {
-                this.events.remove(tv);
+        Boolean replaced = false;
+        for (int j = 0; j < this.timerEventsArray.length; j++) {
+            if (this.timerEventsArray[j].getUniqueCode().equals(timerEvent.getUniqueCode())) {
+                this.timerEventsArray[j] = timerEvent;
+                replaced = true;
+                break;
             }
         }
-        this.events.add(timerEvent);
+        if (!replaced) {
+            // Add to the end of the array
+            TimerEvent[] newTimerEventsArray = new TimerEvent[this.timerEventsArray.length + 1];
+            for (int j = 0; j < this.timerEventsArray.length; j++) {
+                newTimerEventsArray[j] = this.timerEventsArray[j];
+            }
+            newTimerEventsArray[this.timerEventsArray.length] = timerEvent;
+            this.timerEventsArray = newTimerEventsArray; // replace the array
+        }
+
         // Now push the expiryTime to always be later than the last event
         if (this.expiryTimeStamp.equals(DEFAULT_TIMER_EXPIRY_SECONDS)) {
             // This means that we need to seed the expiryTimestamp because a timer event has
@@ -208,7 +225,7 @@ public class TimerData implements Serializable {
             this.expiryTimeStamp = timerEvent.getTimeStamp() + OFFSET_EXPIRY_SECONDS;
         }
 
-        Collections.sort(this.events, new TimerEventComparator());
+        Arrays.sort(this.timerEventsArray, new TimerEventComparator());
         this.currentMilestone = this.getNextMilestone();
     }
 
@@ -226,12 +243,20 @@ public class TimerData implements Serializable {
                 ZoneId.of("UTC")).withZoneSameInstant(ZoneId.of("UTC")).toString();
     }
 
-    public TimerEvent[] getTimereventsArray() {
-        return timereventsArray;
+    public TimerEvent[] getTimerEventsArray() {
+        return timerEventsArray;
     }
 
-    public void setTimereventsArray(TimerEvent[] timereventsArray) {
-        this.timereventsArray = timereventsArray;
+    public void setTimerEventsArray(TimerEvent[] timerEventsArray) {
+        this.timerEventsArray = timerEventsArray;
+    }
+
+    public Long getStartEpoch() {
+        return startEpoch;
+    }
+
+    public void setStartEpoch(Long startEpoch) {
+        this.startEpoch = startEpoch;
     }
 
     @Override
@@ -239,7 +264,7 @@ public class TimerData implements Serializable {
         return "TimerData [intervalStr=" + getIntervalStr() + ", elapsedMin=" + elapsedMin + ", expiryMin=" + expiryMin
                 + ",timerExpiry=" + expiryTimeStamp
                 + ", intervalMin=" + intervalMin + ", hasExpired=" + this.hasExpired() + ", currentMilestone="
-                + getCurrentMilestone() + ",events=" + events + "]";
+                + getCurrentMilestone() + ",events=" + timerEventsArray + "]";
     }
 
     class TimerEventComparator implements Comparator<TimerEvent> {
