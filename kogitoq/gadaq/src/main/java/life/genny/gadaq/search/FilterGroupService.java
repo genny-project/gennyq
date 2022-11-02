@@ -85,13 +85,7 @@ public class FilterGroupService {
     public static final String SELECT_SAVED_SEARCH = "Select Saved Search";
     public static final String DELETE = "Delete";
 
-    //PCM
-    public static final String PRI_LOC1 = "PRI_LOC1";
-    public static final String PRI_LOC2 = "PRI_LOC2";
-    public static final String PRI_LOC3 = "PRI_LOC3";
-
-    public static final String PCM_TABLE = "PCM_TABLE";
-    public static final String PCM_SAVED_SEARCH = "PCM_SAVED_SEARCH";
+    public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
 
 
     /**
@@ -101,8 +95,7 @@ public class FilterGroupService {
      */
     public String getSearchEntityCodeByMsgCode(String code) {
         String sbeCode = code.replaceFirst(EVT_QUE_TREE_PREFIX,"");
-        sbeCode = FilterConst.CACHING_SBE + sbeCode.replaceFirst(EVT_QUE_TABLE_PREFIX,"")
-                .replaceFirst(QUE_PREF,"");
+        sbeCode = FilterConst.CACHING_SBE + sbeCode.replaceFirst(QUE_PREF,"");
 
         return sbeCode;
     }
@@ -823,16 +816,6 @@ public class FilterGroupService {
 
     }
 
-    /**
-     * Send pcm
-     * @param sbeCode Search base entity code
-     * @param queGroup Question group
-     */
-    public void sendPCM(String sbeCode, String queGroup) {
-        /* Send PCM */
-        filterService.searchTable(sbeCode);
-        filterService.sendPCM(sbeCode,PCM_TABLE, queGroup);
-    }
 
     /**
      * Handle saved search selected
@@ -898,7 +881,6 @@ public class FilterGroupService {
             } else if(isValidTable(code)) {
                 targetCode =  getSearchEntityCodeByMsgCode(code);
                 queGroup = FilterConst.QUE_TABLE_FILTER_GRP;
-                sendPCM(targetCode,queGroup);
 
                 /* Show saved search for bucket */
             } else if(isValidBucket(code))  {
@@ -951,7 +933,7 @@ public class FilterGroupService {
             String targetCode = EventMessageUtils.getTargetCode(msg);
 
             /* init user token */
-            if(!token.isEmpty()) { userToken.init(token);}
+//            if(!token.isEmpty()) { userToken.init(token);}
 
             /* Go to sorting */
             if (isSorting(attrCode, targetCode)) {
@@ -977,6 +959,20 @@ public class FilterGroupService {
                 selectQuickSearch(token, attrCode, attrName, value);
             }
 
-        } catch (Exception ex){}
+        } catch (Exception ex){
+            log.error(ex);
+        }
+    }
+
+    /**
+     * Return add fitler group or not
+     * @param parentCode Parent Code
+     * @return Whether being add fitler group or not
+     */
+    public boolean isAddFilterGroup(String parentCode) {
+        if(parentCode.equalsIgnoreCase(QUE_ADD_FILTER_GRP)) {
+            return true;
+        }
+        return false;
     }
 }

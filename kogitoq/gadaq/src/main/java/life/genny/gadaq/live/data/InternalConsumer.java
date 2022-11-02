@@ -104,6 +104,7 @@ public class InternalConsumer {
 
 		/* Handle filter */
 		filterService.handleFilterEventData(data);
+
 		// log duration
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
@@ -120,6 +121,8 @@ public class InternalConsumer {
 
 		// init scope and process msg
 		Instant start = Instant.now();
+
+
 		scope.init(event);
 
 		// check if event is a valid event
@@ -135,14 +138,21 @@ public class InternalConsumer {
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
 		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
+		if ("DD".equals(msg.getEvent_type()) && !filterService.isAddFilterGroup(msg.getData().getParentCode())) {
 			return;
 		}
 		events.route(msg);
 		scope.destroy();
 
 		/* Handle filter */
-		filterService.handleFilterEvent(event);
+		if(filterService.isNeededFilterAndQuickSearch(msg.getData().getCode())) {
+			filterService.handleFilterEvent(event);
+		}
+
+		if(filterService.isAddFilterGroup(msg.getData().getParentCode())) {
+			filterService.handleFilterEventData(event);
+		}
+
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}

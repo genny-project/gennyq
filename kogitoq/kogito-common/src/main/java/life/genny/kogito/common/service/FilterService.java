@@ -1,6 +1,7 @@
 package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
@@ -422,9 +423,8 @@ public class FilterService {
     public void sendQuickSearch(String queGroup,String queCode,String attCode, String targetCode) {
         Ask ask = new Ask();
         ask.setName(FilterConst.FILTER_LABEL);
-        Question question = new Question();
-        question.setCode(queGroup);
-        question.setAttributeCode(FilterConst.QUE_QQQ_GROUP);
+        Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
+        Question question = new Question(queGroup,FilterConst.FILTER_LABEL,attribute);
         ask.setQuestion(question);
 
         Ask childAsk = new Ask();
@@ -640,99 +640,6 @@ public class FilterService {
         return newSbeCode;
     }
 
-    /**
-     * Send a search PCM with the correct search code.
-     * @param searchCode Search base entity code
-     * @param pcmCode The code of pcm to send
-     * @param queSaveSearchGrp The code of quick search
-     */
-    public void sendPCM(String searchCode, String pcmCode,String queSaveSearchGrp) {
-        BaseEntity main = beUtils.getBaseEntity(FilterConst.PCM_CONTENT);
-        BaseEntity pcmTable = beUtils.getBaseEntity(pcmCode);
-
-        /* loc 1 */
-        Attribute mainAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC1);
-        EntityAttribute mainEA = new EntityAttribute(main, mainAtt, 1.0, FilterConst.PCM_TABLE);
-        main.addAttribute(mainEA);
-
-        Attribute pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC1);
-        EntityAttribute pcmEA = new EntityAttribute(pcmTable, pcmAtt, 1.0, searchCode);
-        pcmTable.addAttribute(pcmEA);
-
-        /* loc 2 */
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC2);
-        pcmEA = new EntityAttribute(pcmTable, pcmAtt, 1.0, FilterConst.LNK_PERSON);
-        pcmTable.addAttribute(pcmEA);
-
-        Attribute priCode = qwandaUtils.getAttribute(FilterConst.PRI_QUESTION_CODE);
-        mainEA = new EntityAttribute(main, priCode, 1.0, queSaveSearchGrp);
-        pcmTable.addAttribute(mainEA);
-
-        /* loc 3 - saved search popup */
-        mainAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC3);
-        mainEA = new EntityAttribute(main, mainAtt, 1.0, FilterConst.PCM_SAVED_SEARCH_POPUP);
-        pcmTable.addAttribute(mainEA);
-
-        BaseEntity pcm3 = beUtils.getBaseEntity(FilterConst.PCM_SAVED_SEARCH_POPUP);
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC1);
-        pcmEA = new EntityAttribute(pcm3, pcmAtt, 1.0, FilterConst.PCM_SAVED_SEARCH_POPUP_TEXT);
-        pcm3.addAttribute(pcmEA);
-
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC2);
-        pcmEA = new EntityAttribute(pcm3, pcmAtt, 1.0, FilterConst.PCM_SAVED_SEARCH);
-        pcm3.addAttribute(pcmEA);
-
-        /* loc 3.1 - saved search inside popup */
-        BaseEntity pcm31 = beUtils.getBaseEntity(FilterConst.PCM_SAVED_SEARCH_POPUP_TEXT);
-
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC1);
-        pcmEA = new EntityAttribute(pcm31, pcmAtt, 1.0, FilterConst.SAVED_SEARCHES);
-        pcm31.addAttribute(pcmEA);
-
-        priCode = qwandaUtils.getAttribute(FilterConst.PRI_QUESTION_CODE);
-        mainEA = new EntityAttribute(pcm31, priCode, 1.0, queSaveSearchGrp);
-        pcm31.addAttribute(mainEA);
-
-        /* loc 3.2 - saved search inside popup */
-        BaseEntity pcm32 = beUtils.getBaseEntity(FilterConst.PCM_SAVED_SEARCH);
-
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC1);
-        pcmEA = new EntityAttribute(pcm32, pcmAtt, 1.0, FilterConst.PCM_SAVED_SEARCH_SELECT);
-        pcm32.addAttribute(pcmEA);
-
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC2);
-        pcmEA = new EntityAttribute(pcm32, pcmAtt, 1.0, FilterConst.PCM_SBE_DETAIL_VIEW);
-        pcm32.addAttribute(pcmEA);
-
-        /* loc 3.1.1 */
-        BaseEntity pcm311 = beUtils.getBaseEntity(FilterConst.PCM_SAVED_SEARCH_SELECT);
-
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC1);
-        pcmEA = new EntityAttribute(pcm311, pcmAtt, 1.0, FilterConst.LNK_PERSON);
-        pcm311.addAttribute(pcmEA);
-
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC2);
-        pcmEA = new EntityAttribute(pcm311, pcmAtt, 1.0, FilterConst.EVT_SAVED_SEARCH_DELETE);
-        pcm311.addAttribute(pcmEA);
-
-        pcmAtt = qwandaUtils.getAttribute(FilterConst.PRI_LOC3);
-        pcmEA = new EntityAttribute(pcm311, pcmAtt, 1.0, FilterConst.EVT_SAVED_SEARCH_SAVE);
-        pcm311.addAttribute(pcmEA);
-
-        priCode = qwandaUtils.getAttribute(FilterConst.PRI_QUESTION_CODE);
-        mainEA = new EntityAttribute(pcm311, priCode, 1.0, queSaveSearchGrp);
-        pcm311.addAttribute(mainEA);
-
-        /* send messages */
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(main);
-        msg.add(pcmTable);
-        msg.add(pcm31);
-        msg.add(pcm32);
-        msg.add(pcm311);
-        msg.setToken(userToken.getToken());
-        msg.setReplace(true);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-    }
 
     /**
      * Send table data

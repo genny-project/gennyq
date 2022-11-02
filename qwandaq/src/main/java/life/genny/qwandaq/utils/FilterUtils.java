@@ -12,7 +12,9 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import life.genny.qwandaq.Question;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.trait.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -85,7 +87,8 @@ public class FilterUtils {
         Ask ask = new Ask();
         ask.setName(FilterConst.FILTERS);
 
-        Question question = new Question();
+        Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
+        Question question = new Question(questionCode,questionCode,attribute);
         question.setAttributeCode(FilterConst.QUE_QQQ_GROUP);
         ask.setQuestion(question);
 
@@ -255,9 +258,8 @@ public class FilterUtils {
         ask.setTargetCode(targetCode);
         ask.setHidden(true);
 
-        Question question = new Question();
-        question.setCode(FilterConst.FILTER_QUE_EXIST);
-        question.setAttributeCode(FilterConst.QUE_QQQ_GROUP);
+        Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
+        Question question = new Question(FilterConst.FILTER_QUE_EXIST,FilterConst.FILTER_QUE_EXIST,attribute);
 
         // change exist filter group
         if (listFilParams.size() > 0) {
