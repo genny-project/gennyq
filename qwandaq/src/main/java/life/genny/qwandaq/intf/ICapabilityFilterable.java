@@ -43,7 +43,7 @@ public interface ICapabilityFilterable {
     public static boolean requirementsMetImpl(Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
         Set<Capability> checkCaps = capabilityRequirements;
 
-        if(checkCaps.isEmpty())
+        if(checkCaps == null || checkCaps.isEmpty())
             return true;
 
         Set<Capability> userCapabilities = requirementsConfig.getUserCaps();
