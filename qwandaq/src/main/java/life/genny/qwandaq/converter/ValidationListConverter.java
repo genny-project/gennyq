@@ -4,13 +4,9 @@ package life.genny.qwandaq.converter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.io.StringReader;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonReader;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -67,39 +63,35 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	@Override
 	public List<Validation> convertToEntityAttribute(String joined) {
 		final List<Validation> validations = new CopyOnWriteArrayList<Validation>();
-		if (joined != null) {
-		//	log.info("ValidationStr=" + joined);
-			if (!StringUtils.isBlank(joined)) {
-				log.info(" Begin Validation List Deserialization: [ " + joined + " ]");
-				joined = joined.substring(1); // remove leading quotes
-				joined = StringUtils.chomp(joined, "\""); // remove last char
-				final String[] validationListStr = joined.split("\",\"");
+		if(StringUtils.isBlank(joined))
+			return validations;
+		
+			//	log.info("ValidationStr=" + joined);
+		joined = joined.substring(1); // remove leading quotes
+		joined = StringUtils.chomp(joined, "\""); // remove last char
+		final String[] validationListStr = joined.split("\",\"");
 
-				if (validationListStr.length == 6) {
-					//	log.info("ValidationListStr LENGTH=6");
-					log.info("Validation List Deserialization: " + joined);
-					// for (int i = 0; i < validationListStr.length; i = i + 6) {
-					List<String> validationGroups = Arrays.asList(convertFromString(validationListStr[3]));
-					String[] regexs = convertFromString(validationListStr[2]);
-					Validation v = new Validation(validationListStr[0], validationListStr[1], validationGroups,
-							validationListStr[3].equalsIgnoreCase("TRUE"),
-							validationListStr[4].equalsIgnoreCase("TRUE"));
-					if (regexs.length != 0) {
-						v.setRegex(regexs[0]);
-					}
-					validations.add(v);
-					// }
-				} else {
-					for (int i = 0; i < validationListStr.length; i = i + 3) {
-						Validation validation  = new Validation(validationListStr[i], validationListStr[i + 1],
-								validationListStr[i + 2]);
-					//	log.info("VALIDATION:"+validation);
-						validations.add(validation);
-					}
-				}
-
+		if (validationListStr.length == 6) {
+			// for (int i = 0; i < validationListStr.length; i = i + 6) {
+			List<String> validationGroups = Arrays.asList(convertFromString(validationListStr[3]));
+			String[] regexs = convertFromString(validationListStr[2]);
+			Validation v = new Validation(validationListStr[0], validationListStr[1], validationGroups,
+					validationListStr[3].equalsIgnoreCase("TRUE"),
+					validationListStr[4].equalsIgnoreCase("TRUE"));
+			if (regexs.length != 0) {
+				v.setRegex(regexs[0]);
+			}
+			validations.add(v);
+			// }
+		} else {
+			for (int i = 0; i < validationListStr.length; i = i + 3) {
+				Validation validation  = new Validation(validationListStr[i], validationListStr[i + 1],
+						validationListStr[i + 2]);
+			//	log.info("VALIDATION:"+validation);
+				validations.add(validation);
 			}
 		}
+		
 		return validations;
 	}
 
@@ -121,13 +113,8 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 * @return List&lt;String&gt;
 	 */
 	public String[] convertFromString(final String joined) {
-		log.info("Converting " + joined + " from string");
-		if (joined.startsWith("[") || joined.startsWith("{")) {
-			String[] arr = CommonUtils.getArrayFromString(joined, (String obj) -> obj.toString()).toArray(new String[0]);
-			for(String st : arr) {
-				log.info("OBJECCT: " + st);
-			}
-			return arr;
+		if (joined.startsWith("[") || joined.startsWith("{")) {			
+			return CommonUtils.getArrayFromString(joined, (String obj) -> obj.toString()).toArray(new String[0]);
 		} else {
 			return new String[] {joined};
 		}
