@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>life.genny</groupId>
 		<artifactId>gennyq</artifactId>
-		<version>10.3.0</version>
+		<version>10.2.0</version>
 	</parent>
 
 	<artifactId>qwandaq</artifactId>
@@ -56,6 +56,7 @@
 		<version.moneta>1.1</version.moneta>
 		<jwt.version>0.10.7</jwt.version>
 		<testcontainers.version>1.17.5</testcontainers.version>
+		<minio.version>8.4.3</minio.version>
 	</properties>
 
 	<distributionManagement>
@@ -247,14 +248,11 @@
 			<artifactId>smallrye-mutiny-vertx-sql-client</artifactId>
 			<version>3.0.0-milestone1</version>
 		</dependency>
-
-		<!-- Nice little reflections library (To be used sparingly) -->
 		<dependency>
-			<groupId>org.reflections</groupId>
-			<artifactId>reflections</artifactId>
-			<version>0.10.2</version>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>${minio.version}</version>
 		</dependency>
-		
 	</dependencies>
 
 	<build>
