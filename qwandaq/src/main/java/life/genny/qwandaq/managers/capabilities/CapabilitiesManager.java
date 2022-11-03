@@ -231,23 +231,18 @@ public class CapabilitiesManager extends Manager {
 	public static boolean checkCapability(Set<CapabilityNode> capabilitySet, boolean hasAll, CapabilityNode... checkModes) {
 		capabilitySet = cascadeCapabilities(capabilitySet);
 		if (hasAll) {
-			System.out.println("Has All Check: " + CommonUtils.getArrayString(checkModes));
 			for (CapabilityNode checkMode : checkModes) {
 				boolean hasMode = capabilitySet.contains(checkMode);
 				if (!hasMode) {
-					System.out.println("Found one missing: " + checkMode);
 					return false;
 				}
 			}
 
-			System.out.println("Has all passed for set: " + CommonUtils.getArrayString(capabilitySet));
 			return true;
 		} else {
-			System.out.println("Has At least one Check: " + CommonUtils.getArrayString(checkModes) + " in " + CommonUtils.getArrayString(capabilitySet));
 			for (CapabilityNode checkMode : checkModes) {
 				boolean hasMode = capabilitySet.contains(checkMode);
 				if (hasMode) {
-					System.out.println("At least one passed with " + checkMode + " in " + CommonUtils.getArrayString(capabilitySet));
 					return true;
 				}
 			}

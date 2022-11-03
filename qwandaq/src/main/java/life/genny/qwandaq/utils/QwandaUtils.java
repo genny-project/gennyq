@@ -323,8 +323,9 @@ public class QwandaUtils {
 				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
 				if(requirementsConfig != null) {
-					if(!questionQuestion.requirementsMet(requirementsConfig)) // For now all caps are needed. I'll make this more comprehensive later
+					if(!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
 						continue;
+					}
 				}
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 
@@ -344,7 +345,7 @@ public class QwandaUtils {
 				if (questionQuestion.getIcon() != null) {
 					child.getQuestion().setIcon(questionQuestion.getIcon());
 				}
-
+				log.info("Adding: " + child.getQuestionCode());
 				ask.add(child);
 			}
 		} else {
