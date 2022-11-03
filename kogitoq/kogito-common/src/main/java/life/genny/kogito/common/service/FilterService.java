@@ -276,19 +276,38 @@ public class FilterService {
             SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
 
             if (searchBE != null) {
+                QDataBaseEntityMessage msgColumn = filterUtils.getFilterValuesByColum(searchBE);
+
+                msgColumn.setToken(userToken.getToken());
+                msgColumn.setReplace(true);
+                KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgColumn);
+            }
+        }catch (Exception ex) {
+            log.error(ex);
+        }
+    }
+
+    /**
+     * Send filter group and filter column for filter function
+     * @param sbeCode SBE code
+     * @param queCode Question code
+     * @param filterCode Filter code
+     * @param listFilterParams Filter parameters
+     */
+    public void sendAddFilterGroup(String sbeCode, String queGrp,String questionCode, String filterCode,
+                                   Map<String, Map<String,String>> listFilterParams) {
+        try {
+//            SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
+
+//            if (searchBE != null) {
                 Ask ask = filterUtils.getFilterGroupBySearchBE(sbeCode, questionCode, filterCode, listFilterParams);
                 QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
                 msgFilterGrp.setToken(userToken.getToken());
                 String queCode = "";
-                if(addedJti) {
-                    queCode = filterUtils.getSearchBaseEntityCodeByJTI(sbeCode);
-                    ask.setTargetCode(queCode);
 
-                    queCode = queGrp + "_" + queCode;
-                }else {
-                    ask.setTargetCode(sbeCode);
-                    queCode = queGrp + "_" + sbeCode;
-                }
+                ask.setTargetCode(sbeCode);
+                queCode = queGrp + "_" + sbeCode;
+
                 msgFilterGrp.setTargetCode(queCode);
                 ask.setQuestionCode(queCode);
                 ask.getQuestion().setCode(queCode);
@@ -297,13 +316,7 @@ public class FilterService {
                 msgFilterGrp.setTag(FilterConst.FILTERS);
                 msgFilterGrp.setReplace(true);
                 KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
-
-                QDataBaseEntityMessage msgColumn = filterUtils.getFilterColumBySearchBE(searchBE);
-
-                msgColumn.setToken(userToken.getToken());
-                msgColumn.setReplace(true);
-                KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgColumn);
-            }
+//            }
         }catch (Exception ex) {
             log.error(ex);
         }
@@ -316,7 +329,7 @@ public class FilterService {
      */
     public void sendFilterOption(String questionCode, String sbeCode) {
         QDataBaseEntityMessage msg = filterUtils.getFilterOptionByEventCode(questionCode);
-        String sbeCodeJti =  filterUtils.getSearchBaseEntityCodeByJTI(sbeCode);
+        String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());
         msg.setParentCode(FilterConst.QUE_ADD_FILTER_GRP);
@@ -334,8 +347,9 @@ public class FilterService {
      * @param queCode Question code
      * @param lnkCode Link Code
      * @param lnkVal Link Value
+     * @param attCode Attribute code
      */
-    public void sendFilterValue(String queGrp,String queCode, String lnkCode, String lnkVal) {
+    public void sendFilterValue(String queGrp,String queCode, String lnkCode, String lnkVal,String attCode) {
         QDataBaseEntityMessage msg = null;
         msg = filterUtils.getFilterSelectBoxValueByCode(queGrp,queCode, lnkCode,lnkVal);
 
@@ -343,6 +357,8 @@ public class FilterService {
         msg.setTargetCode(queCode);
         msg.setMessage(FilterConst.FILTERS);
         msg.setReplace(true);
+        msg.setAttributeCode(attCode);
+
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
@@ -353,7 +369,7 @@ public class FilterService {
      * @param listFilterParams List of filter parameters
      */
     public void handleFilter(String sbeCode, Map<String,Map<String, String>> listFilterParams) {
-        String sbeCodeJti = filterUtils.getSearchBaseEntityCodeByJTI(sbeCode);
+        String sbeCodeJti = filterUtils.getCleanSBECode(sbeCode);
 
         SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCodeJti, SearchEntity.class);
 
@@ -647,5 +663,40 @@ public class FilterService {
      */
     public void searchTable(String sbeCode) {
         searchUtils.searchTable(sbeCode);
+    }
+
+    /**
+     * Strip search base entity code without jti
+     *
+     * @param orgSbe Original search base entity code
+     * @return Search base entity code without jti
+     */
+    public String getCleanSBECode(String orgSbe) {
+        return filterUtils.getCleanSBECode(orgSbe);
+    }
+
+    /**
+     * Send a partial PCM with the correct search code.
+     *
+     * @param pcmCode The code of pcm to send
+     * @param loc The location code
+     * @param queValCode Question value code
+     * @param queValCode Question value code
+     */
+    public void sendPartialPCM(String pcmCode,String loc,String queValCode) {
+        // update target pcm
+        BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+        for(EntityAttribute ea : pcm.getBaseEntityAttributes()) {
+            if(ea.getAttributeCode().equalsIgnoreCase(loc)) {
+                ea.setValue(queValCode);
+                ea.setValueString(queValCode);
+            }
+        }
+
+        // send to alyson
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcm);
+        msg.setToken(userToken.getToken());
+        msg.setReplace(true);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 }

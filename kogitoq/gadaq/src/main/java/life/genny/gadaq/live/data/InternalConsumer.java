@@ -9,9 +9,11 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.gadaq.search.EventMessageUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -149,12 +151,24 @@ public class InternalConsumer {
 			filterService.handleFilterEvent(event);
 		}
 
-		if(filterService.isAddFilterGroup(msg.getData().getParentCode())) {
-			filterService.handleFilterEventData(event);
-		}
 
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
+	@Incoming("data")
+	@Blocking
+	public void getEventData(String event) {
+		// init scope and process msg
+		Instant start = Instant.now();
+
+		log.info("Received Event : " + SecurityUtils.obfuscate(event));
+
+		scope.init(event);
+		filterService.handleFilterEventData(event);
+		scope.destroy();
+
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+	}
 }

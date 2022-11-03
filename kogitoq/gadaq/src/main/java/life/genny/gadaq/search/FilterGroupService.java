@@ -2,6 +2,7 @@ package life.genny.gadaq.search;
 
 import life.genny.kogito.common.service.FilterService;
 import life.genny.kogito.common.service.FilterService.Options;
+import life.genny.kogito.common.service.SearchService;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.FilterConst;
@@ -29,6 +30,7 @@ import java.util.UUID;
 import java.util.Comparator;
 import javax.inject.Inject;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.Question;
 
 @ApplicationScoped
 public class FilterGroupService {
@@ -51,8 +53,12 @@ public class FilterGroupService {
     @Inject
     DatabaseUtils databaseUtils;
 
+    @Inject
+    SearchService search;
+
     public static final String EVT_QUE_TREE_PREFIX = "QUE_TREE_ITEM_";
     public static final String EVT_QUE_TABLE_PREFIX = "QUE_TABLE_";
+    public static final String SBE_TABLE_PREF = "SBE_TABLE_";
 
     public static final String DATE = "DATE";
     public static final String DATETIME = "DATETIME";
@@ -150,7 +156,8 @@ public class FilterGroupService {
     public  boolean isValidTable(String code) {
         boolean result = false;
 
-        if(code.startsWith(EVT_QUE_TREE_PREFIX) || code.startsWith(EVT_QUE_TABLE_PREFIX))
+        if(code.startsWith(EVT_QUE_TREE_PREFIX) || code.startsWith(EVT_QUE_TABLE_PREFIX)
+                || code.startsWith(SBE_TABLE_PREF))
             return true;
 
         return result;
@@ -246,6 +253,16 @@ public class FilterGroupService {
             return FilterConst.QUE_FILTER_VALUE_TEXT;
         }
         return questionCode;
+    }
+
+    /**
+     * Return attribute code by question
+     * @param questionCode Question Code
+     * @return Return question code by filter code
+     */
+    public String getAttributeCodeByQuestion(String questionCode){
+        Question question = databaseUtils.findQuestionByCode(userToken.getProductCode(), questionCode);
+        return question.getAttributeCode();
     }
 
     /**
@@ -454,20 +471,24 @@ public class FilterGroupService {
      * Handle event when filter columns is selected
      * @param targetCode Target code
      * @param value Message value
+     * @return Attribute code according to value selected
      */
-    public void selectFilerColumn(String targetCode, String value) {
+    public String selectFilerColumn(String targetCode, String value) {
         String queCode = getQuestionCodeByFilterValue(value);
+        String attCode = getAttributeCodeByQuestion(queCode);
 
         String filterCode = "";
         Map<String, Map<String, String>> params = new HashMap<>();
-        filterService.sendFilterGroup(targetCode, FilterConst.QUE_FILTER_GRP,queCode,true,filterCode,params);
         filterService.sendFilterOption(queCode, targetCode);
+        filterService.sendAddFilterGroup(targetCode, FilterConst.QUE_ADD_FILTER_GRP,queCode,filterCode,params);
 
         boolean isSelectBox = isFilterSelectQuestion(value);
         if(isSelectBox) {
             String linkVal = getLinkVal(value);
-            filterService.sendFilterValue(FilterConst.QUE_ADD_FILTER_GRP,queCode,FilterConst.LNK_CORE,linkVal);
+            filterService.sendFilterValue(FilterConst.QUE_ADD_FILTER_GRP,queCode,FilterConst.LNK_CORE,linkVal,attCode);
         }
+
+        return attCode;
     }
 
     /**
@@ -913,7 +934,9 @@ public class FilterGroupService {
                 sendFilterAndQuickSearch(code,queGroup,targetCode,filterCode,filterParams,isSubmitted);
             }
 
-        } catch(Exception ex) {}
+        } catch(Exception ex) {
+            log.error(ex);
+        }
     }
 
 
@@ -931,9 +954,13 @@ public class FilterGroupService {
             String attrName = "";
             String value = EventMessageUtils.getValue(msg);
             String targetCode = EventMessageUtils.getTargetCode(msg);
+            String cleanSBE = filterService.getCleanSBECode(targetCode);
+            String queGroup = EventMessageUtils.getParentCode(msg);
+            Map<String,Map<String, String>> filterParams = new HashMap<>();
+            boolean isSubmitted = false;
 
             /* init user token */
-//            if(!token.isEmpty()) { userToken.init(token);}
+            if(!token.isEmpty()) { userToken.init(token);}
 
             /* Go to sorting */
             if (isSorting(attrCode, targetCode)) {
@@ -948,7 +975,8 @@ public class FilterGroupService {
 
                 /* Go to filter column selected */
             } else if(isFilerColumnSelected(code, attrCode)) {
-                selectFilerColumn(targetCode, value);
+                String queValCode = selectFilerColumn(cleanSBE, value);
+                filterService.sendPartialPCM(FilterConst.PCM_SBE_ADD_SEARCH, FilterConst.PRI_LOC3, queValCode);
 
                 /* Go to list of searches selected */
             } else if(isSearchSelected(code)) {
@@ -957,6 +985,12 @@ public class FilterGroupService {
                 /*Quick search selected*/
             } else if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
                 selectQuickSearch(token, attrCode, attrName, value);
+            }
+
+            /* Send table again when selecting filter column */
+            if(isValidTable(cleanSBE)) {
+                String questionCode = getQuestionCodeBySBE(cleanSBE);
+                search.sendTable(questionCode);
             }
 
         } catch (Exception ex){
@@ -970,9 +1004,19 @@ public class FilterGroupService {
      * @return Whether being add fitler group or not
      */
     public boolean isAddFilterGroup(String parentCode) {
-        if(parentCode.equalsIgnoreCase(QUE_ADD_FILTER_GRP)) {
+        if(parentCode !=null && parentCode.equalsIgnoreCase(QUE_ADD_FILTER_GRP)) {
             return true;
         }
         return false;
+    }
+
+
+    /**
+     * Get question code by sbe code
+     * @param cleanSBE sbe code
+     * @return question code by sbe code
+     */
+    public String getQuestionCodeBySBE(String cleanSBE) {
+        return cleanSBE.replace(SBE_TABLE_PREF, EVT_QUE_TABLE_PREFIX);
     }
 }

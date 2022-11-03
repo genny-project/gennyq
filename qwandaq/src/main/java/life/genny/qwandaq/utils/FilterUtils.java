@@ -16,7 +16,6 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.trait.*;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -104,14 +103,11 @@ public class FilterUtils {
 
     /**
      * Change existing filter group
-     *
-     * @param sbeCode       Search base entity code
      * @param ask           Ask existing group
      * @param filterCode    Filter code
      * @param listFilParams List of filter parameters
      */
-    public void setExistingFilterGroup(String sbeCode, Ask ask, String filterCode,
-                                       Map<String, Map<String, String>> listFilParams) {
+    public void setExistingFilterGroup(Ask ask, String filterCode, Map<String, Map<String, String>> listFilParams) {
         //current filter state
         Ask curAsk = new Ask();
         curAsk.setQuestionCode(FilterConst.QUE_SAVED_SEARCH_CODE);
@@ -138,31 +134,11 @@ public class FilterUtils {
             childAsk.setDisabled(false);
             childAsk.setQuestionCode(param.getValue().get(FilterConst.QUESTIONCODE));
             childAsk.setQuestion(question);
-            childAsk.setTargetCode(getSearchBaseEntityCodeByJTI(sbeCode));
+
+            childAsk.setTargetCode(userToken.userCode);
 
             ask.add(childAsk);
         }
-    }
-
-    /**
-     * Return Html value by filter parameters
-     * @param filterParams Filter parameters
-     * @return Html value by filter parameters
-     */
-    public String getHtmlByFilterParam(Map<String, String> filterParams) {
-        String attrCode = getFilterParamValByKey(filterParams, FilterConst.COLUMN)
-                .replaceFirst(FilterConst.PRI_PREFIX, "");
-
-        String attrName = getFilterParamValByKey(filterParams, FilterConst.OPTION);
-        String value = getFilterParamValByKey(filterParams, FilterConst.VALUE);
-        String attrNameStrip = attrName.replaceFirst(FilterConst.SEL_PREF, "")
-                .replace("_", " ");
-
-        String finalAttCode = StringUtils.capitalize(getLastWord(attrCode).toLowerCase());
-        String finalVal = StringUtils.capitalize(getLastWord(value.toLowerCase()));
-        String html = finalAttCode + " " + StringUtils.capitalize(attrNameStrip.toLowerCase()) + " " + finalVal;
-
-        return html;
     }
 
     /**
@@ -209,33 +185,27 @@ public class FilterUtils {
      */
     public Ask getAddFilterGroupBySearchBE(String sbeCode, String questionCode) {
         String sourceCode = userToken.getUserCode();
-        BaseEntity source = beUtils.getBaseEntityByCode(sourceCode);
-        BaseEntity target = beUtils.getBaseEntityByCode(sbeCode);
+        BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
+        BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
 
-        String sbeCodeJti = getSearchBaseEntityCodeByJTI(sbeCode);
         Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_ADD_FILTER_GRP, source, target);
         ask.getChildAsks().stream().forEach(e -> {
             if (e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_FILTER_COLUMN)
                     || e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_FILTER_OPTION)
                     || e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_SUBMIT)) {
                 e.setHidden(false);
-            } else if (e.getQuestionCode().equalsIgnoreCase(questionCode)) {
+            } else if(e.getQuestionCode().equalsIgnoreCase(questionCode)) {
                 e.setHidden(false);
             } else {
                 e.setHidden(true);
             }
 
-            e.setTargetCode(sbeCodeJti);
+            e.setTargetCode(sourceCode);
         });
 
-        String targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
-        ask.setTargetCode(targetCode);
-
         Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_SUBMIT, source, target);
-//		askSubmit.setDisabled(true);
 
-        ask.setTargetCode(targetCode);
-
+        ask.setTargetCode(sourceCode);
         ask.add(askSubmit);
 
         return ask;
@@ -253,9 +223,8 @@ public class FilterUtils {
                                                 Map<String, Map<String, String>> listFilParams) {
         Ask ask = new Ask();
         ask.setName(FilterConst.FILTER_QUE_EXIST_NAME);
-        String targetCode = getSearchBaseEntityCodeByJTI(sbeCode);
         ask.setSourceCode(userToken.getUserCode());
-        ask.setTargetCode(targetCode);
+        ask.setTargetCode(userToken.getUserCode());
         ask.setHidden(true);
 
         Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
@@ -263,7 +232,7 @@ public class FilterUtils {
 
         // change exist filter group
         if (listFilParams.size() > 0) {
-            setExistingFilterGroup(sbeCode, ask,filterCode, listFilParams);
+            setExistingFilterGroup(ask,filterCode, listFilParams);
         }
 
         ask.setQuestion(question);
@@ -277,7 +246,7 @@ public class FilterUtils {
      * @param searchBE Search Base Entity
      * @return Message of Filter column
      */
-    public QDataBaseEntityMessage getFilterColumBySearchBE(SearchEntity searchBE) {
+    public QDataBaseEntityMessage getFilterValuesByColum(SearchEntity searchBE) {
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
         msg.setParentCode(FilterConst.QUE_ADD_FILTER_GRP);
@@ -334,33 +303,29 @@ public class FilterUtils {
         base.setLinkValue(FilterConst.LNK_ITEMS);
         base.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
 
-        if (questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_DJP_HC)) {
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_NOT_EQUAL_TO));
-            return base;
-        } else if (questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_DATE)
+       if (questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_DATE)
                 || questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_DATETIME)
                 || questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_TIME)) {
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_GREATER_THAN));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_LESS_THAN));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LESS_THAN));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
         } else if (questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_COUNTRY)
                 || questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_INTERNSHIP_TYPE)
                 || questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_STATE)
                 || questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_ACADEMY)
                 || questionCode.equalsIgnoreCase(FilterConst.QUE_FILTER_VALUE_DJP_HC)) {
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
         } else {
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_NOT_EQUAL_TO));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_LIKE));
-            base.add(beUtils.getBaseEntityByCode(FilterConst.SEL_NOT_LIKE));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LIKE));
+            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_LIKE));
         }
 
         return base;
