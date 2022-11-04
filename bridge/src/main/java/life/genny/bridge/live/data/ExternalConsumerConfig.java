@@ -168,7 +168,7 @@ public class ExternalConsumerConfig {
 		.subRouter(sockJSHandler.bridge(options, handler));
 		
 		router.route("/frontend/*")
-		.handler(cors());
+		.handler(cors())
 		.handler(sockJSHandler);
 		// .subRouter(sockJSHandler.bridge(options, handler))
 
