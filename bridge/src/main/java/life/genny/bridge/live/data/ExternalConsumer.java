@@ -5,7 +5,7 @@ import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.inject.Singleton;
+
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 

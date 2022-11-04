@@ -11,13 +11,21 @@ import javax.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.Handler;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
+
 import io.vertx.ext.bridge.PermittedOptions;
+import io.vertx.ext.bridge.BridgeEventType;
+
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.CorsHandler;
+
+import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * ExternalConsumerConfig --- This class contains configurations for {@link CorsHandler}
@@ -118,14 +126,54 @@ public class ExternalConsumerConfig {
 	 * @param router {@link Router } Vertx router to set the routes
 	 */
 	public void init(@Observes Router router) {
-		SockJSHandlerOptions sockOptions = new SockJSHandlerOptions().setHeartbeatInterval(2000);
+		SockJSHandlerOptions sockOptions = new SockJSHandlerOptions()
+			.setHeartbeatInterval(2000);
+		
 		SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
+
 		sockJSHandler.bridge(setBridgeOptions(),handler::handleConnectionTypes);
-                environment.filter(d -> !d.equals("prod"))
-                .ifPresent(d -> {
-                        router.route().handler(cors());
-                });
-		router.route("/frontend/*").handler(cors());
-		router.route("/frontend/*").handler(sockJSHandler);
+
+		SockJSBridgeOptions options = new SockJSBridgeOptions();
+
+		Handler<BridgeEvent> handler = new Handler<BridgeEvent>() {
+			public void handle(BridgeEvent be) {
+				boolean isPublish = be.type() == BridgeEventType.PUBLISH;
+				boolean isSend = be.type() == BridgeEventType.SEND;
+				System.out.println("Received BridgeEvent: " + be.getRawMessage().toString());
+				if (isPublish || isSend) {
+					  // Add Access-Control-Allow-Origin
+					  System.out.println(CommonUtils.equalsBreak(100));
+					  System.out.println("PARSING HEADERS");
+					  JsonObject rawMessage = be.getRawMessage();
+					  System.out.println("raw message: " + rawMessage);
+					  JsonObject headers = rawMessage.getJsonObject("headers");
+					  System.out.println("Received headers: " + headers);
+
+					  String referer = headers.getString("referer");
+
+					  headers.put("Access-Control-Allow-Origin", referer);
+
+					  rawMessage.put("headers", headers);
+					  be.setRawMessage(rawMessage);
+					}
+					be.complete(true);
+			}
+		};
+
+		environment.filter(d -> !"prod".equals(d))
+		.ifPresent(d -> {
+				router.route() // do we want to be routing to d here?
+				.subRouter(sockJSHandler.bridge(options, handler))
+				.handler(cors());
+		});
+		
+		router.route("/frontend/*")
+		.subRouter(sockJSHandler.bridge(options, handler));
+		
+		router.route("/frontend/*")
+		.handler(sockJSHandler)
+		.handler(cors());
+		// .subRouter(sockJSHandler.bridge(options, handler))
+
 	}
 }
