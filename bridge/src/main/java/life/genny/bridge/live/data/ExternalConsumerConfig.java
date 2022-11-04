@@ -142,12 +142,9 @@ public class ExternalConsumerConfig {
 				System.out.println("Received BridgeEvent: " + be.getRawMessage().toString());
 				if (isPublish || isSend) {
 					  // Add Access-Control-Allow-Origin
-					  System.out.println(CommonUtils.equalsBreak(100));
-					  System.out.println("PARSING HEADERS");
 					  JsonObject rawMessage = be.getRawMessage();
-					  System.out.println("raw message: " + rawMessage);
+					  
 					  JsonObject headers = rawMessage.getJsonObject("headers");
-					  System.out.println("Received headers: " + headers);
 
 					  String referer = headers.getString("referer");
 
@@ -171,8 +168,8 @@ public class ExternalConsumerConfig {
 		.subRouter(sockJSHandler.bridge(options, handler));
 		
 		router.route("/frontend/*")
-		.handler(sockJSHandler)
 		.handler(cors());
+		.handler(sockJSHandler)
 		// .subRouter(sockJSHandler.bridge(options, handler))
 
 	}
