@@ -83,7 +83,7 @@ key=$2
 tag=$3
 password=$4
 echo ${mydate} $key $url  $message $tag $password
-KEYCLOAK_RESPONSE=`curl -s -X POST https://keycloak-bali.gada.io/realms/internmatch/protocol/openid-connect/token  -H "Content-Type: application/x-www-form-urlencoded" -d 'username=user1' -d "password=${password}" -d 'grant_type=password' -d 'client_id=alyson' `
+KEYCLOAK_RESPONSE=`curl -s -X POST ${GENNY_KEYCLOAK_URL:https://keycloak.gada.io}/realms${GENNY_REALM:internmatch}/protocol/openid-connect/token  -H "Content-Type: application/x-www-form-urlencoded" -d 'username=user1' -d "password=${password}" -d 'grant_type=password' -d 'client_id=alyson' `
 #echo $KEYCLOAK_RESPONSE
 #printf "${RED}Parsing access_token field, as we don't need the other elements:${NORMAL}\n"
 TOKEN=`echo "$KEYCLOAK_RESPONSE" | jq -r '.access_token'`

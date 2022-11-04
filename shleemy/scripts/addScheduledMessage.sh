@@ -82,7 +82,7 @@ cron=$2
 url=$1
 echo ${mydate} ${url}  $cron 
 access_token=$(\
-    curl -s -X POST https://keycloak-bali.gada.io/realms/internmatch/protocol/openid-connect/token \
+    curl -s -X POST ${GENNY_KEYCLOAK_URL:https://keycloak.gada.io}/realms/${GENNY_REALM:internmatch}/protocol/openid-connect/token \
     --user backend:6781baee-3b97-4b01-bcd4-b14aecd38fd8 \
     -H 'content-type: application/x-www-form-urlencoded' \
     -d 'username=user1&password=WelcomeToTheHub121!&grant_type=password' | jq --raw-output '.access_token' \

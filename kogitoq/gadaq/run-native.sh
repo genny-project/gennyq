@@ -29,11 +29,11 @@ echo "raw host (target system) = ${rawhost}"
 
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
-export GENNY_KEYCLOAK_URL=https://keycloak-bali.gada.io
+export GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io/auth}
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus
-export GENNY_REALM=internmatch
+export GENNY_REALM=${GENNY_REALM:internmatch}
 export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
 export GENNY_KOGITO_DATAINDEX_WS_URL=ws://${rawhost}:8582

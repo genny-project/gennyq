@@ -13,11 +13,11 @@ source ../../genny-main/services_ports.env
 
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
-export GENNY_KEYCLOAK_URL=https://keycloak-bali.gada.io
+export GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io/auth}
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus
-export GENNY_REALM=internmatch
+export GENNY_REALM=${GENNY_REALM:internmatch}
 export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
 export GENNY_KOGITO_DATAINDEX_WS_URL=ws://${rawhost}:8582
@@ -37,7 +37,7 @@ export QUARKUS_INFINISPAN_CLIENT_SASL_MECHANISM=DIGEST-MD5
 export QUARKUS_INFINISPAN_CLIENT_SERVER_LIST=${rawhost}:11222
 export QUARKUS_INFINISPAN_CLIENT_USE_AUTH="true"
 export INFINISPAN_PASSWORD=password
-export QUARKUS_OIDC_AUTH_SERVER_URL="${GENNY_KEYCLOAK_URL}/realms/${GENNY_REALM}"
+export QUARKUS_OIDC_AUTH_SERVER_URL="${GENNY_KEYCLOAK_URL}/realms${GENNY_REALM}"
 export QUARKUS_OIDC_CLIENT_ID=${GENNY_CLIENT_ID}
 export QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE=BASIC
 export QUARKUS_INFINISPAN_CLIENT_INTELLIGENCE=BASIC
@@ -54,7 +54,7 @@ export GENNY_MYSQL_PASSWORD=password
 export GENNY_MYSQL_URL=alyson.genny.life
 export GENNY_MYSQL_PORT=3310
 export GENNY_MYSQL_DB=gennydb
-export ENV_KEYCLOAK_REDIRECTURI=https://keycloak-bali.gada.io
+export ENV_KEYCLOAK_REDIRECTURI=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io/auth}
 export RULESSERVICE_URL=http://wildfly-rulesservice
 export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
 echo "infinispan url $GENNY_INFINISPAN_URL"
