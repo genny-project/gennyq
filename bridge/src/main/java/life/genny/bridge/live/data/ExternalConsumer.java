@@ -1,5 +1,18 @@
 package life.genny.bridge.live.data;
 
+import java.util.UUID;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
@@ -14,17 +27,6 @@ import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.serviceq.Service;
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.util.Arrays;
-import java.util.UUID;
 
 /**
  * ExternalConsumer --- External clients can connect to the endpoint configured in {@link
@@ -106,7 +108,7 @@ public class ExternalConsumer {
 		} else {
 			log.error("A message was sent with a bad token or an unauthorized user or a token from "
 					+ "a different authority this user has not access to this request "
-					+ uuid + ", allowed_roles: " + Arrays.toString(roles) + ", user_roles:" + gennyToken.getUserRoles());
+					+ uuid);
 			bridgeEvent.complete(false);
 		}
 	}
@@ -186,8 +188,9 @@ public class ExternalConsumer {
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
 		// JsonObject nonTokenBody = (JsonObject) body.remove("token");
+		
 
-		log.info("Incoming Payload = %s".formatted(body));
+		log.info("Incoming Payload = " + body.toString());
 
 		if (body == null || body.getString("msg_type") == null) {
 			log.error("Bad body JsonObject passed");

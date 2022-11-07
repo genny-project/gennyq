@@ -19,5 +19,5 @@ echo "version = ${version}"
 USER=`whoami`
 mvn clean
 ./mvnw clean package -Dquarkus.container-image.build=true -DskipTests=true
-docker tag ${org}/${project}:${version} ${org}/${project}:${version}
+#docker tag ${org}/${project}:${version} ${org}/${project}:${version}
 docker tag ${org}/${project}:${version} ${org}/${project}:latest

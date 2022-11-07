@@ -85,6 +85,9 @@ public class Question extends CodedEntity {
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
 	public static final String QUE_CANCEL = "QUE_CANCEL";
 	public static final String QUE_RESET = "QUE_RESET";
+	public static final String QUE_UPDATE = "QUE_UPDATE";
+	public static final String QUE_UNDO = "QUE_UNDO";
+	public static final String QUE_REDO = "QUE_REDO";
 
 	public static final String QUE_NEXT = "QUE_NEXT";
 	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";

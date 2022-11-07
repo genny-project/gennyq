@@ -1,22 +1,32 @@
 package life.genny.bridge.live.data;
 
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.bridge.PermittedOptions;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.CorsHandler;
-import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
-import io.vertx.ext.web.handler.sockjs.SockJSHandler;
-import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.vertx.core.Vertx;
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
+
+import io.vertx.ext.bridge.PermittedOptions;
+import io.vertx.ext.bridge.BridgeEventType;
+
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.CorsHandler;
+
+import io.vertx.ext.web.handler.sockjs.BridgeEvent;
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
+import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * ExternalConsumerConfig --- This class contains configurations for {@link CorsHandler}
@@ -109,22 +119,61 @@ public class ExternalConsumerConfig {
                 .allowedHeader("X-Requested-With");
     }
 
-    /**
-     * This method receives  the event with the CDI of tye Router which is used to set all the configs
-     * required to initialized the route /frontend/* so external client can make a get request and then
-     * upgrade to websockets when a 101 response has been received. After the websockets protocol has
-     * been successful then the method handleConnectionTypes from {@link ExternalConsumer } will be used
-     * to handle all the messages sent from the external client
-     *
-     * @param router {@link Router } Vertx router to set the routes
-     */
-    public void init(@Observes Router router) {
-        SockJSHandlerOptions sockOptions = new SockJSHandlerOptions().setHeartbeatInterval(2000);
-        SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
-        sockJSHandler.bridge(setBridgeOptions(), handler::handleConnectionTypes);
-        environment.filter(d -> !d.equals("prod"))
-                .ifPresent(d -> router.route().handler(cors()));
-        router.route("/frontend/*").handler(cors());
-        router.route("/frontend/*").handler(sockJSHandler);
-    }
+	/**
+	 * This method receives  the event with the CDI of tye Router which is used to set all the configs
+	 * required to initialized the route /frontend/* so external client can make a get request and then 
+	 * upgrade to websockets when a 101 response has been received. After the websockets protocol has 
+	 * been successful then the method handleConnectionTypes from {@link ExternalConsumer } will be used
+	 * to handle all the messages sent from the external client
+	 *
+	 * @param router {@link Router } Vertx router to set the routes
+	 */
+	public void init(@Observes Router router) {
+		SockJSHandlerOptions sockOptions = new SockJSHandlerOptions()
+			.setHeartbeatInterval(2000);
+
+		SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
+
+		sockJSHandler.bridge(setBridgeOptions(),handler::handleConnectionTypes);
+
+		SockJSBridgeOptions options = new SockJSBridgeOptions();
+
+		Handler<BridgeEvent> handler = new Handler<>() {
+			public void handle(BridgeEvent be) {
+				boolean isPublish = be.type() == BridgeEventType.PUBLISH;
+				boolean isSend = be.type() == BridgeEventType.SEND;
+				System.out.println("Received BridgeEvent: " + be.getRawMessage().toString());
+				if (isPublish || isSend) {
+					// Add Access-Control-Allow-Origin
+					JsonObject rawMessage = be.getRawMessage();
+
+					JsonObject headers = rawMessage.getJsonObject("headers");
+
+					String referer = headers.getString("referer");
+
+					headers.put("Access-Control-Allow-Origin", referer);
+
+					rawMessage.put("headers", headers);
+					be.setRawMessage(rawMessage);
+				}
+				be.complete(true);
+			}
+		};
+
+		environment.filter(d -> !"prod".equals(d))
+		.ifPresent(d -> {
+				router.route() // do we want to be routing to d here?
+				.subRouter(sockJSHandler.bridge(options, handler))
+				.handler(cors());
+		});
+
+		router.route("/frontend/*")
+		.subRouter(sockJSHandler.bridge(options, handler));
+
+		router.route("/frontend/*")
+		.handler(cors())
+		.handler(sockJSHandler);
+		// .subRouter(sockJSHandler.bridge(options, handler))
+
+	}
 }
