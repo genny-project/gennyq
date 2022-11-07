@@ -57,6 +57,10 @@ public class PCM extends BaseEntity {
 		return Integer.parseInt(StringUtils.removeStart(location, Attribute.PRI_LOC));
 	}
 
+	public static String location(Integer index) {
+		return Attribute.PRI_LOC + index;
+	}
+
 	public void addStringAttribute(String code, String name, String value) {
 		addStringAttribute(code, name, 1.0, value);
 	}
@@ -79,7 +83,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setLocation(Integer index, String value) {
-		String code = Attribute.PRI_LOC + index;
+		String code = location(index);
 		addStringAttribute(code, "Location " + index, Double.valueOf(index), value);
 	}
 
