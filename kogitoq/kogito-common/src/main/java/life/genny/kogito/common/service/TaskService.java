@@ -155,6 +155,13 @@ public class TaskService {
 			throw new NullParameterException("processId");
 		if (pcmCode == null)
 			throw new NullParameterException("pcmCode");
+		if (parent == null) {
+			parent = "PCM_CONTENT";
+		}
+		if (location == null) {
+			location = "PRI_LOC1";
+		}
+
 		if (buttonEvents == null)
 			throw new NullParameterException("buttonEvents");
 
@@ -168,6 +175,8 @@ public class TaskService {
 		log.info("sourceCode : " + sourceCode);
 		log.info("targetCode : " + targetCode);
 		log.info("pcmCode : " + pcmCode);
+		log.info("parent : " + parent);
+		log.info("location : " + location);
 		log.info("buttonEvents : " + buttonEvents);
 		log.info("==========================================");
 
@@ -200,7 +209,7 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		// dispatch data
-		if (!sourceCode.equals(userCode))
+		if (!sourceCode.equals(userCode)) // TODO: Not every task has a userCode
 			return processData;
 
 		// build data
