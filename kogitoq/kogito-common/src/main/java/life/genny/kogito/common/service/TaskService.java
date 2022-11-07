@@ -155,19 +155,14 @@ public class TaskService {
 			throw new NullParameterException("processId");
 		if (pcmCode == null)
 			throw new NullParameterException("pcmCode");
+		if (buttonEvents == null)
+			throw new NullParameterException("buttonEvents");
 
 		// defaults
 		if (parent == null)
 			parent = PCM.PCM_CONTENT;
 		if (location == null)
 			location = PCM.location(1);
-
-		if (buttonEvents == null)
-			throw new NullParameterException("buttonEvents");
-
-		/*
-		 * no need to check parent and location as they can sometimes be null
-		 */
 
 		log.info("==========================================");
 		log.info("processId : " + processId);
