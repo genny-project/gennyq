@@ -28,12 +28,13 @@ public class FilterConst {
     public static final String QUE_QQQ_GROUP = "QQQ_QUESTION_GROUP";
     public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
     public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
+    public static final String QUE_SBE_DETAIL_QUESTION_GRP = "QUE_SBE_DETAIL_QUESTION_GRP";
     public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
     public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
     public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
     public static final String QUE_SUBMIT = "QUE_SUBMIT";
     public static final String QUE_FILTER_VALUE_PREF = "QUE_FILTER_VALUE_";
-    public static final String QUE_TAG_PREF = "ROW_";
+    public static final String ROW_FILTER_PREF = "ROW_FILTER_";
     public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
     public static final String QUE_FILTER_VALUE_STATE = "QUE_FILTER_VALUE_STATE";
     public static final String QUE_FILTER_VALUE_INTERNSHIP_TYPE = "QUE_FILTER_VALUE_INTERNSHIP_TYPE";
@@ -46,6 +47,7 @@ public class FilterConst {
     /* Link */
     public static final String LNK_FILTER_COLUMN = "LNK_FILTER_COLUMN";
     public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
+    public static final String LNK_FILTER_VALUE = "LNK_FILTER_VALUE";
 
     public static final String LNK_CORE = "LNK_CORE";
     public static final String LNK_PERSON = "LNK_PERSON";
@@ -54,8 +56,7 @@ public class FilterConst {
 
     /* Filter */
     public static final String FILTERS = "Filters";
-    public static final String FILTER_QUE_EXIST = "QUE_EXISTING_FILTERS_GRP";
-    public static final String FILTER_QUE_EXIST_NAME = "Existing Filters";
+    public static final String QUE_EXISTING_FILTERS_GRP = "QUE_EXISTING_FILTERS_GRP";
     public static final String FILTER_SEL = "SEL_FILTER_COLUMN_";
     public static final String FILTER_COL = "FLC_";
     public static final String SEL_PREF = "SEL_";
@@ -68,14 +69,6 @@ public class FilterConst {
     /* Filter columns */
     public static final String FILTER_DATE = "DATE";
 
-    /* Filter academy */
-    public static final String SEL_OA_WRP = "SEL_OA_WRP";
-    public static final String SEL_OA_WIL = "SEL_OA_WIL";
-    public static final String SEL_OA_CARRERBOX = "SEL_OA_CARRERBOX";
-    public static final String SEL_PROFESSIONAL_YEAR = "SEL_PROFESSIONAL_YEAR";
-    public static final String SEL_COURSE_CREDIT = "SEL_COURSE_CREDIT";
-    public static final String SEL_DIGITAL_JOBS = "SEL_DIGITAL_JOBS";
-
     /* Filter date */
     public static final String SEL_GREATER_THAN = "SEL_GREATER_THAN";
     public static final String SEL_GREATER_THAN_OR_EQUAL_TO = "SEL_GREATER_THAN_OR_EQUAL_TO";
@@ -85,12 +78,10 @@ public class FilterConst {
     /* Dropdown */
     public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
     public static final String PRI_CODE_LABEL = "CODE";
-    public static final String PRI_NAME_LABEL = "NAME";
 
 
     /* Caching */
     public static final String CACHING_SBE = "SBE_";
-    public static final String SBE_HOST_COMPANIES_VIEW = "SBE_HOST_COMPANIES_VIEW";
     public static final String SBE_TAB_BUCKET_VIEW = "SBE_TAB_BUCKET_VIEW";
     public static final String SBE_APPLIED_APPLICATIONS = "SBE_APPLIED_APPLICATIONS";
 
@@ -114,33 +105,18 @@ public class FilterConst {
     public static final String QUESTIONCODE = "questionCode";
 
     /* Bucket filter values */
-    public static final String PRI_IS_HOST_CPY="PRI_IS_HOST_CPY";
     public static final String PRI_ASSOC_HC="PRI_ASSOC_HC";
-    public static final String PRI_STATUS="PRI_STATUS";
     public static final String ACTIVE="ACTIVE";
-    public static final String BUCKET_FILTER_LABEL="Start typing to search";
-    public static final String PRI_IS_INTERN="PRI_IS_INTERN";
-    public static final String PRI_IS_EDU_PRO="PRI_IS_EDU_PRO";
 
     /* Saved searches */
     public static final String QUE_SAVED_SEARCH_GRP = "QUE_SAVED_SEARCH_GRP";
     public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
     public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
     public static final String QUE_SAVED_SEARCH_LIST = "QUE_SAVED_SEARCH_LIST";
-    public static final String QUE_SAVED_SEARCH_CODE = "QUE_SAVED_SEARCH_CODE";
-    public static final String PCM_SAVED_SEARCH_POPUP = "PCM_SAVED_SEARCH_POPUP";
-    public static final String PCM_SAVED_SEARCH = "PCM_SAVED_SEARCH";
-    public static final String PRI_QUESTION_CODE = "PRI_QUESTION_CODE";
-    public static final String QUE_FILTER_APPLY = "QUE_FILTER_APPLY";
+    public static final String QUE_SAVED_SEARCH_APPLY = "QUE_SAVED_SEARCH_APPLY";
     public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
     public static final String YES = "YES";
     public static final String LNK_AUTHOR = "LNK_AUTHOR";
     public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
-    public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
-    public static final String PCM_SAVED_SEARCH_POPUP_TEXT = "PCM_SAVED_SEARCH_POPUP_TEXT";
-    public static final String SAVED_SEARCHES = "Saved Searches";
-    public static final String PCM_SAVED_SEARCH_SELECT = "PCM_SAVED_SEARCH_SELECT";
     public static final String PCM_SBE_ADD_SEARCH = "PCM_SBE_ADD_SEARCH";
-    public static final String EVT_SAVED_SEARCH_DELETE = "EVT_SAVED_SEARCH_DELETE";
-    public static final String EVT_SAVED_SEARCH_SAVE = "EVT_SAVED_SEARCH_SAVE";
 }

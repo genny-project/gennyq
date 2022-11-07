@@ -31,7 +31,7 @@ public class EventMessageUtils {
     public static final String SELECTED_OPTION = "selectedOption";
     public static final String SEARCH_NAME = "SEARCH_NAME";
     public static final String SEARCH_CODE = "SEARCH_CODE";
-
+    public static final String DATA_TYPE = "data_type";
 
     /**
      * Get name attribute of message
@@ -134,6 +134,15 @@ public class EventMessageUtils {
      */
     public static String getParentCode(JsonObject msg) {
         return getValueByCode(msg, PARENT_CODE);
+    }
+
+    /**
+     * Get data type of message
+     * @param msg Message object
+     * @return name attribute of message
+     */
+    public static String getDataType(JsonObject msg) {
+        return getValueByCode(msg, DATA_TYPE);
     }
 
     /**
@@ -370,8 +379,8 @@ public class EventMessageUtils {
      * @param code
      * @return Whether filter tag or not
      */
-    public boolean isFilterTag(String code) {
-        if(code.startsWith(FilterConst.QUE_TAG_PREF)) {
+    public boolean isRowFilterTag(String code) {
+        if(code.startsWith(FilterConst.ROW_FILTER_PREF)) {
             return true;
         }
 

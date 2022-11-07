@@ -11,6 +11,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.constants.FilterConst;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -135,22 +136,32 @@ public class Events {
 			return;
 		}
 
-//		// add item TODO:Temporary closed
-//		if (code.startsWith("QUE_ADD_")) {
-//			code = StringUtils.removeStart(code, "QUE_ADD_");
-//			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
-//
-//			log.info("Prefix: " + code);
-//			if ("PER".equals(prefix)) {
-//				JsonObject json = Json.createObjectBuilder()
-//						.add("definitionCode", "DEF_"+code)
-//						.add("sourceCode", userToken.getUserCode())
-//						.build();
-//
-//				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
-//				return;
-//			}
-//		}
+		if (code.startsWith("QUE_ADD_SEARCH")) {
+			JsonObject json = Json.createObjectBuilder()
+					.add("questionCode", code)
+					.add("sourceCode", userToken.getUserCode())
+					.add("targetCode", userToken.getUserCode())
+					.build();
+
+			kogitoUtils.triggerWorkflow(SELF, "callProcessQuestions", json);
+			return;
+		}
+
+		if (code.startsWith("QUE_ADD_")) {
+			code = StringUtils.removeStart(code, "QUE_ADD_");
+			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
+
+			log.info("Prefix: " + code);
+			if ("PER".equals(prefix)) {
+				JsonObject json = Json.createObjectBuilder()
+						.add("definitionCode", "DEF_"+code)
+						.add("sourceCode", userToken.getUserCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
+				return;
+			}
+		}
 
 		// edit item
 		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*") ) {

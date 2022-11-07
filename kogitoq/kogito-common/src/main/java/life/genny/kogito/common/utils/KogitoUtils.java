@@ -224,35 +224,42 @@ public class KogitoUtils {
 	 * @param json The json object to send
 	 */
 	public String triggerWorkflow(final UseService useService, final String id, JsonObject json) {
+		try {
+			// add token to JsonObject
+			JsonObjectBuilder builder = Json.createObjectBuilder();
+			json.forEach(builder::add);
+			builder.add("token", userToken.getToken());
+			builder.add("userToken", jsonb.toJson(userToken));
+			json = builder.build();
 
-		// add token to JsonObject
-		JsonObjectBuilder builder = Json.createObjectBuilder();
-		json.forEach(builder::add);
-		builder.add("token", userToken.getToken());
-		builder.add("userToken", jsonb.toJson(userToken));
-		json = builder.build();
+			// select uri
+			String uri = selectServiceURI(useService) + "/" + id;
+			log.info("Triggering workflow with uri: " + uri);
 
-		// select uri
-		String uri = selectServiceURI(useService) + "/" + id;
-		log.info("Triggering workflow with uri: " + uri);
+			// make post request
+			HttpResponse<String> response = HttpUtils.post(uri, json.toString(), userToken);
+			if (response == null) {
+				log.error("NULL RESPONSE from workflow endpoint");
+				return null;
+			}
 
-		// make post request
-		HttpResponse<String> response = HttpUtils.post(uri, json.toString(), userToken);
-		if (response == null) {
-			log.error("NULL RESPONSE from workflow endpoint");
-			return null;
+			// ensure request was a success
+			if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
+				log.error("Error, Response Status: " + response.statusCode());
+				return null;
+			}
+
+
+			JsonObject result = jsonb.fromJson(response.body(), JsonObject.class);
+
+			// return the processId
+			return result.getString("id");
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 
-		// ensure request was a success
-		if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Error, Response Status: " + response.statusCode());
-			return null;
-		}
-
-		JsonObject result = jsonb.fromJson(response.body(), JsonObject.class);
-
-		// return the processId
-		return result.getString("id");
+		return null;
 	}
 
 	/**

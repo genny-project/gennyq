@@ -53,8 +53,7 @@ public class FilterService {
     @Inject
     SearchUtils searchUtils;
 
-    @Inject
-    SearchService searchService;
+    public static final String SEPARATOR = ";";
 
     public static enum Options {
         PAGINATION,
@@ -289,37 +288,41 @@ public class FilterService {
 
     /**
      * Send filter group and filter column for filter function
-     * @param sbeCode SBE code
-     * @param queCode Question code
+     * @param queGrp Question group code
+     * @param questionCode Question code
      * @param filterCode Filter code
      * @param listFilterParams Filter parameters
      */
-    public void sendAddFilterGroup(String sbeCode, String queGrp,String questionCode, String filterCode,
+    public void sendAddFilterGroup(String queGrp,String questionCode, String filterCode,
                                    Map<String, Map<String,String>> listFilterParams) {
         try {
-//            SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
+            Ask ask = filterUtils.getFilterGroup(questionCode, filterCode, listFilterParams);
+            QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
+            msgFilterGrp.setToken(userToken.getToken());
 
-//            if (searchBE != null) {
-                Ask ask = filterUtils.getFilterGroupBySearchBE(sbeCode, questionCode, filterCode, listFilterParams);
-                QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
-                msgFilterGrp.setToken(userToken.getToken());
-                String queCode = "";
+            msgFilterGrp.setTargetCode(questionCode);
+            ask.setQuestionCode(questionCode);
+            ask.getQuestion().setCode(questionCode);
 
-                ask.setTargetCode(sbeCode);
-                queCode = queGrp + "_" + sbeCode;
-
-                msgFilterGrp.setTargetCode(queCode);
-                ask.setQuestionCode(queCode);
-                ask.getQuestion().setCode(queCode);
-
-                msgFilterGrp.setMessage(FilterConst.FILTERS);
-                msgFilterGrp.setTag(FilterConst.FILTERS);
-                msgFilterGrp.setReplace(true);
-                KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
-//            }
+            msgFilterGrp.setMessage(FilterConst.FILTERS);
+            msgFilterGrp.setTag(FilterConst.FILTERS);
+            msgFilterGrp.setReplace(true);
+            KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgFilterGrp);
         }catch (Exception ex) {
             log.error(ex);
         }
+    }
+
+
+    public void sendFilterDetailsByGroup(String queGrp,String filterCode,Map<String, Map<String,String>> listParam,
+                                         boolean replaced) {
+        Ask ask = filterUtils.getFilterDetailsGroup(queGrp,filterCode, listParam);
+        sendAsk(ask,queGrp, replaced);
+    }
+
+    public void sendFilterDetailsByGroup(String queGrp,String filterCode,Map<String, Map<String,String>> listParam) {
+        Ask ask = filterUtils.getFilterDetailsGroup(queGrp,filterCode, listParam);
+        sendAsk(ask,queGrp, false);
     }
 
     /**
@@ -350,8 +353,7 @@ public class FilterService {
      * @param attCode Attribute code
      */
     public void sendFilterValue(String queGrp,String queCode, String lnkCode, String lnkVal,String attCode) {
-        QDataBaseEntityMessage msg = null;
-        msg = filterUtils.getFilterSelectBoxValueByCode(queGrp,queCode, lnkCode,lnkVal);
+        QDataBaseEntityMessage msg = filterUtils.getFilterSelectBoxValueByCode(queGrp,queCode, lnkCode,lnkVal);
 
         msg.setToken(userToken.getToken());
         msg.setTargetCode(queCode);
@@ -684,7 +686,6 @@ public class FilterService {
      * @param queValCode Question value code
      */
     public void sendPartialPCM(String pcmCode,String loc,String queValCode) {
-        // update target pcm
         BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
         for(EntityAttribute ea : pcm.getBaseEntityAttributes()) {
             if(ea.getAttributeCode().equalsIgnoreCase(loc)) {
@@ -692,11 +693,84 @@ public class FilterService {
                 ea.setValueString(queValCode);
             }
         }
+        sendBaseEntity(pcm);
+    }
 
-        // send to alyson
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(pcm);
+    public void sendFilterDetailsByPcm(String pcmCode,String queCode,String attCode,String value) {
+        BaseEntity base = beUtils.getBaseEntity(pcmCode);
+
+        for(EntityAttribute ea : base.getBaseEntityAttributes()) {
+            if(ea.getAttributeCode().equalsIgnoreCase(FilterConst.PRI_LOC1)) {
+                ea.setValue(attCode);
+                ea.setValueString(attCode);
+            }
+        }
+
+        sendBaseEntity(base);
+    }
+
+    public void sendFilterDetailsByBase(String parentCode,String queCode,String attCode,String value) {
+        List<BaseEntity> baseEntities = new ArrayList<>();
+
+        BaseEntity base = new BaseEntity(attCode);
+        String  rowVal = queCode + SEPARATOR + attCode + SEPARATOR + value;
+
+        Attribute attribute = qwandaUtils.getAttribute(attCode);
+        EntityAttribute ea = new EntityAttribute(base,attribute,1.0);
+        ea.setValue(rowVal);
+        ea.setValueString(rowVal);
+
+        base.addAttribute(ea);
+        baseEntities.add(base);
+
+        sendBaseEntity(baseEntities,parentCode,queCode,false);
+    }
+
+    public void sendBaseEntity(BaseEntity baseEntity) {
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntity);
         msg.setToken(userToken.getToken());
         msg.setReplace(true);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
+
+    public void sendBaseEntity(BaseEntity baseEntity,boolean replaced) {
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntity);
+        msg.setToken(userToken.getToken());
+        msg.setReplace(replaced);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+    }
+
+    public void sendBaseEntity(List<BaseEntity> baseEntities,String parentCode,String queCode,boolean replaced) {
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
+
+        msg.setToken(userToken.getToken());
+        msg.setParentCode(parentCode);
+        msg.setQuestionCode(queCode);
+
+        msg.setItems(baseEntities);
+        msg.setReplace(replaced);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+    }
+
+    public void sendAsk(Ask ask,String queGrp) {
+        QDataAskMessage msg = new QDataAskMessage(ask);
+
+        msg.setToken(userToken.getToken());
+        msg.setTargetCode(queGrp);
+        msg.setMessage(queGrp);
+        msg.setReplace(true);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+    }
+
+    public void sendAsk(Ask ask,String queGrp, boolean replaced) {
+        QDataAskMessage msg = new QDataAskMessage(ask);
+
+        msg.setToken(userToken.getToken());
+        msg.setTargetCode(queGrp);
+        msg.setMessage(queGrp);
+        msg.setReplace(replaced);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+    }
+
+
 }

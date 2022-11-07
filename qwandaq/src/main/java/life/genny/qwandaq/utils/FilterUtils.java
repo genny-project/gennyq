@@ -25,6 +25,7 @@ import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import org.w3c.dom.Attr;
 
 @ApplicationScoped
 public class FilterUtils {
@@ -76,12 +77,11 @@ public class FilterUtils {
     /**
      * Return ask with filter group content
      *
-     * @param sbeCode      Search Base Entity Code
      * @param questionCode Question code
      * @param listParam    List o filter parameters
      * @return Ask
      */
-    public Ask getFilterGroupBySearchBE(String sbeCode, String questionCode,String filterCode,
+    public Ask getFilterGroup(String questionCode,String filterCode,
                                         Map<String, Map<String, String>> listParam) {
         Ask ask = new Ask();
         ask.setName(FilterConst.FILTERS);
@@ -91,12 +91,8 @@ public class FilterUtils {
         question.setAttributeCode(FilterConst.QUE_QQQ_GROUP);
         ask.setQuestion(question);
 
-        Ask addFilterAsk = getAddFilterGroupBySearchBE(sbeCode, questionCode);
+        Ask addFilterAsk = getAddFilterGroupBySearchBE(questionCode);
         ask.add(addFilterAsk);
-
-        Ask existFilterAsk = getExistingFilterGroupBySearchBE(sbeCode,filterCode,listParam);
-
-        ask.add(existFilterAsk);
 
         return ask;
     }
@@ -107,37 +103,58 @@ public class FilterUtils {
      * @param filterCode    Filter code
      * @param listFilParams List of filter parameters
      */
-    public void setExistingFilterGroup(Ask ask, String filterCode, Map<String, Map<String, String>> listFilParams) {
+    public void setFilterDetailsGroup(Ask ask, String filterCode, Map<String, Map<String, String>> listFilParams) {
         //current filter state
-        Ask curAsk = new Ask();
-        curAsk.setQuestionCode(FilterConst.QUE_SAVED_SEARCH_CODE);
-        curAsk.setAttributeCode(FilterConst.QUE_SAVED_SEARCH_CODE);
-        curAsk.setName(filterCode);
-        Question curQue = new Question();
-        curQue.setCode(FilterConst.QUE_SAVED_SEARCH_CODE);
-        curAsk.setQuestion(curQue);
-
-        ask.add(curAsk);
-
         for (Map.Entry<String, Map<String, String>> param : listFilParams.entrySet()) {
-            Ask childAsk = new Ask();
-            childAsk.setAttributeCode(param.getKey());
 
-            Question question = new Question();
-            question.setAttributeCode(param.getValue().get(FilterConst.COLUMN));
-            question.setCode(param.getValue().get(FilterConst.QUESTIONCODE));
-            question.setName(param.getValue().get(FilterConst.OPTION));
-            question.setHtml(param.getValue().get(FilterConst.VALUE));
+            for(Map.Entry<String,String> childParam : param.getValue().entrySet()) {
+//                Ask childAsk = new Ask();
+//                childAsk.setAttributeCode(childParam.getKey());
+//
+//                Attribute att = new Attribute(childParam.getKey(), childParam.getKey(), new DataType());
+////                Question question = new Question(param.getKey(), param.getKey(), att);
+//
+//                Question question = new Question(FilterConst.QUESTIONCODE, FilterConst.OPTION, att);
+//                question.setAttributeCode(param.getValue().get(FilterConst.COLUMN));
+//
+//                question.setCode(param.getValue().get(FilterConst.QUESTIONCODE));
+//                question.setName(param.getValue().get(FilterConst.OPTION));
+//                question.setHtml(param.getValue().get(FilterConst.VALUE));
+////                question.setHtml(childParam.getValue());
+//
+//                childAsk.setName(param.getValue().get(FilterConst.COLUMN));
+////                childAsk.setName(childParam.getKey());
+//                childAsk.setHidden(false);
+//                childAsk.setDisabled(false);
+//                childAsk.setQuestionCode(param.getValue().get(FilterConst.QUESTIONCODE));
+//                childAsk.setQuestion(question);
+//
+//                childAsk.setTargetCode(userToken.userCode);
+//
+//                ask.add(childAsk);
 
-            childAsk.setName(param.getValue().get(FilterConst.COLUMN));
-            childAsk.setHidden(false);
-            childAsk.setDisabled(false);
-            childAsk.setQuestionCode(param.getValue().get(FilterConst.QUESTIONCODE));
-            childAsk.setQuestion(question);
+                Ask childAsk = new Ask();
+                childAsk.setAttributeCode(param.getKey());
 
-            childAsk.setTargetCode(userToken.userCode);
+                Attribute att = new Attribute(childParam.getKey(), childParam.getKey(), new DataType());
+                Question question = new Question(FilterConst.QUESTIONCODE, FilterConst.OPTION, att);
+//                question.setAttributeCode(param.getValue().get(FilterConst.COLUMN));
 
-            ask.add(childAsk);
+                //          question.setCode(param.getValue().get(FilterConst.QUESTIONCODE));
+                //          question.setName(param.getValue().get(FilterConst.OPTION));
+
+                question.setHtml(childParam.getValue());
+                childAsk.setName(childParam.getValue());
+
+                childAsk.setHidden(false);
+                childAsk.setDisabled(false);
+//                childAsk.setQuestionCode(param.getValue().get(FilterConst.QUESTIONCODE));
+                childAsk.setQuestion(question);
+
+                childAsk.setTargetCode(userToken.userCode);
+
+                ask.add(childAsk);
+            }
         }
     }
 
@@ -179,11 +196,10 @@ public class FilterUtils {
     /**
      * Return ask with add filter group content
      *
-     * @param sbeCode      Search Base Entity Code
      * @param questionCode Question code
      * @return Ask
      */
-    public Ask getAddFilterGroupBySearchBE(String sbeCode, String questionCode) {
+    public Ask getAddFilterGroupBySearchBE(String questionCode) {
         String sourceCode = userToken.getUserCode();
         BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
         BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
@@ -213,28 +229,26 @@ public class FilterUtils {
 
     /**
      * Construct existing filter group object in Add Filter group form
-     *
-     * @param sbeCode       Search Base Entity Code
-     * @param filterCode    Filter code
+     * @param queGrp  Question Group code
+     * @param filterCode Filter code
      * @param listFilParams List of Filter parameters
      * @return return existing filter group object
      */
-    public Ask getExistingFilterGroupBySearchBE(String sbeCode,String filterCode,
-                                                Map<String, Map<String, String>> listFilParams) {
-        Ask ask = new Ask();
-        ask.setName(FilterConst.FILTER_QUE_EXIST_NAME);
-        ask.setSourceCode(userToken.getUserCode());
-        ask.setTargetCode(userToken.getUserCode());
+    public Ask getFilterDetailsGroup(String queGrp,String filterCode, Map<String, Map<String, String>> listFilParams) {
+        String sourceCode = userToken.getUserCode();
+        BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
+        BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
+
+        Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,source,target);
         ask.setHidden(true);
 
-        Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
-        Question question = new Question(FilterConst.FILTER_QUE_EXIST,FilterConst.FILTER_QUE_EXIST,attribute);
-
-        // change exist filter group
+        // change filter details group
         if (listFilParams.size() > 0) {
-            setExistingFilterGroup(ask,filterCode, listFilParams);
+            setFilterDetailsGroup(ask,filterCode, listFilParams);
         }
 
+        Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
+        Question question = new Question(queGrp,queGrp,attribute);
         ask.setQuestion(question);
 
         return ask;

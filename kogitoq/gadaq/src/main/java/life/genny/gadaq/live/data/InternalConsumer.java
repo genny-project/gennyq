@@ -57,7 +57,7 @@ public class InternalConsumer {
 	Events events;
 
 	@Inject
-	FilterGroupService filterService;
+	FilterGroupService filter;
 
 	/**
 	 * Execute on start up.
@@ -105,7 +105,7 @@ public class InternalConsumer {
 		scope.destroy();
 
 		/* Handle filter */
-		filterService.handleFilterEventData(data);
+//		filter.handleFilterEventData(data);
 
 		// log duration
 		Instant end = Instant.now();
@@ -140,15 +140,15 @@ public class InternalConsumer {
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
 		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type()) && !filterService.isAddFilterGroup(msg.getData().getParentCode())) {
+		if ("DD".equals(msg.getEvent_type()) && !filter.isAddFilterGroup(msg.getData().getParentCode())) {
 			return;
 		}
 		events.route(msg);
 		scope.destroy();
 
 		/* Handle filter */
-		if(filterService.isNeededFilterAndQuickSearch(msg.getData().getCode())) {
-			filterService.handleFilterEvent(event);
+		if(filter.isFilter(msg.getData().getParentCode(),msg.getData().getCode())) {
+			filter.handleEvent(event);
 		}
 
 
@@ -165,7 +165,7 @@ public class InternalConsumer {
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
 		scope.init(event);
-		filterService.handleFilterEventData(event);
+		filter.handleEventData(event);
 		scope.destroy();
 
 		Instant end = Instant.now();
