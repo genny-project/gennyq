@@ -51,7 +51,7 @@ public class BridgeGrpcService implements Stream {
      * Stores a map between jti and
      * a broadcast processor
      */
-    private static final Map<String, BroadcastProcessor<Item>> processors = new HashMap<>();
+    private final static Map<String, BroadcastProcessor<Item>> processors = new HashMap<>();
 
 
     /**
