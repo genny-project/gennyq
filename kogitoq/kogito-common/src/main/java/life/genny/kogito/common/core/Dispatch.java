@@ -4,7 +4,6 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,6 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -252,16 +250,13 @@ public class Dispatch {
 
 		log.info("Traversing " + pcm.getCode());
 		log.info(jsonb.toJson(pcm));
-		msg.add(pcm);
 
 		// check for a question code
 		Ask ask = null;
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
-		if (questionCode == null) {
-			log.warn("Question Code is null for " + pcm.getCode());
-		} else {
+		if (questionCode != null) {
 			// use pcm target if one is specified
-			String targetCode = pcm.getValueAsString(Attribute.PRI_TARGET_CODE);
+			String targetCode = pcm.getTargetCode();
 			if (targetCode != null && !targetCode.equals(target.getCode())) {
 				// merge targetCode
 				Map<String, Object> ctxMap = new HashMap<>();
@@ -275,7 +270,12 @@ public class Dispatch {
 				ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target);
 				msg.add(ask);
 			}
+		} else {
+			log.warn("Question Code is null for " + pcm.getCode());
 		}
+
+		// add pcm for sending
+		msg.add(pcm);
 
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
@@ -290,7 +290,6 @@ public class Dispatch {
 				processData.getSearches().add(value);
 				continue;
 			}
-
 		}
 	}
 

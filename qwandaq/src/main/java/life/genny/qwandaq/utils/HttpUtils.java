@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,8 +31,9 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 public class HttpUtils {
 
 	static final Logger log = Logger.getLogger(HttpUtils.class);
-
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
 
 	/**
 	 * Create and send a PUT request.
@@ -95,6 +97,7 @@ public class HttpUtils {
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
+				.timeout(DEFAULT_TIMEOUT)
 				.PUT(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 
@@ -176,7 +179,8 @@ public class HttpUtils {
 
 		Builder requestBuilder = HttpRequest.newBuilder()
 				.uri(createURI(uri))
-				.setHeader("Content-Type", contentType);
+				.setHeader("Content-Type", contentType)
+				.timeout(DEFAULT_TIMEOUT);
 
 		if (token != null) {
 			requestBuilder.setHeader("Authorization", "Bearer " + token);
@@ -232,6 +236,7 @@ public class HttpUtils {
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
+				.timeout(DEFAULT_TIMEOUT)
 				.GET().build();
 
 		HttpResponse<String> response = null;
@@ -279,6 +284,7 @@ public class HttpUtils {
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
+				.timeout(DEFAULT_TIMEOUT)
 				.DELETE().build();
 
 		HttpResponse<String> response = null;
