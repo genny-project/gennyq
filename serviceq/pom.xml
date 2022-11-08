@@ -57,10 +57,10 @@
 			<artifactId>qwandaq</artifactId>
 			<version>${genny.version}</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!--   <groupId>io.quarkus</groupId> -->
-		<!--   <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId> -->
-		<!-- </dependency> -->
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>javax.annotation</groupId>
 			<artifactId>javax.annotation-api</artifactId>
