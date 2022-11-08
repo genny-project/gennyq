@@ -182,9 +182,8 @@ public class HttpUtils {
 				.setHeader("Content-Type", contentType)
 				.timeout(DEFAULT_TIMEOUT);
 
-		if (token != null) {
+		if (token != null)
 			requestBuilder.setHeader("Authorization", "Bearer " + token);
-		}
 
 		HttpRequest request = requestBuilder
 				.POST(HttpRequest.BodyPublishers.ofString(body))
