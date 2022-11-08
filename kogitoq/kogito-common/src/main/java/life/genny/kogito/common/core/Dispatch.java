@@ -111,6 +111,16 @@ public class Dispatch {
 		if (buttonEvents != null) {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
+
+			PCM eventsPCM = beUtils.getPCM("PCM_EVENTS");
+			// Now set the unique code of the PCM_EVENTS so that it is unique
+			eventsPCM.setCode("PCM_EVENTS");
+			msg.add(eventsPCM);
+			// Now update the PCM to point the last location to the PCM_EVENTS
+			// add a LOC2 to the PCM if it doesn't exist
+			if (pcm.getLocation(2) == null) {
+				pcm.addStringAttribute("PRI_LOC2", "LOC2", PCM.PCM_EVENTS);
+			}
 		}
 
 		// init if null to stop null pointers
