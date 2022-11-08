@@ -1,36 +1,33 @@
 package life.genny.qwandaq.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.attribute.Attribute;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import life.genny.qwandaq.attribute.Attribute;
-
 @Embeddable
 @RegisterForReflection
-public class EntityEntityId implements java.io.Serializable {
+public class HEntityEntityId implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	@ManyToOne()
 	@JsonManagedReference(value = "entityEntity")
 	@JsonIgnoreProperties("links")
-	private BaseEntity source;
+	private HBaseEntity source;
 
 	private String targetCode;
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
 	private Attribute attribute;
 
-	public EntityEntityId() {
+	public HEntityEntityId() {
 	}
 
 	/**
@@ -50,14 +47,14 @@ public class EntityEntityId implements java.io.Serializable {
 	/**
 	 * @return the source
 	 */
-	public BaseEntity getSource() {
+	public HBaseEntity getSource() {
 		return source;
 	}
 
 	/**
 	 * @param source the source to set
 	 */
-	public void setSource(final BaseEntity source) {
+	public void setSource(final HBaseEntity source) {
 		this.source = source;
 	}
 
@@ -93,10 +90,10 @@ public class EntityEntityId implements java.io.Serializable {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof EntityEntityId)) {
+		if (!(obj instanceof HEntityEntityId)) {
 			return false;
 		}
-		EntityEntityId that = (EntityEntityId) obj;
+		HEntityEntityId that = (HEntityEntityId) obj;
 		EqualsBuilder eb = new EqualsBuilder();
 		eb.append(attribute, that.attribute);
 		eb.append(source.getCode(), that.source.getCode());

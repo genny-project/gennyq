@@ -20,33 +20,50 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Cacheable;
+import javax.persistence.CascadeType;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Index;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.HEntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
-
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.*;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -70,24 +87,23 @@ import static life.genny.qwandaq.constants.GennyConstants.PER_BE_PREFIX;
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
-	@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
-	"code",
-	"realm"
-	}
-))
+		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
+		"code",
+		"realm"
+}))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @FilterDefs({
-	@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
-		@ParamDef(name = "attributeCodes", type = "string")
+		@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
+				@ParamDef(name = "attributeCodes", type = "string")
 		}),
-	@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
-		@ParamDef(name = "attributeCode", type = "string")
-	})
+		@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
+				@ParamDef(name = "attributeCode", type = "string")
+		})
 })
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @RegisterForReflection
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf {
 
 	@Transient
@@ -104,7 +120,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
 	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade=CascadeType.ALL)
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)
 	@JsonBackReference(value = "entityAttribute")
 	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
 	@Filters({
@@ -117,18 +133,24 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
 	@JsonBackReference(value = "entityEntity")
 	// @Cascade({ CascadeType.MERGE, CascadeType.REMOVE })
-	/* Stores the links of BaseEntity to another BaseEntity */
-	private Set<EntityEntity> links = new LinkedHashSet<>();
+	/* Stores the links of HBaseEntity to another HBaseEntity */
+	private Set<HEntityEntity> links = new LinkedHashSet<>();
 
 	@Transient
 	@JsonbTransient
 	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
-	/*@JsonIgnore
-	@XmlTransient
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")*/
-	// @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	@JsonbTransient
+	/*
+	 * @JsonIgnore
+	 *
+	 * @XmlTransient
+	 *
+	 * @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
+	 *
+	 * @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
+	 *
+	 * @JsonbTransient
+	 */
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
 
 	@XmlTransient
@@ -158,7 +180,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public HBaseEntity() {
 		// super();
 		// dummy
@@ -171,7 +192,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 */
 	public HBaseEntity(final String aName) {
 		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
-
 	}
 
 	/**
@@ -183,7 +203,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@ProtoFactory
 	public HBaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
-
 	}
 
 	/**
@@ -234,23 +253,23 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	// @JsonbTransient
-	public Set<EntityEntity> getLinks() {
+	public Set<HEntityEntity> getLinks() {
 		return links;
 	}
 
 	/**
-	 * Sets the Links of the BaseEntity with another BaseEntity
+	 * Sets the Links of the HBaseEntity with another HBaseEntity
 	 *
 	 * @param links the links to set
 	 */
-	public void setLinks(final Set<EntityEntity> links) {
+	public void setLinks(final Set<HEntityEntity> links) {
 		this.links = links;
 	}
 
 	/**
 	 * @param links the links to set
 	 */
-	public void setLinks(final List<EntityEntity> links) {
+	public void setLinks(final List<HEntityEntity> links) {
 		this.links.addAll(links);
 	}
 
@@ -263,7 +282,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	}
 
 	/**
-	 * Sets the Questions of the BaseEntity with another BaseEntity
+	 * Sets the Questions of the HBaseEntity with another HBaseEntity
 	 *
 	 * @param questions the questions to set
 	 */
@@ -320,7 +339,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		boolean ret = false;
 
 		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> ti.getAttribute().getCode().equals(linkAttributeCode))) {
+		if (getLinks().parallelStream().anyMatch(ti -> ti.getPk().getAttribute().getCode().equals(linkAttributeCode))) {
 			ret = true;
 		}
 		return ret;
@@ -390,11 +409,11 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 * @param attribute the attribute to find
 	 * @return HEntityAttribute
 	 */
-	public HEntityAttribute findEntityAttribute(final Attribute attribute) {
-		final HEntityAttribute foundEntity = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst().get();
+	public Optional<HEntityAttribute> findEntityAttribute(final Attribute attribute) {
+		final Optional<HEntityAttribute> foundEntityOpt = getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst();
 
-		return foundEntity;
+		return foundEntityOpt;
 	}
 
 	/**
@@ -463,18 +482,23 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final HEntityAttribute entityAttribute = new HEntityAttribute(weight, value);
-		entityAttribute.setRealm(getRealm());
-		entityAttribute.setBaseEntityCode(getCode());
-		entityAttribute.setAttribute(attribute);
+		final HEntityAttribute entityAttribute = new HEntityAttribute(this, attribute, weight, value);
 		Optional<HEntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
-			existing.get().setValue(value);
+			if (value != null)
+				existing.get().setValue(value);
 			existing.get().setWeight(weight);
 			// removeAttribute(existing.get().getAttributeCode());
 		} else {
 			this.getBaseEntityAttributes().add(entityAttribute);
 		}
+		return updateEntityAttributePk(entityAttribute, attribute);
+	}
+
+	private HEntityAttribute updateEntityAttributePk(HEntityAttribute entityAttribute, Attribute attribute) {
+		entityAttribute.setBaseEntity(this);
+		entityAttribute.setAttribute(attribute);
+
 		return entityAttribute;
 	}
 
@@ -496,10 +520,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final HEntityAttribute entityAttribute = new HEntityAttribute(weight, value);
-		entityAttribute.setRealm(getRealm());
-		entityAttribute.setBaseEntityCode(getCode());
-		entityAttribute.setAttribute(attribute);
+		final HEntityAttribute entityAttribute = new HEntityAttribute(this, attribute, weight, value);
 		getBaseEntityAttributes().add(entityAttribute);
 
 		return entityAttribute;
@@ -533,25 +554,25 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	}
 
 	/**
-	 * addTarget This links this baseEntity to a target BaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
+	 * addTarget This links this baseEntity to a target HBaseEntity and associated
+	 * weight,value to the baseEntity. It auto creates the HEntityEntity object and
 	 * sets itself to be the source. For efficiency we assume the link does not
 	 * already exist
 	 *
 	 * @param target        the target to add
 	 * @param linkAttribute the attribute link
 	 * @param weight        the weight of the target
-	 * @return EntityEntity
+	 * @return HEntityEntity
 	 * @throws BadDataException if the target could not be added
 	 */
-	public EntityEntity addTarget(final HBaseEntity target, final Attribute linkAttribute, final Double weight)
+	public HEntityEntity addTarget(final HBaseEntity target, final Attribute linkAttribute, final Double weight)
 			throws BadDataException {
 		return addTarget(target, linkAttribute, weight, null);
 	}
 
 	/**
-	 * addTarget This links this baseEntity to a target BaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
+	 * addTarget This links this baseEntity to a target HBaseEntity and associated
+	 * weight,value to the baseEntity. It auto creates the HEntityEntity object and
 	 * sets itself to be the source. For efficiency we assume the link does not
 	 * already exist
 	 *
@@ -559,11 +580,11 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	 * @param linkAttribute the attribute link
 	 * @param weight        the weight of the target
 	 * @param value         the value of the target
-	 * @return EntityEntity
+	 * @return HEntityEntity
 	 * @throws BadDataException if the target could not be added
 	 */
-	public EntityEntity addTarget(final HBaseEntity target, final Attribute linkAttribute, final Double weight,
-                                  final Object value) throws BadDataException {
+	public HEntityEntity addTarget(final HBaseEntity target, final Attribute linkAttribute, final Double weight,
+								  final Object value) throws BadDataException {
 		if (target == null)
 			throw new BadDataException("missing Target Entity");
 		if (linkAttribute == null)
@@ -571,13 +592,13 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityEntity entityEntity = new EntityEntity(getRealm(), getCode(), target.getCode(), linkAttribute, value, weight);
+		final HEntityEntity entityEntity = new HEntityEntity(this, target, linkAttribute, value, weight);
 		getLinks().add(entityEntity);
 		return entityEntity;
 	}
 
 	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
+	 * addAnswer This links this baseEntity to a target HBaseEntity and associated
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source and assumes itself to be the target. For efficiency we assume the link
 	 * does not already exist and weight = 0
@@ -591,7 +612,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	}
 
 	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
+	 * addAnswer This links this baseEntity to a target HBaseEntity and associated
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source and assumes itself to be the target. For efficiency we assume the link
 	 * does not already exist
@@ -606,7 +627,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	}
 
 	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
+	 * addAnswer This links this baseEntity to a target HBaseEntity and associated
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source. For efficiency we assume the link does not already exist
 	 *
@@ -625,7 +646,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final AnswerLink answerLink = new AnswerLink(source.toBaseEntity(), this.toBaseEntity(), answer, weight);
+		final AnswerLink answerLink = new AnswerLink(source, this, answer, weight);
 		if (answer.getAskId() != null) {
 			answerLink.setAskId(answer.getAskId());
 		}
@@ -637,13 +658,9 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 			ea.get().setValue(answerLink.getValue());
 			ea.get().setInferred(answer.getInferred());
 			ea.get().setWeight(answer.getWeight());
-			ea.get().setRealm(getRealm());
-			ea.get().setBaseEntityCode(getCode());
+			ea.get().setBaseEntity(this);
 		} else {
-			HEntityAttribute newEA = new HEntityAttribute(weight, answerLink.getValue());
-			newEA.setRealm(getRealm());
-			newEA.setBaseEntityCode(getCode());
-			newEA.setAttributeCode(answerLink.getAttributeCode());
+			HEntityAttribute newEA = new HEntityAttribute(this, answerLink.getAttribute(), weight, answerLink.getValue());
 			newEA.setInferred(answerLink.getInferred());
 			this.baseEntityAttributes.add(newEA);
 		}
@@ -652,7 +669,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	}
 
 	/**
-	 * Merge a BaseEntity.
+	 * Merge a HBaseEntity.
 	 *
 	 * @param entity the entity to merge
 	 * @return Set
@@ -1150,7 +1167,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(PER_BE_PREFIX);
+		return getCode().startsWith(Prefix.PER);
 	}
 
 	@Override
@@ -1174,8 +1191,8 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 
 	@Override
 	public boolean equals(Object otherObject) {
-		return this.getRealm().equals(((HBaseEntity) otherObject).getRealm())
-				&& this.getCode().equals(((HBaseEntity) otherObject).getCode());
+		return this.getRealm().equals(((BaseEntity) otherObject).getRealm())
+				&& this.getCode().equals(((BaseEntity) otherObject).getCode());
 	}
 
 	public BaseEntity toBaseEntity() {

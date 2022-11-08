@@ -9,6 +9,7 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
 
 /**
  * AnswerLinkId stores information regarding the source and target BaseEntitys
@@ -23,11 +24,11 @@ public class AnswerLinkId implements java.io.Serializable {
 
   @JsonIgnore
   @ManyToOne
-  private BaseEntity source;
+  private HBaseEntity source;
 
   @JsonIgnore
   @ManyToOne
-  private BaseEntity target;
+  private HBaseEntity target;
 
   @JsonIgnore
   @ManyToOne(optional = true, fetch = FetchType.LAZY)
@@ -36,28 +37,28 @@ public class AnswerLinkId implements java.io.Serializable {
   /**
    * @return the source
    */
-  public BaseEntity getSource() {
+  public HBaseEntity getSource() {
     return source;
   }
 
   /**
    * @param source the source to set
    */
-  public void setSource(final BaseEntity source) {
+  public void setSource(final HBaseEntity source) {
     this.source = source;
   }
 
   /**
    * @return the target
    */
-  public BaseEntity getTarget() {
+  public HBaseEntity getTarget() {
     return target;
   }
 
   /**
    * @param target the target to set
    */
-  public void setTarget(final BaseEntity target) {
+  public void setTarget(final HBaseEntity target) {
     this.target = target;
   }
 

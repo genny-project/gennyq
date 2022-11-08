@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -16,6 +17,19 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A non-static utility class used for standard
@@ -104,8 +118,8 @@ public class BaseEntityUtils {
 
 	/**
 	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entity does not exist.
-	 * 
+	 * ItemNotFoundException if the entitiy does not exist.
+	 *
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity
 	 */
@@ -180,67 +194,55 @@ public class BaseEntityUtils {
 		return getBaseEntityByCode(productCode, code, true);
 	}
 
-		if (StringUtils.isBlank(productCode))
-			throw new NullParameterException("productCode");
-		if (StringUtils.isBlank(code))
-			throw new NullParameterException("code");
+	public BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
 
-		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(productCode, code);
-		// BaseEntity entity = (BaseEntity)
-		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = getSerializableBaseEntity(productCode, code);
 
-		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
-		// updates are working.
+		BaseEntity entity = null;
 
-		// check in database if not in cache
-		if (entity == null) {
-			try {
-				if (databaseUtils == null) {
-					log.error("databaseUtils is null");
-					Arc.container().instance(DatabaseUtils.class);
-					EntityManagerFactory factory = Persistence.createEntityManagerFactory("genny");
-					entityManager = factory.createEntityManager();
-					if (entityManager == null) {
-						log.error("entityManager is null");
-					}
-					if (databaseUtils == null) {
-						log.error("databaseUtils is still null");
-						databaseUtils = new DatabaseUtils();
-
-						databaseUtils.setEntityManager(entityManager);
-					} else {
-						databaseUtils.setEntityManager(entityManager);
-					}
-				}
-				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode + " but "
-						+ (entity == null ? "not found in db" : "found in db"));
-				CacheUtils.putObject(productCode, code, entity);
-			} catch (NoResultException e) {
-				throw new ItemNotFoundException(productCode, code);
+		if (baseEntitySerializable == null) {
+			log.errorf("No baseentity found in cache for [ productCode , code ]: [ %s , %s]", productCode, code);
+		} else {
+			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
+			log.info("Converted cached BE to entity BE.");
+			if (bundleAttributes) {
+				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
+				Map<String, EntityAttribute> attributeMap = new HashMap<>();
+				entity.setAttributeMap(attributeMap);
+				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
+					attributes.add(bea);
+					attributeMap.put(bea.getAttributeCode(), bea);
+				});
+				log.infof("Added %s BaseEntityAttributes to BE.", attributeMap.size());
 			}
 		}
 
 		return entity;
 	}
 
-	/**
-	 * Update a {@link BaseEntity} in the database and the cache.
-	 *
-	 * @param baseEntity The BaseEntity to update
-	 * @return the newly cached BaseEntity
-	 */
-	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
-		return updateBaseEntity(baseEntity.getRealm(), baseEntity);
+	public life.genny.qwandaq.serialization.baseentity.BaseEntity getSerializableBaseEntity(String productCode, String code) {
+		if (productCode == null) {
+			throw new NullParameterException("productCode");
+		}
+		if (code == null) {
+			throw new NullParameterException("code");
+		}
+		if (StringUtils.isBlank(productCode)) {
+			throw new DebugException("productCode is empty");
+		}
+		if (StringUtils.isBlank(code)) {
+			throw new DebugException("code is empty");
+		}
+
+		// check for entity in the cache
+		BaseEntityKey key = new BaseEntityKey(productCode, code);
+		return (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 	}
 
 	/**
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
-	 * @param productCode The productCode to cache into
-	 * @param baseEntity  The BaseEntity to update
+	 * @param baseEntity The BaseEntity to update
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {

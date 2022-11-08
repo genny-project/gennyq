@@ -18,6 +18,33 @@ package life.genny.qwandaq;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Index;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.validation.Valid;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import java.util.List;
 
 import javax.json.bind.annotation.JsonbProperty;
@@ -56,6 +83,9 @@ public class Ask extends CoreEntity {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlTransient
+	/*@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "question_id", nullable = false)*/
 	private Question question;
 	private String questionCode;
 	private String attributeCode;

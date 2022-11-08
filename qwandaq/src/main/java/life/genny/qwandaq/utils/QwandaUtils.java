@@ -261,7 +261,7 @@ public class QwandaUtils {
 		}
 	}
 
-	public Attribute createEvent(String code, final String name) {
+	public Attribute createButtonEvent(String code, final String name) {
 		if (!code.startsWith(Prefix.EVT)) {
 			code = Prefix.EVT.concat(code);
 		}
@@ -323,12 +323,7 @@ public class QwandaUtils {
 
 			log.info("[*] Parent Question: " + question.getCode());
 
-			// groups always readonly
-			ask.setReadonly(true);
-
-			// fetch questionQuestions from the DB
-			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode,
-					question.getCode());
+			List<QuestionQuestion> questionQuestions = cacheUtils.getQuestionQuestionByQuestionCode(productCode, question.getCode());
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {

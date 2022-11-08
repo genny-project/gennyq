@@ -241,7 +241,7 @@ public class CacheUtils {
 	public static List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm : '" + productCode
+				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm = '" + productCode
 						+ "' and code like '" + prefix + "%'");
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.execute();
 		return queryResult.list();
@@ -267,8 +267,8 @@ public class CacheUtils {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
-						+ "' and baseEntityCode : '" + baseEntityCode + "'");
+				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm = '" + productCode
+						+ "' and baseEntityCode = '" + baseEntityCode + "'");
 		QueryResult<BaseEntityAttribute> queryResult = query.execute();
 		return queryResult.list();
 	}
@@ -315,8 +315,8 @@ public class CacheUtils {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm : '" + productCode
-						+ "' and valueString : '" + questionCode + "'  and attributeCode : 'parentCode' order by baseEntityCode");
+				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm = '" + productCode
+						+ "' and valueString = '" + questionCode + "'  and attributeCode = 'parentCode' order by baseEntityCode");
 		List<QuestionQuestion> questionQuestions = new LinkedList<>();
 		QueryResult<BaseEntityAttribute> queryResult = query.execute();
 		String prevBaseEntityCode = null;

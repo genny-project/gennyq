@@ -7,6 +7,7 @@ import life.genny.qwandaq.Answer;
 
 /**
  * TODO: We need to document this
+ * 
  * @author Jasper Robison
  */
 @RegisterForReflection
@@ -16,11 +17,11 @@ public class ProcessData extends ProcessInstanceVariables {
 	private String targetCode;
 	private String questionCode;
 
-    private String pcmCode;
-    private String parent;
-    private String location;
+	private String pcmCode;
+	private String parent;
+	private String location;
 
-	private String events;
+	private String buttonEvents;
 
 	private String definitionCode;
 	private String processEntityCode;
@@ -38,7 +39,7 @@ public class ProcessData extends ProcessInstanceVariables {
 
 	public ProcessData() {
 		super();
-    }
+	}
 
 	public String getSourceCode() {
 		return sourceCode;
@@ -88,12 +89,12 @@ public class ProcessData extends ProcessInstanceVariables {
 		this.location = location;
 	}
 
-	public String getEvents() {
-		return events;
+	public String getButtonEvents() {
+		return buttonEvents;
 	}
 
-	public void setEvents(String events) {
-		this.events = events;
+	public void setButtonEvents(String buttonEvents) {
+		this.buttonEvents = buttonEvents;
 	}
 
 	public String getDefinitionCode() {

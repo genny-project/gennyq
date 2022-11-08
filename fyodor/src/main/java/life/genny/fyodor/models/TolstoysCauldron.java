@@ -9,13 +9,10 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.HEntityAttribute;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.EntityEntity;
 import life.genny.qwandaq.entity.HBaseEntity;
+import life.genny.qwandaq.entity.HEntityEntity;
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.utils.ickle.predicate.IcklePredicate;
 
 /**
  * TolstoysCauldron - A cauldron of query ingredients.
@@ -25,7 +22,7 @@ public class TolstoysCauldron {
 	private SearchEntity searchEntity;
 
 	private Root<HBaseEntity> root;
-	private Root<EntityEntity> link;
+	private Root<HEntityEntity> link;
 
 	private Map<String, Join<HBaseEntity, HEntityAttribute>> joinMap = new HashMap<>();
 	private Map<String, Subquery<HBaseEntity>> subqueryMap = new HashMap<>();
@@ -57,11 +54,11 @@ public class TolstoysCauldron {
 		this.root = root;
 	}
 
-	public Root<EntityEntity> getLink() {
+	public Root<HEntityEntity> getLink() {
 		return link;
 	}
 
-	public void setLink(Root<EntityEntity> link) {
+	public void setLink(Root<HEntityEntity> link) {
 		this.link = link;
 	}
 

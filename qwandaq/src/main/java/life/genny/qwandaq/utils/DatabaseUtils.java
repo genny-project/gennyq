@@ -1,6 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import java.lang.invoke.MethodHandles;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -12,6 +13,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -19,7 +22,6 @@ import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.validation.Validation;
 
 /*
@@ -140,11 +142,11 @@ public class DatabaseUtils {
 	 * @return List
 	 */
 	public List<BaseEntity> findBaseEntitys(String realm, Integer pageSize, Integer pageNumber,
-			String wildcard) {
+											String wildcard) {
 
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
-		String queryStr = "FROM BaseEntity WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
-		Query query = entityManager.createQuery(queryStr, BaseEntity.class)
+		String queryStr = "FROM HBaseEntity WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
+		Query query = entityManager.createQuery(queryStr, HBaseEntity.class)
 				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
@@ -155,7 +157,10 @@ public class DatabaseUtils {
 					.setMaxResults(pageSize);
 		}
 
-		return query.getResultList();
+		List<BaseEntity> baseEntities = new LinkedList<>();
+		List<HBaseEntity> hBaseEntities = query.getResultList();
+		hBaseEntities.stream().forEach(hbe -> baseEntities.add(hbe.toBaseEntity()));
+		return baseEntities;
 	}
 
 	/**
@@ -267,10 +272,10 @@ public class DatabaseUtils {
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 
 		return entityManager
-				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
+				.createQuery("FROM HBaseEntity WHERE realm=:realmStr AND code=:code", HBaseEntity.class)
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
-				.getSingleResult();
+				.getSingleResult().toBaseEntity();
 	}
 
 	/**
@@ -437,11 +442,11 @@ public class DatabaseUtils {
 
 		if (existingEntity == null) {
 			log.debug("New BaseEntity being saved to DB -> " + entity.getCode());
-			entityManager.persist(entity);
+			entityManager.persist(entity.toHBaseEntity());
 		} else {
 			if (entity.getId() == null)
 				entity.setId(existingEntity.getId());
-			entityManager.merge(entity);
+			entityManager.merge(entity.toHBaseEntity());
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
 	}
@@ -479,8 +484,9 @@ public class DatabaseUtils {
 	@Transactional
 	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
 
-		QuestionQuestionId pk = questionQuestion.getPk();
-		log.info("Saving QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
+		String sourceCode = questionQuestion.getParentCode();
+		String targetCode = questionQuestion.getChildCode();
+		log.info("Saving QuestionQuestion " + sourceCode + ":" + targetCode);
 
 		QuestionQuestion existingQuestionQuestion = null;
 		try {
@@ -551,7 +557,7 @@ public class DatabaseUtils {
 
 		log.info("Deleting BaseEntity " + code);
 
-		entityManager.createQuery("DELETE BaseEntity WHERE realm=:realmStr AND code=:code")
+		entityManager.createQuery("DELETE HBaseEntity WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
 				.executeUpdate();

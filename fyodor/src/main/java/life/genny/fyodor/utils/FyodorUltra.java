@@ -27,8 +27,9 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.HEntityAttribute;
-import life.genny.qwandaq.entity.HBaseEntity;
+import life.genny.qwandaq.entity.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -36,11 +37,8 @@ import life.genny.fyodor.models.TolstoysCauldron;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.EntityEntity;
-import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
@@ -249,7 +247,7 @@ public class FyodorUltra {
 		});
 
 		// ensure link join realm is correct
-		Root<EntityEntity> link = cauldron.getLink();
+		Root<HEntityEntity> link = cauldron.getLink();
 		if (link != null) {
 			cauldron.add(cb.equal(link.get("realm"), realm));
 
@@ -434,7 +432,7 @@ public class FyodorUltra {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		Root<HBaseEntity> root = cauldron.getRoot();
-		Root<EntityEntity> entityEntity = query.from(EntityEntity.class);
+		Root<HEntityEntity> entityEntity = query.from(HEntityEntity.class);
 		cauldron.setLink(entityEntity);
 
 		// Only look in targetCode if both are null

@@ -136,9 +136,9 @@ public class GennyCache {
 	 * Return a remote cache for the given realm.
 	 *
 	 * @param realm
-	 *              the associated realm of the desired cache
+	 * 		the associated realm of the desired cache
 	 * @return RemoteCache&lt;String, String&gt;
-	 *         the remote cache associatd with the realm
+	 * 		the remote cache associatd with the realm
 	 */
 	public RemoteCache<String, String> getRemoteCache(final String realm) {
 
@@ -155,11 +155,12 @@ public class GennyCache {
 	}
 
 	/**
-	 * Get a CoreEntity from the cache.
+	 * Return a remote cache for the given entity.
 	 *
-	 * @param cacheName The cache to get from
-	 * @param key       The key to the entity to fetch
-	 * @return The entity
+	 * @param entityName
+	 * 		the name of the associated entity the desired cache
+	 * @return RemoteCache&lt;String, String&gt;
+	 * 		the remote cache associated with the entity
 	 */
 	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
 		if (remoteCacheManager == null) {
@@ -195,16 +196,15 @@ public class GennyCache {
 
 	/**
 	 * Put a CoreEntity into the cache.
-	 * 
+	 *
 	 * @param cacheName The cache to get from
-	 * @param key       The key to put the entity under
-	 * @param value     The entity
-	 * @return The Entity
+	 * @param key The key to put the entity under
+	 * @param value The persistable entity
+	 * @return True if the entity is successfully inserted into cache, False otherwise
 	 */
-	public CoreEntity putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntity value) {
-		if (value == null) {
-			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null");
-		}
+	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
+		return putEntityIntoCache(cacheName, key, value.toSerializableCoreEntity());
+	}
 
 	/**
 	 * Put a CoreEntity into the cache.
@@ -218,13 +218,13 @@ public class GennyCache {
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
-		RemoteCache<CoreEntityKey, CoreEntitySerializable> cache = remoteCacheManager.getCache(cacheName);
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Cache not found: " + cacheName);
 		}
 		try {
 			if(value != null) {
-				cache.put(key, value);
+				cache.put(key, value.toPersistableCoreEntity());
 			} else {
 				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
 			}

@@ -73,19 +73,20 @@ import org.jboss.logging.Logger;
 /*@XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 @Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
-				"code",
-				"realm"
-		}))
+	@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
+	"code",
+	"realm"
+	}
+))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @FilterDefs({
-		@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
-				@ParamDef(name = "attributeCodes", type = "string")
+	@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
+		@ParamDef(name = "attributeCodes", type = "string")
 		}),
-		@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
-				@ParamDef(name = "attributeCode", type = "string")
-		})
+	@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
+		@ParamDef(name = "attributeCode", type = "string")
+	})
 })
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
@@ -106,7 +107,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
 	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)
+	/*@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)
 	@JsonBackReference(value = "entityAttribute")
 	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
 	@Filters({
@@ -631,7 +632,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final AnswerLink answerLink = new AnswerLink(source, this, answer, weight);
+		final AnswerLink answerLink = new AnswerLink(source.toHBaseEntity(), this.toHBaseEntity(), answer, weight);
 		if (answer.getAskId() != null) {
 			answerLink.setAskId(answer.getAskId());
 		}
@@ -1182,5 +1183,18 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	public boolean equals(Object otherObject) {
 		return this.getRealm().equals(((BaseEntity) otherObject).getRealm())
 				&& this.getCode().equals(((BaseEntity) otherObject).getCode());
+	}
+
+	public HBaseEntity toHBaseEntity() {
+		HBaseEntity hBaseEntity = new HBaseEntity();
+		hBaseEntity.setCode(getCode());
+		hBaseEntity.setCreated(getCreated());
+		// hBaseEntity.setDtype();
+		hBaseEntity.setId(getId());
+		hBaseEntity.setName(getName());
+		hBaseEntity.setRealm(getRealm());
+		hBaseEntity.setStatus(getStatus());
+		hBaseEntity.setUpdated(getUpdated());
+		return hBaseEntity;
 	}
 }

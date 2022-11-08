@@ -72,7 +72,6 @@ import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.entity.BaseEntity;
 
 @Entity
-
 @Table(name = "baseentity_attribute", indexes = {
 		@Index(columnList = "baseEntityCode", name = "ba_idx"),
 		@Index(columnList = "attributeCode", name = "ba_idx"),
