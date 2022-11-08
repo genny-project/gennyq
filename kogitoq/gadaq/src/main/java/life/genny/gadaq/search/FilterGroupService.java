@@ -3,7 +3,6 @@ package life.genny.gadaq.search;
 import life.genny.kogito.common.service.FilterService;
 import life.genny.kogito.common.service.FilterService.Options;
 import life.genny.kogito.common.service.SearchService;
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.FilterConst;
@@ -14,7 +13,6 @@ import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -34,8 +32,6 @@ import java.util.Comparator;
 import javax.inject.Inject;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.Question;
-import org.kie.api.runtime.KieRuntimeBuilder;
-import org.kie.api.runtime.KieSession;
 
 @ApplicationScoped
 public class FilterGroupService {
@@ -61,14 +57,11 @@ public class FilterGroupService {
     @Inject
     SearchService search;
 
-    @Inject
-    KieRuntimeBuilder kieRuntimeBuilder;
-
     public static final String EVT_QUE_TREE_PREFIX = "QUE_TREE_ITEM_";
-    public static final String EVT_QUE_TABLE_PREFIX = "QUE_TABLE_";
+    public static final String QUE_TABLE_PREF = "QUE_TABLE_";
     public static final String SBE_TABLE_PREF = "SBE_TABLE_";
     public static final String QUE_FILTER_PREF = "QUE_FILTER_";
-    public static final String QUE_FILTER_VALUE_PREF = "QUE_FILTER_VALUE_";
+    public static final String LNK_FILTER_PREF = "LNK_FILTER_";
 
     public static final String DATE = "DATE";
     public static final String DATETIME = "DATETIME";
@@ -95,11 +88,6 @@ public class FilterGroupService {
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
     public static final String DELETE = "Delete";
     public static final String QUE_ADD_SEARCH = "QUE_ADD_SEARCH";
-    public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
-    public static final String QUE_SBE_DETAIL_QUESTION_GRP = "QUE_SBE_DETAIL_QUESTION_GRP";
-    public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
-    public static final String ANSWER = "Answer";
-
 
     /**
      * Return search base entity by message code
@@ -119,7 +107,7 @@ public class FilterGroupService {
      * @return Being filter prefix or not
      */
     public boolean isFilterPref(String code) {
-        if(code.startsWith(QUE_FILTER_PREF)) {
+        if(code!=null && code.startsWith(QUE_FILTER_PREF)) {
             return true;
         }
         return false;
@@ -147,7 +135,7 @@ public class FilterGroupService {
      */
     public  boolean isFilterValueSelected(String code) {
         boolean result = false;
-        if(code.startsWith(FilterConst.QUE_FILTER_VALUE_PREF))
+        if(code != null && code.startsWith(FilterConst.QUE_FILTER_VALUE_PREF))
             return true;
 
         return result;
@@ -160,7 +148,7 @@ public class FilterGroupService {
      */
     public  boolean isFilterApply(String code) {
         boolean result = false;
-        if(code.equalsIgnoreCase(FilterConst.QUE_SAVED_SEARCH_APPLY))
+        if(code != null && code.equalsIgnoreCase(FilterConst.QUE_SAVED_SEARCH_APPLY))
             return true;
 
         return result;
@@ -173,9 +161,7 @@ public class FilterGroupService {
      */
     public  boolean isValidTable(String code) {
         boolean result = false;
-
-        if(code.startsWith(EVT_QUE_TREE_PREFIX) || code.startsWith(EVT_QUE_TABLE_PREFIX)
-                || code.startsWith(SBE_TABLE_PREF))
+        if(code!=null &&  code.startsWith(QUE_TABLE_PREF))
             return true;
 
         return result;
@@ -198,14 +184,17 @@ public class FilterGroupService {
 
     /**
      * Being filter optio whether selected or not
-     * @param eventCode Event Code
-     * @param attributeCode Attribute Code
+     * @param code Event Code
+     * @param attCode Attribute Code
+     * @param value Value
      * @return filter option selected
      */
-    public boolean isFilerColumnSelected(String eventCode, String attributeCode) {
+    public boolean isFilerColumnSelected(String code,String attCode,String value) {
         boolean result = false;
-        if(eventCode.startsWith(FilterConst.QUE_FILTER_COLUMN)
-                && attributeCode.startsWith(FilterConst.LNK_FILTER_COLUMN))
+        if(code != null && code.startsWith(FilterConst.QUE_FILTER_COLUMN))
+            return true;
+
+        if(attCode !=null && attCode.startsWith(FilterConst.LNK_FILTER_COLUMN))
             return true;
 
         return result;
@@ -213,27 +202,26 @@ public class FilterGroupService {
 
     /**
      * Being filter optio whether selected or not
-     * @param eventCode Event Code
-     * @param attributeCode Attribute Code
+     * @param code Event Code
+     * @param attCode Attribute Code
      * @return filter option selected
      */
-    public boolean isFilerOptionSelected(String eventCode, String attributeCode) {
+    public boolean isFilerOptionSelected(String code, String attCode) {
         boolean result = false;
-        if(eventCode.startsWith(FilterConst.QUE_FILTER_OPTION)
-                && attributeCode.startsWith(FilterConst.LNK_FILTER_OPTION))
-            return true;
+        if(code != null && code.startsWith(FilterConst.QUE_FILTER_OPTION)) return true;
+        if(attCode!=null && attCode.startsWith(FilterConst.LNK_FILTER_OPTION)) return true;
 
         return result;
     }
 
     /**
      * Being filter optio whether selected or not
-     * @param eventCode Event Code
+     * @param code Event Code
      * @return filter option selected
      */
-    public boolean isSearchSelected(String eventCode) {
+    public boolean isSearchSelected(String code) {
         boolean result = false;
-        if(eventCode.startsWith(FilterConst.QUE_SAVED_SEARCH_LIST))
+        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_LIST))
             return true;
 
         return result;
@@ -365,17 +353,17 @@ public class FilterGroupService {
 
     /**
      * Being whether bucket filter select options or not
-     * @param eventCode Event code
+     * @param code Event code
      * @param attrCode Attribute code
      * @param targetCode Target code
      * @param value Event value
      * @return Being whether bucket filter select options or not
      */
-    public boolean isQuickSearchSelectChanged(String eventCode, String attrCode, String targetCode, String value) {
+    public boolean isQuickSearchSelectChanged(String code, String attrCode, String targetCode, String value) {
         boolean result = false;
         String newVal =  getStripSelectValue(value);
 
-        if(eventCode.startsWith(FilterConst.QUE_SELECT_INTERN)
+        if(code!=null && code.startsWith(FilterConst.QUE_SELECT_INTERN)
                 && attrCode.startsWith(FilterConst.LNK_PERSON)
                 && targetCode.startsWith(FilterConst.BKT_APPLICATIONS)
                 && newVal.startsWith(PREF_CPY))
@@ -439,21 +427,19 @@ public class FilterGroupService {
      */
     public  boolean isValidBucket(String code) {
         boolean result = false;
-
-        if(code.startsWith(QUE_TAB_BUCKET_VIEW))
+        if(code != null && code.startsWith(QUE_TAB_BUCKET_VIEW))
             return true;
-
         return result;
     }
 
     /**
      *  Being whether filter button or not
-     * @param code Event code
+     * @param msg Event message
      * @return Being whether it was sent or not
      */
-    public boolean isFilter(String parentCode,String code) {
-        boolean result = isFilterAndQuickSearch(code) || isFilterBtn(code) || isAddFilterGroup(parentCode);
-
+    public boolean isFilter(QEventMessage msg) {
+        String code = msg.getData().getCode();
+        boolean result = isValidTable(code) || isValidBucket(code) || isFilterBtn(code) || isAddFilterGroup(msg);
         return result;
     }
 
@@ -470,12 +456,17 @@ public class FilterGroupService {
     }
 
     /**
-     *  Being whether filter button or not
-     * @param dataType Data type
+     *  Being whether filter event or not
+     * @param msg Event Message
      * @return Being whether it was sent or not
      */
-    public boolean isAnswer(String dataType) {
-        boolean result = dataType.equalsIgnoreCase(ANSWER);
+    public boolean isDropdown(QEventMessage msg) {
+        String code = msg.getData().getCode();
+        String attCode = msg.getAttributeCode();
+        String value  = msg.getData().getValue();
+//        boolean result = isFilerColumnSelected(code,attCode,value) || isFilerOptionSelected(code,attCode)
+//                            || isFilterValueSelected(code);
+        boolean result = isFilerOptionSelected(code,attCode) || isFilterValueSelected(code);
 
         return result;
     }
@@ -493,13 +484,33 @@ public class FilterGroupService {
         return result;
     }
 
+
     /**
      * Return add fitler group or not
-     * @param parentCode Parent Code
+     * @param msg Event Message
      * @return Whether being add fitler group or not
      */
-    public boolean isAddFilterGroup(String parentCode) {
-        if(parentCode !=null && parentCode.equalsIgnoreCase(QUE_ADD_FILTER_GRP)) {
+    public boolean isFilterQuestionPref(QEventMessage msg) {
+        if(msg.getData().getParentCode() !=null && msg.getData().getParentCode().startsWith(QUE_FILTER_PREF)) {
+            return true;
+        }
+        if(msg.getData().getCode() !=null && msg.getData().getCode().startsWith(QUE_FILTER_PREF)) {
+            return true;
+        }
+        if(msg.getAttributeCode() !=null && msg.getAttributeCode().startsWith(LNK_FILTER_PREF)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Return add fitler group or not
+     * @param msg Event message
+     * @return Whether being add fitler group or not
+     */
+    public boolean isAddFilterGroup(QEventMessage msg) {
+        if(msg.getData().getParentCode() !=null
+                && msg.getData().getParentCode().equalsIgnoreCase(FilterConst.QUE_ADD_FILTER_SBE_GRP)) {
             return true;
         }
         return false;
@@ -513,7 +524,7 @@ public class FilterGroupService {
      */
     public  boolean isBtnSearchAdd(String code) {
         boolean result = false;
-        if(code.startsWith(QUE_ADD_SEARCH))
+        if(code != null && code.startsWith(QUE_ADD_SEARCH))
             return true;
         return result;
     }
@@ -554,13 +565,13 @@ public class FilterGroupService {
         String filterCode = "";
         Map<String, Map<String, String>> params = new HashMap<>();
         filterService.sendFilterOption(queCode, targetCode);
-        filterService.sendAddFilterGroup(FilterConst.QUE_ADD_FILTER_GRP,queCode,filterCode,params);
+        filterService.sendAddFilterGroup(FilterConst.QUE_ADD_FILTER_SBE_GRP,queCode,filterCode,params);
         filterService.sendFilterDetailsByGroup(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,filterCode,params);
 
         boolean isSelectBox = isFilterSelectQuestion(value);
         if(isSelectBox) {
             String linkVal = getLinkVal(value);
-            filterService.sendFilterValue(FilterConst.QUE_ADD_FILTER_GRP,queCode,FilterConst.LNK_CORE,linkVal,attCode);
+            filterService.sendFilterValue(FilterConst.QUE_ADD_FILTER_SBE_GRP,queCode,FilterConst.LNK_CORE,linkVal,attCode);
         }
 
         return attCode;
@@ -584,12 +595,12 @@ public class FilterGroupService {
 
     /**
      * Being whether saved search or not
-     * @param eventCode Event Code
+     * @param code Event Code
      * @return Being whether save button  or not
      */
-    public boolean isBtnSearchSave(String eventCode) {
+    public boolean isBtnSearchSave(String code) {
         boolean result = false;
-        if(eventCode.startsWith(FilterConst.QUE_SAVED_SEARCH_SAVE))
+        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SAVE))
             return true;
 
         return result;
@@ -597,12 +608,12 @@ public class FilterGroupService {
 
     /**
      * Being whether saved search or not
-     * @param eventCode Event Code
+     * @param code Event Code
      * @return Being whether delete button  or not
      */
-    public boolean isBtnSearchDelete(String eventCode) {
+    public boolean isBtnSearchDelete(String code) {
         boolean result = false;
-        if(eventCode.startsWith(FilterConst.QUE_SAVED_SEARCH_DELETE))
+        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_DELETE))
             return true;
 
         return result;
@@ -784,7 +795,7 @@ public class FilterGroupService {
         Map<String,Map<String, String>> params = new HashMap<>();
 
         String searchCode = EventMessageUtils.getSearchCode(msg);
-        deleteSearches(searchCode);
+//        deleteSearches(searchCode);
 
         /* update filter existing group */
         filterService.sendFilterGroup(sbeCode,FilterConst.QUE_FILTER_GRP,code,true,searchCode,params);
@@ -900,12 +911,12 @@ public class FilterGroupService {
         }
 
         /* get the latest of filter */
-        filterService.sendFilterGroup(sbeCode,FilterConst.QUE_FILTER_GRP,code,true,filterCode,filterParams);
-
-        String queCode = FilterConst.QUE_SAVED_SEARCH_LIST;
+//        filterService.sendFilterGroup(sbeCode,FilterConst.QUE_FILTER_GRP,code,true,filterCode,filterParams);
+        filterService.sendFilterColumns(sbeCode);
 
         /* send saved searches */
         String newSbe = filterService.getSearchBaseEntityCodeByJTI(sbeCode);
+        String queCode = FilterConst.QUE_SAVED_SEARCH_LIST;
 
         /* send saved search list */
         filterService.sendListSavedSearches(newSbe,queGroup,queCode,FilterConst.PRI_NAME,FilterConst.VALUE);
@@ -958,26 +969,20 @@ public class FilterGroupService {
      */
     public void sendFilterDetails(String queCode,String attCode,String value) {
         String stripVal = getStripSelectValue(value);
-//        boolean replaced = true;
 
         String filterCode = "";
         Map<String,Map<String,String>> listParam = new HashMap();
         Map<String,String> param = new HashMap<>();
-
-//        String stripValue = getStripSelectValue(value);
-//        param.put(FilterConst.LNK_FILTER_COLUMN, stripValue);
-//        param.put(FilterConst.LNK_FILTER_OPTION,stripValue);
-//        if(isFilterValueSelected(queCode)) {
-//            param.put(attCode,stripValue);
-//            replaced = true;
-//        }
-//        listParam.put(queCode, param);
 
         filterService.sendFilterDetailsByGroup(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,filterCode,listParam);
         filterService.sendFilterDetailsByBase(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,queCode,attCode,stripVal);
 //        filterService.sendFilterDetailsByPcm(PCM_SBE_DETAIL_VIEW,queCode,attCode,stripVal);
     }
 
+    public void initDropDown(String sbeCode) {
+        /* get the latest of filter */
+        filterService.sendFilterColumns(sbeCode);
+    }
 
     /**
      * Handle filter event
@@ -1048,7 +1053,7 @@ public class FilterGroupService {
      * Handle filter data event
      * @param event
      */
-    public void handleEventData(String event) {
+    public void handleDropdown(String event) {
         try {
             JsonObject msg = jsonb.fromJson(event, JsonObject.class);
 
@@ -1059,10 +1064,6 @@ public class FilterGroupService {
             String value = EventMessageUtils.getValue(msg);
             String targetCode = EventMessageUtils.getTargetCode(msg);
             String cleanSBE = filterService.getCleanSBECode(targetCode);
-            String queGroup = EventMessageUtils.getParentCode(msg);
-            String dataType = EventMessageUtils.getDataType(msg);
-            Map<String,Map<String, String>> filterParams = new HashMap<>();
-            boolean isSubmitted = false;
 
             if(!isFilterPref(code)) return;
 
@@ -1070,19 +1071,7 @@ public class FilterGroupService {
             if(!token.isEmpty()) { userToken.init(token);}
 
             /* Go to sorting */
-            if (isSorting(attrCode, targetCode)) {
-                handleSorting(attrCode, attrName, value, targetCode);
-            /* pagination */
-            } else if(isPaginationEvent(code)) {
-                String sbeCode = getSafeValueByCode(msg,FilterConst.TARGETCODE);
-                filterService.handleSortAndSearch(code,code,"",sbeCode, Options.PAGINATION);
-
-            /* Go searching text */
-            } else if (isSearchText(attrCode)) {
-                searchQuickText(msg, value, targetCode);
-
-            /* Go to filter column selected */
-            } else if(isFilerColumnSelected(code, attrCode)) {
+            if(isFilerColumnSelected(code,attrCode,value)) {
                 String queValCode = selectFilerColumn(cleanSBE, value);
                 filterService.sendPartialPCM(FilterConst.PCM_SBE_ADD_SEARCH, FilterConst.PRI_LOC3, queValCode);
                 sendFilterDetails(code,attrCode,value);
@@ -1121,7 +1110,7 @@ public class FilterGroupService {
      * @return question code by sbe code
      */
     public String getQuestionCodeBySBE(String cleanSBE) {
-        return cleanSBE.replace(SBE_TABLE_PREF, EVT_QUE_TABLE_PREFIX);
+        return cleanSBE.replace(SBE_TABLE_PREF, QUE_TABLE_PREF);
     }
 
 }

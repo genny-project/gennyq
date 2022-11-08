@@ -27,7 +27,7 @@ public class FilterConst {
     /* question */
     public static final String QUE_QQQ_GROUP = "QQQ_QUESTION_GROUP";
     public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
-    public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
+    public static final String QUE_ADD_FILTER_SBE_GRP = "QUE_ADD_FILTER_SBE_GRP";
     public static final String QUE_SBE_DETAIL_QUESTION_GRP = "QUE_SBE_DETAIL_QUESTION_GRP";
     public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
     public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";

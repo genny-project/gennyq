@@ -137,13 +137,7 @@ public class Events {
 		}
 
 		if (code.startsWith("QUE_ADD_SEARCH")) {
-			JsonObject json = Json.createObjectBuilder()
-					.add("questionCode", code)
-					.add("sourceCode", userToken.getUserCode())
-					.add("targetCode", userToken.getUserCode())
-					.build();
-
-			kogitoUtils.triggerWorkflow(SELF, "callProcessQuestions", json);
+			callFilterProcessQuestion();
 			return;
 		}
 
@@ -188,5 +182,18 @@ public class Events {
 		log.info("Forwarding Event Message...");
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
 	}
-	
+
+
+	public void callFilterProcessQuestion() {
+		JsonObject json = Json.createObjectBuilder()
+				.add("questionCode", "QUE_ADD_FILTER_GRP")
+				.add("sourceCode", userToken.getUserCode())
+				.add("targetCode", userToken.getUserCode())
+				.add("pcmCode", "PCM_FORM")
+				.add("events", "Update")
+				.build();
+
+		kogitoUtils.triggerWorkflow(SELF, "processQuestions", json);
+		return;
+	}
 }

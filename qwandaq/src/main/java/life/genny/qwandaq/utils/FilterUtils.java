@@ -204,7 +204,7 @@ public class FilterUtils {
         BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
         BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
 
-        Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_ADD_FILTER_GRP, source, target);
+        Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_ADD_FILTER_SBE_GRP, source, target);
         ask.getChildAsks().stream().forEach(e -> {
             if (e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_FILTER_COLUMN)
                     || e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_FILTER_OPTION)
@@ -263,7 +263,7 @@ public class FilterUtils {
     public QDataBaseEntityMessage getFilterValuesByColum(SearchEntity searchBE) {
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
-        msg.setParentCode(FilterConst.QUE_ADD_FILTER_GRP);
+        msg.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
         msg.setLinkCode(FilterConst.LNK_CORE);
         msg.setLinkValue(FilterConst.LNK_ITEMS);
         msg.setQuestionCode(FilterConst.QUE_FILTER_COLUMN);
@@ -312,7 +312,7 @@ public class FilterUtils {
     public QDataBaseEntityMessage getFilterOptionByEventCode(String questionCode) {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
-        base.setParentCode(FilterConst.QUE_ADD_FILTER_GRP);
+        base.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
         base.setLinkCode(FilterConst.LNK_CORE);
         base.setLinkValue(FilterConst.LNK_ITEMS);
         base.setQuestionCode(FilterConst.QUE_FILTER_OPTION);

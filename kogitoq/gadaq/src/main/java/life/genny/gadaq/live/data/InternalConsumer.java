@@ -9,11 +9,11 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.json.JsonObject;
+
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.gadaq.search.EventMessageUtils;
+
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -139,17 +139,22 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
+
 		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type()) && !filter.isAddFilterGroup(msg.getData().getParentCode())) {
-			return;
+		if ("DD".equals(msg.getEvent_type())) {
+			if(filter.isDropdown(msg)) {
+				log.info("==================isDropdown(msg)==================");
+				filter.handleDropdown(event);
+			} else return;
 		}
-		events.route(msg);
-		scope.destroy();
 
 		/* Handle filter */
-		if(filter.isFilter(msg.getData().getParentCode(),msg.getData().getCode())) {
+		if(filter.isFilter(msg)) {
 			filter.handleEvent(event);
 		}
+
+		events.route(msg);
+		scope.destroy();
 
 
 		Instant end = Instant.now();
@@ -165,7 +170,7 @@ public class InternalConsumer {
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
 		scope.init(event);
-		filter.handleEventData(event);
+		filter.handleDropdown(event);
 		scope.destroy();
 
 		Instant end = Instant.now();

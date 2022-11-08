@@ -326,6 +326,26 @@ public class FilterService {
     }
 
     /**
+     * Send values of filter columns
+     * @param sbeCode SBE code
+     */
+    public void sendFilterColumns(String sbeCode) {
+        try {
+            SearchEntity searchBE = CacheUtils.getObject(userToken.getRealm(), sbeCode, SearchEntity.class);
+
+            if (searchBE != null) {
+                QDataBaseEntityMessage msgColumn = filterUtils.getFilterValuesByColum(searchBE);
+
+                msgColumn.setToken(userToken.getToken());
+                msgColumn.setReplace(true);
+                KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgColumn);
+            }
+        }catch (Exception ex) {
+            log.error(ex);
+        }
+    }
+
+    /**
      * Send filter option
      * @param questionCode Question Code
      * @param sbeCode Search Base Entiy Code
@@ -335,7 +355,7 @@ public class FilterService {
         String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());
-        msg.setParentCode(FilterConst.QUE_ADD_FILTER_GRP);
+        msg.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
         msg.setLinkCode(FilterConst.LNK_CORE);
         msg.setLinkValue(FilterConst.LNK_ITEMS);
         msg.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
