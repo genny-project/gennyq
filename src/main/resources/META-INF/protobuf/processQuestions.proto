@@ -103,9 +103,9 @@ message ProcessData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	repeated string attributeCodes = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string definitionCode = 3; 
+	optional string buttonEvents = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string events = 4; 
+	optional string definitionCode = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string location = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
@@ -129,11 +129,11 @@ message ProcessData {
 message ProcessQuestions { 
 	option java_package = "life.genny.gadaq";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="") */ 
+ @VariableInfo(tags="input") */ 
 	optional Answer answer = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
-	optional S2SData data = 2; 
+	optional string buttonEvents = 2;
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
 	optional string events = 3; 
@@ -184,7 +184,7 @@ message S2SData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional EAbortReason abortReason = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string events = 2; 
+	optional string buttonEvents = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string location = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
@@ -212,15 +212,17 @@ message TimerData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional int64 elapsedMin = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated TimerEvent events = 3; 
+	optional bool expired = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional bool expired = 4; 
+	optional int64 expiryMin = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryMin = 5; 
+	optional int64 expiryTimeStamp = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryTimeStamp = 6; 
+	optional int64 intervalMin = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 intervalMin = 7; 
+	optional int64 startEpoch = 7; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	repeated TimerEvent timerEventsArray = 8; 
 }
 /* @Indexed */ 
 message TimerEvent { 

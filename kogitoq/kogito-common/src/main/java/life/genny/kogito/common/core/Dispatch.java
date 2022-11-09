@@ -4,6 +4,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,17 +28,20 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
+
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -53,7 +57,9 @@ public class Dispatch {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	public static final String[] SUBMIT_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT };
+
+	public static final String[] BUTTON_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT, Attribute.EVT_UPDATE,
+			Attribute.EVT_CANCEL, Attribute.EVT_UNDO, Attribute.EVT_REDO, Attribute.EVT_RESET };
 
 	@Inject
 	UserToken userToken;
@@ -89,6 +95,7 @@ public class Dispatch {
 	public QBulkMessage build(ProcessData processData, PCM pcm) {
 
 		ReqConfig reqConfig = capMan.getUserCapabilities();
+
 		// fetch source and target entities
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
@@ -110,9 +117,9 @@ public class Dispatch {
 		}
 
 		// generate events if specified
-		String events = processData.getEvents();
-		if (events != null) {
-			Ask eventsAsk = createEvents(events, sourceCode, targetCode);
+		String buttonEvents = processData.getButtonEvents();
+		if (buttonEvents != null) {
+			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
 		}
 
@@ -130,9 +137,9 @@ public class Dispatch {
 
 		/**
 		 * update parent pcm
-		 * NOTE: the null check protects from cases where 
+		 * NOTE: the null check protects from cases where
 		 * dispatch is called with a null parent and location.
-		 * This occurs when triggering dispatch for a pcm 
+		 * This occurs when triggering dispatch for a pcm
 		 * that requires a different target code.
 		 */
 		String parent = processData.getParent();
@@ -158,15 +165,15 @@ public class Dispatch {
 		findReadonlyAttributeCodes(flatMapOfAsks, processData);
 		List<String> attributeCodes = processData.getAttributeCodes();
 		log.info("Non-Readonly Attributes: " + attributeCodes);
+		return !attributeCodes.isEmpty();
+		// if (!attributeCodes.isEmpty())
+		// 	return true;
 
-		if (!attributeCodes.isEmpty())
-			return true;
-
-		return false;
+		// return false;
 	}
 
 	/**
-	 * Build the process entity and perform checks 
+	 * Build the process entity and perform checks
 	 * only required for asks expecting answers.
 	 *
 	 * @param processData
@@ -174,8 +181,8 @@ public class Dispatch {
 	 * @param flatMapOfAsks
 	 * @param msg
 	 */
-	public BaseEntity handleNonReadonly(ProcessData processData, List<Ask> asks, Map<String, Ask> flatMapOfAsks, QBulkMessage msg) {
-
+	public BaseEntity handleNonReadonly(ProcessData processData, List<Ask> asks, Map<String, Ask> flatMapOfAsks,
+			QBulkMessage msg) {
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		for (Ask ask : flatMapOfAsks.values()) {
@@ -190,9 +197,9 @@ public class Dispatch {
 		// pre-send ask updates
 		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
 		qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapOfAsks);
-		
-		// update any submit events
-		for (String event : SUBMIT_EVENTS) {
+
+		// update any button Events
+		for (String event : BUTTON_EVENTS) {
 			Ask evt = flatMapOfAsks.get(event);
 			if (evt != null)
 				evt.setDisabled(!answered);
@@ -309,7 +316,7 @@ public class Dispatch {
 	 * @param targetCode The target entity code
 	 * @return The events ask group
 	 */
-	public Ask createEvents(String events, String sourceCode, String targetCode) {
+	public Ask createButtonEvents(String buttonEvents, String sourceCode, String targetCode) {
 
 		// fetch attributes and create group
 		Attribute groupAttribute = qwandaUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP);
@@ -320,10 +327,10 @@ public class Dispatch {
 		ask.setRealm(userToken.getProductCode());
 
 		// split events string by comma
-		for (String name : events.split(",")) {
+		for (String name : buttonEvents.split(",")) {
 			String code = name.toUpperCase();
 			// create child and add to ask
-			Attribute attribute = qwandaUtils.createEvent(code, name);
+			Attribute attribute = qwandaUtils.createButtonEvent(code, name);
 			Question question = new Question(Prefix.QUE + code, name, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.add(child);
@@ -355,12 +362,12 @@ public class Dispatch {
 	/**
 	 * Recursively traverse the asks and add any entity selections to the msg.
 	 *
-	 * NOTE: This needs optimisation. Ultimately we would like 
+	 * NOTE: This needs optimisation. Ultimately we would like
 	 * to make use of a flat map, or tree map.
 	 *
-	 * @param asks    The ask to traverse
+	 * @param asks   The ask to traverse
 	 * @param target The target entity used in finding values
-	 * @param asks    The msg to add entities to
+	 * @param asks   The msg to add entities to
 	 */
 	public void handleDropdownAttributes(Ask ask, BaseEntity target, QBulkMessage msg) {
 
@@ -373,8 +380,9 @@ public class Dispatch {
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
 
 			// get list of value codes
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, ask.getQuestion().getAttribute().getCode());
-
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
+					ask.getQuestion().getAttribute().getCode());
+			
 			if (codes == null || codes.isEmpty())
 				sendDropdownItems(ask, target, ask.getQuestion().getCode());
 			else
@@ -396,13 +404,13 @@ public class Dispatch {
 	}
 
 	/**
-	 * Recursively traverse the ask to find any already selected dropdown 
+	 * Recursively traverse the ask to find any already selected dropdown
 	 * items to send, and trigger dropdown searches.
 	 *
-	 * @param ask The Ask to traverse
-	 * @param target The target entity used in processing
+	 * @param ask      The Ask to traverse
+	 * @param target   The target entity used in processing
 	 * @param rootCode The code of the root question used in sending DD messages
-	*/
+	 */
 	public void sendDropdownItems(Ask ask, BaseEntity target, String parentCode) {
 
 		Question question = ask.getQuestion();
@@ -425,7 +433,7 @@ public class Dispatch {
 
 					// Ensure only the PRI_NAME attribute exists in the selection
 					selection = beUtils.addNonLiteralAttributes(selection);
-					selection = beUtils.privacyFilter(selection, 
+					selection = beUtils.privacyFilter(selection,
 							Collections.singleton(Attribute.PRI_NAME));
 					selectionMsg.add(selection);
 				}
@@ -443,17 +451,17 @@ public class Dispatch {
 
 			// trigger dropdown search in dropkick
 			JsonObject json = Json.createObjectBuilder()
-			.add("event_type", "DD")
-			.add("data", Json.createObjectBuilder()
-				.add("questionCode", question.getCode())
-				.add("sourceCode", ask.getSourceCode())
-				.add("targetCode", ask.getTargetCode())
-				.add("parentCode", parentCode)
-				.add("value", "")
-				.add("processId", ask.getProcessId()))
-			.add("attributeCode", attribute.getCode())
-			.add("token", userToken.getToken())
-			.build();
+					.add("event_type", "DD")
+					.add("data", Json.createObjectBuilder()
+							.add("questionCode", question.getCode())
+							.add("sourceCode", ask.getSourceCode())
+							.add("targetCode", ask.getTargetCode())
+							.add("parentCode", parentCode)
+							.add("value", "")
+							.add("processId", ask.getProcessId()))
+					.add("attributeCode", attribute.getCode())
+					.add("token", userToken.getToken())
+					.build();
 
 			KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
 		}
@@ -484,7 +492,7 @@ public class Dispatch {
 		contexts.put("USER", beUtils.getUserBaseEntity());
 
 		baseEntities.stream().forEach(entity -> {
-			 MergeUtils.mergeBaseEntity(entity, contexts);
+			MergeUtils.mergeBaseEntity(entity, contexts);
 		});
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntities);

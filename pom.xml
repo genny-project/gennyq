@@ -24,17 +24,17 @@
 
 	<properties>
 		<!-- Quarkus Properties -->
-		<quarkus.platform.version>2.13.2.Final</quarkus.platform.version>
+		<quarkus.platform.version>2.13.3.Final</quarkus.platform.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
 		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
 
 		<!-- drools -->
-		<version.org.drools>8.28.0.Beta</version.org.drools>
+		<version.org.drools>8.29.0.Final</version.org.drools>
 		<version.org.optaplanner>${version.org.drools}</version.org.optaplanner>
 
 		<!-- kogito -->
-		<kogito.version>1.28.0.Final</kogito.version>
+		<kogito.version>1.29.0.Final</kogito.version>
 		<kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
 		<kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
 		<kogito.bom.version>${kogito.version}</kogito.bom.version>
@@ -511,6 +511,19 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 			</plugin>
+<plugin>
+      <groupId>org.jboss.jandex</groupId>
+      <artifactId>jandex-maven-plugin</artifactId>
+      <version>1.2.3</version>
+      <executions>
+        <execution>
+          <id>make-index</id>
+          <goals>
+            <goal>jandex</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
 		</plugins>
 	</build>
 </project>

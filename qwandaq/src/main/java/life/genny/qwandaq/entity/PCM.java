@@ -2,7 +2,6 @@ package life.genny.qwandaq.entity;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Optional;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -57,6 +56,10 @@ public class PCM extends BaseEntity {
 		return Integer.parseInt(StringUtils.removeStart(location, Attribute.PRI_LOC));
 	}
 
+	public static String location(int index) {
+		return Attribute.PRI_LOC.concat(Integer.toString(index));
+	}
+
 	public void addStringAttribute(String code, String name, String value) {
 		addStringAttribute(code, name, 1.0, value);
 	}
@@ -79,7 +82,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setLocation(Integer index, String value) {
-		String code = Attribute.PRI_LOC + index;
+		String code = location(index);
 		addStringAttribute(code, "Location " + index, Double.valueOf(index), value);
 	}
 

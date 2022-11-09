@@ -20,8 +20,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import life.genny.qwandaq.attribute.Attribute;
+
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
+
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
@@ -93,6 +95,10 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
 	public static final String QUE_CANCEL = "QUE_CANCEL";
 	public static final String QUE_RESET = "QUE_RESET";
+	
+	public static final String QUE_UPDATE = "QUE_UPDATE";
+	public static final String QUE_UNDO = "QUE_UNDO";
+	public static final String QUE_REDO = "QUE_REDO";
 
 	public static final String QUE_NEXT = "QUE_NEXT";
 	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";
@@ -270,7 +276,7 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
     @JsonbTransient
     @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
-		this.capabilityRequirements = requirements;		
+		this.capabilityRequirements = requirements;
 	}
 
 	/**

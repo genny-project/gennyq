@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -256,16 +257,12 @@ public class QwandaUtils {
 		}
 	}
 
-	public Attribute createEvent(String code, String name) {
-		return createEvent(userToken.getProductCode(), code, name);
-	}
-
-	public Attribute createEvent(String productCode, String code, final String name) {
+	public Attribute createButtonEvent(String code, final String name) {
 		if (!code.startsWith(Prefix.EVT)) {
 			code = Prefix.EVT.concat(code);
 		}
 		code = code.toUpperCase();
-		DataType DTT_EVENT = getAttribute(productCode, "EVT_SUBMIT").getDataType();
+		DataType DTT_EVENT = getAttribute(userToken.getProductCode(), "EVT_SUBMIT").getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
@@ -393,7 +390,6 @@ public class QwandaUtils {
 
 		return generateAskFromQuestion(question, source, target, requirementsConfig);
 	}
-
 
 	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
 		return generateAskFromQuestionCode(code, source, target, null);

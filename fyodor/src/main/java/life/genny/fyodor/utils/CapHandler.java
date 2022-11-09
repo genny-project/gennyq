@@ -103,6 +103,7 @@ public class CapHandler extends Manager {
 		}
 
 		//  TODO: Get rid of this service code check. Not ideal
+		// TODO: We also need to consolidate what it means to be a service user
 		boolean isService = GennyConstants.PER_SERVICE.equals(userToken.getUserCode()) || GennyConstants.PER_SERVICE.equals(userToken.getCode()) || userToken.hasRole("service");
 		if(!isService) {
 			ReqConfig reqConfig = capMan.getUserCapabilities();

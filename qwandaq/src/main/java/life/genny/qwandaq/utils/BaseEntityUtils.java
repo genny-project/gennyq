@@ -110,7 +110,7 @@ public class BaseEntityUtils {
 	/**
 	 * Get a PCM using a code, but throw an
 	 * ItemNotFoundException if the entity does not exist.
-
+	 * 
 	 * @param code
 	 * @return
 	 */

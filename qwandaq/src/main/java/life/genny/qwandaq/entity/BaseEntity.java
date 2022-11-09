@@ -56,9 +56,11 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
@@ -211,7 +213,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
     @JsonbTransient
     @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
-		this.capabilityRequirements = requirements;		
+		this.capabilityRequirements = requirements;
 	}
 
 	/**

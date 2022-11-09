@@ -33,7 +33,6 @@ import life.genny.qwandaq.entity.search.trait.Operator;
 
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -76,11 +75,7 @@ public class InitService {
 	private SearchUtils searchUtils;
 
 	@Inject
-	private RoleManager roleMan;
-
-	@Inject
 	private CapabilitiesManager capMan;
-
 
 	/**
 	 * Send the Project BaseEntity.
@@ -169,7 +164,7 @@ public class InitService {
 			return;
 		}
 
-		log.info("Sending "+pcms.size()+" PCMs");
+		log.info("Sending " + pcms.size() + " PCMs");
 
 		// configure ask msg
 		QDataAskMessage askMsg = new QDataAskMessage();
@@ -243,7 +238,7 @@ public class InitService {
 			try {
 				// Check for a def
 				beUtils.getBaseEntity(productCode, defCode);
-			} catch(ItemNotFoundException e) {
+			} catch (ItemNotFoundException e) {
 				// We don't need to handle this. We don't care if there isn't always a def
 				continue;
 			}
@@ -252,7 +247,7 @@ public class InitService {
 
 			String eventCode = "EVT_ADD_".concat(baseCode);
 			String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
-			Attribute event = qwandaUtils.createEvent(eventCode, name);
+			Attribute event = qwandaUtils.createButtonEvent(eventCode, name);
 
 			Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
 
@@ -270,7 +265,7 @@ public class InitService {
 	public void sendAddItems() {
 
 		BaseEntity user = beUtils.getUserBaseEntity();
-		
+
 		Ask ask = generateAddItemsAsk(userToken.getProductCode(), user);
 		// configure msg and send
 		QDataAskMessage msg = new QDataAskMessage(ask);
