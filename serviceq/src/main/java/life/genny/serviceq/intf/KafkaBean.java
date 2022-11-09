@@ -1,5 +1,14 @@
 package life.genny.serviceq.intf;
 
+import io.smallrye.reactive.messaging.kafka.api.OutgoingKafkaRecordMetadata;
+import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.kafka.KafkaInterface;
+import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.session.bridge.BridgeSwitch;
+import life.genny.serviceq.live.data.InternalProducer;
+import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -7,17 +16,6 @@ import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import io.smallrye.reactive.messaging.kafka.OutgoingKafkaRecordMetadata;
-import org.eclipse.microprofile.reactive.messaging.Message;
-
-import life.genny.qwandaq.session.bridge.BridgeSwitch;
-import life.genny.qwandaq.kafka.KafkaInterface;
-import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.exception.runtime.DebugException;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.serviceq.live.data.InternalProducer;
 
 @ApplicationScoped
 public class KafkaBean implements KafkaInterface {
