@@ -161,6 +161,12 @@ public class TaskService {
 			throw new NullParameterException("pcmCode");
 		if (buttonEvents == null)
 			throw new NullParameterException("buttonEvents");
+		if (parent == null) {
+			parent = "PCM_CONTENT";
+		}
+		if (location == null) {
+			location = "PRI_LOC1";
+		}
 
 		// defaults
 		if (parent == null)
@@ -192,7 +198,7 @@ public class TaskService {
 
 		processData.setButtonEvents(buttonEvents);
 		processData.setProcessId(processId);
-		processData.setAnswers(new ArrayList<Answer>());
+		processData.setAnswers(new ArrayList<>());
 
 		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);

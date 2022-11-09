@@ -118,7 +118,7 @@ public class Question extends CodedEntity implements ICapabilityFilterable {
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
 	@JsonManagedReference(value = "questionQuestion")
 	@JsonbTransient
-	private Set<QuestionQuestion> childQuestions = new HashSet<QuestionQuestion>(0);
+	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);
 
 	@XmlTransient
 	@ManyToOne(fetch = FetchType.EAGER)
