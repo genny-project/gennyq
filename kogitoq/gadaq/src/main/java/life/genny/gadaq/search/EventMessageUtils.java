@@ -60,6 +60,15 @@ public class EventMessageUtils {
         return getValueByCode(msg,FilterConst.CODE);
     }
 
+    /**
+     * Get message code
+     * @param msg Message
+     * @return Code
+     */
+    public static String getCode(String msg) {
+        JsonObject json = jsonb.fromJson(msg, JsonObject.class);
+        return getValueByCode(json,FilterConst.CODE);
+    }
 
     /**
      * Get message target code
@@ -202,67 +211,6 @@ public class EventMessageUtils {
         return value;
     }
 
-
-    /**
-     *  parse string to map object
-     * @param data json string
-     * @param options PAGINATION or SORT or SEARCH
-     * @return return map object
-     */
-    public static Map<String, Object> parseEventMessage(String data, Options options){
-        Map<String, Object> map = new HashMap<>();
-
-        try {
-            JsonObject eventJson = jsonb.fromJson(data, JsonObject.class);
-
-            if(options.equals(Options.PAGINATION)) {
-                JsonObject jsonObject = eventJson.getJsonObject(DATA);
-
-                map.put(FilterConst.CODE,jsonObject.getString(FilterConst.CODE));
-                map.put(FilterConst.TARGETCODE, jsonObject.getString(FilterConst.TARGETCODE));
-                map.put(FilterConst.TOKEN, eventJson.getString(FilterConst.TOKEN));
-
-                return map;
-            }else if(options.equals(Options.SEARCH)) { //sorting, searching text
-                map.put(FilterConst.TOKEN, eventJson.getString(FilterConst.TOKEN));
-
-                JsonArray items = eventJson.getJsonArray(ITEMS);
-                if(items.size() > 0){
-                    JsonObject jsonObject = items.getJsonObject(0);
-                    map.put(FilterConst.CODE,jsonObject.getString(FilterConst.CODE));
-                    map.put(FilterConst.ATTRIBUTECODE,jsonObject.getString(FilterConst.ATTRIBUTECODE));
-                    String strTargetcode = jsonObject.getString(FilterConst.TARGETCODE);
-                    String[] splitted = strTargetcode.split("\"*\"");
-                    List<String> targetCodes = new ArrayList();
-                    for(String str : splitted){
-                        if(str.startsWith(FilterConst.CACHING_SBE)) {
-                            targetCodes.add(str);
-                        }
-                    }
-                    map.put(FilterConst.TARGETCODE,jsonObject.getString(FilterConst.TARGETCODE));
-                    //It is used for buckets
-                    map.put(FilterConst.TARGETCODES,targetCodes);
-
-                    map.put(FilterConst.VALUE, jsonObject.getString(FilterConst.VALUE));
-
-                    return map;
-                }
-            } else if(options.equals(Options.FILTER)) {
-                JsonObject jsonObject = eventJson.getJsonObject("data");
-
-                map.put(FilterConst.CODE,jsonObject.getString(FilterConst.CODE));
-                map.put(FilterConst.TARGETCODE, jsonObject.getString(FilterConst.TARGETCODE));
-                map.put(FilterConst.TOKEN, eventJson.getString(FilterConst.TOKEN));
-                if(jsonObject.containsKey(FilterConst.VALUE)) {
-                    map.put(FilterConst.VALUE, jsonObject.getString(FilterConst.VALUE));
-                }
-                return map;
-            }
-        } catch (Exception ex) {}
-        return map;
-    }
-
-
     /**
      * Strip search base entity code without jti
      * @param orgSbe Original search base entity code
@@ -285,56 +233,6 @@ public class EventMessageUtils {
     public static Map<String,Map<String, String>> parseFilterMessage(String event) {
         Map<String,Map<String, String>> map = jsonb.fromJson(event, Map.class);
         return map;
-    }
-
-
-    /**
-     * Get Search filter by filter value
-     * @param filterVal Filter value
-     * @return Get Search filter by filter value
-     */
-    public Operator getOperatorByVal(String filterVal){
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN)){
-            return Operator.GREATER_THAN;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO)){
-            return Operator.GREATER_THAN_OR_EQUAL;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN)){
-            return Operator.LESS_THAN;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO)){
-            return Operator.LESS_THAN_OR_EQUAL;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO)){
-            return Operator.EQUALS;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO)){
-            return Operator.NOT_EQUALS;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO)){
-            return Operator.EQUALS;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO)){
-            return Operator.NOT_EQUALS;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE)){
-            return Operator.LIKE;
-        }
-
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE)){
-            return Operator.NOT_LIKE;
-        }
-
-        return Operator.EQUALS;
     }
 
     /**

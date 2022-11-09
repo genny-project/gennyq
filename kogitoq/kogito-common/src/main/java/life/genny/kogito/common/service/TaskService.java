@@ -130,6 +130,52 @@ public class TaskService {
 	}
 
 	/**
+	 * Dispatch a readonly PCM tree update.
+	 *
+	 * @param sourceCode
+	 * @param targetCode
+	 * @param pcm
+	 * @param parent
+	 * @param location
+	 * @param processId
+	 */
+	public void dispatch(String sourceCode, String targetCode, PCM pcm, String parent, String location,String processId) {
+
+		if (sourceCode == null)
+			throw new NullParameterException("sourceCode");
+		if (targetCode == null)
+			throw new NullParameterException("targetCode");
+		if (pcm == null)
+			throw new NullParameterException("pcm");
+		if (processId == null)
+			throw new NullParameterException("processId");
+		/*
+		 * no need to check parent and location as they can sometimes be null
+		 */
+
+		// construct basic processData
+		ProcessData processData = new ProcessData();
+		processData.setSourceCode(sourceCode);
+		processData.setTargetCode(targetCode);
+		processData.setProcessId(processId);
+
+		// pcm data
+		processData.setPcmCode(pcm.getCode());
+		processData.setParent(parent);
+		processData.setLocation(location);
+
+		// build and send data
+		QBulkMessage msg = dispatch.build(processData, pcm);
+		dispatch.sendData(msg);
+
+		// send searches
+		for (String code : processData.getSearches()) {
+			log.info("Sending search: " + code);
+			search.searchTable(code);
+		}
+	}
+
+	/**
 	 * Build a question group and assign to the PCM before dispatching a PCM tree update.
 	 *
 	 * @param sourceCode

@@ -56,6 +56,7 @@ public class FilterConst {
 
     /* Filter */
     public static final String FILTERS = "Filters";
+    public static final String FILTER_PREF = "FILTER_";
     public static final String QUE_EXISTING_FILTERS_GRP = "QUE_EXISTING_FILTERS_GRP";
     public static final String FILTER_SEL = "SEL_FILTER_COLUMN_";
     public static final String FILTER_COL = "FLC_";
@@ -91,6 +92,7 @@ public class FilterConst {
     public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
     public static final String BKT_APPLICATIONS = "BKT_APPLICATIONS";
     public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
+    public static final String QUE_TABLE = "QUE_TABLE_";
 
     /* Event */
     public static final String PRI_EVENT = "PRI_EVENT";

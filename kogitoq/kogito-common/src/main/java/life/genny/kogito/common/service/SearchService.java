@@ -82,6 +82,25 @@ public class SearchService {
 	/**
 	 * Perform a Detail View search.
 	 *
+	 * @param code The code of the target to display
+	 */
+	public void sendTable(String code,String processId) {
+
+		// trim TREE_ITEM_ from code if present
+		code = StringUtils.replaceOnce(code, "_TREE_ITEM_", "_");
+		String searchCode = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.SBE);
+		log.info("Sending Table :: " + searchCode);
+
+		// send pcm with correct template code
+		String userCode = userToken.getUserCode();
+		PCM pcm = beUtils.getPCM(PCM.PCM_TABLE);
+		pcm.setLocation(1, searchCode);
+		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, "PRI_LOC1",processId);
+	}
+
+	/**
+	 * Perform a Detail View search.
+	 *
 	 * @param targetCode The code of the target to display
 	 */
 	public void sendDetailView(String targetCode) {

@@ -91,6 +91,7 @@ public class SearchCaching {
 		cacheDropdown("DEF_BUILDING",
 				new SearchEntity("SBE_SER_LNK_AREA_UNIT", "Area Unit Dropdown")
 						.setLinkValue("AREA_UNIT"));
+
 	}
 
 	private void cacheSearch(SearchEntity entity) {

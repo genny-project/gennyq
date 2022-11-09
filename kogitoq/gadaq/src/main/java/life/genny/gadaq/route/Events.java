@@ -120,7 +120,8 @@ public class Events {
 
 		// table view (Default View Mode)
 		if (code.startsWith("QUE_TABLE_")) {
-			search.sendTable(code);
+			processId = callSavedSearch(code);
+			search.sendTable(code,processId);
 			return;
 		}
 
@@ -133,11 +134,6 @@ public class Events {
 					.add("targetCode", targetCode)
 					.build();
 			kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
-			return;
-		}
-
-		if (code.startsWith("QUE_ADD_SEARCH")) {
-			callFilterProcessQuestion();
 			return;
 		}
 
@@ -184,16 +180,15 @@ public class Events {
 	}
 
 
-	public void callFilterProcessQuestion() {
+	public String callSavedSearch(String code) {
+		String definitionCode = "DEF_" + code.replaceFirst(FilterConst.QUE_TABLE,"");
+		definitionCode = definitionCode.substring(0,definitionCode.length() - 1);
+
 		JsonObject json = Json.createObjectBuilder()
-				.add("questionCode", "QUE_ADD_FILTER_GRP")
 				.add("sourceCode", userToken.getUserCode())
-				.add("targetCode", userToken.getUserCode())
-				.add("pcmCode", "PCM_FORM")
-				.add("events", "Update")
+				.add("definitionCode", definitionCode)
 				.build();
 
-		kogitoUtils.triggerWorkflow(SELF, "processQuestions", json);
-		return;
+		return kogitoUtils.triggerWorkflow(SELF, "savedSearch", json);
 	}
 }

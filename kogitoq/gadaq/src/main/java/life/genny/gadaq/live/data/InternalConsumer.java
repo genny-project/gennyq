@@ -14,6 +14,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 
+import life.genny.gadaq.search.EventMessageUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -142,16 +143,17 @@ public class InternalConsumer {
 
 		// If the event is a Dropdown then leave it for DropKick
 		if ("DD".equals(msg.getEvent_type())) {
-			if(filter.isDropdown(msg)) {
-				log.info("==================isDropdown(msg)==================");
-				filter.handleDropdown(event);
-			} else return;
+////				if (filter.isDropdown(msg)) {
+//					log.info("==================isDropdown(msg)==================");
+//					filter.handleDropdown(event);
+////				} else return;
+				return;
 		}
 
 		/* Handle filter */
-		if(filter.isFilter(msg)) {
-			filter.handleEvent(event);
-		}
+//		if(filter.isFilter(msg)) {
+//			filter.handleEvent(event);
+//		}
 
 		events.route(msg);
 		scope.destroy();
@@ -170,10 +172,13 @@ public class InternalConsumer {
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
 		scope.init(event);
-		filter.handleDropdown(event);
+		if(filter.isDropdown(event)) {
+			filter.handleDropdown(event);
+		}
 		scope.destroy();
 
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
+
 }

@@ -3,6 +3,7 @@ package life.genny.gadaq.search;
 import life.genny.kogito.common.service.FilterService;
 import life.genny.kogito.common.service.FilterService.Options;
 import life.genny.kogito.common.service.SearchService;
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.FilterConst;
@@ -16,6 +17,7 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -32,6 +34,8 @@ import java.util.Comparator;
 import javax.inject.Inject;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.Question;
+
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.SELF;
 
 @ApplicationScoped
 public class FilterGroupService {
@@ -57,6 +61,9 @@ public class FilterGroupService {
     @Inject
     SearchService search;
 
+    @Inject
+    KogitoUtils kogitoUtils;
+
     public static final String EVT_QUE_TREE_PREFIX = "QUE_TREE_ITEM_";
     public static final String QUE_TABLE_PREF = "QUE_TABLE_";
     public static final String SBE_TABLE_PREF = "SBE_TABLE_";
@@ -68,14 +75,11 @@ public class FilterGroupService {
     public static final String TIME = "TIME";
 
     /* select box option */
-    public static final String PRI_ADDRESS_COUNTRY = "PRI_ADDRESS_COUNTRY";
-    public static final String PRI_ASSOC_COMP_INTERNSHIP = "PRI_ASSOC_COMP_INTERNSHIP";
-    public static final String PRI_INTERNSHIP_TYPE = "PRI_INTERNSHIP_TYPE";
-    public static final String PRI_DJP_AGREE = "PRI_DJP_AGREE";
+    public static final String COMPLETE_INTERNSHIP = "PRI_ASSOC_COMP_INTERNSHIP";
+    public static final String DJP_AGREE = "DJP_AGREE";
 
     /* Dropdown links */
     public static final String COUNTRY = "COUNTRY";
-    public static final String COMPLETE_INTERNSHIP = "COMPLETE_INTERNSHIP";
     public static final String YES_NO = "YES_NO";
     public static final String INTERNSHIP_TYPE = "INTERNSHIP_TYPE";
 
@@ -119,10 +123,10 @@ public class FilterGroupService {
      */
     public  boolean isFilterSelectQuestion(String filterValue) {
         boolean result = false;
-        if(filterValue.contains(PRI_ADDRESS_COUNTRY)
-                || filterValue.contains(PRI_ASSOC_COMP_INTERNSHIP)
-                || filterValue.contains(PRI_DJP_AGREE)
-                || filterValue.contains(PRI_INTERNSHIP_TYPE))
+        if(filterValue.contains(COUNTRY)
+                || filterValue.contains(COMPLETE_INTERNSHIP)
+                || filterValue.contains(DJP_AGREE)
+                || filterValue.contains(INTERNSHIP_TYPE))
             return true;
 
         return result;
@@ -186,10 +190,9 @@ public class FilterGroupService {
      * Being filter optio whether selected or not
      * @param code Event Code
      * @param attCode Attribute Code
-     * @param value Value
      * @return filter option selected
      */
-    public boolean isFilerColumnSelected(String code,String attCode,String value) {
+    public boolean isFilerColumnSelected(String code,String attCode) {
         boolean result = false;
         if(code != null && code.startsWith(FilterConst.QUE_FILTER_COLUMN))
             return true;
@@ -233,31 +236,15 @@ public class FilterGroupService {
      * @return Return question code by filter code
      */
     public String getQuestionCodeByFilterValue(String filterVal){
-        String questionCode = "";
-        String suffix = getLastSuffixCodeByFilterValue(filterVal);
+        String valSuffix = getLastSuffixCodeByFilterValue(filterVal);
+        String questionCode = FilterConst.QUE_FILTER_VALUE_PREF + valSuffix;
 
-        if(filterVal.contains(PRI_ADDRESS_COUNTRY)){
-            return FilterConst.QUE_FILTER_VALUE_COUNTRY;
-        } else if(filterVal.contains(PRI_ASSOC_COMP_INTERNSHIP)){
-            return FilterConst.QUE_FILTER_VALUE_ACADEMY;
-        } else if(filterVal.contains(PRI_DJP_AGREE)){
-            return FilterConst.QUE_FILTER_VALUE_DJP_HC;
-        } else if(filterVal.contains(PRI_INTERNSHIP_TYPE)){
-            return FilterConst.QUE_FILTER_VALUE_INTERNSHIP_TYPE;
-        }
-        //date,time
-        if(suffix.equalsIgnoreCase(DATE)){
-            return FilterConst.QUE_FILTER_VALUE_DATE;
-        } else if(suffix.equalsIgnoreCase(DATETIME)){
-            return FilterConst.QUE_FILTER_VALUE_DATETIME;
-        } else if(suffix.equalsIgnoreCase(TIME)){
-            return FilterConst.QUE_FILTER_VALUE_TIME;
-        }
+        if(valSuffix.contains(DATE)) return FilterConst.QUE_FILTER_VALUE_DATETIME;
 
-        //text
-        if(!filterVal.isEmpty()) {
+        if(!isFilterSelectQuestion(valSuffix)) {
             return FilterConst.QUE_FILTER_VALUE_TEXT;
         }
+
         return questionCode;
     }
 
@@ -271,25 +258,25 @@ public class FilterGroupService {
         return question.getAttributeCode();
     }
 
-    /**
-     * Return link value based on event value
-     * @param value Event Value
-     * @return Return link value based on event value
-     */
-    public String getLinkVal(String value) {
-        String lnkVal = "";
-        if(value.contains(PRI_ADDRESS_COUNTRY)){
-            lnkVal = COUNTRY;
-        } else if(value.contains(PRI_ASSOC_COMP_INTERNSHIP)){
-            lnkVal = COMPLETE_INTERNSHIP;
-        } else if(value.contains(PRI_DJP_AGREE)){
-            lnkVal = YES_NO;
-        } else if(value.contains(PRI_INTERNSHIP_TYPE)){
-            lnkVal = INTERNSHIP_TYPE;
-        }
-
-        return lnkVal;
-    }
+//    /**
+//     * Return link value based on event value
+//     * @param value Event Value
+//     * @return Return link value based on event value
+//     */
+//    public String getLinkVal(String value) {
+//        String lnkVal = "";
+//        if(value.contains(COUNTRY)){
+//            lnkVal = COUNTRY;
+//        } else if(value.contains(PRI_ASSOC_COMP_INTERNSHIP)){
+//            lnkVal = COMPLETE_INTERNSHIP;
+//        } else if(value.contains(PRI_DJP_AGREE)){
+//            lnkVal = YES_NO;
+//        } else if(value.contains(PRI_INTERNSHIP_TYPE)){
+//            lnkVal = INTERNSHIP_TYPE;
+//        }
+//
+//        return lnkVal;
+//    }
 
     /**
      * Return the last suffix code
@@ -298,10 +285,9 @@ public class FilterGroupService {
      */
     public String getLastSuffixCodeByFilterValue(String filterVal) {
         String lastSuffix = "";
-        int lastIndex = filterVal.lastIndexOf("_");
+        int lastIndex = filterVal.lastIndexOf(FilterConst.FILTER_PREF) + FilterConst.FILTER_PREF.length();
         if(lastIndex > -1) {
             lastSuffix = filterVal.substring(lastIndex, filterVal.length());
-            lastSuffix = lastSuffix.replaceFirst("_","");
             lastSuffix = lastSuffix.replaceFirst("\"]","");
         }
         return lastSuffix;
@@ -457,6 +443,21 @@ public class FilterGroupService {
 
     /**
      *  Being whether filter event or not
+     * @param event Event Message
+     * @return Being whether it was sent or not
+     */
+    public boolean isDropdown(String event) {
+        JsonObject msg = jsonb.fromJson(event, JsonObject.class);
+        String code = EventMessageUtils.getCode(msg);
+        String attCode = EventMessageUtils.getAttributeCode(msg);
+
+        boolean result =  isFilerColumnSelected(code,attCode) || isFilerOptionSelected(code,attCode) || isFilterValueSelected(code);
+
+        return result;
+    }
+
+    /**
+     *  Being whether filter event or not
      * @param msg Event Message
      * @return Being whether it was sent or not
      */
@@ -566,11 +567,13 @@ public class FilterGroupService {
         Map<String, Map<String, String>> params = new HashMap<>();
         filterService.sendFilterOption(queCode, targetCode);
         filterService.sendAddFilterGroup(FilterConst.QUE_ADD_FILTER_SBE_GRP,queCode,filterCode,params);
-        filterService.sendFilterDetailsByGroup(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,filterCode,params);
+//        filterService.sendFilterDetailsByGroup(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,filterCode,params);
+        filterService.sendFilterDetailsByGroup(FilterConst.QUE_ADD_FILTER_SBE_GRP,filterCode,params);
 
         boolean isSelectBox = isFilterSelectQuestion(value);
         if(isSelectBox) {
-            String linkVal = getLinkVal(value);
+//            String linkVal = getLinkVal(value);
+            String linkVal = getLastSuffixCodeByFilterValue(value);
             filterService.sendFilterValue(FilterConst.QUE_ADD_FILTER_SBE_GRP,queCode,FilterConst.LNK_CORE,linkVal,attCode);
         }
 
@@ -974,8 +977,11 @@ public class FilterGroupService {
         Map<String,Map<String,String>> listParam = new HashMap();
         Map<String,String> param = new HashMap<>();
 
-        filterService.sendFilterDetailsByGroup(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,filterCode,listParam);
-        filterService.sendFilterDetailsByBase(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,queCode,attCode,stripVal);
+        filterService.sendFilterDetailsByGroup(FilterConst.QUE_ADD_FILTER_SBE_GRP,filterCode,listParam);
+        filterService.sendFilterDetailsByBase(FilterConst.QUE_ADD_FILTER_SBE_GRP,queCode,attCode,stripVal);
+
+//        filterService.sendFilterDetailsByGroup(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,filterCode,listParam);
+//        filterService.sendFilterDetailsByBase(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,queCode,attCode,stripVal);
 //        filterService.sendFilterDetailsByPcm(PCM_SBE_DETAIL_VIEW,queCode,attCode,stripVal);
     }
 
@@ -990,6 +996,8 @@ public class FilterGroupService {
      */
     public void handleEvent(String event) {
         try {
+            log.info("====================handleEvent(String event)====================");
+
             JsonObject msg = jsonb.fromJson(event, JsonObject.class);;
 
             String token = EventMessageUtils.getToken(msg);
@@ -1003,31 +1011,37 @@ public class FilterGroupService {
             /* init user token */
             if(!token.isEmpty()) { userToken.init(token);}
 
+            /* Handle dropdown */
+            handleDropdown(event);
+
             /* bucket pagination */
             if(isBucketPagination(code)) {
                 filterService.handleSortAndSearch(code,code,"",targetCode, Options.PAGINATION_BUCKET);
 
-                /* Show saved search for table */
+            /* Show saved search for table */
             } else if(isValidTable(code)) {
                 targetCode =  getSearchEntityCodeByMsgCode(code);
                 queGroup = FilterConst.QUE_TABLE_FILTER_GRP;
 
-                /* Show saved search for bucket */
+            /* Show saved search for bucket */
             } else if(isValidBucket(code))  {
                 targetCode =  FilterConst.SBE_APPLIED_APPLICATIONS;
                 queGroup = FilterConst.QUE_BUCKET_INTERNS_GRP;
 
-                /* apply filter */
+            /* apply filter */
             } else if(isFilterApply(code)) {
                 handleFilter(targetCode,value);
                 isSubmitted = true;
                 filterParams = EventMessageUtils.getCleanFilterParamsByMap(value);
-                /* quick search is selected */
-            } else if(isQuickSearchSelectOptions(code,targetCode, value)) {
-                filterService.sendQuickSearchItems(FilterConst.SBE_DROPDOWN,FilterConst.QUE_BUCKET_INTERNS_GRP
-                        ,FilterConst.QUE_SELECT_INTERN,FilterConst.PRI_NAME, value);
 
-                /* Button save search */
+            /* quick search is selected */
+            } else if(isQuickSearchSelectOptions(code,targetCode, value)) {
+                filterService.sendQuickSearchItems(FilterConst.SBE_DROPDOWN, FilterConst.QUE_BUCKET_INTERNS_GRP
+                        , FilterConst.QUE_SELECT_INTERN, FilterConst.PRI_NAME, value);
+
+            /* Button save search */
+            } else if(isBtnSearchAdd(code)) {
+//                callFilterProcessQuestion();
             } else if(isBtnSearchSave(code)) {
                 String searchName = EventMessageUtils.getSearchName(msg);
                 saveSearch(code,queGroup, targetCode,searchName, value);
@@ -1039,8 +1053,10 @@ public class FilterGroupService {
 
             /* send back quick search dropdown and filter group */
             if(isFilterAndQuickSearch(code)) {
-                String filterCode = EventMessageUtils.getFilterCode(msg);
-                sendFilterAndQuickSearch(code,queGroup,targetCode,filterCode,filterParams,isSubmitted);
+                callFilterProcessQuestion();
+
+//                String filterCode = EventMessageUtils.getFilterCode(msg);
+//                sendFilterAndQuickSearch(code,queGroup,targetCode,filterCode,filterParams,isSubmitted);
             }
 
         } catch(Exception ex) {
@@ -1055,6 +1071,8 @@ public class FilterGroupService {
      */
     public void handleDropdown(String event) {
         try {
+            log.info("====================handleDropdown(String event)====================");
+
             JsonObject msg = jsonb.fromJson(event, JsonObject.class);
 
             String token = EventMessageUtils.getToken(msg);;
@@ -1071,7 +1089,9 @@ public class FilterGroupService {
             if(!token.isEmpty()) { userToken.init(token);}
 
             /* Go to sorting */
-            if(isFilerColumnSelected(code,attrCode,value)) {
+            if(isFilerColumnSelected(code,attrCode)) {
+                //TODO : Change sbe
+//                cleanSBE = "SBE_TABLE_INTERNSHIPS";
                 String queValCode = selectFilerColumn(cleanSBE, value);
                 filterService.sendPartialPCM(FilterConst.PCM_SBE_ADD_SEARCH, FilterConst.PRI_LOC3, queValCode);
                 sendFilterDetails(code,attrCode,value);
@@ -1102,6 +1122,20 @@ public class FilterGroupService {
         } catch (Exception ex){
             log.error(ex);
         }
+    }
+
+    public void callFilterProcessQuestion() {
+        JsonObject json = Json.createObjectBuilder()
+                .add("questionCode", FilterConst.QUE_ADD_FILTER_SBE_GRP)
+                .add("sourceCode", userToken.getUserCode())
+                .add("targetCode", userToken.getUserCode())
+                .add("pcmCode", "PCM_FORM")
+                .add("events", "Update")
+                .build();
+
+        kogitoUtils.triggerWorkflow(SELF, "processQuestions", json);
+//        kogitoUtils.triggerWorkflow(SELF, "callProcessQuestions", json);
+        return;
     }
 
     /**
