@@ -37,6 +37,7 @@ public class PCM extends BaseEntity {
 	public static final String PCM_TABLE = "PCM_TABLE";
 	public static final String PCM_DETAIL_VIEW = "PCM_DETAIL_VIEW";
 	public static final String PCM_PROCESS = "PCM_PROCESS";
+	public static final String PCM_EVENTS = "PCM_EVENTS";
 
 	public PCM(String code, String name) {
 		super(code, name);
@@ -87,7 +88,7 @@ public class PCM extends BaseEntity {
 	}
 
 	public String getLocation(Integer index) {
-		return getValueAsString(Attribute.PRI_LOC+index);
+		return getValueAsString(Attribute.PRI_LOC + index);
 	}
 
 	public List<EntityAttribute> getLocations() {
