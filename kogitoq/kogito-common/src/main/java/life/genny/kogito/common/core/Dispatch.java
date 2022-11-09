@@ -111,6 +111,16 @@ public class Dispatch {
 		if (buttonEvents != null) {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
+
+			PCM eventsPCM = beUtils.getPCM("PCM_EVENTS");
+
+			// Now update the PCM to point the last location to the PCM_EVENTS
+			// add a LOC2 to the PCM if it doesn't exist
+			if (pcm.getLocation(2) == null) {
+				pcm.addStringAttribute("PRI_LOC2", "LOC2", PCM.PCM_EVENTS);
+			}
+			pcm.setLocation(2, eventsPCM.getCode()); // TODO - find last location?
+
 		}
 
 		// init if null to stop null pointers
@@ -251,6 +261,10 @@ public class Dispatch {
 			QBulkMessage msg, ProcessData processData) {
 
 		log.info("Traversing " + pcm.getCode());
+		if ("PCM_FORM_EDIT".equals(pcm.getCode())) { // TODO, this could be better
+			log.info("Found PCM_FORM_EDIT");
+			pcm.setQuestionCode(processData.getQuestionCode()); // Need to override the hard wired QUE_BASEENTITY_GRP
+		}
 		log.info(jsonb.toJson(pcm));
 		msg.add(pcm);
 
