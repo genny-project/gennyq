@@ -117,8 +117,12 @@ public class TaskService {
 		processData.setParent(parent);
 		processData.setLocation(location);
 
+		// fetch target
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
 		// build and send data
 		QBulkMessage msg = dispatch.build(processData, pcm);
+		msg.add(target);
 		dispatch.sendData(msg);
 
 		// send searches
