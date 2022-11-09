@@ -133,10 +133,10 @@ message ProcessQuestions {
 	optional Answer answer = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
-	optional string buttonEvents = 2; 
+	optional string buttonEvents = 2;
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
-	optional S2SData data = 3; 
+	optional string events = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
 	optional bool expectingAnswers = 4; 
@@ -268,9 +268,9 @@ message Validation {
 }
 enum EAbortReason { 
 	option java_package = "life.genny.kogito.common.models.S2SData";
-	CANCEL = 1;
+	CANCEL = 0;
 	TIMEOUT = 2;
-	NONE = 0;
+	NONE = 1;
 }
 enum EEntityStatus { 
 	option java_package = "life.genny.qwandaq";

@@ -2,13 +2,17 @@ package life.genny.qwandaq;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Index;
@@ -22,9 +26,12 @@ import javax.persistence.UniqueConstraint;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
@@ -38,7 +45,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 })
 @Cacheable
 @RegisterForReflection
-public class QuestionQuestion implements java.io.Serializable, Comparable<Object> {
+public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -81,6 +88,11 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	private String dependency;
 
 	private String icon;
+	
+	@Column(name = "capreqs")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
+
 
 	public QuestionQuestion() {
 	}
@@ -579,6 +591,19 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	public String getIcon() {
 		return this.icon;
+	}
+
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+	
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;		
 	}
 
 }

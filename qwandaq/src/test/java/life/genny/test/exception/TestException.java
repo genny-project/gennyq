@@ -11,7 +11,7 @@ public class TestException extends GennyRuntimeException {
     private final String msg;
 
     public TestException(String msg, TestCase<?, ?> test) {
-        this(msg, test.name);
+        this(msg, test.getName());
     }
 
     public TestException(String msg, String testName) {

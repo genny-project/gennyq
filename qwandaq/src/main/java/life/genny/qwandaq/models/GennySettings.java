@@ -20,18 +20,6 @@ public class GennySettings {
 	 * @param fallback - default value in the case the environment variable is not present
 	 * @param alert - whether or not to log a warning if the environment variable is missing
 	 * */
-	private static final String getConfig(String env) 
-		throws IllegalStateException {
-		return getConfig(env, null, false);
-	}
-
-	/**
-	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException} if
-	 * no fallback is present
-	 * @param env - key of the system environment variable to get
-	 * @param fallback - default value in the case the environment variable is not present
-	 * @param alert - whether or not to log a warning if the environment variable is missing
-	 * */
 	private static final String getConfig(String env, String fallback) 
 		throws IllegalStateException {
 		return getConfig(env, fallback, false);
