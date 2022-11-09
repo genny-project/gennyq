@@ -11,8 +11,8 @@ public class ReqConfig {
     public static final boolean DEFAULT_ALL_CAPS = true;
     public static final boolean DEFAULT_ALL_MODES = true;
     
-    public final boolean requiresAllCaps;
-    public final boolean requiresAllModes;
+    private boolean requiresAllCaps;
+    private boolean requiresAllModes;
     public final CapabilitySet userCapabilities;
 
     public ReqConfig(CapabilitySet userCapabilities) {
@@ -29,6 +29,24 @@ public class ReqConfig {
         this.requiresAllModes = requiresAllModes;
     }
 
+    // getters and setters
+
+    public boolean needsAllCaps() {
+        return requiresAllCaps;
+    }
+
+    public boolean needsAllModes() {
+        return requiresAllModes;
+    }
+
+    public void setAllModes(boolean requiresAllModes) {
+        this.requiresAllModes = requiresAllModes;
+    }
+
+    public void setAllCaps(boolean requiresAllCaps) {
+        this.requiresAllCaps = requiresAllCaps;
+    }
+
     public Set<Capability> getUserCaps() {
         return userCapabilities;
     }
@@ -42,6 +60,5 @@ public class ReqConfig {
         .append(userCapabilities.toString())
         .append(" ]")
         .toString();
-
     }
 }

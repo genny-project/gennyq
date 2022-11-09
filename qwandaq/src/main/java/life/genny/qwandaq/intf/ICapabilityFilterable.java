@@ -47,8 +47,8 @@ public interface ICapabilityFilterable {
             return true;
 
         Set<Capability> userCapabilities = requirementsConfig.getUserCaps();
-        boolean requiresAllCaps = requirementsConfig.requiresAllCaps;
-        boolean requiresAllModes = requirementsConfig.requiresAllModes;
+        boolean requiresAllCaps = requirementsConfig.needsAllCaps();
+        boolean requiresAllModes = requirementsConfig.needsAllModes();
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks
