@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -50,8 +51,11 @@ import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.converter.MoneyConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
@@ -67,7 +71,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute implements java.io.Serializable, Comparable<Object> {
+public class EntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
@@ -184,7 +188,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	private Boolean confirmationFlag = false;
 
+	// // please do not send this out to frontend no matter what
+	// @JsonbTransient
+	// @JsonIgnore
+	@Column(name = "capreqs")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
+
 	public EntityAttribute() {
+
 	}
 
 	/**
@@ -200,15 +212,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 *                   attributes)
 	 */
 	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
-		autocreateCreated();
-		setBaseEntity(baseEntity);
-		setAttribute(attribute);
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-							// attribute from scoring.
-		}
-		setWeight(weight);
-		setReadonly(false);
+		this(baseEntity, attribute, weight, null);
 	}
 
 	/**
@@ -238,8 +242,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		if (value != null) {
 			setValue(value);
 		}
+		setReadonly(false);
 	}
 
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+	
 	/**
 	 * @return EntityAttributeId
 	 */
@@ -290,6 +301,12 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		getPk().setBaseEntity(baseEntity);
 		this.baseEntityCode = baseEntity.getCode();
 		this.realm = baseEntity.getRealm();
+	}
+
+	@Transient
+	@JsonbTransient
+	public BaseEntity getBaseEntity() {
+		return getPk().getBaseEntity();
 	}
 
 	/**
@@ -702,7 +719,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
@@ -888,7 +904,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
@@ -1315,4 +1330,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		this.confirmationFlag = confirmationFlag;
 	}
 
+
+	public boolean isLocked() {
+		return capabilityRequirements != null;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;		
+	}
 }

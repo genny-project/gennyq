@@ -4,8 +4,8 @@ import java.util.Set;
 import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 
 /**
  * Trait

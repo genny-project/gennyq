@@ -11,8 +11,8 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
