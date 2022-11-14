@@ -61,7 +61,6 @@ public class TaskService {
 	 * @param processData
 	 */
 	public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
-
 		// check if task exists
 		log.info("Checking if task exists...");
 
@@ -117,8 +116,12 @@ public class TaskService {
 		processData.setParent(parent);
 		processData.setLocation(location);
 
+		// fetch target
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
 		// build and send data
 		QBulkMessage msg = dispatch.build(processData, pcm);
+		msg.add(target);
 		dispatch.sendData(msg);
 
 		// send searches
@@ -131,6 +134,7 @@ public class TaskService {
 	/**
 	 * Build a question group and assign to the PCM before dispatching a PCM tree
 	 * update.
+>>>>>>> 10.2.0
 	 *
 	 * @param sourceCode
 	 * @param targetCode
@@ -158,9 +162,11 @@ public class TaskService {
 		if (buttonEvents == null)
 			throw new NullParameterException("buttonEvents");
 
-		/*
-		 * no need to check parent and location as they can sometimes be null
-		 */
+		// defaults
+		if (parent == null)
+			parent = PCM.PCM_CONTENT;
+		if (location == null)
+			location = PCM.location(1);
 
 		log.info("==========================================");
 		log.info("processId : " + processId);
@@ -168,6 +174,8 @@ public class TaskService {
 		log.info("sourceCode : " + sourceCode);
 		log.info("targetCode : " + targetCode);
 		log.info("pcmCode : " + pcmCode);
+		log.info("parent : " + parent);
+		log.info("location : " + location);
 		log.info("buttonEvents : " + buttonEvents);
 		log.info("==========================================");
 
@@ -200,7 +208,7 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		// dispatch data
-		if (!sourceCode.equals(userCode))
+		if (!sourceCode.equals(userCode)) // TODO: Not every task has a userCode
 			return processData;
 
 		// build data
@@ -270,7 +278,6 @@ public class TaskService {
 	 * @return
 	 */
 	public Boolean submit(ProcessData processData) {
-
 		// construct bulk message
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
@@ -298,7 +305,6 @@ public class TaskService {
 	 * @return
 	 */
 	public ProcessData reset(ProcessData processData) {
-
 		// delete stored answers
 		processData.setAnswers(new ArrayList<Answer>());
 		qwandaUtils.storeProcessData(processData);
@@ -313,7 +319,6 @@ public class TaskService {
 	 * @param processData
 	 */
 	public void cancel(ProcessData processData) {
-
 		// clear cache entry
 		qwandaUtils.clearProcessData(processData.getProcessId());
 		// default redirect

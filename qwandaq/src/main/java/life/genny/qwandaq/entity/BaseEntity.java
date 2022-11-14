@@ -31,9 +31,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Cacheable;
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.Entity;
@@ -52,8 +56,14 @@ import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
@@ -102,7 +112,7 @@ import org.jboss.logging.Logger;
 @Cacheable
 @RegisterForReflection
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class BaseEntity extends CodedEntity implements BaseEntityIntf {
+public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabilityFilterable {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -160,21 +170,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	@XmlTransient
 	@Transient
 	private transient Map<String, EntityAttribute> attributeMap = null;
-
-	/**
-	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
-	 */
-	public Map<String, EntityAttribute> getAttributeMap() {
-		return attributeMap;
-	}
-
-	/**
-	 * @param attributeMap the attributeMap to set
-	 */
-	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
-		this.attributeMap = attributeMap;
-	}
-
 	/**
 	 * Constructor.
 	 */
@@ -203,6 +198,24 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		super(aCode, aName);
 	}
 
+
+	@Column(name = "capreqs")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
+
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
+	}
+
 	/**
 	 * @return Set The Answers.
 	 */
@@ -224,12 +237,21 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		this.answers.addAll(answers);
 	}
 
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Set<EntityAttribute> getBaseEntityAttributes() {
+		return getBaseEntityAttributes(null);
+	}
+
 	/**
 	 * @return the baseEntityAttributes
 	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityAttribute> getBaseEntityAttributes() {
-		return baseEntityAttributes;
+	public Set<EntityAttribute> getBaseEntityAttributes(ReqConfig requirementsConfig) {
+		if(requirementsConfig == null)
+			return baseEntityAttributes;
+		
+		return baseEntityAttributes.stream().filter((ea) -> ea.requirementsMet(requirementsConfig))
+			.collect(Collectors.toSet());
 	}
 
 	/**
@@ -386,6 +408,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		return foundEntity;
 	}
 
+	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
+		return findPrefixEntityAttributes(attributePrefix, null);
+	}
+
 	/**
 	 * findEntityAttribute This returns an attributeEntity if it exists in the
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
@@ -393,11 +419,14 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 	 * @param attributePrefix the attributePrefix to find with
 	 * @return EntityAttribute
 	 */
-	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
-		List<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix))).collect(Collectors.toList());
+	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix, ReqConfig requirementsConfig) {
+		Stream<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix)));
+		
+		if(requirementsConfig != null)
+			foundEntitys.filter(ea -> ea.requirementsMet(requirementsConfig));
 
-		return foundEntitys;
+		return foundEntitys.collect(Collectors.toList());
 	}
 
 	/**
@@ -1162,6 +1191,21 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf {
 		}
 
 	}
+
+	/**
+	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
+	 */
+	public Map<String, EntityAttribute> getAttributeMap() {
+		return attributeMap;
+	}
+
+	/**
+	 * @param attributeMap the attributeMap to set
+	 */
+	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
+		this.attributeMap = attributeMap;
+	}
+
 
 	@JsonbTransient
 	public boolean isPerson() {

@@ -7,8 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -32,6 +31,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
@@ -62,8 +62,6 @@ public class QwandaUtils {
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
 
-	private final ExecutorService executorService = Executors.newFixedThreadPool(GennySettings.executorThreadCount());
-
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
@@ -84,17 +82,18 @@ public class QwandaUtils {
 	public QwandaUtils() {
 	}
 
-	private static DataType DTT_EVENT;
+	// private static DataType DTT_EVENT;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
 	@PostConstruct
 	private void init() {
-		Attribute submit = getAttribute("EVT_SUBMIT");
-		if (submit == null) {
-			log.error("Could not find Attribute: EVT_SUBMIT");
-		}
-		DTT_EVENT = submit.getDataType();
+		// Attribute submit = getAttribute("EVT_SUBMIT");
+		// if (submit == null) {
+		// 	log.error("Could not find Attribute: EVT_SUBMIT");
+		// 	return;
+		// }
+		// DTT_EVENT = submit.getDataType();
 	}
 
 	/**
@@ -263,49 +262,38 @@ public class QwandaUtils {
 			code = Prefix.EVT.concat(code);
 		}
 		code = code.toUpperCase();
+		DataType DTT_EVENT = getAttribute(userToken.getProductCode(), "EVT_SUBMIT").getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
 	/**
-	 * Generate an ask for a question using the question code, the
+	 * Generate an ask for a question, the
 	 * source and the target. This operation is recursive if the
 	 * question is a group.
 	 *
-	 * @param code   The code of the question
+	 * @param question The question to generate from
 	 * @param source The source entity
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
-
-		if (code == null)
-			throw new NullParameterException("code");
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
+		if (question == null)
+			throw new NullParameterException("question");
 		if (source == null)
 			throw new NullParameterException("source");
 		if (target == null)
 			throw new NullParameterException("target");
 
-		// if the code is QUE_BASEENTITY_GRP then display all the attributes
-		if ("QUE_BASEENTITY_GRP".equals(code)) {
-			return generateAskGroupUsingBaseEntity(target);
-		}
-
 		String productCode = userToken.getProductCode();
-		log.debug("Fetching Question: " + code);
-
-		// find the question in the database
-		Question question;
-		try {
-			question = databaseUtils.findQuestionByCode(productCode, code);
-		} catch (NoResultException e) {
-			throw new ItemNotFoundException(code, e);
-		}
-
 		// init new parent ask
 		Ask ask = new Ask(question, source.getCode(), target.getCode());
 		ask.setRealm(productCode);
 
 		Attribute attribute = question.getAttribute();
+		if ("QUE_BASEENTITY_GRP".equals(question.getCode())) {
+			return generateAskGroupUsingBaseEntity(target);
+		}
+
 
 		// override with Attribute icon if question icon is null
 		if (attribute != null && attribute.getIcon() != null) {
@@ -331,7 +319,11 @@ public class QwandaUtils {
 
 				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
-
+				if(requirementsConfig != null) {
+					if(!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
+						continue;
+					}
+				}
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 
 				// Do not include PRI_SUBMIT
@@ -350,7 +342,7 @@ public class QwandaUtils {
 				if (questionQuestion.getIcon() != null) {
 					child.getQuestion().setIcon(questionQuestion.getIcon());
 				}
-
+				log.info("Adding: " + child.getQuestionCode());
 				ask.add(child);
 			}
 		} else {
@@ -358,6 +350,49 @@ public class QwandaUtils {
 		}
 
 		return ask;
+	}
+
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target) {
+		return generateAskFromQuestion(question, source, target, null);
+	}
+
+	/**
+	 * Generate an ask for a question using the question code, the
+	 * source and the target. This operation is recursive if the
+	 * question is a group.
+	 *
+	 * @param code   The code of the question
+	 * @param source The source entity
+	 * @param target The target entity
+	 * @return The generated Ask
+	 */
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+		// don't need to check source, target since they are checked in generateAskFromQuestion
+
+		// if the code is QUE_BASEENTITY_GRP then display all the attributes
+		if ("QUE_BASEENTITY_GRP".equals(code)) {
+			return generateAskGroupUsingBaseEntity(target);
+		}
+
+		String productCode = userToken.getProductCode();
+		log.debug("Fetching Question: " + code);
+
+		// find the question in the database
+		Question question;
+		try {
+			question = databaseUtils.findQuestionByCode(productCode, code);
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException(code, e);
+		}
+
+		return generateAskFromQuestion(question, source, target, requirementsConfig);
+	}
+
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
+		return generateAskFromQuestionCode(code, source, target, null);
 	}
 
 	/**
@@ -406,31 +441,6 @@ public class QwandaUtils {
 			}
 		}
 		return codes;
-	}
-
-	/**
-	 * @param asks
-	 * @return
-	 */
-	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks) {
-		return getAllAsksRecursively(asks, new HashMap<String, Ask>());
-	}
-
-	/**
-	 * @param asks
-	 * @param map
-	 * @return
-	 */
-	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks, Map<String, Ask> map) {
-
-		for (Ask ask : asks) {
-			if (ask.hasChildren()) {
-				map.put(ask.getQuestion().getAttribute().getCode(), ask);
-				map = getAllAsksRecursively(ask.getChildAsks(), map);
-			}
-		}
-
-		return map;
 	}
 
 	/**

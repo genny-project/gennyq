@@ -11,7 +11,9 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
+
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -78,7 +80,7 @@ public class RoleManager extends Manager {
 	public BaseEntity attachRole(BaseEntity target, String roleCode) {
 		
 		// Check we're working with a person
-		if(!target.isPerson())
+		if(target == null || !target.isPerson())
 			throw new RoleException("Error attaching role to target: " + target.getCode() + ". Target is not a person");
 		
 		roleCode = cleanRoleCode(roleCode);

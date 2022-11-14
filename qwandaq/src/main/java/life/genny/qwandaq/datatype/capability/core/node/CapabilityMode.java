@@ -1,4 +1,4 @@
-package life.genny.qwandaq.datatype.capability;
+package life.genny.qwandaq.datatype.capability.core.node;
 
 import java.util.HashMap;
 import java.util.Map;
