@@ -151,10 +151,10 @@ public class CapabilitiesManager extends Manager {
 	 * @param productCode    The product code
 	 * @param target         The target entity
 	 * @param code The capability code
-	 * @param modes          The modes to set
+	 * @param nodes          The nodes to set
 	 */
 	private void updateCapability(String productCode, BaseEntity target, final Attribute capability,
-			final CapabilityNode... modes) {
+			final CapabilityNode... nodes) {
 		// Update base entity
 		if (capability == null) {
 			throw new NullParameterException("capability");
@@ -164,8 +164,8 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(modes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(modes));
+		target.addAttribute(capability, 0.0, getModeString(nodes));
+		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 

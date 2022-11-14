@@ -108,7 +108,7 @@ public class CapabilityNode {
 		int size = this.permMode.ordinal();
 		CapabilityNode[] lesserNodes = new CapabilityNode[size];
 		for(int i = 0; i < size; i++) {
-			lesserNodes[i] = new CapabilityNode(capMode, PermissionMode.getByOrd(size - (i + 1)));
+			lesserNodes[i] = get(capMode, PermissionMode.getByOrd(size - (i + 1)));
 		}
 
 		return lesserNodes;
@@ -140,7 +140,7 @@ public class CapabilityNode {
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
 		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));
 
-		return new CapabilityNode(capMode, permMode);
+		return get(capMode, permMode);
 	}
 
 	public String toString(boolean verbose) {
@@ -158,6 +158,7 @@ public class CapabilityNode {
 
 	@Override
 	public boolean equals(Object other) {
+		// Ref: https://stackoverflow.com/questions/596462/any-reason-to-prefer-getclass-over-instanceof-when-generating-equals
 		if(!this.getClass().equals(other.getClass())) {
 			return false;
 		}
