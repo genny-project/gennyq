@@ -24,7 +24,7 @@
 
 	<properties>
 		<!-- Quarkus Properties -->
-		<quarkus.platform.version>2.13.3.Final</quarkus.platform.version>
+		<quarkus.platform.version>2.14.0.Final</quarkus.platform.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
 		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
@@ -59,7 +59,7 @@
 		<genny.version>${project.version}</genny.version>
 
 		<jackson.version>2.13.0</jackson.version>
-		<jandex.version>1.0.7</jandex.version>
+		<jandex.version>3.0.3</jandex.version>
 		<jjwt.version>0.7.0</jjwt.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
