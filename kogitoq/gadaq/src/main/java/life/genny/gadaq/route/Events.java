@@ -27,6 +27,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.gadaq.search.FilterGroupService;
 
 /**
  * Events
@@ -51,6 +52,9 @@ public class Events {
 	SearchService search;
 	@Inject
 	TaskService tasks;
+
+	@Inject
+	FilterGroupService filter;
 
 	/**
 	 * @param msg
@@ -142,6 +146,7 @@ public class Events {
 
 		// table view (Default View Mode)
 		if (code.startsWith("QUE_TABLE_")) {
+			filter.init(code);
 			search.sendTable(code);
 			return;
 		}
