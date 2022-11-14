@@ -95,7 +95,7 @@ public class CapHandler extends Manager {
 	 * @param trait
 	 * @return
 	 */
-	public Boolean traitCapabilitiesMet(Trait trait) {
+	public boolean traitCapabilitiesMet(Trait trait) {
 
 		if(userToken == null) {
 			error("[!] No UserToken, cannot verify capabilities");
@@ -104,7 +104,7 @@ public class CapHandler extends Manager {
 
 		//  TODO: Get rid of this service code check. Not ideal
 		// TODO: We also need to consolidate what it means to be a service user
-		boolean isService = GennyConstants.PER_SERVICE.equals(userToken.getUserCode()) || GennyConstants.PER_SERVICE.equals(userToken.getCode()) || userToken.hasRole("service");
+		boolean isService = hasSecureToken(userToken);
 		if(!isService) {
 			ReqConfig reqConfig = capMan.getUserCapabilities();
 			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
@@ -114,6 +114,19 @@ public class CapHandler extends Manager {
 			}
 		}
 		return true;
+	}
+
+	public static boolean hasSecureToken(UserToken userToken) {
+		if(GennyConstants.PER_SERVICE.equals(userToken.getUserCode()))
+			return true;
+			
+		if(GennyConstants.PER_SERVICE.equals(userToken.getCode()))
+			return true;
+		
+		if(userToken.hasRole("service"))
+			return true;
+		
+		return false;		
 	}
 
 }
