@@ -203,6 +203,7 @@ public class Events {
 						.build();
 
 				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
+				return;
 			}
 		}
 
