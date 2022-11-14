@@ -187,6 +187,7 @@ public class Entities {
 
 		if (entity == null) {
 			log.error("productCode=[" + productCode + "] , code=" + be.getCode());
+			// TODO: Need to produce a proper response here
 		}
 
 		return Response.ok(entity.getId()).build();

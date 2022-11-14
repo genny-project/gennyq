@@ -1,12 +1,15 @@
-package life.genny.qwandaq.datatype.capability;
+package life.genny.qwandaq.datatype.capability.core;
+
+import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleBuilder;
-
-import static life.genny.qwandaq.datatype.capability.CapabilityMode.*;
 
 /**
  * Builder class to make adding capability nodes to Capabilities easier
@@ -43,6 +46,18 @@ public class CapabilityBuilder {
      */
     public CapabilityBuilder(String capabilityCode) {
         this(null, capabilityCode);
+    }
+
+    /**
+     * Set multiple CapabilityModes to the same scope
+     * @param scope - scope to set the modes to
+     * @param modes - modes to set
+     */
+    public CapabilityBuilder setModes(PermissionMode scope, CapabilityMode... modes) {
+        for(CapabilityMode mode : modes) {
+            addNode(mode, scope);
+        }
+        return this;
     }
 
     /**
@@ -88,7 +103,7 @@ public class CapabilityBuilder {
      * @return this
      */
     public CapabilityBuilder addNode(CapabilityMode mode, PermissionMode scope) {
-        nodes.add(new CapabilityNode(mode, scope));
+        nodes.add(CapabilityNode.get(mode, scope));
         return this;
     }
 

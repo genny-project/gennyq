@@ -5,8 +5,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 
 /**
  * Capability
@@ -33,8 +34,8 @@ public class CapabilityRequirement extends Trait {
 		this(code, requiresAll, new HashSet<>(Arrays.asList(caps)));
 	}
 	
-	public boolean meetsRequirements(Set<Capability> capabilities) {
-		for(Capability cap : capabilities) {
+	public boolean meetsRequirements(ReqConfig reqConfig) {
+		for(Capability cap : reqConfig.userCapabilities) {
 			if(!cap.checkPerms(requiresAll, nodes))
 				return false;
 		}

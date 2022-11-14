@@ -42,7 +42,7 @@ public interface GennyExceptionIntf {
         }
         
         for(StackTraceElement element : elements) {
-            String line = "on " + element.getModuleName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
+            String line = "on " + element.getClassName() + ":" + Integer.toString(element.getLineNumber()) + " - " + element.getMethodName();
             if (element.getClassName().startsWith(PACKAGE_PREFIX))
                 log.error(line);
             else log.debug(line);

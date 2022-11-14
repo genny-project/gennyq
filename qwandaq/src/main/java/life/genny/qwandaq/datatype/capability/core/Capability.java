@@ -1,7 +1,9 @@
-package life.genny.qwandaq.datatype.capability;
+package life.genny.qwandaq.datatype.capability.core;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -9,6 +11,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -19,7 +22,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * @author Bryn Meachem
  */
 @RegisterForReflection
-public class Capability {
+public class Capability implements Serializable {
     
     public final String code;
 
@@ -31,12 +34,16 @@ public class Capability {
         this.nodes = nodes;
     }
 
+    public Capability(String capabilityCode, String capNodes) {
+        this(capabilityCode, CapabilitiesManager.deserializeCapArray(capNodes));
+    }
+
     public Capability(String capabilityCode, CapabilityNode... nodes) {
-        this(capabilityCode, new HashSet<>(Arrays.asList(nodes)));
+        this(capabilityCode, new LinkedHashSet<>(Arrays.asList(nodes)));
     }
 
     public Capability(String capabilityCode, List<CapabilityNode> nodes) {
-        this(capabilityCode, new HashSet<>(nodes));
+        this(capabilityCode, new LinkedHashSet<>(nodes));
     }
 
     /**
@@ -60,11 +67,15 @@ public class Capability {
         if(this.nodes.isEmpty()) {
             return other;
         }
+       
         // For each node, find the most permissive nodes
         for(CapabilityNode node : this.nodes) {
             for(CapabilityNode otherNode : other.nodes) {
                 if(node.capMode.equals(otherNode.capMode)) {
                     newNodes.add(node.compareNodes(otherNode, mostPermissive));
+                } else {
+                    newNodes.add(otherNode);
+                    newNodes.add(node);
                 }
             }
         }
@@ -88,8 +99,21 @@ public class Capability {
         return null;
     }
 
+    public boolean checkPerms(boolean hasAll, Capability cap) {
+        System.out.println("Checking " + (hasAll ? "hasAll" : "") + cap);
+        if(!code.equals(cap.code))
+            return false;
+        return checkPerms(hasAll, cap.nodes);
+    }
+
 	public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
-		return CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]));
+		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]))) {
+            System.out.println("Passed Capability check: " + CommonUtils.getArrayString(checkSet));
+            return true;
+        } else {
+            System.out.println("Failed cap check: " + CommonUtils.getArrayString(checkSet));
+            return false;
+        }
 	}
 
     public boolean checkPerms(boolean hasAll, CapabilityNode... nodes) {
@@ -118,6 +142,10 @@ public class Capability {
         }
 
         return true;
+    }
+
+    public String nodeString() {
+        return CommonUtils.getArrayString(nodes);
     }
 
     @Override
