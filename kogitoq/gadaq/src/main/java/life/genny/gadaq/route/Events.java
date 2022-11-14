@@ -172,6 +172,13 @@ public class Events {
 
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
+			}else if ("MSG".equals(prefix)){
+				JsonObject json = Json.createObjectBuilder()
+						.add("definitionCode", "DEF_".concat(code))
+						.add("sourceCode", userToken.getUserCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
 			}
 		}
 
