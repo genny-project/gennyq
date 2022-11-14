@@ -58,7 +58,7 @@ import life.genny.qwandaq.validation.Validation;
 public class QwandaUtils {
 
 	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
-	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT };
+	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT, Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
 
