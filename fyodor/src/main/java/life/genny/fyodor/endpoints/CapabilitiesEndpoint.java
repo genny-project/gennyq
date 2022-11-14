@@ -17,6 +17,7 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 
+@Path("/v1/caps")
 public class CapabilitiesEndpoint {
     
  
