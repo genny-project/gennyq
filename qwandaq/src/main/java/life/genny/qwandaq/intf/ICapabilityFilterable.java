@@ -62,7 +62,7 @@ public interface ICapabilityFilterable {
             // a set of user capabilities should only have 1 entry per capability code
             if(!optCap.get().checkPerms(requiresAllModes, reqCap)) {
                 if(requiresAllCaps) {
-                    getLogger().warn("Missing cap permissions " + (requiresAllModes ? "allModes " : "") + reqCap);
+                    getLogger().warn("Missing cap permissions " + (requiresAllModes ? "allNodes " : "") + reqCap);
                     return false;
                 }
             } else {

@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.FyodorUltra;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;

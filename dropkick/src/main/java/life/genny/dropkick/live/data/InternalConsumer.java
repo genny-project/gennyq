@@ -23,7 +23,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;

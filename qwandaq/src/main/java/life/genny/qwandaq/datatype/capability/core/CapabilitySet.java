@@ -2,6 +2,7 @@ package life.genny.qwandaq.datatype.capability.core;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 
 import life.genny.qwandaq.entity.BaseEntity;
 
@@ -18,6 +19,10 @@ public class CapabilitySet extends HashSet<Capability> {
     public CapabilitySet(BaseEntity entity, Collection<Capability> capabilities) {
         super(capabilities);
         this.entity = entity;
+    }
+
+    public Optional<Capability> getCapabilityByCode(String code) {
+        return this.stream().filter((cap) -> cap.code.equals(code)).findFirst();
     }
 
     public String getEntityCode() {

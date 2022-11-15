@@ -88,13 +88,13 @@ public class CapabilitiesManager extends Manager {
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
 				role = roles.get(i);
-				info("		- " + role.getCode());
 				CapabilitySet roleCaps = getEntityCapabilities(role);
+				info("		- " + role.getCode() + "(" + roleCaps.size() + " capabilities)");
 				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
-				trace("			Capabilities:");
+				info("			Capabilities:");
 				for(Capability cap : roleCaps) {
-					trace("			- " + cap);
+					info("			- " + cap);
 					// Find preexisting capability. If it exists, merge the Nodes in the way that
 					// grants the most permission possible
 					Capability preexistingCap = cap.hasCodeInSet(capabilities);
@@ -260,7 +260,7 @@ public class CapabilitiesManager extends Manager {
 		}
 	}
 
-	private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSet) {
+private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSet) {
 		// Allocate new list with max size of all combinations of CapMode and PermMode
 		List<CapabilityNode> newCaps = new ArrayList<>(capSet.size() * CapabilityMode.values().length * PermissionMode.values().length);
 		for(CapabilityNode node : capSet) {

@@ -6,7 +6,7 @@ import javax.json.bind.JsonbBuilder;
 import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
