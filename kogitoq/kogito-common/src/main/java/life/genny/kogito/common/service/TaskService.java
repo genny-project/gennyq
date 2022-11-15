@@ -134,7 +134,6 @@ public class TaskService {
 	/**
 	 * Build a question group and assign to the PCM before dispatching a PCM tree
 	 * update.
->>>>>>> 10.2.0
 	 *
 	 * @param sourceCode
 	 * @param targetCode
