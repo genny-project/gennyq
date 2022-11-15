@@ -111,6 +111,7 @@ public class CapHandler extends Manager {
 			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
 				getLogger().info("[!] Testing Cap: " + capTrait);
 				if(!capTrait.meetsRequirements(reqConfig)) {
+					getLogger().info("[!] Failed to meet requirement: " + capTrait);
 					return false;
 				}
 			}

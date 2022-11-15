@@ -82,13 +82,19 @@ public class CapabilitiesManager extends Manager {
 		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
+			info("User Roles:");
 			BaseEntity role = roles.get(0);
+			info("		- " + role.getCode());
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
+				role = roles.get(i);
+				info("		- " + role.getCode());
 				CapabilitySet roleCaps = getEntityCapabilities(role);
 				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
+				trace("			Capabilities:");
 				for(Capability cap : roleCaps) {
+					trace("			- " + cap);
 					// Find preexisting capability. If it exists, merge the Nodes in the way that
 					// grants the most permission possible
 					Capability preexistingCap = cap.hasCodeInSet(capabilities);
@@ -97,6 +103,7 @@ public class CapabilitiesManager extends Manager {
 						cap = preexistingCap.merge(cap, true);
 					}
 					capabilities.add(cap);
+					System.out.println("	[!] " + cap.code + " = " + cap.nodeString());
 				}
 			}
 		} else {
@@ -115,7 +122,7 @@ public class CapabilitiesManager extends Manager {
 			}
 			capabilities.add(capability);
 		}
-
+		
 		return new ReqConfig(capabilities, requiresAllCaps, requiresAllModes);
 	}
 

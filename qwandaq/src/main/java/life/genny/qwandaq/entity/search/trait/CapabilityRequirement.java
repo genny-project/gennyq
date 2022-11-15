@@ -38,12 +38,21 @@ public class CapabilityRequirement extends Trait {
 		if(nodes == null)
 			return true;
 		
-		for(Capability cap : reqConfig.userCapabilities) {
-			if(!cap.checkPerms(requiresAll, nodes))
-				return false;
+		if(reqConfig.needsAllCaps()) {
+			for(Capability cap : reqConfig.userCapabilities) {
+				if(!cap.checkPerms(requiresAll, nodes))
+					return false;
+			}
+			return true;
+		} else {
+			for(Capability cap : reqConfig.userCapabilities) {
+				if(cap.checkPerms(requiresAll, nodes)) {
+					return true;
+				}
+			}
+			return false;
 		}
 
-		return true;
 	}
 
 	public CapabilityNode[] getNodes() {
