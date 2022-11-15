@@ -1,7 +1,6 @@
 package life.genny.qwandaq.serialization.adapters;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.json.Json;
@@ -14,7 +13,6 @@ import javax.json.bind.adapter.JsonbAdapter;
 
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.search.trait.CapabilityRequirement;
-import life.genny.qwandaq.utils.CommonUtils;
 
 public class CapabilityRequirementAdapter implements JsonbAdapter<Set<CapabilityRequirement>, JsonArray> {
 
@@ -31,9 +29,14 @@ public class CapabilityRequirementAdapter implements JsonbAdapter<Set<Capability
     }
 
     public static JsonObject adaptOneToJson(CapabilityRequirement obj) {
+        JsonArrayBuilder jsonArray = Json.createArrayBuilder();
+        for(CapabilityNode node : obj.getNodes()) {
+            jsonArray.add(node.toString());
+        }
+
         return Json.createObjectBuilder()
             .add("code", obj.getCode())
-            .add("nodes", CommonUtils.getArrayString(obj.getNodes()))
+            .add("nodes", jsonArray.build())
             .add("reqAll", obj.requiresAll())
             .build();
     }
@@ -52,11 +55,13 @@ public class CapabilityRequirementAdapter implements JsonbAdapter<Set<Capability
     private static CapabilityRequirement adaptOneFromJson(JsonObject obj) {
         String name = obj.getString("code");
         String code = name;
-        String nodeString = obj.getString("nodes");
+        JsonArray nodes = obj.getJsonArray("nodes");
         boolean reqAll = obj.getBoolean("reqAll");
-        
-        List<CapabilityNode> nodes = CommonUtils.getListFromString(nodeString, CapabilityNode::parseCapability);
-        return new CapabilityRequirement(code, reqAll, nodes.toArray(new CapabilityNode[0]));
+        CapabilityNode[] nodeArray = new CapabilityNode[nodes.size()];
+        for(int i = 0; i < nodes.size(); i++) {
+            nodeArray[i] = CapabilityNode.parseCapability(nodes.getString(i));
+        }
+        return new CapabilityRequirement(code, reqAll, nodeArray);
     }
     
 }
