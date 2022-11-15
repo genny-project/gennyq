@@ -372,7 +372,15 @@ public class Dispatch {
 	 * @param target The target entity used in finding values
 	 * @param asks   The msg to add entities to
 	 */
-	public void handleDropdownAttributes(Ask ask, BaseEntity target, QBulkMessage msg) {
+	public void handleDropdownAttributes(Ask ask, String parentCode, BaseEntity target, QBulkMessage msg) {
+
+		log.info("Ask: " + ask.getQuestion().getCode() + ", parentCode: " + parentCode);
+
+		// recursion
+		if (ask.hasChildren()) {
+			for (Ask child : ask.getChildAsks())
+				handleDropdownAttributes(child, ask.getQuestion().getCode(), target, msg);
+		}
 
 		// check for dropdown attribute
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
@@ -382,7 +390,7 @@ public class Dispatch {
 					ask.getQuestion().getAttribute().getCode());
 			
 			if (codes == null || codes.isEmpty())
-				sendDropdownItems(ask, target, ask.getQuestion().getCode());
+				sendDropdownItems(ask, target, parentCode);
 			else
 				collectSelections(codes, msg);
 		}
