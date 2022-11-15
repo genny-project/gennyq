@@ -106,8 +106,10 @@ public class CapHandler extends Manager {
 		// TODO: We also need to consolidate what it means to be a service user
 		boolean isService = hasSecureToken(userToken);
 		if(!isService) {
+			// TODO: Move this call
 			ReqConfig reqConfig = capMan.getUserCapabilities();
 			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
+				getLogger().info("[!] Testing Cap: " + capTrait);
 				if(!capTrait.meetsRequirements(reqConfig)) {
 					return false;
 				}

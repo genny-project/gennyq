@@ -9,7 +9,7 @@ import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.utils.CommonUtils;
 
-import life.genny.test.utils.suite.JUnitTester;
+import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 public class RequirementsTest extends BaseRequirementsTest {
 

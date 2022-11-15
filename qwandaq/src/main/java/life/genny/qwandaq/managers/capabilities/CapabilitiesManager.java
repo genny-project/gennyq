@@ -430,7 +430,7 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated
 	public static List<CapabilityNode> deserializeCapArray(String modeString) {
-		return CommonUtils.getArrayFromString(modeString, CapabilityNode::parseCapability);
+		return CommonUtils.getListFromString(modeString, CapabilityNode::parseCapability);
 	}
 
 	/**

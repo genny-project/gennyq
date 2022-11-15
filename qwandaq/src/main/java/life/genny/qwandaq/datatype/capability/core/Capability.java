@@ -105,8 +105,8 @@ public class Capability implements Serializable {
         return checkPerms(hasAll, cap.nodes);
     }
 
-	public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
-		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]))) {
+	public boolean checkPerms(boolean hasAll, CapabilityNode... checkSet) {
+		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet)) {
             System.out.println("Passed Capability check: " + CommonUtils.getArrayString(checkSet));
             return true;
         } else {
@@ -115,8 +115,8 @@ public class Capability implements Serializable {
         }
 	}
 
-    public boolean checkPerms(boolean hasAll, CapabilityNode... nodes) {
-        return CapabilitiesManager.checkCapability(this.nodes, hasAll, nodes);
+    public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
+        return CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]));
     }
 
     public static Capability getFromEA(EntityAttribute ea) {

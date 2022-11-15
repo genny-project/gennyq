@@ -30,6 +30,7 @@ public class CapabilityNode {
 			}
 			NODE_MAP.put(mode, scopeMap);
 		}
+		log.info("Init " + (CapabilityMode.values().length * PermissionMode.values().length) + "CapabilityNodes");
 	}
 
 	public static CapabilityNode get(CapabilityMode mode, PermissionMode scope) {
@@ -38,6 +39,11 @@ public class CapabilityNode {
 
 	public static CapabilityNode get(CapabilityMode mode) {
 		return get(mode, PermissionMode.SELF);
+	}
+
+	public static CapabilityNode get(char modeId, char permId) {
+		return get(CapabilityMode.getByIdentifier(modeId),
+			PermissionMode.getByIdentifier(permId));
 	}
 
 	/**

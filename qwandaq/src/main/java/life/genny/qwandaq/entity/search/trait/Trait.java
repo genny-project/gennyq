@@ -1,11 +1,15 @@
 package life.genny.qwandaq.entity.search.trait;
 
 import java.util.Set;
+
+import javax.json.bind.annotation.JsonbTypeAdapter;
+
 import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.serialization.adapters.CapabilityRequirementAdapter;
 
 /**
  * Trait
@@ -16,6 +20,8 @@ public abstract class Trait {
 	private String code;
 	private String name;
 
+	// @JsonbTransient
+	@JsonbTypeAdapter(CapabilityRequirementAdapter.class)
 	private Set<CapabilityRequirement> capabilityRequirements = new HashSet<>();
 
 	public Trait() {
@@ -46,9 +52,8 @@ public abstract class Trait {
 		return capabilityRequirements;
 	}
 
-	public Trait setCapabilityRequirements(Set<CapabilityRequirement> capabilities) {
+	public void setCapabilityRequirements(Set<CapabilityRequirement>  capabilities) {
 		this.capabilityRequirements = capabilities;
-		return this;
 	}
 
 	public Trait addCapabilityRequirement(CapabilityRequirement capability) {
