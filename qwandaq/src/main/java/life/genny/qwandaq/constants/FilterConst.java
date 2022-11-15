@@ -11,7 +11,7 @@ public class FilterConst {
     public static final String  PRI_PREFIX = "PRI_";
     public static final String PRI_NAME="PRI_NAME";
     public static final String PRI_CODE="PRI_CODE";
-    public static final String FIELD="FIELD";
+    public static final String FIELD="FIELD_";
 
     /* PCM */
     public static final String PCM_TABLE = "PCM_TABLE";
@@ -56,7 +56,6 @@ public class FilterConst {
 
     /* Filter */
     public static final String FILTERS = "Filters";
-    public static final String QUE_EXISTING_FILTERS_GRP = "QUE_EXISTING_FILTERS_GRP";
     public static final String FILTER_SEL = "SEL_FILTER_COLUMN_";
     public static final String FILTER_COL = "FLC_";
     public static final String SEL_PREF = "SEL_";
@@ -99,7 +98,6 @@ public class FilterConst {
     /* Event */
     public static final String TOKEN = "token";
     public static final String ATTRIBUTECODE = "attributeCode";
-    public static final String COLUMN = "column";
     public static final String VALUE = "value";
     public static final String OPTION = "option";
     public static final String QUESTIONCODE = "questionCode";
@@ -121,11 +119,6 @@ public class FilterConst {
     public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
     public static final String PCM_SBE_ADD_SEARCH = "PCM_SBE_ADD_SEARCH";
 
-    public static final String QUE_TAG_PREF = "QUE_TAG_";
-    public static final String FILTER_QUE_EXIST_NAME = "FILTER_QUE_EXIST_NAME";
-    public static final String QUE_FILTER_VALUE = "QUE_FILTER_VALUE";
-    public static final String FILTER_QUE_EXIST = "FILTER_QUE_EXIST";
-
     public static final String FILTER_PREF = "FILTER_";
 
     /** Filter Category **/
@@ -134,6 +127,7 @@ public class FilterConst {
     public static final String SELECT = "SELECT";
     public static final String YES_NO = "YES_NO";
     public static final String COUNTRY = "COUNTRY";
+    public static final String SEPARATOR = ":";
 
 
 }
