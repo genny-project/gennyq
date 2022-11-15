@@ -187,9 +187,10 @@ public class Dispatch {
 			QBulkMessage msg) {
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		String code = processEntity.getCode();
 		String processId = processData.getProcessId();
 		for (Ask ask : flatMapOfAsks.values()) {
-			ask.setTargetCode(processEntity.getCode());
+			ask.setTargetCode(code);
 			ask.setProcessId(processId);
 		}
 
@@ -379,12 +380,13 @@ public class Dispatch {
 	 */
 	public void handleDropdownAttributes(Ask ask, String parentCode, BaseEntity target, QBulkMessage msg) {
 
-		log.info("Ask: " + ask.getQuestion().getCode() + ", parentCode: " + parentCode);
+		String questionCode = ask.getQuestion().getCode();
+		log.info("Ask: " + questionCode + ", parentCode: " + parentCode);
 
 		// recursion
 		if (ask.hasChildren()) {
 			for (Ask child : ask.getChildAsks())
-				handleDropdownAttributes(child, ask.getQuestion().getCode(), target, msg);
+				handleDropdownAttributes(child, questionCode, target, msg);
 		}
 
 		// check for dropdown attribute
