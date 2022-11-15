@@ -187,10 +187,15 @@ public class Dispatch {
 			QBulkMessage msg) {
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		String processId = processData.getProcessId();
 		for (Ask ask : flatMapOfAsks.values()) {
 			ask.setTargetCode(processEntity.getCode());
-			ask.setProcessId(processData.getProcessId());
+			ask.setProcessId(processId);
 		}
+
+		// TODO: This should not be necessary, but is
+		for (Ask ask : asks)
+			qwandaUtils.recursivelySetProcessId(ask, processId);
 
 		// check mandatory fields
 		// TODO: change to use flatMap
