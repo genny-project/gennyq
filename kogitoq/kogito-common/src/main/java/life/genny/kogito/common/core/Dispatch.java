@@ -57,7 +57,9 @@ public class Dispatch {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	public static final String[] BUTTON_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT, Attribute.EVT_UPDATE };
+
+	public static final String[] BUTTON_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT, Attribute.EVT_UPDATE,
+			Attribute.EVT_CANCEL, Attribute.EVT_UNDO, Attribute.EVT_REDO, Attribute.EVT_RESET };
 
 	@Inject
 	UserToken userToken;
@@ -125,8 +127,10 @@ public class Dispatch {
 			// Now set the unique code of the PCM_EVENTS so that it is unique
 			msg.add(eventsPCM);
 			// Now update the PCM to point the last location to the PCM_EVENTS
-			if (pcm.getLocation(2) == null)
-				pcm.setLocation(2, PCM.PCM_EVENTS);
+			if (pcm.getLocation(2) == null) {
+				pcm.addStringAttribute("PRI_LOC2", "LOC2", PCM.PCM_EVENTS);
+			}
+				pcm.setLocation(2, eventsPCM.getCode());
 		}
 
 		// init if null to stop null pointers
@@ -242,7 +246,7 @@ public class Dispatch {
 	 * @param msg
 	 * @param processData
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target,
+	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 
 		// add pcm to bulk message
@@ -258,7 +262,7 @@ public class Dispatch {
 	 * @param target
 	 * @return
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target,
+	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 
 		ReqConfig reqConfig = capMan.getUserCapabilities();
@@ -267,6 +271,10 @@ public class Dispatch {
 			return;
 		}
 		log.info("Traversing " + pcm.getCode());
+		if ("PCM_FORM_EDIT".equals(pcm.getCode())) { // TODO, this could be better
+			log.info("Found PCM_FORM_EDIT");
+			pcm.setQuestionCode(processData.getQuestionCode()); // Need to override the hard wired QUE_BASEENTITY_GRP
+		}
 		log.info(jsonb.toJson(pcm));
 
 		// check for a question code
@@ -374,13 +382,18 @@ public class Dispatch {
 	 */
 	public void handleDropdownAttributes(Ask ask, BaseEntity target, QBulkMessage msg) {
 
+		if (ask.hasChildren()) {
+			for (Ask child : ask.getChildAsks())
+				handleDropdownAttributes(child, target, msg);
+		}
+
 		// check for dropdown attribute
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
 
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
 					ask.getQuestion().getAttribute().getCode());
-
+			
 			if (codes == null || codes.isEmpty())
 				sendDropdownItems(ask, target, ask.getQuestion().getCode());
 			else
@@ -414,21 +427,55 @@ public class Dispatch {
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
 
-		// trigger dropdown search in dropkick
-		JsonObject json = Json.createObjectBuilder()
-		.add("event_type", "DD")
-		.add("data", Json.createObjectBuilder()
-			.add("questionCode", question.getCode())
-			.add("sourceCode", ask.getSourceCode())
-			.add("targetCode", ask.getTargetCode())
-			.add("parentCode", parentCode)
-			.add("value", "")
-			.add("processId", ask.getProcessId()))
-		.add("attributeCode", attribute.getCode())
-		.add("token", userToken.getToken())
-		.build();
+		if (attribute.getCode().startsWith(Prefix.LNK)) {
 
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
+			// check for already selected items
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
+			if (codes != null && !codes.isEmpty()) {
+
+				// grab selection baseentitys
+				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
+				for (String code : codes) {
+					if (StringUtils.isBlank(code)) {
+						continue;
+					}
+
+					BaseEntity selection = beUtils.getBaseEntity(code);
+
+					// Ensure only the PRI_NAME attribute exists in the selection
+					selection = beUtils.addNonLiteralAttributes(selection);
+					selection = beUtils.privacyFilter(selection,
+							Collections.singleton(Attribute.PRI_NAME));
+					selectionMsg.add(selection);
+				}
+
+				// send selections
+				if (selectionMsg.getItems() != null) {
+					selectionMsg.setToken(userToken.getToken());
+					selectionMsg.setReplace(true);
+					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
+					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
+				} else {
+					log.info("No selection items found for " + attribute.getCode());
+				}
+			}
+
+			// trigger dropdown search in dropkick
+			JsonObject json = Json.createObjectBuilder()
+					.add("event_type", "DD")
+					.add("data", Json.createObjectBuilder()
+							.add("questionCode", question.getCode())
+							.add("sourceCode", ask.getSourceCode())
+							.add("targetCode", ask.getTargetCode())
+							.add("parentCode", parentCode)
+							.add("value", "")
+							.add("processId", ask.getProcessId()))
+					.add("attributeCode", attribute.getCode())
+					.add("token", userToken.getToken())
+					.build();
+
+			KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
+		}
 	}
 
 	/**
