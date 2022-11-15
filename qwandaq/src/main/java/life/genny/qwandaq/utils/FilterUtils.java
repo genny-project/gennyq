@@ -3,19 +3,20 @@ package life.genny.qwandaq.utils;
 import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Map;
-import java.util.List;
-import java.util.Comparator;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.trait.*;
+import life.genny.qwandaq.models.SavedSearch;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -30,6 +31,7 @@ import org.w3c.dom.Attr;
 @ApplicationScoped
 public class FilterUtils {
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+    static Jsonb jsonb = JsonbBuilder.create();
 
     @Inject
     QwandaUtils qwandaUtils;
@@ -101,48 +103,57 @@ public class FilterUtils {
      * Change existing filter group
      * @param ask           Ask existing group
      * @param filterCode    Filter code
-     * @param listFilParams List of filter parameters
+     * @param params List of filter parameters
      */
-    public void setFilterDetailsGroup(Ask ask, String filterCode, Map<String, Map<String, String>> listFilParams) {
+    public void setFilterDetailsGroup(Ask ask, String filterCode, Map<String,SavedSearch> params) {
         //current filter state
-        for (Map.Entry<String, Map<String, String>> param : listFilParams.entrySet()) {
+        for (Map.Entry<String,SavedSearch> param : params.entrySet()) {
+            Ask childAsk = new Ask();
 
-            for(Map.Entry<String,String> childParam : param.getValue().entrySet()) {
-                Ask childAsk = new Ask();
-                childAsk.setAttributeCode(param.getKey());
+            String strJson = jsonb.toJson(param.getValue());
+            SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-                Attribute att = new Attribute(childParam.getKey(), childParam.getKey(), new DataType());
-                Question question = new Question(FilterConst.QUESTIONCODE, FilterConst.OPTION, att);
+            String colName = ss.getColumn();
+            childAsk.setAttributeCode(colName);
 
-                question.setHtml(childParam.getValue());
-                childAsk.setName(childParam.getValue());
+            Attribute att = new Attribute(colName,colName, new DataType());
+            Question question = new Question(FilterConst.QUESTIONCODE, FilterConst.OPTION, att);
 
-                childAsk.setHidden(false);
-                childAsk.setDisabled(false);
-//                childAsk.setQuestionCode(param.getValue().get(FilterConst.QUESTIONCODE));
-                childAsk.setQuestion(question);
+            String html = ss.getValueCode();
+            question.setHtml(html);
+            childAsk.setName(html);
 
-                childAsk.setTargetCode(userToken.userCode);
+            childAsk.setHidden(false);
+            childAsk.setDisabled(false);
+            childAsk.setQuestion(question);
 
-                ask.add(childAsk);
-            }
+            childAsk.setTargetCode(userToken.userCode);
+
+            ask.add(childAsk);
         }
     }
 
     /**
-     * Return the last word
-     *
-     * @param str String
-     * @return The last word
+     * Return the link value code
+     * @param value Value
+     * @return Return the link value code
      */
-    public String getLastWord(String str) {
-        String word = "";
-        int lastIndex = str.lastIndexOf("_");
-        if (lastIndex > -1) {
-            word = str.substring(lastIndex + 1, str.length());
-            return word;
+    public String getLinkValueCode(String value) {
+        String fieldName = "";
+        int priIndex = -1;
+        int fieldIndex = value.lastIndexOf(FilterConst.FIELD);
+        if(fieldIndex > -1) {
+            priIndex = value.indexOf(FilterConst.PRI_PREFIX) + FilterConst.PRI_PREFIX.length();
+            fieldName = value.substring(priIndex,fieldIndex - 1);
+            return fieldName;
+        } else {
+            priIndex = value.lastIndexOf(FilterConst.PRI_PREFIX) + FilterConst.PRI_PREFIX.length();
         }
-        return str;
+        if(priIndex > -1) {
+            fieldName = value.substring(priIndex);
+            fieldName = fieldName.replaceFirst("\"]","");
+        }
+        return fieldName;
     }
 
     /**
@@ -183,10 +194,11 @@ public class FilterUtils {
      * Construct existing filter group object in Add Filter group form
      * @param queGrp  Question Group code
      * @param filterCode Filter code
-     * @param listFilParams List of Filter parameters
+     * @param params List of Filter parameters
      * @return return existing filter group object
      */
-    public Ask getFilterDetailsGroup(String queGrp,String filterCode, Map<String, Map<String, String>> listFilParams) {
+//    public Ask getFilterDetailsGroup(String queGrp,String queCode,String filterCode,Map<String,Map<String, String>> params) {
+    public Ask getFilterDetailsGroup(String queGrp,String queCode,String filterCode,Map<String, SavedSearch> params) {
         String sourceCode = userToken.getUserCode();
         BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
         BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
@@ -195,16 +207,17 @@ public class FilterUtils {
         ask.setHidden(true);
 
         // change filter details group
-        if (listFilParams.size() > 0) {
-            setFilterDetailsGroup(ask,filterCode, listFilParams);
+        if (params.size() > 0) {
+            setFilterDetailsGroup(ask,filterCode, params);
         }
 
         Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
-        Question question = new Question(queGrp,queGrp,attribute);
+        Question question = new Question(queCode,queCode,attribute);
         ask.setQuestion(question);
 
         return ask;
     }
+
 
     /**
      * Return Message of filter column
