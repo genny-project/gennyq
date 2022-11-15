@@ -1,14 +1,14 @@
 package life.genny.fyodor.utils;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.capability.Capability;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
@@ -68,9 +68,7 @@ public class CapHandler extends Manager {
 		// TODO: Handle filters and clauses
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
 		info("Filtering " + containers.size() + " filters");
-		containers = searchEntity.getClauseContainers().stream()
-				// .filter(container -> traitCapabilitiesMet(container))
-				.collect(Collectors.toList());
+		containers = new ArrayList<>(searchEntity.getClauseContainers());
 
 		info("Filtered down to " + containers.size() + " clause containers");
 		searchEntity.setClauseContainers(containers);

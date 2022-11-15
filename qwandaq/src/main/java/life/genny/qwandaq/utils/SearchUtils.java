@@ -990,21 +990,4 @@ public class SearchUtils {
 
 		return base;
 	}
-
-	/**
-	 * Return ask with bucket filter options
-	 * 
-	 * @param queCode  Question Code
-	 * @param lnkCode  Link Code
-	 * @param lnkValue Link Value
-	 * @return Bucket filter options
-	 */
-	public SearchEntity getBucketFilterOptions(String sbeCode, String queCode, String lnkCode, String lnkValue) {
-		SearchEntity searchBE = new SearchEntity(sbeCode, GennyConstants.SBE_DROPDOWN)
-				.add(new Column(lnkCode, lnkValue));
-		searchBE.setRealm(userToken.getProductCode());
-		searchBE.setPageStart(0).setPageSize(100);
-
-		return searchBE;
-	}
 }

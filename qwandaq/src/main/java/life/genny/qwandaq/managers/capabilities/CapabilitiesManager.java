@@ -27,10 +27,13 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityMode;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.PermissionMode;
+
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;

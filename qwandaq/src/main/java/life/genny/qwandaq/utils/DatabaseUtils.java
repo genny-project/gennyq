@@ -351,6 +351,17 @@ public class DatabaseUtils {
 				.getResultList();
 	}
 
+	public List<QuestionQuestion> findParentQuestionQuestionsByTargetCode(String realm, String targetCode) {
+
+		return entityManager
+				.createQuery(
+						"FROM QuestionQuestion WHERE realm=:realmStr AND targetCode = :targetCode order by weight ASC",
+						QuestionQuestion.class)
+				.setParameter("realmStr", realm)
+				.setParameter("targetCode", targetCode)
+				.getResultList();
+	}
+
 	/**
 	 * Find a list of Asks using question code, sourceCode and targetCode.
 	 * 
