@@ -1,17 +1,24 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.entity.BaseEntity;
-import org.jboss.logging.Logger;
+import java.io.StringReader;
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import java.io.StringReader;
-import java.text.DecimalFormat;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.jboss.logging.Logger;
+import org.javamoney.moneta.Money;
+
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 
 /**
  * A utiltity used in the MailMerge feature of Genny.
@@ -67,40 +74,34 @@ public class MergeUtils {
 	 */
 	public static String merge(String mergeStr, Map<String, Object> templateEntityMap) { 
 		
-		if (mergeStr != null) {
+		if (mergeStr == null)
+			throw new NullParameterException("mergeStr");
 
-			Matcher match = PATTERN_MATCHER.matcher(mergeStr);
-			Matcher matchVariables = PATTERN_VARIABLE.matcher(mergeStr);
-		
-			if (templateEntityMap != null && templateEntityMap.size() > 0) {
-				
-				while (match.find()) {	
-					
-					Object mergedObject = wordMerge(match.group(1), templateEntityMap);
-					if (mergedObject != null) {
-						mergeStr = mergeStr.replace(REGEX_START + match.group(1) + REGEX_END, mergedObject.toString());
-					} else {
-						mergeStr = mergeStr.replace(REGEX_START + match.group(1) + REGEX_END, "");
-					}			
-				}
-				
-				// NOTE: duplicating this for now. ideally wordMerge should be a bit more flexible and allows all kind of data to be passed
-				while (matchVariables.find()) {
-					
-					Object mergedText = templateEntityMap.get(matchVariables.group(1));
-					if (mergedText != null) {
-						mergeStr = mergeStr.replace(VARIABLE_REGEX_START + matchVariables.group(1) + VARIABLE_REGEX_END, mergedText.toString());
-					} else {
-						mergeStr = mergeStr.replace(VARIABLE_REGEX_START + matchVariables.group(1) + VARIABLE_REGEX_END, "");
-					}	
-				}
-				
+		Matcher match = PATTERN_MATCHER.matcher(mergeStr);
+		Matcher matchVariables = PATTERN_VARIABLE.matcher(mergeStr);
+
+		if (templateEntityMap != null && templateEntityMap.size() > 0) {
+
+			while (match.find()) {
+
+				Object mergedObject = wordMerge(match.group(1), templateEntityMap);
+				if (mergedObject != null)
+					mergeStr = mergeStr.replace(REGEX_START + match.group(1) + REGEX_END, mergedObject.toString());
+				else
+					mergeStr = mergeStr.replace(REGEX_START + match.group(1) + REGEX_END, "");
 			}
 
-		} else {
-			log.warn("mergeStr is NULL");
+			// NOTE: duplicating this for now. ideally wordMerge should be a bit more flexible and allows all kind of data to be passed
+			while (matchVariables.find()) {
+
+				Object mergedText = templateEntityMap.get(matchVariables.group(1));
+				if (mergedText != null)
+					mergeStr = mergeStr.replace(VARIABLE_REGEX_START + matchVariables.group(1) + VARIABLE_REGEX_END, mergedText.toString());
+				else
+					mergeStr = mergeStr.replace(VARIABLE_REGEX_START + matchVariables.group(1) + VARIABLE_REGEX_END, "");
+			}
 		}
-	
+
 		return mergeStr;
 	}
 	
@@ -112,21 +113,19 @@ public class MergeUtils {
 	 */
 	public static Object wordMerge(String mergeText, Map<String, Object> entitymap) {
 
-		if (mergeText == null || mergeText.isEmpty()) {
+		if (mergeText == null || mergeText.isEmpty())
 			return DEFAULT;
-		}
 
 		// we split the text to merge into 2 components: BE.PRI... becomes [BE, PRI...]
 		String[] entityArr = mergeText.split("\\.");
 		String keyCode = entityArr[0];
 		log.debug("looking for key in map: " + keyCode);
 
-//		if ((entityArr.length == 0))
-//			return DEFAULT;
-
-		if (!entitymap.containsKey(keyCode)) {
+		if ((entityArr.length == 0))
 			return DEFAULT;
-		}
+
+		if (!entitymap.containsKey(keyCode))
+			return DEFAULT;
 
 		Object value = entitymap.get(keyCode);
 
@@ -141,21 +140,21 @@ public class MergeUtils {
 			String attributeCode = entityArr[1];
 
 			if (attributeCode.equals("PRI_CODE")) {
-				log.info("context: " + keyCode + ", attr: " + attributeCode + ", value: " + be.getCode());
+				log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + be.getCode());
 				return be.getCode();
 			}
 
 			Object attributeValue = be.getValue(attributeCode, null);
-			log.info("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
+			log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 
 			Matcher matchFormat = null;
-			if (entityArr.length > 2) {
+			if (entityArr != null && entityArr.length > 2) {
 				matchFormat = FORMAT_PATTERN_VARIABLE.matcher(entityArr[2]);
 			}
 
 			if (attributeValue instanceof org.javamoney.moneta.Money money) {
 
-				log.info("This is a Money attribute");
+				log.debug("This is a Money attribute");
 				DecimalFormat df = new DecimalFormat("#.00");
 
 				return df.format(money.getNumber()) + " " + money.getCurrency();
@@ -170,20 +169,20 @@ public class MergeUtils {
 				   3rd component -> (date-Format)
 				   */
 				if (matchFormat != null && matchFormat.find()) {
-					log.info("Datetime attribute " + attributeCode + " needs formatting. Format is " + entityArr[2]);
+					log.debug("Datetime attribute " + attributeCode + " needs formatting. Format is " + entityArr[2]);
 					return TimeUtils.formatDateTime(ldtValue, matchFormat.group(1));
 				} else {
-					log.info("DateTime attribute " + attributeCode + " does NOT need formatting");
+					log.debug("DateTime attribute " + attributeCode + " does NOT need formatting");
 					return ldtValue;
 				}
 
 			} else if (attributeValue instanceof java.time.LocalDate ldValue) {
 
 				if (matchFormat != null && matchFormat.find()) {
-					log.info("Date attribute " + attributeCode + " needs formatting. Format is " + entityArr[2]);
+					log.debug("Date attribute " + attributeCode + " needs formatting. Format is " + entityArr[2]);
 					return TimeUtils.formatDate(ldValue, matchFormat.group(1));
 				} else {
-					log.info("Date attribute " + attributeCode + " does NOT need formatting");
+					log.debug("Date attribute " + attributeCode + " does NOT need formatting");
 					return ldValue;
 				}
 
@@ -192,10 +191,10 @@ public class MergeUtils {
 				String result = null;
 				if (matchFormat != null && matchFormat.find()) {
 					result = getFormattedString(sValue, matchFormat.group(1));
-					log.info("String attribute " + attributeCode + " needs formatting. Format is " + entityArr[2] + ", Result is " + result);
+					log.debug("String attribute " + attributeCode + " needs formatting. Format is " + entityArr[2] + ", Result is " + result);
 				} else {
 					result = be.findEntityAttribute(attributeCode).get().getValueString();
-					log.info("String attribute " + attributeCode + " does NOT need formatting. Result is " + result);
+					log.debug("String attribute " + attributeCode + " does NOT need formatting. Result is " + result);
 				}
 				return result;
 
@@ -227,34 +226,31 @@ public class MergeUtils {
 	 */
 	public static Boolean contextsArePresent(String mergeStr, Map<String, Object> templateEntityMap) { 
 		
-		if (mergeStr != null) {
+		if (mergeStr == null)
+			throw new NullParameterException("mergeStr");
 
-			Matcher match = PATTERN_MATCHER.matcher(mergeStr);
-			Matcher matchVariables = PATTERN_VARIABLE.matcher(mergeStr);
-		
-			if (templateEntityMap != null && templateEntityMap.size() > 0) {
-				
-				while (match.find()) {
-					
-					Object mergedObject = wordMerge(match.group(1), templateEntityMap);
-					if (mergedObject == null || mergedObject.toString().isEmpty()) {
-						return false;
-					}			
+		Matcher match = PATTERN_MATCHER.matcher(mergeStr);
+		Matcher matchVariables = PATTERN_VARIABLE.matcher(mergeStr);
+
+		if (templateEntityMap != null && templateEntityMap.size() > 0) {
+
+			while (match.find()) {
+
+				Object mergedObject = wordMerge(match.group(1), templateEntityMap);
+				if (mergedObject == null || mergedObject.toString().isEmpty()) {
+					return false;
 				}
-				
-				while(matchVariables.find()) {
-					
-					Object mergedText = templateEntityMap.get(matchVariables.group(1));
-					if (mergedText == null) {
-						return false;
-					}	
-				}
-				
 			}
 
-		} else {
-			log.warn("mergeStr is NULL");
+			while(matchVariables.find()) {
+
+				Object mergedText = templateEntityMap.get(matchVariables.group(1));
+				if (mergedText == null) {
+					return false;
+				}
+			}
 		}
+
 		return true;
 	}
 
