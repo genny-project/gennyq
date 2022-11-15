@@ -118,6 +118,10 @@
       <version>${kogito.bom.version}</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>jakarta.json.bind</groupId>
+          <artifactId>jakarta.json.bind-api</artifactId>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
