@@ -57,7 +57,6 @@ public class Dispatch {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-
 	public static final String[] BUTTON_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT, Attribute.EVT_UPDATE,
 			Attribute.EVT_CANCEL, Attribute.EVT_UNDO, Attribute.EVT_REDO, Attribute.EVT_RESET };
 
@@ -125,7 +124,7 @@ public class Dispatch {
 			PCM eventsPCM = beUtils.getPCM("PCM_EVENTS");
 			// Now set the unique code of the PCM_EVENTS so that it is unique
 			eventsPCM.setCode("PCM_EVENTS");
-			msg.add(eventsPCM);
+			// msg.add(eventsPCM);
 			// Now update the PCM to point the last location to the PCM_EVENTS
 			// add a LOC2 to the PCM if it doesn't exist
 			if (pcm.getLocation(2) == null) {
@@ -178,7 +177,7 @@ public class Dispatch {
 		log.info("Non-Readonly Attributes: " + attributeCodes);
 		return !attributeCodes.isEmpty();
 		// if (!attributeCodes.isEmpty())
-		// 	return true;
+		// return true;
 
 		// return false;
 	}
@@ -251,7 +250,7 @@ public class Dispatch {
 	 * @param msg
 	 * @param processData
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
+	public void traversePCM(String code, BaseEntity source, BaseEntity target,
 			QBulkMessage msg, ProcessData processData) {
 
 		// add pcm to bulk message
@@ -267,11 +266,11 @@ public class Dispatch {
 	 * @param target
 	 * @return
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
+	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target,
 			QBulkMessage msg, ProcessData processData) {
 
 		ReqConfig reqConfig = capMan.getUserCapabilities();
-		if(!pcm.requirementsMet(reqConfig)) {
+		if (!pcm.requirementsMet(reqConfig)) {
 			log.warn("User " + userToken.getUserCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
@@ -398,7 +397,7 @@ public class Dispatch {
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
 					ask.getQuestion().getAttribute().getCode());
-			
+
 			if (codes == null || codes.isEmpty())
 				sendDropdownItems(ask, target, ask.getQuestion().getCode());
 			else
