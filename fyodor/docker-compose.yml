@@ -52,7 +52,7 @@ services:
       #    - DDT_URL=http://bridge:8089
       - FULL_MYSQL_URL=jdbc:mysql://mysql/gennydb
       - GENNY_KAFKA_URL=http://localhost:${KAFKA_PORT}
-      - GENNY_REALM=internmatch
+      - GENNY_REALM=${GENNY_REALM:internmatch}
       - GENNY_CLIENT_ID=${GENNY_CLIENT_ID}
       - GENNY_CLIENT_SECRET=${GENNY_CLIENT_SECRET}
       - GENNY_SERVICE_USERNAME=${GENNY_SERVICE_USERNAME}

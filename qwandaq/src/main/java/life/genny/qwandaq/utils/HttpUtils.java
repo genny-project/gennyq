@@ -1,25 +1,26 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.utils.callbacks.FILogCallback;
-import org.jboss.logging.Logger;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
-import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.net.http.HttpResponse;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import org.jboss.logging.Logger;
+
+import life.genny.qwandaq.exception.GennyRuntimeException;
+import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 /**
  * A Static utility class for standard HTTP requests.
@@ -30,8 +31,9 @@ import java.util.stream.Collectors;
 public class HttpUtils {
 
 	static final Logger log = Logger.getLogger(HttpUtils.class);
-
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
 
 	/**
 	 * Create and send a PUT request.
@@ -95,6 +97,7 @@ public class HttpUtils {
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
+				.timeout(DEFAULT_TIMEOUT)
 				.PUT(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 
@@ -176,11 +179,11 @@ public class HttpUtils {
 
 		Builder requestBuilder = HttpRequest.newBuilder()
 				.uri(createURI(uri))
-				.setHeader("Content-Type", contentType);
+				.setHeader("Content-Type", contentType)
+				.timeout(DEFAULT_TIMEOUT);
 
-		if (token != null) {
+		if (token != null)
 			requestBuilder.setHeader("Authorization", "Bearer " + token);
-		}
 
 		HttpRequest request = requestBuilder
 				.POST(HttpRequest.BodyPublishers.ofString(body))
@@ -232,6 +235,7 @@ public class HttpUtils {
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
+				.timeout(DEFAULT_TIMEOUT)
 				.GET().build();
 
 		HttpResponse<String> response = null;
@@ -279,6 +283,7 @@ public class HttpUtils {
 				.uri(createURI(uri))
 				.setHeader("Content-Type", "application/json")
 				.setHeader("Authorization", "Bearer " + token)
+				.timeout(DEFAULT_TIMEOUT)
 				.DELETE().build();
 
 		HttpResponse<String> response = null;

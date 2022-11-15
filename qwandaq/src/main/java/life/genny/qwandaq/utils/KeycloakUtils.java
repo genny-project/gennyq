@@ -247,14 +247,14 @@ public class KeycloakUtils {
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
         // A necessary evil. I think?
-        // realm = "internmatch";
-        log.info("Realm is " + realm);
+        log.info("this is the real realm: " + realm + " from configuration, and we force it use 'gada' realm");
+        realm = "gada";
 
         String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
-        // log.info("encodedPostRequest:[" + str + "]");
+        //log.info("encodedPostRequest:[" + str + "]");
         JsonObject json = jsonb.fromJson(str, JsonObject.class);
         String token = json.getString("access_token");
 
@@ -283,7 +283,7 @@ public class KeycloakUtils {
             conn.setDoOutput(true);
 
             OutputStream os = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, StandardCharsets.UTF_8));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
             writer.write(getPostDataString(postDataParams));
 
             // flush and close

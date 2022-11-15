@@ -1,19 +1,24 @@
 package life.genny.fyodor.utils;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.Capability;
 import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
-import life.genny.qwandaq.entity.search.trait.*;
+import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.CapabilityRequirement;
+import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.models.UserToken;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * CapHandler
@@ -98,17 +103,18 @@ public class CapHandler extends Manager {
 			return false;
 		}
 
-		if (GennyConstants.PER_SERVICE.equals(userToken.getUserCode()))
-			return true;
-
-		Set<Capability> capabilities = capMan.getUserCapabilities();
-		for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
-			if(!capTrait.meetsRequirements(capabilities)) {
-				return false;
+		//  TODO: Get rid of this service code check. Not ideal
+		// TODO: We also need to consolidate what it means to be a service user
+		boolean isService = GennyConstants.PER_SERVICE.equals(userToken.getUserCode()) || GennyConstants.PER_SERVICE.equals(userToken.getCode()) || userToken.hasRole("service");
+		if(!isService) {
+			ReqConfig reqConfig = capMan.getUserCapabilities();
+			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
+				if(!capTrait.meetsRequirements(reqConfig)) {
+					return false;
+				}
 			}
 		}
 		// TODO: implement capabilities
-		//
 		return true;
 	}
 

@@ -1,35 +1,35 @@
 package life.genny.test.qwandaq.utils.capabilities;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
+import life.genny.test.utils.suite.JUnitTester;
 
 
 public class PrefixScreeningTest {
 
-    class TestCase<L, R> {
-        public final L input;
-        public final R expected;
-
-        public TestCase(L input, R expected) {
-            this.input = input;
-            this.expected = expected;
-        }
-    }
-
-    @Test
+    // @Test
     public void testPrefixScreen() {
-        List<TestCase<String, Boolean>> tests = new ArrayList<>();
-        tests.add(new TestCase<String, Boolean>("PER_TESTER", true));
-        tests.add(new TestCase<String, Boolean>("DEF_TESTER", true));
-        tests.add(new TestCase<String, Boolean>("DOC_TESTER", false));
-        tests.add(new TestCase<String, Boolean>("ROL_TESTER", true));
-        tests.add(new TestCase<String, Boolean>("TNT_TESTER", false));
+        new JUnitTester<String, Boolean>()
+        // Need to add a test function
+        .createTest("Prefix Screening 1")
+        .setInput("PER_TESTER")
+        .setExpected(true)
+        .build()
 
-        for(TestCase<String, Boolean> test : tests) {
-            System.out.println("[!] Prefix Screen testing: " + test.input + ". Expected: " + test.expected);
-            // assertEquals(test.expected, CapabilityUtils.isAllowedToHaveCapabilities(test.input));
-        }
+        .createTest("Prefix Screening 2")
+        .setInput("DOC_TESTER")
+        .setExpected(false)
+        .build()
+
+        .createTest("Prefix Screening 3")
+        .setInput("ROL_TESTER")
+        .setExpected(true)
+        .build()
+        
+        .createTest("Prefix Screening 4")
+        .setInput("TNT_TESTER")
+        .setExpected(false)
+        .build()
+
+        .assertAll();
+
     }
 }

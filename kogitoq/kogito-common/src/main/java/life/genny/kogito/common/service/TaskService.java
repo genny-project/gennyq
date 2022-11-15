@@ -61,7 +61,6 @@ public class TaskService {
 	 * @param processData
 	 */
 	public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
-
 		// check if task exists
 		log.info("Checking if task exists...");
 
@@ -117,8 +116,12 @@ public class TaskService {
 		processData.setParent(parent);
 		processData.setLocation(location);
 
+		// fetch target
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
 		// build and send data
 		QBulkMessage msg = dispatch.build(processData, pcm);
+		msg.add(target);
 		dispatch.sendData(msg);
 
 		// send searches
@@ -131,6 +134,7 @@ public class TaskService {
 	/**
 	 * Build a question group and assign to the PCM before dispatching a PCM tree
 	 * update.
+>>>>>>> 10.2.0
 	 *
 	 * @param sourceCode
 	 * @param targetCode
@@ -280,7 +284,6 @@ public class TaskService {
 	 * @return
 	 */
 	public Boolean submit(ProcessData processData) {
-
 		// construct bulk message
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
@@ -308,7 +311,6 @@ public class TaskService {
 	 * @return
 	 */
 	public ProcessData reset(ProcessData processData) {
-
 		// delete stored answers
 		processData.setAnswers(new ArrayList<Answer>());
 		qwandaUtils.storeProcessData(processData);
@@ -323,7 +325,6 @@ public class TaskService {
 	 * @param processData
 	 */
 	public void cancel(ProcessData processData) {
-
 		// clear cache entry
 		qwandaUtils.clearProcessData(processData.getProcessId());
 		// default redirect

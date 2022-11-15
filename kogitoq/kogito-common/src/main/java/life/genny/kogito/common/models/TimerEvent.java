@@ -55,7 +55,7 @@ public class TimerEvent implements Serializable {
         log.info("2TimerEvent incoming timeStamp = " + timeStamp + " , final:" + this.timeStamp + " , "
                 + getDateTime(this.timeStamp));
         this.uniqueCode = uniqueCode;
-        this.updatePairs = updatePairs;
+        this.updatePairs = updatepairs;
     }
 
     public TimerEvent(final LocalDateTime startDateTimeUTC, final Long minutes, final String uniqueCode,

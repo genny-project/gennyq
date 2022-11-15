@@ -1,27 +1,5 @@
 package life.genny.qwandaq.attribute;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.converter.MoneyConverter;
-import life.genny.qwandaq.entity.BaseEntity;
-import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Type;
-import org.javamoney.moneta.Money;
-import org.jboss.logging.Logger;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.bind.annotation.JsonbProperty;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlTransient;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.text.DateFormat;
@@ -36,6 +14,48 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.bind.annotation.JsonbProperty;
+import javax.json.bind.annotation.JsonbTransient;
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+import javax.persistence.AssociationOverride;
+import javax.persistence.AssociationOverrides;
+import javax.persistence.Cacheable;
+import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.JoinColumn;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.persistence.UniqueConstraint;
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.time.DateUtils;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Type;
+import org.javamoney.moneta.Money;
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.converter.MoneyConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
@@ -51,7 +71,7 @@ import java.util.List;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute implements java.io.Serializable, Comparable<Object> {
+public class EntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
@@ -168,7 +188,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	private Boolean confirmationFlag = false;
 
+	// // please do not send this out to frontend no matter what
+	// @JsonbTransient
+	// @JsonIgnore
+	@Column(name = "capreqs")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
+
 	public EntityAttribute() {
+
 	}
 
 	/**
@@ -184,15 +212,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 *                   attributes)
 	 */
 	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
-		autocreateCreated();
-		setBaseEntity(baseEntity);
-		setAttribute(attribute);
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-							// attribute from scoring.
-		}
-		setWeight(weight);
-		setReadonly(false);
+		this(baseEntity, attribute, weight, null);
 	}
 
 	/**
@@ -222,6 +242,13 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		if (value != null) {
 			setValue(value);
 		}
+		setReadonly(false);
+	}
+
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
 	}
 
 	/**
@@ -274,6 +301,12 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		getPk().setBaseEntity(baseEntity);
 		this.baseEntityCode = baseEntity.getCode();
 		this.realm = baseEntity.getRealm();
+	}
+
+	@Transient
+	@JsonbTransient
+	public BaseEntity getBaseEntity() {
+		return getPk().getBaseEntity();
 	}
 
 	/**
@@ -1222,4 +1255,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		this.confirmationFlag = confirmationFlag;
 	}
 
+
+	public boolean isLocked() {
+		return capabilityRequirements != null;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
+	}
 }

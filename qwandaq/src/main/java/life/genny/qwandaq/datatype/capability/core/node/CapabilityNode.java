@@ -1,6 +1,11 @@
-package life.genny.qwandaq.datatype.capability;
+package life.genny.qwandaq.datatype.capability.core.node;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.jboss.logging.Logger;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 
@@ -10,8 +15,30 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
  */
 @RegisterForReflection
 public class CapabilityNode {
+	private static final Logger log = Logger.getLogger(CapabilityNode.class);
+	
 	// Leave this here please
 	public static final String DELIMITER = ":";
+
+	// Some optimisation through statics
+	private static final Map<CapabilityMode, Map<PermissionMode, CapabilityNode>> NODE_MAP = new EnumMap<>(CapabilityMode.class);
+	static {
+		for(CapabilityMode mode : CapabilityMode.values()) {
+			Map<PermissionMode, CapabilityNode> scopeMap = new EnumMap<>(PermissionMode.class);
+			for(PermissionMode scope : PermissionMode.values()) {
+				scopeMap.put(scope, new CapabilityNode(mode, scope));
+			}
+			NODE_MAP.put(mode, scopeMap);
+		}
+	}
+
+	public static CapabilityNode get(CapabilityMode mode, PermissionMode scope) {
+		return NODE_MAP.get(mode).get(scope);
+	}
+
+	public static CapabilityNode get(CapabilityMode mode) {
+		return get(mode, PermissionMode.SELF);
+	}
 
 	/**
 	 * This capability's mode
@@ -36,7 +63,7 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
+	private CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
 		this.capMode = capMode;
 		this.permMode = permMode;
 	}
@@ -47,7 +74,7 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public CapabilityNode(CapabilityMode capMode) {
+	private CapabilityNode(CapabilityMode capMode) {
 		this(capMode, PermissionMode.SELF);
 	}
 
@@ -62,11 +89,15 @@ public class CapabilityNode {
 		// if -1 then this is less permissive
 		// if 0 then they are equal
 		// if 1 then this is more permissive
-		int ord = this.permMode.compareTo(other.permMode);
+		int ord = other.permMode.compareTo(this.permMode);
+		
+		CapabilityNode result;
 		if(ord > 0)
-			return mostPermissive ? other : this;
+			result = mostPermissive ? other : this;
 		else
-			return mostPermissive ? this : other;
+			result = mostPermissive ? this : other;
+
+		return result;
 	}
 
 	/**
@@ -100,6 +131,11 @@ public class CapabilityNode {
 		throws BadDataException {
 		CapabilityMode capMode;
 		PermissionMode permMode;
+
+		if(capabilityString.length() != 3) {
+			log.error("Expected length 3. Got: " + capabilityString.length());
+			throw new BadDataException("Could not deserialize capability node: " + capabilityString);
+		}
 
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
 		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));

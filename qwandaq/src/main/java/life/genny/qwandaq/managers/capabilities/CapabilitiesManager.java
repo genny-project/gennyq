@@ -61,7 +61,7 @@ public class CapabilitiesManager extends Manager {
 	// == TODO LIST
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy properly established this should be possible
 	// but until then this is my best bet for getting this working reliably (don't trust the tokens just yet, as service token has productCode improperly set)
-
+	
 	/**
 	 * Return a Set of Capabilities based on a BaseEntity's LNK_ROLE and its own set of capabilities
 	 * <p>If a {@link UserToken} instance is accessible, this will have already been called and cached,
@@ -69,21 +69,21 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	@Deprecated(forRemoval = false)
-	public Set<Capability> getUserCapabilities() {
+	public ReqConfig getUserCapabilities(boolean requiresAllCaps, boolean requiresAllModes) {
 		// this is a necessary log, since we are trying to minimize how often this function is called
 		// it is good to see how often it comes up
 		info("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		BaseEntity userBE = beUtils.getUserBaseEntity();
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
-		Set<Capability> capabilities;
-
+		CapabilitySet capabilities;
+		
 		if(!roles.isEmpty()) {
 			BaseEntity role = roles.get(0);
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
-				Set<Capability> roleCaps = getEntityCapabilities(role);
-				// Being careful about accidentally duplicating capabilities
+				CapabilitySet roleCaps = getEntityCapabilities(role);
+				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
 				for(Capability cap : roleCaps) {
 					// Find preexisting capability. If it exists, merge the Nodes in the way that
@@ -97,11 +97,11 @@ public class CapabilitiesManager extends Manager {
 				}
 			}
 		} else {
-			capabilities = new HashSet<>();
+			capabilities = new CapabilitySet(userBE);
 		}
 
 		// Now overwrite with user capabilities
-		Set<Capability> userCapabilities = getEntityCapabilities(userBE);
+		CapabilitySet userCapabilities = getEntityCapabilities(userBE);
 		for(Capability capability : userCapabilities) {
 			// Try and find a preexisting capability to overwrite.
 			// If it exists, remove so we can override the role-based capability
@@ -113,23 +113,33 @@ public class CapabilitiesManager extends Manager {
 			capabilities.add(capability);
 		}
 
-		return capabilities;
+		return new ReqConfig(capabilities, requiresAllCaps, requiresAllModes);
 	}
 
+	public ReqConfig getUserCapabilities(boolean requiresAllCaps) {
+		return getUserCapabilities(requiresAllCaps, ReqConfig.DEFAULT_ALL_MODES);
+	}
+
+	public ReqConfig getUserCapabilities() {
+		return getUserCapabilities(ReqConfig.DEFAULT_ALL_CAPS);
+	}
+	
 	/**
 	 * Get a single entity's capabilities (excluding roles)
 	 * @param productCode
 	 * @param target
 	 * @return
 	 */
-	public Set<Capability> getEntityCapabilities(final BaseEntity target) {
+	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
 		if(capabilities.isEmpty()) {
-			return new HashSet<>();
+			return new CapabilitySet(target);
 		}
-		return capabilities.stream()
+		CapabilitySet cSet = new CapabilitySet(target);
+		cSet.addAll(capabilities.stream()
 			.map((EntityAttribute ea) -> Capability.getFromEA(ea))
-			.collect(Collectors.toSet());
+			.collect(Collectors.toSet()));
+		return cSet;
 	}
 
 	/**
@@ -225,6 +235,7 @@ public class CapabilitiesManager extends Manager {
 					return false;
 				}
 			}
+
 			return true;
 		} else {
 			for (CapabilityNode checkMode : checkModes) {
@@ -233,6 +244,8 @@ public class CapabilitiesManager extends Manager {
 					return true;
 				}
 			}
+
+			System.out.println("Doesn't have at least one of " + CommonUtils.getArrayString(checkModes) + " in " + CommonUtils.getArrayString(capabilitySet));
 			return false;
 		}
 	}
@@ -377,7 +390,7 @@ public class CapabilitiesManager extends Manager {
 	 * @return <b>true</b> if target satisfies the requirements specified by the args or <b>false</b> if not
 	 * @throws RoleException - if the target doesn't have the capability
 	 */
-	public boolean entityHasCapability(final BaseEntity target, final String rawCapabilityCode, boolean hasAll, final CapabilityNode... checkModes)
+	public boolean entityHasCapability(final BaseEntity target, final String rawCapabilityCode, boolean hasAll, final CapabilityNode... checkModes) 
 		throws RoleException {
 		final String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 		final String code = target.getCode();
@@ -396,7 +409,7 @@ public class CapabilitiesManager extends Manager {
 		List<CapabilityNode> caps = deserializeCapArray(modeString);
 		return new Capability(capabilityCode, caps);
 	}
-
+	
 	/**
 	 * Deserialise a stringified array of modes to a set of {@link CapabilityNode}
 	 * @param modeString
@@ -460,7 +473,7 @@ public class CapabilitiesManager extends Manager {
 		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
 	}
 
-	public static String getModeString(List<CapabilityNode> capabilities) {
+	public static String getModeString(Collection<CapabilityNode> capabilities) {
 		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
 	}
 

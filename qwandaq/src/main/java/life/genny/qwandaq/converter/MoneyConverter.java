@@ -1,21 +1,21 @@
 package life.genny.qwandaq.converter;
 
-import org.javamoney.moneta.Money;
-import org.jboss.logging.Logger;
+import java.io.StringReader;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
-import java.io.StringReader;
+
+import org.javamoney.moneta.Money;
+
+import javax.money.CurrencyUnit;
+import javax.money.Monetary;
+
+import javax.json.Json;
+import javax.json.JsonReader;
+import javax.json.JsonObject;
 
 @Converter
 public class MoneyConverter implements AttributeConverter<Money, String> {
-
-	private static final Logger log = Logger.getLogger(MoneyConverter.class);
 
 	/** 
 	 * Convert a Money object to a String

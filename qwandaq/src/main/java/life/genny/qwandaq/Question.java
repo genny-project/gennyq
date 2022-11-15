@@ -18,13 +18,18 @@ package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import io.quarkus.runtime.annotations.RegisterForReflection;
+
 import life.genny.qwandaq.attribute.Attribute;
+
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
-import org.jboss.logging.Logger;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.*;
@@ -33,9 +38,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -75,7 +85,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 
 @RegisterForReflection
-public class Question extends CodedEntity {
+public class Question extends CodedEntity implements ICapabilityFilterable {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 
@@ -85,6 +95,7 @@ public class Question extends CodedEntity {
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
 	public static final String QUE_CANCEL = "QUE_CANCEL";
 	public static final String QUE_RESET = "QUE_RESET";
+
 	public static final String QUE_UPDATE = "QUE_UPDATE";
 	public static final String QUE_UNDO = "QUE_UNDO";
 	public static final String QUE_REDO = "QUE_REDO";
@@ -114,6 +125,11 @@ public class Question extends CodedEntity {
 	@JoinColumn(name = "attribute_id", nullable = false)
 	private Attribute attribute;
 
+
+	@Column(name = "capreqs")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
+
 	@Embedded
 	@Valid
 	private ContextList contextList;
@@ -136,20 +152,6 @@ public class Question extends CodedEntity {
 	private String helper = "";
 
 	private String icon;
-
-	/**
-	 * @return String
-	 */
-	public String getHelper() {
-		return helper;
-	}
-
-	/**
-	 * @param helper the helper to set
-	 */
-	public void setHelper(String helper) {
-		this.helper = helper;
-	}
 
 	/**
 	 * Constructor.
@@ -261,6 +263,20 @@ public class Question extends CodedEntity {
 		}
 		this.attribute = null;
 		this.attributeCode = Attribute.QQQ_QUESTION_GROUP;
+	}
+
+
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
 	}
 
 	/**
@@ -518,10 +534,14 @@ public class Question extends CodedEntity {
 	 *
 	 * @param childQuestionCode the code of the child Question used to remove the
 	 *                          child Question
+	 * @return <b>true</b> if child question was present, <b>false</b> otherwise
 	 */
-	public void removeChildQuestion(final String childQuestionCode) {
+	public boolean removeChildQuestion(final String childQuestionCode) {
 		final Optional<QuestionQuestion> optQuestionQuestion = findQuestionLink(childQuestionCode);
-		getChildQuestions().remove(optQuestionQuestion);
+		boolean isPresent = optQuestionQuestion.isPresent();
+		if(isPresent)
+			getChildQuestions().remove(optQuestionQuestion.get());
+		return isPresent;
 	}
 
 	/**
@@ -636,5 +656,20 @@ public class Question extends CodedEntity {
 	public void setIcon(String icon) {
 		this.icon = icon;
 	}
+
+	/**
+	 * @return String
+	 */
+	public String getHelper() {
+		return helper;
+	}
+
+	/**
+	 * @param helper the helper to set
+	 */
+	public void setHelper(String helper) {
+		this.helper = helper;
+	}
+
 
 }

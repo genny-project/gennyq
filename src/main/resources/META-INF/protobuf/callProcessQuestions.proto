@@ -92,7 +92,7 @@ message TimerEvent {
 }
 enum EAbortReason { 
 	option java_package = "life.genny.kogito.common.models.S2SData";
-	CANCEL = 1;
+	CANCEL = 0;
 	TIMEOUT = 2;
-	NONE = 0;
+	NONE = 1;
 }

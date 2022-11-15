@@ -20,7 +20,6 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
@@ -167,7 +166,7 @@ public class Events {
 			log.info("Prefix: " + code);
 			if ("PER".equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_" + code)
+						.add("definitionCode", "DEF_".concat(code))
 						.add("sourceCode", userToken.getUserCode())
 						.build();
 
@@ -201,5 +200,4 @@ public class Events {
 		log.info("Forwarding Event Message...");
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
 	}
-
 }

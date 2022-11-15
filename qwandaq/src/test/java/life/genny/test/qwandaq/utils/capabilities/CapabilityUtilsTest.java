@@ -7,84 +7,57 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityMode;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.PermissionMode;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 import life.genny.test.qwandaq.utils.BaseTestCase;
-import life.genny.test.utils.callbacks.test.FITestCallback;
-import life.genny.test.utils.suite.TestCase;
+import life.genny.test.utils.suite.JUnitTester;
 
-import static life.genny.qwandaq.datatype.capability.CapabilityMode.*;
-import static life.genny.qwandaq.datatype.capability.PermissionMode.*;
-
-import static life.genny.test.utils.suite.TestCase.Builder;
-import static life.genny.test.utils.suite.TestCase.Input;
-import static life.genny.test.utils.suite.TestCase.Expected;
+import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CapabilityUtilsTest extends BaseTestCase {
-
-	static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
     @InjectMocks
     CapabilitiesManager capManager;
 
     @Test
     public void cleanCapabilityCodeTest() {
-
-        Builder<String, String> builder = new Builder<>();
-
-        FITestCallback<Input<String>, Expected<String>> testFunction = (input) -> {
-            return new Expected<>(CapabilitiesManager.cleanCapabilityCode(input.input));
-        };
         
-        List<TestCase<String, String>> tests = new ArrayList<>();
-        tests.add(
-            builder.setName("Clean Cap 1")
-                    .setInput("OWN_APPLE")
-                    .setExpected("CAP_OWN_APPLE")
-                    .setTest(testFunction)
-                    .build()
-        );
-        
-        tests.add(
-            builder.setName("Clean Cap 2")
-                    .setInput("oWn_ApplE")
-                    .setExpected("CAP_OWN_APPLE")
-                    .setTest(testFunction)
-                    .build()
-        );
+         new JUnitTester<String, String>()
+        .setTest((input) -> {
+            return Expected(CapabilitiesManager.cleanCapabilityCode(input.input));
+        }).createTest("Clean Cap 1")
+        .setInput("OWN_APPLE")
+        .setExpected("CAP_OWN_APPLE")
+        .build()
 
-        for(TestCase<String, String> test : tests) {
-            assertEquals(test.getExpected(), test.test());
-        }
+        .createTest("Clean Cap 2")
+        .setInput("oWn_ApplE")
+        .setExpected("CAP_OWN_APPLE")
+        .build()
+
+        .assertAll();
 
     }
 
     @Test
     public void serializeCapabilityTest() {
-        Builder<CapabilityNode, String> builder = new Builder<>();
-
-        FITestCallback<Input<CapabilityNode>, Expected<String>> testFunc = (input) -> {
-            return new Expected<>(input.input.toString());
-        };
-        
-        List<TestCase<CapabilityNode, String>> tests = new ArrayList<>();
         List<CapabilityNode> caps = new ArrayList<>();
         for(CapabilityMode mode : CapabilityMode.values()) {
             for(PermissionMode permMode : PermissionMode.values()) {
-                caps.add(new CapabilityNode(mode, permMode));
+                caps.add(CapabilityNode.get(mode, permMode));
             }
         }
 
@@ -92,32 +65,29 @@ public class CapabilityUtilsTest extends BaseTestCase {
             .map((CapabilityNode cap) -> cap.capMode.getIdentifier() + CapabilityNode.DELIMITER + cap.permMode.getIdentifier())
             .collect(Collectors.toList());
 
+
+        JUnitTester<CapabilityNode, String> unitTester = new JUnitTester<CapabilityNode, String>()
+        .setTest((input) -> {
+            return Expected(input.input.toString());
+        });
+
+        // Create Tests
         for(int i = 0; i < caps.size(); i++) {
-            tests.add(
-                builder.setName("Serialize test: " + expected.get(i))
-                    .setInput(caps.get(i))
-                    .setExpected(expected.get(i))
-                    .setTest(testFunc)
-                    .build()
-            );
+            unitTester.createTest("Serialize test: " + expected.get(i))
+            .setInput(caps.get(i))
+            .setExpected(expected.get(i))
+            .build();
         }
 
-        for(TestCase<CapabilityNode, String> test : tests) {
-            assertEquals(test.getExpected(), test.test());
-        }
+        unitTester.assertAll();
     }
 
     @Test
     public void deserializeCapabilityTest() {
-        Builder<String, CapabilityNode> builder = new Builder<>();
 
-        FITestCallback<Input<String>, Expected<CapabilityNode>> testFunc = (input) -> {
-            return new Expected<>(CapabilityNode.parseCapability(input.input));
-        };
-        
-        List<TestCase<String, CapabilityNode>> tests = new ArrayList<>();
         List<String> capString = new ArrayList<>();
 
+        // Gen data
         for(CapabilityMode mode : CapabilityMode.values()) {
             for(PermissionMode permMode : PermissionMode.values()) {
                 capString.add(mode.getIdentifier() + CapabilityNode.DELIMITER + permMode.getIdentifier());
@@ -127,55 +97,88 @@ public class CapabilityUtilsTest extends BaseTestCase {
         List<CapabilityNode> expected = capString.stream().map((String caps) -> {
             CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(0));
             PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(2));
-
-            return new CapabilityNode(mode, permMode);
+            return CapabilityNode.get(mode, permMode);
         }).collect(Collectors.toList());
 
+        // Create tester
+        JUnitTester<String, CapabilityNode> unitTester = new JUnitTester<String, CapabilityNode>()
+        .setTest((input) -> {
+            return Expected(CapabilityNode.parseCapability(input.input));
+        });
+
         for(int i = 0; i < expected.size(); i++) {
-            tests.add(
-                builder.setName("Serialize test: " + expected.get(i))
-                    .setInput(capString.get(i))
-                    .setExpected(expected.get(i))
-                    .setTest(testFunc)
-                    .build()
-            );
+            unitTester.createTest("Serialize test: " + expected.get(i))
+            .setInput(capString.get(i))
+            .setExpected(expected.get(i))
+            .build();
         }
 
-        for(TestCase<String, CapabilityNode> test : tests) {
-            assertEquals(test.getExpected(), test.test());
-        }
+        unitTester.assertAll();
+    }
+
+    private String mergeTestName(Capability c1, Capability c2, boolean mostPermissive) {
+        return (mostPermissive ? "Most" : "Least")
+             + " Permissive Test "
+             + c1.nodeString() + " & " + c2.nodeString();
     }
 
     @Test
-    public void mostPermissiveTest() {
-        Capability capability1 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, NONE), new CapabilityNode(EDIT, SELF));
-        Capability capability2 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, SELF));
-        Capability capability3 = new Capability("CAP_ADMIN", new CapabilityNode(ADD, ALL));
+    public void mergeTest() {
+        JUnitTester<Capability, Capability> tester = new JUnitTester<Capability, Capability>();
+
+        Capability capability1 = new CapabilityBuilder("CAP_ADMIN").add(SELF).buildCap();
+        Capability capability2 = new CapabilityBuilder("CAP_ADMIN").edit(SELF).buildCap();
+        Capability capability3 = new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap();
+
+        tester.setTest((input) -> {
+            return Expected(capability1.merge(input.input, true)); // most permissive test
+        })
+
+        .createTest(mergeTestName(capability1, capability2, true))
+        .setInput(capability2)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(SELF).edit(SELF).buildCap())
+        .build()
+
+        .createTest(mergeTestName(capability1, capability3, true))
+        .setInput(capability3)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap())
+        .build()
+
+        .assertAll()
+
+        .setTest((input) -> {
+            return Expected(capability1.merge(input.input, false)); // least permissive test
+        })
+
+        .createTest(mergeTestName(capability1, capability2, false))
+        .setInput(capability2)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(SELF).edit(SELF).buildCap())
+        .build()
+
+        .createTest(mergeTestName(capability1, capability3, false))
+        .setInput(capability3)
+        .setExpected(new CapabilityBuilder("CAP_ADMIN").add(SELF).buildCap())
+        .build()
+
+        .assertAll();
     }
 
     @Test
     public void getLesserNodesTest() {
-        Builder<CapabilityNode, CapabilityNode[]> builder = new Builder<>();
-        List<TestCase<CapabilityNode, CapabilityNode[]>> tests = new ArrayList<>();
-
-        FITestCallback<Input<CapabilityNode>, Expected<CapabilityNode[]>> testFunc = (input) -> {
-            return new Expected<>(input.input.getLesserNodes());
-        };
-
-        tests.add(
-            builder.setName("Lesser Nodes Test 1")
-                    .setInput(new CapabilityNode(ADD, ALL))
-                    .setExpected(new CapabilityNode[] {
-                        new CapabilityNode(ADD, SELF),
-                        new CapabilityNode(ADD, NONE)
-                    })
-                    .setTest(testFunc)
-                    .build()
-        );
-
-        for(TestCase<CapabilityNode, CapabilityNode[]> test : tests) {
-            assertArrayEquals(test.getExpected(), test.test());
-        }
+        new JUnitTester<CapabilityNode, CapabilityNode[]>()
+        .setTest((input) -> {
+            return Expected(input.input.getLesserNodes());
+        })
+        .setVerification((result, expected) -> {
+            assertArrayEquals(expected, result);
+        })
+        .createTest("Lesser Nodes Test 1")
+        .setInput(CapabilityNode.get(ADD, ALL))
+        .setExpected(new CapabilityNode[] {
+            CapabilityNode.get(ADD, SELF),
+            CapabilityNode.get(ADD, NONE)
+        }).build()
+        .assertAll();
 
     }
 
@@ -184,35 +187,46 @@ public class CapabilityUtilsTest extends BaseTestCase {
         // testing checkCapability
         Set<CapabilityNode> capabilitySet = new HashSet<>(Arrays.asList(
             new CapabilityNode[] {
-                new CapabilityNode(ADD, ALL),
-                new CapabilityNode(EDIT, SELF),
-                new CapabilityNode(VIEW, NONE)
+                CapabilityNode.get(ADD, ALL),
+                CapabilityNode.get(EDIT, SELF)
             }
         ));
 
-        boolean result = CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode(ADD, ALL));
-        assertEquals(true, result);
+        new JUnitTester<CapabilityNode[], Boolean>()
+        .setTest((input) -> {
+            return Expected(CapabilitiesManager.checkCapability(capabilitySet, false, input.input));
+        })
+        .createTest("Has Any One Capability 1")
+        .setInput(new CapabilityNode[] {
+            CapabilityNode.get(ADD, ALL)
+        }).setExpected(true)
+        .build()
 
-        result = CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode(ADD, SELF));
-        assertEquals(true, result);
+        .createTest("Has Any One Capability 2")
+        .setInput(new CapabilityNode[] {
+            CapabilityNode.get(ADD, SELF), CapabilityNode.get(DELETE, ALL)
+        }).setExpected(true)
+        .build()
 
-        result = CapabilitiesManager.checkCapability(capabilitySet, true, new CapabilityNode(ADD, SELF));
-        assertEquals(true, result);
+        .assertAll()
 
-        result = CapabilitiesManager.checkCapability(capabilitySet, true, new CapabilityNode(ADD, SELF), new CapabilityNode(DELETE, ALL));
-        assertEquals(false, result);
+        // Next test
+        .setTest((input) -> {
+            return Expected(CapabilitiesManager.checkCapability(capabilitySet, true, input.input));
+        })
 
-        result = CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode(ADD, SELF), new CapabilityNode(DELETE, ALL));
-        assertEquals(true, result);
-    }
+        .createTest("Has All Capabilities 1")
+        .setInput(new CapabilityNode[] {
+            CapabilityNode.get(ADD, SELF)
+        }).setExpected(true)
+        .build()
 
-    @Test
-    public void getCapModeArrayTest() {
-        Builder<String, CapabilityNode[]> builder = new Builder<String, CapabilityNode[]>();
-    }
+        .createTest("Has All Capabilities 2")
+        .setInput(new CapabilityNode[] {
+            CapabilityNode.get(ADD, SELF), CapabilityNode.get(DELETE, ALL)
+        }).setExpected(false)
+        .build()
 
-    @Test
-    public void getCapModeStringTest() {
-        Builder<CapabilityNode[], String> builder = new Builder<CapabilityNode[], String>();
+        .assertAll();
     }
 }

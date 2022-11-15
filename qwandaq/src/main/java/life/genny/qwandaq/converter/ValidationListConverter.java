@@ -1,18 +1,18 @@
 package life.genny.qwandaq.converter;
 
 
-import life.genny.qwandaq.validation.Validation;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonReader;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import java.io.StringReader;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.validation.Validation;
 
 @Converter
 public class ValidationListConverter implements AttributeConverter<List<Validation>, String> {
@@ -60,39 +60,36 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	@SuppressWarnings("deprecation")
 	@Override
 	public List<Validation> convertToEntityAttribute(String joined) {
-        final List<Validation> validations = new CopyOnWriteArrayList<>();
-		if (joined != null) {
-		//	log.info("ValidationStr=" + joined);
-			if (!StringUtils.isBlank(joined)) {
-				joined = joined.substring(1); // remove leading quotes
-				joined = StringUtils.chomp(joined, "\""); // remove last char
-				final String[] validationListStr = joined.split("\",\"");
+		final List<Validation> validations = new CopyOnWriteArrayList<Validation>();
+		if(StringUtils.isBlank(joined))
+			return validations;
 
-				if (validationListStr.length == 6) {
-				//	log.info("ValidationListStr LENGTH=6");
-					for (int i = 0; i < validationListStr.length; i = i + 6) {
-						List<String> validationGroups = convertFromString(validationListStr[i + 3]);
-						List<String> regexs = convertFromString(validationListStr[i + 2]);
-						Validation v = new Validation(validationListStr[i], validationListStr[i + 1], validationGroups,
-								validationListStr[i + 3].equalsIgnoreCase("TRUE"),
-								validationListStr[i + 4].equalsIgnoreCase("TRUE"));
-						if (!regexs.isEmpty()) {
-							v.setRegex(regexs.get(0));
-						}
-						validations.add(v);
-					}
+			//	log.info("ValidationStr=" + joined);
+		joined = joined.substring(1); // remove leading quotes
+		joined = StringUtils.chomp(joined, "\""); // remove last char
+		final String[] validationListStr = joined.split("\",\"");
 
-				} else {
-					for (int i = 0; i < validationListStr.length; i = i + 3) {
-						Validation validation  = new Validation(validationListStr[i], validationListStr[i + 1],
-								validationListStr[i + 2]);
-					//	log.info("VALIDATION:"+validation);
-						validations.add(validation);
-					}
-				}
-
+		if (validationListStr.length == 6) {
+			// for (int i = 0; i < validationListStr.length; i = i + 6) {
+			List<String> validationGroups = Arrays.asList(convertFromString(validationListStr[3]));
+			String[] regexs = convertFromString(validationListStr[2]);
+			Validation v = new Validation(validationListStr[0], validationListStr[1], validationGroups,
+					validationListStr[3].equalsIgnoreCase("TRUE"),
+					validationListStr[4].equalsIgnoreCase("TRUE"));
+			if (regexs.length != 0) {
+				v.setRegex(regexs[0]);
+			}
+			validations.add(v);
+			// }
+		} else {
+			for (int i = 0; i < validationListStr.length; i = i + 3) {
+				Validation validation  = new Validation(validationListStr[i], validationListStr[i + 1],
+						validationListStr[i + 2]);
+			//	log.info("VALIDATION:"+validation);
+				validations.add(validation);
 			}
 		}
+
 		return validations;
 	}
 
@@ -113,17 +110,11 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 * @param joined the string to convert
 	 * @return List&lt;String&gt;
 	 */
-	public List<String> convertFromString(final String joined) {
-
-        List<String> list = new CopyOnWriteArrayList<>();
+	public String[] convertFromString(final String joined) {
 		if (joined.startsWith("[") || joined.startsWith("{")) {
-			JsonReader reader = Json.createReader(new StringReader(joined));
-			JsonArray array = reader.readArray();
-			list = (List) array;
+			return CommonUtils.getArrayFromString(joined, (String obj) -> obj.toString()).toArray(new String[0]);
 		} else {
-			list.add(joined);
+			return new String[] {joined};
 		}
-
-		return list;
 	}
 }
