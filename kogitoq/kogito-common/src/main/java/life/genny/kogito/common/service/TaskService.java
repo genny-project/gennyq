@@ -228,6 +228,7 @@ public class TaskService {
 			// TODO: change to use flatMap
 			for (Ask ask : asks)
 				dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), processEntity, msg);
+
 		} else
 			msg.add(target);
 
