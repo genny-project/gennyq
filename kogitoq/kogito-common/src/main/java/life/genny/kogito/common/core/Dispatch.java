@@ -187,10 +187,16 @@ public class Dispatch {
 			QBulkMessage msg) {
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		String code = processEntity.getCode();
+		String processId = processData.getProcessId();
 		for (Ask ask : flatMapOfAsks.values()) {
-			ask.setTargetCode(processEntity.getCode());
-			ask.setProcessId(processData.getProcessId());
+			ask.setTargetCode(code);
+			ask.setProcessId(processId);
 		}
+
+		// TODO: This should not be necessary, but is
+		for (Ask ask : asks)
+			qwandaUtils.recursivelySetProcessId(ask, processId);
 
 		// check mandatory fields
 		// TODO: change to use flatMap
@@ -372,7 +378,16 @@ public class Dispatch {
 	 * @param target The target entity used in finding values
 	 * @param asks   The msg to add entities to
 	 */
-	public void handleDropdownAttributes(Ask ask, BaseEntity target, QBulkMessage msg) {
+	public void handleDropdownAttributes(Ask ask, String parentCode, BaseEntity target, QBulkMessage msg) {
+
+		String questionCode = ask.getQuestion().getCode();
+		log.info("Ask: " + questionCode + ", parentCode: " + parentCode);
+
+		// recursion
+		if (ask.hasChildren()) {
+			for (Ask child : ask.getChildAsks())
+				handleDropdownAttributes(child, questionCode, target, msg);
+		}
 
 		// check for dropdown attribute
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
@@ -382,7 +397,7 @@ public class Dispatch {
 					ask.getQuestion().getAttribute().getCode());
 			
 			if (codes == null || codes.isEmpty())
-				sendDropdownItems(ask, target, ask.getQuestion().getCode());
+				sendDropdownItems(ask, target, parentCode);
 			else
 				collectSelections(codes, msg);
 		}
