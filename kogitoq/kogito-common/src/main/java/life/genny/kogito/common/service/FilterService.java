@@ -2,19 +2,18 @@ package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
 import javax.enterprise.context.ApplicationScoped;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.Comparator;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
@@ -37,6 +36,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 @ApplicationScoped
 public class FilterService {
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+    static Jsonb jsonb = JsonbBuilder.create();
 
     @Inject
     UserToken userToken;
@@ -55,12 +55,9 @@ public class FilterService {
     @Inject
     SearchUtils searchUtils;
 
-    public static final String SEPARATOR = ";";
-
     public static enum Options {
         PAGINATION,
         SEARCH,
-        FILTER,
         PAGINATION_BUCKET
     }
 
@@ -315,8 +312,9 @@ public class FilterService {
         }
     }
 
-    public void sendFilterDetailsByGroup(String queGrp,String filterCode,Map<String, Map<String,String>> listParam) {
-        Ask ask = filterUtils.getFilterDetailsGroup(queGrp,filterCode, listParam);
+//    public void sendFilterDetailsByGroup(String queGrp,String queCode,String filterCode,Map<String,Map<String,String>> params) {
+    public void sendFilterDetailsByGroup(String queGrp,String queCode,String filterCode,Map<String, SavedSearch> params) {
+        Ask ask = filterUtils.getFilterDetailsGroup(queGrp,queCode,filterCode, params);
         sendAsk(ask,queGrp, false);
     }
 
@@ -383,18 +381,17 @@ public class FilterService {
     /**
      * handle filter by string in the table
      * @param sbeCode Search base entity code without JTI
-     * @param listFilterParams List of filter parameters
+     * @param params List of filter parameters
      */
-    public void handleFilter(String sbeCode, Map<String,Map<String, String>> listFilterParams) {
+    public void handleFilter(String sbeCode, Map<String,SavedSearch> params) {
         String sessionCode = searchUtils.sessionSearchCode(sbeCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
         SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
-
         excludeExtraFilterBySearchBE(searchBE);
 
         // add conditions by filter parameters
-        setFilterParams(searchBE,listFilterParams);
+        setFilterParams(searchBE,params);
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
@@ -409,9 +406,7 @@ public class FilterService {
     public void excludeExtraFilterBySearchBE(SearchEntity searchBE) {
         List<ClauseContainer> clauses = new ArrayList<>(searchBE.getClauseContainers());
         for(ClauseContainer clause : clauses){
-//            if(clause.getFilter().getType() == Filter.FILTER_TYPE.EXTRA) {
-                searchBE.remove(clause.getFilter());
-//            }
+            searchBE.remove(clause.getFilter());
         }
     }
 
@@ -439,26 +434,25 @@ public class FilterService {
      * Add filer parameters to search base entity
      * @param searchBE Search base entity
      */
-    public void setFilterParams(SearchEntity searchBE, Map<String,Map<String, String>> listFilterParams) {
-        for(Map.Entry<String, Map<String,String>> e : listFilterParams.entrySet()) {
-            String queCode = getFilterParamValByKey(e.getValue(), FilterConst.QUESTIONCODE);
-            String operatorCode = getFilterParamValByKey(e.getValue(), FilterConst.OPTION);
-            String value = getFilterParamValByKey(e.getValue(), FilterConst.VALUE);
-            String field = getFilterParamValByKey(e.getValue(), FilterConst.COLUMN);
-            Operator operator = getOperatorByVal(operatorCode);
+    public void setFilterParams(SearchEntity searchBE, Map<String,SavedSearch> params) {
+        for(Map.Entry<String,SavedSearch> param : params.entrySet()) {
+            String strJson = jsonb.toJson(param.getValue());
+            SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
+            Operator operator = getOperatorByVal(ss.getOperator());
+            String value = ss.getValue();
             if (operator.equals(Operator.LIKE)) {
                 value = "%" + value + "%";
             }
 
-            boolean isDate = isDateTimeSelected(queCode);
+            boolean isDate = isDateTimeSelected(ss.getColumn());
             Filter filter = null;
 
             if (isDate) {
                 LocalDateTime dateTime = parseStringToDate(value);
-                filter = new Filter(field, operator, dateTime);
+                filter = new Filter(ss.getColumn(), operator, dateTime);
             } else {
-                filter = new Filter(field, operator, value);
+                filter = new Filter(ss.getColumn(), operator, value);
             }
 
             searchBE.remove(filter);
@@ -613,8 +607,9 @@ public class FilterService {
      * @param lnkValue Link value
      */
     public void sendListSavedSearches(String group,String code,String lnkCode,String lnkValue) {
-        String sbeJti = getSearchBaseEntityCodeByJTI(FilterConst.SBE_SAVED_SEARCH);
-        SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeJti,lnkCode,lnkValue, true);
+//        String sbeJti = getSearchBaseEntityCodeByJTI(FilterConst.SBE_SAVED_SEARCH);
+        String sbeCode = FilterConst.SBE_SAVED_SEARCH;
+        SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeCode,lnkCode,lnkValue, true);
         QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
@@ -725,10 +720,12 @@ public class FilterService {
     public void sendFilterDetailsByBase(String parentCode,String queCode,String attCode,String value) {
         List<BaseEntity> baseEntities = new ArrayList<>();
 
+//        String newAttCode = getColumnName(attCode);
+        SavedSearch savedSearch = new SavedSearch(attCode,value);
         BaseEntity base = new BaseEntity(attCode);
-        String  rowVal = queCode + SEPARATOR + attCode + SEPARATOR + value;
+        String  rowVal = attCode + FilterConst.SEPARATOR + value;
 
-        Attribute attribute = qwandaUtils.getAttribute(attCode);
+        Attribute attribute = qwandaUtils.getAttribute(savedSearch.getColumn());
         EntityAttribute ea = new EntityAttribute(base,attribute,1.0);
         ea.setValue(rowVal);
         ea.setValueString(rowVal);
@@ -784,6 +781,15 @@ public class FilterService {
         msg.setMessage(queGrp);
         msg.setReplace(replaced);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+    }
+
+    /**
+     * Return the link value code
+     * @param value Filter Value
+     * @return Return the link value code
+     */
+    public String getLinkValueCode(String value) {
+       return  filterUtils.getLinkValueCode(value);
     }
 
 

@@ -125,12 +125,14 @@ public class Dispatch {
 			// TODO: fix this as it removes flexibility
 			PCM eventsPCM = beUtils.getPCM(PCM.PCM_EVENTS);
 			// Now set the unique code of the PCM_EVENTS so that it is unique
-			msg.add(eventsPCM);
+			eventsPCM.setCode("PCM_EVENTS");
+			// msg.add(eventsPCM);
 			// Now update the PCM to point the last location to the PCM_EVENTS
+			// add a LOC2 to the PCM if it doesn't exist
 			if (pcm.getLocation(2) == null) {
 				pcm.addStringAttribute("PRI_LOC2", "LOC2", PCM.PCM_EVENTS);
 			}
-				pcm.setLocation(2, eventsPCM.getCode());
+			pcm.setLocation(2, eventsPCM.getCode()); // TODO - find last location?
 		}
 
 		// init if null to stop null pointers
@@ -176,6 +178,10 @@ public class Dispatch {
 		List<String> attributeCodes = processData.getAttributeCodes();
 		log.info("Non-Readonly Attributes: " + attributeCodes);
 		return !attributeCodes.isEmpty();
+		// if (!attributeCodes.isEmpty())
+		// return true;
+
+		// return false;
 	}
 
 	/**
@@ -262,11 +268,11 @@ public class Dispatch {
 	 * @param target
 	 * @return
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
+	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target,
 			QBulkMessage msg, ProcessData processData) {
 
 		ReqConfig reqConfig = capMan.getUserCapabilities();
-		if(!pcm.requirementsMet(reqConfig)) {
+		if (!pcm.requirementsMet(reqConfig)) {
 			log.warn("User " + userToken.getUserCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
@@ -393,7 +399,7 @@ public class Dispatch {
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
 					ask.getQuestion().getAttribute().getCode());
-			
+
 			if (codes == null || codes.isEmpty())
 				sendDropdownItems(ask, target, ask.getQuestion().getCode());
 			else

@@ -26,8 +26,8 @@ public class PCM extends BaseEntity {
 
 	public static final String PREFIX = Prefix.PCM;
 
-	public static final String TPL_VERT = "TPL_VERT";
-	public static final String TPL_HORI = "TPL_HORI";
+	public static final String TPL_VERT = "TPL_VERT_ALL";
+	public static final String TPL_HORI = "TPL_HORI_ALL";
 
 	public static final String PCM_TREE = "PCM_TREE";
 	public static final String PCM_ROOT = "PCM_ROOT";
