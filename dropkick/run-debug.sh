@@ -13,7 +13,7 @@ source ../../genny-main/services_ports.env
 
 export GENNY_SHOW_VALUES="TRUE"
 export GENNY_SERVICE_USERNAME=service
-export GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io/auth}
+export GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL}
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
 export GENNY_CLIENT_ID=kogito-console-quarkus

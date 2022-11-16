@@ -247,14 +247,14 @@ public class KeycloakUtils {
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
         // A necessary evil. I think?
-        log.info("this is the real realm: " + realm + " from configuration, and we force it use 'gada' realm");
-        realm = "gada";
+        // realm = "internmatch";
+        log.info("Realm is " + realm);
 
         String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
-        //log.info("encodedPostRequest:[" + str + "]");
+        // log.info("encodedPostRequest:[" + str + "]");
         JsonObject json = jsonb.fromJson(str, JsonObject.class);
         String token = json.getString("access_token");
 
@@ -320,16 +320,20 @@ public class KeycloakUtils {
         StringBuilder result = new StringBuilder();
         boolean first = true;
 
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            log.debug("key: " + entry.getKey() + ", value: " + entry.getValue());
-            if (first)
-                first = false;
-            else
-                result.append("&");
+        try {
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                log.debug("key: " + entry.getKey() + ", value: " + entry.getValue());
+                if (first)
+                    first = false;
+                else
+                    result.append("&");
 
-            result.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8));
-            result.append("=");
-            result.append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+                result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
+                result.append("=");
+                result.append(URLEncoder.encode(entry.getValue(), "UTF-8"));
+            }
+        } catch (UnsupportedEncodingException e) {
+            log.error("Error encoding Post Data String: " + e.getStackTrace());
         }
 
         return result.toString();

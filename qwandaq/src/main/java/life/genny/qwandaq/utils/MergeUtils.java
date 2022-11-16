@@ -74,8 +74,7 @@ public class MergeUtils {
 	 */
 	public static String merge(String mergeStr, Map<String, Object> templateEntityMap) { 
 		
-		if (mergeStr == null)
-			throw new NullParameterException("mergeStr");
+		if (mergeStr != null) {
 
 		Matcher match = PATTERN_MATCHER.matcher(mergeStr);
 		Matcher matchVariables = PATTERN_VARIABLE.matcher(mergeStr);
@@ -100,6 +99,10 @@ public class MergeUtils {
 				else
 					mergeStr = mergeStr.replace(VARIABLE_REGEX_START + matchVariables.group(1) + VARIABLE_REGEX_END, "");
 			}
+		}
+
+		} else {
+			log.warn("mergeStr is NULL");
 		}
 
 		return mergeStr;
@@ -226,8 +229,7 @@ public class MergeUtils {
 	 */
 	public static Boolean contextsArePresent(String mergeStr, Map<String, Object> templateEntityMap) { 
 		
-		if (mergeStr == null)
-			throw new NullParameterException("mergeStr");
+		if (mergeStr != null) {
 
 		Matcher match = PATTERN_MATCHER.matcher(mergeStr);
 		Matcher matchVariables = PATTERN_VARIABLE.matcher(mergeStr);
@@ -251,6 +253,9 @@ public class MergeUtils {
 			}
 		}
 
+		} else {
+			log.warn("mergeStr is NULL");
+		}
 		return true;
 	}
 

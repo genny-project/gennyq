@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /*
  * A static utility class used for standard read and write 
@@ -180,14 +181,16 @@ public class CacheUtils {
 	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
 	 */
 	static List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
-        return cache.getRemoteCache(cacheName)
-                .entrySet().stream().map((Map.Entry<String, String> entry) -> {
-                    String key = entry.getKey();
-                    CoreEntityKey currentKey = keyStruct.fromKey(key);
+		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
+		.entrySet().stream().map((Map.Entry<String, String> entry) -> {
+			String key = entry.getKey();
+			CoreEntityKey currentKey = keyStruct.fromKey(key);
 
-                    return currentKey.getEntityCode().startsWith(prefix) ? jsonb.fromJson(entry.getValue(), CoreEntity.class) : null;
-                })
-                .filter(Objects::nonNull).toList();
+			return currentKey.getEntityCode().startsWith(prefix) ? jsonb.fromJson(entry.getValue(), CoreEntity.class) : null;
+		})
+		.filter(Objects::nonNull).toList();
+
+		return entities;
 	}
 
 	/**

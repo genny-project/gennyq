@@ -261,7 +261,7 @@ public class Bridge {
                 continue;
             }
             try {
-                value = URLDecoder.decode(value, StandardCharsets.UTF_8);
+                value = URLDecoder.decode(value, "UTF-8");
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
             }

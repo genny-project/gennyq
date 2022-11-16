@@ -508,7 +508,7 @@ public class Dispatch {
 		Map<String, Object> contexts = new HashMap<>();
 		contexts.put("USER", beUtils.getUserBaseEntity());
 
-		baseEntities.stream().forEach(entity -> {
+		baseEntities.forEach(entity -> {
 			MergeUtils.mergeBaseEntity(entity, contexts);
 		});
 

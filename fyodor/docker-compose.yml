@@ -36,9 +36,7 @@ services:
       mysql:
         condition: service_healthy
     image: gennyproject/fyodor:latest
-    #    container_name: bootq 
-    #    container_name: bootq 
-    #    container_name: bootq 
+#    container_name: bootq
     volumes:
       - ./google_credentials:/root/.genny/sheets.googleapis.com-java-quickstart
     env_file:

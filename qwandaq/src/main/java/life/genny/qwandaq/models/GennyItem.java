@@ -54,10 +54,10 @@ public class GennyItem {
 		}
 		final String cleanAttributeCode = attributeCode.trim().toUpperCase();
 		// TODo optimise
-        return b2bdata.stream().
+		Optional<AttributeCodeValueString> matchingObject = b2bdata.stream().
                 filter(p -> p.getAttributeCode().equals(cleanAttributeCode)).
                 findFirst();
-		
+		return matchingObject;
 	}
 
 }

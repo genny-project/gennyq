@@ -472,8 +472,9 @@ public class GennyToken implements Serializable {
 		} catch (Exception e) {
 			auth_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue(); // this is the 'issued at' timestamp
 		}
-		return LocalDateTime.ofInstant(Instant.ofEpochSecond(auth_timestamp),
+		LocalDateTime authTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(auth_timestamp),
 				TimeZone.getDefault().toZoneId());
+		return authTime;
 	}
 
 	/**
@@ -483,8 +484,9 @@ public class GennyToken implements Serializable {
 	@JsonIgnore
 	public LocalDateTime getExpiryDateTime() {
 		Long exp_timestamp = ((Number) adecodedTokenMap.get("exp")).longValue();
-		return LocalDateTime.ofInstant(Instant.ofEpochSecond(exp_timestamp),
+		LocalDateTime expTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(exp_timestamp),
 				TimeZone.getDefault().toZoneId());
+		return expTime;
 	}
 
 	/**
@@ -523,8 +525,9 @@ public class GennyToken implements Serializable {
 	@JsonIgnore
 	public LocalDateTime getiatDateTime() {
 		Long iat_timestamp = ((Number) adecodedTokenMap.get("iat")).longValue();
-		return LocalDateTime.ofInstant(Instant.ofEpochSecond(iat_timestamp),
+		LocalDateTime iatTime = LocalDateTime.ofInstant(Instant.ofEpochSecond(iat_timestamp),
 				TimeZone.getDefault().toZoneId());
+		return iatTime;
 	}
 
 	/**
@@ -565,7 +568,10 @@ public class GennyToken implements Serializable {
 		if (getUserCode().equals(userCode)) {
 			return true;
 		}
-		return getEmailUserCode().equals(userCode);
+		if (getEmailUserCode().equals(userCode)) {
+			return true;
+		}
+		return false;
 
 	}
 

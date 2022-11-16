@@ -47,7 +47,9 @@ public class PanacheLocalDateTimeAdapter implements JsonbAdapter<LocalDateTime, 
 		String str = obj.toString();
 		str = str.substring(0,str.length()-1);
 		String value = str.substring(1);
-        return dateFormatter.parse(value, LocalDateTime::from);
+		LocalDateTime ret = dateFormatter.parse(value, LocalDateTime::from);
+
+		return ret;
 	}
 
 
@@ -60,6 +62,7 @@ public class PanacheLocalDateTimeAdapter implements JsonbAdapter<LocalDateTime, 
 
 		TemporalAccessor ta = DateTimeFormatter.ISO_INSTANT.parse(dateTimeStr);
 		Instant i = Instant.from(ta);
-        return LocalDateTime.ofInstant(i, zoneOffset);
+		LocalDateTime dt  = LocalDateTime.ofInstant(i, zoneOffset);
+		return dt;
 	}
 }

@@ -56,7 +56,10 @@ public class BlackListInfo {
             return;
         }
 
-        boolean hasDelete = protocol.startsWith("-") && !protocol.subSequence(1, 2).equals("-");
+        boolean hasDelete = false;
+        if(protocol.startsWith("-") && !protocol.subSequence(1, 2).equals("-")){
+            hasDelete = true;
+        }
 
         try {
             if (hasDelete) {
