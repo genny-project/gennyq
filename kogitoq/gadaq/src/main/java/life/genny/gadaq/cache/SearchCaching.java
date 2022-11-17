@@ -5,24 +5,28 @@ import java.lang.invoke.MethodHandles;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import static life.genny.gadaq.constants.GadaQConstants.*;
+import life.genny.qwandaq.entity.search.trait.*;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.serviceq.Service;
+
+import static life.genny.qwandaq.attribute.Attribute.*;
 
 /**
  * SearchCaching
  */
 @ApplicationScoped
-public class SearchCaching {
+public class   SearchCaching {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
 	Service service;
+
+	public static final String SBE_MESSAGE = "SBE_MESSAGE";
 
 	public void saveToCache() {
 
@@ -91,6 +95,22 @@ public class SearchCaching {
 		cacheDropdown("DEF_BUILDING",
 				new SearchEntity("SBE_SER_LNK_AREA_UNIT", "Area Unit Dropdown")
 						.setLinkValue("AREA_UNIT"));
+
+		// DEF_MESSAGE
+		cacheSearch(
+				new SearchEntity(SBE_MESSAGE, "Messages")
+						.add(new Filter(PRI_CODE, Operator.LIKE, "MSG_%"))
+						.add(new Column(PRI_NAME, "Code"))
+						.add(new Column(PRI_DESCRIPTION, "Description"))
+						.add(new Column(PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
+						.add(new Column(PRI_CONTEXT_LIST, "Context List"))
+						.add(new Column(PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
+						.add(new Column(PRI_CC, "CC"))
+						.add(new Column(PRI_BCC, "BCC"))
+						.add(new Column(PRI_BODY, "Body"))
+						.add(new Action(EDIT, "Edit"))
+						.setPageSize(4)
+						.setPageStart(0));
 	}
 
 	private void cacheSearch(SearchEntity entity) {
