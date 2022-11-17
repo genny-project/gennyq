@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTransient;
 
 import org.jboss.logging.Logger;
 
@@ -638,4 +639,9 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
+
+	@JsonbTransient
+	public Map<Class<? extends Trait>, List<? extends Trait>> getTraitMap() {
+		return traits;
+	}
 }

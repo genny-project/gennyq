@@ -2,15 +2,12 @@ package life.genny.qwandaq.entity.search.trait;
 
 import java.util.Set;
 
-import javax.json.bind.annotation.JsonbTypeAdapter;
-
 import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
-import life.genny.qwandaq.serialization.adapters.CapabilityAdapter;
 
 /**
  * Trait
@@ -22,7 +19,7 @@ public abstract class Trait implements ICapabilityFilterable {
 	private String name;
 
 	// @JsonbTransient
-	@JsonbTypeAdapter(CapabilityAdapter.class)
+	// @JsonbTypeAdapter(CapabilitySetAdapter.class)
 	private Set<Capability> capReqs = new HashSet<>();
 
 	public Trait() {
@@ -49,12 +46,10 @@ public abstract class Trait implements ICapabilityFilterable {
 		this.name = name;
 	}
 
-	@JsonbTypeAdapter(CapabilityAdapter.class)
 	public Set<Capability> getCapabilityRequirements() {
 		return capReqs;
 	}
 
-	@JsonbTypeAdapter(CapabilityAdapter.class)
 	public void setCapabilityRequirements(Set<Capability>  capabilities) {
 		this.capReqs = capabilities;
 	}
@@ -67,5 +62,20 @@ public abstract class Trait implements ICapabilityFilterable {
 	public Trait addCapabilityRequirement(String code, CapabilityNode... nodes) {
 		Capability req = new Capability(code, nodes);
 		return addCapabilityRequirement(req);
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if(!(other instanceof Trait))
+			return false;
+		Trait otherT = (Trait)other;
+
+		if(!this.code.equals(otherT.code))
+			return false;
+
+		if(!this.name.equals(otherT.name))
+			return false;
+		
+		return this.getCapabilityRequirements().equals(otherT.getCapabilityRequirements());
 	}
 }
