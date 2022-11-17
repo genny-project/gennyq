@@ -57,7 +57,6 @@ public class Dispatch {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-
 	public static final String[] BUTTON_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT, Attribute.EVT_UPDATE,
 			Attribute.EVT_CANCEL, Attribute.EVT_UNDO, Attribute.EVT_REDO, Attribute.EVT_RESET };
 
@@ -258,7 +257,7 @@ public class Dispatch {
 	 * @param msg
 	 * @param processData
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
+	public void traversePCM(String code, BaseEntity source, BaseEntity target,
 			QBulkMessage msg, ProcessData processData) {
 
 		// add pcm to bulk message
