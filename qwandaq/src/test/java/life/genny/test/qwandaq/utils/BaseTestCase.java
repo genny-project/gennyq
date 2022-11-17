@@ -3,8 +3,7 @@ package life.genny.test.qwandaq.utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.MockitoAnnotations;
 
-import life.genny.test.utils.suite.Expected;
-import life.genny.test.utils.suite.Input;
+import life.genny.qwandaq.utils.testsuite.*;
 
 public class BaseTestCase {
 

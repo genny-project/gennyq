@@ -665,6 +665,8 @@ public class DatabaseUtils {
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getSourceCode() + ":" + qq.getTargetCode());
 			// TODO: Potentially update sub questions
 			saveQuestionQuestion(qq);
+			Question q = findQuestionByCode(realm, qq.getTargetCode());
+			updateCapabilityRequirements(realm, q, capabilityRequirements);
 			return true;
 		}
 

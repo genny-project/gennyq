@@ -1,4 +1,4 @@
-package life.genny.test.utils.callbacks.test;
+package life.genny.qwandaq.utils.callbacks.testing;
 
 public interface FITestCallback<Input, Expected> {
 

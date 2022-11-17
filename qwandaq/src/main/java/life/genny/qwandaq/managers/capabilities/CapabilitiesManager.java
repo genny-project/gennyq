@@ -82,13 +82,19 @@ public class CapabilitiesManager extends Manager {
 		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
+			info("User Roles:");
 			BaseEntity role = roles.get(0);
+			info("		- " + role.getCode());
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
+				role = roles.get(i);
 				CapabilitySet roleCaps = getEntityCapabilities(role);
+				info("		- " + role.getCode() + "(" + roleCaps.size() + " capabilities)");
 				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
+				info("			Capabilities:");
 				for(Capability cap : roleCaps) {
+					info("			- " + cap);
 					// Find preexisting capability. If it exists, merge the Nodes in the way that
 					// grants the most permission possible
 					Capability preexistingCap = cap.hasCodeInSet(capabilities);
@@ -97,6 +103,7 @@ public class CapabilitiesManager extends Manager {
 						cap = preexistingCap.merge(cap, true);
 					}
 					capabilities.add(cap);
+					System.out.println("	[!] " + cap.code + " = " + cap.nodeString());
 				}
 			}
 		} else {
@@ -115,7 +122,7 @@ public class CapabilitiesManager extends Manager {
 			}
 			capabilities.add(capability);
 		}
-
+		
 		return new ReqConfig(capabilities, requiresAllCaps, requiresAllModes);
 	}
 
@@ -151,10 +158,10 @@ public class CapabilitiesManager extends Manager {
 	 * @param productCode    The product code
 	 * @param target         The target entity
 	 * @param code The capability code
-	 * @param modes          The modes to set
+	 * @param nodes          The nodes to set
 	 */
 	private void updateCapability(String productCode, BaseEntity target, final Attribute capability,
-			final CapabilityNode... modes) {
+			final CapabilityNode... nodes) {
 		// Update base entity
 		if (capability == null) {
 			throw new NullParameterException("capability");
@@ -164,8 +171,8 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(modes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(modes));
+		target.addAttribute(capability, 0.0, getModeString(nodes));
+		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -253,7 +260,7 @@ public class CapabilitiesManager extends Manager {
 		}
 	}
 
-	private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSet) {
+private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSet) {
 		// Allocate new list with max size of all combinations of CapMode and PermMode
 		List<CapabilityNode> newCaps = new ArrayList<>(capSet.size() * CapabilityMode.values().length * PermissionMode.values().length);
 		for(CapabilityNode node : capSet) {
@@ -430,7 +437,7 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated
 	public static List<CapabilityNode> deserializeCapArray(String modeString) {
-		return CommonUtils.getArrayFromString(modeString, CapabilityNode::parseCapability);
+		return CommonUtils.getListFromString(modeString, CapabilityNode::parseCapability);
 	}
 
 	/**

@@ -38,4 +38,8 @@ public enum PermissionMode {
     public static PermissionMode getByOrd(int ordinal) {
         return PermissionMode.values()[ordinal];
     }
+
+    public boolean morePermissiveThan(PermissionMode other) {
+        return this.ordinal() > other.ordinal();
+    }
 }

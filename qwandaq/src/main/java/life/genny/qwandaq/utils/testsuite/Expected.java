@@ -1,4 +1,4 @@
-package life.genny.test.utils.suite;
+package life.genny.qwandaq.utils.testsuite;
 
 
 

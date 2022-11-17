@@ -15,7 +15,7 @@ import javax.persistence.criteria.Subquery;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.EntityEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 
 /**
  * TolstoysCauldron - A cauldron of query ingredients.

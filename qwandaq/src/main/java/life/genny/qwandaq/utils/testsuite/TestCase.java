@@ -1,8 +1,8 @@
-package life.genny.test.utils.suite;
+package life.genny.qwandaq.utils.testsuite;
 
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.test.utils.callbacks.test.FITestCallback;
-import life.genny.test.utils.callbacks.test.FITestVerificationCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FITestCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FITestVerificationCallback;
 
 /**
  * 
