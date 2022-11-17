@@ -8,16 +8,16 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
-import life.genny.qwandaq.entity.search.trait.CapabilityRequirement;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * CapHandler
@@ -95,7 +95,7 @@ public class CapHandler extends Manager {
 	 * @param trait
 	 * @return
 	 */
-	public Boolean traitCapabilitiesMet(Trait trait) {
+	public boolean traitCapabilitiesMet(Trait trait) {
 
 		if(userToken == null) {
 			error("[!] No UserToken, cannot verify capabilities");
@@ -104,16 +104,31 @@ public class CapHandler extends Manager {
 
 		//  TODO: Get rid of this service code check. Not ideal
 		// TODO: We also need to consolidate what it means to be a service user
-		boolean isService = GennyConstants.PER_SERVICE.equals(userToken.getUserCode()) || GennyConstants.PER_SERVICE.equals(userToken.getCode()) || userToken.hasRole("service");
+		boolean isService = hasSecureToken(userToken);
 		if(!isService) {
+			// TODO: Move this call
 			ReqConfig reqConfig = capMan.getUserCapabilities();
-			for(CapabilityRequirement capTrait : trait.getCapabilityRequirements()) {
-				if(!capTrait.meetsRequirements(reqConfig)) {
-					return false;
-				}
-			}
+			getLogger().info("Checking: " + trait);
+			getLogger().info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
+			return trait.requirementsMet(reqConfig); //traitCapabilitiesMet(reqConfig, trait);
 		}
 		return true;
+	}
+	public static boolean traitCapabilitiesMet(ReqConfig reqs, Trait trait) {
+		return trait.requirementsMet(reqs);
+	}
+
+	public static boolean hasSecureToken(UserToken userToken) {
+		if(GennyConstants.PER_SERVICE.equals(userToken.getUserCode()))
+			return true;
+			
+		if(GennyConstants.PER_SERVICE.equals(userToken.getCode()))
+			return true;
+		
+		if(userToken.hasRole("service"))
+			return true;
+		
+		return false;		
 	}
 
 }

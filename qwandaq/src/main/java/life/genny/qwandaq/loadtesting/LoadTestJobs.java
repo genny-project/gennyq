@@ -1,4 +1,4 @@
-package life.genny.qwandaq.test;
+package life.genny.qwandaq.loadtesting;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,7 +9,7 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 
 @ApplicationScoped
 public class LoadTestJobs {

@@ -672,8 +672,6 @@ public class DatabaseUtils {
 			Question q = (Question)filterable;
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
 			saveQuestion(q);
-			List<QuestionQuestion> qqList = findParentQuestionQuestionsByTargetCode(realm, q.getCode());
-			qqList.stream().forEach(qq -> updateCapabilityRequirements(realm, qq, capabilityRequirements));
 			return true;
 		}
 		

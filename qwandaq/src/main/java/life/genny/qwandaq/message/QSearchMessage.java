@@ -3,7 +3,7 @@ package life.genny.qwandaq.message;
 import java.io.Serializable;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 
 @RegisterForReflection
 public class QSearchMessage extends QMessage implements Serializable {

@@ -2,6 +2,7 @@ package life.genny.qwandaq.datatype.capability.core.node;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.jboss.logging.Logger;
@@ -30,6 +31,7 @@ public class CapabilityNode {
 			}
 			NODE_MAP.put(mode, scopeMap);
 		}
+		log.info("Init " + (CapabilityMode.values().length * PermissionMode.values().length) + "CapabilityNodes");
 	}
 
 	public static CapabilityNode get(CapabilityMode mode, PermissionMode scope) {
@@ -40,15 +42,24 @@ public class CapabilityNode {
 		return get(mode, PermissionMode.SELF);
 	}
 
+	public static CapabilityNode get(Entry<CapabilityMode, PermissionMode> node) {
+		return get(node.getKey(), node.getValue());
+	}
+
+	public static CapabilityNode get(char modeId, char permId) {
+		return get(CapabilityMode.getByIdentifier(modeId),
+			PermissionMode.getByIdentifier(permId));
+	}
+
 	/**
 	 * This capability's mode
 	 */
-	public final CapabilityMode capMode;
+	public CapabilityMode capMode;
 
 	/**
 	 * This capability's permission for the given mode
 	 */
-	public final PermissionMode permMode;
+	public PermissionMode permMode;
 
 	/**
 	 * Create a new capability with the given mode and permissions
@@ -68,15 +79,8 @@ public class CapabilityNode {
 		this.permMode = permMode;
 	}
 
-	/**
-	 * Create a new capability with the given mode and permissions
-	 * @param capMode
-	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
-	 */
-	private CapabilityNode(CapabilityMode capMode) {
-		this(capMode, PermissionMode.SELF);
-	}
+	@Deprecated
+	public CapabilityNode() {}
 
 	/**
 	 * Get the most permissive node between this and another Node
@@ -100,6 +104,10 @@ public class CapabilityNode {
 		return result;
 	}
 
+	public CapabilityNode compareNodes(Entry<CapabilityMode, PermissionMode> other, boolean mostPermissive) {
+		return compareNodes(get(other), mostPermissive);
+	}
+
 	/**
 	 * Get all CapabilityNodes with less permissions than this one for it's given Mode
 	 * @return
@@ -108,7 +116,7 @@ public class CapabilityNode {
 		int size = this.permMode.ordinal();
 		CapabilityNode[] lesserNodes = new CapabilityNode[size];
 		for(int i = 0; i < size; i++) {
-			lesserNodes[i] = new CapabilityNode(capMode, PermissionMode.getByOrd(size - (i + 1)));
+			lesserNodes[i] = get(capMode, PermissionMode.getByOrd(size - (i + 1)));
 		}
 
 		return lesserNodes;
@@ -140,7 +148,7 @@ public class CapabilityNode {
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
 		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));
 
-		return new CapabilityNode(capMode, permMode);
+		return get(capMode, permMode);
 	}
 
 	public String toString(boolean verbose) {
@@ -158,6 +166,7 @@ public class CapabilityNode {
 
 	@Override
 	public boolean equals(Object other) {
+		// Ref: https://stackoverflow.com/questions/596462/any-reason-to-prefer-getclass-over-instanceof-when-generating-equals
 		if(!this.getClass().equals(other.getClass())) {
 			return false;
 		}
