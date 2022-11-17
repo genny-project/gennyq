@@ -54,12 +54,12 @@ public class CapabilityNode {
 	/**
 	 * This capability's mode
 	 */
-	public final CapabilityMode capMode;
+	public CapabilityMode capMode;
 
 	/**
 	 * This capability's permission for the given mode
 	 */
-	public final PermissionMode permMode;
+	public PermissionMode permMode;
 
 	/**
 	 * Create a new capability with the given mode and permissions
@@ -78,6 +78,8 @@ public class CapabilityNode {
 		this.capMode = capMode;
 		this.permMode = permMode;
 	}
+
+	public CapabilityNode() {}
 
 	/**
 	 * Create a new capability with the given mode and permissions
