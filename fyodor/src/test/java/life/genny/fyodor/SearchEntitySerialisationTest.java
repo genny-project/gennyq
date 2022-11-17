@@ -6,7 +6,6 @@ import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.Trait;
-import life.genny.qwandaq.utils.CommonUtils;
 
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 
@@ -25,10 +24,10 @@ public class SearchEntitySerialisationTest {
         SearchEntity entity = new SearchEntity("PROP_SEARCH", "Property")
         .add(action);
         String json = jsonb.toJson(entity);
-        System.out.println("JSOON: " + json);
+        // System.out.println("JSOON: " + json);
 
         entity = jsonb.fromJson(json, SearchEntity.class);
-        System.out.println(entity);
+        // System.out.println(entity);
         // System.out.println(CommonUtils.getArrayString(action.getCapabilityRequirements()));
         
     }

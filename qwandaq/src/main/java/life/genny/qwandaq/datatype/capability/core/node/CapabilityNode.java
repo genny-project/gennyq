@@ -79,17 +79,8 @@ public class CapabilityNode {
 		this.permMode = permMode;
 	}
 
+	@Deprecated
 	public CapabilityNode() {}
-
-	/**
-	 * Create a new capability with the given mode and permissions
-	 * @param capMode
-	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
-	 */
-	private CapabilityNode(CapabilityMode capMode) {
-		this(capMode, PermissionMode.SELF);
-	}
 
 	/**
 	 * Get the most permissive node between this and another Node

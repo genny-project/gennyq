@@ -49,10 +49,12 @@ public abstract class Trait implements ICapabilityFilterable {
 		this.name = name;
 	}
 
+	@JsonbTypeAdapter(CapabilityAdapter.class)
 	public Set<Capability> getCapabilityRequirements() {
 		return capReqs;
 	}
 
+	@JsonbTypeAdapter(CapabilityAdapter.class)
 	public void setCapabilityRequirements(Set<Capability>  capabilities) {
 		this.capReqs = capabilities;
 	}

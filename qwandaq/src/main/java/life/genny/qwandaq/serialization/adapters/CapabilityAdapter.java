@@ -2,6 +2,7 @@ package life.genny.qwandaq.serialization.adapters;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.json.Json;
@@ -36,11 +37,16 @@ public class CapabilityAdapter implements JsonbAdapter<Set<Capability>, JsonArra
     }
 
     private JsonObject adaptOneToJson(Capability capability) {
+
+        JsonArrayBuilder nodeArray = Json.createArrayBuilder();
+        for(CapabilityNode node : capability.nodes) {
+            nodeArray.add(node.toString());
+        }
+
         JsonObject obj = Json.createObjectBuilder()
             .add("code", capability.code)
-            .add("nodes", capability.nodeString())
+            .add("nodes", nodeArray.build())
             .build();
-
         return obj;
     }
 
@@ -50,12 +56,17 @@ public class CapabilityAdapter implements JsonbAdapter<Set<Capability>, JsonArra
         for(int i = 0; i < serializedSet.size(); i++) {
             caps.add(adaptOneFromJson(serializedSet.getJsonObject(i)));
         }
-        return convertToEA(serializedSet.toString());
+        return caps;
     }
 
     private Capability adaptOneFromJson(JsonObject capJson) {
         String code = capJson.getString("code");
-        Set<CapabilityNode> nodes = CapabilitiesManager.deserializeCapSet(capJson.getString("nodes"));
+        JsonArray nodeArray = capJson.getJsonArray("nodes");
+        Set<CapabilityNode> nodes = new LinkedHashSet<>(nodeArray.size());
+        for(int i = 0; i < nodeArray.size(); i++) {
+            nodes.add(CapabilityNode.parseCapability(nodeArray.getString(i)));
+        }
+
         return new Capability(code, nodes);
     }
 
