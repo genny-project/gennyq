@@ -20,6 +20,7 @@ public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
     }
 
     public static JsonObject toJson(Capability capability) {
+        System.out.println("Serialising: " + capability);
         JsonArrayBuilder nodeArray = Json.createArrayBuilder();
         for(CapabilityNode node : capability.nodes) {
             nodeArray.add(node.toString());
@@ -38,6 +39,7 @@ public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
     }
 
     public static Capability fromJson(JsonObject capJson) {
+        System.out.println("Deserializing: " + capJson);
         String code = capJson.getString("code");
         JsonArray nodeArray = capJson.getJsonArray("nodes");
         Set<CapabilityNode> nodes = new LinkedHashSet<>(nodeArray.size());
