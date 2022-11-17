@@ -90,6 +90,36 @@ public class EqualityTests {
         )
         .setExpected(true)
         .build()
+        
+        .createTest("Equality 7")
+        .setInput(
+            new Trait[] {new Action("EDIT", "EDIT"),
+                new Action("EDIT", "EDIT")
+                .addCapabilityRequirement(CapabilityBuilder.code("CAP_PROPERTY").buildCap())
+            }
+        )
+        .setExpected(false)
+        .build()
+
+        .createTest("Equality 8")
+        .setInput(
+            new Trait[] {
+                new Action("EDIT", "EDIT"),
+                new Action("EDIT", "EDIT")
+            }
+        )
+        .setExpected(true)
+        .build()
+
+        .createTest("Equality 9")
+        .setInput(
+            new Trait[] {
+                new Action("EDIT2", "EDIT"),
+                new Action("EDIT", "EDIT")
+            }
+        )
+        .setExpected(false)
+        .build()
 
         .assertAll();
 
