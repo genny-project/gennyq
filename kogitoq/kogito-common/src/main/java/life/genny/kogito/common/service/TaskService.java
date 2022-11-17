@@ -134,7 +134,6 @@ public class TaskService {
 	/**
 	 * Build a question group and assign to the PCM before dispatching a PCM tree
 	 * update.
->>>>>>> 10.2.0
 	 *
 	 * @param sourceCode
 	 * @param targetCode
@@ -228,7 +227,8 @@ public class TaskService {
 			// handle initial dropdown selections
 			// TODO: change to use flatMap
 			for (Ask ask : asks)
-				dispatch.handleDropdownAttributes(ask, processEntity, msg);
+				dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), processEntity, msg);
+
 		} else
 			msg.add(target);
 
