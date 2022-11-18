@@ -20,6 +20,7 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
@@ -160,11 +161,11 @@ public class Events {
 
 		// add item
 		if (code.startsWith("QUE_ADD_")) {
-			code = StringUtils.removeStart(code, "QUE_ADD_");
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
+			code = StringUtils.removeStart(code, "QUE_ADD");
+			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF + code + ":PREFIX", String.class);
 
 			log.info("Prefix: " + code);
-			if ("PER".equals(prefix)) {
+			if (Prefix.PER.equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
 						.add("definitionCode", "DEF_".concat(code))
 						.add("sourceCode", userToken.getUserCode())
@@ -181,12 +182,12 @@ public class Events {
 			// if (parentCode.startsWith("SBE_")) {
 			JsonObject payload = Json.createObjectBuilder()
 					.add("questionCode", "QUE_BASEENTITY_GRP")
-					.add("userCode", userToken.getUserCode())
+					.add("sourceCode", userToken.getUserCode())
 					.add("targetCode", msg.getData().getTargetCode())
 					.add("pcmCode", "PCM_FORM")
 					.add("buttonEvents", "Cancel,Update,Submit")
 					.build();
-			kogitoUtils.triggerWorkflow(SELF, "callProcessQuestions", payload);
+			kogitoUtils.triggerWorkflow(SELF, "processQuestions", payload);
 			return;
 			// }
 
