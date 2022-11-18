@@ -312,7 +312,13 @@ public class FilterService {
         }
     }
 
-//    public void sendFilterDetailsByGroup(String queGrp,String queCode,String filterCode,Map<String,Map<String,String>> params) {
+    /**
+     * Send filter details by group
+     * @param queGrp Question group
+     * @param queCode Question code
+     * @param filterCode Filter code
+     * @param params Parameters
+     */
     public void sendFilterDetailsByGroup(String queGrp,String queCode,String filterCode,Map<String, SavedSearch> params) {
         Ask ask = filterUtils.getFilterDetailsGroup(queGrp,queCode,filterCode, params);
         sendAsk(ask,queGrp, false);
@@ -627,18 +633,22 @@ public class FilterService {
                                                   SearchEntity search) {
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
-        List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+        try {
+            msg.setToken(userToken.getToken());
 
-        List<BaseEntity> basesSorted =  bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
-                .collect(Collectors.toList());
+            List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+            List<BaseEntity> basesSorted = bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
+                    .collect(Collectors.toList());
 
-        msg.setToken(userToken.getToken());
-        msg.setItems(basesSorted);
-        msg.setParentCode(group);
-        msg.setQuestionCode(code);
-        msg.setLinkCode(lnkCode);
-        msg.setLinkValue(lnkValue);
-        msg.setReplace(true);
+            msg.setItems(basesSorted);
+            msg.setParentCode(group);
+            msg.setQuestionCode(code);
+            msg.setLinkCode(lnkCode);
+            msg.setLinkValue(lnkValue);
+            msg.setReplace(true);
+        }catch(Exception ex) {
+            log.error(ex);
+        }
 
         return msg;
     }
@@ -718,9 +728,6 @@ public class FilterService {
      * @param value Value
      */
     public void sendFilterDetailsByBase(String parentCode,String queCode,String attCode,String value) {
-        List<BaseEntity> baseEntities = new ArrayList<>();
-
-//        String newAttCode = getColumnName(attCode);
         SavedSearch savedSearch = new SavedSearch(attCode,value);
         BaseEntity base = new BaseEntity(attCode);
         String  rowVal = attCode + FilterConst.SEPARATOR + value;
@@ -731,9 +738,21 @@ public class FilterService {
         ea.setValueString(rowVal);
 
         base.addAttribute(ea);
-        baseEntities.add(base);
 
-        sendBaseEntity(baseEntities,parentCode,queCode,false);
+        sendBaseEntity(base,parentCode,queCode);
+    }
+
+    /**
+     * Send base entity
+     * @param baseEntity Base entity
+     */
+    public void sendBaseEntity(BaseEntity baseEntity,String parentCode,String queCode) {
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntity);
+        msg.setToken(userToken.getToken());
+        msg.setParentCode(parentCode);
+        msg.setQuestionCode(queCode);
+        msg.setReplace(true);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
     /**
@@ -789,7 +808,7 @@ public class FilterService {
      * @return Return the link value code
      */
     public String getLinkValueCode(String value) {
-       return  filterUtils.getLinkValueCode(value);
+        return  filterUtils.getLinkValueCode(value);
     }
 
 

@@ -504,7 +504,7 @@ public class FilterGroupService {
         String filterCode = base.getCode();
 
         filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP, FilterConst.QUE_SAVED_SEARCH_LIST,
-                                            FilterConst.PRI_NAME,FilterConst.VALUE);
+                FilterConst.PRI_NAME,FilterConst.VALUE);
     }
 
     /**
@@ -518,9 +518,10 @@ public class FilterGroupService {
         try {
             String prefix = FilterConst.SBE_SAVED_SEARCH + "_";
             BaseEntity defBE = new BaseEntity(prefix);
+            defBE.setRealm(user.getProductCode());
             String baseCode = prefix + UUID.randomUUID().toString();
 
-            //create the main base entity
+            // create the main base entity
             String attCode = FilterConst.LNK_SAVED_SEARCHES;
             Attribute attr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
             defBE.addAttribute(attr, 1.0, FilterConst.SBE_PREF);
@@ -528,19 +529,21 @@ public class FilterGroupService {
 
             Attribute attrFound = qwandaUtils.getAttribute(user.getProductCode(),attCode);
 
+            // array of parameters
             List<String> listUUID = getListUUID(prefix,params.entrySet().size());
-
             String strLnkArr = convertLnkArrayToString(listUUID);
+
             baseEntity.addAttribute(attrFound, 1.0, strLnkArr);
             beUtils.updateBaseEntity(baseEntity);
 
+            // create child base entities
             Attribute childAttr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
             BaseEntity childDefBE = new BaseEntity(prefix);
+            childDefBE.setRealm(user.getProductCode());
             childDefBE.addAttribute(childAttr, 1.0, prefix);
 
             //create other base entities based on the main base entity
             int index = 0;
-//            for(Map.Entry<String,Map<String,String>> entry : params.entrySet()) {
             for(Map.Entry<String,SavedSearch> entry : params.entrySet()) {
                 String childBaseCode = listUUID.get(index);
 

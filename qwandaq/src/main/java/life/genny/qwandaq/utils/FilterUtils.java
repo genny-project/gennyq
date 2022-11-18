@@ -84,7 +84,7 @@ public class FilterUtils {
      * @return Ask
      */
     public Ask getFilterGroup(String questionCode,String filterCode,
-                                        Map<String, Map<String, String>> listParam) {
+                              Map<String, Map<String, String>> listParam) {
         Ask ask = new Ask();
         ask.setName(FilterConst.FILTERS);
 
@@ -236,28 +236,28 @@ public class FilterUtils {
         List<BaseEntity> baseEntities = new ArrayList<>();
 
         searchBE.getBaseEntityAttributes().stream()
-            .filter(e -> e.getAttributeCode().startsWith(FilterConst.FILTER_COL))
-            .forEach(e -> {
-                BaseEntity baseEntity = new BaseEntity();
-                List<EntityAttribute> entityAttributes = new ArrayList<>();
+                .filter(e -> e.getAttributeCode().startsWith(FilterConst.FILTER_COL))
+                .forEach(e -> {
+                    BaseEntity baseEntity = new BaseEntity();
+                    List<EntityAttribute> entityAttributes = new ArrayList<>();
 
-                EntityAttribute ea = new EntityAttribute();
-                String attrCode = e.getAttributeCode().replaceFirst(FilterConst.FILTER_COL, "");
-                ea.setAttributeName(e.getAttributeName());
-                ea.setAttributeCode(attrCode);
+                    EntityAttribute ea = new EntityAttribute();
+                    String attrCode = e.getAttributeCode().replaceFirst(FilterConst.FILTER_COL, "");
+                    ea.setAttributeName(e.getAttributeName());
+                    ea.setAttributeCode(attrCode);
 
-                String baseCode = FilterConst.FILTER_SEL + FilterConst.FILTER_COL + attrCode;
-                ea.setBaseEntityCode(baseCode);
-                ea.setValueString(e.getAttributeName());
+                    String baseCode = FilterConst.FILTER_SEL + FilterConst.FILTER_COL + attrCode;
+                    ea.setBaseEntityCode(baseCode);
+                    ea.setValueString(e.getAttributeName());
 
-                entityAttributes.add(ea);
+                    entityAttributes.add(ea);
 
-                baseEntity.setCode(baseCode);
-                baseEntity.setName(e.getAttributeName());
+                    baseEntity.setCode(baseCode);
+                    baseEntity.setName(e.getAttributeName());
 
-                baseEntity.setBaseEntityAttributes(entityAttributes);
-                baseEntities.add(baseEntity);
-            });
+                    baseEntity.setBaseEntityAttributes(entityAttributes);
+                    baseEntities.add(baseEntity);
+                });
 
         List<BaseEntity> basesSorted =  baseEntities.stream()
                 .sorted(Comparator.comparing(BaseEntity::getName))
@@ -282,7 +282,7 @@ public class FilterUtils {
         base.setLinkValue(FilterConst.LNK_ITEMS);
         base.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
 
-       if (value.contains(FilterConst.DATETIME)){
+        if (value.contains(FilterConst.DATETIME)){
             base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN));
             base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
             base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LESS_THAN));
@@ -371,7 +371,7 @@ public class FilterUtils {
      */
     public SearchEntity getListSavedSearch(String sbeCode,String lnkCode, String lnkValue, boolean isSortedDate) {
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
-        searchBE.add(new Filter(FilterConst.PRI_CODE, Operator.LIKE, FilterConst.SBE_SAVED_SEARCH + "%"))
+        searchBE.add(new Filter(FilterConst.PRI_CODE, Operator.LIKE, FilterConst.SBE_SAVED_SEARCH + "_%"))
                 .add(new Column(lnkCode, lnkValue));
 
         String startWith = "[\"" + FilterConst.SBE_SAVED_SEARCH;
@@ -385,7 +385,7 @@ public class FilterUtils {
         }
 
         searchBE.setRealm(userToken.getProductCode());
-        searchBE.setPageStart(0).setPageSize(20);
+        searchBE.setPageStart(0).setPageSize(100);
 
         return searchBE;
     }
