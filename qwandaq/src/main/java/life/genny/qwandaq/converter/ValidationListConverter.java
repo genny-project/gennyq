@@ -1,18 +1,16 @@
 package life.genny.qwandaq.converter;
 
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.validation.Validation;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.validation.Validation;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Converter
 public class ValidationListConverter implements AttributeConverter<List<Validation>, String> {
@@ -112,7 +110,7 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 */
 	public String[] convertFromString(final String joined) {
 		if (joined.startsWith("[") || joined.startsWith("{")) {
-			return CommonUtils.getArrayFromString(joined, (String obj) -> obj.toString()).toArray(new String[0]);
+			return CommonUtils.getListFromString(joined, (String obj) -> obj).toArray(new String[0]);
 		} else {
 			return new String[] {joined};
 		}

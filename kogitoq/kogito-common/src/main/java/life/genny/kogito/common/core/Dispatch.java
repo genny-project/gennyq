@@ -1,16 +1,24 @@
 package life.genny.kogito.common.core;
 
-import static life.genny.qwandaq.entity.PCM.PCM_TREE;
-
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import life.genny.kogito.common.service.TaskService;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.message.QBulkMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.*;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -18,34 +26,11 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import java.lang.invoke.MethodHandles;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import life.genny.kogito.common.service.TaskService;
-import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.Prefix;
-
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.PCM;
-import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.kafka.KafkaTopic;
-
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.MergeUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
+import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 /**
  * Dispatch
@@ -400,11 +385,6 @@ public class Dispatch {
 		if (ask.hasChildren()) {
 			for (Ask child : ask.getChildAsks())
 				handleDropdownAttributes(child, questionCode, target, msg);
-		}
-
-		if (ask.hasChildren()) {
-			for (Ask child : ask.getChildAsks())
-				handleDropdownAttributes(child, target, msg);
 		}
 
 		// check for dropdown attribute

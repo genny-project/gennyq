@@ -1,36 +1,35 @@
 package life.genny.kogito.common.service;
 
-import life.genny.qwandaq.constants.FilterConst;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.utils.*;
-import org.jboss.logging.Logger;
-
-import javax.inject.Inject;
-import javax.enterprise.context.ApplicationScoped;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
-import java.util.*;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.stream.Collectors;
-
-import life.genny.qwandaq.entity.search.clause.ClauseContainer;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.SearchEntity;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
-import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.SavedSearch;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.*;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.invoke.MethodHandles;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @ApplicationScoped

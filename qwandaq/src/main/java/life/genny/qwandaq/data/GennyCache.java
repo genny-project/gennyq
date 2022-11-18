@@ -76,7 +76,6 @@ public class GennyCache {
 			remoteCacheManager = new RemoteCacheManager(config);
 			remoteCacheManager.getConfiguration().marshallerClass();
 		}
-
 	}
 
 	/**
