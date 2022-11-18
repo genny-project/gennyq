@@ -14,7 +14,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.serialization.adapters.CapabilityAdapter;
 import life.genny.qwandaq.utils.CommonUtils;
@@ -111,8 +110,10 @@ public class Capability implements Serializable {
     /**
      * Check if this capability has at least one or all of the given nodes in the <b>checkSet</b>
      * @param hasAll - whether or not to check if this capability has all of the nodes in the check set or at least one
-     * @param checkSet - the 
-     * @return
+     * @param checkSet - the set of nodes to check the capabilities
+     * @return whether or not this capability object meets the requirements of the checkSet
+     * 
+     * @see {@link CapabilitiesManager#checkCapability(EntityAttribute, boolean, CapabilityNode...)}
      */
 	public boolean checkPerms(boolean hasAll, CapabilityNode... checkSet) {
 		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet)) {
@@ -124,6 +125,14 @@ public class Capability implements Serializable {
         }
 	}
 
+    /**
+     * Check if this capability has at least one or all of the given nodes in the <b>checkSet</b>
+     * @param hasAll - whether or not to check if this capability has all of the nodes in the check set or at least one
+     * @param checkSet - the set of nodes to check the capabilities
+     * @return whether or not this capability object meets the requirements of the checkSet
+     * 
+     * @see {@link CapabilitiesManager#checkCapability(EntityAttribute, boolean, CapabilityNode...)}
+     */
     public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
         return CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]));
     }
