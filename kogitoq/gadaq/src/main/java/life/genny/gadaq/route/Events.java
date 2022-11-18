@@ -21,13 +21,17 @@ import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 /**
  * Events
@@ -40,6 +44,12 @@ public class Events {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	DatabaseUtils dbUtils;
+
+	@Inject
+	DefUtils defUtils;
 
 	@Inject
 	KogitoUtils kogitoUtils;
@@ -160,14 +170,15 @@ public class Events {
 		}
 
 		// add item
-		if (code.startsWith("QUE_ADD_")) {
+		if (code.startsWith("QUE_ADD")) {
 			code = StringUtils.removeStart(code, "QUE_ADD");
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF + code + ":PREFIX", String.class);
+			String defCode = Prefix.DEF.concat(code);
+			String prefix = CacheUtils.getObject(userToken.getProductCode(), defCode + ":PREFIX", String.class);
 
 			log.info("Prefix: " + code);
 			if (Prefix.PER.equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
+						.add("definitionCode", defCode)
 						.add("sourceCode", userToken.getUserCode())
 						.build();
 
@@ -180,10 +191,12 @@ public class Events {
 		if ("ACT_EDIT".equals(code)) {
 
 			// if (parentCode.startsWith("SBE_")) {
+			// BaseEntity target = dbUtils.findBaseEntityByCode(userToken.getProductCode(), msg.getData().getTargetCode());
+			// BaseEntity def = defUtils.getDEF(target);
 			JsonObject payload = Json.createObjectBuilder()
 					.add("questionCode", "QUE_BASEENTITY_GRP")
 					.add("sourceCode", userToken.getUserCode())
-					.add("targetCode", msg.getData().getTargetCode())
+					.add("targetCode", targetCode)
 					.add("pcmCode", "PCM_FORM")
 					.add("buttonEvents", "Cancel,Update,Submit")
 					.build();

@@ -163,6 +163,7 @@ public class DefUtils {
 		log.info("Detected combination DEF - " + mergedCode);
 
 		// reverse order and begin filling new def
+		// TODO: Could/Should use a stack here
 		Collections.reverse(codes);
 		for (String code : codes) {
 
