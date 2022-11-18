@@ -76,7 +76,7 @@ public class SearchService {
 		String userCode = userToken.getUserCode();
 		PCM pcm = beUtils.getPCM(PCM.PCM_TABLE);
 		pcm.setLocation(1, searchCode);
-		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, "PRI_LOC1");
+		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, PCM.location(1));
 	}
 
 	/**
@@ -92,16 +92,11 @@ public class SearchService {
 		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF);
 
 		// construct template and question codes from type
-		String template = Prefix.TPL + type + "_DETAIL_VIEW";
-		String questionCode = Prefix.QUE + type + "_PROFILE";
+		String pcmCode = Prefix.PCM + type + "_DETAIL_VIEW";
 
 		// send pcm with correct info
 		String userCode = userToken.getUserCode();
-		PCM pcm = beUtils.getPCM(PCM.PCM_DETAIL_VIEW);
-		pcm.setTemplateCode(template);
-		pcm.setQuestionCode(questionCode);
-
-		tasks.dispatch(userCode, targetCode, pcm, PCM_CONTENT, "PRI_LOC1");
+		tasks.dispatch(userCode, targetCode, pcmCode, PCM_CONTENT, PCM.location(1));
 	}
 
 	/**
@@ -152,3 +147,4 @@ public class SearchService {
 	}
 
 }
+
