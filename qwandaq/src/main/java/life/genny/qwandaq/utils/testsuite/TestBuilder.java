@@ -1,10 +1,8 @@
-package life.genny.test.utils.suite;
+package life.genny.qwandaq.utils.testsuite;
 
 
-import life.genny.test.utils.callbacks.test.FITestCallback;
-import life.genny.test.utils.callbacks.test.FITestVerificationCallback;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import life.genny.qwandaq.utils.callbacks.testing.FITestCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FITestVerificationCallback;
 
 public class TestBuilder<I, E> {
 
@@ -78,10 +76,6 @@ public class TestBuilder<I, E> {
             throw new IllegalArgumentException("No Expected result set for test: " + name);
         }
 
-        return new TestCase<I, E>(name, input, expected, testCallback, verificationCallback != null ? verificationCallback : TestBuilder::defaultAssertion);
-    }
-
-    private static <E> void defaultAssertion(E result, E expected) {
-        assertEquals(expected, result);
+        return new TestCase<I, E>(name, input, expected, testCallback, verificationCallback != null ? verificationCallback : tester.verificationCallback);
     }
 }

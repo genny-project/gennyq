@@ -1,4 +1,4 @@
-package life.genny.qwandaq.entity;
+package life.genny.qwandaq.entity.search;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTransient;
 
 import org.jboss.logging.Logger;
 
@@ -18,7 +19,7 @@ import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
-
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
@@ -660,5 +661,10 @@ public class SearchEntity extends BaseEntity {
 		}
 
 		return this;
+	}
+
+	@JsonbTransient
+	public Map<Class<? extends Trait>, List<? extends Trait>> getTraitMap() {
+		return traits;
 	}
 }

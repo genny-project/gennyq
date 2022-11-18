@@ -1,4 +1,4 @@
-package life.genny.qwandaq.test;
+package life.genny.qwandaq.loadtesting;
 
 public class TestCase<Input, Expected> {
     public final Input input;

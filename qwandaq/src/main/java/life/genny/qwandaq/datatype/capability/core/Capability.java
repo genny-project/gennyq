@@ -7,12 +7,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.json.bind.annotation.JsonbTypeAdapter;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.serialization.adapters.CapabilityAdapter;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /**
@@ -21,13 +25,18 @@ import life.genny.qwandaq.utils.CommonUtils;
  * 
  * @author Bryn Meachem
  */
+@JsonbTypeAdapter(CapabilityAdapter.class)
 @RegisterForReflection
 public class Capability implements Serializable {
     
-    public final String code;
+    public String code;
 
-    // TODO: Consider the use of an Enum Map here
-    public final Set<CapabilityNode> nodes;
+    public Set<CapabilityNode> nodes;
+
+    public Capability() {
+        code="JSON-CONSTRUCTED";
+        nodes=new HashSet<>();
+    }
 
     public Capability(String capabilityCode, Set<CapabilityNode> nodes) {
         this.code = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
@@ -101,13 +110,15 @@ public class Capability implements Serializable {
 
     public boolean checkPerms(boolean hasAll, Capability cap) {
         System.out.println("Checking " + (hasAll ? "hasAll" : "") + cap);
+        if(cap.nodes == null || cap.nodes.isEmpty())
+            throw new RuntimeException("Tried to check capability: " + cap);
         if(!code.equals(cap.code))
             return false;
         return checkPerms(hasAll, cap.nodes);
     }
 
-	public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
-		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]))) {
+	public boolean checkPerms(boolean hasAll, CapabilityNode... checkSet) {
+		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet)) {
             System.out.println("Passed Capability check: " + CommonUtils.getArrayString(checkSet));
             return true;
         } else {
@@ -116,8 +127,8 @@ public class Capability implements Serializable {
         }
 	}
 
-    public boolean checkPerms(boolean hasAll, CapabilityNode... nodes) {
-        return CapabilitiesManager.checkCapability(this.nodes, hasAll, nodes);
+    public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
+        return CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]));
     }
 
     public static Capability getFromEA(EntityAttribute ea) {
