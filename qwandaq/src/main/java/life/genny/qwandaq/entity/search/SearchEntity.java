@@ -628,4 +628,28 @@ public class SearchEntity extends BaseEntity {
 	public TraitMap getTraitMap() {
 		return traits;
 	}
+
+	/**
+	 * Remove filter object from clause container
+	 * @param filter Filter object
+	 * @return Search entity after removing filter
+	 */
+	public SearchEntity remove(Filter filter) {
+		boolean found = false;
+		int index = 0;
+
+		for(ClauseContainer clause : this.clauseContainers) {
+			if(clause.getFilter().getCode().equalsIgnoreCase(filter.getCode())
+					&& clause.getFilter().getOperator().name().equalsIgnoreCase(filter.getOperator().name())) {
+				found = true;break;
+			}
+			index++;
+		}
+
+		if(found) {
+			this.clauseContainers.remove(index);
+		}
+
+		return this;
+	}
 }

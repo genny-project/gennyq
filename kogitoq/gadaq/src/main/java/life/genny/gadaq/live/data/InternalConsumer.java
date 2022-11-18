@@ -30,6 +30,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import life.genny.gadaq.search.FilterGroupService;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -52,6 +53,10 @@ public class InternalConsumer {
 
 	@Inject
 	Events events;
+
+	@Inject
+	FilterGroupService filter;
+
 
 	/**
 	 * Execute on start up.
@@ -132,9 +137,40 @@ public class InternalConsumer {
 			return;
 		}
 		events.route(msg);
+
+		if(filter.isFilterBtn(msg)) {
+			filter.handleBtnEvents(msg);
+		}
+
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
+	@Incoming("data")
+	@Blocking
+	public void getEventData(String event) {
+		// init scope and process msg
+		Instant start = Instant.now();
+
+		log.info("Received Event : " + SecurityUtils.obfuscate(event));
+
+		QDataAnswerMessage msg = null;
+		try {
+			msg = jsonb.fromJson(event, QDataAnswerMessage.class);
+		} catch (Exception e) {
+			log.error("Cannot parse this event! " + event);
+			e.printStackTrace();
+			return;
+		}
+
+		scope.init(event);
+		if(filter.isValidEvent(msg)){
+			filter.handleDataEvents(msg);
+		}
+		scope.destroy();
+
+		Instant end = Instant.now();
+		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+	}
 }
