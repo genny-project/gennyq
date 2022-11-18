@@ -8,8 +8,9 @@ import javax.inject.Inject;
 import static life.genny.gadaq.constants.GadaQConstants.*;
 import life.genny.qwandaq.entity.search.trait.*;
 import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.serviceq.Service;
 

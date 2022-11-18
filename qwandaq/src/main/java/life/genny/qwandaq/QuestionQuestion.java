@@ -32,6 +32,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 import org.apache.commons.lang3.builder.CompareToBuilder;
 
@@ -45,7 +46,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 })
 @Cacheable
 @RegisterForReflection
-public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
+public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
 
 	private static final long serialVersionUID = 1L;
 

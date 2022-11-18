@@ -1,10 +1,10 @@
-package life.genny.qwandaq.test;
+package life.genny.qwandaq.loadtesting;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.message.QSearchMessage;
 
 public class TestJob {

@@ -1,16 +1,24 @@
-package life.genny.test.utils.suite;
+package life.genny.qwandaq.utils.testsuite;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import life.genny.test.utils.callbacks.test.FITestCallback;
-import life.genny.test.utils.callbacks.test.FITestVerificationCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FITestCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FITestVerificationCallback;
 
 public class JUnitTester<I, E> {
     public FITestCallback<Input<I>, Expected<E>> testCallback;
     public FITestVerificationCallback<E> verificationCallback;
 
     private final List<TestCase<I,E>> tests = new ArrayList<>();
+
+    public JUnitTester() {
+        this(JUnitTester::defaultAssertion);
+    }
+
+    public JUnitTester(FITestVerificationCallback<E> verificationCallback) {
+        setVerification(verificationCallback);
+    }
 
     public JUnitTester<I, E> setTest(FITestCallback<Input<I>, Expected<E>> testCallback) {
         this.testCallback = testCallback;
@@ -39,5 +47,19 @@ public class JUnitTester<I, E> {
         tests.clear();
         return this;
     }
+    
+    public static <E> void defaultAssertion(E result, E expected) {
+        if(!objectsAreEqual(result, expected))
+            throw new AssertionError("Got: " + result + ". Expected: " + expected);
+        
+    }
 
+
+    // pulled from junit api
+    private static boolean objectsAreEqual(Object obj1, Object obj2) {
+		if (obj1 == null) {
+			return (obj2 == null);
+		}
+		return obj1.equals(obj2);
+	}
 }

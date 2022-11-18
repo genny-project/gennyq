@@ -75,4 +75,8 @@ public abstract class Manager {
 	protected void error(Object o) {
 		log(o, log::error);
 	}
+	
+	protected void trace(Object o) {
+		log(o, log::trace);
+	}
 }

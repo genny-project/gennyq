@@ -66,6 +66,7 @@ import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
@@ -81,7 +82,7 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
+public class EntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 

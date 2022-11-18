@@ -38,7 +38,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.EntityEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
@@ -131,7 +131,7 @@ public class FyodorUltra {
 
 		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
 		log.info("Applying capabilities...");
-
+		log.info("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
 		capHandler.refineFiltersFromCapabilities(searchEntity);
 		capHandler.refineSortsFromCapabilities(searchEntity);
