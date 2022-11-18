@@ -11,6 +11,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.gadaq.search.FilterGroupService;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -27,6 +28,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import org.kie.dmn.model.v1_4.TFilter;
 
 /**
  * Events
@@ -51,6 +53,9 @@ public class Events {
 	SearchService search;
 	@Inject
 	TaskService tasks;
+
+	@Inject
+	FilterGroupService filter;
 
 	/**
 	 * @param msg
@@ -142,6 +147,7 @@ public class Events {
 
 		// table view (Default View Mode)
 		if (code.startsWith("QUE_TABLE_")) {
+			filter.init(code);
 			search.sendTable(code);
 			return;
 		}
