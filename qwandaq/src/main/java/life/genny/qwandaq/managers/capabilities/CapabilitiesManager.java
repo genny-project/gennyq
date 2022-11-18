@@ -84,17 +84,13 @@ public class CapabilitiesManager extends Manager {
 		if(!roles.isEmpty()) {
 			info("User Roles:");
 			BaseEntity role = roles.get(0);
-			info("		- " + role.getCode());
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
 				role = roles.get(i);
 				CapabilitySet roleCaps = getEntityCapabilities(role);
-				info("		- " + role.getCode() + "(" + roleCaps.size() + " capabilities)");
 				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
-				info("			Capabilities:");
 				for(Capability cap : roleCaps) {
-					info("			- " + cap);
 					// Find preexisting capability. If it exists, merge the Nodes in the way that
 					// grants the most permission possible
 					Capability preexistingCap = cap.hasCodeInSet(capabilities);
@@ -103,7 +99,6 @@ public class CapabilitiesManager extends Manager {
 						cap = preexistingCap.merge(cap, true);
 					}
 					capabilities.add(cap);
-					System.out.println("	[!] " + cap.code + " = " + cap.nodeString());
 				}
 			}
 		} else {
@@ -142,12 +137,16 @@ public class CapabilitiesManager extends Manager {
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
+		info("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
 		}
 		CapabilitySet cSet = new CapabilitySet(target);
 		cSet.addAll(capabilities.stream()
-			.map((EntityAttribute ea) -> Capability.getFromEA(ea))
+			.map((EntityAttribute ea) -> {
+				System.out.println("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
+				return Capability.getFromEA(ea);
+			})
 			.collect(Collectors.toSet()));
 		return cSet;
 	}

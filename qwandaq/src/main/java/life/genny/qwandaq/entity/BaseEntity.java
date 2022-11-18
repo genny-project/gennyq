@@ -64,6 +64,7 @@ import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FilterDef;
@@ -112,7 +113,7 @@ import org.jboss.logging.Logger;
 @Cacheable
 @RegisterForReflection
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabilityFilterable {
+public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabilityHiddenFilterable {
 
 	@Transient
 	private static final long serialVersionUID = 1L;

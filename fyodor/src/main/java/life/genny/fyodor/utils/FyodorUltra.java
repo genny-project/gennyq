@@ -131,7 +131,7 @@ public class FyodorUltra {
 
 		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
 		log.info("Applying capabilities...");
-
+		log.info("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
 		capHandler.refineFiltersFromCapabilities(searchEntity);
 		capHandler.refineSortsFromCapabilities(searchEntity);

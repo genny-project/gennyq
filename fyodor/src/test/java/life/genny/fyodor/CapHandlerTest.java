@@ -87,7 +87,11 @@ public class CapHandlerTest {
     public void useCaseTests() {
 
         setTestCaps(
-            new CapabilityBuilder("CAP_PROPERTY").view(ALL).buildCap()
+            CapabilityBuilder.code("CAP_PROPERTY").view(ALL).buildCap(),
+            CapabilityBuilder.code("CAP_DASHBOARD_VIEW").view(ALL).buildCap(),
+            CapabilityBuilder.code("CAP_ACTION_APPLY").view(ALL).buildCap(),
+            CapabilityBuilder.code("CAP_PROPERTY_VIEW").view(ALL).buildCap(),
+            CapabilityBuilder.code("CAP_TENANT").view(SELF).buildCap()
         );
         ReqConfig reqCon = new ReqConfig(USER_TEST_CAPS);
 

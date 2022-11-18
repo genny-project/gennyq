@@ -12,6 +12,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -24,9 +25,14 @@ import life.genny.qwandaq.utils.CommonUtils;
 @RegisterForReflection
 public class Capability implements Serializable {
     
-    public final String code;
+    public String code;
 
-    public final Set<CapabilityNode> nodes;
+    public Set<CapabilityNode> nodes;
+
+    public Capability() {
+        code="JSON-CONSTRUCTED";
+        nodes=new HashSet<>();
+    }
 
     public Capability(String capabilityCode, Set<CapabilityNode> nodes) {
         this.code = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
@@ -100,6 +106,8 @@ public class Capability implements Serializable {
 
     public boolean checkPerms(boolean hasAll, Capability cap) {
         System.out.println("Checking " + (hasAll ? "hasAll" : "") + cap);
+        if(cap.nodes == null || cap.nodes.isEmpty())
+            throw new RuntimeException("Tried to check capability: " + cap);
         if(!code.equals(cap.code))
             return false;
         return checkPerms(hasAll, cap.nodes);

@@ -27,6 +27,7 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
@@ -85,7 +86,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 
 @RegisterForReflection
-public class Question extends CodedEntity implements ICapabilityFilterable {
+public class Question extends CodedEntity implements ICapabilityHiddenFilterable {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 

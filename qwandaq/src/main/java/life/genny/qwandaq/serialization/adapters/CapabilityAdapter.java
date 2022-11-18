@@ -5,32 +5,58 @@ import java.util.Iterator;
 import java.util.Set;
 
 import javax.json.Json;
-import javax.json.JsonValue;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
 import javax.json.bind.adapter.JsonbAdapter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.serialization.adapters.CapabilityAdapter;
 
 
-public class CapabilityAdapter implements JsonbAdapter<Set<Capability>, JsonValue> {
+public class CapabilityAdapter implements JsonbAdapter<Set<Capability>, JsonArray> {
     private static final String CAPABILITY_DELIMITER = "  ";
 	private static final String ARRAY_START = "[";
-	private static final Logger log = Logger.getLogger(CapabilitiesManager.class);
+	private static final Logger log = Logger.getLogger(CapabilityAdapter.class);
 
     // Method handles
     @Override
-    public JsonValue adaptToJson(Set<Capability> deserializedSet) throws Exception {
-        return Json.createValue(convertToDBColumn(deserializedSet));
+    public JsonArray adaptToJson(Set<Capability> deserializedSet) throws Exception {
+        JsonArrayBuilder array = Json.createArrayBuilder();
+        for(Capability cap : deserializedSet) {
+            array.add(adaptOneToJson(cap));
+        }
+        return array.build();
+    }
+
+    private JsonObject adaptOneToJson(Capability capability) {
+        JsonObject obj = Json.createObjectBuilder()
+            .add("code", capability.code)
+            .add("nodes", capability.nodeString())
+            .build();
+
+        return obj;
     }
 
     @Override
-    public Set<Capability> adaptFromJson(JsonValue serializedSet) throws Exception {
+    public Set<Capability> adaptFromJson(JsonArray serializedSet) throws Exception {
+        Set<Capability> caps = new HashSet<>(serializedSet.size());
+        for(int i = 0; i < serializedSet.size(); i++) {
+            caps.add(adaptOneFromJson(serializedSet.getJsonObject(i)));
+        }
         return convertToEA(serializedSet.toString());
+    }
+
+    private Capability adaptOneFromJson(JsonObject capJson) {
+        String code = capJson.getString("code");
+        Set<CapabilityNode> nodes = CapabilitiesManager.deserializeCapSet(capJson.getString("nodes"));
+        return new Capability(code, nodes);
     }
 
 

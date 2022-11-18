@@ -18,6 +18,7 @@ import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * CapHandler
@@ -106,6 +107,8 @@ public class CapHandler extends Manager {
 		if(!isService) {
 			// TODO: Move this call
 			ReqConfig reqConfig = capMan.getUserCapabilities();
+			getLogger().info("Checking: " + trait);
+			getLogger().info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
 			return trait.requirementsMet(reqConfig); //traitCapabilitiesMet(reqConfig, trait);
 		}
 		// TODO: implement capabilities
