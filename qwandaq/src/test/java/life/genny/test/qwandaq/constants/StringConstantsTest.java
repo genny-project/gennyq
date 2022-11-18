@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.BaseTestCase;
@@ -21,6 +22,11 @@ public class StringConstantsTest extends BaseTestCase {
             
             .createTest("Attribute Code Constants")
             .setInput(Attribute.class)
+            .setExpected(true)
+            .build()
+
+            .createTest("Question Code Constants")
+            .setInput(Question.class)
             .setExpected(true)
             .build()
 
