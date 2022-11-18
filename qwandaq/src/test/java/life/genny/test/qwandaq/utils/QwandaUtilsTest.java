@@ -1,15 +1,11 @@
 package life.genny.test.qwandaq.utils;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.junit.jupiter.api.Test;
 
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -20,8 +16,6 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 public class QwandaUtilsTest extends BaseTestCase {
-
-	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -81,6 +75,7 @@ public class QwandaUtilsTest extends BaseTestCase {
 
 		BaseEntity nonFilled = new BaseEntity(PER_TARGET);
 		nonFilled.addAttribute(new EntityAttribute(nonFilled, firstName, 1.0, "Boris"));
+		nonFilled.addAttribute(new EntityAttribute(nonFilled, lastName, 1.0, null));
 
         new JUnitTester<BaseEntity, Boolean>()
             .setTest((input) -> {

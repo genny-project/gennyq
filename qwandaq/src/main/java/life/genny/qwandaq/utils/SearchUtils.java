@@ -753,7 +753,7 @@ public class SearchUtils {
 	 */
 	public String getHtmlByFilterParam(Map<String, String> filterParams) {
 		String attrCode = getFilterParamValByKey(filterParams, GennyConstants.ATTRIBUTECODE)
-				.replaceFirst(Attribute.DEFAULT_CODE_PREFIX, "");
+				.replaceFirst(Prefix.PRI, "");
 
 		String attrName = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_OPTION);
 		String value = getFilterParamValByKey(filterParams, GennyConstants.QUE_FILTER_VALUE);

@@ -27,6 +27,7 @@ import io.quarkus.arc.Arc;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
@@ -688,9 +689,9 @@ public class BaseEntityUtils {
 		// attribute
 		// is already stored in the entity attribute?
 		// ACC: not quite, it is the DEF 'ATT' attribute, not the real one
-		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
+		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes(Prefix.ATT);
 		for (EntityAttribute ea : atts) {
-			String attrCode = ea.getAttributeCode().substring("ATT_".length());
+			String attrCode = ea.getAttributeCode().substring(Prefix.ATT.length());
 			Attribute attribute = qwandaUtils.getAttribute(attrCode);
 
 			if (attribute == null) {
@@ -721,11 +722,11 @@ public class BaseEntityUtils {
 			}
 		}
 
-		Attribute linkDef = qwandaUtils.getAttribute("LNK_DEF");
+		Attribute linkDef = qwandaUtils.getAttribute(Attribute.LNK_DEF);
 		item.addAnswer(new Answer(item, item, linkDef, "[\"" + defBE.getCode() + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = qwandaUtils.getAttribute("LNK_AUTHOR");
+		Attribute lnkAuthorAttr = qwandaUtils.getAttribute(Attribute.LNK_AUTHOR);
 		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item);
@@ -769,7 +770,7 @@ public class BaseEntityUtils {
 
 		BaseEntity item = null;
 		String uuid = null;
-		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
+		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 
 		if (uuidEA.isEmpty()) {
 			throw new DebugException("Passed defBE is not a user def!" + defBE.getCode());
@@ -781,7 +782,7 @@ public class BaseEntityUtils {
 
 		// this is a user, generate keycloak id
 		uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
-		Optional<String> optCode = defBE.getValue("PRI_PREFIX");
+		Optional<String> optCode = defBE.getValue(Attribute.PRI_PREFIX);
 
 		if (optCode.isEmpty()) {
 			throw new DebugException("Prefix not provided" + defBE.getCode());
@@ -796,19 +797,15 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = qwandaUtils.getAttribute("PRI_EMAIL");
+			Attribute emailAttribute = qwandaUtils.getAttribute(Attribute.PRI_EMAIL);
 			item.addAnswer(new Answer(item, item, emailAttribute, email));
-			Attribute usernameAttribute = qwandaUtils.getAttribute("PRI_USERNAME");
+			Attribute usernameAttribute = qwandaUtils.getAttribute(Attribute.PRI_USERNAME);
 			item.addAnswer(new Answer(item, item, usernameAttribute, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = qwandaUtils.getAttribute("PRI_UUID");
+		Attribute uuidAttribute = qwandaUtils.getAttribute(Attribute.PRI_UUID);
 		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
-
-		// keycloak UUID
-		Attribute keycloakAttribute = qwandaUtils.getAttribute("PRI_KEYCLOAK_UUID");
-		item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
 
 		return item;
 	}
