@@ -18,6 +18,7 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -329,11 +330,11 @@ public class DefUtils {
 		String attributeCode = answer.getAttributeCode();
 
 		// allow if it is Capability saved to a Role
-		if (targetCode.startsWith("ROL_") && attributeCode.startsWith("PRM_")) {
+		if (targetCode.startsWith(Prefix.ROL) && attributeCode.startsWith(Prefix.CAP)) {
 			return true;
-		} else if (targetCode.startsWith("SBE_")
-				&& (attributeCode.startsWith("COL_") || attributeCode.startsWith("CAL_")
-						|| attributeCode.startsWith("SRT_") || attributeCode.startsWith("ACT_"))) {
+		} else if (targetCode.startsWith(Prefix.SBE)
+				&& (attributeCode.startsWith(Prefix.COL) || attributeCode.startsWith("CAL_")
+						|| attributeCode.startsWith("SRT_") || attributeCode.startsWith(Prefix.ACT))) {
 			return true;
 		}
 
