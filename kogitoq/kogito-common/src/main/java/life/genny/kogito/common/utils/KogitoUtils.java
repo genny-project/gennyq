@@ -75,8 +75,14 @@ public class KogitoUtils {
 	BaseEntityService baseEntityService;
 
 	public static enum UseService {
-		SELF,
-		GADAQ,
+		SELF(GennySettings.gadaqServiceUrl()),
+		GADAQ(GennySettings.kogitoServiceUrl());
+		
+		private UseService(String serviceURI) {
+			this.serviceURI = serviceURI;
+		}
+
+		public final String serviceURI;
 	}
 
 	/**
@@ -144,7 +150,7 @@ public class KogitoUtils {
 	public String sendSignal(final UseService useService, final String workflowId, final String processId,
 			final String signal, final String payload) {
 
-		String uri = selectServiceURI(useService) + "/" + workflowId + "/" + processId + "/" + signal;
+		String uri = useService.serviceURI + "/" + workflowId + "/" + processId + "/" + signal;
 		log.info("Sending Signal to uri: " + uri);
 
 		HttpResponse<String> response = HttpUtils.post(uri, payload, "application/json", userToken);
@@ -233,7 +239,7 @@ public class KogitoUtils {
 		json = builder.build();
 
 		// select uri
-		String uri = selectServiceURI(useService) + "/" + id;
+		String uri = useService.serviceURI + "/" + id;
 		log.info("Triggering workflow with uri: " + uri);
 
 		// make post request
@@ -253,22 +259,6 @@ public class KogitoUtils {
 
 		// return the processId
 		return result.getString("id");
-	}
-
-	/**
-	 * Helper function for selecting a uri
-	 * 
-	 * @param useService The Service enum
-	 */
-	public String selectServiceURI(final UseService useService) {
-
-		switch (useService) {
-			case GADAQ:
-				return GennySettings.gadaqServiceUrl();
-			case SELF:
-			default:
-				return GennySettings.kogitoServiceUrl();
-		}
 	}
 
 	/**

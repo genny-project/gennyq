@@ -176,21 +176,22 @@ public class Events {
 		}
 
 		// edit item
-		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
+		if ("ACT_EDIT".equals(code)) {
 
-			if (parentCode.startsWith("SBE_")) {
-				JsonObject payload = Json.createObjectBuilder()
-						.add("questionCode", "QUE_BASEENTITY_GRP")
-						.add("userCode", userToken.getUserCode())
-						.add("sourceCode", userToken.getUserCode())
-						.add("targetCode", msg.getData().getTargetCode())
-						.build();
-				kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
-				return;
-			}
-
-			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
+			// if (parentCode.startsWith("SBE_")) {
+			JsonObject payload = Json.createObjectBuilder()
+					.add("questionCode", "QUE_BASEENTITY_GRP")
+					.add("userCode", userToken.getUserCode())
+					.add("targetCode", msg.getData().getTargetCode())
+					.add("pcmCode", "PCM_FORM")
+					.add("buttonEvents", "Cancel,Update,Submit")
+					.build();
+			kogitoUtils.triggerWorkflow(SELF, "callProcessQuestions", payload);
 			return;
+			// }
+
+			// kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
+			// return;
 		}
 
 		/**
