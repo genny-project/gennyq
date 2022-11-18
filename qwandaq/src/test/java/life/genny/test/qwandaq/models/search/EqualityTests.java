@@ -5,14 +5,14 @@ import org.junit.jupiter.api.Test;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.Trait;
+
 import life.genny.qwandaq.utils.testsuite.Expected;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
-import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 
 public class EqualityTests {
-    
+
     @Test
     public void traitEqualityTests() {
         new JUnitTester<Trait[], Boolean>()

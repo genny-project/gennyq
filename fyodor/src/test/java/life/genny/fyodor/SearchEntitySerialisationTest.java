@@ -21,7 +21,8 @@ public class SearchEntitySerialisationTest {
     @Test
     public void serialiseTrait() {
         Trait action = new Action("EDIT", "EDIT")
-            .addCapabilityRequirement(CapabilityBuilder.code("CAP_PROPERTY").edit(ALL).buildCap());
+            .addCapabilityRequirement(CapabilityBuilder.code("CAP_PROPERTY").edit(ALL).buildCap())
+            .addCapabilityRequirement(CapabilityBuilder.code("CAP_IRVAN").add(SELF).edit(NONE).view(ALL).buildCap());
 
         SearchEntity entity = new SearchEntity("PROP_SEARCH", "Property")
         .add(action);

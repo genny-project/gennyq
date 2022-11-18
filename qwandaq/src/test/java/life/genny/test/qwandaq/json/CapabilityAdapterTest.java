@@ -20,6 +20,7 @@ public class CapabilityAdapterTest extends SerialisationTest<Capability> {
         .setTest((input) -> {
             Capability inputCap = input.input;
             String json = jsonb.toJson(inputCap);
+            System.out.println("Serialized as: " + json);
             Capability outputCap = jsonb.fromJson(json, Capability.class);
 
             return new Expected<>(outputCap);

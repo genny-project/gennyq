@@ -225,8 +225,13 @@ public class AnswerLink implements java.io.Serializable {
 
 			case "java.lang.Integer":
 			case "Integer":
-				Integer integer = Integer.parseInt(result);
-				setValueInteger(integer);
+				try {
+					Integer integer = Integer.parseInt(result);
+					setValueInteger(integer);
+				} catch(NumberFormatException e) {
+					log.error("[!] Error converting value to integer: " + result);
+					log.error("[!] Not a number! Please set the validations properly to ensure this doesn't happen");
+				}
 				break;
 
 			case "java.time.LocalDateTime":
