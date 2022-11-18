@@ -4,8 +4,6 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +17,6 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -28,20 +25,17 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
-
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
-
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -165,13 +159,14 @@ public class Dispatch {
 	 * @param msg
 	 * @return
 	 */
-	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks, ProcessData processData) {
+	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks) {
 
-		// only build processEntity if answers are expected
-		findReadonlyAttributeCodes(flatMapOfAsks, processData);
-		List<String> attributeCodes = processData.getAttributeCodes();
-		log.info("Non-Readonly Attributes: " + attributeCodes);
-		return !attributeCodes.isEmpty();
+		for (Ask ask : flatMapOfAsks.values()) {
+			if (!ask.getReadonly())
+				return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -216,26 +211,9 @@ public class Dispatch {
 		msg.getAsks().addAll(asks);
 
 		// filter unwanted attributes
-		List<String> attributeCodes = processData.getAttributeCodes();
-		privacyFilter(processEntity, attributeCodes);
 		log.info("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
 
 		return processEntity;
-	}
-
-	/**
-	 * @param map
-	 * @param processData
-	 */
-	public void findReadonlyAttributeCodes(Map<String, Ask> map, ProcessData processData) {
-
-		log.info("Finding non readonlys");
-		for (Ask ask : map.values()) {
-			log.info("Looking at ask: " + ask.getQuestion().getCode() + ", readonly: " + ask.getReadonly());
-			// add to active attrbute codes if answer expected
-			if (!ask.getReadonly())
-				processData.getAttributeCodes().add(ask.getQuestion().getAttribute().getCode());
-		}
 	}
 
 	/**
@@ -273,7 +251,6 @@ public class Dispatch {
 			return;
 		}
 		log.info("Traversing " + pcm.getCode());
-		log.info(jsonb.toJson(pcm));
 
 		// check for a question code
 		Ask ask = null;
@@ -381,7 +358,6 @@ public class Dispatch {
 	public void handleDropdownAttributes(Ask ask, String parentCode, BaseEntity target, QBulkMessage msg) {
 
 		String questionCode = ask.getQuestion().getCode();
-		log.info("Ask: " + questionCode + ", parentCode: " + parentCode);
 
 		// recursion
 		if (ask.hasChildren()) {

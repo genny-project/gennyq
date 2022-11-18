@@ -413,34 +413,19 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Get all attribute codes active within an ask using recursion.
+	 * Perform basic code checks on attribute code.
 	 *
-	 * @param codes The set of codes to add to
-	 * @param ask   The ask to traverse
-	 * @return The udpated set of codes
+	 * @param code An attribute code
+	 * @return boolean
 	 */
-	public Set<String> recursivelyGetAttributeCodes(Set<String> codes, Ask ask) {
+	public static boolean attributeCodeMeetsBasicRequirements(String code) {
 
-		String code = ask.getQuestion().getAttribute().getCode();
+		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4)))
+			return false;
+		else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code))
+			return false;
 
-		// grab attribute code of current ask if conditions met
-		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
-			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));
-		} else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
-			log.debugf("Attribute %s in exclude list", code);
-		} else if (ask.getReadonly()) {
-			log.debugf("Ask %s is set to readonly", ask.getQuestion().getCode());
-		} else {
-			codes.add(code);
-		}
-
-		// grab all child ask attribute codes
-		if (ask.hasChildren()) {
-			for (Ask childAsk : ask.getChildAsks()) {
-				codes.addAll(recursivelyGetAttributeCodes(codes, childAsk));
-			}
-		}
-		return codes;
+		return true;
 	}
 
 	/**
@@ -520,7 +505,7 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
 		Boolean answered = true;
@@ -529,6 +514,7 @@ public class QwandaUtils {
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 
 			String attributeCode = ea.getAttributeCode();
+
 			Ask ask = map.get(attributeCode);
 			if (ask == null)
 				continue;
