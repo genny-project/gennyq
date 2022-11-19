@@ -473,8 +473,8 @@ public class Dispatch {
 		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 
 		baseEntities.stream().forEach(entity -> {
-			MergeUtils.mergeBaseEntity(entity, contexts);
 			entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
+			MergeUtils.mergeBaseEntity(entity, contexts);
 		});
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntities);
