@@ -470,7 +470,10 @@ public class Dispatch {
 		Map<String, Object> contexts = new HashMap<>();
 		contexts.put("USER", beUtils.getUserBaseEntity());
 
+		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
+
 		baseEntities.stream().forEach(entity -> {
+			entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
 			MergeUtils.mergeBaseEntity(entity, contexts);
 		});
 
