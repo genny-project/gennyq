@@ -470,8 +470,11 @@ public class Dispatch {
 		Map<String, Object> contexts = new HashMap<>();
 		contexts.put("USER", beUtils.getUserBaseEntity());
 
+		Attribute PRI_NAME = qwandaUtils.getAttribute(Attribute.PRI_NAME);
+
 		baseEntities.stream().forEach(entity -> {
 			MergeUtils.mergeBaseEntity(entity, contexts);
+			entity.addAttribute(new EntityAttribute(entity, PRI_NAME, 1.0, entity.getName()));
 		});
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntities);
