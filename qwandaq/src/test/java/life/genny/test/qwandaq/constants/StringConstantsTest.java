@@ -2,18 +2,18 @@ package life.genny.test.qwandaq.constants;
 
 import java.lang.reflect.Field;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.BaseTestCase;
 
 public class StringConstantsTest extends BaseTestCase {
 
     @Test
-    public void testAttributeCodes() {
+    public void testStringConstantEquality() {
 
         new JUnitTester<Class<?>, Boolean>()
             .setTest((input) -> {
@@ -27,6 +27,11 @@ public class StringConstantsTest extends BaseTestCase {
 
             .createTest("Question Code Constants")
             .setInput(Question.class)
+            .setExpected(true)
+            .build()
+
+            .createTest("PCM Code Constants")
+            .setInput(PCM.class)
             .setExpected(true)
             .build()
 
