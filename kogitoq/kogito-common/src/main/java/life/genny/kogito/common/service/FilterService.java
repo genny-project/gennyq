@@ -261,7 +261,12 @@ public class FilterService {
         }
     }
 
-    public void handleQuickSearch(String code, String attrName,String value, String targetCode) {
+    /**
+     * Handle quick search
+     * @param value Value
+     * @param targetCode Target code
+     */
+    public void handleQuickSearch(String value, String targetCode) {
         String sessionCode = searchUtils.sessionSearchCode(targetCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
@@ -269,14 +274,10 @@ public class FilterService {
 
         // searching text
         String newValue = value.replaceFirst("!","");
-        List<Column> columns = searchBE.getColumns();
-        for(Column col : columns) {
-            if(!col.getCode().startsWith(FilterConst.PRI_CREATED)) {
-                Filter filter = new Filter(col.getCode(), Operator.LIKE, "%" + newValue + "%");
-                searchBE.remove(filter);
-                searchBE.add(filter);
-            }
-        }
+        Filter filter = new Filter(FilterConst.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+        searchBE.remove(filter);
+        searchBE.add(filter);
+
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
@@ -756,7 +757,9 @@ public class FilterService {
             String strJson = jsonb.toJson(param.getValue());
             SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-            String rowVal = ss.getColumn() + FilterConst.SEPARATOR + ss.getValueCode();
+            String rowVal = ss.getColumn() + FilterConst.SEPARATOR
+                            + ss.getOperator().replaceFirst(FilterConst.SEL_PREF,"")
+                            + FilterConst.SEPARATOR + ss.getValue();
 
             Attribute attribute = qwandaUtils.getAttribute(ss.getColumn());
             EntityAttribute ea = new EntityAttribute(base, attribute, 1.0);
