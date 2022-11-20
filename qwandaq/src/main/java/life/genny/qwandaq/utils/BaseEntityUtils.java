@@ -787,9 +787,8 @@ public class BaseEntityUtils {
 			throw new DebugException("Prefix not provided" + defBE.getCode());
 		}
 
-		String name = defBE.getName();
 		String code = optCode.get() + "_" + uuid.toUpperCase();
-		item = new BaseEntity(code, name);
+		item = new BaseEntity(code, null);
 		item.setRealm(userToken.getProductCode());
 
 		// add email and username
