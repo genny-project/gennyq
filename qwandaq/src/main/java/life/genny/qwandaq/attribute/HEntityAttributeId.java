@@ -25,7 +25,7 @@ public class HEntityAttributeId implements java.io.Serializable {
 	@ManyToOne
 	@JsonBackReference(value = "attribute")
 	// @JsonIgnore
-	public Attribute attribute;
+	public HAttribute attribute;
 
 	/**
 	 * @return BaseEntity
@@ -44,14 +44,14 @@ public class HEntityAttributeId implements java.io.Serializable {
 	/** 
 	 * @return Attribute
 	 */
-	public Attribute getAttribute() {
+	public HAttribute getAttribute() {
 		return attribute;
 	}
 
 	/** 
 	 * @param attribute the attribute to set
 	 */
-	public void setAttribute(final Attribute attribute) {
+	public void setAttribute(final HAttribute attribute) {
 		this.attribute = attribute;
 	}
 

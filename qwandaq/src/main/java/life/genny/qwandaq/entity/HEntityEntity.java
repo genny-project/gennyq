@@ -29,6 +29,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
+import life.genny.qwandaq.attribute.HAttribute;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.annotations.Type;
@@ -156,7 +157,7 @@ public class HEntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @param weight the weighted importance of this attribute (relative to the other attributes)
 	 */
 	public HEntityEntity(final HBaseEntity source, final HBaseEntity target,
-						final Attribute attribute, Double weight) {
+						 final HAttribute attribute, Double weight) {
 		this(source,target,attribute, "DUMMY",weight);
 		this.getLink().setLinkValue(null);
 		this.setValueString(null);
@@ -172,7 +173,7 @@ public class HEntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @param weight the weighted importance of this attribute (relative to the other attributes)
 	 */
 	public HEntityEntity(final HBaseEntity source, final HBaseEntity target,
-						final Attribute attribute, final Object value, Double weight) {
+						final HAttribute attribute, final Object value, Double weight) {
 		autocreateCreated();
 		getPk().setSource(source);
 		//    getPk().setTarget(target);
@@ -202,7 +203,7 @@ public class HEntityEntity implements java.io.Serializable, Comparable<Object> {
 	 * @param weight the weighted importance of this attribute (relative to the other attributes)
 	 */
 	public HEntityEntity(final HBaseEntity source, final HBaseEntity target,
-						final Attribute attribute, Double weight, final Object value) {
+						final HAttribute attribute, Double weight, final Object value) {
 		autocreateCreated();
 
 		this.pk.setSource(source);

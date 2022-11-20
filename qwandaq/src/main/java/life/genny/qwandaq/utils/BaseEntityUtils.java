@@ -140,7 +140,7 @@ public class BaseEntityUtils {
 
 		BaseEntity baseEntity = getBaseEntityOrNull(productCode, code);
 		if (baseEntity == null)
-			throw new ItemNotFoundException(code);
+			throw new ItemNotFoundException(productCode + ":" + code);
 
 		return baseEntity;
 	}
@@ -195,32 +195,25 @@ public class BaseEntityUtils {
 	}
 
 	public BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
-
-		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = getSerializableBaseEntity(productCode, code);
-
-		BaseEntity entity = null;
-
-		if (baseEntitySerializable == null) {
+		final BaseEntity entity = getPersistableBaseEntity(productCode, code);
+		if (entity == null) {
 			log.errorf("No baseentity found in cache for [ productCode , code ]: [ %s , %s]", productCode, code);
 		} else {
-			entity = (BaseEntity) baseEntitySerializable.toPersistableCoreEntity();
-			log.info("Converted cached BE to entity BE.");
+			log.infof("Converted cached BE to entity BE. [productCode, code] : [%s, %s]", productCode, code);
 			if (bundleAttributes) {
-				Set<EntityAttribute> attributes = entity.getBaseEntityAttributes();
 				Map<String, EntityAttribute> attributeMap = new HashMap<>();
 				entity.setAttributeMap(attributeMap);
 				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
-					attributes.add(bea);
+					entity.getBaseEntityAttributes().add(bea);
 					attributeMap.put(bea.getAttributeCode(), bea);
 				});
-				log.infof("Added %s BaseEntityAttributes to BE.", attributeMap.size());
+				log.infof("Added %s BaseEntityAttributes to BE.", entity.getBaseEntityAttributes().size());
 			}
 		}
-
 		return entity;
 	}
 
-	public life.genny.qwandaq.serialization.baseentity.BaseEntity getSerializableBaseEntity(String productCode, String code) {
+	public BaseEntity getPersistableBaseEntity(String productCode, String code) {
 		if (productCode == null) {
 			throw new NullParameterException("productCode");
 		}
@@ -236,7 +229,7 @@ public class BaseEntityUtils {
 
 		// check for entity in the cache
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		return (life.genny.qwandaq.serialization.baseentity.BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		return (BaseEntity) CacheUtils.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
 	}
 
 	/**

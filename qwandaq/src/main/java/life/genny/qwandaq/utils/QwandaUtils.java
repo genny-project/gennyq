@@ -21,6 +21,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
 
+import life.genny.qwandaq.attribute.HAttribute;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -131,12 +132,12 @@ public class QwandaUtils {
 	}
 
 	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
-		Attribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
+		HAttribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), HAttribute.class);
 
 		if (existingAttrib != null) {
 			if (CommonUtils.compare(attribute, existingAttrib)) {
 				log.warn("Attribute already exists with same fields: " + existingAttrib.getCode());
-				return existingAttrib;
+				return existingAttrib.toAttribute();
 			}
 			log.info("Updating existing attribute!: " + existingAttrib.getCode());
 		}
@@ -145,7 +146,7 @@ public class QwandaUtils {
 		attribute.setRealm(productCode);
 		databaseUtils.saveAttribute(attribute);
 
-		return CacheUtils.getObject(productCode, attribute.getCode(), Attribute.class);
+		return CacheUtils.getObject(productCode, attribute.getCode(), HAttribute.class).toAttribute();
 	}
 
 	/**
@@ -170,20 +171,20 @@ public class QwandaUtils {
 	 * @return Attribute
 	 */
 	public Attribute getAttribute(final String productCode, final String attributeCode) {
-		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
+		HAttribute attribute = CacheUtils.getObject(productCode, attributeCode, HAttribute.class);
 
 		if (attribute == null) {
 			log.error("Could not find attribute " + attributeCode + " in cache: " + productCode);
 			loadAllAttributesIntoCache(productCode);
 		}
 
-		attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
+		attribute = CacheUtils.getObject(productCode, attributeCode, HAttribute.class);
 
 		if (attribute == null) {
 			throw new ItemNotFoundException(productCode, attributeCode);
 		}
 
-		return attribute;
+		return attribute.toAttribute();
 	}
 
 	/**

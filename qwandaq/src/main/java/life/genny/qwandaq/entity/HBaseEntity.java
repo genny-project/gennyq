@@ -431,7 +431,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 			throw new BadDataException("missing Attribute");
 		}
 
-		return addAttribute(ea.getAttribute(), ea.getWeight(), ea.getValue());
+		return addAttribute(ea.getAttribute().toAttribute(), ea.getWeight(), ea.getValue());
 	}
 
 	/**
@@ -482,7 +482,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final HEntityAttribute entityAttribute = new HEntityAttribute(this, attribute, weight, value);
+		final HEntityAttribute entityAttribute = new HEntityAttribute(this, attribute.toHAttribute(), weight, value);
 		Optional<HEntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
 			if (value != null)
@@ -497,7 +497,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 
 	private HEntityAttribute updateEntityAttributePk(HEntityAttribute entityAttribute, Attribute attribute) {
 		entityAttribute.setBaseEntity(this);
-		entityAttribute.setAttribute(attribute);
+		entityAttribute.setAttribute(attribute.toHAttribute());
 
 		return entityAttribute;
 	}
@@ -520,7 +520,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final HEntityAttribute entityAttribute = new HEntityAttribute(this, attribute, weight, value);
+		final HEntityAttribute entityAttribute = new HEntityAttribute(this, attribute.toHAttribute(), weight, value);
 		getBaseEntityAttributes().add(entityAttribute);
 
 		return entityAttribute;
@@ -592,7 +592,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final HEntityEntity entityEntity = new HEntityEntity(this, target, linkAttribute, value, weight);
+		final HEntityEntity entityEntity = new HEntityEntity(this, target, linkAttribute.toHAttribute(), value, weight);
 		getLinks().add(entityEntity);
 		return entityEntity;
 	}
@@ -660,7 +660,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 			ea.get().setWeight(answer.getWeight());
 			ea.get().setBaseEntity(this);
 		} else {
-			HEntityAttribute newEA = new HEntityAttribute(this, answerLink.getAttribute(), weight, answerLink.getValue());
+			HEntityAttribute newEA = new HEntityAttribute(this, answerLink.getAttribute().toHAttribute(), weight, answerLink.getValue());
 			newEA.setInferred(answerLink.getInferred());
 			this.baseEntityAttributes.add(newEA);
 		}
@@ -686,7 +686,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		// value and override, else add new attribute
 
 		for (final HEntityAttribute ea : entity.getBaseEntityAttributes()) {
-			final Attribute attribute = ea.getAttribute();
+			final Attribute attribute = ea.getAttribute().toAttribute();
 			if (this.containsEntityAttribute(attribute.getCode())) {
 				// check for update value
 				final Object oldValue = this.getValue(attribute);

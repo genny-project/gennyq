@@ -22,18 +22,15 @@ package life.genny.qwandaq.attribute;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
-import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.utils.CommonUtils;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.persistence.Embedded;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 /**
  * Attribute represents a distinct abstract Fact about a target entity
@@ -63,16 +60,16 @@ import java.time.ZoneOffset;
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
 
-/*@Table(name = "attribute", indexes = {
+@Table(name = "attribute", indexes = {
 		@Index(columnList = "code", name = "code_idx"),
 		@Index(columnList = "realm", name = "code_idx")
 }, uniqueConstraints = @UniqueConstraint(columnNames = { "code", "realm" }))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @RegisterForReflection
-public class Attribute extends CodedEntity implements CoreEntityPersistable {
+public class HAttribute extends CodedEntity {
 
 	private static final long serialVersionUID = 1L;
 
@@ -150,10 +147,10 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	/**
 	 * Constructor.
 	 */
-	public Attribute() {
+	public HAttribute() {
 	}
 
-	public Attribute(String code, String name, DataType dataType) {
+	public HAttribute(String code, String name, DataType dataType) {
 		super(code, name);
 		setDataType(dataType);
 	}
@@ -279,7 +276,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	 * @param other attribute to compare against
 	 * @return true if all fields are the same. False if one is different
 	 */
-	public boolean equals(Attribute other) {
+	public boolean equals(HAttribute other) {
 		return equals(other, false);
 	}
 
@@ -291,7 +288,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	 *                false)
 	 * @return true if all fields are the same. False if one is different
 	 */
-	public boolean equals(Attribute other, boolean checkId) {
+	public boolean equals(HAttribute other, boolean checkId) {
 		boolean sameDesc = CommonUtils.compare(description, other.description);
 		if (!sameDesc)
 			return false;
@@ -324,51 +321,22 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 		return checkId ? (other.getId() == getId()) : true;
 	}
 
-	@Override
-	public CoreEntitySerializable toSerializableCoreEntity() {
-		life.genny.qwandaq.serialization.attribute.Attribute attributeSerializable = new life.genny.qwandaq.serialization.attribute.Attribute();
-		attributeSerializable.setCode(getCode());
-		attributeSerializable.setCreated(getCreated());
-		attributeSerializable.setName(getName());
-		attributeSerializable.setRealm(getRealm());
-		attributeSerializable.setUpdated(getUpdated());
-		attributeSerializable.setDefaultPrivacyFlag(getDefaultPrivacyFlag());
-		attributeSerializable.setDefaultValue(getDefaultValue());
-		attributeSerializable.setDescription(getDescription());
-		attributeSerializable.setHelp(getHelp());
-		attributeSerializable.setPlaceholder(getPlaceholder());
-		attributeSerializable.setIcon(getIcon());
-		attributeSerializable.setStatus(getStatus().ordinal());
-		return attributeSerializable;
-	}
-
-	@Override
-	public int hashCode() {
-		return (this.getRealm()+this.getCode()).hashCode();
-	}
-
-	@Override
-	public boolean equals(Object otherObject) {
-		return this.getRealm().equals(((HAttribute) otherObject).getRealm())
-				&& this.getCode().equals(((HAttribute) otherObject).getCode());
-	}
-
-	public HAttribute toHAttribute() {
-		HAttribute hAttribute = new HAttribute();
-		hAttribute.setDataType(getDataType());
-		hAttribute.setIndex(getIndex());
-		hAttribute.setCode(getCode());
-		hAttribute.setCreated(getCreated());
-		hAttribute.setName(getName());
-		hAttribute.setRealm(getRealm());
-		hAttribute.setUpdated(getUpdated());
-		hAttribute.setDefaultPrivacyFlag(getDefaultPrivacyFlag());
-		hAttribute.setDefaultValue(getDefaultValue());
-		hAttribute.setDescription(getDescription());
-		hAttribute.setHelp(getHelp());
-		hAttribute.setPlaceholder(getPlaceholder());
-		hAttribute.setIcon(getIcon());
-		hAttribute.setStatus(getStatus());
-		return hAttribute;
+	public Attribute toAttribute() {
+		Attribute attribute = new Attribute();
+		attribute.setDataType(getDataType());
+		attribute.setIndex(getIndex());
+		attribute.setCode(getCode());
+		attribute.setCreated(getCreated());
+		attribute.setName(getName());
+		attribute.setRealm(getRealm());
+		attribute.setUpdated(getUpdated());
+		attribute.setDefaultPrivacyFlag(getDefaultPrivacyFlag());
+		attribute.setDefaultValue(getDefaultValue());
+		attribute.setDescription(getDescription());
+		attribute.setHelp(getHelp());
+		attribute.setPlaceholder(getPlaceholder());
+		attribute.setIcon(getIcon());
+		attribute.setStatus(getStatus());
+		return attribute;
 	}
 }

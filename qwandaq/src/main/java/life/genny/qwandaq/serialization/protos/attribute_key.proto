@@ -1,5 +1,6 @@
 package life.genny.qwandaq.serialization.attribute;
 
 message AttributeKey {
-  optional string code = 1;
+  optional string realm = 1;
+  optional string code = 2;
 }

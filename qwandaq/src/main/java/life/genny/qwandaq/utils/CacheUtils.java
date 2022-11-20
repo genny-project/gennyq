@@ -182,6 +182,17 @@ public class CacheUtils {
 	}
 
 	/**
+	 * Get a CoreEntity object from the cache using a CoreEntityKey.
+	 *
+	 * @param cacheName The cache to read from
+	 * @param key The key they item is saved against
+	 * @return The CoreEntity returned
+	 */
+	public static CoreEntityPersistable getPersistableEntity(String cacheName, CoreEntityKey key) {
+		return cache.getPersistableEntityFromCache(cacheName, key);
+	}
+
+	/**
 	 * Save a {@link CoreEntity} to the cache using a CoreEntityKey.
 	 *
 	 * @param cacheName The cache to save to
@@ -299,10 +310,10 @@ public class CacheUtils {
 	}
 
 	public Question getQuestion(String productCode, String questionCode, boolean fetchChildQuestions) {
-		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = baseEntityUtils.getSerializableBaseEntity(productCode, questionCode);
+		BaseEntity baseEntity = baseEntityUtils.getPersistableBaseEntity(productCode, questionCode);
 		Set<BaseEntityAttribute> attributes = new HashSet<>();
 		attributes.addAll(baseEntityAttributeUtils.getAllBaseEntityAttributesForBaseEntity(productCode, questionCode));
-		Question question = questionUtils.getQuestionFromSerializableBaseEntity(baseEntity, attributes);
+		Question question = questionUtils.getQuestionFromBaseEntity(baseEntity, attributes);
 		if(fetchChildQuestions) {
 			question.getChildQuestionCodesAsStrings().parallelStream().forEach(code -> {
 				question.getChildQuestions().add(getQuestionQuestionRecursively(productCode, code, true));
@@ -325,7 +336,7 @@ public class CacheUtils {
 		for (BaseEntityAttribute baseEntityAttribute : allAttributes) {
 			String curBaseEntityCode = baseEntityAttribute.getBaseEntityCode();
 			if (prevBaseEntityCode != null && !prevBaseEntityCode.equals(curBaseEntityCode)) {
-				life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = baseEntityUtils.getSerializableBaseEntity(productCode, curBaseEntityCode);
+				BaseEntity baseEntity = baseEntityUtils.getPersistableBaseEntity(productCode, curBaseEntityCode);
 				questionQuestions.add(questionUtils.getQuestionQuestionFromBaseEntityBaseEntityAttributes(baseEntity, attributesForBaseEntity));
 				attributesForBaseEntity.clear();
 			} else {
@@ -337,7 +348,7 @@ public class CacheUtils {
 	}
 
 	public QuestionQuestion getQuestionQuestionRecursively(String productCode, String baseEntityCode, boolean fetchChildQuestions) {
-		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = baseEntityUtils.getSerializableBaseEntity(productCode, baseEntityCode);
+		BaseEntity baseEntity = baseEntityUtils.getPersistableBaseEntity(productCode, baseEntityCode);
 		Set<BaseEntityAttribute> attributes = new HashSet<>();
 		attributes.addAll(baseEntityAttributeUtils.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode));
 		QuestionQuestion questionQuestion = questionUtils.getQuestionQuestionFromBaseEntityBaseEntityAttributes(baseEntity, attributes);

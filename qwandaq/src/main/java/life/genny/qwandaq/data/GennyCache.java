@@ -177,7 +177,21 @@ public class GennyCache {
 	 * @return The entity
 	 */
 	public CoreEntitySerializable getEntityFromCache(String cacheName, CoreEntityKey key) {
+		CoreEntityPersistable persistableCoreEntity = getPersistableEntityFromCache(cacheName, key);
+		if (persistableCoreEntity == null) {
+			return null;
+		}
+		return persistableCoreEntity.toSerializableCoreEntity();
+	}
 
+	/**
+	 * Get a CoreEntity from the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key The key to the entity to fetch
+	 * @return The persistable core entity
+	 */
+	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
@@ -191,7 +205,7 @@ public class GennyCache {
 		if (coreEntityPersistable == null) {
 			return null;
 		}
-		return coreEntityPersistable.toSerializableCoreEntity();
+		return coreEntityPersistable;
 	}
 
 	/**

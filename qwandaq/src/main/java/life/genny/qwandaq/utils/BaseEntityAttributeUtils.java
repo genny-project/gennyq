@@ -4,7 +4,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.HAttribute;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -21,6 +24,9 @@ import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeK
 @ApplicationScoped
 public class BaseEntityAttributeUtils {
     static final Logger log = Logger.getLogger(BaseEntityAttributeUtils.class);
+
+	@Inject
+	private QwandaUtils qwandaUtils;
 
     /**
 	 * Fetch a {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
@@ -103,7 +109,14 @@ public class BaseEntityAttributeUtils {
         getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
                 .forEach((baseEntityAttribute) -> {
 					EntityAttribute ea = (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity();
-
+					HAttribute hAttribute = CacheUtils.getObject(productCode, ea.getAttributeCode(), HAttribute.class);
+					if (hAttribute != null) {
+						log.infof("############### Read attribute for [realm, beCode, attCode]: [%s, %s, %s]", ea.getRealm(), ea.getBaseEntityCode(), ea.getAttributeCode());
+					} else {
+						log.infof("############### Can't find attribute for [realm, attCode]: [%s, %s]", productCode, ea.getAttributeCode());
+						throw new RuntimeException("Attribute is null");
+					}
+					ea.setAttribute(hAttribute.toAttribute());
 					baseEntityAttributes.add(ea);
 				});
         return baseEntityAttributes;

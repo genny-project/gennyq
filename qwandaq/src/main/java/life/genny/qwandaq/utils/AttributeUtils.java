@@ -17,6 +17,6 @@ public class AttributeUtils {
 
     public Attribute getAttributeByCode(String productCode, String attributeCode) {
         AttributeKey key = new AttributeKey(productCode, attributeCode);
-        return (Attribute) CacheUtils.getEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
+        return (Attribute) CacheUtils.getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
     }
 }

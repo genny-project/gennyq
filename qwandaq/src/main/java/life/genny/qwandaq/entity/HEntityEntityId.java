@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.HAttribute;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -25,7 +26,7 @@ public class HEntityEntityId implements java.io.Serializable {
 	private String targetCode;
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
-	private Attribute attribute;
+	private HAttribute attribute;
 
 	public HEntityEntityId() {
 	}
@@ -61,14 +62,14 @@ public class HEntityEntityId implements java.io.Serializable {
 	/**
 	 * @return the attribute
 	 */
-	public Attribute getAttribute() {
+	public HAttribute getAttribute() {
 		return attribute;
 	}
 
 	/**
 	 * @param attribute the attribute to set
 	 */
-	public void setAttribute(final Attribute attribute) {
+	public void setAttribute(final HAttribute attribute) {
 		this.attribute = attribute;
 	}
 

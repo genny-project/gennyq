@@ -1,23 +1,27 @@
 package life.genny.bridge.live.data;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import io.vertx.core.Vertx;
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.bridge.PermittedOptions;
+import io.vertx.ext.bridge.BridgeEventType;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
+import io.vertx.ext.web.handler.impl.BodyHandlerImpl;
+import io.vertx.ext.web.handler.sockjs.BridgeEvent;
+import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
+import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.ext.bridge.PermittedOptions;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.handler.CorsHandler;
-import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
-import io.vertx.ext.web.handler.sockjs.SockJSHandler;
-import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * ExternalConsumerConfig --- This class contains configurations for {@link CorsHandler}
@@ -118,14 +122,47 @@ public class ExternalConsumerConfig {
 	 * @param router {@link Router } Vertx router to set the routes
 	 */
 	public void init(@Observes Router router) {
+		BodyHandler bodyHandler = new BodyHandlerImpl();
 		SockJSHandlerOptions sockOptions = new SockJSHandlerOptions().setHeartbeatInterval(2000);
 		SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
 		sockJSHandler.bridge(setBridgeOptions(),handler::handleConnectionTypes);
-                environment.filter(d -> !d.equals("prod"))
-                .ifPresent(d -> {
-                        router.route().handler(cors());
-                });
-		router.route("/frontend/*").handler(cors());
-		router.route("/frontend/*").handler(sockJSHandler);
+		SockJSBridgeOptions options = new SockJSBridgeOptions();
+
+		Handler<BridgeEvent> handler = be -> {
+			boolean isPublish = be.type() == BridgeEventType.PUBLISH;
+			boolean isSend = be.type() == BridgeEventType.SEND;
+			// System.out.println("Received BridgeEvent: " + be.getRawMessage().toString());
+			if (isPublish || isSend) {
+				// Add Access-Control-Allow-Origin
+				JsonObject rawMessage = be.getRawMessage();
+
+				JsonObject headers = rawMessage.getJsonObject("headers");
+
+				String referer = headers.getString("referer");
+
+				headers.put("Access-Control-Allow-Origin", referer);
+
+				rawMessage.put("headers", headers);
+				be.setRawMessage(rawMessage);
+			}
+			be.complete(true);
+		};
+
+		environment.filter(d -> !"prod".equals(d))
+				.ifPresent(d -> {
+					router.route() // do we want to be routing to d here?
+							.subRouter(sockJSHandler.bridge(options, handler))
+							.handler(bodyHandler)
+							.handler(cors());
+				});
+
+		router.route("/frontend/*")
+				.handler(bodyHandler)
+				.subRouter(sockJSHandler.bridge(options, handler));
+
+		router.route("/frontend/*")
+				.handler(cors())
+				.handler(bodyHandler)
+				.handler(sockJSHandler);
 	}
 }

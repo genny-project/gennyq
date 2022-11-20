@@ -132,13 +132,13 @@ public class QuestionUtils {
         return attribute;
     }
 
-    public Question getQuestionFromSerializableBaseEntity(BaseEntity baseEntity, Set<BaseEntityAttribute> attributes) {
+    public Question getQuestionFromBaseEntity(life.genny.qwandaq.entity.BaseEntity baseEntity, Set<BaseEntityAttribute> attributes) {
         Question question = new Question();
         question.setCode(baseEntity.getCode());
         question.setCreated(baseEntity.getCreated());
         question.setName(baseEntity.getName());
         question.setRealm(baseEntity.getRealm());
-        question.setStatus(EEntityStatus.valueOf(baseEntity.getStatus()));
+        question.setStatus(baseEntity.getStatus());
         question.setUpdated(baseEntity.getUpdated());
         updateAttributesInQuestion(question, attributes);
         return question;
@@ -181,7 +181,7 @@ public class QuestionUtils {
         });
     }
 
-    public QuestionQuestion getQuestionQuestionFromBaseEntityBaseEntityAttributes(BaseEntity baseEntity, Set<BaseEntityAttribute> attributes) {
+    public QuestionQuestion getQuestionQuestionFromBaseEntityBaseEntityAttributes(life.genny.qwandaq.entity.BaseEntity baseEntity, Set<BaseEntityAttribute> attributes) {
         QuestionQuestion questionQuestion = new QuestionQuestion();
         String beCode = baseEntity.getCode();
         String[] sourceTargetCodes = beCode.split(BaseEntityKey.BE_KEY_DELIMITER);

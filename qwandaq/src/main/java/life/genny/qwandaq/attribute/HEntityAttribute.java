@@ -215,7 +215,7 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 	 *                   other
 	 *                   attributes)
 	 */
-	public HEntityAttribute(final HBaseEntity baseEntity, final Attribute attribute, Double weight) {
+	public HEntityAttribute(final HBaseEntity baseEntity, final HAttribute attribute, Double weight) {
 		autocreateCreated();
 		setBaseEntity(baseEntity);
 		setAttribute(attribute);
@@ -241,7 +241,7 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 	 * @param value
 	 *                   the value associated with this attribute
 	 */
-	public HEntityAttribute(final HBaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
+	public HEntityAttribute(final HBaseEntity baseEntity, final HAttribute attribute, Double weight, final Object value) {
 		autocreateCreated();
 		setBaseEntity(baseEntity);
 		setAttribute(attribute);
@@ -327,14 +327,14 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 	 */
 	@Transient
 	// @JsonIgnore
-	public Attribute getAttribute() {
+	public HAttribute getAttribute() {
 		return getPk().getAttribute();
 	}
 
 	/**
 	 * @param attribute the attribute to set
 	 */
-	public void setAttribute(final Attribute attribute) {
+	public void setAttribute(final HAttribute attribute) {
 		getPk().setAttribute(attribute);
 		this.attributeCode = attribute.getCode();
 		this.attributeName = attribute.getName();

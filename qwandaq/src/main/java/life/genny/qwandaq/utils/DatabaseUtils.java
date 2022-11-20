@@ -13,6 +13,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.HBaseEntity;
 import org.jboss.logging.Logger;
@@ -91,7 +92,7 @@ public class DatabaseUtils {
 	public Long countAttributes(String realm) {
 
 		return (Long) entityManager
-				.createQuery("SELECT count(1) FROM Attribute WHERE realm=:realmStr AND name not like 'App\\_%'")
+				.createQuery("SELECT count(1) FROM HAttribute WHERE realm=:realmStr AND name not like 'App\\_%'")
 				.setParameter("realmStr", realm)
 				.getResultList().get(0);
 	}
@@ -111,10 +112,10 @@ public class DatabaseUtils {
 	public List<Attribute> findAttributes(String realm, Integer startIdx, Integer pageSize, String wildcard) {
 
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
-		String queryStr = "FROM Attribute WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "")
+		String queryStr = "FROM HAttribute WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "")
 				+ " AND name not like 'App\\_%' order by id";
 
-		Query query = entityManager.createQuery(queryStr, Attribute.class)
+		Query query = entityManager.createQuery(queryStr, HAttribute.class)
 				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
@@ -126,7 +127,10 @@ public class DatabaseUtils {
 			query = query.setFirstResult(startIdx).setMaxResults(pageSize);
 		}
 
-		return query.getResultList();
+		List<Attribute> attributes = new LinkedList<>();
+		List<HAttribute> hAttributes = query.getResultList();
+		hAttributes.stream().forEach(hAttribute -> attributes.add(hAttribute.toAttribute()));
+		return attributes;
 	}
 
 	/**
@@ -256,10 +260,10 @@ public class DatabaseUtils {
 	public Attribute findAttributeByCode(String realm, String code) {
 
 		return entityManager
-				.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
+				.createQuery("FROM HAttribute WHERE realm=:realmStr AND code =:code", HAttribute.class)
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
-				.getSingleResult();
+				.getSingleResult().toAttribute();
 	}
 
 	/**
@@ -366,7 +370,7 @@ public class DatabaseUtils {
 	 */
 	public List<Link> findParentLinks(String realm, String targetCode) {
 
-		return entityManager.createQuery("SELECT ee.link FROM EntityEntity ee"
+		return entityManager.createQuery("SELECT ee.link FROM HEntityEntity ee"
 				+ " where ee.pk.targetCode=:targetCode and ee.pk.source.realm=:realmStr", Link.class)
 				.setParameter("targetCode", targetCode)
 				.setParameter("realmStr", realm)
@@ -416,9 +420,9 @@ public class DatabaseUtils {
 		}
 
 		if (existingAttribute == null) {
-			entityManager.persist(attribute);
+			entityManager.persist(attribute.toHAttribute());
 		} else {
-			entityManager.merge(attribute);
+			entityManager.merge(attribute.toHAttribute());
 		}
 		log.info("Successfully saved Attribute " + attribute.getCode());
 	}
@@ -538,7 +542,7 @@ public class DatabaseUtils {
 
 		log.info("Deleting Attribute " + code);
 
-		entityManager.createQuery("DELETE Attribute WHERE realm=:realmStr AND code=:code")
+		entityManager.createQuery("DELETE HAttribute WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
 				.executeUpdate();

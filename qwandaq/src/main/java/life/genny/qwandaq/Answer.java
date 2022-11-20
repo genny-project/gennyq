@@ -50,6 +50,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import life.genny.qwandaq.attribute.HAttribute;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Type;
@@ -140,6 +141,8 @@ public class Answer {
 	@XmlTransient
 	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "attribute_id", nullable = false)
+	private HAttribute hAttribute;
+
 	private Attribute attribute;
 
 	/**
@@ -224,6 +227,7 @@ public class Answer {
 		this.sourceCode = source.getCode();
 		this.targetCode = target.getCode();
 		this.attributeCode = attribute.getCode();
+		this.hAttribute = attribute.toHAttribute();
 		this.attribute = attribute;
 		this.setValue(value);
 		autocreateCreated();
@@ -468,6 +472,7 @@ public class Answer {
 	public Answer(final Ask aAsk, final String value) throws BadDataException {
 		this.askId = aAsk.getId();
 		this.attributeCode = aAsk.getQuestion().getAttribute().getCode();
+		this.hAttribute = aAsk.getQuestion().getAttribute().toHAttribute();
 		this.attribute = aAsk.getQuestion().getAttribute();
 		this.sourceCode = aAsk.getSourceCode();
 		this.targetCode = aAsk.getTargetCode();
@@ -750,6 +755,22 @@ public class Answer {
 	}
 
 	/**
+	 * @return hibernate variant of attribute
+	 */
+	public HAttribute getHAttribute() {
+		return hAttribute;
+	}
+
+	/**
+	 * @param attribute
+	 *                  hibernate variant of attribute to set
+	 */
+	public void setHAttribute(final HAttribute hAttribute) {
+		this.hAttribute = hAttribute;
+		this.attribute = hAttribute.toAttribute();
+	}
+
+	/**
 	 * @return the attribute
 	 */
 	public Attribute getAttribute() {
@@ -762,6 +783,7 @@ public class Answer {
 	 */
 	public void setAttribute(final Attribute attribute) {
 		this.attribute = attribute;
+		this.hAttribute = attribute.toHAttribute();
 		if (attribute == null)
 			return;
 		if (attribute.getDataType() == null)
