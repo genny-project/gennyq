@@ -25,6 +25,7 @@ import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
 
 import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
@@ -577,11 +578,17 @@ public class SearchEntity extends BaseEntity {
 	 * @return SearchEntity
 	 */
 	public SearchEntity convertToSendable() {
+
+		// find columns and assoc columns
 		List<Column> columns = getTraits(Column.class);
+		columns.addAll(getTraits(AssociatedColumn.class));
+
+		// find traits
 		List<Action> actions = getTraits(Action.class);
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
 		log.info("Columns: " + columns.size());
 		log.info("Actions: " + actions.size());
+
 		// add action attributes
 		IntStream.range(0, columns.size())
 				.forEach(i -> {
