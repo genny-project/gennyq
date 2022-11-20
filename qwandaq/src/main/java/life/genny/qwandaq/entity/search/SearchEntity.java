@@ -581,7 +581,7 @@ public class SearchEntity extends BaseEntity {
 
 		// find columns and assoc columns
 		List<Column> columns = getTraits(Column.class);
-		columns.addAll(getTraits(AssociatedColumn.class));
+		List<AssociatedColumn> associatedColumns = getTraits(AssociatedColumn.class);
 
 		// find traits
 		List<Action> actions = getTraits(Action.class);
@@ -589,10 +589,20 @@ public class SearchEntity extends BaseEntity {
 		log.info("Columns: " + columns.size());
 		log.info("Actions: " + actions.size());
 
-		// add action attributes
+		// add columns attributes
 		IntStream.range(0, columns.size())
 				.forEach(i -> {
 					Column column = columns.get(i);
+					Attribute attribute = new Attribute(Column.PREFIX + column.getCode(), column.getName(),
+							new DataType(String.class));
+					EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+					ea.setIndex(i);
+				});
+
+		// add associated columns attributes
+		IntStream.range(0, associatedColumns.size())
+				.forEach(i -> {
+					Column column = associatedColumns.get(i);
 					Attribute attribute = new Attribute(Column.PREFIX + column.getCode(), column.getName(),
 							new DataType(String.class));
 					EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
