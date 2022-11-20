@@ -57,6 +57,9 @@ public class FilterGroupService {
     @Inject
     DatabaseUtils databaseUtils;
 
+    @Inject
+    UserToken userToken;
+
     public static final String QUE_TABLE_PREF = "QUE_TABLE_";
     public static final String SBE_TABLE_PREF = "SBE_TABLE_";
 
@@ -144,11 +147,15 @@ public class FilterGroupService {
     /**
      * Being filter optio whether selected or not
      * @param code Event Code
+     * @param value Message value
      * @return filter option selected
      */
-    public boolean isSearchSelected(String code) {
+    public boolean isSearchSelected(String code,String value) {
         boolean result = false;
-        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SELECT)) return true;
+        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SELECT)
+                && value!=null && value.startsWith(FilterConst.SBE_SAVED_SEARCH)) {
+            return true;
+        }
         return result;
     }
 
@@ -361,9 +368,10 @@ public class FilterGroupService {
     public boolean isValidEvent(QDataAnswerMessage msg) {
         String code = getQuestionCode(msg);
         String attCode = getAttributeCode(msg);
+        String value = getValue(msg);
 
         boolean result =  isColumnSelected(code,attCode) || isOptionSelected(code,attCode)
-                || isValueSelected(code) || isFilterBtn(code) || isQuickSearch(code);
+                || isValueSelected(code) || isFilterBtn(code) || isQuickSearch(code) || isSearchSelected(code,value);
 
         return result;
     }
@@ -503,7 +511,7 @@ public class FilterGroupService {
         BaseEntity base = saveBaseEntity(name,params);
         String filterCode = base.getCode();
 
-        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP, FilterConst.QUE_SAVED_SEARCH_LIST,
+        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP, FilterConst.QUE_SAVED_SEARCH_SELECT,
                 FilterConst.PRI_NAME,FilterConst.VALUE);
     }
 
@@ -604,7 +612,7 @@ public class FilterGroupService {
      * @param code Base entity
      */
     public void deleteSearch(String code) {
-//        databaseUtils.deleteBaseEntityAndAttribute(userToken.getProductCode(), code);
+        databaseUtils.deleteBaseEntityAndAttribute(userToken.getProductCode(), code);
     }
 
     /**
@@ -625,23 +633,13 @@ public class FilterGroupService {
 
     /**
      * Save searches
-     * @param sbeCode Search base entity code
-     * @param msg Message object
+     * @param filterCode Filter code
      */
-    public void handleDeleteSearch(String sbeCode,String code, QDataAnswerMessage msg) {
-        Map<String,Map<String, String>> params = new HashMap<>();
+    public void handleDeleteSearch(String filterCode) {
+        deleteSearches(filterCode);
 
-//        String searchCode = EventMessageUtils.getSearchCode(msg);
-        String searchCode = getSearchCode(msg);
-//        deleteSearches(searchCode);
-
-        /* update filter existing group */
-//        filterService.sendFilterGroup(sbeCode,FilterConst.QUE_FILTER_GRP,code,true,searchCode,params);
-
-//        String queGroup = EventMessageUtils.getParentCode(msg);
-        String queGroup = getParentCode(msg);
-        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,FilterConst.QUE_SAVED_SEARCH_LIST,
-                FilterConst.PRI_NAME, FilterConst.VALUE);
+        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
+                FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
     }
 
     /**
@@ -698,11 +696,15 @@ public class FilterGroupService {
 
             for(BaseEntity base : bases) {
                 String value = getValueStringByAttCode(base,LNK_SAVED_SEARCHES);
-//                result.put(base.getCode(),jsonb.fromJson(value, Map.class));
-                log.info(value);
-            }
-        }catch(Exception ex) {}
+                SavedSearch ss = jsonb.fromJson(value, SavedSearch.class);
 
+                result.put(base.getCode(),ss);
+            }
+        }catch(Exception ex) {
+            log.error(ex);
+        }
+
+        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),result);
         return result;
     }
 
@@ -742,13 +744,6 @@ public class FilterGroupService {
         if(filterCode.isEmpty()) {
             filterCode = getLatestFilterCode(sbeCode);
         }
-
-        Map<String,Map<String, String>> filterParams = new HashMap<>();
-//        if(isSubmitted) {
-//            filterParams = filters;
-//        } else {
-//            filterParams = getFilterParamsByBaseCode(filterCode);
-//        }
 
         /* get the latest of filter */
         filterService.sendFilterColumns(sbeCode);
@@ -963,13 +958,8 @@ public class FilterGroupService {
             }
             /* Button delete search */
             if(isBtnSearchDelete(code)) {
-                // TODO
-                // handleDeleteSearch(targetCode, code,msg);
+                 handleDeleteSearch(value);
             }
-
-//            if(isSearchSelected(code)) {
-//                handleSearchSelected(targetCode,value);
-//            }
 
             // Quick search selected
             if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
@@ -1015,7 +1005,7 @@ public class FilterGroupService {
                 return;
             }
             /* saved search saved */
-            if(isSearchSelected(code)) {
+            if(isSearchSelected(code,value)) {
                 handleSearchSelected(code,value);
             }
 
@@ -1035,12 +1025,10 @@ public class FilterGroupService {
      */
     public void handleQuickSearch(QDataAnswerMessage msg) {
         try {
-            String code = getQuestionCode(msg);
-            String attrName = "";
             String value = getValue(msg);
             String targetCode = getTargetCode(msg);
 
-            filterService.handleQuickSearch(code,attrName,value,targetCode);
+            filterService.handleQuickSearch(value,targetCode);
 
         } catch (Exception ex){
             log.error(ex);
