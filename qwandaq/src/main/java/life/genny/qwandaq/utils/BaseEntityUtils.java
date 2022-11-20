@@ -666,11 +666,7 @@ public class BaseEntityUtils {
 			if (StringUtils.isBlank(code))
 				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
 
-			if (StringUtils.isBlank(name))
-				name = defBE.getName();
-
-			// create entity and set realm
-			// check if code already exists
+			// create entity and set realm check if code already exists
 			try {
 				item = this.getBaseEntity(defBE.getRealm(), code);
 				item.setName(name);
