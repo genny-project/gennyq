@@ -1,5 +1,7 @@
 package life.genny.qwandaq.utils;
 
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -257,12 +259,18 @@ public class QwandaUtils {
 		}
 	}
 
+	/**
+	 * Create a button event.
+	 *
+	 * @param code
+	 * @param name
+	 * @return
+	 */
 	public Attribute createButtonEvent(String code, final String name) {
-		if (!code.startsWith(Prefix.EVT)) {
+		if (!code.startsWith(Prefix.EVT))
 			code = Prefix.EVT.concat(code);
-		}
 		code = code.toUpperCase();
-		DataType DTT_EVENT = getAttribute(userToken.getProductCode(), "EVT_SUBMIT").getDataType();
+		DataType DTT_EVENT = getAttribute(userToken.getProductCode(), Attribute.EVT_SUBMIT).getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
@@ -839,7 +847,7 @@ public class QwandaUtils {
 		List<EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
-		String prefix = definition.getValueAsString("PRI_PREFIX");
+		String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
 
 		for (EntityAttribute entityAttribute : uniques) {
 			// fetch list of unique code combo
@@ -851,14 +859,14 @@ public class QwandaUtils {
 				continue;
 
 			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
-					.add(new Filter("PRI_CODE", Operator.LIKE, prefix + "_%"))
+					.add(new Filter(PRI_CODE, Operator.LIKE, prefix + "_%"))
 					.setPageStart(0)
 					.setPageSize(1);
 
 			// ensure we are not counting any of our targets
 			for (BaseEntity target : targets) {
 				log.info("adding not equal " + target.getCode());
-				searchEntity.add(new Filter("PRI_CODE", Operator.NOT_EQUALS, target.getCode()));
+				searchEntity.add(new Filter(PRI_CODE, Operator.NOT_EQUALS, target.getCode()));
 			}
 
 			for (String code : codes) {
@@ -872,7 +880,7 @@ public class QwandaUtils {
 					// get the first value in array of target
 					for (BaseEntity target : targets) {
 
-						log.info("TARGET = " + target.getCode() + ", EMAIL = " + target.getValueAsString("PRI_EMAIL"));
+						log.info("TARGET = " + target.getCode() + ", EMAIL = " + target.getValueAsString(Attribute.PRI_EMAIL));
 
 						if (target.containsEntityAttribute(code)) {
 							value = target.getValueAsString(code);
