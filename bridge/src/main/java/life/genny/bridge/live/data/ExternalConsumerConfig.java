@@ -122,7 +122,6 @@ public class ExternalConsumerConfig {
 	 * @param router {@link Router } Vertx router to set the routes
 	 */
 	public void init(@Observes Router router) {
-		BodyHandler bodyHandler = new BodyHandlerImpl();
 		SockJSHandlerOptions sockOptions = new SockJSHandlerOptions().setHeartbeatInterval(2000);
 		SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
 		sockJSHandler.bridge(setBridgeOptions(),handler::handleConnectionTypes);
@@ -152,17 +151,14 @@ public class ExternalConsumerConfig {
 				.ifPresent(d -> {
 					router.route() // do we want to be routing to d here?
 							.subRouter(sockJSHandler.bridge(options, handler))
-							.handler(bodyHandler)
 							.handler(cors());
 				});
 
 		router.route("/frontend/*")
-				.handler(bodyHandler)
 				.subRouter(sockJSHandler.bridge(options, handler));
 
 		router.route("/frontend/*")
 				.handler(cors())
-				.handler(bodyHandler)
 				.handler(sockJSHandler);
 	}
 }
