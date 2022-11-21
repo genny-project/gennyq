@@ -121,16 +121,13 @@ public class Dispatch {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
 
-			PCM eventsPCM = beUtils.getPCM("PCM_EVENTS");
+			// TODO: fix this as it removes flexibility
+			PCM eventsPCM = beUtils.getPCM(PCM.PCM_EVENTS);
 			// Now set the unique code of the PCM_EVENTS so that it is unique
-			eventsPCM.setCode("PCM_EVENTS");
-			// msg.add(eventsPCM);
+			msg.add(eventsPCM);
 			// Now update the PCM to point the last location to the PCM_EVENTS
-			// add a LOC2 to the PCM if it doesn't exist
-			if (pcm.getLocation(2) == null) {
-				pcm.addStringAttribute("PRI_LOC2", "LOC2", PCM.PCM_EVENTS);
-			}
-			pcm.setLocation(2, eventsPCM.getCode()); // TODO - find last location?
+			if (pcm.getLocation(2) == null)
+				pcm.setLocation(2, PCM.PCM_EVENTS);
 		}
 
 		// init if null to stop null pointers
@@ -176,10 +173,6 @@ public class Dispatch {
 		List<String> attributeCodes = processData.getAttributeCodes();
 		log.info("Non-Readonly Attributes: " + attributeCodes);
 		return !attributeCodes.isEmpty();
-		// if (!attributeCodes.isEmpty())
-		// return true;
-
-		// return false;
 	}
 
 	/**
@@ -195,10 +188,16 @@ public class Dispatch {
 			QBulkMessage msg) {
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+		String code = processEntity.getCode();
+		String processId = processData.getProcessId();
 		for (Ask ask : flatMapOfAsks.values()) {
-			ask.setTargetCode(processEntity.getCode());
-			ask.setProcessId(processData.getProcessId());
+			ask.setTargetCode(code);
+			ask.setProcessId(processId);
 		}
+
+		// TODO: This should not be necessary, but is
+		for (Ask ask : asks)
+			qwandaUtils.recursivelySetProcessId(ask, processId);
 
 		// check mandatory fields
 		// TODO: change to use flatMap
@@ -250,7 +249,7 @@ public class Dispatch {
 	 * @param msg
 	 * @param processData
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target,
+	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 
 		// add pcm to bulk message
@@ -266,19 +265,15 @@ public class Dispatch {
 	 * @param target
 	 * @return
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target,
+	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 
 		ReqConfig reqConfig = capMan.getUserCapabilities();
-		if (!pcm.requirementsMet(reqConfig)) {
+		if(!pcm.requirementsMet(reqConfig)) {
 			log.warn("User " + userToken.getUserCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
 		log.info("Traversing " + pcm.getCode());
-		if ("PCM_FORM_EDIT".equals(pcm.getCode())) { // TODO, this could be better
-			log.info("Found PCM_FORM_EDIT");
-			pcm.setQuestionCode(processData.getQuestionCode()); // Need to override the hard wired QUE_BASEENTITY_GRP
-		}
 		log.info(jsonb.toJson(pcm));
 
 		// check for a question code
@@ -384,11 +379,15 @@ public class Dispatch {
 	 * @param target The target entity used in finding values
 	 * @param asks   The msg to add entities to
 	 */
-	public void handleDropdownAttributes(Ask ask, BaseEntity target, QBulkMessage msg) {
+	public void handleDropdownAttributes(Ask ask, String parentCode, BaseEntity target, QBulkMessage msg) {
 
+		String questionCode = ask.getQuestion().getCode();
+		log.info("Ask: " + questionCode + ", parentCode: " + parentCode);
+
+		// recursion
 		if (ask.hasChildren()) {
 			for (Ask child : ask.getChildAsks())
-				handleDropdownAttributes(child, target, msg);
+				handleDropdownAttributes(child, questionCode, target, msg);
 		}
 
 		// check for dropdown attribute
@@ -397,9 +396,9 @@ public class Dispatch {
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
 					ask.getQuestion().getAttribute().getCode());
-
+			
 			if (codes == null || codes.isEmpty())
-				sendDropdownItems(ask, target, ask.getQuestion().getCode());
+				sendDropdownItems(ask, target, parentCode);
 			else
 				collectSelections(codes, msg);
 		}
@@ -431,55 +430,21 @@ public class Dispatch {
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
 
-		if (attribute.getCode().startsWith(Prefix.LNK)) {
+		// trigger dropdown search in dropkick
+		JsonObject json = Json.createObjectBuilder()
+		.add("event_type", "DD")
+		.add("data", Json.createObjectBuilder()
+			.add("questionCode", question.getCode())
+			.add("sourceCode", ask.getSourceCode())
+			.add("targetCode", ask.getTargetCode())
+			.add("parentCode", parentCode)
+			.add("value", "")
+			.add("processId", ask.getProcessId()))
+		.add("attributeCode", attribute.getCode())
+		.add("token", userToken.getToken())
+		.build();
 
-			// check for already selected items
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
-			if (codes != null && !codes.isEmpty()) {
-
-				// grab selection baseentitys
-				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
-				for (String code : codes) {
-					if (StringUtils.isBlank(code)) {
-						continue;
-					}
-
-					BaseEntity selection = beUtils.getBaseEntity(code);
-
-					// Ensure only the PRI_NAME attribute exists in the selection
-					selection = beUtils.addNonLiteralAttributes(selection);
-					selection = beUtils.privacyFilter(selection,
-							Collections.singleton(Attribute.PRI_NAME));
-					selectionMsg.add(selection);
-				}
-
-				// send selections
-				if (selectionMsg.getItems() != null) {
-					selectionMsg.setToken(userToken.getToken());
-					selectionMsg.setReplace(true);
-					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
-					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
-				} else {
-					log.info("No selection items found for " + attribute.getCode());
-				}
-			}
-
-			// trigger dropdown search in dropkick
-			JsonObject json = Json.createObjectBuilder()
-					.add("event_type", "DD")
-					.add("data", Json.createObjectBuilder()
-							.add("questionCode", question.getCode())
-							.add("sourceCode", ask.getSourceCode())
-							.add("targetCode", ask.getTargetCode())
-							.add("parentCode", parentCode)
-							.add("value", "")
-							.add("processId", ask.getProcessId()))
-					.add("attributeCode", attribute.getCode())
-					.add("token", userToken.getToken())
-					.build();
-
-			KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
-		}
+		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
 	}
 
 	/**

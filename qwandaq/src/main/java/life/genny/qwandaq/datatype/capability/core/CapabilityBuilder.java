@@ -28,6 +28,15 @@ public class CapabilityBuilder {
     final String capabilityCode;
 
     /**
+     * Create a new builder for a capability with the given code
+     * @param capabilityCode
+     * @return
+     */
+    public static CapabilityBuilder code(String capabilityCode) {
+        return new CapabilityBuilder(capabilityCode);
+    }
+
+    /**
      * <p>Create a new Capability Builder for the given capabilityCode and link this to a given RoleBuilder</p>
      * <p>this constructor cleans the capability code as per {@link CapabilitiesManager#cleanCapabilityCode(String)}</p>
      * @param rb - parent {@link RoleBuilder}

@@ -23,6 +23,8 @@ public class BlackListInfo {
 
     Set<UUID> blackListedUUIDs = ConcurrentHashMap.newKeySet();
 
+    public BlackListInfo() {}
+
     public Set<UUID> getBlackListedUUIDs() {
         return blackListedUUIDs;
     }

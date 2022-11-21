@@ -167,6 +167,8 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(Collection<T> list, FIGetStringCallBack<T> stringCallback) {
+        if(list == null)
+            return "null";
         StringBuilder result = new StringBuilder("[");
         Iterator<T> iterator = list.iterator();
         for(int i = 0; i < list.size(); i++) {
@@ -194,7 +196,9 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
+        if(array == null) return "null";
         if(array.length == 0) return "[]";
+        
         StringBuilder result = new StringBuilder("[");
         int i;
         for(i = 0; i < array.length - 1; i++) {
@@ -225,6 +229,10 @@ public class CommonUtils {
         return instance;
     }
 
+    public static <T> T[] getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
+        return (T[])getListFromString(arrayString, objectCallback).toArray();
+    }
+
     /**
      * Assuming arrayString is of the form "[a,b,c,d]"
      * @param <T>
@@ -232,7 +240,7 @@ public class CommonUtils {
      * @param objectCallback
      * @return
      */
-    public static <T> List<T> getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
+    public static <T> List<T> getListFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
         arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
         
 

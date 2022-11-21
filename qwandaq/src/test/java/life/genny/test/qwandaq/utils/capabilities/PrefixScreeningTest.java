@@ -1,6 +1,6 @@
 package life.genny.test.qwandaq.utils.capabilities;
 
-import life.genny.test.utils.suite.JUnitTester;
+import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 
 public class PrefixScreeningTest {

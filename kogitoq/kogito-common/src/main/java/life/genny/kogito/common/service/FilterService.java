@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;

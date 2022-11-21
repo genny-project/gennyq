@@ -233,7 +233,8 @@ public class TaskService {
 			// handle initial dropdown selections
 			// TODO: change to use flatMap
 			for (Ask ask : asks)
-				dispatch.handleDropdownAttributes(ask, processEntity, msg);
+				dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), processEntity, msg);
+
 		} else
 			msg.add(target);
 

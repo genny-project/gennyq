@@ -17,7 +17,7 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.fyodor.utils.FyodorUltra;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;

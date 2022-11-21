@@ -1,22 +1,27 @@
 package life.genny.qwandaq.entity.search.trait;
 
 import java.util.Set;
+
+import javax.json.bind.annotation.JsonbTypeAdapter;
+
 import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.serialization.adapters.CapabilityAdapter;
 
 /**
  * Trait
  */
 @RegisterForReflection
-public abstract class Trait {
+public abstract class Trait implements ICapabilityFilterable {
 
 	private String code;
 	private String name;
 
-	private Set<CapabilityRequirement> capabilityRequirements = new HashSet<>();
+	private Set<Capability> capReqs = new HashSet<>();
 
 	public Trait() {
 	}
@@ -42,27 +47,36 @@ public abstract class Trait {
 		this.name = name;
 	}
 
-	public Set<CapabilityRequirement> getCapabilityRequirements() {
-		return capabilityRequirements;
+	public Set<Capability> getCapabilityRequirements() {
+		return capReqs;
 	}
 
-	public Trait setCapabilityRequirements(Set<CapabilityRequirement> capabilities) {
-		this.capabilityRequirements = capabilities;
+	public void setCapabilityRequirements(Set<Capability>  capabilities) {
+		this.capReqs = capabilities;
+	}
+
+	public Trait addCapabilityRequirement(Capability capability) {
+		this.capReqs.add(capability);
 		return this;
 	}
 
-	public Trait addCapabilityRequirement(CapabilityRequirement capability) {
-		this.capabilityRequirements.add(capability);
-		return this;
-	}
-
-	public Trait addCapabilityRequirement(Capability capability, boolean requiresAll) {
-		return addCapabilityRequirement(CapabilityRequirement.fromCapability(capability, requiresAll));
-	}
-
-	public Trait addCapabilityRequirement(String code, boolean requiresAll, CapabilityNode... nodes) {
-		CapabilityRequirement req = new CapabilityRequirement(code, requiresAll, nodes);
+	public Trait addCapabilityRequirement(String code, CapabilityNode... nodes) {
+		Capability req = new Capability(code, nodes);
 		return addCapabilityRequirement(req);
 	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(!(other instanceof Trait))
+			return false;
+		Trait otherT = (Trait)other;
 
+		if(!this.code.equals(otherT.code))
+			return false;
+
+		if(!this.name.equals(otherT.name))
+			return false;
+		
+		return this.getCapabilityRequirements().equals(otherT.getCapabilityRequirements());
+	}
 }
