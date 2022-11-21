@@ -29,8 +29,8 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
 
-/* 
- * SearchEntity class implements the search of base entities applying 
+/*
+ * SearchEntity class implements the search of base entities applying
  * different filters/search to the baseEntity and its attributes.
  */
 @SuppressWarnings("unchecked")
@@ -46,7 +46,7 @@ public class SearchEntity extends BaseEntity {
 	private TraitMap traits = new TraitMap();
 
 	private List<ClauseContainer> clauseContainers = new ArrayList<>();
-	
+
 	private Boolean allColumns = false;
 
 	// TODO: redesign filters
@@ -60,7 +60,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code SearchEntity code
 	 * @param name SearchEntity name
 	 */
@@ -73,7 +73,7 @@ public class SearchEntity extends BaseEntity {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see life.genny.qwandaq.CoreEntity#setRealm(java.lang.String)
 	 */
 	public SearchEntity setRealm(final String realm) {
@@ -105,7 +105,7 @@ public class SearchEntity extends BaseEntity {
 		this.traits.put(Sort.class, sorts);
 		return this;
 	}
-	
+
 	public List<Column> getColumns() {
 		return traits.getList(Column.class);
 	}
@@ -140,7 +140,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Add an And clause
-	 * 
+	 *
 	 * @param and And clause
 	 * @return SearchEntity
 	 */
@@ -151,7 +151,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Add an Or clause
-	 * 
+	 *
 	 * @param or Or clause
 	 * @return SearchEntity
 	 */
@@ -175,7 +175,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Add a conditional attribute.
-	 * 
+	 *
 	 * @param code      the attribute to apply the condition to
 	 * @param condition the condition to apply
 	 * @return SearchEntity
@@ -191,7 +191,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Add a whitelist attribute
-	 * 
+	 *
 	 * @param code the attribute code to add to the whitelist
 	 * @return SearchEntity
 	 */
@@ -205,7 +205,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Add a blacklist attribute
-	 * 
+	 *
 	 * @param code the attribute code to add to the blacklist
 	 * @return SearchEntity
 	 */
@@ -219,7 +219,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the title of the results data to be sent
-	 * 
+	 *
 	 * @param title The page title
 	 * @return SearchEntity
 	 */
@@ -233,7 +233,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the parentCode of the SearchEntity
-	 * 
+	 *
 	 * @param parentCode the parent entity code
 	 * @return SearchEntity
 	 */
@@ -248,7 +248,7 @@ public class SearchEntity extends BaseEntity {
 	/**
 	 * This method allows to set the start/begining number of the range(page) of the
 	 * results data to be sent
-	 * 
+	 *
 	 * @param pageStart the start of the page number
 	 * @return SearchEntity
 	 */
@@ -262,7 +262,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set size of the selection allowed for a searchEntity
-	 * 
+	 *
 	 * @param selectSize size of selection
 	 * @return SearchEntity
 	 */
@@ -277,7 +277,7 @@ public class SearchEntity extends BaseEntity {
 	/**
 	 * This method allows to set the total number of the results (BaseEntites) to be
 	 * sent
-	 * 
+	 *
 	 * @param pageSize number of items to be sent in each page
 	 * @return SearchEntity
 	 */
@@ -292,7 +292,7 @@ public class SearchEntity extends BaseEntity {
 	/**
 	 * This method allows to set the stakeholder/user code to the search. It will
 	 * search for the BaseEntites that the given user is stakeholder of.
-	 * 
+	 *
 	 * @param stakeholder the userCode of the stakeHolder
 	 * @return SearchEntity
 	 */
@@ -308,7 +308,7 @@ public class SearchEntity extends BaseEntity {
 	 * This method allows to set the stakeholder/user code to the parent/source
 	 * Basentity involved in the search. It will search for the BaseEntites under
 	 * the give source BE that the given user is stakeholder of.
-	 * 
+	 *
 	 * @param sourceStakeholder the userCode of the source stakeHolder
 	 * @return SearchEntity
 	 */
@@ -325,7 +325,7 @@ public class SearchEntity extends BaseEntity {
 	 * This method allows to set the stakeholder/user code to the parent/source
 	 * Basentity involved in the search. It will search for the BaseEntites under
 	 * the give source BE that the given user is stakeholder of.
-	 * 
+	 *
 	 * @param linkCode the linkCode
 	 * @return SearchEntity
 	 */
@@ -339,7 +339,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the link value the result of the search.
-	 * 
+	 *
 	 * @param linkValue - linkValue of the sourceCode to the results (BaseEntities)
 	 *                  of the search
 	 * @return SearchEntity
@@ -378,7 +378,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the wildcard of the results data to be sent
-	 * 
+	 *
 	 * @param wildcard the widlcard
 	 * @return SearchEntity
 	 */
@@ -392,7 +392,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the wildcard depth level for associated wildcards
-	 * 
+	 *
 	 * @param depth the widlcard depth level
 	 * @return SearchEntity
 	 */
@@ -406,7 +406,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the status of the result BEs
-	 * 
+	 *
 	 * @param status the search status to set
 	 * @return SearchEntity
 	 */
@@ -420,7 +420,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the cachable of the result BEs for initial page.
-	 * 
+	 *
 	 * @param cachable true or false. true means cache the result for subsequent
 	 *                 lookup
 	 * @return SearchEntity
@@ -436,7 +436,7 @@ public class SearchEntity extends BaseEntity {
 	/**
 	 * This method allows to set the total number of the results (BaseEntites) from
 	 * the search.
-	 * 
+	 *
 	 * @param totalResults the total results count to set
 	 * @return SearchEntity
 	 */
@@ -450,7 +450,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to set the page index of the search
-	 * 
+	 *
 	 * @param pageIndex the page index to set
 	 * @return SearchEntity
 	 */
@@ -464,7 +464,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Get the page start
-	 * 
+	 *
 	 * @return Integer
 	 */
 	public Integer getPageStart() {
@@ -473,7 +473,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Get the page size
-	 * 
+	 *
 	 * @return Integer
 	 */
 	public Integer getPageSize() {
@@ -506,7 +506,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * This method allows to remove the attributes from the SearchEntity.
-	 * 
+	 *
 	 * @param attributeCode the code of the column to remove
 	 * @return SearchEntity
 	 */
@@ -517,7 +517,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Get the allowed column codes
-	 * 
+	 *
 	 * @return Set
 	 */
 	public Set<String> allowedColumns() {
@@ -528,7 +528,7 @@ public class SearchEntity extends BaseEntity {
 
 	/**
 	 * Convert to a saveable entity
-	 * 
+	 *
 	 * @return SearchEntity
 	 */
 	public SearchEntity convertToSaveable() {
@@ -537,33 +537,33 @@ public class SearchEntity extends BaseEntity {
 
 		// add clause container attributes
 		IntStream.range(0, this.clauseContainers.size())
-			.forEach(i -> {
-				ClauseContainer clauseContainer = clauseContainers.get(i);
-				Attribute attribute = new Attribute("", "",
-					new DataType(String.class));
-				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
-				ea.setIndex(i);
-				ea.setValue(jsonb.toJson(clauseContainer));
-			});
+				.forEach(i -> {
+					ClauseContainer clauseContainer = clauseContainers.get(i);
+					Attribute attribute = new Attribute("", "",
+							new DataType(String.class));
+					EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+					ea.setIndex(i);
+					ea.setValue(jsonb.toJson(clauseContainer));
+				});
 
 		// add sort attributes
 		List<Sort> sorts = traits.getList(Sort.class);
 		IntStream.range(0, sorts.size())
-			.forEach(i -> {
-				Sort sort = sorts.get(i);
-				Attribute attribute = new Attribute(Sort.PREFIX + sort.getCode(), sort.getName(),
-					new DataType(String.class));
-				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
-				ea.setIndex(i);
-				ea.setValue(sort.getOrder().toString());
-			});
+				.forEach(i -> {
+					Sort sort = sorts.get(i);
+					Attribute attribute = new Attribute(Sort.PREFIX + sort.getCode(), sort.getName(),
+							new DataType(String.class));
+					EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+					ea.setIndex(i);
+					ea.setValue(sort.getOrder().toString());
+				});
 
 		return this;
 	}
 
 	/**
 	 * Convert to a sendable entity
-	 * 
+	 *
 	 * @return SearchEntity
 	 */
 	public SearchEntity convertToSendable() {
@@ -572,11 +572,11 @@ public class SearchEntity extends BaseEntity {
 			List<Trait> list = (List<Trait>) traits.getList(traitEntry.getKey());
 			boolean plural = list.size() > 1;
 			String msg = new StringBuilder("Serializing ")
-							.append(list.size())
-							.append(" ")
-							.append(traitEntry.getKey().getSimpleName())
-							.append(plural ? "s as EntityAttributes" : " as an EntityAttribute")
-							.toString();
+					.append(list.size())
+					.append(" ")
+					.append(traitEntry.getKey().getSimpleName())
+					.append(plural ? "s as EntityAttributes" : " as an EntityAttribute")
+					.toString();
 			log.info(msg);
 			for(int i = 0; i < list.size(); i++) {
 				Trait trait = list.get(i);
@@ -593,7 +593,7 @@ public class SearchEntity extends BaseEntity {
 	/**
 	 * This Method allows specifying columns that can be further filtered on by the
 	 * user
-	 * 
+	 *
 	 * @param attributeCode The code of the attribute
 	 * @param fName         The name given to the filter column
 	 * @return SearchEntity the updated search base entity
@@ -610,7 +610,7 @@ public class SearchEntity extends BaseEntity {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

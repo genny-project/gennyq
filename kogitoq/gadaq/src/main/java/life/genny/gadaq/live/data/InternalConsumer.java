@@ -168,9 +168,11 @@ public class InternalConsumer {
 		if(filter.isValidEvent(msg)){
 			filter.handleDataEvents(msg);
 		}
-		scope.destroy();
 
+		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
+
+
 }

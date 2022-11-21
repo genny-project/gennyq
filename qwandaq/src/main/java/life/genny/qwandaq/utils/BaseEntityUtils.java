@@ -647,9 +647,6 @@ public class BaseEntityUtils {
 		if (code != null && code.charAt(3) != '_')
 			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
-		if (name == null)
-			name = "";
-
 		BaseEntity item = null;
 		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
 
@@ -668,10 +665,12 @@ public class BaseEntityUtils {
 
 			if (StringUtils.isBlank(code))
 				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
+
 			if (StringUtils.isBlank(name))
 				name = defBE.getName();
 
-			// create entity and set realm check if code already exists
+			// create entity and set realm
+			// check if code already exists
 			try {
 				item = this.getBaseEntity(defBE.getRealm(), code);
 				item.setName(name);

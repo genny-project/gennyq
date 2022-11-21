@@ -534,12 +534,11 @@ public class FilterGroupService {
 
     /**
      * Save search
-     * @param name Event name
+     * @param nameOrName Event name or Code
      */
-    public void saveSearch(String name) {
+    public void saveSearch(String nameOrName) {
         Map<String,SavedSearch> params = getParamsFromCache();
-        BaseEntity base = saveBaseEntity(name,params);
-        String filterCode = base.getCode();
+        BaseEntity base = saveBaseEntity(nameOrName,params);
 
         filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP, FilterConst.QUE_SAVED_SEARCH_SELECT,
                 FilterConst.PRI_NAME,FilterConst.VALUE);
@@ -547,10 +546,10 @@ public class FilterGroupService {
 
     /**
      * Save base entity
-     * @param name Search name
+     * @param nameOrCode Search name
      * @param params Parameters
      */
-    public BaseEntity saveBaseEntity(String name,Map<String, SavedSearch> params) {
+    public BaseEntity saveBaseEntity(String nameOrCode,Map<String, SavedSearch> params) {
         BaseEntity baseEntity = null;
 
         try {
@@ -563,7 +562,11 @@ public class FilterGroupService {
             String attCode = FilterConst.LNK_SAVED_SEARCHES;
             Attribute attr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
             defBE.addAttribute(attr, 1.0, FilterConst.SBE_PREF);
-            baseEntity = beUtils.create(defBE, name, baseCode);
+            if(nameOrCode.startsWith(FilterConst.SBE_SAVED_SEARCH)) {
+                baseEntity = beUtils.getBaseEntityOrNull(userToken.getProductCode(), nameOrCode);
+            } else {
+                baseEntity = beUtils.create(defBE, nameOrCode, baseCode);
+            }
 
             Attribute attrFound = qwandaUtils.getAttribute(user.getProductCode(),attCode);
 
@@ -585,7 +588,7 @@ public class FilterGroupService {
             for(Map.Entry<String,SavedSearch> entry : params.entrySet()) {
                 String childBaseCode = listUUID.get(index);
 
-                BaseEntity childBase = beUtils.create(childDefBE, name, childBaseCode);
+                BaseEntity childBase = beUtils.create(childDefBE, nameOrCode, childBaseCode);
                 String childVal = jsonb.toJson(entry.getValue());
                 childBase.addAttribute(attrFound, 1.0,childVal);
                 beUtils.updateBaseEntity(childBase);
@@ -831,11 +834,16 @@ public class FilterGroupService {
 
     /**
      * Handle filter event by apply button
+     * @param code Message Code
      */
-    public void handleFilter() {
+    public void handleFilter(String code) {
         Map<String,SavedSearch> params = getParamsFromCache();
         String sbeCode = getSbeTableFromCache();
         filterService.handleFilter(sbeCode, params);
+
+        BaseEntity base = new BaseEntity(code);
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
     /**
@@ -1038,12 +1046,12 @@ public class FilterGroupService {
             }
             /* apply filter */
             if(isApply(code)) {
-                handleFilter();return;
+                handleFilter(code);return;
             }
             /* Button delete search */
             if(isBtnSearchDelete(code)) {
-                 handleDeleteSearch(value);
-                 return;
+                handleDeleteSearch(value);
+                return;
             }
             /* Details delet */
             if(isDetailDelete(code)){

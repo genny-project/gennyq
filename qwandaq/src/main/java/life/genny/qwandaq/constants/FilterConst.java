@@ -129,6 +129,5 @@ public class FilterConst {
     public static final String QUE_SEARCH = "QUE_SEARCH";
 
     public static final String PRI_CREATED = "PRI_CREATED";
-
     public static final String ISCODE = "isCode";
 }
