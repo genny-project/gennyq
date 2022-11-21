@@ -87,6 +87,15 @@ public class CommonUtils {
         }
     }
 
+    public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
+        for(K key : map.keySet()) {
+            String msg = new StringBuilder(keyCallback.getString(key))
+                            .append(" = ")
+                            .append(valueCallback.getString(map.get(key)))
+                            .toString();
+            log.info(msg);
+        }
+    }
 
     /**
      * Safe-compare two Objects (null-safe)

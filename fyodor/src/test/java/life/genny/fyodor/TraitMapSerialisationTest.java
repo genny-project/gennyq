@@ -36,7 +36,7 @@ public class TraitMapSerialisationTest {
 
         TraitMap map = entity.getTraitMap();
 
-        // CommonUtils.printMap(map, (item) -> {});
+        CommonUtils.printMap(map);
 
         String json = jsonb.toJson(map);
         System.out.println(json);

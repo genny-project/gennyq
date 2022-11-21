@@ -1,4 +1,4 @@
-package life.genny.qwandaq.serialization.adapters;
+package life.genny.qwandaq.serialization.adapters.capabilities;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,7 +15,7 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.serialization.adapters.CapabilitySetAdapter;
+import life.genny.qwandaq.serialization.adapters.capabilities.CapabilitySetAdapter;
 
 
 public class CapabilitySetAdapter implements JsonbAdapter<Set<Capability>, JsonArray> {

@@ -1,4 +1,4 @@
-package life.genny.qwandaq.serialization.adapters;
+package life.genny.qwandaq.serialization.adapters.capabilities;
 
 import java.util.HashSet;
 import java.util.Iterator;
