@@ -83,10 +83,8 @@ public class TopologyProducer {
 
 	void onStart(@Observes StartupEvent ev) {
 
-		if (service.showValues()) {
+		if (service.showValues())
 			log.info("Blacklist        :" + (enableBlacklist ? "ON" : "OFF"));
-		}
-
 		service.fullServiceInit(true);
 		log.info("[*] Finished Topology Startup!");
 	}
@@ -101,7 +99,6 @@ public class TopologyProducer {
 				.peek((k, v) -> scope.init(v))
 				.peek((k, v) -> log.info("Received message: " + stripToken(v)))
 				.filter((k, v) -> (v != null))
-				.mapValues((k, v) -> tidy(v))
 				.filter((k, v) -> validateData(v))
 				.mapValues((k, v) -> handleDependentDropdowns(v))
 				.peek((k, v) -> log.info("Forwarding valid message"))
@@ -141,7 +138,7 @@ public class TopologyProducer {
 					Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-					Map<String, Ask> flatMapAsks = qwandaUtils.buildAskFlatMap(asks);
+					Map<String, Ask> flatMapAsks = QwandaUtils.buildAskFlatMap(asks);
 
 					qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
 					asksToSend.addAll(asks);
@@ -156,17 +153,6 @@ public class TopologyProducer {
 	}
 
 	/**
-	 * Helper function to tidy some values
-	 * 
-	 * @param data
-	 * @return
-	 */
-	public String tidy(String data) {
-
-		return data.replaceAll("Adamm", "Adam");
-	}
-
-	/**
 	 * Function for validating a data message.
 	 * 
 	 * @param data the data to validate
@@ -175,7 +161,6 @@ public class TopologyProducer {
 	public Boolean validateData(String data) {
 
 		QDataAnswerMessage msg = jsonb.fromJson(data, QDataAnswerMessage.class);
-
 		if (msg.getItems().length == 0) {
 			log.warn("Detected a payload with empty items.. ignoring & proceding..");
 			return false;

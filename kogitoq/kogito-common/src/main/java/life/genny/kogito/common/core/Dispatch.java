@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -115,13 +116,20 @@ public class Dispatch {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
 
+			boolean hasEvents = msg.getEntities().stream()
+				.map(entity -> entity.getCode())
+				.filter(Objects::nonNull)
+				.anyMatch(code -> code.equals(PCM.PCM_EVENTS));
+
 			// TODO: fix this as it removes flexibility
-			PCM eventsPCM = beUtils.getPCM(PCM.PCM_EVENTS);
-			// Now set the unique code of the PCM_EVENTS so that it is unique
-			msg.add(eventsPCM);
-			// Now update the PCM to point the last location to the PCM_EVENTS
-			if (pcm.getLocation(2) == null)
+			if (!hasEvents) {
+				PCM eventsPCM = beUtils.getPCM(PCM.PCM_EVENTS);
+				// Now set the unique code of the PCM_EVENTS so that it is unique
+				msg.add(eventsPCM);
+				// Now update the PCM to point the last location to the PCM_EVENTS
+				if (pcm.getLocation(2) == null)
 				pcm.setLocation(2, PCM.PCM_EVENTS);
+			}
 		}
 
 		// init if null to stop null pointers
@@ -196,7 +204,7 @@ public class Dispatch {
 
 		// check mandatory fields
 		// TODO: change to use flatMap
-		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
+		Boolean answered = QwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
 
 		// pre-send ask updates
 		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
@@ -254,7 +262,6 @@ public class Dispatch {
 		log.info("Traversing " + pcm.getCode());
 
 		// check for a question code
-		Ask ask = null;
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
 		if (questionCode != null) {
 			// use pcm target if one is specified
@@ -269,7 +276,7 @@ public class Dispatch {
 				return;
 			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 				// add ask to bulk message
-				ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, reqConfig);
+				Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, reqConfig);
 				msg.add(ask);
 			}
 		} else {
