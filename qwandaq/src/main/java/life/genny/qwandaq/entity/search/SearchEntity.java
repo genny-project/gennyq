@@ -522,7 +522,11 @@ public class SearchEntity extends BaseEntity {
 	 * @return Set
 	 */
 	public Set<String> allowedColumns() {
-		return traits.getList(Column.class).stream()
+
+		List<Column> allowed = new ArrayList<>();
+		allowed.addAll(traits.getList(Column.class));
+		allowed.addAll(traits.getList(AssociatedColumn.class));
+		return allowed.stream()
 				.map(c -> c.getCode())
 				.collect(Collectors.toSet());
 	}
