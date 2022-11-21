@@ -45,7 +45,7 @@ public class SearchEntitySerialisationTest {
         CommonUtils.printCollection(entity.getBaseEntityAttributes());
 
         String json = jsonb.toJson(entity);
-        System.out.println("JSOON: " + json);
+        // System.out.println("JSOON: " + json);
 
         SearchEntity entity2 = jsonb.fromJson(json, SearchEntity.class);
         System.out.println("Post Serializable Entity AC: " + entity.getTraitMap().getList(AssociatedColumn.class).size());
