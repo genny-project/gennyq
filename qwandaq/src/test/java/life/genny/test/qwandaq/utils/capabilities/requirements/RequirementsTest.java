@@ -16,7 +16,7 @@ import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.SetBuilder;
+import life.genny.qwandaq.utils.collections.SetBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 public class RequirementsTest extends BaseRequirementsTest {
@@ -141,7 +141,7 @@ public class RequirementsTest extends BaseRequirementsTest {
 
     @Test
     public void miscReqTests() {
-        Set<CapabilityNode> capabilitySet = new SetBuilder<CapabilityNode>()
+        Set<CapabilityNode> capabilitySet = (Set<CapabilityNode>)new SetBuilder<CapabilityNode>()
             .add(CapabilityNode.get(CapabilityMode.EDIT, PermissionMode.ALL))
             .build();
         assertEquals(CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode[] {
