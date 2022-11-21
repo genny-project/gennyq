@@ -47,6 +47,10 @@ public class ReqConfig {
         this.requiresAllCaps = requiresAllCaps;
     }
 
+    /**
+     * Get the set of capabilities belonging to the user of this ReqConfig object
+     * @return
+     */
     public Set<Capability> getUserCaps() {
         return userCapabilities;
     }

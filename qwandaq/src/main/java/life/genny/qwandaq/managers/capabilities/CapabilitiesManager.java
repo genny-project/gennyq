@@ -236,6 +236,8 @@ public class CapabilitiesManager extends Manager {
 	}
 
 	public static boolean checkCapability(Set<CapabilityNode> capabilitySet, boolean hasAll, CapabilityNode... checkModes) {
+        if(checkModes == null || checkModes.length == 0)
+            return true;
 		capabilitySet = cascadeCapabilities(capabilitySet);
 		if (hasAll) {
 			for (CapabilityNode checkMode : checkModes) {
