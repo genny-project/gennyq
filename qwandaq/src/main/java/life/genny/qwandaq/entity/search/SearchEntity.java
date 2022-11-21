@@ -24,6 +24,7 @@ import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
 
 import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
@@ -521,7 +522,11 @@ public class SearchEntity extends BaseEntity {
 	 * @return Set
 	 */
 	public Set<String> allowedColumns() {
-		return traits.getList(Column.class).stream()
+
+		List<Column> allowed = new ArrayList<>();
+		allowed.addAll(traits.getList(Column.class));
+		allowed.addAll(traits.getList(AssociatedColumn.class));
+		return allowed.stream()
 				.map(c -> c.getCode())
 				.collect(Collectors.toSet());
 	}
