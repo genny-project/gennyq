@@ -647,6 +647,9 @@ public class BaseEntityUtils {
 		if (code != null && code.charAt(3) != '_')
 			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
+		if (name == null)
+			name = "";
+
 		BaseEntity item = null;
 		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
 
