@@ -647,6 +647,9 @@ public class BaseEntityUtils {
 		if (code != null && code.charAt(3) != '_')
 			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
+		if (name == null)
+			name = "";
+
 		BaseEntity item = null;
 		Optional<EntityAttribute> uuidEA = defBE.findEntityAttribute("ATT_PRI_UUID");
 
@@ -784,7 +787,7 @@ public class BaseEntityUtils {
 		}
 
 		String code = optCode.get() + "_" + uuid.toUpperCase();
-		item = new BaseEntity(code, null);
+		item = new BaseEntity(code, "");
 		item.setRealm(userToken.getProductCode());
 
 		// add email and username
