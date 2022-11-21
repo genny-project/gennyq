@@ -577,14 +577,13 @@ public class SearchEntity extends BaseEntity {
 							.append(plural ? "s as EntityAttributes" : " as an EntityAttribute")
 							.toString();
 			log.info(msg);
-			IntStream.range(0, list.size())
-					.forEach(i -> {
-						Trait trait = list.get(i);
-						Attribute attribute = new Attribute(Column.PREFIX + trait.getCode(), trait.getName(),
-								new DataType(String.class));
-						EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
-						ea.setIndex(i);
-					});
+			for(int i = 0; i < list.size(); i++) {
+				Trait trait = list.get(i);
+				Attribute attribute = new Attribute(Column.PREFIX + trait.getCode(), trait.getName(),
+						new DataType(String.class));
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+				ea.setIndex(i);
+			}
 		}
 
 		return this;
