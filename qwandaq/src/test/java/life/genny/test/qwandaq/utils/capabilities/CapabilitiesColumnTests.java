@@ -73,7 +73,7 @@ public class CapabilitiesColumnTests extends BaseTestCase {
         .createTest("Serialize Database Capability 2")
         .setInput("CAP_TEST_CAP[]")
         .setExpected(
-            (Set<Capability>) new SetBuilder<Capability>()
+            (Set<Capability>)new SetBuilder<Capability>()
             .add(new CapabilityBuilder("CAP_TEST_CAP").buildCap())
             .build()
         )

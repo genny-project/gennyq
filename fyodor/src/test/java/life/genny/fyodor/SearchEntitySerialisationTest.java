@@ -25,15 +25,15 @@ public class SearchEntitySerialisationTest {
     public void serialiseTrait() {
 
         SearchEntity entity = new SearchEntity(SBE_TABLE_APPLICATIONS, "Applications")
-        .add(new Filter("LNK_DEF", Operator.CONTAINS, DEF_APPLICATION))
-        .add(new AssociatedColumn("LNK_PROPERTY", "PRI_NAME", "Property Heading"))
-        .add(new Column("PRI_CREATED", "Date Submitted"))
-        .add(new AssociatedColumn("LNK_TENANT", "PRI_NAME", "Tenant Name"))
-        .add(new AssociatedColumn("LNK_TENANT", "PRI_EMAIL", "Tenant Email"))
-        .add(new AssociatedColumn("LNK_TENANT", "PRI_MOBILE", "Tenant Mobile"))
-        .add(new Column("PRI_APPROVED", "Approved"))
-        .add(new AssociatedColumn("LNK_PROPERTY", "PRI_NAME", "Applied"))
-        .add(new Action("VIEW", "View"))
+        .add(new Filter("LNK_DEF", Operator.CONTAINS, "DEF_TEST"))
+        .add(new AssociatedColumn("LNK_TEST1", "PRI_NAME", "Assc. column 1"))
+        .add(new Column("PRI_CREATED", "Some date here"))
+        .add(new AssociatedColumn("LNK_TEST2", "PRI_NAME", "Name"))
+        .add(new AssociatedColumn("LNK_TEST3", "PRI_EMAIL", "Email"))
+        .add(new AssociatedColumn("LNK_TEST4", "PRI_MOBILE", "Mobile"))
+        .add(new Column("PRI_ATTRIB1", "Some attribute"))
+        .add(new AssociatedColumn("LNK_TEST5", "PRI_NAME", "Some name"))
+        .add(new Action("VIEW", "View Button"))
         .setPageSize(20)
         .setPageStart(0);
         System.out.println("Entity AC: " + entity.getTraitMap().getList(AssociatedColumn.class).size());
