@@ -105,6 +105,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";
 
 	public static final String QUE_EVENTS = "QUE_EVENTS";
+	public static final String QUE_BASEENTITY_GRP = "QUE_BASEENTITY_GRP";
 
 	// entity
 	public static final String QUE_NAME = "QUE_NAME";

@@ -30,6 +30,5 @@ public class TimerDataTest {
 			timerData.updateMilestone();
 
 		timerData.updateElapsed();
-
     }
 }

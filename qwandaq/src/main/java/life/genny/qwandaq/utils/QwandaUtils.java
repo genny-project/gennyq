@@ -289,17 +289,14 @@ public class QwandaUtils {
 		Ask ask = new Ask(question, source.getCode(), target.getCode());
 		ask.setRealm(productCode);
 
-		Attribute attribute = question.getAttribute();
-		if ("QUE_BASEENTITY_GRP".equals(question.getCode())) {
+		if (Question.QUE_BASEENTITY_GRP.equals(question.getCode()))
 			return generateAskGroupUsingBaseEntity(target);
-		}
-
 
 		// override with Attribute icon if question icon is null
+		Attribute attribute = question.getAttribute();
 		if (attribute != null && attribute.getIcon() != null) {
-			if (question.getIcon() == null) {
+			if (question.getIcon() == null)
 				question.setIcon(attribute.getIcon());
-			}
 		}
 
 		// check if it is a question group
@@ -327,7 +324,7 @@ public class QwandaUtils {
 				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
 
 				// Do not include PRI_SUBMIT
-				if ("PRI_SUBMIT".equals(child.getQuestion().getAttribute().getCode())) {
+				if (Attribute.PRI_SUBMIT.equals(child.getQuestion().getAttribute().getCode())) {
 					continue;
 				}
 
@@ -373,7 +370,7 @@ public class QwandaUtils {
 		// don't need to check source, target since they are checked in generateAskFromQuestion
 
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
-		if ("QUE_BASEENTITY_GRP".equals(code)) {
+		if (Question.QUE_BASEENTITY_GRP.equals(code)) {
 			return generateAskGroupUsingBaseEntity(target);
 		}
 
