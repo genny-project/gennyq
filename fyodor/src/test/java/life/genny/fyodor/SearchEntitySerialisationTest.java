@@ -36,12 +36,8 @@ public class SearchEntitySerialisationTest {
         .add(new Action("TEST_ACTION_THINGY", "ACTION THINGY"))
         .setPageSize(20)
         .setPageStart(0);
-        System.out.println("Entity AC: " + entity.getTraitMap().get(AssociatedColumn.class).size());
-        System.out.println("Entity Attributes: " + entity.getBaseEntityAttributes().size());
-        // entity = entity.convertToSendable();
-        System.out.println("Entity Attributes: " + entity.getBaseEntityAttributes().size());
+        
         System.out.println("===============================================");
-        CommonUtils.printCollection(entity.getBaseEntityAttributes());
 
         String json = jsonb.toJson(entity);
         System.out.println("JSOON: " + json);

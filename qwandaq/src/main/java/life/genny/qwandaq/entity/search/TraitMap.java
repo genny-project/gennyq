@@ -42,13 +42,19 @@ public class TraitMap extends HashMap<Integer, List<? extends Trait>> {
 		return put(id, list);
 	}
 
-	public <T extends Trait> void add(Trait trait) {
-		List<T> list = (List<T>) get(trait.getClass());
+	public <T extends Trait> void add(T trait) {
+		add((Class<T>)trait.getClass(), trait);
+	}
+
+	private <T extends Trait> void add(Class<T> traitType, T trait) {
+		List<T> list = (List<T>) get(traitType);
 		if(list == null) {
 			list = new ArrayList<T>();
 			put(TRAIT_MAP.getKey(trait.getClass()), list);
 		}
-		list.add((T) trait);
+		list.add(trait);
+		System.out.println(list.get(0).getClass());
+		
 	}
 
 }

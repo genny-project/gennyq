@@ -28,8 +28,8 @@ public class TraitMapSerialisationTest {
     public void test() {
 
         SearchEntity entity = new SearchEntity(SBE_TABLE_APPLICATIONS, "Applications")
-        .add(new Filter("LNK_DEF", Operator.CONTAINS, "DEF_TEST")
-            .addCapabilityRequirement(CapabilityBuilder.code("CAP_TEST").add(ALL).buildCap()))
+        // .add(new Filter("LNK_DEF", Operator.CONTAINS, "DEF_TEST")
+        //     .addCapabilityRequirement(CapabilityBuilder.code("CAP_TEST").add(ALL).buildCap()))
         .add(new AssociatedColumn("LNK_TEST1", "PRI_NAME", "Assc. column 1"))
         .add(new Column("PRI_CREATED", "Some date here"))
         .add(new AssociatedColumn("LNK_TEST2", "PRI_NAME", "Name"))

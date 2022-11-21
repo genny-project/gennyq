@@ -20,7 +20,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
-
+import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
@@ -39,7 +39,6 @@ public class SearchEntity extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
-	// TODO: Polish this
 	private TraitMap traits = new TraitMap();
 
 	private List<ClauseContainer> clauseContainers = new ArrayList<>();
@@ -107,6 +106,12 @@ public class SearchEntity extends BaseEntity {
 		this.clauseContainers.add(new ClauseContainer(filter));
 		return this;
 	}
+
+	// public SearchEntity add(AssociatedColumn asscColumn) {
+	// 	System.out.println("ADDING ASSOCIATED COLUMN");
+	// 	this.traits.add(Column.class, asscColumn);
+	// 	return this;
+	// }
 
 	/**
 	 * Add an And clause
@@ -592,6 +597,16 @@ public class SearchEntity extends BaseEntity {
 
 	public <T extends Trait> SearchEntity add(Trait trait) {
 		traits.add(trait);
+		return this;
+	}
+
+	public <T extends Trait> SearchEntity add(AssociatedColumn trait) {
+		List<Column> columns = traits.get(Column.class);
+		if(columns == null) {
+			columns = new ArrayList<Column>();
+			traits.put(Column.class, columns);
+		}
+		columns.add(trait);
 		return this;
 	}
 
