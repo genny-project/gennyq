@@ -20,7 +20,7 @@ public class TraitMapSerialisationTest {
     
     static Jsonb jsonb = JsonbBuilder.create();
 
-    @Test
+    // @Test
     public void test() {
 
         SearchEntity entity = new SearchEntity(SBE_TABLE_APPLICATIONS, "Applications")
