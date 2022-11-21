@@ -27,6 +27,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -198,8 +199,8 @@ public class Dispatch {
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
 
 		// pre-send ask updates
-		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapOfAsks);
+		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
+		qwandaUtils.updateDependentAsks(processEntity, definition, flatMapOfAsks);
 
 		// update any button Events
 		for (String event : BUTTON_EVENTS) {

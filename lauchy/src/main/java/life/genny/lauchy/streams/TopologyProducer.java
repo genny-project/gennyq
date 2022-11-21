@@ -30,6 +30,7 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -137,12 +138,12 @@ public class TopologyProducer {
 					ProcessData processData = qwandaUtils.fetchProcessData(processId); 
 					List<Ask> asks = qwandaUtils.fetchAsks(processData);
 
-					BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+					Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
 					Map<String, Ask> flatMapAsks = qwandaUtils.buildAskFlatMap(asks);
 
-					qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapAsks);
+					qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
 					asksToSend.addAll(asks);
 				});
 
@@ -208,26 +209,18 @@ public class TopologyProducer {
 		String attributeCode = answer.getAttributeCode();
 
 		// check that user is the source of message
-		if (!(userToken.getUserCode()).equals(answer.getSourceCode())) {
-			log.errorf("UserCode %s does not match answer source %s",
-					userToken.getUserCode(),
-					answer.getSourceCode());
-			return blacklist();
-		}
+		if (!(userToken.getUserCode()).equals(answer.getSourceCode()))
+			return blacklist(String.format("UserCode %s does not match answer source %s", userToken.getUserCode(), answer.getSourceCode()));
 
 		// check processId is not blank
 		String processId = answer.getProcessId();
 		log.info("CHECK Integrity of processId [" + processId + "]");
-		if (StringUtils.isBlank(processId)) {
-			log.error("ProcessId is blank");
-			return blacklist();
-		}
+		if (StringUtils.isBlank(processId))
+			return blacklist("ProcessId is blank");
 
 		// Check if inferredflag is set
-		if (answer.getInferred()) {
-			log.error("InferredFlag is set");
-			return blacklist();
-		}
+		if (answer.getInferred())
+			return blacklist("InferredFlag is set");
 
 		// fetch process data from graphql
 		ProcessData processData = qwandaUtils.fetchProcessData(processId);
@@ -237,24 +230,18 @@ public class TopologyProducer {
 			return false;
 		}
 
-		if (processData.getAttributeCodes() == null) {
-			log.error("AttributeCodes null");
-			return blacklist();
-		}
+		if (processData.getAttributeCodes() == null)
+			return blacklist("AttributeCodes null");
 
-		if (!processData.getAttributeCodes().contains(attributeCode)) {
-			log.error("AttributeCode " + attributeCode + " does not existing");
-			return blacklist();
-		}
+		if (!processData.getAttributeCodes().contains(attributeCode))
+			return blacklist("AttributeCode " + attributeCode + " does not existing");
 
 		// check target is same
 		BaseEntity target = qwandaUtils.generateProcessEntity(processData);
-		if (!target.getCode().equals(answer.getTargetCode())) {
-			log.warn("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
-			return blacklist();
-		}
+		if (!target.getCode().equals(answer.getTargetCode()))
+			return blacklist("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
 
-		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 		log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
@@ -276,30 +263,22 @@ public class TopologyProducer {
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 
 		// check attribute code is allowed by target DEF
-		if (!definition.containsEntityAttribute("ATT_" + attributeCode)) {
-			log.error("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
-			return blacklist();
-		}
+		if (!definition.containsEntityAttribute("ATT_" + attributeCode))
+			return blacklist("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
 
 		temporaryBucketSearchHandler(answer, target, attribute);
 
 		// handleBucketSearch(ans)
 		if ("PRI_ABN".equals(attributeCode)) {
-
-			if (isValidABN(answer.getValue())) {
+			if (isValidABN(answer.getValue()))
 				return true;
-			}
-			log.errorf("invalid ABN %s", answer.getValue());
-			return blacklist();
+			return blacklist(String.format("invalid ABN %s", answer.getValue()));
 		}
 
 		if ("PRI_CREDITCARD".equals(attributeCode)) {
-
-			if (isValidCreditCard(answer.getValue())) {
+			if (isValidCreditCard(answer.getValue()))
 				return true;
-			}
-			log.errorf("invalid Credit Card %s", answer.getValue());
-			return blacklist();
+			return blacklist(String.format("invalid Credit Card %s", answer.getValue()));
 		}
 
 		// check if answer is null
@@ -310,12 +289,9 @@ public class TopologyProducer {
 		}
 
 		// blacklist if none of the regex match
-		if (!qwandaUtils.validationsAreMet(attribute, answer.getValue())) {
-			log.info("Answer Value is bad: " + answer.getValue());
-			return blacklist();
-		} else {
-			log.info("Answer Value is good: " + answer.getValue());
-		}
+		if (!qwandaUtils.validationsAreMet(attribute, answer.getValue()))
+			return blacklist("Answer Value is bad: " + answer.getValue());
+		log.info("Answer Value is good: " + answer.getValue());
 
 		return true;
 	}
@@ -327,16 +303,12 @@ public class TopologyProducer {
 	 *
 	 * @return Boolean
 	 */
-	public Boolean blacklist() {
-
+	public Boolean blacklist(String err) {
 		String uuid = userToken.getUuid();
-
+		log.error(err);
 		log.info("BLACKLIST " + (enableBlacklist ? "ON" : "OFF") + " " + userToken.getEmail() + ":" + uuid);
-
-		if (!enableBlacklist) {
+		if (!enableBlacklist)
 			return true;
-		}
-
 		KafkaUtils.writeMsg(KafkaTopic.BLACKLIST, uuid);
 		return false;
 	}

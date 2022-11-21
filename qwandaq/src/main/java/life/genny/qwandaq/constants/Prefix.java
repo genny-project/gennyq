@@ -34,6 +34,7 @@ public class Prefix {
 
 	// capability
 	public static final String CAP = "CAP_";
+	public static final String PRM = "PRM_";
 
 	// search entity
 	public static final String SBE = "SBE_";

@@ -35,6 +35,7 @@ import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
@@ -477,13 +478,13 @@ public class QwandaUtils {
 	/**
 	 * @param asks
 	 * @param target
-	 * @param defBE
+	 * @param definition
 	 * @param flatMapAsks
 	 * @return
 	 */
-	public Map<String, Ask> updateDependentAsks(BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
+	public Map<String, Ask> updateDependentAsks(BaseEntity target, Definition definition, Map<String, Ask> flatMapAsks) {
 
-		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes(Prefix.DEP);
+		List<EntityAttribute> dependentAsks = definition.findPrefixEntityAttributes(Prefix.DEP);
 
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
@@ -728,12 +729,12 @@ public class QwandaUtils {
 
 			// fetch target and target DEF
 			BaseEntity target = beUtils.getBaseEntity(targetCode);
-			BaseEntity defBE = defUtils.getDEF(target);
+			Definition definition = defUtils.getDEF(target);
 
 			// filter Non-valid answers using def
 			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
 			List<Answer> validAnswers = group.stream()
-					.filter(item -> defUtils.answerValidForDEF(defBE, item))
+					.filter(item -> defUtils.answerValidForDEF(definition, item))
 					.collect(Collectors.toList());
 
 			// update target using valid answers
@@ -775,14 +776,14 @@ public class QwandaUtils {
 	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
 
 		// grab def entity
-		BaseEntity defBE = defUtils.getDEF(baseEntity);
+		Definition definition = defUtils.getDEF(baseEntity);
 
 		String sourceCode = userToken.getUserCode();
 		String targetCode = baseEntity.getCode();
 
 		// create GRP ask
 		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
-		Question question = new Question(DefUtils.PREF_QUE_BASE_GRP,
+		Question question = new Question(Question.QUE_BASEENTITY_GRP,
 				"Edit " + targetCode + " : " + baseEntity.getName(),
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
@@ -793,7 +794,7 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid atribute
-		defBE.getBaseEntityAttributes().stream()
+		definition.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
 				.forEach((ea) -> {
 					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
@@ -841,7 +842,7 @@ public class QwandaUtils {
 	 *                   original target
 	 * @return Boolean
 	 */
-	public Boolean isDuplicate(BaseEntity definition, Answer answer, BaseEntity... targets) {
+	public Boolean isDuplicate(Definition definition, Answer answer, BaseEntity... targets) {
 
 		// Check if attribute code exists as a UNQ for the DEF
 		List<EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");

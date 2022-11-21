@@ -15,6 +15,7 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -57,7 +58,7 @@ public class ProcessAnswers {
 		}
 
 		// check if the answer is valid for the target
-		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 		if (!defUtils.answerValidForDEF(definition, answer)) {
 			log.error("Bad incoming answer... Not saving!");
 			return false;
@@ -76,7 +77,7 @@ public class ProcessAnswers {
 	 */
 	public Boolean checkUniqueness(ProcessData processData) {
 
-		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
 
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
