@@ -668,6 +668,8 @@ public class BaseEntityUtils {
 
 			if (StringUtils.isBlank(code))
 				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
+			if (StringUtils.isBlank(name))
+				name = defBE.getName();
 
 			// create entity and set realm check if code already exists
 			try {
@@ -786,8 +788,9 @@ public class BaseEntityUtils {
 			throw new DebugException("Prefix not provided" + defBE.getCode());
 		}
 
+		String name = defBE.getName();
 		String code = optCode.get() + "_" + uuid.toUpperCase();
-		item = new BaseEntity(code, "");
+		item = new BaseEntity(code, name);
 		item.setRealm(userToken.getProductCode());
 
 		// add email and username
