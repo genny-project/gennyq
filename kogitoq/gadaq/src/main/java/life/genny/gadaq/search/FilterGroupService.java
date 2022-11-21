@@ -147,6 +147,19 @@ public class FilterGroupService {
     /**
      * Being filter optio whether selected or not
      * @param code Event Code
+     * @return filter option selected
+     */
+    public boolean isSearchSelected(String code) {
+        boolean result = false;
+        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SELECT)) {
+            return true;
+        }
+        return result;
+    }
+
+    /**
+     * Being filter optio whether selected or not
+     * @param code Event Code
      * @param value Message value
      * @return filter option selected
      */
@@ -354,7 +367,8 @@ public class FilterGroupService {
 
     public boolean isFilterBtn(QEventMessage msg) {
         String code = msg.getData().getCode();
-        boolean result = isApply(code) || isBtnSearchAdd(code) || isBtnSearchDelete(code) || isBtnSearchSave(code);
+        boolean result = isApply(code) || isBtnSearchAdd(code) || isBtnSearchDelete(code) || isBtnSearchSave(code)
+                || isDetailDelete(code);
 
         return result;
     }
@@ -368,10 +382,13 @@ public class FilterGroupService {
     public boolean isValidEvent(QDataAnswerMessage msg) {
         String code = getQuestionCode(msg);
         String attCode = getAttributeCode(msg);
-        String value = getValue(msg);
 
         boolean result =  isColumnSelected(code,attCode) || isOptionSelected(code,attCode)
-                || isValueSelected(code) || isFilterBtn(code) || isQuickSearch(code) || isSearchSelected(code,value);
+                || isValueSelected(code) || isFilterBtn(code) || isQuickSearch(code);
+
+        if(isSearchSelected(code)) {
+            return true;
+        }
 
         return result;
     }
@@ -407,7 +424,7 @@ public class FilterGroupService {
      */
     public  boolean isBtnSearchAdd(String code) {
         boolean result = false;
-        if(code != null && code.startsWith(QUE_ADD_SEARCH))
+        if(code != null && code.equalsIgnoreCase(QUE_ADD_SEARCH))
             return true;
         return result;
     }
@@ -483,7 +500,7 @@ public class FilterGroupService {
      */
     public boolean isBtnSearchSave(String code) {
         boolean result = false;
-        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SAVE))
+        if(code!=null && code.equalsIgnoreCase(FilterConst.QUE_SAVED_SEARCH_SAVE))
             return true;
 
         return result;
@@ -496,7 +513,20 @@ public class FilterGroupService {
      */
     public boolean isBtnSearchDelete(String code) {
         boolean result = false;
-        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_DELETE))
+        if(code!=null && code.equalsIgnoreCase(FilterConst.QUE_SAVED_SEARCH_DELETE))
+            return true;
+
+        return result;
+    }
+
+    /**
+     * Being whether saved search detail or not
+     * @param code Event Code
+     * @return Being whether detail delete button  or not
+     */
+    public boolean isDetailDelete(String code) {
+        boolean result = false;
+        if(code!=null && code.equalsIgnoreCase(FilterConst.QUE_SBE_DETAIL_VIEW_DELETE))
             return true;
 
         return result;
@@ -640,6 +670,34 @@ public class FilterGroupService {
 
         filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
                 FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
+    }
+
+    /**
+     * Delete details row
+     * @param sbeCode Sbe code
+     * @param column Attribute code
+     */
+    public void deleteDetail(String sbeCode,String column) {
+        // get from cached
+        Map<String,SavedSearch> params = getParamsFromCache();
+        Map<String,SavedSearch> paramsClone = getParamsFromCache();
+
+        // remove parameter by attribute code
+        for(Map.Entry<String, SavedSearch> param : paramsClone.entrySet()) {
+            String strJson = jsonb.toJson(param.getValue());
+            SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
+
+            if(ss.getColumn().equalsIgnoreCase(column)) {
+                params.remove(param.getKey());
+            }
+        }
+
+        // send pcm  and base entities
+        BaseEntity base = new BaseEntity(sbeCode);
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
+
+        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),params);
     }
 
     /**
@@ -900,6 +958,32 @@ public class FilterGroupService {
     }
 
     /**
+     * Dropdown value
+     * @param value Value
+     * @return dropdown value
+     */
+    public String getDropdownValue(String value) {
+        JsonObject json = jsonb.fromJson(value, JsonObject.class);
+        if(json.containsKey(FilterConst.VALUE)) {
+            return json.getString(FilterConst.VALUE);
+        }
+        return "";
+    }
+
+    /**
+     * Get iscode attribute
+     * @param value isCode attribute
+     * @return isCode value
+     */
+    public boolean isCode(String value) {
+        JsonObject json = jsonb.fromJson(value, JsonObject.class);
+        if(json.containsKey(FilterConst.ISCODE)) {
+            return json.getBoolean(FilterConst.ISCODE);
+        }
+        return false;
+    }
+
+    /**
      * Get search code
      * @param msg Message object
      * @return search code
@@ -959,6 +1043,12 @@ public class FilterGroupService {
             /* Button delete search */
             if(isBtnSearchDelete(code)) {
                  handleDeleteSearch(value);
+                 return;
+            }
+            /* Details delet */
+            if(isDetailDelete(code)){
+                deleteDetail(targetCode, value);
+                return;
             }
 
             // Quick search selected
@@ -1005,8 +1095,11 @@ public class FilterGroupService {
                 return;
             }
             /* saved search saved */
-            if(isSearchSelected(code,value)) {
-                handleSearchSelected(code,value);
+            if(isSearchSelected(code)) {
+                String dropdownVal = getDropdownValue(value);
+                if(isCode(value)) {
+                    handleSearchSelected(code, dropdownVal);
+                }
             }
 
             /* Quick search selected */

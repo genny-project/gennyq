@@ -757,14 +757,20 @@ public class FilterService {
             String strJson = jsonb.toJson(param.getValue());
             SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-            String rowVal = ss.getColumn() + FilterConst.SEPARATOR
-                            + ss.getOperator().replaceFirst(FilterConst.SEL_PREF,"")
-                            + FilterConst.SEPARATOR + ss.getValue();
+            Attribute att= qwandaUtils.getAttribute(ss.getColumn());
+            StringBuilder valBuild = new StringBuilder(ss.getColumn());
+            valBuild.append(FilterConst.SEPARATOR+ss.getOperator());
+            valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
 
-            Attribute attribute = qwandaUtils.getAttribute(ss.getColumn());
-            EntityAttribute ea = new EntityAttribute(base, attribute, 1.0);
-            ea.setValue(rowVal);
-            ea.setValueString(rowVal);
+            StringBuilder lblBuild = new StringBuilder(att.getName() + FilterConst.SEPARATOR);
+            lblBuild.append(ss.getOperator().replaceFirst(FilterConst.SEL_PREF, "").replaceAll("_"," "));
+            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(FilterConst.SEL_PREF, ""));
+
+            EntityAttribute ea = new EntityAttribute(base, att, 1.0);
+            ea.setAttributeName(lblBuild.toString());
+            ea.setValue(valBuild.toString());
+            ea.setValueString(valBuild.toString());
+
             base.getBaseEntityAttributes().add(ea);
         }
 

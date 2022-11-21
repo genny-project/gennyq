@@ -138,6 +138,10 @@ public class InternalConsumer {
 		}
 		events.route(msg);
 
+		if(filter.isFilterBtn(msg)) {
+			filter.handleBtnEvents(msg);
+		}
+
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");

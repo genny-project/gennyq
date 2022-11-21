@@ -147,6 +147,7 @@ public class Events {
 
 		// table view (Default View Mode)
 		if (code.startsWith("QUE_TABLE_")) {
+			filter.init(code);
 			search.sendTable(code);
 			return;
 		}
