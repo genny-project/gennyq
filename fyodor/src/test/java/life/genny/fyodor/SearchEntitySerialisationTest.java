@@ -25,15 +25,15 @@ public class SearchEntitySerialisationTest {
     public void serialiseTrait() {
 
         SearchEntity entity = new SearchEntity(SBE_TABLE_APPLICATIONS, "Applications")
-        .add(new Filter("LNK_TEST_LINK", Operator.CONTAINS, "DEF_TEST"))
-        .add(new AssociatedColumn("LNK_TEST1", "PRI_DUMMY_ATTRIBUTE_NINE_THOUSAND", "Assc. column 1"))
-        .add(new Column("PRI_ATTRIB_TEST_NO_CONSTANT", "Some value here"))
-        .add(new AssociatedColumn("LNK_TEST2", "PRI_DUMMY_ATTRIBUTE", "Funny Attribute Name"))
-        .add(new AssociatedColumn("LNK_TEST3", "PRI_GRRR", "Email"))
-        .add(new AssociatedColumn("LNK_TEST4", "PRI_THIS_IS_A_TEST_ATTRIB", "Dan"))
-        .add(new Column("PRI_ATTRIB1", "Some attribute"))
-        .add(new AssociatedColumn("LNK_TEST5", "PRI_JOE_ATTRIBUTE", "Joe"))
-        .add(new Action("TEST_ACTION_THINGY", "ACTION THINGY"))
+        .add(new Filter("LNK_DEF", Operator.CONTAINS, DEF_APPLICATION))
+        .add(new AssociatedColumn("LNK_PROPERTY", "PRI_NAME", "Property Heading"))
+        .add(new Column("PRI_CREATED", "Date Submitted"))
+        .add(new AssociatedColumn("LNK_TENANT", "PRI_NAME", "Tenant Name"))
+        .add(new AssociatedColumn("LNK_TENANT", "PRI_EMAIL", "Tenant Email"))
+        .add(new AssociatedColumn("LNK_TENANT", "PRI_MOBILE", "Tenant Mobile"))
+        .add(new Column("PRI_APPROVED", "Approved"))
+        .add(new AssociatedColumn("LNK_PROPERTY", "PRI_NAME", "Applied"))
+        .add(new Action("VIEW", "View"))
         .setPageSize(20)
         .setPageStart(0);
         System.out.println("Entity AC: " + entity.getTraitMap().getList(AssociatedColumn.class).size());
@@ -45,7 +45,7 @@ public class SearchEntitySerialisationTest {
         CommonUtils.printCollection(entity.getBaseEntityAttributes());
 
         String json = jsonb.toJson(entity);
-        System.out.println("JSOON: " + json);
+        // System.out.println("JSOON: " + json);
 
         SearchEntity entity2 = jsonb.fromJson(json, SearchEntity.class);
         System.out.println("Post Serializable Entity AC: " + entity.getTraitMap().getList(AssociatedColumn.class).size());

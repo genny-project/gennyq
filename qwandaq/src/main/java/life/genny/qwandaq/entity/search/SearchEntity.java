@@ -3,6 +3,7 @@ package life.genny.qwandaq.entity.search;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -567,19 +568,19 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity convertToSendable() {
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
-		for(Class<? extends Trait> clazz : TraitMap.SERIALIZED_TRAIT_TYPES) {
-			List<Trait> list = (List<Trait>) traits.getList(clazz);
+		for(Entry<Class<? extends Trait>, String> traitEntry : TraitMap.SERIALIZED_TRAIT_TYPES.entrySet()) {
+			List<Trait> list = (List<Trait>) traits.getList(traitEntry.getKey());
 			boolean plural = list.size() > 1;
 			String msg = new StringBuilder("Serializing ")
 							.append(list.size())
 							.append(" ")
-							.append(clazz.getSimpleName())
+							.append(traitEntry.getKey().getSimpleName())
 							.append(plural ? "s as EntityAttributes" : " as an EntityAttribute")
 							.toString();
 			log.info(msg);
 			for(int i = 0; i < list.size(); i++) {
 				Trait trait = list.get(i);
-				Attribute attribute = new Attribute(Column.PREFIX + trait.getCode(), trait.getName(),
+				Attribute attribute = new Attribute(traitEntry.getValue() + trait.getCode(), trait.getName(),
 						new DataType(String.class));
 				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
 				ea.setIndex(i);

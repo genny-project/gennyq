@@ -3,6 +3,7 @@ package life.genny.qwandaq.entity.search;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.json.bind.annotation.JsonbTransient;
 
@@ -13,11 +14,11 @@ import life.genny.qwandaq.entity.search.trait.Trait;
 
 public class TraitMap extends HashMap<Class<? extends Trait>, List<? extends Trait>> {
 
-	public final static List<Class<? extends Trait>> SERIALIZED_TRAIT_TYPES = new ArrayList<>();
+	public final static Map<Class<? extends Trait>, String> SERIALIZED_TRAIT_TYPES = new HashMap<>();
     static {
-            SERIALIZED_TRAIT_TYPES.add(Column.class);
-            SERIALIZED_TRAIT_TYPES.add(AssociatedColumn.class);
-            SERIALIZED_TRAIT_TYPES.add(Action.class);
+            SERIALIZED_TRAIT_TYPES.put(Column.class, Column.PREFIX);
+            SERIALIZED_TRAIT_TYPES.put(AssociatedColumn.class, AssociatedColumn.PREFIX);
+            SERIALIZED_TRAIT_TYPES.put(Action.class, Action.PREFIX);
     }
 
     @JsonbTransient
