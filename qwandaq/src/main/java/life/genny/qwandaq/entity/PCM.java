@@ -24,9 +24,6 @@ public class PCM extends BaseEntity {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	/**
-	 *
-	 */
 	public static final String TPL_VERT = "TPL_VERT";
 	public static final String TPL_HORI = "TPL_HORI";
 

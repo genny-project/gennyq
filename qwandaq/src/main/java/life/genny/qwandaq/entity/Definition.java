@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTransient;
 
 import org.jboss.logging.Logger;
 
@@ -21,7 +22,12 @@ public class Definition extends BaseEntity {
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	public static final String PREFIX = Prefix.DEF;
+	// core
+	public static final String DEF_COMMON = "DEF_COMMON";
+	public static final String DEF_PERSON = "DEF_PERSON";
+	public static final String DEF_COMPANY = "DEF_COMPANY";
+
+	public static final String DEF_USER = "DEF_USER";
 
 	public Definition(String code, String name) {
 		super(code, name);
@@ -41,6 +47,7 @@ public class Definition extends BaseEntity {
 		setValue(Prefix.ATT.concat(attributeCode), mandatory);
 	}
 
+	@JsonbTransient
 	public List<EntityAttribute> getAllowedAttributes() {
 		return findPrefixEntityAttributes(Prefix.ATT);
 	}
@@ -49,6 +56,7 @@ public class Definition extends BaseEntity {
 		setValue(Prefix.DFT.concat(attributeCode), value);
 	}
 
+	@JsonbTransient
 	public List<EntityAttribute> getDefaultValues() {
 		return findPrefixEntityAttributes(Prefix.DFT);
 	}

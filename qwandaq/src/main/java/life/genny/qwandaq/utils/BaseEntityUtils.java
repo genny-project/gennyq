@@ -30,6 +30,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -116,8 +117,18 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public PCM getPCM(String code) {
-
 		return PCM.from(getBaseEntity(code));
+	}
+
+	/**
+	 * Get a Definition using a code, but throw an
+	 * ItemNotFoundException if the entity does not exist.
+	 * 
+	 * @param code
+	 * @return
+	 */
+	public Definition getDefinition(String code) {
+		return Definition.from(getBaseEntity(code));
 	}
 
 	/**
@@ -128,7 +139,6 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-
 		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
 	}
 
@@ -141,11 +151,9 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
-
 		BaseEntity baseEntity = getBaseEntityOrNull(productCode, code);
 		if (baseEntity == null)
 			throw new ItemNotFoundException(code);
-
 		return baseEntity;
 	}
 
@@ -156,7 +164,6 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity, or null if not found
 	 */
 	public BaseEntity getBaseEntityOrNull(String code) {
-
 		return getBaseEntityOrNull(userToken.getProductCode(), code);
 	}
 
@@ -168,7 +175,6 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity, or null if not found
 	 */
 	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
-
 		return getBaseEntityByCode(productCode, code);
 	}
 
@@ -180,9 +186,8 @@ public class BaseEntityUtils {
 	 */
 	@Deprecated
 	public BaseEntity getBaseEntityByCode(String code) {
-		if (userToken == null) {
+		if (userToken == null)
 			throw new NullParameterException("User Token");
-		}
 		return getBaseEntityByCode(serviceToken.getProductCode(), code);
 	}
 
@@ -260,14 +265,12 @@ public class BaseEntityUtils {
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(String productCode, BaseEntity baseEntity) {
-
 		// ensure for all entityAttribute that baseentity and attribute are not null
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 			ea.setRealm(productCode);
 			if (ea.getPk().getBaseEntity() == null) {
 				ea.getPk().setBaseEntity(baseEntity);
 			}
-
 			if (ea.getPk().getAttribute() == null) {
 				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
 				ea.getPk().setAttribute(attribute);
@@ -310,9 +313,8 @@ public class BaseEntityUtils {
 
 		String newBaseEntityCode = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		// return null if attributeCode valueString is null or empty
-		if (StringUtils.isEmpty(newBaseEntityCode)) {
+		if (StringUtils.isEmpty(newBaseEntityCode))
 			return null;
-		}
 		try {
 			BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
 			return newBe;
@@ -330,7 +332,6 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity code stored in the attribute
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(String baseEntityCode, String attributeCode) {
-
 		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		return getBaseEntityCodeFromLinkAttribute(be, attributeCode);
 	}
