@@ -33,8 +33,12 @@ public class TraitMap extends HashMap<Integer, List<? extends Trait>> {
 
 	public <T extends Trait> List<T> get(Class<T> traitType) {
 		int id = TRAIT_MAP.getKey(traitType);
-		List<T> traitList = (List<T>) super.get(id);
-		return traitList;
+		List<T> list = (List<T>) super.get(id);
+		if(list == null) {
+			list = new ArrayList<T>();
+			put(TRAIT_MAP.getKey(traitType), list);
+		}
+		return list;
 	}
 
 	public <T extends Trait> List<? extends Trait> put(Class<T> traitType, List<T> list) {
@@ -48,10 +52,6 @@ public class TraitMap extends HashMap<Integer, List<? extends Trait>> {
 
 	private <T extends Trait> void add(Class<T> traitType, T trait) {
 		List<T> list = (List<T>) get(traitType);
-		if(list == null) {
-			list = new ArrayList<T>();
-			put(TRAIT_MAP.getKey(trait.getClass()), list);
-		}
 		list.add(trait);
 		System.out.println(list.get(0).getClass());
 		

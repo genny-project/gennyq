@@ -611,7 +611,9 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	public <T extends Trait> List<T> getTraits(Class<T> traitType) {
-		return traits.get(traitType);
+		List<T> t = traits.get(traitType);
+		if(t == null) return new ArrayList<>();
+		return t;
 	}
 
 	public <T extends Trait> void setTraits(Class<T> traitType, List<T> traits) {
