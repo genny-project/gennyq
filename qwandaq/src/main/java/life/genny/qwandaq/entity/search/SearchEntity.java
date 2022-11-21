@@ -24,6 +24,7 @@ import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
 
 import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
@@ -559,6 +560,10 @@ public class SearchEntity extends BaseEntity {
 			});
 
 		return this;
+	}
+
+	public List<AssociatedColumn> getAssociatedColumns() {
+		return getTraitMap().getList(AssociatedColumn.class);
 	}
 
 	/**

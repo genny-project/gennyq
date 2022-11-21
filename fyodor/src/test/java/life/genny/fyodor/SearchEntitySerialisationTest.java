@@ -49,7 +49,7 @@ public class SearchEntitySerialisationTest {
 
         SearchEntity entity2 = jsonb.fromJson(json, SearchEntity.class);
         System.out.println("Post Serializable Entity AC: " + entity.getTraitMap().getList(AssociatedColumn.class).size());
-
+        CommonUtils.printCollection(entity.getAssociatedColumns(), (AssociatedColumn col) -> col.getCode() + " " + col.getName());
         System.out.println("Entity Attributes: " + entity2.getBaseEntityAttributes().size());
         System.out.println("===============================================");
         CommonUtils.printCollection(entity2.getBaseEntityAttributes());
