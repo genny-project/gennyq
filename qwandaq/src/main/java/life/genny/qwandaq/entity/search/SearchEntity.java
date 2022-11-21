@@ -562,6 +562,10 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
+	public void setAssociatedColumns(List<AssociatedColumn> list) {
+		getTraitMap().put(AssociatedColumn.class, list);
+	}
+
 	public List<AssociatedColumn> getAssociatedColumns() {
 		return getTraitMap().getList(AssociatedColumn.class);
 	}
