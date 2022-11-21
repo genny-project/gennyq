@@ -17,9 +17,6 @@ import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.utils.CommonUtils;
 
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
 
 public class TraitMapSerialisationTest {
 	public static final String SBE_TABLE_APPLICATIONS = "SBE_TABLE_APPLICATIONS";
@@ -50,9 +47,10 @@ public class TraitMapSerialisationTest {
         System.out.println(json);
         
         TraitMap map2 = jsonb.fromJson(json, TraitMap.class);
-        List<Action> acts = map2.get(Action.class);
         CommonUtils.printMap(map2);
-        // assertEquals(map, map2);
+        map2.clear();
+        System.out.println("CLEARED" + map2.size());
+        CommonUtils.printMap(map2);
     }
 
     @Test

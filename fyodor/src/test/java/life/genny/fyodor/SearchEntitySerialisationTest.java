@@ -39,7 +39,6 @@ public class SearchEntitySerialisationTest {
         System.out.println("Entity AC: " + entity.getTraitMap().get(AssociatedColumn.class).size());
         System.out.println("Entity Attributes: " + entity.getBaseEntityAttributes().size());
         // entity = entity.convertToSendable();
-        System.out.println("Post sendable Entity AC: " + entity.getTraitMap().get(AssociatedColumn.class).size());
         System.out.println("Entity Attributes: " + entity.getBaseEntityAttributes().size());
         System.out.println("===============================================");
         CommonUtils.printCollection(entity.getBaseEntityAttributes());
@@ -48,7 +47,6 @@ public class SearchEntitySerialisationTest {
         System.out.println("JSOON: " + json);
 
         SearchEntity entity2 = jsonb.fromJson(json, SearchEntity.class);
-        System.out.println("Post Serializable Entity AC: " + entity.getTraitMap().get(AssociatedColumn.class).size());
 
         System.out.println("Entity Attributes: " + entity2.getBaseEntityAttributes().size());
         System.out.println("===============================================");

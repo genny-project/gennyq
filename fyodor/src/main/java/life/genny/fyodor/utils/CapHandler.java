@@ -36,28 +36,28 @@ public class CapHandler extends Manager {
 	 */
 	public void refineColumnsFromCapabilities(SearchEntity searchEntity) {
 
-		List<Column> columns = searchEntity.getColumns();
+		List<Column> columns = searchEntity.getTraits(Column.class);
 		info("Filtering " + columns.size() + " columns");
 		columns = columns.stream()
 				.filter(column -> traitCapabilitiesMet(column))
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + columns.size() + " columns");
-		searchEntity.setColumns(columns);
+		searchEntity.setTraits(Column.class, columns);
 	}
 
 	/**
 	 * @param searchEntity
 	 */
 	public void refineSortsFromCapabilities(SearchEntity searchEntity) {
-		List<Sort> sorts = searchEntity.getSorts();
+		List<Sort> sorts = searchEntity.getTraits(Sort.class);
 		info("Filtering " + sorts.size() + " sorts");
 
 		sorts = sorts.stream()
 				.filter(sort -> traitCapabilitiesMet(sort))
 				.collect(Collectors.toList());
 		info("Filtered down to " + sorts.size() + " sorts");
-		searchEntity.setSorts(sorts);
+		searchEntity.setTraits(Sort.class, sorts);
 	}
 	
 	/**
@@ -80,7 +80,7 @@ public class CapHandler extends Manager {
 	 */
 	public void refineActionsFromCapabilities(SearchEntity searchEntity) {
 
-		List<Action> actions = searchEntity.getActions();
+		List<Action> actions = searchEntity.getTraits(Action.class);
 		info("Filtering " + actions.size() + " actions");
 		
 		actions = actions.stream()
@@ -88,7 +88,7 @@ public class CapHandler extends Manager {
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + actions.size() + " actions");
-		searchEntity.setActions(actions);
+		searchEntity.setTraits(Action.class, actions);
 	}
 
 	/**

@@ -8,7 +8,6 @@ import java.util.stream.IntStream;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.json.bind.annotation.JsonbTransient;
 
 import org.jboss.logging.Logger;
 
@@ -22,7 +21,6 @@ import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
 
-import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
@@ -94,39 +92,6 @@ public class SearchEntity extends BaseEntity {
 
 	public void setClauseContainers(List<ClauseContainer> clauseContainers) {
 		this.clauseContainers = clauseContainers;
-	}
-
-	@JsonbTransient
-	public List<Sort> getSorts() {
-		return traits.get(Sort.class);
-	}
-
-	@JsonbTransient
-	public SearchEntity setSorts(List<Sort> sorts) {
-		this.traits.put(Sort.class, sorts);
-		return this;
-	}
-	
-	@JsonbTransient
-	public List<Column> getColumns() {
-		return traits.get(Column.class);
-	}
-
-	@JsonbTransient
-	public SearchEntity setColumns(List<Column> columns) {
-		this.traits.put(Column.class, columns);
-		return this;
-	}
-
-	@JsonbTransient
-	public List<Action> getActions() {
-		return traits.get(Action.class);
-	}
-
-	@JsonbTransient
-	public SearchEntity setActions(List<Action> actions) {
-		this.traits.put(Action.class, actions);
-		return this;
 	}
 
 	public Boolean getAllColumns() {
@@ -573,7 +538,7 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity convertToSendable() {
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
-		for(Class<? extends Trait> clazz : TraitMap.SERIALIZED_TRAIT_TYPES) {
+		for(Class<? extends Trait> clazz : TraitMap.SENDABLE_TRAIT_TYPES) {
 			List<Trait> list = (List<Trait>) traits.get(clazz);
 			boolean plural = list.size() > 1;
 			String msg = new StringBuilder("Serializing ")
@@ -591,6 +556,8 @@ public class SearchEntity extends BaseEntity {
 				ea.setIndex(i);
 			}
 		}
+
+		traits.clear();
 
 		return this;
 	}
@@ -624,9 +591,16 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	public <T extends Trait> SearchEntity add(Trait trait) {
-		// TODO: Could do ClauseArgument check here
-		((List<T>) traits.get(trait.getClass())).add((T) trait);
+		traits.add(trait);
 		return this;
+	}
+
+	public <T extends Trait> List<T> getTraits(Class<T> traitType) {
+		return traits.get(traitType);
+	}
+
+	public <T extends Trait> void setTraits(Class<T> traitType, List<T> traits) {
+		this.traits.put(traitType, traits);
 	}
 
 	// @JsonbTransient
