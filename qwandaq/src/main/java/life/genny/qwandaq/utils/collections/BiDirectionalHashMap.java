@@ -18,7 +18,7 @@ public class BiDirectionalHashMap<K, V> extends HashMap<K, V> {
         return val;
     }
 
-    public K getKey(V value) {
+    public K getKey(Object value) {
         return reverseMap.get(value);
     }
 }

@@ -97,7 +97,7 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	public List<Sort> getSorts() {
-		return traits.getList(Sort.class);
+		return traits.get(Sort.class);
 	}
 
 	public SearchEntity setSorts(List<Sort> sorts) {
@@ -106,7 +106,7 @@ public class SearchEntity extends BaseEntity {
 	}
 	
 	public List<Column> getColumns() {
-		return traits.getList(Column.class);
+		return traits.get(Column.class);
 	}
 
 	public SearchEntity setColumns(List<Column> columns) {
@@ -115,7 +115,7 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	public List<Action> getActions() {
-		return traits.getList(Action.class);
+		return traits.get(Action.class);
 	}
 
 	public SearchEntity setActions(List<Action> actions) {
@@ -520,7 +520,7 @@ public class SearchEntity extends BaseEntity {
 	 * @return Set
 	 */
 	public Set<String> allowedColumns() {
-		return traits.getList(Column.class).stream()
+		return traits.get(Column.class).stream()
 				.map(c -> c.getCode())
 				.collect(Collectors.toSet());
 	}
@@ -546,7 +546,7 @@ public class SearchEntity extends BaseEntity {
 			});
 
 		// add sort attributes
-		List<Sort> sorts = traits.getList(Sort.class);
+		List<Sort> sorts = traits.get(Sort.class);
 		IntStream.range(0, sorts.size())
 			.forEach(i -> {
 				Sort sort = sorts.get(i);
@@ -568,7 +568,7 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity convertToSendable() {
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
 		for(Class<? extends Trait> clazz : TraitMap.SERIALIZED_TRAIT_TYPES) {
-			List<Trait> list = (List<Trait>) traits.getList(clazz);
+			List<Trait> list = (List<Trait>) traits.get(clazz);
 			boolean plural = list.size() > 1;
 			String msg = new StringBuilder("Serializing ")
 							.append(list.size())
@@ -619,7 +619,7 @@ public class SearchEntity extends BaseEntity {
 
 	public <T extends Trait> SearchEntity add(Trait trait) {
 		// TODO: Could do ClauseArgument check here
-		((List<T>) traits.getList(trait.getClass())).add((T) trait);
+		((List<T>) traits.get(trait.getClass())).add((T) trait);
 		return this;
 	}
 
