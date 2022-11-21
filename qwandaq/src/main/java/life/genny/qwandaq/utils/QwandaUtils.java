@@ -431,7 +431,7 @@ public class QwandaUtils {
 	/**
 	 * @param asks
 	 */
-	public Map<String, Ask> buildAskFlatMap(List<Ask> asks) {
+	public static Map<String, Ask> buildAskFlatMap(List<Ask> asks) {
 		return buildAskFlatMap(new HashMap<String, Ask>(), asks);
 	}
 
@@ -439,7 +439,7 @@ public class QwandaUtils {
 	 * @param map
 	 * @param asks
 	 */
-	public Map<String, Ask> buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
+	public static Map<String, Ask> buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
 
 		if (asks == null)
 			return map;
@@ -463,9 +463,8 @@ public class QwandaUtils {
 		target.getBaseEntityAttributes().stream()
 				.forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
 		for (String d : dependencies) {
-			if (!target.getValue(d).isPresent()) {
+			if (!target.getValue(d).isPresent())
 				return false;
-			}
 		}
 		return true;
 	}
@@ -479,10 +478,10 @@ public class QwandaUtils {
 	 */
 	public Map<String, Ask> updateDependentAsks(BaseEntity target, BaseEntity defBE, Map<String, Ask> flatMapAsks) {
 
-		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes("DEP");
+		List<EntityAttribute> dependentAsks = defBE.findPrefixEntityAttributes(Prefix.DEP);
 
 		for (EntityAttribute dep : dependentAsks) {
-			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), "DEP_");
+			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
 			Ask targetAsk = flatMapAsks.get(attributeCode);
 			if (targetAsk == null) {
 				continue;
@@ -511,26 +510,21 @@ public class QwandaUtils {
 		Boolean answered = true;
 
 		// iterate entity attributes to check which have been answered
-		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
+		// for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
+		for (Ask ask : map.values()) {
 
-			String attributeCode = ea.getAttributeCode();
-
-			Ask ask = map.get(attributeCode);
-			if (ask == null)
-				continue;
+			String attributeCode = ask.getQuestion().getAttribute().getCode();
 
 			Boolean mandatory = ask.getMandatory();
-			if (mandatory == null)
-				continue;
+			Boolean readonly = ask.getReadonly();
 
-			String value = ea.getAsString();
+			String value = baseEntity.getValueAsString(attributeCode);
 
-			// if any are both blank and mandatory, then task is not complete
-			if (mandatory && StringUtils.isBlank(value)) {
+			// if any are blank, mandatory and non-readonly, then task is not complete
+			if ((mandatory && !readonly) && StringUtils.isBlank(value))
 				answered = false;
-			}
 
-			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + ea.getAttributeCode() + " : " + value;
+			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
 			log.info("===> " + resultLine);
 		}
 

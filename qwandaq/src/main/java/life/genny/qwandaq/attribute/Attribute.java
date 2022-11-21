@@ -124,6 +124,10 @@ public class Attribute extends CodedEntity {
 	public static final String EVT_NEXT = "EVT_NEXT";
 	public static final String EVT_PREVIOUS = "EVT_PREVIOUS";
 
+	// person
+	public static final String PRI_FIRSTNAME = "PRI_FIRSTNAME";
+	public static final String PRI_LASTNAME = "PRI_LASTNAME";
+
 	// contact
 	public static final String PRI_MOBILE = "PRI_MOBILE";
 	public static final String PRI_EMAIL = "PRI_EMAIL";
