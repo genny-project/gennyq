@@ -38,7 +38,7 @@ public class SearchEntitySerialisationTest {
         .setPageStart(0);
         System.out.println("Entity AC: " + entity.getTraitMap().get(AssociatedColumn.class).size());
         System.out.println("Entity Attributes: " + entity.getBaseEntityAttributes().size());
-        entity = entity.convertToSendable();
+        // entity = entity.convertToSendable();
         System.out.println("Post sendable Entity AC: " + entity.getTraitMap().get(AssociatedColumn.class).size());
         System.out.println("Entity Attributes: " + entity.getBaseEntityAttributes().size());
         System.out.println("===============================================");

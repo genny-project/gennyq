@@ -76,4 +76,13 @@ public abstract class Trait implements ICapabilityFilterable {
 		
 		return this.getCapabilityRequirements().equals(otherT.getCapabilityRequirements());
 	}
+
+	@Override
+	public String toString() {
+		return new StringBuilder("code=")
+			.append(this.getCode())
+			.append(", name=")
+			.append(this.getName())
+			.toString();
+	}
 }

@@ -96,28 +96,34 @@ public class SearchEntity extends BaseEntity {
 		this.clauseContainers = clauseContainers;
 	}
 
+	@JsonbTransient
 	public List<Sort> getSorts() {
 		return traits.get(Sort.class);
 	}
 
+	@JsonbTransient
 	public SearchEntity setSorts(List<Sort> sorts) {
 		this.traits.put(Sort.class, sorts);
 		return this;
 	}
 	
+	@JsonbTransient
 	public List<Column> getColumns() {
 		return traits.get(Column.class);
 	}
 
+	@JsonbTransient
 	public SearchEntity setColumns(List<Column> columns) {
 		this.traits.put(Column.class, columns);
 		return this;
 	}
 
+	@JsonbTransient
 	public List<Action> getActions() {
 		return traits.get(Action.class);
 	}
 
+	@JsonbTransient
 	public SearchEntity setActions(List<Action> actions) {
 		this.traits.put(Action.class, actions);
 		return this;
@@ -623,7 +629,7 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
-	@JsonbTransient
+	// @JsonbTransient
 	public TraitMap getTraitMap() {
 		return traits;
 	}
