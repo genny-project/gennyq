@@ -6,9 +6,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import static life.genny.gadaq.constants.GadaQConstants.*;
+
+import life.genny.gadaq.constants.GadaQConstants;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.*;
 import org.jboss.logging.Logger;
-import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -102,7 +104,7 @@ public class   SearchCaching {
 				new SearchEntity(SBE_MESSAGE, "Messages")
 						.add(new Filter(PRI_CODE, Operator.LIKE, "MSG_%"))
 						.add(new Column(PRI_NAME, "Code"))
-						.add(new Column(PRI_DESCRIPTION, "Description"))
+						.add(new Column(GadaQConstants.PRI_DESCRIPTION, "Description"))
 						.add(new Column(PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
 						.add(new Column(PRI_CONTEXT_LIST, "Context List"))
 						.add(new Column(PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
