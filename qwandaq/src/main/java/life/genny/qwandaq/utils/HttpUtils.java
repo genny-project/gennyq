@@ -144,7 +144,6 @@ public class HttpUtils {
 	 */
 	@Deprecated
 	public static HttpResponse<String> post(String uri, String body, String token) {
-
 		return post(uri, body, "application/json", token);
 	}
 

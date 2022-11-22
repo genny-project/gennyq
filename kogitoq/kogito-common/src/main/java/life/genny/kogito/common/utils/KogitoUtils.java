@@ -272,49 +272,6 @@ public class KogitoUtils {
 	}
 
 	/**
-	 * Process an event message using EventRoutes
-	 *
-	 * @param event The stringified event message
-	 */
-	public void routeEvent(String event) {
-
-		// check if event is a valid event
-		QEventMessage msg = null;
-		try {
-			msg = jsonb.fromJson(event, QEventMessage.class);
-		} catch (Exception e) {
-			log.error("Cannot parse this event! " + event);
-			e.printStackTrace();
-			return;
-		}
-
-		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
-			return;
-		}
-
-		if (msg.getData().getSourceCode() == null) {
-			log.warn("Event message has no sourceCode, setting sourceCode using userToken...");
-			msg.getData().setSourceCode(userToken.getUserCode());
-		}
-
-		// start new session
-		KieSession session = kieRuntimeBuilder.newKieSession();
-		initSession(session, "EventRoutes");
-
-		// Insert Extras
-		session.insert(gqlUtils);
-		session.insert(qwandaUtils);
-		session.insert(importGithubService);
-		session.insert(baseEntityService);
-		session.insert(msg);
-
-		// trigger EventRoutes rules
-		session.fireAllRules();
-		session.dispose();
-	}
-
-	/**
 	 * Process an Answer msg using inference rules.
 	 *
 	 * @param data The stringified data message
