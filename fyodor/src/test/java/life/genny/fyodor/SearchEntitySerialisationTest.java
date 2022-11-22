@@ -8,12 +8,8 @@ import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.trait.Trait;
-import life.genny.qwandaq.utils.CommonUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.List;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -24,40 +20,25 @@ public class SearchEntitySerialisationTest {
     
     static Jsonb jsonb = JsonbBuilder.create();
 
+    static SearchEntity entity = new SearchEntity(SBE_TABLE_APPLICATIONS, "Applications")
+    .add(new Filter("LNK_TEST_LINK", Operator.CONTAINS, "DEF_TEST"))
+    .add(new AssociatedColumn("LNK_TEST1", "PRI_DUMMY_ATTRIBUTE_NINE_THOUSAND", "Assc. column 1"))
+    .add(new Column("PRI_ATTRIB_TEST_NO_CONSTANT", "Some value here"))
+    .add(new AssociatedColumn("LNK_TEST2", "PRI_DUMMY_ATTRIBUTE", "Funny Attribute Name"))
+    .add(new AssociatedColumn("LNK_TEST3", "PRI_GRRR", "Email"))
+    .add(new AssociatedColumn("LNK_TEST4", "PRI_THIS_IS_A_TEST_ATTRIB", "Dan"))
+    .add(new Column("PRI_ATTRIB1", "Some attribute"))
+    .add(new AssociatedColumn("LNK_TEST5", "PRI_JOE_ATTRIBUTE", "Joe"))
+    .add(new Action("TEST_ACTION_THINGY", "ACTION THINGY"))
+    .add(new Action("TEST_ACTION_THINGY2", "ACTION erefef"))
+    .setPageSize(20)
+    .setPageStart(0);
+
     @Test
     public void serialiseTrait() {
-
-        SearchEntity entity = new SearchEntity(SBE_TABLE_APPLICATIONS, "Applications")
-        .add(new Filter("LNK_TEST_LINK", Operator.CONTAINS, "DEF_TEST"))
-        .add(new AssociatedColumn("LNK_TEST1", "PRI_DUMMY_ATTRIBUTE_NINE_THOUSAND", "Assc. column 1"))
-        .add(new Column("PRI_ATTRIB_TEST_NO_CONSTANT", "Some value here"))
-        .add(new AssociatedColumn("LNK_TEST2", "PRI_DUMMY_ATTRIBUTE", "Funny Attribute Name"))
-        .add(new AssociatedColumn("LNK_TEST3", "PRI_GRRR", "Email"))
-        .add(new AssociatedColumn("LNK_TEST4", "PRI_THIS_IS_A_TEST_ATTRIB", "Dan"))
-        .add(new Column("PRI_ATTRIB1", "Some attribute"))
-        .add(new AssociatedColumn("LNK_TEST5", "PRI_JOE_ATTRIBUTE", "Joe"))
-        .add(new Action("TEST_ACTION_THINGY", "ACTION THINGY"))
-        .setPageSize(20)
-        .setPageStart(0);
-        
-        System.out.println("===============================================");
-
-        CommonUtils.printMap(entity.getTraitMap(), (key) -> key.toString(), (List<? extends Trait> list) -> CommonUtils.getArrayString(list,
-        t -> t.getCode()));
-
         String json = jsonb.toJson(entity);
-
         SearchEntity entity2 = jsonb.fromJson(json, SearchEntity.class);
-        CommonUtils.printMap(entity2.getTraitMap());
-        for(List<? extends Trait> traitList : entity2.getTraitMap().values()) {
-            for(Trait t : traitList) {
-                System.out.println(t.getClass().getSimpleName() + " = " + t);
-            }
-        }
-        // System.out.println(entity2.getTraitMap().get());
         json = jsonb.toJson(entity2);
-        System.out.println("JSON: " + json);
-
         assertEquals(entity, entity2);
     }
 }

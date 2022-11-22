@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -27,7 +28,7 @@ public class TraitMapAdapter implements JsonbAdapter<TraitMap, JsonObject> {
             JsonArrayBuilder traitList = Json.createArrayBuilder();
 
             for(Trait t : trait.getValue()) {
-                traitList.add(jsonb.toJson(t));
+                traitList.add(jsonb.fromJson(jsonb.toJson(t), JsonObject.class));
             }
 
             object.add(Integer.toString(trait.getKey()), traitList.build());
@@ -38,11 +39,15 @@ public class TraitMapAdapter implements JsonbAdapter<TraitMap, JsonObject> {
     @Override
     public TraitMap adaptFromJson(JsonObject obj) throws Exception {
         TraitMap map = new TraitMap();
-        System.out.println("DESERIALISING: " + obj.toString());
         for(Entry<String, JsonValue> entry : obj.entrySet()) {
             int id = Integer.parseInt(entry.getKey());
             Class<? extends Trait> deserialiseClass = TraitMap.TRAIT_MAP_IDS.get(id);
-            System.out.println("Deserialising: " + deserialiseClass.getName()  + ": " + entry.getValue().toString());
+            JsonArray array = entry.getValue().asJsonArray();
+
+            for(int i = 0; i < array.size(); i++) {
+                Trait trait = jsonb.fromJson(array.get(i).toString(), deserialiseClass);
+                map.add(trait);
+            }
         }
 
         return map;

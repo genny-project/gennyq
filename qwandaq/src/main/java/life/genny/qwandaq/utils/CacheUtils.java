@@ -106,7 +106,6 @@ public class CacheUtils {
 
 		log.tracef("realm: %s, key: %s", realm, key);
 		String data = (String) readCache(realm, key);
-		log.info("[!] RETRIEVED DATA: " + data);
 		log.tracef("key: %s, value: %s", key, data);
 
 		if (StringUtils.isEmpty(data)) {

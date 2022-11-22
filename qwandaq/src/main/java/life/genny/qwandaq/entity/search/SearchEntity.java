@@ -631,10 +631,12 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	// @JsonbTransient
+	@JsonbTypeAdapter(TraitMapAdapter.class)
 	public TraitMap getTraitMap() {
 		return traits;
 	}
 
+	@JsonbTypeAdapter(TraitMapAdapter.class)
 	public void setTraitMap(TraitMap map) {
 		this.traits = map;
 	}
