@@ -12,6 +12,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.gadaq.search.FilterGroupService;
+import life.genny.qwandaq.constants.FilterConst;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -142,6 +143,12 @@ public class Events {
 			return;
 		} else if (GennyConstants.PAGINATION_PREV.equals(code)) {
 			search.handleSearchPagination(targetCode, true);
+			return;
+		}
+
+		// bucket pagination
+		if (FilterConst.QUE_TABLE_LAZY_LOAD.equals(code)) {
+			search.handleSearchPagination(targetCode, false);
 			return;
 		}
 
