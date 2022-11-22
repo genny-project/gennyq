@@ -1,8 +1,11 @@
 package life.genny.qwandaq.entity.search;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -36,11 +39,11 @@ import life.genny.qwandaq.serialization.adapters.search.TraitMapAdapter;
 @SuppressWarnings("unchecked")
 @RegisterForReflection
 public class SearchEntity extends BaseEntity {
-	private final static List<Class<? extends Trait>> SENDABLE_TRAIT_TYPES = new ArrayList<>();
+	private final static Map<Class<? extends Trait>, String> SENDABLE_TRAIT_TYPES = new HashMap<>();
     static {
-            SENDABLE_TRAIT_TYPES.add(Column.class);
-            SENDABLE_TRAIT_TYPES.add(AssociatedColumn.class);
-            SENDABLE_TRAIT_TYPES.add(Action.class);
+		SENDABLE_TRAIT_TYPES.put(Column.class, Column.PREFIX);
+		SENDABLE_TRAIT_TYPES.put(AssociatedColumn.class, AssociatedColumn.PREFIX);
+		SENDABLE_TRAIT_TYPES.put(Action.class, Action.PREFIX);
     }
 
 
@@ -506,7 +509,10 @@ public class SearchEntity extends BaseEntity {
 	 * @return Set
 	 */
 	public Set<String> allowedColumns() {
-		return traits.get(Column.class).stream()
+		List<Column> allowed = new ArrayList<>();
+		allowed.addAll(traits.get(Column.class));
+		allowed.addAll(traits.get(AssociatedColumn.class));
+		return allowed.stream()
 				.map(c -> c.getCode())
 				.collect(Collectors.toSet());
 	}
@@ -546,6 +552,14 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
+	public void setAssociatedColumns(List<AssociatedColumn> list) {
+		getTraitMap().put(AssociatedColumn.class, list);
+	}
+
+	public List<AssociatedColumn> getAssociatedColumns() {
+		return getTraitMap().get(AssociatedColumn.class);
+	}
+
 	/**
 	 * Convert to a sendable entity
 	 * 
@@ -553,26 +567,24 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity convertToSendable() {
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
-		for(Class<? extends Trait> clazz : SENDABLE_TRAIT_TYPES) {
-			List<Trait> list = (List<Trait>) traits.get(clazz);
+		for(Entry<Class<? extends Trait>, String> traitEntry : SENDABLE_TRAIT_TYPES.entrySet()) {
+			List<Trait> list = (List<Trait>) traits.get(traitEntry.getKey());
 			boolean plural = list.size() > 1;
 			String msg = new StringBuilder("Serializing ")
 							.append(list.size())
 							.append(" ")
-							.append(clazz.getSimpleName())
+							.append(traitEntry.getKey().getSimpleName())
 							.append(plural ? "s as EntityAttributes" : " as an EntityAttribute")
 							.toString();
 			log.info(msg);
 			for(int i = 0; i < list.size(); i++) {
 				Trait trait = list.get(i);
-				Attribute attribute = new Attribute(Column.PREFIX + trait.getCode(), trait.getName(),
+				Attribute attribute = new Attribute(traitEntry.getValue() + trait.getCode(), trait.getName(),
 						new DataType(String.class));
 				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
 				ea.setIndex(i);
 			}
 		}
-
-		// traits.clear();
 
 		return this;
 	}
