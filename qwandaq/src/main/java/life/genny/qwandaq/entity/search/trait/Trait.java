@@ -21,8 +21,6 @@ public abstract class Trait implements ICapabilityFilterable {
 	private String code;
 	private String name;
 
-	// @JsonbTransient
-	@JsonbTypeAdapter(CapabilityAdapter.class)
 	private Set<Capability> capReqs = new HashSet<>();
 
 	public Trait() {
@@ -65,5 +63,20 @@ public abstract class Trait implements ICapabilityFilterable {
 	public Trait addCapabilityRequirement(String code, CapabilityNode... nodes) {
 		Capability req = new Capability(code, nodes);
 		return addCapabilityRequirement(req);
+	}
+	
+	@Override
+	public boolean equals(Object other) {
+		if(!(other instanceof Trait))
+			return false;
+		Trait otherT = (Trait)other;
+
+		if(!this.code.equals(otherT.code))
+			return false;
+
+		if(!this.name.equals(otherT.name))
+			return false;
+		
+		return this.getCapabilityRequirements().equals(otherT.getCapabilityRequirements());
 	}
 }

@@ -2,7 +2,7 @@ package life.genny.fyodor.endpoints;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.fyodor.utils.FyodorUltra;
-import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.SearchEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
@@ -23,6 +23,22 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+<<<<<<<<< Temporary merge branch 1
+=========
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.vertx.core.http.HttpServerRequest;
+import life.genny.fyodor.utils.FyodorUltra;
+import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.models.Page;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.HttpUtils;
+
+>>>>>>>>> Temporary merge branch 2
 /**
  * Search - Endpoints providing classic Genny Search functionality
  */

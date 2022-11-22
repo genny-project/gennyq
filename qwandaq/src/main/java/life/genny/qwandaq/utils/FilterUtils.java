@@ -1,11 +1,27 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.Ask;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+
+import java.lang.invoke.MethodHandles;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.search.trait.*;
+import life.genny.qwandaq.models.SavedSearch;
+import org.jboss.logging.Logger;
+
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.Or;
@@ -13,20 +29,7 @@ import life.genny.qwandaq.entity.search.trait.*;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.models.UserToken;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+import org.w3c.dom.Attr;
 
 @ApplicationScoped
 public class FilterUtils {
