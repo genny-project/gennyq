@@ -1,7 +1,6 @@
 package life.genny.test.qwandaq.utils;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,29 +50,29 @@ public class QwandaUtilsTest extends BaseTestCase {
             .assertAll();
     }
 
- //    @Test
- //    public void testAskFlatMapBuilder() {
+    @Test
+    public void testAskFlatMapBuilder() {
 
-	// 	List<Ask> asks = new ArrayList<>();
-	// 	asks.add(buildAskGroup());
+		List<Ask> asks = new ArrayList<>();
+		asks.add(buildAskGroup());
 
- //        new JUnitTester<List<Ask>, Boolean>()
- //            .setTest((input) -> {
-	// 			boolean found = true;
-	// 			Map<String, Ask> flatMap = QwandaUtils.buildAskFlatMap(input.input);
-	// 			for (Ask ask : asks) {
-	// 				if (!recursiveAskConfirmation(ask, flatMap))
-	// 					found = false;
-	// 			}
- //                return Expected(found);
- //            })
- //            .createTest("Answered Case")
- //            .setInput(asks)
- //            .setExpected(true)
- //            .build()
+        new JUnitTester<List<Ask>, Boolean>()
+            .setTest((input) -> {
+				boolean found = true;
+				Map<String, Ask> flatMap = QwandaUtils.buildAskFlatMap(input.input);
+				for (Ask ask : asks) {
+					if (!recursiveAskConfirmation(ask, flatMap))
+						found = false;
+				}
+                return Expected(found);
+            })
+            .createTest("Answered Case")
+            .setInput(asks)
+            .setExpected(true)
+            .build()
 
-	// 		.assertAll();
-	// }
+			.assertAll();
+	}
 
     @Test
     public void testMandatoryFieldCheck() {
@@ -131,9 +130,9 @@ public class QwandaUtilsTest extends BaseTestCase {
 				if (!recursiveAskConfirmation(child, flatMap))
 					return false;
 			}
-		}
-		if (flatMap.get(ask.getAttributeCode()) == null)
+		} else if (flatMap.get(ask.getAttributeCode()) == null)
 			return false;
+
 		return true;
 	}
 

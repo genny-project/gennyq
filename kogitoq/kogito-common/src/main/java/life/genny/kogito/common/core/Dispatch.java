@@ -2,7 +2,6 @@ package life.genny.kogito.common.core;
 
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,11 +48,11 @@ import life.genny.qwandaq.utils.SearchUtils;
 @ApplicationScoped
 public class Dispatch {
 
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+	public static final String[] BUTTON_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT, Attribute.EVT_UPDATE };
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	public static final String[] BUTTON_EVENTS = { Attribute.EVT_SUBMIT, Attribute.EVT_NEXT, Attribute.EVT_UPDATE };
+	@Inject Logger log;
 
 	@Inject
 	UserToken userToken;

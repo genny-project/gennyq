@@ -493,7 +493,7 @@ public class QwandaUtils {
 				continue;
 			}
 
-			String[] dependencies = beUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
+			String[] dependencies = CommonUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
 
 			boolean depsAnswered = hasDepsAnswered(target, dependencies);
 			targetAsk.setDisabled(!depsAnswered);
@@ -899,7 +899,7 @@ public class QwandaUtils {
 
 				// clean it up if it is a code
 				if (value.contains("[") && value.contains("]"))
-					value = beUtils.cleanUpAttributeValue(value);
+					value = CommonUtils.cleanUpAttributeValue(value);
 
 				log.info("Adding unique filter: " + code + " like " + value);
 				searchEntity.add(new Filter(code, Operator.LIKE, "%" + value + "%"));

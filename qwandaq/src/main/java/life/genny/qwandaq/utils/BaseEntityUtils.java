@@ -105,7 +105,6 @@ public class BaseEntityUtils {
 	 * @return the user's {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
-
 		return getBaseEntity(userToken.getUserCode());
 	}
 
@@ -163,6 +162,7 @@ public class BaseEntityUtils {
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity, or null if not found
 	 */
+	@Deprecated
 	public BaseEntity getBaseEntityOrNull(String code) {
 		return getBaseEntityOrNull(userToken.getProductCode(), code);
 	}
@@ -174,6 +174,7 @@ public class BaseEntityUtils {
 	 * @param code        The code of the entity to fetch
 	 * @return The BaseEntity, or null if not found
 	 */
+	@Deprecated
 	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
 		return getBaseEntityByCode(productCode, code);
 	}
@@ -276,15 +277,10 @@ public class BaseEntityUtils {
 				ea.getPk().setAttribute(attribute);
 			}
 		}
-
 		baseEntity.setRealm(productCode);
 		databaseUtils.saveBaseEntity(baseEntity);
 		CacheUtils.putObject(productCode, baseEntity.getCode(), baseEntity);
 
-		// BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(),
-		// baseEntity.getCode());
-		// return (BaseEntity)
-		// CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
 		return baseEntity;
 	}
 
@@ -354,7 +350,7 @@ public class BaseEntityUtils {
 			if (!(value instanceof String))
 				return null;
 
-			return cleanUpAttributeValue((String) value);
+			return CommonUtils.cleanUpAttributeValue((String) value);
 		}
 
 		return null;
@@ -395,26 +391,6 @@ public class BaseEntityUtils {
 	}
 
 	/**
-	 * Classic Genny style string clean up. This will remove any double quotes,
-	 * whitespaces and square brackets from the string.
-	 * <p>
-	 * Hope this makes our code look a little
-	 * nicer :)
-	 * <p>
-	 * 
-	 * TODO: Consider moving this to CommonUtils
-	 *
-	 * @param value The value to clean
-	 * @return A clean string
-	 */
-	public String cleanUpAttributeValue(String value) throws NullParameterException {
-		if (value == null)
-			throw new NullParameterException("value");
-		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
-		return cleanCode;
-	}
-
-	/**
 	 * Get the value of an EntityAttribute as an Object.
 	 *
 	 * @param baseEntityCode The code of the entity to grab from
@@ -422,15 +398,12 @@ public class BaseEntityUtils {
 	 * @return The value as an Object
 	 */
 	public Object getBaseEntityValue(final String baseEntityCode, final String attributeCode) {
-
 		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
 		if (be != null) {
 			Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
-			if (ea.isPresent()) {
+			if (ea.isPresent())
 				return ea.get().getObject();
-			}
 		}
-
 		return null;
 	}
 
@@ -442,16 +415,12 @@ public class BaseEntityUtils {
 	 * @return The value as a String
 	 */
 	public static String getBaseEntityAttrValueAsString(BaseEntity be, String attributeCode) {
-
-		if (be == null) {
+		if (be == null)
 			return null;
-		}
-
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getObjectAsString();
 		}
-
 		return null;
 	}
 
