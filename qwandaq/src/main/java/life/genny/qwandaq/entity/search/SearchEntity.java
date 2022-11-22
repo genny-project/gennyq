@@ -1,15 +1,15 @@
 package life.genny.qwandaq.entity.search;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTransient;
 
 import org.jboss.logging.Logger;
 
@@ -24,6 +24,7 @@ import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
 
 import life.genny.qwandaq.entity.search.trait.Action;
+import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
@@ -43,7 +44,7 @@ public class SearchEntity extends BaseEntity {
 	private static final long serialVersionUID = 1L;
 
 	// TODO: Polish this
-	private Map<Class<? extends Trait>, List<? extends Trait>> traits = new HashMap<>();
+	private TraitMap traits = new TraitMap();
 
 	private List<ClauseContainer> clauseContainers = new ArrayList<>();
 	
@@ -97,26 +98,17 @@ public class SearchEntity extends BaseEntity {
 		this.clauseContainers = clauseContainers;
 	}
 
-	public <T extends Trait> List<T> getTraits(Class<T> traitType) {
-		List<? extends Trait> traitList = traits.get(traitType);
-		if (traitList == null) {
-			traitList = new ArrayList<>();
-			traits.put(traitType, traitList);
-		}
-		return (List<T>) traitList;
-	}
-
 	public List<Sort> getSorts() {
-		return getTraits(Sort.class);
+		return traits.getList(Sort.class);
 	}
 
 	public SearchEntity setSorts(List<Sort> sorts) {
 		this.traits.put(Sort.class, sorts);
 		return this;
 	}
-
+	
 	public List<Column> getColumns() {
-		return getTraits(Column.class);
+		return traits.getList(Column.class);
 	}
 
 	public SearchEntity setColumns(List<Column> columns) {
@@ -125,7 +117,7 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	public List<Action> getActions() {
-		return getTraits(Action.class);
+		return traits.getList(Action.class);
 	}
 
 	public SearchEntity setActions(List<Action> actions) {
@@ -530,7 +522,11 @@ public class SearchEntity extends BaseEntity {
 	 * @return Set
 	 */
 	public Set<String> allowedColumns() {
-		return getTraits(Column.class).stream()
+
+		List<Column> allowed = new ArrayList<>();
+		allowed.addAll(traits.getList(Column.class));
+		allowed.addAll(traits.getList(AssociatedColumn.class));
+		return allowed.stream()
 				.map(c -> c.getCode())
 				.collect(Collectors.toSet());
 	}
@@ -556,7 +552,7 @@ public class SearchEntity extends BaseEntity {
 			});
 
 		// add sort attributes
-		List<Sort> sorts = getTraits(Sort.class);
+		List<Sort> sorts = traits.getList(Sort.class);
 		IntStream.range(0, sorts.size())
 			.forEach(i -> {
 				Sort sort = sorts.get(i);
@@ -570,36 +566,39 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
+	public void setAssociatedColumns(List<AssociatedColumn> list) {
+		getTraitMap().put(AssociatedColumn.class, list);
+	}
+
+	public List<AssociatedColumn> getAssociatedColumns() {
+		return getTraitMap().getList(AssociatedColumn.class);
+	}
+
 	/**
 	 * Convert to a sendable entity
 	 * 
 	 * @return SearchEntity
 	 */
 	public SearchEntity convertToSendable() {
-		List<Column> columns = getTraits(Column.class);
-		List<Action> actions = getTraits(Action.class);
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
-		log.info("Columns: " + columns.size());
-		log.info("Actions: " + actions.size());
-		// add action attributes
-		IntStream.range(0, columns.size())
-				.forEach(i -> {
-					Column column = columns.get(i);
-					Attribute attribute = new Attribute(Column.PREFIX + column.getCode(), column.getName(),
-							new DataType(String.class));
-					EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
-					ea.setIndex(i);
-				});
-
-		// add action attributes
-		IntStream.range(0, actions.size())
-				.forEach(i -> {
-					Action action = actions.get(i);
-					Attribute attribute = new Attribute(Action.PREFIX + action.getCode(), action.getName(),
-							new DataType(String.class));
-					EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
-					ea.setIndex(i);
-				});
+		for(Entry<Class<? extends Trait>, String> traitEntry : TraitMap.SERIALIZED_TRAIT_TYPES.entrySet()) {
+			List<Trait> list = (List<Trait>) traits.getList(traitEntry.getKey());
+			boolean plural = list.size() > 1;
+			String msg = new StringBuilder("Serializing ")
+							.append(list.size())
+							.append(" ")
+							.append(traitEntry.getKey().getSimpleName())
+							.append(plural ? "s as EntityAttributes" : " as an EntityAttribute")
+							.toString();
+			log.info(msg);
+			for(int i = 0; i < list.size(); i++) {
+				Trait trait = list.get(i);
+				Attribute attribute = new Attribute(traitEntry.getValue() + trait.getCode(), trait.getName(),
+						new DataType(String.class));
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
+				ea.setIndex(i);
+			}
+		}
 
 		return this;
 	}
@@ -634,7 +633,7 @@ public class SearchEntity extends BaseEntity {
 
 	public <T extends Trait> SearchEntity add(Trait trait) {
 		// TODO: Could do ClauseArgument check here
-		((List<T>) getTraits(trait.getClass())).add((T) trait);
+		((List<T>) traits.getList(trait.getClass())).add((T) trait);
 		return this;
 	}
 
@@ -660,5 +659,10 @@ public class SearchEntity extends BaseEntity {
 		}
 
 		return this;
+	}
+
+	@JsonbTransient
+	public TraitMap getTraitMap() {
+		return traits;
 	}
 }

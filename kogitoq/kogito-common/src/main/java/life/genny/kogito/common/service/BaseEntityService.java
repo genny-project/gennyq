@@ -14,6 +14,7 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -70,7 +71,7 @@ public class BaseEntityService {
 		if (definitionCode == null)
 			throw new NullParameterException("definitionCode");
 
-		if (!definitionCode.startsWith("DEF_"))
+		if (!definitionCode.startsWith(Prefix.DEF))
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity

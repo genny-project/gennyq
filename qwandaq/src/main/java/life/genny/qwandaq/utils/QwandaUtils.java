@@ -660,7 +660,7 @@ public class QwandaUtils {
 
 		// init entity and force the realm
 		log.info("Creating Process Entity " + processData.getProcessEntityCode() + "...");
-		BaseEntity processEntity = new BaseEntity(processData.getProcessEntityCode(), "QuestionBE");
+		BaseEntity processEntity = new BaseEntity(processData.getProcessEntityCode(), target.getName());
 		processEntity.setRealm(userToken.getProductCode());
 
 		List<String> attributeCodes = processData.getAttributeCodes();

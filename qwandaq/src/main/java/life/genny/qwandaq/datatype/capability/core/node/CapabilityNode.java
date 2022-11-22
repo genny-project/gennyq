@@ -4,6 +4,8 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.json.bind.annotation.JsonbTransient;
+
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.jboss.logging.Logger;
 
@@ -54,12 +56,12 @@ public class CapabilityNode {
 	/**
 	 * This capability's mode
 	 */
-	public final CapabilityMode capMode;
+	public CapabilityMode capMode;
 
 	/**
 	 * This capability's permission for the given mode
 	 */
-	public final PermissionMode permMode;
+	public PermissionMode permMode;
 
 	/**
 	 * Create a new capability with the given mode and permissions
@@ -79,15 +81,8 @@ public class CapabilityNode {
 		this.permMode = permMode;
 	}
 
-	/**
-	 * Create a new capability with the given mode and permissions
-	 * @param capMode
-	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
-	 */
-	private CapabilityNode(CapabilityMode capMode) {
-		this(capMode, PermissionMode.SELF);
-	}
+	@Deprecated
+	public CapabilityNode() {}
 
 	/**
 	 * Get the most permissive node between this and another Node
@@ -119,6 +114,7 @@ public class CapabilityNode {
 	 * Get all CapabilityNodes with less permissions than this one for it's given Mode
 	 * @return
 	 */
+	@JsonbTransient
 	public CapabilityNode[] getLesserNodes() {
 		int size = this.permMode.ordinal();
 		CapabilityNode[] lesserNodes = new CapabilityNode[size];

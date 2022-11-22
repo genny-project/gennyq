@@ -84,11 +84,13 @@ public class ProcessAnswers {
 
 		// send error for last answer in the list
 		// NOTE: This should be reconsidered
+		Boolean acceptSubmission = true;
+		if (answers.isEmpty())
+			return acceptSubmission;
 
 		Answer answer = answers.get(answers.size()-1);
 		String attributeCode = answer.getAttributeCode();
 
-		Boolean acceptSubmission = true;
 		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
