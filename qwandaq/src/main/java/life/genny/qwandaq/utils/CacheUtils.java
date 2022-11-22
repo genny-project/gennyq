@@ -106,6 +106,7 @@ public class CacheUtils {
 
 		log.tracef("realm: %s, key: %s", realm, key);
 		String data = (String) readCache(realm, key);
+		log.info("[!] RETRIEVED DATA: " + data);
 		log.tracef("key: %s, value: %s", key, data);
 
 		if (StringUtils.isEmpty(data)) {
@@ -145,8 +146,11 @@ public class CacheUtils {
 	public static void putObject(String realm, String key, Object obj) {
 
 		String json = jsonb.toJson(obj);
+		log.info("========================");
+		log.info("key=" + realm + ":" + key);
+		log.info("data: " + json);
 		cache.getRemoteCache(realm).put(key, json);
-		log.tracef("Caching: [%s:%s]=%s", realm , key, obj);
+		log.tracef("Caching: [%s:%s]=%s", realm , key, json);
 	}
 
 	/**

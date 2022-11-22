@@ -8,9 +8,12 @@ import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.utils.CommonUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -39,14 +42,21 @@ public class SearchEntitySerialisationTest {
         
         System.out.println("===============================================");
 
+        CommonUtils.printMap(entity.getTraitMap(), (key) -> key.toString(), (List<? extends Trait> list) -> CommonUtils.getArrayString(list,
+        t -> t.getCode()));
+
         String json = jsonb.toJson(entity);
-        System.out.println("JSOON: " + json);
 
         SearchEntity entity2 = jsonb.fromJson(json, SearchEntity.class);
-
-        System.out.println("Entity Attributes: " + entity2.getBaseEntityAttributes().size());
-        System.out.println("===============================================");
-        CommonUtils.printCollection(entity2.getBaseEntityAttributes());
+        CommonUtils.printMap(entity2.getTraitMap());
+        for(List<? extends Trait> traitList : entity2.getTraitMap().values()) {
+            for(Trait t : traitList) {
+                System.out.println(t.getClass().getSimpleName() + " = " + t);
+            }
+        }
+        // System.out.println(entity2.getTraitMap().get());
+        json = jsonb.toJson(entity2);
+        System.out.println("JSON: " + json);
 
         assertEquals(entity, entity2);
     }

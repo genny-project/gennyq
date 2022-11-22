@@ -8,6 +8,7 @@ import java.util.stream.IntStream;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 import org.jboss.logging.Logger;
 
@@ -20,11 +21,13 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
+import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
+import life.genny.qwandaq.serialization.adapters.search.TraitMapAdapter;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
@@ -33,6 +36,13 @@ import life.genny.qwandaq.entity.search.trait.Trait;
 @SuppressWarnings("unchecked")
 @RegisterForReflection
 public class SearchEntity extends BaseEntity {
+	private final static List<Class<? extends Trait>> SENDABLE_TRAIT_TYPES = new ArrayList<>();
+    static {
+            SENDABLE_TRAIT_TYPES.add(Column.class);
+            SENDABLE_TRAIT_TYPES.add(AssociatedColumn.class);
+            SENDABLE_TRAIT_TYPES.add(Action.class);
+    }
+
 
 	private static final Logger log = Logger.getLogger(SearchEntity.class);
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -543,7 +553,7 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity convertToSendable() {
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
-		for(Class<? extends Trait> clazz : TraitMap.SENDABLE_TRAIT_TYPES) {
+		for(Class<? extends Trait> clazz : SENDABLE_TRAIT_TYPES) {
 			List<Trait> list = (List<Trait>) traits.get(clazz);
 			boolean plural = list.size() > 1;
 			String msg = new StringBuilder("Serializing ")
@@ -623,5 +633,9 @@ public class SearchEntity extends BaseEntity {
 	// @JsonbTransient
 	public TraitMap getTraitMap() {
 		return traits;
+	}
+
+	public void setTraitMap(TraitMap map) {
+		this.traits = map;
 	}
 }

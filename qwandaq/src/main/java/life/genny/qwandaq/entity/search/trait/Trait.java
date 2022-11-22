@@ -1,7 +1,7 @@
 package life.genny.qwandaq.entity.search.trait;
 
 import java.util.Set;
-
+import java.io.Serializable;
 import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -13,7 +13,7 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
  * Trait
  */
 @RegisterForReflection
-public abstract class Trait implements ICapabilityFilterable {
+public abstract class Trait implements ICapabilityFilterable, Serializable {
 
 	private String code;
 	private String name;

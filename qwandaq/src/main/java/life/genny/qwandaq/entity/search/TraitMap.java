@@ -12,37 +12,28 @@ import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.utils.collections.BiDirectionalHashMap;
 
 import life.genny.qwandaq.entity.search.trait.Trait;
-
 public class TraitMap extends HashMap<Integer, List<? extends Trait>> {
-    private static BiDirectionalHashMap<Integer, Class<? extends Trait>> TRAIT_MAP = new BiDirectionalHashMap<>();
+    public static BiDirectionalHashMap<Integer, Class<? extends Trait>> TRAIT_MAP_IDS = new BiDirectionalHashMap<>();
     static {
-        TRAIT_MAP.put(0, Action.class);
-        TRAIT_MAP.put(1, AssociatedColumn.class);
-        TRAIT_MAP.put(2, Column.class);
-        TRAIT_MAP.put(3, Filter.class);
-        TRAIT_MAP.put(4, Sort.class);
+        TRAIT_MAP_IDS.put(0, Action.class);
+        TRAIT_MAP_IDS.put(1, AssociatedColumn.class);
+        TRAIT_MAP_IDS.put(2, Column.class);
+        TRAIT_MAP_IDS.put(3, Filter.class);
+        TRAIT_MAP_IDS.put(4, Sort.class);
     }
-
-	public final static List<Class<? extends Trait>> SENDABLE_TRAIT_TYPES = new ArrayList<>();
-    static {
-            SENDABLE_TRAIT_TYPES.add(Column.class);
-            SENDABLE_TRAIT_TYPES.add(AssociatedColumn.class);
-            SENDABLE_TRAIT_TYPES.add(Action.class);
-    }
-
 
 	public <T extends Trait> List<T> get(Class<T> traitType) {
-		int id = TRAIT_MAP.getKey(traitType);
+		int id = TRAIT_MAP_IDS.getKey(traitType);
 		List<T> list = (List<T>) super.get(id);
 		if(list == null) {
 			list = new ArrayList<T>();
-			put(TRAIT_MAP.getKey(traitType), list);
+			put(TRAIT_MAP_IDS.getKey(traitType), list);
 		}
 		return list;
 	}
 
 	public <T extends Trait> List<? extends Trait> put(Class<T> traitType, List<T> list) {
-		int id = TRAIT_MAP.getKey(traitType);
+		int id = TRAIT_MAP_IDS.getKey(traitType);
 		return put(id, list);
 	}
 
@@ -52,9 +43,7 @@ public class TraitMap extends HashMap<Integer, List<? extends Trait>> {
 
 	private <T extends Trait> void add(Class<T> traitType, T trait) {
 		List<T> list = (List<T>) get(traitType);
-		list.add(trait);
-		System.out.println(list.get(0).getClass());
-		
+		list.add(trait);		
 	}
 
 }
