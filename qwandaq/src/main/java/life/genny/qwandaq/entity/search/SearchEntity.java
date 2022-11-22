@@ -11,6 +11,7 @@ import java.util.stream.IntStream;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.annotation.JsonbTransient;
 import javax.json.bind.annotation.JsonbTypeAdapter;
 
 import org.jboss.logging.Logger;
@@ -119,12 +120,6 @@ public class SearchEntity extends BaseEntity {
 		this.clauseContainers.add(new ClauseContainer(filter));
 		return this;
 	}
-
-	// public SearchEntity add(AssociatedColumn asscColumn) {
-	// 	System.out.println("ADDING ASSOCIATED COLUMN");
-	// 	this.traits.add(Column.class, asscColumn);
-	// 	return this;
-	// }
 
 	/**
 	 * Add an And clause
@@ -495,11 +490,11 @@ public class SearchEntity extends BaseEntity {
 	/**
 	 * This method allows to remove the attributes from the SearchEntity.
 	 * 
-	 * @param attributeCode the code of the column to remove
+	 * @param attributeCode the code of the column to remove (without COL_)
 	 * @return SearchEntity
 	 */
 	public SearchEntity removeColumn(final String attributeCode) {
-		removeAttribute("COL_" + attributeCode);
+		removeAttribute(Column.PREFIX + attributeCode);
 		return this;
 	}
 
@@ -552,14 +547,6 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
-	public void setAssociatedColumns(List<AssociatedColumn> list) {
-		getTraitMap().put(AssociatedColumn.class, list);
-	}
-
-	public List<AssociatedColumn> getAssociatedColumns() {
-		return getTraitMap().get(AssociatedColumn.class);
-	}
-
 	/**
 	 * Convert to a sendable entity
 	 * 
@@ -586,6 +573,8 @@ public class SearchEntity extends BaseEntity {
 			}
 		}
 
+		// ensure trait data doesn't get sent out to FE
+		traits.clear();
 		return this;
 	}
 
@@ -607,16 +596,6 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return "SearchEntity[ code = " + this.getCode() + "]";
-	}
-
 	public <T extends Trait> SearchEntity add(Trait trait) {
 		traits.add(trait);
 		return this;
@@ -632,17 +611,18 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
+	@JsonbTransient
 	public <T extends Trait> List<T> getTraits(Class<T> traitType) {
 		List<T> t = traits.get(traitType);
 		if(t == null) return new ArrayList<>();
 		return t;
 	}
 
+	@JsonbTransient
 	public <T extends Trait> void setTraits(Class<T> traitType, List<T> traits) {
 		this.traits.put(traitType, traits);
 	}
 
-	// @JsonbTransient
 	@JsonbTypeAdapter(TraitMapAdapter.class)
 	public TraitMap getTraitMap() {
 		return traits;
@@ -651,5 +631,15 @@ public class SearchEntity extends BaseEntity {
 	@JsonbTypeAdapter(TraitMapAdapter.class)
 	public void setTraitMap(TraitMap map) {
 		this.traits = map;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "SearchEntity[ code = " + this.getCode() + "]";
 	}
 }

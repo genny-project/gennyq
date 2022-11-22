@@ -3,7 +3,6 @@ package life.genny.qwandaq.entity.search;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
