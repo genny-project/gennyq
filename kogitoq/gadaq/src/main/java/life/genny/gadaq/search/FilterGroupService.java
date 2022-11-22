@@ -1151,7 +1151,6 @@ public class FilterGroupService {
     public void handleQuickSearch(QDataAnswerMessage msg) {
         try {
             String value = getValue(msg);
-            String targetCode = getTargetCode(msg);
             boolean coded = isCode(value);
             String dropdownVal =  getDropdownValue(value);
             String sbe =  getSbeTableFromCache();

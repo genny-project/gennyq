@@ -297,6 +297,8 @@ public class FilterService {
 
         SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
 
+        clearFilters(searchBE);
+
         // searching by text or search by code
         Filter filter = null;
         String newValue = value.replaceFirst("!","");
@@ -312,6 +314,18 @@ public class FilterService {
 
         String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
         search.sendTable(queCode);
+    }
+
+    /**
+     * Clearn filers from search base entity
+     * @param searchBE Search base entity
+     */
+    public void clearFilters(SearchEntity searchBE) {
+        List<ClauseContainer> cloneList = new ArrayList(searchBE.getClauseContainers());
+
+        for(ClauseContainer cc : cloneList) {
+            searchBE.remove(cc.getFilter());
+        }
     }
 
     /**
