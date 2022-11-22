@@ -562,7 +562,7 @@ public class SearchEntity extends BaseEntity {
 			}
 		}
 
-		traits.clear();
+		// traits.clear();
 
 		return this;
 	}
