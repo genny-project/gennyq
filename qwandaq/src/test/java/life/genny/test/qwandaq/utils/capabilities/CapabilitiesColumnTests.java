@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
-import life.genny.test.qwandaq.utils.BaseTestCase;
+import life.genny.qwandaq.utils.testsuite.BaseTestCase;
 import life.genny.qwandaq.utils.collections.SetBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 

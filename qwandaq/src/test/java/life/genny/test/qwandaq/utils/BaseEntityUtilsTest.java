@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import life.genny.qwandaq.utils.testsuite.BaseTestCase;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.json.bind.Jsonb;

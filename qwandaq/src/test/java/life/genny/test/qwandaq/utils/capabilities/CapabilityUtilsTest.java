@@ -19,7 +19,7 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
-import life.genny.test.qwandaq.utils.BaseTestCase;
+import life.genny.qwandaq.utils.testsuite.BaseTestCase;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;

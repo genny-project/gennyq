@@ -1,6 +1,6 @@
 package life.genny.test.qwandaq.utils.capabilities.requirements;
 
-import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.ALL;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,7 +11,7 @@ import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
-import life.genny.test.qwandaq.utils.BaseTestCase;
+import life.genny.qwandaq.utils.testsuite.BaseTestCase;
 
 public class BaseRequirementsTest extends BaseTestCase {
     

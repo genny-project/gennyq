@@ -1,19 +1,10 @@
-package life.genny.test.qwandaq.utils;
+package life.genny.qwandaq.utils.testsuite;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.mockito.MockitoAnnotations;
-
-import life.genny.qwandaq.utils.testsuite.*;
 
 public class BaseTestCase {
 
     public BaseTestCase() {
         log("Begin " + this.getClass().getSimpleName() + " tests");
-    }
-
-    @BeforeEach
-    void initMocks() {
-        MockitoAnnotations.openMocks(this);
     }
 
     public static void log(Object msg) {
