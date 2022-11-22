@@ -278,7 +278,6 @@ public class FilterService {
         searchBE.remove(filter);
         searchBE.add(filter);
 
-
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
         String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
@@ -286,6 +285,34 @@ public class FilterService {
 
     }
 
+    /**
+     * Handle quick search
+     * @param value Value
+     * @param coded being coded or not
+     * @param targetCode Target code
+     */
+    public void handleQuickSearchDropdown(String value,boolean coded,String targetCode) {
+        String sessionCode = searchUtils.sessionSearchCode(targetCode);
+        String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
+
+        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+
+        // searching by text or search by code
+        Filter filter = null;
+        String newValue = value.replaceFirst("!","");
+        if(coded) {
+            filter = new Filter(FilterConst.PRI_CODE, Operator.EQUALS, value);
+        }else {
+            filter = new Filter(FilterConst.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+        }
+        searchBE.remove(filter);
+        searchBE.add(filter);
+
+        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+
+        String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        search.sendTable(queCode);
+    }
 
     /**
      * Send filter group and filter column for filter function
@@ -639,7 +666,6 @@ public class FilterService {
      * @param lnkValue Link value
      */
     public void sendListSavedSearches(String group,String code,String lnkCode,String lnkValue) {
-//        String sbeJti = getSearchBaseEntityCodeByJTI(FilterConst.SBE_SAVED_SEARCH);
         String sbeCode = FilterConst.SBE_SAVED_SEARCH;
         SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeCode,lnkCode,lnkValue, true);
         QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
@@ -857,6 +883,18 @@ public class FilterService {
      */
     public String getLinkValueCode(String value) {
         return  filterUtils.getLinkValueCode(value);
+    }
+
+    /**
+     * Send dropdown options data
+     * @param code Question code
+     * @param lnkCode Link code
+     * @param lnkValue Link value
+     */
+    public void sendListQuickSearches(String queGrp, String code,String sbeCode,String lnkCode,String lnkValue,String typing) {
+        SearchEntity searchEntity = filterUtils.getListQuickSearches(sbeCode,lnkCode,lnkValue,typing);
+        QDataBaseEntityMessage msg = getBaseItemsMsg(queGrp,code,lnkCode,lnkValue,searchEntity);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
 

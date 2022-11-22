@@ -378,9 +378,9 @@ public class FilterUtils {
         searchBE.add(new Filter(FilterConst.LNK_AUTHOR,Operator.CONTAINS,userToken.getUserCode()));
 
         if(isSortedDate) {
-            searchBE.add(new Sort("PRI_CREATED_DATE", Ord.DESC));
+            searchBE.add(new Sort(FilterConst.PRI_CREATED_DATE, Ord.DESC));
         } else {
-            searchBE.add(new Sort("PRI_CREATED_DATE", Ord.ASC));
+            searchBE.add(new Sort(FilterConst.PRI_CREATED_DATE, Ord.ASC));
         }
 
         searchBE.setRealm(userToken.getProductCode());
@@ -388,4 +388,25 @@ public class FilterUtils {
 
         return searchBE;
     }
+
+
+    /**
+     * Get search base entity
+     * @param sbeCode Search base entity
+     * @param lnkCode link code
+     * @param lnkValue Link value
+     * @param typing Typing value
+     * @return Search entity
+     */
+    public SearchEntity getListQuickSearches(String sbeCode,String lnkCode,String lnkValue,String typing) {
+        SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
+        searchBE.add(new Filter(FilterConst.PRI_NAME, Operator.LIKE, typing+ "_%"))
+                .add(new Column(lnkCode, lnkValue));
+
+        searchBE.setRealm(userToken.getProductCode());
+        searchBE.setPageStart(0).setPageSize(20);
+
+        return searchBE;
+    }
+
 }

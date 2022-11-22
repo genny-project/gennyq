@@ -12,6 +12,7 @@ public class FilterConst {
     public static final String PRI_NAME="PRI_NAME";
     public static final String PRI_CODE="PRI_CODE";
     public static final String FIELD="FIELD_";
+    public static final String PRI_CREATED_DATE="PRI_CREATED_DATE";
 
     /* PCM */
     public static final String PCM_TABLE = "PCM_TABLE";
@@ -130,4 +131,5 @@ public class FilterConst {
 
     public static final String PRI_CREATED = "PRI_CREATED";
     public static final String ISCODE = "isCode";
+
 }

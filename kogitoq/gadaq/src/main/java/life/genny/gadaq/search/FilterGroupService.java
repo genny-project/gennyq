@@ -71,6 +71,9 @@ public class FilterGroupService {
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
     public static final String DELETE = "Delete";
     public static final String QUE_ADD_SEARCH = "QUE_ADD_SEARCH";
+    public static final String QUE_QUICK_SEARCH = "QUE_QUICK_SEARCH";
+    public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
+    public static final String QUE_QUICK_SEARCH_GRP = "QUE_QUICK_SEARCH_GRP";
 
     /**
      * Check code whether is filter select question or not
@@ -384,7 +387,7 @@ public class FilterGroupService {
         String attCode = getAttributeCode(msg);
 
         boolean result =  isColumnSelected(code,attCode) || isOptionSelected(code,attCode)
-                || isValueSelected(code) || isFilterBtn(code) || isQuickSearch(code);
+                || isValueSelected(code) || isFilterBtn(code) || isQuickSearchDropdown(code);
 
         if(isSearchSelected(code)) {
             return true;
@@ -479,13 +482,11 @@ public class FilterGroupService {
 
     /**
      * Handle event if selecting value in quick search
-     * @param token Message token
      * @param attrCode Attribute code
      * @param attrName Attribute name
      * @param value Message value
      */
-    public void selectQuickSearch(String token, String attrCode, String attrName,String value) {
-        user.init(token);
+    public void selectQuickSearch(String attrCode, String attrName,String value) {
         List<String> bucketCodes = filterService.getBucketCodesBySBE(FilterConst.SBE_TAB_BUCKET_VIEW);
         String baseCode = getStripSelectValue(value);
         String newVal = getBaseNameByCode(baseCode);
@@ -1023,6 +1024,33 @@ public class FilterGroupService {
         return false;
     }
 
+    /**
+     *  Send  quick search and filter group
+     * @param msg Message
+     * @return Being whether it was sent or not
+     */
+
+    public boolean isQuickSearchDropdown(QEventMessage msg) {
+        String code = getQuestionCode(msg);
+        if(code !=null && code.equalsIgnoreCase(QUE_QUICK_SEARCH)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *  Send  quick search and filter group
+     * @param code Message Code
+     * @return Being whether it was sent or not
+     */
+
+    public boolean isQuickSearchDropdown(String code) {
+        if(code !=null && code.equalsIgnoreCase(QUE_QUICK_SEARCH)) {
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * Handle filter data event
@@ -1040,6 +1068,12 @@ public class FilterGroupService {
             // init user token
             if(!token.isEmpty()) { user.init(token);}
 
+            /* Send the list of quick search result */
+            if(isQuickSearchDropdown(msg)) {
+                sendListQuickSearchDropdown(msg);
+                return;
+            }
+
             /* Button save search */
             if(isBtnSearchSave(code)) {
                 saveSearch(value);return;
@@ -1053,15 +1087,10 @@ public class FilterGroupService {
                 handleDeleteSearch(value);
                 return;
             }
-            /* Details delet */
+            /* Details delete */
             if(isDetailDelete(code)){
                 deleteDetail(targetCode, value);
                 return;
-            }
-
-            // Quick search selected
-            if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
-                selectQuickSearch(token, attrCode, attrName, value);
             }
 
         } catch (Exception ex){
@@ -1086,7 +1115,7 @@ public class FilterGroupService {
             if(!token.isEmpty()) { user.init(token);}
 
             /* Quick search */
-            if(isQuickSearch(code)) {
+            if(isQuickSearchDropdown(code)) {
                 handleQuickSearch(msg);
                 return;
             }
@@ -1110,32 +1139,28 @@ public class FilterGroupService {
                 }
             }
 
-            /* Quick search selected */
-            if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
-                selectQuickSearch(token, attrCode, attrName, value);
-            }
-
         } catch (Exception ex){
             log.error(ex);
         }
     }
 
     /**
-     * Handle filter data event
+     * Handle quick search
      * @param msg Answer Message
      */
     public void handleQuickSearch(QDataAnswerMessage msg) {
         try {
             String value = getValue(msg);
             String targetCode = getTargetCode(msg);
-
-            filterService.handleQuickSearch(value,targetCode);
+            boolean coded = isCode(value);
+            String dropdownVal =  getDropdownValue(value);
+            String sbe =  getSbeTableFromCache();
+            filterService.handleQuickSearchDropdown(dropdownVal,coded,sbe);
 
         } catch (Exception ex){
             log.error(ex);
         }
     }
-
 
     /**
      * Initialize Cache
@@ -1149,6 +1174,7 @@ public class FilterGroupService {
 
         filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
                 FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
+
     }
 
     /**
@@ -1177,5 +1203,22 @@ public class FilterGroupService {
     public void clearParamsInCache() {
         Map<String, SavedSearch> params = new HashMap<>();
         CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),params);
+    }
+
+
+    /**
+     * Handle quick search dropdown
+     * @param msg Answer Message
+     */
+    public void sendListQuickSearchDropdown(QEventMessage msg) {
+        try {
+            String value = msg.getData().getValue();
+            if(!value.isEmpty()) {
+                filterService.sendListQuickSearches(QUE_QUICK_SEARCH_GRP,QUE_QUICK_SEARCH,SBE_QUICK_SEARCH,
+                                    FilterConst.PRI_NAME,FilterConst.VALUE,value);
+            }
+        } catch (Exception ex){
+            log.error(ex);
+        }
     }
 }

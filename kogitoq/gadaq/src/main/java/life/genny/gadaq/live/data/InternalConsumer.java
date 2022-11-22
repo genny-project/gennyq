@@ -132,12 +132,19 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
+		// Quick search
+		if(filter.isQuickSearchDropdown(msg)) {
+			filter.sendListQuickSearchDropdown(msg);
+			return;
+		}
+
 		// If the event is a Dropdown then leave it for DropKick
 		if ("DD".equals(msg.getEvent_type())) {
 			return;
 		}
 		events.route(msg);
 
+		// Saved search buttons
 		if(filter.isFilterBtn(msg)) {
 			filter.handleBtnEvents(msg);
 		}
