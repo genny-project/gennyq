@@ -229,8 +229,7 @@ public class KeycloakUtils {
      * @return String
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
-        // A necessary evil. I think?
-        // realm = "internmatch";
+
         log.info("Realm is " + realm);
 
         String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";

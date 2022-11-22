@@ -245,7 +245,7 @@ public class KogitoUtils {
 
 		// ensure request was a success
 		if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Error, Response Status: " + response.statusCode());
+			log.error("Error, Response Status: " + response.statusCode() + ", Message: " + response.body().toString());
 			return null;
 		}
 
