@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -131,14 +132,20 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
-		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
-			return;
-		}
-		events.route(msg);
+		// Check if a token is present, if not then log an error and abort
+		if (StringUtils.isBlank(msg.getToken())) {
+			log.error("No token present, so aborting , for event! " + event);
+		} else {
 
-		if(filter.isFilterBtn(msg)) {
-			filter.handleBtnEvents(msg);
+			// If the event is a Dropdown then leave it for DropKick
+			if ("DD".equals(msg.getEvent_type())) {
+				return;
+			}
+			events.route(msg);
+
+			if (filter.isFilterBtn(msg)) {
+				filter.handleBtnEvents(msg);
+			}
 		}
 
 		scope.destroy();
@@ -164,7 +171,7 @@ public class InternalConsumer {
 		}
 
 		scope.init(event);
-		if(filter.isValidEvent(msg)) {
+		if (filter.isValidEvent(msg)) {
 			filter.handleDataEvents(msg);
 		}
 		scope.destroy();
