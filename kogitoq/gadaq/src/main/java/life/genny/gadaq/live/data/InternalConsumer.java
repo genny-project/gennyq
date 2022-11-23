@@ -154,6 +154,10 @@ public class InternalConsumer {
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
+	/**
+	 * Consume data from anwsers
+	 * @param event Event
+	 */
 	@Incoming("data")
 	@Blocking
 	public void getEventData(String event) {
