@@ -462,7 +462,7 @@ public class FilterGroupService {
      * @return Attribute code according to value selected
      */
     public String selectFilerColumn(String value) {
-        String sbeCode = getCachedSbeTable();
+        String sbeCode = filterService.getCachedSbeTable();
         String queCode = getQuestionCodeByValue(value);
         String attCode = getAttributeCodeByQuestion(queCode);
 
@@ -678,10 +678,10 @@ public class FilterGroupService {
 
     /**
      * Delete details row
-     * @param sbeCode Sbe code
-     * @param column Attribute code
+     * @param targetCode Target code
+     * @param value Message value
      */
-    public void deleteDetail(String sbeCode,String column) {
+    public void deleteDetail(String targetCode,String value) {
         // get from cached
         Map<String,SavedSearch> params = getParamsFromCache();
         Map<String,SavedSearch> paramsClone = getParamsFromCache();
@@ -690,6 +690,12 @@ public class FilterGroupService {
         for(Map.Entry<String, SavedSearch> param : paramsClone.entrySet()) {
             String strJson = jsonb.toJson(param.getValue());
             SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
+            String column = "";
+            String[] splitted =  value.split(FilterConst.SEPARATOR);
+
+            if(splitted.length > 0) {
+                column = splitted[0];
+            }
 
             if(ss.getColumn().equalsIgnoreCase(column)) {
                 params.remove(param.getKey());
@@ -697,11 +703,11 @@ public class FilterGroupService {
         }
 
         // send pcm  and base entities
-        BaseEntity base = new BaseEntity(sbeCode);
+        BaseEntity base = new BaseEntity(targetCode);
         filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
 
-        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),params);
+        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -766,7 +772,7 @@ public class FilterGroupService {
             log.error(ex);
         }
 
-        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),result);
+        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),result);
         return result;
     }
 
@@ -839,7 +845,7 @@ public class FilterGroupService {
      */
     public void handleFilter(String code) {
         Map<String,SavedSearch> params = getParamsFromCache();
-        String sbeCode = getSbeTableFromCache();
+        String sbeCode = filterService.getSbeTableFromCache();
         filterService.handleFilter(sbeCode, params);
 
         BaseEntity base = new BaseEntity(code);
@@ -881,29 +887,11 @@ public class FilterGroupService {
      * @param value Values
      */
     public void putAnswerstoCache(String attCode,String value) {
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         SavedSearch savedSearch = new SavedSearch(attCode,value);
 
         params.put(UUID.randomUUID().toString() ,savedSearch);
-        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),params);
-    }
-
-    /**
-     * Cached answer key
-     * @return Cached answer key
-     */
-    public String getCachedAnswerKey() {
-        String key = FilterConst.LAST_ANSWERS_MAP + ":" + user.getUserCode();
-        return key;
-    }
-
-    /**
-     * Cached sbe table code
-     * @return Sbe table code
-     */
-    public String getCachedSbeTable() {
-        String key = FilterConst.LAST_SBE_TABLE + ":" + user.getUserCode();
-        return key;
+        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -1153,7 +1141,7 @@ public class FilterGroupService {
             String value = getValue(msg);
             boolean coded = isCode(value);
             String dropdownVal =  getDropdownValue(value);
-            String sbe =  getSbeTableFromCache();
+            String sbe =  filterService.getSbeTableFromCache();
             filterService.handleQuickSearchDropdown(dropdownVal,coded,sbe);
 
         } catch (Exception ex){
@@ -1166,14 +1154,7 @@ public class FilterGroupService {
      * @param queCode Question code
      */
     public void init(String queCode) {
-        clearParamsInCache();
-        String sbe = queCode.replaceFirst(FilterConst.QUE_PREF,FilterConst.SBE_PREF);
-        filterService.sendFilterColumns(sbe);
-        CacheUtils.putObject(user.getProductCode(),getCachedSbeTable(), sbe);
-
-        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
-                FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
-
+        filterService.init(queCode);
     }
 
     /**
@@ -1181,29 +1162,10 @@ public class FilterGroupService {
      * @return Parameters from cache
      */
     public Map<String,SavedSearch> getParamsFromCache() {
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         if(params == null) params = new HashMap<>();
         return params;
     }
-
-    /**
-     * Get sbe code from cache
-     * @return sbe code from cache
-     */
-    public String getSbeTableFromCache() {
-        String sbe = CacheUtils.getObject(user.getProductCode(),getCachedSbeTable() ,String.class);
-        if(sbe == null) return sbe = "";
-        return sbe;
-    }
-
-    /**
-     * Clear params in cache
-     */
-    public void clearParamsInCache() {
-        Map<String, SavedSearch> params = new HashMap<>();
-        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),params);
-    }
-
 
     /**
      * Handle quick search dropdown

@@ -518,7 +518,7 @@ public class FilterService {
                 value = "%" + value + "%";
             }
 
-            boolean isDate = isDateTimeSelected(ss.getColumn());
+            boolean isDate = isDateTimeSelected(ss.getCode());
             Filter filter = null;
 
             if (isDate) {
@@ -911,5 +911,54 @@ public class FilterService {
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
+    /**
+     * Initialize Cache
+     * @param queCode Question code
+     */
+    public void init(String queCode) {
+        clearParamsInCache();
+        String sbe = queCode.replaceFirst(FilterConst.QUE_PREF,FilterConst.SBE_PREF);
+        sendFilterColumns(sbe);
+        CacheUtils.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
 
+        sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
+                FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
+
+    }
+
+    /**
+     * Clear params in cache
+     */
+    public void clearParamsInCache() {
+        Map<String, SavedSearch> params = new HashMap<>();
+        CacheUtils.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
+    }
+
+    /**
+     * Get sbe code from cache
+     * @return sbe code from cache
+     */
+    public String getSbeTableFromCache() {
+        String sbe = CacheUtils.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
+        if(sbe == null) return sbe = "";
+        return sbe;
+    }
+
+    /**
+     * Cached sbe table code
+     * @return Sbe table code
+     */
+    public String getCachedSbeTable() {
+        String key = FilterConst.LAST_SBE_TABLE + ":" + userToken.getUserCode();
+        return key;
+    }
+
+    /**
+     * Cached answer key
+     * @return Cached answer key
+     */
+    public String getCachedAnswerKey() {
+        String key = FilterConst.LAST_ANSWERS_MAP + ":" + userToken.getUserCode();
+        return key;
+    }
 }

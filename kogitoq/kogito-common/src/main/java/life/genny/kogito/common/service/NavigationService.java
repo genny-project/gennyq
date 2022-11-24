@@ -66,6 +66,9 @@ public class NavigationService {
 	@Inject
 	TaskService tasks;
 
+	@Inject
+	FilterService filter;
+
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
 	/**
@@ -141,18 +144,11 @@ public class NavigationService {
 	/**
 	 * Redirect by question code
 	 * 
-	 * @param questionCode Question code
+	 * @param code Question code
 	 */
-	public void redirectByQuestionCode(String questionCode) {
-		String redirectCode = getRedirectCodeByQuestionCode(questionCode);
-
-		JsonObjectBuilder builder = Json.createObjectBuilder()
-				.add("code", CommonUtils.removePrefix(redirectCode));
-
-		if (userToken.getUserCode() != null)
-			builder.add("targetCode", userToken.getUserCode());
-
-		kogitoUtils.triggerWorkflow(GADAQ, "view", builder.build());
+	public void redirectByQuestionCode(String code) {
+		filter.init(code);
+		searchService.sendTable(code);
 	}
 
 	/**
@@ -161,6 +157,7 @@ public class NavigationService {
 	 * @param questionCode question code
 	 * @return Definition code
 	 */
+	@Deprecated
 	public String getDefCodeByQuestionCode(String questionCode) {
 		String defCode = "DEF_" + questionCode.replaceFirst("QUE_QA_", "")
 				.replaceFirst("QUE_ADD_", "")
@@ -176,6 +173,7 @@ public class NavigationService {
 	 * @param questionCode Question code
 	 * @return redirect question code
 	 */
+	@Deprecated
 	public String getRedirectCodeByQuestionCode(String questionCode) {
 		String defaultRedirectCode = "";
 		String defCode = getDefCodeByQuestionCode(questionCode);
@@ -207,6 +205,7 @@ public class NavigationService {
 	 * 
 	 * @return redirect code
 	 */
+	@Deprecated
 	public String getRedirectCodeByUser() {
 		String redirectCode = "";
 		String defCode = "";

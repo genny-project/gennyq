@@ -124,7 +124,7 @@ public class FilterConst {
     public static final String SELECT = "SELECT";
     public static final String YES_NO = "YES_NO";
     public static final String COUNTRY = "COUNTRY";
-    public static final String SEPARATOR = ":";
+    public static final String SEPARATOR = ";";
 
     /* Quick search */
     public static final String QUE_SEARCH = "QUE_SEARCH";
