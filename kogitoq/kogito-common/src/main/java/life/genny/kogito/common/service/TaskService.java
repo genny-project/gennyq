@@ -202,7 +202,7 @@ public class TaskService {
 		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
-		String userCode = userToken.getUserCode();
+		String userCode = userToken != null ? userToken.getUserCode() : null;
 
 		// find target and target definition
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
