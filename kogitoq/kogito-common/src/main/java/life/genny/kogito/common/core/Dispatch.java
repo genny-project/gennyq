@@ -456,7 +456,9 @@ public class Dispatch {
 		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 
 		baseEntities.stream().forEach(entity -> {
-			entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
+			if (entity.findEntityAttribute(Attribute.PRI_NAME).isEmpty())
+				entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
+
 			MergeUtils.mergeBaseEntity(entity, contexts);
 		});
 
