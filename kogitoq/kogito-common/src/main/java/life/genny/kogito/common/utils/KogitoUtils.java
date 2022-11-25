@@ -232,6 +232,11 @@ public class KogitoUtils {
 		builder.add("userToken", jsonb.toJson(userToken));
 		json = builder.build();
 
+		String getUri = selectServiceURI(useService) + "/" + id + "/schema";
+		log.info("GETURI = " + getUri);
+		HttpResponse<String> resp = HttpUtils.get(getUri, userToken);
+		log.info("[*] SCHEMA = " + resp.body());
+
 		// select uri
 		String uri = selectServiceURI(useService) + "/" + id;
 		log.info("Triggering workflow with uri: " + uri);

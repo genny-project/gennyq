@@ -237,6 +237,8 @@ public class HttpUtils {
 				.timeout(DEFAULT_TIMEOUT)
 				.GET().build();
 
+		log.info("[GET]: " + uri);
+
 		HttpResponse<String> response = null;
 		try {
 			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
