@@ -152,7 +152,7 @@ public class Events {
 		}
 
 		// test question
-		if (code.startsWith("TEST_QUE_.*")) {
+		if (code.startsWith("TEST_QUE_")) {
 			JsonObject payload = Json.createObjectBuilder()
 					.add("questionCode", code.substring("TEST_".length()))
 					.add("userCode", userToken.getUserCode())
