@@ -36,8 +36,6 @@ public class InternalConsumer {
     @Inject
     BlackListInfo blackList;
     @Inject
-    BridgeGrpcService grpcService;
-    @Inject
     GennyScopeInit scope;
     @Inject
     Service service;
