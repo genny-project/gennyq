@@ -1,36 +1,37 @@
 package life.genny.kogito.common.service;
 
+import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.models.SavedSearch;
+import life.genny.qwandaq.utils.*;
+import org.jboss.logging.Logger;
+
+import javax.inject.Inject;
+import javax.enterprise.context.ApplicationScoped;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.invoke.MethodHandles;
+import java.util.*;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.stream.Collectors;
+
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.FilterConst;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.clause.ClauseContainer;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
-import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.*;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.search.trait.Column;
 
 @ApplicationScoped
 public class FilterService {
@@ -261,6 +262,73 @@ public class FilterService {
     }
 
     /**
+     * Handle quick search
+     * @param value Value
+     * @param targetCode Target code
+     */
+    public void handleQuickSearch(String value, String targetCode) {
+        String sessionCode = searchUtils.sessionSearchCode(targetCode);
+        String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
+
+        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+
+        // searching text
+        String newValue = value.replaceFirst("!","");
+        Filter filter = new Filter(FilterConst.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+        searchBE.remove(filter);
+        searchBE.add(filter);
+
+        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+
+        String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        search.sendTable(queCode);
+
+    }
+
+    /**
+     * Handle quick search
+     * @param value Value
+     * @param coded being coded or not
+     * @param targetCode Target code
+     */
+    public void handleQuickSearchDropdown(String value,boolean coded,String targetCode) {
+        String sessionCode = searchUtils.sessionSearchCode(targetCode);
+        String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
+
+        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+
+        clearFilters(searchBE);
+
+        // searching by text or search by code
+        Filter filter = null;
+        String newValue = value.replaceFirst("!","");
+        if(coded) {
+            filter = new Filter(FilterConst.PRI_CODE, Operator.EQUALS, value);
+        }else {
+            filter = new Filter(FilterConst.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+        }
+        searchBE.remove(filter);
+        searchBE.add(filter);
+
+        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+
+        String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        search.sendTable(queCode);
+    }
+
+    /**
+     * Clearn filers from search base entity
+     * @param searchBE Search base entity
+     */
+    public void clearFilters(SearchEntity searchBE) {
+        List<ClauseContainer> cloneList = new ArrayList(searchBE.getClauseContainers());
+
+        for(ClauseContainer cc : cloneList) {
+            searchBE.remove(cc.getFilter());
+        }
+    }
+
+    /**
      * Send filter group and filter column for filter function
      * @param sbeCode SBE code
      * @param queGrp Question group code
@@ -311,7 +379,13 @@ public class FilterService {
         }
     }
 
-//    public void sendFilterDetailsByGroup(String queGrp,String queCode,String filterCode,Map<String,Map<String,String>> params) {
+    /**
+     * Send filter details by group
+     * @param queGrp Question group
+     * @param queCode Question code
+     * @param filterCode Filter code
+     * @param params Parameters
+     */
     public void sendFilterDetailsByGroup(String queGrp,String queCode,String filterCode,Map<String, SavedSearch> params) {
         Ask ask = filterUtils.getFilterDetailsGroup(queGrp,queCode,filterCode, params);
         sendAsk(ask,queGrp, false);
@@ -444,7 +518,7 @@ public class FilterService {
                 value = "%" + value + "%";
             }
 
-            boolean isDate = isDateTimeSelected(ss.getColumn());
+            boolean isDate = isDateTimeSelected(ss.getCode());
             Filter filter = null;
 
             if (isDate) {
@@ -606,7 +680,6 @@ public class FilterService {
      * @param lnkValue Link value
      */
     public void sendListSavedSearches(String group,String code,String lnkCode,String lnkValue) {
-//        String sbeJti = getSearchBaseEntityCodeByJTI(FilterConst.SBE_SAVED_SEARCH);
         String sbeCode = FilterConst.SBE_SAVED_SEARCH;
         SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeCode,lnkCode,lnkValue, true);
         QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
@@ -626,18 +699,22 @@ public class FilterService {
                                                   SearchEntity search) {
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
-        List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+        try {
+            msg.setToken(userToken.getToken());
 
-        List<BaseEntity> basesSorted =  bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
-                .collect(Collectors.toList());
+            List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+            List<BaseEntity> basesSorted = bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
+                    .collect(Collectors.toList());
 
-        msg.setToken(userToken.getToken());
-        msg.setItems(basesSorted);
-        msg.setParentCode(group);
-        msg.setQuestionCode(code);
-        msg.setLinkCode(lnkCode);
-        msg.setLinkValue(lnkValue);
-        msg.setReplace(true);
+            msg.setItems(basesSorted);
+            msg.setParentCode(group);
+            msg.setQuestionCode(code);
+            msg.setLinkCode(lnkCode);
+            msg.setLinkValue(lnkValue);
+            msg.setReplace(true);
+        }catch(Exception ex) {
+            log.error(ex);
+        }
 
         return msg;
     }
@@ -713,26 +790,57 @@ public class FilterService {
      * Send fitler details by base entity
      * @param parentCode Parent code
      * @param queCode Question code
-     * @param attCode Attribute code
-     * @param value Value
+     * @param params Parameters
      */
-    public void sendFilterDetailsByBase(String parentCode,String queCode,String attCode,String value) {
-        List<BaseEntity> baseEntities = new ArrayList<>();
+    public void sendFilterDetailsByBase(BaseEntity base,String parentCode,String queCode,Map<String,SavedSearch> params) {
+        for (Map.Entry<String,SavedSearch> param : params.entrySet()) {
+            String strJson = jsonb.toJson(param.getValue());
+            SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-//        String newAttCode = getColumnName(attCode);
-        SavedSearch savedSearch = new SavedSearch(attCode,value);
-        BaseEntity base = new BaseEntity(attCode);
-        String  rowVal = attCode + FilterConst.SEPARATOR + value;
+            Attribute att= qwandaUtils.getAttribute(ss.getColumn());
+            StringBuilder valBuild = new StringBuilder(ss.getColumn());
+            valBuild.append(FilterConst.SEPARATOR+ss.getOperator());
+            valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
 
-        Attribute attribute = qwandaUtils.getAttribute(savedSearch.getColumn());
-        EntityAttribute ea = new EntityAttribute(base,attribute,1.0);
-        ea.setValue(rowVal);
-        ea.setValueString(rowVal);
+            StringBuilder lblBuild = new StringBuilder(att.getName() + FilterConst.SEPARATOR);
+            lblBuild.append(ss.getOperator().replaceFirst(FilterConst.SEL_PREF, "").replaceAll("_"," "));
+            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(FilterConst.SEL_PREF, ""));
 
-        base.addAttribute(ea);
-        baseEntities.add(base);
+            EntityAttribute ea = new EntityAttribute(base, att, 1.0);
+            ea.setAttributeName(lblBuild.toString());
+            ea.setValue(valBuild.toString());
+            ea.setValueString(valBuild.toString());
 
-        sendBaseEntity(baseEntities,parentCode,queCode,false);
+            base.getBaseEntityAttributes().add(ea);
+        }
+
+        sendBaseEntity(base,parentCode,queCode,false);
+    }
+
+    /**
+     * Send base entity
+     * @param baseEntity Base entity
+     */
+    public void sendBaseEntity(BaseEntity baseEntity,String parentCode,String queCode) {
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntity);
+        msg.setToken(userToken.getToken());
+        msg.setParentCode(parentCode);
+        msg.setQuestionCode(queCode);
+        msg.setReplace(true);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+    }
+
+    /**
+     * Send base entity
+     * @param baseEntity Base entity
+     */
+    public void sendBaseEntity(BaseEntity baseEntity,String parentCode,String queCode,boolean replaced) {
+        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntity);
+        msg.setToken(userToken.getToken());
+        msg.setParentCode(parentCode);
+        msg.setQuestionCode(queCode);
+        msg.setReplace(replaced);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
     /**
@@ -788,8 +896,69 @@ public class FilterService {
      * @return Return the link value code
      */
     public String getLinkValueCode(String value) {
-       return  filterUtils.getLinkValueCode(value);
+        return  filterUtils.getLinkValueCode(value);
     }
 
+    /**
+     * Send dropdown options data
+     * @param code Question code
+     * @param lnkCode Link code
+     * @param lnkValue Link value
+     */
+    public void sendListQuickSearches(String queGrp, String code,String sbeCode,String lnkCode,String lnkValue,String typing) {
+        SearchEntity searchEntity = filterUtils.getListQuickSearches(sbeCode,lnkCode,lnkValue,typing);
+        QDataBaseEntityMessage msg = getBaseItemsMsg(queGrp,code,lnkCode,lnkValue,searchEntity);
+        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+    }
 
+    /**
+     * Initialize Cache
+     * @param queCode Question code
+     */
+    public void init(String queCode) {
+        clearParamsInCache();
+        String sbe = queCode.replaceFirst(FilterConst.QUE_PREF,FilterConst.SBE_PREF);
+        sendFilterColumns(sbe);
+        CacheUtils.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
+
+        sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
+                FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
+
+    }
+
+    /**
+     * Clear params in cache
+     */
+    public void clearParamsInCache() {
+        Map<String, SavedSearch> params = new HashMap<>();
+        CacheUtils.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
+    }
+
+    /**
+     * Get sbe code from cache
+     * @return sbe code from cache
+     */
+    public String getSbeTableFromCache() {
+        String sbe = CacheUtils.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
+        if(sbe == null) return sbe = "";
+        return sbe;
+    }
+
+    /**
+     * Cached sbe table code
+     * @return Sbe table code
+     */
+    public String getCachedSbeTable() {
+        String key = FilterConst.LAST_SBE_TABLE + ":" + userToken.getUserCode();
+        return key;
+    }
+
+    /**
+     * Cached answer key
+     * @return Cached answer key
+     */
+    public String getCachedAnswerKey() {
+        String key = FilterConst.LAST_ANSWERS_MAP + ":" + userToken.getUserCode();
+        return key;
+    }
 }
