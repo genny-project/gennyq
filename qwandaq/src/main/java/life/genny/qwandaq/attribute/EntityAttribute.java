@@ -49,6 +49,7 @@ import io.quarkus.arc.Arc;
 import life.genny.qwandaq.constants.QwandaQConstant;
 import life.genny.qwandaq.converter.MinIOConverter;
 import life.genny.qwandaq.dto.FileUpload;
+import life.genny.qwandaq.handler.AttributeMinIOHandler;
 import life.genny.qwandaq.utils.ConfigUtils;
 import life.genny.qwandaq.utils.MinIOUtils;
 import org.apache.commons.lang3.builder.CompareToBuilder;
@@ -628,7 +629,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	public void autocreateUpdate() {
 
 		if (getValueString() != null) {
-			convertToMinIOObject();
+            this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
 		}
 
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
@@ -640,39 +641,9 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
 
 		if (getValueString() != null) {
-			convertToMinIOObject();
+			this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
 		}
 
-	}
-
-	public void convertToMinIOObject() {
-		log.info("Converting to MinIO");
-		try {
-			int limit = ConfigUtils.getConfig("attribute.minio.threshold", Integer.class) * 1024; // 4Kb
-			// logic to push to minIO if it is greater than certain size
-			byte[] data = valueString.getBytes(StandardCharsets.UTF_8);
-			if (data.length > limit) {
-				log.info("Greater Size");
-				String fileName = QwandaQConstant.MINIO_LAZY_PREFIX + baseEntityCode + "-" + attributeCode;
-				String path = ConfigUtils.getConfig("file.temp", String.class);
-				File theDir = new File(path);
-				if (!theDir.exists()) {
-					theDir.mkdirs();
-				}
-				String fileInfoName = path.concat(fileName);
-				File fileInfo = new File(fileInfoName);
-				try (FileWriter myWriter = new FileWriter(fileInfo.getPath())) {
-					myWriter.write(valueString);
-				} catch (IOException e) {
-					log.error("Exception: " + e.getMessage());
-				}
-				log.info("Writing to MinIO");
-				this.valueString = Arc.container().instance(MinIOUtils.class).get().saveOnStore(new FileUpload(fileName, fileInfoName));
-				fileInfo.delete();
-			}
-		} catch (Exception ex) {
-			log.error("Exception: " + ex.getMessage());
-		}
 	}
 
 	/**

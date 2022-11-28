@@ -1,7 +1,7 @@
 package life.genny.qwandaq.converter;
 
 import io.quarkus.arc.Arc;
-import life.genny.qwandaq.constants.MinIOConstant;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.QwandaQConstant;
 import life.genny.qwandaq.utils.MinIOUtils;
 import org.jboss.logging.Logger;
@@ -30,7 +30,7 @@ public class MinIOConverter implements AttributeConverter<String, String> {
             } else {
                 // Exception handled in Minio.fetchFromStorePublicDirectory(dbData);;
                 // This will be the default text the attribute value will show since there was exception in Minio.fetchFromStorePublicDirectory(dbData);
-                return MinIOConstant.ERROR_FALLBACK_MSG;
+                return GennyConstants.ERROR_FALLBACK_MSG;
             }
         } else {
             return dbData;

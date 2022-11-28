@@ -2,8 +2,9 @@ package life.genny.qwandaq.utils;
 
 import io.minio.*;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.constants.MinIOConstant;
 import life.genny.qwandaq.dto.FileUpload;
+import life.genny.qwandaq.exception.runtime.MinIOException;
+import life.genny.qwandaq.models.GennySettings;
 import org.apache.commons.io.IOUtils;
 import org.jboss.logging.Logger;
 
@@ -30,9 +31,14 @@ public class MinIOUtils {
     @PostConstruct
     public void beforeConstruct() {
         try {
-            minioClient = MinioClient.builder().endpoint(MinIOConstant.getServerUrl()).credentials(MinIOConstant.getAccessKey(), MinIOConstant.getPrivateKey()).build();
+            minioClient = MinioClient
+                    .builder()
+                    .endpoint(GennySettings.minIOServerUrl())
+                    .credentials(GennySettings.minIOAccessKey(), GennySettings.minIOSecretKey())
+                    .build();
         } catch (Exception ex) {
             log.error("Exception: " + ex.getMessage());
+            throw new MinIOException("Constructing MinIOClient failed");
         }
     }
 
@@ -67,7 +73,7 @@ public class MinIOUtils {
     public byte[] fetchFromStoreUserDirectory(UUID fileUUID, UUID userUUID) {
         try {
             String fullPath = REALM + "/" + userUUID.toString() + MEDIA_PATH + fileUUID.toString() + INFO_FILE_SUFFIX;
-            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(fullPath).build();
+            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(fullPath).build();
             GetObjectResponse getObjectResponse = minioClient.getObject(getObjectArgs);
             byte[] byteArray = IOUtils.toByteArray(getObjectResponse);
             return byteArray;
@@ -84,7 +90,7 @@ public class MinIOUtils {
     public StatObjectResponse fetchStatFromStorePublicDirectory(String fileUUID) {
         try {
             String fullPath = REALM + PUBLIC_MEDIA_PATH + fileUUID;
-            StatObjectArgs statObjectArgs = StatObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(fullPath).build();
+            StatObjectArgs statObjectArgs = StatObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(fullPath).build();
             StatObjectResponse statObjectResponse = minioClient.statObject(statObjectArgs);
             return statObjectResponse;
         } catch (Exception ex) {
@@ -100,13 +106,13 @@ public class MinIOUtils {
     public String fetchInfoFromStorePublicDirectory(String fileUUID) {
         try {
             String fullPath = REALM + PUBLIC_MEDIA_PATH + fileUUID + INFO_FILE_SUFFIX;
-            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(fullPath).build();
+            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(fullPath).build();
             GetObjectResponse getObjectResponse = minioClient.getObject(getObjectArgs);
             byte[] byteArray = IOUtils.toByteArray(getObjectResponse);
             return new String(byteArray);
         } catch (Exception ex) {
             log.error("Exception: " + ex.getMessage());
-            return "";
+            return null;
         }
     }
 
@@ -117,7 +123,7 @@ public class MinIOUtils {
     public byte[] streamFromStorePublicDirectory(String fileUUID, Long start, Long end) {
         try {
             String fullPath = REALM + PUBLIC_MEDIA_PATH + fileUUID;
-            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(fullPath).offset(start).length(end).build();
+            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(fullPath).offset(start).length(end).build();
             GetObjectResponse getObjectResponse = minioClient.getObject(getObjectArgs);
             byte[] byteArray = IOUtils.toByteArray(getObjectResponse);
             return byteArray;
@@ -130,7 +136,7 @@ public class MinIOUtils {
     public byte[] fetchFromStorePublicDirectory(UUID fileUUID) {
         try {
             String fullPath = REALM + PUBLIC_MEDIA_PATH + fileUUID.toString();
-            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(fullPath).build();
+            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(fullPath).build();
             GetObjectResponse getObjectResponse = minioClient.getObject(getObjectArgs);
             byte[] byteArray = IOUtils.toByteArray(getObjectResponse);
             return byteArray;
@@ -143,7 +149,7 @@ public class MinIOUtils {
     public byte[] fetchFromStorePublicDirectory(String fileName) {
         try {
             String fullPath = REALM + PUBLIC_MEDIA_PATH + fileName;
-            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(fullPath).build();
+            GetObjectArgs getObjectArgs = GetObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(fullPath).build();
             GetObjectResponse getObjectResponse = minioClient.getObject(getObjectArgs);
             byte[] byteArray = IOUtils.toByteArray(getObjectResponse);
             return byteArray;
@@ -156,10 +162,11 @@ public class MinIOUtils {
     public void deleteFromStorePublicDirectory(UUID fileUUID) {
         try {
             String fullPath = REALM + PUBLIC_MEDIA_PATH + fileUUID.toString();
-            RemoveObjectArgs removeObjectArgs = RemoveObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(fullPath).build();
+            RemoveObjectArgs removeObjectArgs = RemoveObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(fullPath).build();
             minioClient.removeObject(removeObjectArgs);
         } catch (Exception ex) {
             log.error("Exception: " + ex.getMessage());
+            throw new MinIOException("Delete from minIO failed");
         }
     }
 
@@ -168,19 +175,19 @@ public class MinIOUtils {
 
         String path = sub + MEDIA_PATH + uuid;
         try {
-            BucketExistsArgs bucketExistsArgs = BucketExistsArgs.builder().bucket(MinIOConstant.getBucketName()).build();
+            BucketExistsArgs bucketExistsArgs = BucketExistsArgs.builder().bucket(GennySettings.minIOBucketName()).build();
 
             boolean isExist = minioClient.bucketExists(bucketExistsArgs);
             if (isExist) {
-                log.debug("Bucket " + MinIOConstant.getBucketName() + "already exists.");
+                log.debug("Bucket " + GennySettings.minIOBucketName() + "already exists.");
             } else {
-                log.debug("Start creat Bucket:" + MinIOConstant.getBucketName());
-                MakeBucketArgs makeBucketArgs = MakeBucketArgs.builder().bucket(MinIOConstant.getBucketName()).build();
+                log.debug("Start creat Bucket:" + GennySettings.minIOBucketName());
+                MakeBucketArgs makeBucketArgs = MakeBucketArgs.builder().bucket(GennySettings.minIOBucketName()).build();
                 minioClient.makeBucket(makeBucketArgs);
-                log.debug("Finish create Bucket:" + MinIOConstant.getBucketName());
+                log.debug("Finish create Bucket:" + GennySettings.minIOBucketName());
             }
 
-            UploadObjectArgs uploadObjectArgs = UploadObjectArgs.builder().bucket(MinIOConstant.getBucketName()).object(path).filename(inpt).build();
+            UploadObjectArgs uploadObjectArgs = UploadObjectArgs.builder().bucket(GennySettings.minIOBucketName()).object(path).filename(inpt).build();
 
             minioClient.uploadObject(uploadObjectArgs);
 
@@ -188,6 +195,7 @@ public class MinIOUtils {
             log.debug("Success, File" + inpt + " uploaded to bucket with path:" + path);
         } catch (Exception ex) {
             log.error("Exception: " + ex.getMessage());
+            throw new MinIOException("Uploading file failed");
         }
         return isSuccess;
     }
