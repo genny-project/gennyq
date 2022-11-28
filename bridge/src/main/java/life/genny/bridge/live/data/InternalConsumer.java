@@ -124,11 +124,16 @@ public class InternalConsumer {
             return;
         }
 
-        // try {
             final JsonObject json = new JsonObject(incoming);
             GennyToken gennyToken = new GennyToken(json.getString("token"));
-            verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
-            KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
+            try {
+                verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
+            } catch (Exception e) {
+                log.error("The token verification has failed somehow this token was able to penatrate other "
+                        + "security barriers please check this exception in more depth");
+                e.printStackTrace();
+            }
+            // KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
 
             if (json.containsKey("data_type")) {
                 log.info("QBEM being sent outside:" + json);
@@ -145,12 +150,6 @@ public class InternalConsumer {
                 log.error("The host service of channel producer tried to accessed an endpoint and got an"
                         + " unauthorised message potentially from api and the producer hosted in rulesservice");
             }
-        // Masking exceptions doesn't help debug the issue
-        // } catch (Exception e) {
-        //     log.error("The token verification has failed somehow this token was able to penatrate other "
-        //             + "security barriers please check this exception in more depth");
-        //     e.printStackTrace();
-        // }
     }
 
 }
