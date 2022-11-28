@@ -1,5 +1,7 @@
 package life.genny.test.qwandaq.json;
 
+import static org.junit.Assert.assertTrue;
+
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 

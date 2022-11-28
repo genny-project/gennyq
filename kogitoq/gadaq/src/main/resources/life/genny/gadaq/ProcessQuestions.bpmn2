@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_Bj_-AUCkEDuoYeyEDn_wEA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_FrvrgEhwEDuc__BiWo5adA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -59,7 +59,7 @@
   <bpmn2:signal id="_37119769" name="requestion"/>
   <bpmn2:signal id="_3641717" name="wait"/>
   <bpmn2:interface id="_2DFF10A3-DAF8-412C-BA9F-FE4B63E4088F_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
-    <bpmn2:operation id="_2DFF10A3-DAF8-412C-BA9F-FE4B63E4088F_ServiceOperation" name="dispatchFull" implementationRef="dispatchFull"/>
+    <bpmn2:operation id="_2DFF10A3-DAF8-412C-BA9F-FE4B63E4088F_ServiceOperation" name="dispatchTask" implementationRef="dispatchTask"/>
   </bpmn2:interface>
   <bpmn2:signal id="_-1412808770" name="answer"/>
   <bpmn2:interface id="_81C82A39-2DE9-4653-8BC1-AD9CFCAABE89_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
@@ -76,10 +76,10 @@
     <bpmn2:operation id="_01BC1914-9CBF-4E4A-8C4A-28F572B02A06_ServiceOperation" name="doesTaskExist" implementationRef="doesTaskExist"/>
   </bpmn2:interface>
   <bpmn2:interface id="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
-    <bpmn2:operation id="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceOperation" name="dispatchFull" implementationRef="dispatchFull"/>
+    <bpmn2:operation id="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceOperation" name="dispatchTask" implementationRef="dispatchTask"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_D26C6ECD-AE3D-4D47-800D-0F47030CAB4D" name="Default Collaboration">
-    <bpmn2:participant id="_1496BA78-C083-4C23-91E9-12C5D8D9A0AB" name="Pool Participant" processRef="processQuestions"/>
+  <bpmn2:collaboration id="_A095DE8F-BB1F-46B2-A3F3-FF2200D93C95" name="Default Collaboration">
+    <bpmn2:participant id="_251D889A-A240-467D-989D-D7158C4109C5" name="Pool Participant" processRef="processQuestions"/>
   </bpmn2:collaboration>
   <bpmn2:process id="processQuestions" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Process Questions" isExecutable="true" processType="Public">
     <bpmn2:extensionElements>
@@ -186,7 +186,7 @@
       </bpmn2:extensionElements>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_B0BC5BD4-07BA-456F-B0AD-33BD799C4E6D" sourceRef="_6CFBA188-90A4-4833-ADEE-68B4D6A76D8E" targetRef="_DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC"/>
-    <bpmn2:serviceTask id="_3EF74D32-E67F-4318-A5AA-FF66257D457B" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.TaskService" drools:serviceoperation="dispatchFull" name="Dispatch" implementation="Java" operationRef="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceOperation">
+    <bpmn2:serviceTask id="_3EF74D32-E67F-4318-A5AA-FF66257D457B" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.TaskService" drools:serviceoperation="dispatchTask" name="Dispatch" implementation="Java" operationRef="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceOperation">
       <bpmn2:extensionElements>
         <drools:metaData name="elementname">
           <drools:metaValue><![CDATA[Dispatch]]></drools:metaValue>
@@ -508,7 +508,7 @@ kcontext.setVariable("data",data);
           </drools:metaData>
         </bpmn2:extensionElements>
       </bpmn2:sequenceFlow>
-      <bpmn2:serviceTask id="_2DFF10A3-DAF8-412C-BA9F-FE4B63E4088F" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.TaskService" drools:serviceoperation="dispatchFull" name="Dispatch" implementation="Java" operationRef="_2DFF10A3-DAF8-412C-BA9F-FE4B63E4088F_ServiceOperation">
+      <bpmn2:serviceTask id="_2DFF10A3-DAF8-412C-BA9F-FE4B63E4088F" drools:serviceimplementation="Java" drools:serviceinterface="life.genny.kogito.common.service.TaskService" drools:serviceoperation="dispatchTask" name="Dispatch" implementation="Java" operationRef="_2DFF10A3-DAF8-412C-BA9F-FE4B63E4088F_ServiceOperation">
         <bpmn2:extensionElements>
           <drools:metaData name="elementname">
             <drools:metaValue><![CDATA[Dispatch]]></drools:metaValue>
@@ -1028,7 +1028,7 @@ kcontext.setVariable("data", data);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_Bj_-AUCkEDuoYeyEDn_wEA</bpmn2:source>
-    <bpmn2:target>_Bj_-AUCkEDuoYeyEDn_wEA</bpmn2:target>
+    <bpmn2:source>_FrvrgEhwEDuc__BiWo5adA</bpmn2:source>
+    <bpmn2:target>_FrvrgEhwEDuc__BiWo5adA</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

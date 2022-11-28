@@ -144,7 +144,6 @@ public class HttpUtils {
 	 */
 	@Deprecated
 	public static HttpResponse<String> post(String uri, String body, String token) {
-
 		return post(uri, body, "application/json", token);
 	}
 
@@ -237,6 +236,8 @@ public class HttpUtils {
 				.setHeader("Authorization", "Bearer " + token)
 				.timeout(DEFAULT_TIMEOUT)
 				.GET().build();
+
+		log.info("[GET]: " + uri);
 
 		HttpResponse<String> response = null;
 		try {

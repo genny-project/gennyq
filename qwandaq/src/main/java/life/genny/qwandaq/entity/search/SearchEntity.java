@@ -58,6 +58,9 @@ public class SearchEntity extends BaseEntity {
 
 	private List<ClauseContainer> clauseContainers = new ArrayList<>();
 	
+	/**
+	 * Specify that all results should contain all of their attributes
+	 */
 	private Boolean allColumns = false;
 
 	// TODO: redesign filters
