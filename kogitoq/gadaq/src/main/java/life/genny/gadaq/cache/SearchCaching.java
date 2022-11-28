@@ -99,7 +99,7 @@ public class   SearchCaching {
 				new SearchEntity(SBE_MESSAGE, "Messages")
 						.add(new Filter(PRI_CODE, Operator.LIKE, "MSG_%"))
 						.add(new Column(PRI_NAME, "Code"))
-						.add(new Column(PRI_DESCRIPTION, "Description"))
+						.add(new Column(GadaQConstants.PRI_DESCRIPTION, "Description"))
 						.add(new Column(PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
 						.add(new Column(PRI_CONTEXT_LIST, "Context List"))
 						.add(new Column(PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
