@@ -45,6 +45,7 @@ public class SearchEntity extends BaseEntity {
 		SENDABLE_TRAIT_TYPES.put(Column.class, Column.PREFIX);
 		SENDABLE_TRAIT_TYPES.put(AssociatedColumn.class, AssociatedColumn.PREFIX);
 		SENDABLE_TRAIT_TYPES.put(Action.class, Action.PREFIX);
+		SENDABLE_TRAIT_TYPES.put(Sort.class, Sort.PREFIX);
     }
 
 
