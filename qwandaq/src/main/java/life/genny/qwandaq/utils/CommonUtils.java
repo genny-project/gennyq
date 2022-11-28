@@ -301,6 +301,17 @@ public class CommonUtils {
         return false;
     }
 
+	/**
+	 * Classic Genny style string clean up. This will remove any double quotes,
+	 * whitespaces and square brackets from the string.
+	 * <p>
+	 * Hope this makes our code look a little
+	 * nicer :)
+	 * <p>
+	 * 
+	 * @param value The value to clean
+	 * @return A clean string
+	 */
     public static String cleanUpAttributeValue(String value) {
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;

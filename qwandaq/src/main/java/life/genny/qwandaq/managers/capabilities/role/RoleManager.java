@@ -78,15 +78,18 @@ public class RoleManager extends Manager {
 	 * @return
 	 */
 	public BaseEntity attachRole(BaseEntity target, String roleCode) {
+
+		if (target == null)
+			throw new NullParameterException("target");
 		
 		// Check we're working with a person
-		if(target == null || !target.isPerson())
+		if (!target.isPerson())
 			throw new RoleException("Error attaching role to target: " + target.getCode() + ". Target is not a person");
 		
 		roleCode = cleanRoleCode(roleCode);
 		BaseEntity role = beUtils.getBaseEntity(roleCode);
 
-		if(role == null) 
+		if (role == null) 
 			throw new RoleException("Error attaching role: " + roleCode + ". Role does not exist");
 
 		return attachRole(target, role);
@@ -122,14 +125,14 @@ public class RoleManager extends Manager {
 	 * @return - updated role
 	 */
 	public BaseEntity setChildren(String productCode, BaseEntity targetRole, String... childrenCodes) {
-		if(targetRole == null)
+		if (targetRole == null)
 			throw new NullParameterException("targetRole");
 		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
 
 		String codeString = CommonUtils.getArrayString(childrenCodes);
 
 		// add/edit LNK_CHILDREN
-		if(!optChildren.isPresent()) {
+		if (!optChildren.isPresent()) {
 			targetRole.addAttribute(lnkChildrenAttribute, 1.0, codeString);
 		} else {
 			EntityAttribute childrenEA = optChildren.get();
@@ -160,7 +163,7 @@ public class RoleManager extends Manager {
 			childrenEA = targetRole.addAttribute(lnkChildrenAttribute, 1.0);
 		} else {
 			childrenEA = optChildren.get();
-			String[] preexistingChildren = beUtils.cleanUpAttributeValue(childrenEA.getValueString()).split(",");
+			String[] preexistingChildren = CommonUtils.cleanUpAttributeValue(childrenEA.getValueString()).split(",");
 			childrenCodeList.addAll(Arrays.asList(preexistingChildren));
 		}
 
@@ -177,7 +180,7 @@ public class RoleManager extends Manager {
 	 * @param targetRole role base entity to target
 	 */
 	public List<String> getChildrenCodes(BaseEntity targetRole) {
-		if(targetRole == null)
+		if (targetRole == null)
 			throw new NullParameterException("targetRole");
 		
 		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
@@ -190,7 +193,7 @@ public class RoleManager extends Manager {
 			return new ArrayList<String>();
 		}
 		
-		roleCodes = beUtils.cleanUpAttributeValue(roleCodes);
+		roleCodes = CommonUtils.cleanUpAttributeValue(roleCodes);
 		return Arrays.asList(roleCodes.split(","));
 	}
 
@@ -343,7 +346,7 @@ public class RoleManager extends Manager {
 		EntityAttribute lnkRoleEA = eaOpt.get();
 		String value = lnkRoleEA.getValueString();
 		if(!StringUtils.isBlank(value)) {
-			Set<String> values = Arrays.asList(beUtils.cleanUpAttributeValue(value).split(",")).stream().collect(Collectors.toSet());
+			Set<String> values = Arrays.asList(CommonUtils.cleanUpAttributeValue(value).split(",")).stream().collect(Collectors.toSet());
 			values.add(role.getCode());
 			value = CommonUtils.getArrayString(values, (String v) -> v);			
 		} else {
