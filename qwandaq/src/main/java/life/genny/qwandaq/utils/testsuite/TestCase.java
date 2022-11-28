@@ -51,7 +51,6 @@ public class TestCase<I, E> {
         try { 
             verificationCallback.assertFunction(result, expected.expected);
         } catch(AssertionError e) {
-            System.err.println("TEST FAILED: " + this);
             assert(false);
         }
     }
