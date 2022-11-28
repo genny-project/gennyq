@@ -57,6 +57,9 @@ public class FilterGroupService {
     @Inject
     DatabaseUtils databaseUtils;
 
+    @Inject
+    UserToken userToken;
+
     public static final String QUE_TABLE_PREF = "QUE_TABLE_";
     public static final String SBE_TABLE_PREF = "SBE_TABLE_";
 
@@ -68,6 +71,9 @@ public class FilterGroupService {
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
     public static final String DELETE = "Delete";
     public static final String QUE_ADD_SEARCH = "QUE_ADD_SEARCH";
+    public static final String QUE_QUICK_SEARCH = "QUE_QUICK_SEARCH";
+    public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
+    public static final String QUE_QUICK_SEARCH_GRP = "QUE_QUICK_SEARCH_GRP";
 
     /**
      * Check code whether is filter select question or not
@@ -148,7 +154,24 @@ public class FilterGroupService {
      */
     public boolean isSearchSelected(String code) {
         boolean result = false;
-        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_LIST)) return true;
+        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SELECT)) {
+            return true;
+        }
+        return result;
+    }
+
+    /**
+     * Being filter optio whether selected or not
+     * @param code Event Code
+     * @param value Message value
+     * @return filter option selected
+     */
+    public boolean isSearchSelected(String code,String value) {
+        boolean result = false;
+        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SELECT)
+                && value!=null && value.startsWith(FilterConst.SBE_SAVED_SEARCH)) {
+            return true;
+        }
         return result;
     }
 
@@ -347,7 +370,8 @@ public class FilterGroupService {
 
     public boolean isFilterBtn(QEventMessage msg) {
         String code = msg.getData().getCode();
-        boolean result = isApply(code) || isBtnSearchAdd(code) || isBtnSearchDelete(code) || isBtnSearchSave(code);
+        boolean result = isApply(code) || isBtnSearchAdd(code) || isBtnSearchDelete(code) || isBtnSearchSave(code)
+                || isDetailDelete(code);
 
         return result;
     }
@@ -363,7 +387,11 @@ public class FilterGroupService {
         String attCode = getAttributeCode(msg);
 
         boolean result =  isColumnSelected(code,attCode) || isOptionSelected(code,attCode)
-                || isValueSelected(code) || isFilterBtn(code);
+                || isValueSelected(code) || isFilterBtn(code) || isQuickSearchDropdown(code);
+
+        if(isSearchSelected(code)) {
+            return true;
+        }
 
         return result;
     }
@@ -399,7 +427,7 @@ public class FilterGroupService {
      */
     public  boolean isBtnSearchAdd(String code) {
         boolean result = false;
-        if(code != null && code.startsWith(QUE_ADD_SEARCH))
+        if(code != null && code.equalsIgnoreCase(QUE_ADD_SEARCH))
             return true;
         return result;
     }
@@ -434,7 +462,7 @@ public class FilterGroupService {
      * @return Attribute code according to value selected
      */
     public String selectFilerColumn(String value) {
-        String sbeCode = getCachedSbeTable();
+        String sbeCode = filterService.getCachedSbeTable();
         String queCode = getQuestionCodeByValue(value);
         String attCode = getAttributeCodeByQuestion(queCode);
 
@@ -454,13 +482,11 @@ public class FilterGroupService {
 
     /**
      * Handle event if selecting value in quick search
-     * @param token Message token
      * @param attrCode Attribute code
      * @param attrName Attribute name
      * @param value Message value
      */
-    public void selectQuickSearch(String token, String attrCode, String attrName,String value) {
-        user.init(token);
+    public void selectQuickSearch(String attrCode, String attrName,String value) {
         List<String> bucketCodes = filterService.getBucketCodesBySBE(FilterConst.SBE_TAB_BUCKET_VIEW);
         String baseCode = getStripSelectValue(value);
         String newVal = getBaseNameByCode(baseCode);
@@ -475,7 +501,7 @@ public class FilterGroupService {
      */
     public boolean isBtnSearchSave(String code) {
         boolean result = false;
-        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_SAVE))
+        if(code!=null && code.equalsIgnoreCase(FilterConst.QUE_SAVED_SEARCH_SAVE))
             return true;
 
         return result;
@@ -488,7 +514,20 @@ public class FilterGroupService {
      */
     public boolean isBtnSearchDelete(String code) {
         boolean result = false;
-        if(code!=null && code.startsWith(FilterConst.QUE_SAVED_SEARCH_DELETE))
+        if(code!=null && code.equalsIgnoreCase(FilterConst.QUE_SAVED_SEARCH_DELETE))
+            return true;
+
+        return result;
+    }
+
+    /**
+     * Being whether saved search detail or not
+     * @param code Event Code
+     * @return Being whether detail delete button  or not
+     */
+    public boolean isDetailDelete(String code) {
+        boolean result = false;
+        if(code!=null && code.equalsIgnoreCase(FilterConst.QUE_SBE_DETAIL_VIEW_DELETE))
             return true;
 
         return result;
@@ -496,55 +535,61 @@ public class FilterGroupService {
 
     /**
      * Save search
-     * @param name Event name
+     * @param nameOrName Event name or Code
      */
-    public void saveSearch(String name) {
+    public void saveSearch(String nameOrName) {
         Map<String,SavedSearch> params = getParamsFromCache();
-        BaseEntity base = saveBaseEntity(name,params);
-        String filterCode = base.getCode();
+        BaseEntity base = saveBaseEntity(nameOrName,params);
 
-        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP, FilterConst.QUE_SAVED_SEARCH_LIST,
-                                            FilterConst.PRI_NAME,FilterConst.VALUE);
+        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP, FilterConst.QUE_SAVED_SEARCH_SELECT,
+                FilterConst.PRI_NAME,FilterConst.VALUE);
     }
 
     /**
      * Save base entity
-     * @param name Search name
+     * @param nameOrCode Search name
      * @param params Parameters
      */
-    public BaseEntity saveBaseEntity(String name,Map<String, SavedSearch> params) {
+    public BaseEntity saveBaseEntity(String nameOrCode,Map<String, SavedSearch> params) {
         BaseEntity baseEntity = null;
 
         try {
             String prefix = FilterConst.SBE_SAVED_SEARCH + "_";
             BaseEntity defBE = new BaseEntity(prefix);
+            defBE.setRealm(user.getProductCode());
             String baseCode = prefix + UUID.randomUUID().toString();
 
-            //create the main base entity
+            // create the main base entity
             String attCode = FilterConst.LNK_SAVED_SEARCHES;
             Attribute attr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
             defBE.addAttribute(attr, 1.0, FilterConst.SBE_PREF);
-            baseEntity = beUtils.create(defBE, name, baseCode);
+            if(nameOrCode.startsWith(FilterConst.SBE_SAVED_SEARCH)) {
+                baseEntity = beUtils.getBaseEntityOrNull(userToken.getProductCode(), nameOrCode);
+            } else {
+                baseEntity = beUtils.create(defBE, nameOrCode, baseCode);
+            }
 
             Attribute attrFound = qwandaUtils.getAttribute(user.getProductCode(),attCode);
 
+            // array of parameters
             List<String> listUUID = getListUUID(prefix,params.entrySet().size());
-
             String strLnkArr = convertLnkArrayToString(listUUID);
+
             baseEntity.addAttribute(attrFound, 1.0, strLnkArr);
             beUtils.updateBaseEntity(baseEntity);
 
+            // create child base entities
             Attribute childAttr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
             BaseEntity childDefBE = new BaseEntity(prefix);
+            childDefBE.setRealm(user.getProductCode());
             childDefBE.addAttribute(childAttr, 1.0, prefix);
 
             //create other base entities based on the main base entity
             int index = 0;
-//            for(Map.Entry<String,Map<String,String>> entry : params.entrySet()) {
             for(Map.Entry<String,SavedSearch> entry : params.entrySet()) {
                 String childBaseCode = listUUID.get(index);
 
-                BaseEntity childBase = beUtils.create(childDefBE, name, childBaseCode);
+                BaseEntity childBase = beUtils.create(childDefBE, nameOrCode, childBaseCode);
                 String childVal = jsonb.toJson(entry.getValue());
                 childBase.addAttribute(attrFound, 1.0,childVal);
                 beUtils.updateBaseEntity(childBase);
@@ -601,7 +646,7 @@ public class FilterGroupService {
      * @param code Base entity
      */
     public void deleteSearch(String code) {
-//        databaseUtils.deleteBaseEntityAndAttribute(userToken.getProductCode(), code);
+        databaseUtils.deleteBaseEntityAndAttribute(userToken.getProductCode(), code);
     }
 
     /**
@@ -622,23 +667,47 @@ public class FilterGroupService {
 
     /**
      * Save searches
-     * @param sbeCode Search base entity code
-     * @param msg Message object
+     * @param filterCode Filter code
      */
-    public void handleDeleteSearch(String sbeCode,String code, QDataAnswerMessage msg) {
-        Map<String,Map<String, String>> params = new HashMap<>();
+    public void handleDeleteSearch(String filterCode) {
+        deleteSearches(filterCode);
 
-//        String searchCode = EventMessageUtils.getSearchCode(msg);
-        String searchCode = getSearchCode(msg);
-//        deleteSearches(searchCode);
+        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
+                FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
+    }
 
-        /* update filter existing group */
-//        filterService.sendFilterGroup(sbeCode,FilterConst.QUE_FILTER_GRP,code,true,searchCode,params);
+    /**
+     * Delete details row
+     * @param targetCode Target code
+     * @param value Message value
+     */
+    public void deleteDetail(String targetCode,String value) {
+        // get from cached
+        Map<String,SavedSearch> params = getParamsFromCache();
+        Map<String,SavedSearch> paramsClone = getParamsFromCache();
 
-//        String queGroup = EventMessageUtils.getParentCode(msg);
-        String queGroup = getParentCode(msg);
-        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,FilterConst.QUE_SAVED_SEARCH_LIST,
-                FilterConst.PRI_NAME, FilterConst.VALUE);
+        // remove parameter by attribute code
+        for(Map.Entry<String, SavedSearch> param : paramsClone.entrySet()) {
+            String strJson = jsonb.toJson(param.getValue());
+            SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
+            String column = "";
+            String[] splitted =  value.split(FilterConst.SEPARATOR);
+
+            if(splitted.length > 0) {
+                column = splitted[0];
+            }
+
+            if(ss.getColumn().equalsIgnoreCase(column)) {
+                params.remove(param.getKey());
+            }
+        }
+
+        // send pcm  and base entities
+        BaseEntity base = new BaseEntity(targetCode);
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
+
+        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -685,8 +754,8 @@ public class FilterGroupService {
      * @param filterCode Filter code
      * @return Get the table of filter parameters
      */
-    public Map<String,Map<String, String>> getFilterParamsByBaseCode(String filterCode) {
-        Map<String,Map<String, String>>  result =  new HashMap<>();
+    public Map<String,SavedSearch> getFilterParamsByBaseCode(String filterCode) {
+        Map<String,SavedSearch>  result =  new HashMap<>();
 
         try {
             // get the filter by base entity code
@@ -695,10 +764,15 @@ public class FilterGroupService {
 
             for(BaseEntity base : bases) {
                 String value = getValueStringByAttCode(base,LNK_SAVED_SEARCHES);
-                result.put(base.getCode(),jsonb.fromJson(value, Map.class));
-            }
-        }catch(Exception ex) {}
+                SavedSearch ss = jsonb.fromJson(value, SavedSearch.class);
 
+                result.put(base.getCode(),ss);
+            }
+        }catch(Exception ex) {
+            log.error(ex);
+        }
+
+        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),result);
         return result;
     }
 
@@ -739,13 +813,6 @@ public class FilterGroupService {
             filterCode = getLatestFilterCode(sbeCode);
         }
 
-        Map<String,Map<String, String>> filterParams = new HashMap<>();
-        if(isSubmitted) {
-            filterParams = filters;
-        } else {
-            filterParams = getFilterParamsByBaseCode(filterCode);
-        }
-
         /* get the latest of filter */
         filterService.sendFilterColumns(sbeCode);
 
@@ -761,24 +828,29 @@ public class FilterGroupService {
 
     /**
      * Handle saved search selected
-     * @param target Target code or sbe code
-     * @param eventCode Event code
-     * @param msg Message Object
+     * @param queCode Event code
      */
-    public void handleSearchSelected(String target, String eventCode,JsonObject msg) {
-        String filterCode =  "";
-        Map<String,Map<String, String>>  params = getFilterParamsByBaseCode(filterCode);
-//        filterService.sendFilterGroup(target,FilterConst.QUE_FILTER_GRP,eventCode,true,filterCode,params);
+    public void handleSearchSelected(String queCode,String filterCode) {
+        Map<String,SavedSearch>  params = getFilterParamsByBaseCode(filterCode);
+
+        BaseEntity base = new BaseEntity(queCode);
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
 
     /**
      * Handle filter event by apply button
+     * @param code Message Code
      */
-    public void handleFilter() {
+    public void handleFilter(String code) {
         Map<String,SavedSearch> params = getParamsFromCache();
-        String sbeCode = getSbeTableFromCache();
+        String sbeCode = filterService.getSbeTableFromCache();
         filterService.handleFilter(sbeCode, params);
+
+        BaseEntity base = new BaseEntity(code);
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
     /**
@@ -789,7 +861,7 @@ public class FilterGroupService {
      * @param targetCode Target code
      */
     public void handleSorting(String attrCode,String attrName,String value,String targetCode) {
-        filterService.handleSortAndSearch(attrCode,attrName,value,targetCode, FilterService.Options.SEARCH);
+        filterService.handleSortAndSearch(attrCode,attrName,value,targetCode, Options.SEARCH);
         filterService.sendQuickSearch(FilterConst.QUE_TABLE_FILTER_GRP,FilterConst.QUE_SELECT_INTERN,
                 FilterConst.LNK_PERSON, FilterConst.BKT_APPLICATIONS);
     }
@@ -801,13 +873,11 @@ public class FilterGroupService {
      * @param value Filter Value
      */
     public void sendFilterDetails(String queCode,String attCode,String value) {
-        String stripVal = getStripSelectValue(value);
-
-        String filterCode = "";
         Map<String,SavedSearch> params = getParamsFromCache();
 
-        filterService.sendFilterDetailsByGroup(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,queCode,filterCode,params);
-        filterService.sendFilterDetailsByBase(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,queCode,attCode,stripVal);
+        BaseEntity base = new BaseEntity(queCode);
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
 
@@ -817,29 +887,11 @@ public class FilterGroupService {
      * @param value Values
      */
     public void putAnswerstoCache(String attCode,String value) {
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         SavedSearch savedSearch = new SavedSearch(attCode,value);
 
         params.put(UUID.randomUUID().toString() ,savedSearch);
-        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),params);
-    }
-
-    /**
-     * Cached answer key
-     * @return Cached answer key
-     */
-    public String getCachedAnswerKey() {
-        String key = FilterConst.LAST_ANSWERS_MAP + ":" + user.getUserCode();
-        return key;
-    }
-
-    /**
-     * Cached sbe table code
-     * @return Sbe table code
-     */
-    public String getCachedSbeTable() {
-        String key = FilterConst.LAST_SBE_TABLE + ":" + user.getUserCode();
-        return key;
+        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -860,7 +912,7 @@ public class FilterGroupService {
      * @return Question code
      */
     public String getQuestionCode(QDataAnswerMessage msg) {
-        if(msg.getItems().length > 0) {
+        if(msg != null &&  msg.getItems().length > 0) {
             return msg.getItems()[0].getCode();
         }
         return "";
@@ -869,11 +921,23 @@ public class FilterGroupService {
     /**
      * Get attribute code
      * @param msg Message object
-     * @return Question code
+     * @return Attribute code
      */
     public String getAttributeCode(QDataAnswerMessage msg) {
         if(msg.getItems().length > 0) {
             return msg.getItems()[0].getAttributeCode();
+        }
+        return "";
+    }
+
+    /**
+     * Get target code
+     * @param msg Message object
+     * @return target code
+     */
+    public String getTargetCode(QDataAnswerMessage msg) {
+        if(msg.getItems().length > 0) {
+            return msg.getItems()[0].getTargetCode();
         }
         return "";
     }
@@ -888,6 +952,32 @@ public class FilterGroupService {
             return msg.getItems()[0].getValue();
         }
         return "";
+    }
+
+    /**
+     * Dropdown value
+     * @param value Value
+     * @return dropdown value
+     */
+    public String getDropdownValue(String value) {
+        JsonObject json = jsonb.fromJson(value, JsonObject.class);
+        if(json.containsKey(FilterConst.VALUE)) {
+            return json.getString(FilterConst.VALUE);
+        }
+        return "";
+    }
+
+    /**
+     * Get iscode attribute
+     * @param value isCode attribute
+     * @return isCode value
+     */
+    public boolean isCode(String value) {
+        JsonObject json = jsonb.fromJson(value, JsonObject.class);
+        if(json.containsKey(FilterConst.ISCODE)) {
+            return json.getBoolean(FilterConst.ISCODE);
+        }
+        return false;
     }
 
     /**
@@ -910,6 +1000,47 @@ public class FilterGroupService {
 
 
     /**
+     *  Send  quick search and filter group
+     * @param code Event code
+     * @return Being whether it was sent or not
+     */
+
+    public boolean isQuickSearch(String code) {
+        if(code !=null && code.equalsIgnoreCase(FilterConst.QUE_SEARCH)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *  Send  quick search and filter group
+     * @param msg Message
+     * @return Being whether it was sent or not
+     */
+
+    public boolean isQuickSearchDropdown(QEventMessage msg) {
+        String code = getQuestionCode(msg);
+        if(code !=null && code.equalsIgnoreCase(QUE_QUICK_SEARCH)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     *  Send  quick search and filter group
+     * @param code Message Code
+     * @return Being whether it was sent or not
+     */
+
+    public boolean isQuickSearchDropdown(String code) {
+        if(code !=null && code.equalsIgnoreCase(QUE_QUICK_SEARCH)) {
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
      * Handle filter data event
      * @param msg Event message
      */
@@ -925,28 +1056,29 @@ public class FilterGroupService {
             // init user token
             if(!token.isEmpty()) { user.init(token);}
 
+            /* Send the list of quick search result */
+            if(isQuickSearchDropdown(msg)) {
+                sendListQuickSearchDropdown(msg);
+                return;
+            }
+
             /* Button save search */
             if(isBtnSearchSave(code)) {
                 saveSearch(value);return;
             }
             /* apply filter */
             if(isApply(code)) {
-                handleFilter();return;
+                handleFilter(code);return;
             }
             /* Button delete search */
             if(isBtnSearchDelete(code)) {
-                // TODO
-                // handleDeleteSearch(targetCode, code,msg);
+                handleDeleteSearch(value);
+                return;
             }
-
-            if(isSearchSelected(code)) {
-                // TODO
-                // handleSearchSelected(targetCode,code,msg);
-            }
-
-            // Quick search selected
-            if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
-                selectQuickSearch(token, attrCode, attrName, value);
+            /* Details delete */
+            if(isDetailDelete(code)){
+                deleteDetail(targetCode, value);
+                return;
             }
 
         } catch (Exception ex){
@@ -970,6 +1102,11 @@ public class FilterGroupService {
             // init user token
             if(!token.isEmpty()) { user.init(token);}
 
+            /* Quick search */
+            if(isQuickSearchDropdown(code)) {
+                handleQuickSearch(msg);
+                return;
+            }
             /* Go to Column */
             if(isColumnSelected(code,attrCode)) {
                 String queValCode = selectFilerColumn(value);
@@ -982,14 +1119,12 @@ public class FilterGroupService {
                 sendFilterDetails(code,attrCode,value);
                 return;
             }
-            /* add button*/
+            /* saved search saved */
             if(isSearchSelected(code)) {
-                // TODO
-                // handleSearchSelected(targetCode,code,msg);
-            }
-            /* Quick search selected */
-            if(isQuickSearchSelectChanged(code, attrCode, targetCode, value)) {
-                selectQuickSearch(token, attrCode, attrName, value);
+                String dropdownVal = getDropdownValue(value);
+                if(isCode(value)) {
+                    handleSearchSelected(code, dropdownVal);
+                }
             }
 
         } catch (Exception ex){
@@ -997,19 +1132,29 @@ public class FilterGroupService {
         }
     }
 
+    /**
+     * Handle quick search
+     * @param msg Answer Message
+     */
+    public void handleQuickSearch(QDataAnswerMessage msg) {
+        try {
+            String value = getValue(msg);
+            boolean coded = isCode(value);
+            String dropdownVal =  getDropdownValue(value);
+            String sbe =  filterService.getSbeTableFromCache();
+            filterService.handleQuickSearchDropdown(dropdownVal,coded,sbe);
+
+        } catch (Exception ex){
+            log.error(ex);
+        }
+    }
 
     /**
      * Initialize Cache
      * @param queCode Question code
      */
     public void init(String queCode) {
-        clearParamsInCache();
-        String sbe = queCode.replaceFirst(FilterConst.QUE_PREF,FilterConst.SBE_PREF);
-        filterService.sendFilterColumns(sbe);
-        CacheUtils.putObject(user.getProductCode(),getCachedSbeTable(), sbe);
-
-        filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
-                FilterConst.QUE_SAVED_SEARCH_LIST, FilterConst.PRI_NAME,FilterConst.VALUE);
+        filterService.init(queCode);
     }
 
     /**
@@ -1017,26 +1162,24 @@ public class FilterGroupService {
      * @return Parameters from cache
      */
     public Map<String,SavedSearch> getParamsFromCache() {
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         if(params == null) params = new HashMap<>();
         return params;
     }
 
     /**
-     * Get sbe code from cache
-     * @return sbe code from cache
+     * Handle quick search dropdown
+     * @param msg Answer Message
      */
-    public String getSbeTableFromCache() {
-        String sbe = CacheUtils.getObject(user.getProductCode(),getCachedSbeTable() ,String.class);
-        if(sbe == null) return sbe = "";
-        return sbe;
-    }
-
-    /**
-     * Clear params in cache
-     */
-    public void clearParamsInCache() {
-        Map<String, SavedSearch> params = new HashMap<>();
-        CacheUtils.putObject(user.getProductCode(),getCachedAnswerKey(),params);
+    public void sendListQuickSearchDropdown(QEventMessage msg) {
+        try {
+            String value = msg.getData().getValue();
+            if(!value.isEmpty()) {
+                filterService.sendListQuickSearches(QUE_QUICK_SEARCH_GRP,QUE_QUICK_SEARCH,SBE_QUICK_SEARCH,
+                        FilterConst.PRI_NAME,FilterConst.VALUE,value);
+            }
+        } catch (Exception ex){
+            log.error(ex);
+        }
     }
 }

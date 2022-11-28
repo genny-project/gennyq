@@ -12,6 +12,7 @@ public class FilterConst {
     public static final String PRI_NAME="PRI_NAME";
     public static final String PRI_CODE="PRI_CODE";
     public static final String FIELD="FIELD_";
+    public static final String PRI_CREATED_DATE="PRI_CREATED_DATE";
 
     /* PCM */
     public static final String PCM_TABLE = "PCM_TABLE";
@@ -26,8 +27,6 @@ public class FilterConst {
 
     /* question */
     public static final String QUE_QQQ_GROUP = "QQQ_QUESTION_GROUP";
-    public static final String QUE_FILTER_GRP = "QUE_FILTER_GRP";
-    public static final String QUE_ADD_FILTER_GRP = "QUE_ADD_FILTER_GRP";
     public static final String QUE_SBE_DETAIL_QUESTION_GRP = "QUE_SBE_DETAIL_QUESTION_GRP";
     public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
     public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
@@ -36,11 +35,6 @@ public class FilterConst {
     public static final String QUE_FILTER_VALUE_PREF = "QUE_FILTER_VALUE_";
     public static final String ROW_FILTER_PREF = "ROW_FILTER_";
     public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
-    public static final String QUE_FILTER_VALUE_STATE = "QUE_FILTER_VALUE_STATE";
-    public static final String QUE_FILTER_VALUE_INTERNSHIP_TYPE = "QUE_FILTER_VALUE_INTERNSHIP_TYPE";
-    public static final String QUE_FILTER_VALUE_ACADEMY = "QUE_FILTER_VALUE_ACADEMY";
-    public static final String QUE_FILTER_VALUE_DJP_HC = "QUE_FILTER_VALUE_DJP_HC";
-    public static final String QUE_FILTER_VALUE_DATE = "QUE_FILTER_VALUE_DATE";
     public static final String QUE_FILTER_VALUE_DATETIME = "QUE_FILTER_VALUE_DATETIME";
     public static final String QUE_FILTER_VALUE_TIME = "QUE_FILTER_VALUE_TIME";
 
@@ -111,13 +105,16 @@ public class FilterConst {
     public static final String QUE_SAVED_SEARCH_SELECT_GRP = "QUE_SAVED_SEARCH_SELECT_GRP";
     public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
     public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
+    public static final String QUE_SBE_DETAIL_VIEW_DELETE = "QUE_SBE_DETAIL_VIEW_DELETE";
     public static final String QUE_SAVED_SEARCH_LIST = "QUE_SAVED_SEARCH_LIST";
+    public static final String QUE_SAVED_SEARCH_SELECT = "QUE_SAVED_SEARCH_SELECT";
     public static final String QUE_SAVED_SEARCH_APPLY = "QUE_SAVED_SEARCH_APPLY";
     public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
     public static final String YES = "YES";
     public static final String LNK_AUTHOR = "LNK_AUTHOR";
     public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
     public static final String PCM_SBE_ADD_SEARCH = "PCM_SBE_ADD_SEARCH";
+    public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
 
     public static final String FILTER_PREF = "FILTER_";
 
@@ -127,7 +124,12 @@ public class FilterConst {
     public static final String SELECT = "SELECT";
     public static final String YES_NO = "YES_NO";
     public static final String COUNTRY = "COUNTRY";
-    public static final String SEPARATOR = ":";
+    public static final String SEPARATOR = ";";
 
+    /* Quick search */
+    public static final String QUE_SEARCH = "QUE_SEARCH";
+
+    public static final String PRI_CREATED = "PRI_CREATED";
+    public static final String ISCODE = "isCode";
 
 }
