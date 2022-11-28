@@ -421,11 +421,9 @@ public class SearchUtils {
 	 * @return The last word
 	 */
 	public String getLastWord(String str) {
-		String word = "";
 		int lastIndex = str.lastIndexOf("_");
 		if (lastIndex > -1) {
-			word = str.substring(lastIndex + 1, str.length());
-			return word;
+			return str.substring(lastIndex + 1, str.length());
 		}
 		return str;
 	}
@@ -440,7 +438,7 @@ public class SearchUtils {
 		if (filterParams == null)
 			return value;
 		if (filterParams.containsKey(key)) {
-			value = filterParams.get(key).toString();
+			value = filterParams.get(key);
 		}
 		String finalVal = value.replace("\"", "")
 				.replace("[", "").replace("]", "")

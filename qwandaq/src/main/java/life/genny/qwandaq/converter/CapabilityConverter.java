@@ -50,7 +50,6 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
             return new HashSet<>();
         Set<Capability> capSet = new HashSet<>();
         String[] capabilities = dbData.split(CAPABILITY_DELIMITER);
-        // TODO: May need to verify capability string
         for(String cap : capabilities) {
             capSet.add(deserializeOneCapability(cap));
         }
