@@ -24,8 +24,6 @@ public class   SearchCaching {
 	@Inject
 	Service service;
 
-	public static final String SBE_MESSAGE = "SBE_MESSAGE";
-
 	public void saveToCache() {
 
 		// DEF_ADDRESS
