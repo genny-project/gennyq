@@ -8,18 +8,12 @@ public class FilterConst {
     public static final String SEARCH_TEXT="PRI_SEARCH_TEXT";
     public static final String  FILTER_LABEL = "FILTER_LABEL";
 
-    public static final String  PRI_PREFIX = "PRI_";
     public static final String PRI_NAME="PRI_NAME";
     public static final String PRI_CODE="PRI_CODE";
     public static final String FIELD="FIELD_";
     public static final String PRI_CREATED_DATE="PRI_CREATED_DATE";
 
-    /* PCM */
-    public static final String PCM_TABLE = "PCM_TABLE";
-    public static final String PRI_LOC1 = "PRI_LOC1";
-    public static final String PRI_LOC2 = "PRI_LOC2";
-    public static final String PRI_LOC3 = "PRI_LOC3";
-    public static final String PCM_PROCESS = "PCM_PROCESS";
+    /* BUCKET */
     public static final String BUCKET_CODES = "BUCKET_CODES";
     public static final String BUCKET_DISPLAY = "DISPLAY";
     public static final String NONE = "NONE";
@@ -33,20 +27,16 @@ public class FilterConst {
     public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
     public static final String QUE_SUBMIT = "QUE_SUBMIT";
     public static final String QUE_FILTER_VALUE_PREF = "QUE_FILTER_VALUE_";
-    public static final String ROW_FILTER_PREF = "ROW_FILTER_";
     public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
     public static final String QUE_FILTER_VALUE_DATETIME = "QUE_FILTER_VALUE_DATETIME";
-    public static final String QUE_FILTER_VALUE_TIME = "QUE_FILTER_VALUE_TIME";
 
     /* Link */
     public static final String LNK_FILTER_COLUMN = "LNK_FILTER_COLUMN";
     public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
-    public static final String LNK_FILTER_VALUE = "LNK_FILTER_VALUE";
 
     public static final String LNK_CORE = "LNK_CORE";
     public static final String LNK_PERSON = "LNK_PERSON";
     public static final String LNK_ITEMS = "LNK_ITEMS";
-    public static final String ITEMS = "ITEMS";
 
     /* Filter */
     public static final String FILTERS = "Filters";
@@ -58,9 +48,6 @@ public class FilterConst {
     public static final String SEL_LIKE = "SEL_LIKE";
     public static final String SEL_NOT_LIKE = "SEL_NOT_LIKE";
     public static final String SEL_FILTER_COLUMN_FLC = "SEL_FILTER_COLUMN_FLC_";
-
-    /* Filter columns */
-    public static final String FILTER_DATE = "DATE";
 
     /* Filter date */
     public static final String SEL_GREATER_THAN = "SEL_GREATER_THAN";
@@ -83,7 +70,6 @@ public class FilterConst {
     public static final String LAST_SEARCH = "LAST-SEARCH:";
 
     /* Bucket filter */
-    public static final String QUE_BUCKET_INTERNS_GRP = "QUE_BUCKET_INTERNS_GRP";
     public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
     public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
     public static final String BKT_APPLICATIONS = "BKT_APPLICATIONS";
@@ -91,7 +77,6 @@ public class FilterConst {
 
     /* Event */
     public static final String TOKEN = "token";
-    public static final String ATTRIBUTECODE = "attributeCode";
     public static final String VALUE = "value";
     public static final String OPTION = "option";
     public static final String QUESTIONCODE = "questionCode";
@@ -116,8 +101,6 @@ public class FilterConst {
     public static final String PCM_SBE_ADD_SEARCH = "PCM_SBE_ADD_SEARCH";
     public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
 
-    public static final String FILTER_PREF = "FILTER_";
-
     /** Filter Category **/
     public static final String TEXT = "TEXT";
     public static final String DATETIME = "DATETIME";
@@ -129,7 +112,6 @@ public class FilterConst {
     /* Quick search */
     public static final String QUE_SEARCH = "QUE_SEARCH";
 
-    public static final String PRI_CREATED = "PRI_CREATED";
     public static final String ISCODE = "isCode";
 
 }

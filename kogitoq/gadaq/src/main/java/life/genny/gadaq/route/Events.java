@@ -205,6 +205,17 @@ public class Events {
 			return;
 		}
 
+		// quick search
+		if(filter.isQuickSearchDropdown(msg)) {
+			filter.sendListQuickSearchDropdown(msg);
+			return;
+		}
+
+		// Saved search buttons
+		if(filter.isFilterBtn(msg)) {
+			filter.handleBtnEvents(msg);
+		}
+
 		/**
 		 * If no route exists within gadaq, the message should be
 		 * sent to the project specific service.

@@ -14,6 +14,7 @@ import javax.json.bind.JsonbBuilder;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.trait.*;
 import life.genny.qwandaq.models.SavedSearch;
@@ -143,11 +144,11 @@ public class FilterUtils {
         int priIndex = -1;
         int fieldIndex = value.lastIndexOf(FilterConst.FIELD);
         if(fieldIndex > -1) {
-            priIndex = value.indexOf(FilterConst.PRI_PREFIX) + FilterConst.PRI_PREFIX.length();
+            priIndex = value.indexOf(Prefix.PRI) + Prefix.PRI.length();
             fieldName = value.substring(priIndex,fieldIndex - 1);
             return fieldName;
         } else {
-            priIndex = value.lastIndexOf(FilterConst.PRI_PREFIX) + FilterConst.PRI_PREFIX.length();
+            priIndex = value.lastIndexOf(Prefix.PRI) + Prefix.PRI.length();
         }
         if(priIndex > -1) {
             fieldName = value.substring(priIndex);
@@ -164,8 +165,8 @@ public class FilterUtils {
      */
     public Ask getAddFilterGroupBySearchBE(String questionCode) {
         String sourceCode = userToken.getUserCode();
-        BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
-        BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
+        BaseEntity source = beUtils.getBaseEntity(sourceCode);
+        BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
         Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_ADD_FILTER_SBE_GRP, source, target);
         ask.getChildAsks().stream().forEach(e -> {
@@ -199,8 +200,8 @@ public class FilterUtils {
      */
     public Ask getFilterDetailsGroup(String queGrp,String queCode,String filterCode,Map<String, SavedSearch> params) {
         String sourceCode = userToken.getUserCode();
-        BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
-        BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
+        BaseEntity source = beUtils.getBaseEntity(sourceCode);
+        BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
         Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,source,target);
         ask.setHidden(true);
@@ -277,27 +278,27 @@ public class FilterUtils {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
         base.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
-        base.setLinkCode(FilterConst.LNK_CORE);
-        base.setLinkValue(FilterConst.LNK_ITEMS);
+        base.setLinkCode(Attribute.LNK_CORE);
+        base.setLinkValue(Attribute.LNK_ITEMS);
         base.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
 
         if (value.contains(FilterConst.DATETIME)){
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LESS_THAN));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
         } else if (value.contains(FilterConst.SELECT)) {
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
         } else {
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LIKE));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_LIKE));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_LIKE));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_LIKE));
         }
 
         return base;
@@ -346,8 +347,8 @@ public class FilterUtils {
      */
     public SearchEntity getQuickOptions(String sbeCode,String lnkCode, String lnkValue) {
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
-        searchBE.add(new Or(new Filter(FilterConst.PRI_CODE, Operator.LIKE, "CPY_%")
-                        ,new Filter(FilterConst.PRI_CODE, Operator.LIKE, "PER_%")))
+        searchBE.add(new Or(new Filter(FilterConst.PRI_CODE, Operator.STARTS_WITH, Prefix.CPY)
+                        ,new Filter(FilterConst.PRI_CODE, Operator.STARTS_WITH, Prefix.PER)))
                 .add(new Column(lnkCode, lnkCode));
 
         if(!lnkValue.isEmpty()) {

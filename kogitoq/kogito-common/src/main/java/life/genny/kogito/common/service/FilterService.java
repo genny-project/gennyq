@@ -32,6 +32,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.PCM;
 
 @ApplicationScoped
 public class FilterService {
@@ -218,7 +219,7 @@ public class FilterService {
             sendMessageBySearchEntity(searchBE);
         } else {
             sendMessageBySearchEntity(searchBE);
-            sendSearchPCM(FilterConst.PCM_TABLE, targetCode);
+            sendSearchPCM(PCM.PCM_TABLE, targetCode);
         }
     }
 
@@ -257,7 +258,7 @@ public class FilterService {
             CacheUtils.putObject(userToken.getProductCode(), targetCode, searchBE);
 
             sendMessageBySearchEntity(searchBE);
-            sendSearchPCM(FilterConst.PCM_PROCESS, targetCode);
+            sendSearchPCM(PCM.PCM_PROCESS, targetCode);
         }
     }
 
@@ -777,7 +778,7 @@ public class FilterService {
         BaseEntity base = beUtils.getBaseEntity(pcmCode);
 
         for(EntityAttribute ea : base.getBaseEntityAttributes()) {
-            if(ea.getAttributeCode().equalsIgnoreCase(FilterConst.PRI_LOC1)) {
+            if(ea.getAttributeCode().equalsIgnoreCase(PCM.PRI_LOC1)) {
                 ea.setValue(attCode);
                 ea.setValueString(attCode);
             }

@@ -1,11 +1,12 @@
 package life.genny.qwandaq.models;
 
 import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.constants.Prefix;
 
-import javax.json.JsonObject;
+
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.lang.reflect.Field;
+
 import java.util.Map;
 
 public class SavedSearch {
@@ -167,8 +168,7 @@ public class SavedSearch {
             fieldName = value.substring(priIndex);
             return fieldName;
         } else {
-//            priIndex = value.lastIndexOf(FilterConst.PRI_PREFIX) + FilterConst.PRI_PREFIX.length();
-            priIndex = value.lastIndexOf(FilterConst.PRI_PREFIX);
+            priIndex = value.lastIndexOf(Prefix.PRI);
         }
         if(priIndex > -1) {
             fieldName = value.substring(priIndex);

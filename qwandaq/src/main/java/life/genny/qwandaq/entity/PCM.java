@@ -36,6 +36,8 @@ public class PCM extends BaseEntity {
 	public static final String PCM_DETAIL_VIEW = "PCM_DETAIL_VIEW";
 	public static final String PCM_PROCESS = "PCM_PROCESS";
 	public static final String PCM_EVENTS = "PCM_EVENTS";
+	public static final String PRI_LOC1 = "PRI_LOC1";
+	public static final String PRI_LOC3 = "PRI_LOC3";
 
 	public PCM(String code, String name) {
 		super(code, name);

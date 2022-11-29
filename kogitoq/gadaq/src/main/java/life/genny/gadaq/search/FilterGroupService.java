@@ -35,7 +35,8 @@ import java.util.Comparator;
 import javax.inject.Inject;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.Question;
-
+import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.constants.Prefix;
 
 @ApplicationScoped
 public class FilterGroupService {
@@ -218,7 +219,7 @@ public class FilterGroupService {
      */
     public String getColumnName(String value) {
         String lastSuffix = "";
-        int lastIndex = value.lastIndexOf(FilterConst.PRI_PREFIX) + FilterConst.PRI_PREFIX.length();
+        int lastIndex = value.lastIndexOf(Prefix.PRI) + Prefix.PRI.length();
         if(lastIndex > -1) {
             lastSuffix = value.substring(lastIndex, value.length());
             lastSuffix = lastSuffix.replaceFirst("\"]","");
@@ -705,7 +706,7 @@ public class FilterGroupService {
 
         // send pcm  and base entities
         BaseEntity base = new BaseEntity(targetCode);
-        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
 
         CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
@@ -835,7 +836,7 @@ public class FilterGroupService {
         Map<String,SavedSearch>  params = getFilterParamsByBaseCode(filterCode);
 
         BaseEntity base = new BaseEntity(queCode);
-        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
@@ -850,7 +851,7 @@ public class FilterGroupService {
         filterService.handleFilter(sbeCode, params);
 
         BaseEntity base = new BaseEntity(code);
-        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
@@ -877,7 +878,7 @@ public class FilterGroupService {
         Map<String,SavedSearch> params = getParamsFromCache();
 
         BaseEntity base = new BaseEntity(queCode);
-        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
@@ -1111,7 +1112,7 @@ public class FilterGroupService {
             /* Go to Column */
             if(isColumnSelected(code,attrCode)) {
                 String queValCode = selectFilerColumn(value);
-                filterService.sendPartialPCM(FilterConst.PCM_SBE_ADD_SEARCH, FilterConst.PRI_LOC3, queValCode);
+                filterService.sendPartialPCM(FilterConst.PCM_SBE_ADD_SEARCH, PCM.PRI_LOC3, queValCode);
                 return;
             }
             /* add button*/

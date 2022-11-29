@@ -100,6 +100,10 @@ public class InternalConsumer {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_DATA, msg);
 
+		if(filter.isValidEvent(msg)){
+			filter.handleDataEvents(msg);
+		}
+
 		scope.destroy();
 		// log duration
 		Instant end = Instant.now();
@@ -143,11 +147,6 @@ public class InternalConsumer {
 		}
 		events.route(msg);
 
-		// Saved search buttons
-		if(filter.isFilterBtn(msg)) {
-			filter.handleBtnEvents(msg);
-		}
-
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
@@ -175,6 +174,7 @@ public class InternalConsumer {
 		}
 
 		scope.init(event);
+
 		if(filter.isValidEvent(msg)){
 			filter.handleDataEvents(msg);
 		}
