@@ -16,6 +16,7 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
@@ -52,23 +53,43 @@ public class RoleManager extends Manager {
 	protected void init() {
 		super.init();
 		// Should only need to find this once.
-		roleDef = beUtils.getBaseEntity(DEF_ROLE_CODE);
-		if(roleDef == null)
-			throw new NullParameterException(DEF_ROLE_CODE);
+		// this is automatically assuming that PRODUCT_CODES env is declared
+		String[] productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES").split(":");
+		roleDef = getRoleDef(productCodes);
 		
 		lnkRolAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), Attribute.LNK_ROLE);
 		if(lnkRolAttribute == null) {
-			error(Attribute.LNK_ROLE + " is missing. Adding!");
+			error(Attribute.LNK_ROLE + " is missing. Adding for all product codes declared!");
 			lnkRolAttribute = new Attribute(Attribute.LNK_ROLE, "Role Link", dtt);
-			qwandaUtils.saveAttribute(lnkRolAttribute);
+			for(String productCode : productCodes)
+				qwandaUtils.saveAttribute(productCode, lnkRolAttribute);
 		}
 		try {
 			lnkChildrenAttribute = dbUtils.findAttributeByCode(userToken.getProductCode(), Attribute.LNK_CHILDREN);
 		} catch(NoResultException e) {
-			error(Attribute.LNK_CHILDREN + " is missing. Adding!");
+			error(Attribute.LNK_CHILDREN + " is missing. Adding for all product codes declared!");
 			lnkChildrenAttribute = new Attribute(Attribute.LNK_CHILDREN, "Children Role Link", dtt);
-			qwandaUtils.saveAttribute(lnkChildrenAttribute);
+			for(String productCode : productCodes)
+				qwandaUtils.saveAttribute(productCode, lnkChildrenAttribute);
 		}
+	}
+
+	// find the role def somewhere -_-
+	private BaseEntity getRoleDef(String... productCodes) {
+		for(String productCode : productCodes) {
+			info("Checking " + productCode + " for " + DEF_ROLE_CODE);
+			try {
+				BaseEntity roleDef = beUtils.getBaseEntity(productCode);
+			} catch(ItemNotFoundException e) {
+				warn("Role def not in " + productCode + ". Bootq should fix this");
+				continue;
+			}
+
+			return roleDef;
+		}
+
+		error("Could not " + DEF_ROLE_CODE + " in any products. Have you bootq'd? Is it in the sheets? What happened to it?");
+		return null;
 	}
 
 	/**
