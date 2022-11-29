@@ -3,7 +3,12 @@ package life.genny.kogito.common.service;
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.utils.*;
+import life.genny.qwandaq.utils.FilterUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
@@ -31,8 +36,8 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.constants.Prefix;
 
 @ApplicationScoped
 public class FilterService {
@@ -193,17 +198,17 @@ public class FilterService {
             Integer pagePos = 0;
 
             if(aeIndex.isPresent() && pageSize !=null) {
-                if(code.equalsIgnoreCase(FilterConst.PAGINATION_NEXT) ||
-                        code.equalsIgnoreCase(FilterConst.QUE_TABLE_LAZY_LOAD)) {
+                if(code.equalsIgnoreCase(Question.QUE_TABLE_NEXT_BTN) ||
+                        code.equalsIgnoreCase(Question.QUE_TABLE_LAZY_LOAD)) {
                     indexVal = aeIndex.get().getValueInteger() + 1;
-                } else if (code.equalsIgnoreCase(FilterConst.PAGINATION_PREV)) {
+                } else if (code.equalsIgnoreCase(Question.QUE_TABLE_PREVIOUS_BTN)) {
                     indexVal = aeIndex.get().getValueInteger() - 1;
                 }
 
                 pagePos = (indexVal - 1) * pageSize;
             }
             //initial stage of bucket pagination
-            else if (aeIndex.isEmpty() && code.equalsIgnoreCase(FilterConst.QUE_TABLE_LAZY_LOAD)) {
+            else if (aeIndex.isEmpty() && code.equalsIgnoreCase(Question.QUE_TABLE_LAZY_LOAD)) {
                 indexVal = 2;
                 pagePos = pageSize;
             }
@@ -251,7 +256,7 @@ public class FilterService {
             }
 
             //filter by select box
-            if (code.equalsIgnoreCase(FilterConst.LNK_PERSON)) {
+            if (code.equalsIgnoreCase(Attribute.LNK_PERSON)) {
                 searchBE.add(filter);
             }
 
@@ -281,7 +286,7 @@ public class FilterService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
         search.sendTable(queCode);
 
     }
@@ -313,7 +318,7 @@ public class FilterService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
         search.sendTable(queCode);
     }
 
@@ -422,10 +427,10 @@ public class FilterService {
         String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());
-        msg.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
-        msg.setLinkCode(FilterConst.LNK_CORE);
-        msg.setLinkValue(FilterConst.LNK_ITEMS);
-        msg.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
+        msg.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
+        msg.setLinkCode(Attribute.LNK_CORE);
+        msg.setLinkValue(Attribute.LNK_ITEMS);
+        msg.setQuestionCode(Question.QUE_FILTER_OPTION);
         msg.setTargetCode(sbeCodeJti);
         msg.setReplace(true);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
@@ -469,7 +474,7 @@ public class FilterService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  sbeCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        String queCode =  sbeCode.replaceFirst(Prefix.SBE,Prefix.QUE);
         search.sendTable(queCode);
     }
 
@@ -681,7 +686,7 @@ public class FilterService {
      * @param lnkValue Link value
      */
     public void sendListSavedSearches(String group,String code,String lnkCode,String lnkValue) {
-        String sbeCode = FilterConst.SBE_SAVED_SEARCH;
+        String sbeCode = SearchEntity.SBE_SAVED_SEARCH;
         SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeCode,lnkCode,lnkValue, true);
         QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
@@ -728,7 +733,7 @@ public class FilterService {
      * @return The list of dropdown items
      */
     public List<BaseEntity> getListSavedSearches(String sbeCode,String lnkCode,String lnkValue) {
-        String sbeJti = getSearchBaseEntityCodeByJTI(FilterConst.SBE_SAVED_SEARCH);
+        String sbeJti = getSearchBaseEntityCodeByJTI(SearchEntity.SBE_SAVED_SEARCH);
         SearchEntity search = filterUtils.getListSavedSearch(sbeJti,lnkCode,lnkValue, true);
         List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
         return bases;
@@ -804,8 +809,8 @@ public class FilterService {
             valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
 
             StringBuilder lblBuild = new StringBuilder(att.getName() + FilterConst.SEPARATOR);
-            lblBuild.append(ss.getOperator().replaceFirst(FilterConst.SEL_PREF, "").replaceAll("_"," "));
-            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(FilterConst.SEL_PREF, ""));
+            lblBuild.append(ss.getOperator().replaceFirst(Prefix.SEL, "").replaceAll("_"," "));
+            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(Prefix.SEL, ""));
 
             EntityAttribute ea = new EntityAttribute(base, att, 1.0);
             ea.setAttributeName(lblBuild.toString());
@@ -918,12 +923,12 @@ public class FilterService {
      */
     public void init(String queCode) {
         clearParamsInCache();
-        String sbe = queCode.replaceFirst(FilterConst.QUE_PREF,FilterConst.SBE_PREF);
+        String sbe = queCode.replaceFirst(Prefix.QUE,Prefix.SBE);
         sendFilterColumns(sbe);
         CacheUtils.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
 
-        sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
-                FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
+        sendListSavedSearches(Question.QUE_SAVED_SEARCH_SELECT_GRP,
+                Question.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
 
     }
 

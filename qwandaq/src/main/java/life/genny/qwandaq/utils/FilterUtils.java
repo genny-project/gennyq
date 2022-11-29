@@ -27,7 +27,6 @@ import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import org.w3c.dom.Attr;
 
 @ApplicationScoped
 public class FilterUtils {
@@ -142,7 +141,7 @@ public class FilterUtils {
     public String getLinkValueCode(String value) {
         String fieldName = "";
         int priIndex = -1;
-        int fieldIndex = value.lastIndexOf(FilterConst.FIELD);
+        int fieldIndex = value.lastIndexOf(Prefix.FIELD);
         if(fieldIndex > -1) {
             priIndex = value.indexOf(Prefix.PRI) + Prefix.PRI.length();
             fieldName = value.substring(priIndex,fieldIndex - 1);
@@ -168,11 +167,11 @@ public class FilterUtils {
         BaseEntity source = beUtils.getBaseEntity(sourceCode);
         BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
-        Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_ADD_FILTER_SBE_GRP, source, target);
+        Ask ask = qwandaUtils.generateAskFromQuestionCode(Question.QUE_ADD_FILTER_SBE_GRP, source, target);
         ask.getChildAsks().stream().forEach(e -> {
-            if (e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_FILTER_COLUMN)
-                    || e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_FILTER_OPTION)
-                    || e.getQuestionCode().equalsIgnoreCase(FilterConst.QUE_SUBMIT)) {
+            if (e.getQuestionCode().equalsIgnoreCase(Question.QUE_FILTER_COLUMN)
+                    || e.getQuestionCode().equalsIgnoreCase(Question.QUE_FILTER_OPTION)
+                    || e.getQuestionCode().equalsIgnoreCase(Question.QUE_SUBMIT)) {
                 e.setHidden(false);
             } else if(e.getQuestionCode().equalsIgnoreCase(questionCode)) {
                 e.setHidden(false);
@@ -183,7 +182,7 @@ public class FilterUtils {
             e.setTargetCode(sourceCode);
         });
 
-        Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_SUBMIT, source, target);
+        Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(Question.QUE_SUBMIT, source, target);
 
         ask.setTargetCode(sourceCode);
         ask.add(askSubmit);
@@ -203,7 +202,7 @@ public class FilterUtils {
         BaseEntity source = beUtils.getBaseEntity(sourceCode);
         BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
-        Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,source,target);
+        Ask ask = qwandaUtils.generateAskFromQuestionCode(Question.QUE_SBE_DETAIL_QUESTION_GRP,source,target);
         ask.setHidden(true);
 
         // change filter details group
@@ -228,25 +227,25 @@ public class FilterUtils {
     public QDataBaseEntityMessage getFilterValuesByColum(SearchEntity searchBE) {
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
-        msg.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
-        msg.setLinkCode(FilterConst.LNK_CORE);
-        msg.setLinkValue(FilterConst.LNK_ITEMS);
-        msg.setQuestionCode(FilterConst.QUE_FILTER_COLUMN);
+        msg.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
+        msg.setLinkCode(Attribute.LNK_CORE);
+        msg.setLinkValue(Attribute.LNK_ITEMS);
+        msg.setQuestionCode(Question.QUE_FILTER_COLUMN);
 
         List<BaseEntity> baseEntities = new ArrayList<>();
 
         searchBE.getBaseEntityAttributes().stream()
-                .filter(e -> e.getAttributeCode().startsWith(FilterConst.FILTER_COL))
+                .filter(e -> e.getAttributeCode().startsWith(Prefix.FLC))
                 .forEach(e -> {
                     BaseEntity baseEntity = new BaseEntity();
                     List<EntityAttribute> entityAttributes = new ArrayList<>();
 
                     EntityAttribute ea = new EntityAttribute();
-                    String attrCode = e.getAttributeCode().replaceFirst(FilterConst.FILTER_COL, "");
+                    String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC, "");
                     ea.setAttributeName(e.getAttributeName());
                     ea.setAttributeCode(attrCode);
 
-                    String baseCode = FilterConst.FILTER_SEL + FilterConst.FILTER_COL + attrCode;
+                    String baseCode = FilterConst.FILTER_SEL + Prefix.FLC + attrCode;
                     ea.setBaseEntityCode(baseCode);
                     ea.setValueString(e.getAttributeName());
 
@@ -277,10 +276,10 @@ public class FilterUtils {
     public QDataBaseEntityMessage getFilterOptionByCode(String value) {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
-        base.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
+        base.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
         base.setLinkCode(Attribute.LNK_CORE);
         base.setLinkValue(Attribute.LNK_ITEMS);
-        base.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
+        base.setQuestionCode(Question.QUE_FILTER_OPTION);
 
         if (value.contains(FilterConst.DATETIME)){
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN));
@@ -317,8 +316,8 @@ public class FilterUtils {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
         base.setParentCode(queGrp);
-        base.setLinkCode(FilterConst.LNK_CORE);
-        base.setLinkValue(FilterConst.LNK_ITEMS);
+        base.setLinkCode(Attribute.LNK_CORE);
+        base.setLinkValue(Attribute.LNK_ITEMS);
         base.setQuestionCode(queCode);
 
         SearchEntity searchBE = new SearchEntity(FilterConst.SBE_DROPDOWN, FilterConst.SBE_DROPDOWN)
@@ -371,12 +370,12 @@ public class FilterUtils {
      */
     public SearchEntity getListSavedSearch(String sbeCode,String lnkCode, String lnkValue, boolean isSortedDate) {
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
-        searchBE.add(new Filter(FilterConst.PRI_CODE, Operator.LIKE, FilterConst.SBE_SAVED_SEARCH + "_%"))
+        searchBE.add(new Filter(FilterConst.PRI_CODE, Operator.LIKE, SearchEntity.SBE_SAVED_SEARCH + "_%"))
                 .add(new Column(lnkCode, lnkValue));
 
-        String startWith = "[\"" + FilterConst.SBE_SAVED_SEARCH;
-        searchBE.add(new Filter(FilterConst.LNK_SAVED_SEARCHES,Operator.STARTS_WITH,startWith));
-        searchBE.add(new Filter(FilterConst.LNK_AUTHOR,Operator.CONTAINS,userToken.getUserCode()));
+        String startWith = "[\"" + SearchEntity.SBE_SAVED_SEARCH;
+        searchBE.add(new Filter(Attribute.LNK_SAVED_SEARCHES,Operator.STARTS_WITH,startWith));
+        searchBE.add(new Filter(Attribute.LNK_AUTHOR,Operator.CONTAINS,userToken.getUserCode()));
 
         if(isSortedDate) {
             searchBE.add(new Sort(FilterConst.PRI_CREATED_DATE, Ord.DESC));
@@ -410,4 +409,19 @@ public class FilterUtils {
         return searchBE;
     }
 
+    /**
+     * Return Being valid of filter answer or not
+     * @param attCode Attribute code
+     * @return Being valid of filter answer or not
+     */
+    public boolean validFilter(String attCode) {
+        if(attCode.equalsIgnoreCase(Attribute.LNK_FILTER_COLUMN) ||
+                attCode.equalsIgnoreCase(FilterConst.LNK_SAVED_SEARCH) ||
+                attCode.equalsIgnoreCase(Attribute.LNK_QUICK_SEARCH) ||
+                attCode.startsWith(Prefix.FLC)){
+            return true;
+        }
+
+        return false;
+    }
 }

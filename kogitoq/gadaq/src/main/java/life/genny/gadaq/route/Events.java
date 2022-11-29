@@ -146,7 +146,7 @@ public class Events {
 		}
 
 		// bucket pagination
-		if (FilterConst.QUE_TABLE_LAZY_LOAD.equals(code)) {
+		if (Question.QUE_TABLE_LAZY_LOAD.equals(code)) {
 			search.handleSearchPagination(targetCode, false);
 			return;
 		}
@@ -203,17 +203,6 @@ public class Events {
 
 			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
 			return;
-		}
-
-		// quick search
-		if(filter.isQuickSearchDropdown(msg)) {
-			filter.sendListQuickSearchDropdown(msg);
-			return;
-		}
-
-		// Saved search buttons
-		if(filter.isFilterBtn(msg)) {
-			filter.handleBtnEvents(msg);
 		}
 
 		/**

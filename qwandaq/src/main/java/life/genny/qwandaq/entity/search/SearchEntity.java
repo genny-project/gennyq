@@ -43,6 +43,9 @@ public class SearchEntity extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
+	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
+	public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
+
 	// TODO: Polish this
 	private TraitMap traits = new TraitMap();
 

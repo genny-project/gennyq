@@ -135,9 +135,9 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
-		// Quick search
-		if(filter.isQuickSearchDropdown(msg)) {
-			filter.sendListQuickSearchDropdown(msg);
+        // Filter
+		if(filter.isValidEvent(msg)){
+			filter.handleBtnEvents(msg);
 			return;
 		}
 
@@ -146,38 +146,6 @@ public class InternalConsumer {
 			return;
 		}
 		events.route(msg);
-
-		scope.destroy();
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
-
-	/**
-	 * Consume data from anwsers
-	 * @param event Event
-	 */
-	@Incoming("data")
-	@Blocking
-	public void getEventData(String event) {
-		// init scope and process msg
-		Instant start = Instant.now();
-
-		log.info("Received Event : " + SecurityUtils.obfuscate(event));
-
-		QDataAnswerMessage msg = null;
-		try {
-			msg = jsonb.fromJson(event, QDataAnswerMessage.class);
-		} catch (Exception e) {
-			log.error("Cannot parse this event! " + event);
-			e.printStackTrace();
-			return;
-		}
-
-		scope.init(event);
-
-		if(filter.isValidEvent(msg)){
-			filter.handleDataEvents(msg);
-		}
 
 		scope.destroy();
 		Instant end = Instant.now();
