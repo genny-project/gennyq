@@ -35,7 +35,7 @@ public class InternalConsumer {
 
 		if (service.showValues())
 			log.info("Blacklist        :" + (enableBlacklist ? "ON" : "OFF"));
-		service.fullServiceInit(true);
+		service.fullServiceInit(false);
 		log.info("[*] Finished Lauchy Startup!");
 	}
     

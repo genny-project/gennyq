@@ -26,7 +26,6 @@ import life.genny.kogito.common.service.BaseEntityService;
 import life.genny.kogito.common.service.ImportGithubService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -246,6 +245,7 @@ public class KogitoUtils {
 		// ensure request was a success
 		if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
 			log.error("Error, Response Status: " + response.statusCode());
+			log.error("Body: " + response.body());
 			return null;
 		}
 
