@@ -10,8 +10,9 @@ import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.utils.collections.BiDirectionalHashMap;
-
 import life.genny.qwandaq.entity.search.trait.Trait;
+
+// TODO: MAke this a Map of Maps
 public class TraitMap extends HashMap<Integer, List<? extends Trait>> {
     public static BiDirectionalHashMap<Integer, Class<? extends Trait>> TRAIT_MAP_IDS = new BiDirectionalHashMap<>();
     static {

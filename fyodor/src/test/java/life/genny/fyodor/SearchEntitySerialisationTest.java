@@ -22,6 +22,8 @@ public class SearchEntitySerialisationTest {
     
     static Jsonb jsonb = JsonbBuilder.create();
 
+    //TODO: Turn these into proper tests
+
     static SearchEntity entity = new SearchEntity(SBE_TABLE_APPLICATIONS, "Applications")
     .add(new Filter("LNK_TEST_LINK", Operator.CONTAINS, "DEF_TEST"))
     .add(new AssociatedColumn("LNK_TEST1", "PRI_DUMMY_ATTRIBUTE_NINE_THOUSAND", "Assc. column 1"))
@@ -47,5 +49,14 @@ public class SearchEntitySerialisationTest {
 
         // entity.convertToSendable();
         System.out.println(jsonb.toJson(entity));
+    }
+
+    @Test
+    public void flipOrdTest() {
+        Sort s = entity.getTrait(Sort.class, "SRT_POOPOO").get();
+        System.out.println(s);
+        s.flipOrd();
+        System.out.println(s);
+        System.out.println(entity.getTraitMap()); 
     }
 }
