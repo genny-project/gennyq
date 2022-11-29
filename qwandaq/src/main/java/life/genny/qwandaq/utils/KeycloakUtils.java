@@ -374,7 +374,7 @@ public class KeycloakUtils {
 
         log.info("CreateUserjsonDummy = " + json);
 
-        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users";
+        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users";
 
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
