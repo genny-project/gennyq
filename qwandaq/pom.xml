@@ -259,7 +259,6 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- QwandaQ already has this but native build will fail so adding these here too-->
 		<dependency>
 			<groupId>com.squareup.okhttp3</groupId>
 			<artifactId>okhttp</artifactId>
