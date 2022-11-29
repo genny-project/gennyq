@@ -16,6 +16,7 @@ public class Prefix {
 	// baseentity
 	public static final String PER = "PER_";
 	public static final String CPY = "CPY_";
+	public static final String MSG = "MSG_";
 
 	// attribute
 	public static final String PRI = "PRI_";

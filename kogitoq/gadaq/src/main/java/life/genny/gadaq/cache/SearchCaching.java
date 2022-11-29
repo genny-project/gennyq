@@ -8,6 +8,7 @@ import javax.inject.Inject;
 import static life.genny.qwandaq.constants.GennyConstants.*;
 
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.*;
 import org.jboss.logging.Logger;
@@ -100,7 +101,7 @@ public class SearchCaching {
 		// DEF_MESSAGE
 		cacheSearch(
 				new SearchEntity(SBE_MESSAGE, "Messages")
-						.add(new Filter(PRI_CODE, Operator.LIKE, "MSG_%"))
+						.add(new Filter(PRI_CODE, Operator.STARTS_WITH, Prefix.MSG))
 						.add(new Column(PRI_NAME, "Code"))
 						.add(new Column(PRI_DESCRIPTION, "Description"))
 						.add(new Column(PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
