@@ -138,7 +138,7 @@
 				<module>dropkick</module>
 				<module>lauchy</module>
 				<module>messages</module>
-<!--				<module>shleemy</module>-->
+				<module>shleemy</module>
 				<module>fyodor</module>
 			</modules>
 		</profile>
@@ -165,7 +165,7 @@
 				<module>dropkick</module>
 				<module>lauchy</module>
 				<module>messages</module>
-<!--				<module>shleemy</module>-->
+				<module>shleemy</module>
 				<module>fyodor</module>
 			</modules>
 		</profile>
