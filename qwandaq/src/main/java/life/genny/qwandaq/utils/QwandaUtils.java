@@ -466,8 +466,6 @@ public class QwandaUtils {
 	 * @return
 	 */
 	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
-		target.getBaseEntityAttributes().stream()
-				.forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
 		for (String d : dependencies) {
 			if (!target.getValue(d).isPresent())
 				return false;
