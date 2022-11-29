@@ -40,6 +40,7 @@ import org.keycloak.util.JsonSerialization;
 
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.KeycloakException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
@@ -373,23 +374,19 @@ public class KeycloakUtils {
 
         log.info("CreateUserjsonDummy = " + json);
 
-        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users";
+        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users";
 
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
         HttpResponse<String> response = HttpUtils.post(uri, json, token);
-
-        if (response == null) {
-            log.error("Response was null from keycloak!!!");
-            return null;
-        }
+        if (response == null)
+			throw new KeycloakException("Failed to create user: Response is null");
 
         Integer statusCode = response.statusCode();
         Response.Status status = Response.Status.fromStatusCode(statusCode);
         log.info("Create User Response Status: " + statusCode);
 
         try {
-
             // if user already exists, return their id
             if (status == Response.Status.CONFLICT) {
                 log.warn("Email already taken: " + email);
@@ -402,14 +399,10 @@ public class KeycloakUtils {
             }
 
         } catch (IOException e) {
-            log.error("Error trying to fetch keycloak user Id!");
-            log.error("Response Body: " + response.body());
-            e.printStackTrace();
+			throw new KeycloakException("Failed to create user: ", e);
         }
 
-        log.error("Could not return keycloak user Id");
-        log.error("Response Body: " + response.body());
-        return null;
+		throw new KeycloakException("Failed to create user: " + response.body());
     }
 
     /**
