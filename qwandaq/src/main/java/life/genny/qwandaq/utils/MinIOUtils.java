@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @ApplicationScoped
-@RegisterForReflection
 public class MinIOUtils {
 
     private static final Logger log = Logger.getLogger(MinIOUtils.class);
