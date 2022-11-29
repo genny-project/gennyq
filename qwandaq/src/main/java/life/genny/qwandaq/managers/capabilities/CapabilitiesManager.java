@@ -144,7 +144,7 @@ public class CapabilitiesManager extends Manager {
 		CapabilitySet cSet = new CapabilitySet(target);
 		cSet.addAll(capabilities.stream()
 			.map((EntityAttribute ea) -> {
-				System.out.println("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
+				trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
 				return Capability.getFromEA(ea);
 			})
 			.collect(Collectors.toSet()));
