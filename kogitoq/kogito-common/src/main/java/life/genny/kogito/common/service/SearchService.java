@@ -159,11 +159,15 @@ public class SearchService {
 
 		// Change the sort
 		Optional<Sort> sortOpt = searchEntity.getTrait(Sort.class, sort.getCode());
+		Sort searchSort;
 		if(!sortOpt.isPresent()) {
-			throw new MissingTraitException(searchEntity, sort.getCode());
+			log.warn("Sort missing in SEntity: " + entityCode + ". Adding..");
+			searchEntity.add(sort);
+			searchSort = sort;
+		} else {
+			searchSort = sortOpt.get();
 		}
 
-		Sort searchSort = sortOpt.get();
 		searchSort.flipOrd();
 
 		// send updated search
