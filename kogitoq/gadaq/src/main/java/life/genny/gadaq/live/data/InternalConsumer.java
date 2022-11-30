@@ -100,9 +100,7 @@ public class InternalConsumer {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_DATA, msg);
 
-		if(filter.isValidEvent(msg)){
-			filter.handleDataEvents(msg);
-		}
+		events.route(msg);
 
 		scope.destroy();
 		// log duration
@@ -135,16 +133,6 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
-        // Filter
-		if(filter.isValidEvent(msg)){
-			filter.handleBtnEvents(msg);
-			return;
-		}
-
-		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
-			return;
-		}
 		events.route(msg);
 
 		scope.destroy();

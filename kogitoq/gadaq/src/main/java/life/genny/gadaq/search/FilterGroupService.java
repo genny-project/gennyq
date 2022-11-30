@@ -325,18 +325,6 @@ public class FilterGroupService {
         return false;
     }
 
-    /**
-     * Being whether search text  or not
-     * @param attrCode Attribute code
-     * @return Being whether search text  or not
-     */
-    public boolean isSearchText(String attrCode) {
-        if(attrCode.equalsIgnoreCase(FilterConst.SEARCH_TEXT)) {
-            return true;
-        }
-
-        return false;
-    }
 
     /**
      * Check code whether is quesion showing filter box or not
@@ -366,19 +354,11 @@ public class FilterGroupService {
      * @return Being whether it was sent or not
      */
     public boolean isFilterBtn(String code) {
-        boolean result = isApply(code) || isBtnSearchAdd(code) || isBtnSearchDelete(code) || isBtnSearchSave(code);
-
-        return result;
-    }
-
-    public boolean isFilterBtn(QEventMessage msg) {
-        String code = msg.getData().getCode();
         boolean result = isApply(code) || isBtnSearchAdd(code) || isBtnSearchDelete(code) || isBtnSearchSave(code)
                 || isDetailDelete(code);
 
         return result;
     }
-
 
     /**
      *  Being whether filter event or not
@@ -454,29 +434,6 @@ public class FilterGroupService {
         return result;
     }
 
-    /**
-     * Search quick text
-     * @param msg Parsed message
-     * @param value Message value
-     * @param targetCode Target code
-     */
-    public void searchQuickText(JsonObject msg, String value, String targetCode) {
-        String attrCode = Attribute.PRI_NAME;
-        String attrName = Operator.LIKE.toString();
-        String text =  "%" + value.replaceFirst("!","") + "%";
-//        List<String> targetCodes =  EventMessageUtils.getTargetCodes(msg);
-        List<String> targetCodes =  new ArrayList<>();
-
-        /* Go to bucket */
-        if (targetCodes.size() > 1) {
-            filterService.handleBucketSearch(attrCode, attrName, text, targetCodes);
-            /* Go to search text */
-        }else {
-            filterService.handleSortAndSearch(attrCode, attrName, text, targetCode, Options.SEARCH);
-            filterService.sendQuickSearch(Question.QUE_TABLE_FILTER_GRP,Question.QUE_SELECT_INTERN,
-                    Attribute.LNK_PERSON, FilterConst.BKT_APPLICATIONS);
-        }
-    }
 
     /**
      * Handle event when filter columns is selected
@@ -726,7 +683,7 @@ public class FilterGroupService {
 
         // send pcm  and base entities
         BaseEntity base = new BaseEntity(targetCode);
-        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.location(1), base.getCode());
         filterService.sendFilterDetailsByBase(base,Question.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
 
         CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
@@ -856,7 +813,7 @@ public class FilterGroupService {
         Map<String,SavedSearch>  params = getFilterParamsByBaseCode(filterCode);
 
         BaseEntity base = new BaseEntity(queCode);
-        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.location(1), base.getCode());
         filterService.sendFilterDetailsByBase(base,Question.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
@@ -871,21 +828,8 @@ public class FilterGroupService {
         filterService.handleFilter(sbeCode, params);
 
         BaseEntity base = new BaseEntity(code);
-        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.location(1), base.getCode());
         filterService.sendFilterDetailsByBase(base,Question.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
-    }
-
-    /**
-     * Handle sorting
-     * @param attrCode Attribute code
-     * @param attrName Attribute name
-     * @param value Event Value
-     * @param targetCode Target code
-     */
-    public void handleSorting(String attrCode,String attrName,String value,String targetCode) {
-        filterService.handleSortAndSearch(attrCode,attrName,value,targetCode, Options.SEARCH);
-        filterService.sendQuickSearch(Question.QUE_TABLE_FILTER_GRP,Question.QUE_SELECT_INTERN,
-                Attribute.LNK_PERSON, FilterConst.BKT_APPLICATIONS);
     }
 
     /**
@@ -898,7 +842,7 @@ public class FilterGroupService {
         Map<String,SavedSearch> params = getParamsFromCache();
 
         BaseEntity base = new BaseEntity(queCode);
-        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.PRI_LOC1, base.getCode());
+        filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.location(1), base.getCode());
         filterService.sendFilterDetailsByBase(base,Question.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
 
@@ -1132,7 +1076,7 @@ public class FilterGroupService {
             /* Go to Column */
             if(isColumnSelected(code,attrCode)) {
                 String queValCode = selectFilerColumn(value);
-                filterService.sendPartialPCM(PCM.PCM_SBE_ADD_SEARCH, PCM.PRI_LOC3, queValCode);
+                filterService.sendPartialPCM(PCM.PCM_SBE_ADD_SEARCH, PCM.location(3), queValCode);
                 return;
             }
             /* add button*/

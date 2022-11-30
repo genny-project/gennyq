@@ -11,6 +11,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.message.QDataAnswerMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -205,11 +206,32 @@ public class Events {
 			return;
 		}
 
+		// Filter
+		if(filter.isValidEvent(msg)){
+			filter.handleBtnEvents(msg);
+			return;
+		}
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type())) {
+			return;
+		}
+
 		/**
 		 * If no route exists within gadaq, the message should be
 		 * sent to the project specific service.
 		 */
 		log.info("Forwarding Event Message...");
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
+	}
+
+	/**
+	 * Event route
+	 * @param msg Message
+	 */
+	public void route(QDataAnswerMessage msg) {
+		if(filter.isValidEvent(msg)){
+			filter.handleDataEvents(msg);
+		}
 	}
 }
