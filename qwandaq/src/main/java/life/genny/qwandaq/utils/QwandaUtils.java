@@ -311,7 +311,7 @@ public class QwandaUtils {
 		// check if it is a question group
 		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
 
-			log.info("[*] Parent Question: " + question.getCode());
+			log.info("[*] Building Question Group: " + question.getCode());
 
 			// groups always readonly
 			ask.setReadonly(true);
@@ -323,7 +323,7 @@ public class QwandaUtils {
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
+				log.debug("   [-] Found Child Question:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
 				if(requirementsConfig != null) {
 					if(!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
@@ -348,7 +348,6 @@ public class QwandaUtils {
 				if (questionQuestion.getIcon() != null) {
 					child.getQuestion().setIcon(questionQuestion.getIcon());
 				}
-				log.info("Adding: " + child.getQuestionCode());
 				ask.add(child);
 			}
 		} else {
@@ -607,7 +606,7 @@ public class QwandaUtils {
 		String key = String.format("%s:PROCESS_DATA", processData.getProcessId());
 
 		CacheUtils.putObject(productCode, key, processData);
-		log.infof("ProcessData cached to %s", key);
+		log.tracef("ProcessData cached to %s", key);
 	}
 
 	/**
@@ -621,7 +620,7 @@ public class QwandaUtils {
 		String key = String.format("%s:PROCESS_DATA", processId);
 
 		CacheUtils.removeEntry(productCode, key);
-		log.infof("ProcessData removed from cache: %s", key);
+		log.tracef("ProcessData removed from cache: %s", key);
 	}
 
 	/**

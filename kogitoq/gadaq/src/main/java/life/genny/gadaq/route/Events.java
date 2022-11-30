@@ -71,6 +71,16 @@ public class Events {
 		String parentCode = data.getParentCode();
 		String targetCode = data.getTargetCode();
 
+		// Filter
+		if(filter.isValidEvent(msg)){
+			filter.handleBtnEvents(msg);
+			return;
+		}
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type()))
+			return;
+
 		// auth init
 		if ("AUTH_INIT".equals(code)) {
 			kogitoUtils.triggerWorkflow(SELF, "authInit", "userCode", userToken.getUserCode());
@@ -203,17 +213,6 @@ public class Events {
 			}
 
 			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
-			return;
-		}
-
-		// Filter
-		if(filter.isValidEvent(msg)){
-			filter.handleBtnEvents(msg);
-			return;
-		}
-
-		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
 			return;
 		}
 

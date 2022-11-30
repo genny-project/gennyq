@@ -667,7 +667,7 @@ public class BaseEntityUtils {
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
 				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
-				log.info("Adding mandatory/default -> " + attribute.getCode());
+				log.trace("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
 			}
 		}
