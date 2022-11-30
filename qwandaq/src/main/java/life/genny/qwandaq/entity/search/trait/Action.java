@@ -11,6 +11,9 @@ public class Action extends Trait {
 
 	public static final String PREFIX = Prefix.ACT;
 
+	public static final String VIEW = "VIEW";
+	public static final String EDIT = "EDIT";
+
 	public Action() {
 		super();
 	}
