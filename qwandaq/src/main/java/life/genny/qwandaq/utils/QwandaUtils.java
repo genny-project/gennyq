@@ -169,6 +169,7 @@ public class QwandaUtils {
 		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
 
 		if (attribute == null) {
+			// TODO: We may need to make a cached everything check here to avoid recaching everything in the event we go looking for a dud attribute code
 			log.error("Could not find attribute " + attributeCode + " in cache: " + productCode);
 			loadAllAttributesIntoCache(productCode);
 		}
