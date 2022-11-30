@@ -1,6 +1,5 @@
 package life.genny.qwandaq.managers.capabilities.role;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
@@ -16,7 +15,6 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
@@ -32,79 +30,22 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static life.genny.qwandaq.constants.GennyConstants.DEF_ROLE_CODE;
-
 @ApplicationScoped
 public class RoleManager extends Manager {
 
-	public final static DataType dtt = new DataType(String.class);
-
-	/**
-	 * Map from product code to Map of attribute code to attribute
-	 * (productCode, attributeCode) -> Attribute
-	 */
-	private static Map<String, Map<String, Attribute>> realmAttribMap = new HashMap<>();
-
-	// init the sub-maps
-	static {
-		String[] productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES").split(":");
-		for(String productCode : productCodes) {
-			realmAttribMap.put(productCode, new HashMap<String, Attribute>());
-		}
-	}
+	private final static AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
+		new Attribute(Attribute.LNK_ROLE, "Role Link", new DataType(String.class))
+	);
+	
+	private final static AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
+		new Attribute(Attribute.LNK_CHILDREN, "Child Roles Link", new DataType(String.class))
+	);
 
 	@Inject
 	CapabilitiesManager capManager;
 
 	public RoleManager() {}
     
-	@Override
-	@PostConstruct
-	protected void init() {
-		super.init();
-		
-		Set<String> productCodes = realmAttribMap.keySet();
-		String[][] requiredAttribs = new String[][] {
-			{Attribute.LNK_ROLE, "Role Link"},
-			{Attribute.LNK_CHILDREN, "Link Child Roles"}
-		};
-
-		// ensure the existence of any required attributes (generate if missing)
-		for(String productCode : productCodes) {
-
-			// for each required attribute, find it and add it to our map (this is a small set of attributes, so the memory usage should be low)
-			for(String[] attribDetails : requiredAttribs) {
-
-				Attribute attribute;
-				try {
-					attribute = dbUtils.findAttributeByCode(productCode, attribDetails[0]);
-				} catch(NoResultException e) {
-					attribute = new Attribute(attribDetails[0], attribDetails[1], dtt);
-					error(attribDetails[0] + " is missing in " + productCode + ". Adding!");
-					qwandaUtils.saveAttribute(productCode, attribute);
-				}
-				realmAttribMap.get(productCode).put(attribute.getCode(), attribute);
-			}
-		}
-	}
-
-	// find the role def somewhere -_-
-	private BaseEntity getRoleDef(Set<String> productCodes) {
-		for(String productCode : productCodes) {
-			info("Checking " + productCode + " for " + DEF_ROLE_CODE);
-			try {
-				BaseEntity roleDef = beUtils.getBaseEntity(productCode);
-				return roleDef;
-			} catch(ItemNotFoundException e) {
-				warn("Role def not in " + productCode + ". Bootq should fix this");
-				continue;
-			}
-		}
-
-		error("Could not " + DEF_ROLE_CODE + " in any products. Have you bootq'd? Is it in the sheets? What happened to it?");
-		return null;
-	}
-
 	/**
 	 * Attach a role to a person base entity
 	 * @param target
@@ -160,14 +101,13 @@ public class RoleManager extends Manager {
 	public BaseEntity setChildren(String productCode, BaseEntity targetRole, String... childrenCodes) {
 		if(targetRole == null)
 			throw new NullParameterException("targetRole");
-		Attribute lnkChildrenAttribute = realmAttribMap.get(targetRole.getRealm()).get(Attribute.LNK_CHILDREN);
-		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
+		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildAttribute.get(productCode));
 
 		String codeString = CommonUtils.getArrayString(childrenCodes);
 
 		// add/edit LNK_CHILDREN
 		if(!optChildren.isPresent()) {
-			targetRole.addAttribute(lnkChildrenAttribute, 1.0, codeString);
+			targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0, codeString);
 		} else {
 			EntityAttribute childrenEA = optChildren.get();
 			childrenEA.setValue(codeString);
@@ -189,14 +129,13 @@ public class RoleManager extends Manager {
 		if(targetRole == null)
 			throw new NullParameterException("targetRole");
 		
-		Attribute lnkChildrenAttribute = realmAttribMap.get(targetRole.getRealm()).get(Attribute.LNK_CHILDREN);
-		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
+		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(Attribute.LNK_CHILDREN);
 
 		EntityAttribute childrenEA;
 		List<String> childrenCodeList = Arrays.asList(childrenCodes);
 		// add/edit LNK_CHILDREN
 		if(!optChildren.isPresent()) {
-			childrenEA = targetRole.addAttribute(lnkChildrenAttribute, 1.0);
+			childrenEA = targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0);
 		} else {
 			childrenEA = optChildren.get();
 			String[] preexistingChildren = beUtils.cleanUpAttributeValue(childrenEA.getValueString()).split(",");
@@ -219,8 +158,7 @@ public class RoleManager extends Manager {
 		if(targetRole == null)
 			throw new NullParameterException("targetRole");
 		
-		Attribute lnkChildrenAttribute = realmAttribMap.get(targetRole.getRealm()).get(Attribute.LNK_CHILDREN);
-		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildrenAttribute);
+		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(Attribute.LNK_CHILDREN);
 		if(!optChildren.isPresent()) {
 			warn("No editable children found for: " + targetRole.getCode());
 			return new ArrayList<String>();
@@ -375,8 +313,7 @@ public class RoleManager extends Manager {
 
 		// Create it
 		if(!eaOpt.isPresent()) {
-			Attribute lnkRolAttribute = realmAttribMap.get(target.getRealm()).get(Attribute.LNK_ROLE);
-			target.addAttribute(lnkRolAttribute, 1.0, "[" + role.getCode() + "]");
+			target.addAttribute(lnkRoleAttribute.get(target.getRealm()), 1.0, "[" + role.getCode() + "]");
 			beUtils.updateBaseEntity(target);
 			return target;
 		}
