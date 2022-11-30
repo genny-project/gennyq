@@ -164,10 +164,6 @@ public class DefUtils {
 		for (String code : codes) {
 
 			Definition definition = beUtils.getDefinition(code);
-			if (definition == null) {
-				log.warn("No DEF for " + code);
-				continue;
-			}
 
 			// merge into new def
 			for (EntityAttribute ea : definition.getBaseEntityAttributes()) {
