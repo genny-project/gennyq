@@ -30,6 +30,7 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import life.genny.gadaq.search.FilterGroupService;
 
 @ApplicationScoped
 public class InternalConsumer {
@@ -52,6 +53,9 @@ public class InternalConsumer {
 
 	@Inject
 	Events events;
+
+	@Inject
+	FilterGroupService filter;
 
 	/**
 	 * Execute on start up.
@@ -96,6 +100,8 @@ public class InternalConsumer {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_DATA, msg);
 
+		events.route(msg);
+
 		scope.destroy();
 		// log duration
 		Instant end = Instant.now();
@@ -127,11 +133,8 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
-		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
-			return;
-		}
 		events.route(msg);
+
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");

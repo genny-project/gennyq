@@ -1,5 +1,8 @@
 package life.genny.gadaq.inference;
 
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.UserToken;
@@ -76,4 +79,33 @@ then
 	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name);
 	a.setProcessId(answer.getProcessId());
 	insert(a);
+end
+
+rule InferAddress 
+when
+	answer: Answer( attributeCode == "PRI_ADDRESS_JSON" )
+	beUtils : BaseEntityUtils()
+	userToken : UserToken()
+	qwandaUtils : QwandaUtils()
+	jsonb : Jsonb()
+then
+	System.out.println("InferAddress fired!");
+
+	JsonObject json = jsonb.fromJson(answer.getValue(), JsonObject.class);
+	String country = json.getString("country");
+	String suburb = json.getString("suburb");
+	String state = json.getString("state");
+
+	String processId = answer.getProcessId();
+	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_COUNTRY", country);
+	a.setProcessId(answer.getProcessId());
+	insert(a);
+	 
+	Answer b = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_SUBURB", suburb);
+	b.setProcessId(answer.getProcessId());
+	insert(b);
+
+	Answer c = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_STATE", state);
+	c.setProcessId(answer.getProcessId());
+	insert(c);
 end

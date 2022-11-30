@@ -430,6 +430,7 @@ public class KogitoUtils {
 		session.insert(kogitoUtils);
 		session.insert(jsonb);
 		session.insert(defUtils);
+		session.insert(qwandaUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
 		session.insert(baseEntityService);
