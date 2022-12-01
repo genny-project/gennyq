@@ -154,7 +154,7 @@ public class Dispatch {
 		if (parent != null && !PCM_TREE.equals(parent)) {
 			PCM parentPCM = beUtils.getPCM(parent);
 			Integer location = PCM.findLocation(processData.getLocation());
-			log.info("Updating " + parentPCM.getCode() + " : Location " + location + " -> " + processData.getPcmCode());
+			log.debug("Updating " + parentPCM.getCode() + " : Location " + location + " -> " + processData.getPcmCode());
 			parentPCM.setLocation(location, processData.getPcmCode());
 			msg.add(parentPCM);
 		}
