@@ -519,28 +519,28 @@ public class FilterService {
      * @return Get Search filter by filter value
      */
     public Operator getOperatorByVal(String filterVal){
-        if(filterVal.equalsIgnoreCase(Operator.GREATER_THAN.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN.replaceFirst(Prefix.SEL,""))){
             return Operator.GREATER_THAN;
         }
-        if(filterVal.equalsIgnoreCase(Operator.GREATER_THAN_OR_EQUAL.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.GREATER_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(Operator.LESS_THAN.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN.replaceFirst(Prefix.SEL,""))){
             return Operator.LESS_THAN;
         }
-        if(filterVal.equalsIgnoreCase(Operator.LESS_THAN_OR_EQUAL.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.LESS_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(Operator.EQUALS.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(Operator.NOT_EQUALS.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.NOT_EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(Operator.LIKE.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE.replaceFirst(Prefix.SEL,""))){
             return Operator.LIKE;
         }
-        if(filterVal.equalsIgnoreCase(Operator.NOT_LIKE.name())){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE.replaceFirst(Prefix.SEL,""))){
             return Operator.NOT_LIKE;
         }
 
