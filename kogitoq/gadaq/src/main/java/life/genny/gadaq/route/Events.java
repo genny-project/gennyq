@@ -76,7 +76,7 @@ public class Events {
 		}
 
 		// submit
-		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code)) {
+		if (Question.QUE_SUBMIT.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
 			return;
 		}
@@ -99,7 +99,12 @@ public class Events {
 			return;
 		}
 
-		// undo
+		// next
+		if (Question.QUE_NEXT.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "next", "");
+			return;
+		}
+		// previous
 		if (Question.QUE_PREVIOUS.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
 			return;
@@ -180,7 +185,7 @@ public class Events {
 			}
 		}
 
-		// edit item
+		// edit item (TODO This needs to be moved into a timer based bpmn)
 		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
 
 			if (parentCode.startsWith("SBE_")) {

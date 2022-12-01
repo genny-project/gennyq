@@ -197,8 +197,10 @@ public class Dispatch {
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
 
 		// pre-send ask updates
-		BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-		qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapOfAsks);
+		for (String defCode : processData.getDefCodes()) {
+			BaseEntity defBE = beUtils.getBaseEntity(defCode);
+			qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapOfAsks);
+		}
 
 		// update any button Events
 		for (String event : BUTTON_EVENTS) {
