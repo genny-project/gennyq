@@ -487,15 +487,12 @@ public class QwandaUtils {
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
 			Ask targetAsk = flatMapAsks.get(attributeCode);
-			if (targetAsk == null) {
+			if (targetAsk == null)
 				continue;
-			}
 
 			String[] dependencies = CommonUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
 
-			// boolean depsAnswered = hasDepsAnswered(target, dependencies);
-			// TODO: fix this
-			boolean depsAnswered = true;
+			boolean depsAnswered = hasDepsAnswered(target, dependencies);
 			targetAsk.setDisabled(!depsAnswered);
 			targetAsk.setHidden(!depsAnswered);
 		}

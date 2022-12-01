@@ -28,7 +28,7 @@ public class Prefix {
 	public static final String ATT = "ATT_";
 	public static final String DFT = "DFT_";
 	public static final String SER = "SER_";
-	public static final String DEP = "SER_";
+	public static final String DEP = "DEP_";
 
 	// pcm
 	public static final String TPL = "TPL_";
