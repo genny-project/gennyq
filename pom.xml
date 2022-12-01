@@ -34,7 +34,7 @@
 		<version.org.optaplanner>${version.org.drools}</version.org.optaplanner>
 
 		<!-- kogito -->
-		<kogito.version>1.30.0.Final</kogito.version>
+		<kogito.version>1.29.0.Final</kogito.version>
 		<kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
 		<kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
 		<kogito.bom.version>${kogito.version}</kogito.bom.version>
