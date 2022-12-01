@@ -46,6 +46,7 @@ public class SearchEntity extends BaseEntity {
 	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
 	public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
 	public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
+	public static final String SBE_PROCESS = "SBE_PROCESS";
 
 	// TODO: Polish this
 	private TraitMap traits = new TraitMap();

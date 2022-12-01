@@ -137,6 +137,7 @@ public class Events {
 
 		// bucket view
 		if (Question.QUE_PROCESS.equals(code)) {
+			filter.init(code);
 			search.sendBuckets();
 			return;
 		}
