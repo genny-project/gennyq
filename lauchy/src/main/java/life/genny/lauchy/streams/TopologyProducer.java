@@ -126,7 +126,8 @@ public class TopologyProducer {
 				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
-					// TODO: Wondering if we can just get the processData from the first processId we get
+					// TODO: Wondering if we can just get the processData from the first processId
+					// we get
 					ProcessData processData = qwandaUtils.fetchProcessData(processId);
 					List<Ask> asks = qwandaUtils.fetchAsks(processData);
 
@@ -247,31 +248,30 @@ public class TopologyProducer {
 			return blacklist();
 		}
 
-		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
-		log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
-
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
-
-		if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
-			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
-				log.error("Duplicate answer detected for target " + answer.getTargetCode());
-				String feedback = "Error: This value already exists and must be unique.";
-
-				String parentCode = processData.getQuestionCode();
-				String questionCode = answer.getCode();
-
-				qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-				return false;
-			}
-		}
-
 		// TODO: The attribute should be retrieved from askMessage
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 
-		// check attribute code is allowed by target DEF
-		if (!definition.containsEntityAttribute("ATT_" + attributeCode)) {
-			log.error("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
-			return blacklist();
+		for (String defCode : processData.getDefCodes()) {
+			BaseEntity definition = beUtils.getBaseEntity(defCode);
+			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
+			if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+				if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
+					log.error("Duplicate answer detected for target " + answer.getTargetCode());
+					String feedback = "Error: This value already exists and must be unique.";
+
+					String parentCode = processData.getQuestionCode();
+					String questionCode = answer.getCode();
+
+					qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
+					return false;
+				}
+			}
+			// check attribute code is allowed by target DEF
+			if (!definition.containsEntityAttribute("ATT_" + attributeCode)) {
+				log.error("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
+				return blacklist();
+			}
 		}
 
 		temporaryBucketSearchHandler(answer, target, attribute);
