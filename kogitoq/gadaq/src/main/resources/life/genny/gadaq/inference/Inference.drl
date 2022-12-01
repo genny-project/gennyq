@@ -95,6 +95,8 @@ then
 	String country = json.getString("country");
 	String suburb = json.getString("suburb");
 	String state = json.getString("state");
+	Double latitude = json.getJsonNumber("latitude").doubleValue();
+	Double longitude = json.getJsonNumber("longitude").doubleValue();
 
 	String processId = answer.getProcessId();
 	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_COUNTRY", country);
@@ -108,4 +110,12 @@ then
 	Answer c = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_STATE", state);
 	c.setProcessId(answer.getProcessId());
 	insert(c);
+
+	Answer d = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_LATITUDE", latitude);
+	d.setProcessId(answer.getProcessId());
+	insert(d);
+
+	Answer e = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_LONGITUDE", longitude);
+	e.setProcessId(answer.getProcessId());
+	insert(e);
 end
