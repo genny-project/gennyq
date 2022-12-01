@@ -1,33 +1,111 @@
 package life.genny.qwandaq.datatype.capability.requirement;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
-import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import org.apache.commons.lang3.StringUtils;
+
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.utils.CommonUtils;
 
 public class ReqConfig {
 
     // More synchronization of methods that instantiate a ReqConfig
     public static final boolean DEFAULT_ALL_CAPS = true;
     public static final boolean DEFAULT_ALL_MODES = true;
+    public static final boolean DEFAULT_CASCADE_PERMS = true;
     
     private boolean requiresAllCaps;
     private boolean requiresAllModes;
-    public final CapabilitySet userCapabilities;
+    private boolean cascadePermissions;
 
-    public ReqConfig(CapabilitySet userCapabilities) {
-        this(userCapabilities, DEFAULT_ALL_CAPS);
+    public ReqConfig(boolean requiresAllCaps) {
+        this(requiresAllCaps, DEFAULT_ALL_MODES);
     }
 
-    public ReqConfig(CapabilitySet userCapabilities, boolean requiresAllCaps) {
-        this(userCapabilities, requiresAllCaps, DEFAULT_ALL_MODES);
+    public ReqConfig(boolean requiresAllCaps, boolean requiresAllModes) {
+        this(requiresAllCaps, requiresAllModes, DEFAULT_CASCADE_PERMS);
     }
 
-    public ReqConfig(CapabilitySet userCapabilities, boolean requiresAllCaps, boolean requiresAllModes) {
-        this.userCapabilities = userCapabilities;
+    public ReqConfig(boolean requiresAllCaps, boolean requiresAllModes, boolean cascadePermissions) {
         this.requiresAllCaps = requiresAllCaps;
         this.requiresAllModes = requiresAllModes;
+        this.cascadePermissions = cascadePermissions;
     }
+
+	/**
+	 * Check a single EntityAttribute capability if it has one or all of given
+	 * capability modes
+	 * 
+	 * @param capability
+	 * @param hasAll
+	 * @param checkModes
+	 * @return
+	 */
+	public boolean checkCapability(EntityAttribute capability, Collection<CapabilityNode> checkModes) {
+		if (StringUtils.isBlank(capability.getValueString())) {
+			return false;
+		}
+
+		String modeString = capability.getValueString();
+		Set<CapabilityNode> nodes = CapabilitiesManager.deserializeCapSet(modeString);
+
+		return checkCapability(nodes, checkModes.toArray(new CapabilityNode[0]));
+	}
+
+    // public boolean checkCapability(Collection<Capability> targetNodes, Collection<CapabilityNode> checkModes) {
+    //     return checkCapability(targetNodes, checkModes.toArray(new CapabilityNode[0]));
+    // }
+
+	public boolean checkCapability(Collection<CapabilityNode> targetNodes, CapabilityNode... checkModes) {
+		if (checkModes == null || checkModes.length == 0)
+			return true;
+
+		if (cascadePermissions)
+            targetNodes = cascadeCapabilities(targetNodes);
+
+		if (requiresAllModes) {
+			for (CapabilityNode checkMode : checkModes) {
+				boolean hasMode = targetNodes.contains(checkMode);
+				if (!hasMode) {
+					return false;
+				}
+			}
+
+			return true;
+		} else {
+			for (CapabilityNode checkMode : checkModes) {
+				boolean hasMode = targetNodes.contains(checkMode);
+				if (hasMode) {
+					return true;
+				}
+			}
+
+			System.out.println("Doesn't have at least one of " + CommonUtils.getArrayString(checkModes) + " in "
+					+ CommonUtils.getArrayString(targetNodes));
+			return false;
+		}
+
+	}
+
+	private static Collection<CapabilityNode> cascadeCapabilities(Collection<CapabilityNode> capSet) {
+		// Allocate new list with max size of all combinations of CapMode and PermMode
+		List<CapabilityNode> newCaps = new ArrayList<>(
+				capSet.size() * CapabilityMode.values().length * PermissionMode.values().length);
+		for (CapabilityNode node : capSet) {
+			newCaps.addAll(Arrays.asList(node.getLesserNodes()));
+		}
+
+		capSet.addAll(newCaps);
+		return capSet;
+	}
 
     // getters and setters
 
@@ -39,6 +117,10 @@ public class ReqConfig {
         return requiresAllModes;
     }
 
+    public boolean cascadePermissions() {
+        return cascadePermissions;
+    }
+
     public void setAllModes(boolean requiresAllModes) {
         this.requiresAllModes = requiresAllModes;
     }
@@ -47,21 +129,14 @@ public class ReqConfig {
         this.requiresAllCaps = requiresAllCaps;
     }
 
-    /**
-     * Get the set of capabilities belonging to the user of this ReqConfig object
-     * @return
-     */
-    public Set<Capability> getUserCaps() {
-        return userCapabilities;
-    }
-
     public String toString() {
         return new StringBuilder("[RequirementsConfig: {allCaps: ")
         .append(requiresAllCaps)
         .append(", allModes: ")
         .append(requiresAllModes)
-        .append("} \n")
-        .append(userCapabilities.toString())
+        .append(", cascade: ")
+        .append(cascadePermissions)
+        .append("}")
         .append(" ]")
         .toString();
     }

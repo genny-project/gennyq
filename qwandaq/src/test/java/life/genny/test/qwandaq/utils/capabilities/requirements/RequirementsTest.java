@@ -1,22 +1,13 @@
 package life.genny.test.qwandaq.utils.capabilities.requirements;
 
-import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
-import static org.junit.Assert.assertEquals;
-
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
-import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
-import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.collections.SetBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 public class RequirementsTest extends BaseRequirementsTest {
@@ -63,12 +54,12 @@ public class RequirementsTest extends BaseRequirementsTest {
         JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input));
+            return Expected(filterable.requirementsMet(USER_TEST_CAPS, input.input));
         });
 
         for(int i = 0; i < testTags.length; i++) {
             tester.createTest(testName(testTags[i], combinations[i]))
-            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setInput(new ReqConfig(combinations[i][0], combinations[i][1]))
             .setExpected(true)
             .build();
         }
@@ -92,12 +83,12 @@ public class RequirementsTest extends BaseRequirementsTest {
         JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input));
+            return Expected(filterable.requirementsMet(USER_TEST_CAPS, input.input));
         });
 
         for(int i = 0; i < testTags.length; i++) {
             tester.createTest(testName(testTags[i], combinations[i]))
-            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setInput(new ReqConfig(combinations[i][0], combinations[i][1]))
             .setExpected(true)
             .build();
         }
@@ -126,12 +117,12 @@ public class RequirementsTest extends BaseRequirementsTest {
         JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input));
+            return Expected(filterable.requirementsMet(USER_TEST_CAPS, input.input));
         });
 
         for(int i = 0; i < testTags.length; i++) {
             tester.createTest(testName(testTags[i], combinations[i]))
-            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setInput(new ReqConfig(combinations[i][0], combinations[i][1]))
             .setExpected(true)
             .build();
         }
@@ -139,18 +130,18 @@ public class RequirementsTest extends BaseRequirementsTest {
         tester.assertAll();
     }
 
-    @Test
-    public void miscReqTests() {
-        Set<CapabilityNode> capabilitySet = (Set<CapabilityNode>)new SetBuilder<CapabilityNode>()
-            .add(CapabilityNode.get(CapabilityMode.EDIT, PermissionMode.ALL))
-            .build();
-        assertEquals(CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode[] {
-            CapabilityNode.get(EDIT, ALL),
-            CapabilityNode.get(VIEW, ALL),
-            CapabilityNode.get(DELETE, ALL),
-            CapabilityNode.get(ADD, ALL)
-        }), true);
-    }
+    // @Test
+    // public void miscReqTests() {
+    //     Set<CapabilityNode> capabilitySet = (Set<CapabilityNode>)new SetBuilder<CapabilityNode>()
+    //         .add(CapabilityNode.get(CapabilityMode.EDIT, PermissionMode.ALL))
+    //         .build();
+    //     assertEquals(CapabilitiesManager.checkCapability(capabilitySet, false, new CapabilityNode[] {
+    //         CapabilityNode.get(EDIT, ALL),
+    //         CapabilityNode.get(VIEW, ALL),
+    //         CapabilityNode.get(DELETE, ALL),
+    //         CapabilityNode.get(ADD, ALL)
+    //     }), true);
+    // }
 
     @Test
     public void testEmptyReqsFilterable() {
@@ -170,12 +161,12 @@ public class RequirementsTest extends BaseRequirementsTest {
         JUnitTester<ReqConfig, Boolean> tester = new JUnitTester<ReqConfig, Boolean>()
         .setTest((input) -> {
             log("Requirements: " + CommonUtils.getArrayString(filterable.getCapabilityRequirements()));
-            return Expected(filterable.requirementsMet(input.input));
+            return Expected(filterable.requirementsMet(USER_TEST_CAPS, input.input));
         });
 
         for(int i = 0; i < testTags.length; i++) {
             tester.createTest(testName(testTags[i], combinations[i]))
-            .setInput(new ReqConfig(USER_TEST_CAPS, combinations[i][0], combinations[i][1]))
+            .setInput(new ReqConfig(combinations[i][0], combinations[i][1]))
             .setExpected(true)
             .build();
         }

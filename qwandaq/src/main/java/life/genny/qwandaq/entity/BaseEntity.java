@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Cacheable;
@@ -59,11 +58,9 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -240,20 +237,9 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Set<EntityAttribute> getBaseEntityAttributes() {
-		return getBaseEntityAttributes(null);
+		return baseEntityAttributes;
 	}
 
-	/**
-	 * @return the baseEntityAttributes
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityAttribute> getBaseEntityAttributes(ReqConfig requirementsConfig) {
-		if(requirementsConfig == null)
-			return baseEntityAttributes;
-		
-		return baseEntityAttributes.stream().filter((ea) -> ea.requirementsMet(requirementsConfig))
-			.collect(Collectors.toSet());
-	}
 
 	/**
 	 * @param baseEntityAttributes the baseEntityAttributes to set
@@ -409,10 +395,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		return foundEntity;
 	}
 
-	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
-		return findPrefixEntityAttributes(attributePrefix, null);
-	}
-
 	/**
 	 * findEntityAttribute This returns an attributeEntity if it exists in the
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
@@ -420,14 +402,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @param attributePrefix the attributePrefix to find with
 	 * @return EntityAttribute
 	 */
-	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix, ReqConfig requirementsConfig) {
-		Stream<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix)));
-		
-		if(requirementsConfig != null)
-			foundEntitys.filter(ea -> ea.requirementsMet(requirementsConfig));
-
-		return foundEntitys.collect(Collectors.toList());
+	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
+		return getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix)))
+				.collect(Collectors.toList());
 	}
 
 	/**
