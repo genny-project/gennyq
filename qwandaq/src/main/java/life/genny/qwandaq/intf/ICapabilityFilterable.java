@@ -33,7 +33,7 @@ public interface ICapabilityFilterable {
         Set<Capability> checkCaps = capabilityRequirements;
 
         if(checkCaps == null || checkCaps.isEmpty()) {
-            getLogger().info("No capabilityRequirements found!");
+            getLogger().debug("No capabilityRequirements found!");
             return true;
         }
 

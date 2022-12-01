@@ -109,7 +109,7 @@ public class QwandaUtils {
 
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
 		CacheUtils.putObject(userToken.getProductCode(), key, asks.toArray());
-		log.info("Asks cached for " + processData.getProcessId());
+		log.trace("Asks cached for " + processData.getProcessId());
 	}
 
 	/**
@@ -493,7 +493,9 @@ public class QwandaUtils {
 
 			String[] dependencies = CommonUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
 
-			boolean depsAnswered = hasDepsAnswered(target, dependencies);
+			// boolean depsAnswered = hasDepsAnswered(target, dependencies);
+			// TODO: fix this
+			boolean depsAnswered = true;
 			targetAsk.setDisabled(!depsAnswered);
 			targetAsk.setHidden(!depsAnswered);
 		}
