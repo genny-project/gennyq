@@ -313,9 +313,9 @@ public class BaseEntityService {
 	}
 
 	/**
-	 * Initialize the base entity and assign actual definition
-	 * @param definitionCode Base definition code
-	 * @param detailDefCode Detail definition code
+	 * Create base entity with parent definition and set children definition code in LNK_DEF
+	 * @param definitionCode Parent definition code (For example: DEF_PARENT)
+	 * @param detailDefCode children definition code (For example: DEF_CHILDREN)
 	 * @return
 	 */
 	public String init(String definitionCode,String detailDefCode) {

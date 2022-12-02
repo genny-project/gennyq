@@ -1168,9 +1168,6 @@ public class FilterGroupService {
      * @return being bucket or not
      */
     public boolean isBucketSbe(String code) {
-        if(code.equals(SearchEntity.SBE_PROCESS)) {
-            return true;
-        }
-        return false;
+        return SearchEntity.SBE_PROCESS.equals(code);
     }
 }
