@@ -143,6 +143,7 @@ public class NavigationService {
 	 * 
 	 * @param questionCode Question code
 	 */
+	@Deprecated
 	public void redirectByQuestionCode(String questionCode) {
 		String redirectCode = getRedirectCodeByQuestionCode(questionCode);
 
@@ -176,6 +177,7 @@ public class NavigationService {
 	 * @param questionCode Question code
 	 * @return redirect question code
 	 */
+	@Deprecated
 	public String getRedirectCodeByQuestionCode(String questionCode) {
 		String defaultRedirectCode = "";
 		String defCode = getDefCodeByQuestionCode(questionCode);
@@ -207,6 +209,7 @@ public class NavigationService {
 	 * 
 	 * @return redirect code
 	 */
+	@Deprecated
 	public String getRedirectCodeByUser() {
 		String redirectCode = "";
 		String defCode = "";
@@ -225,6 +228,15 @@ public class NavigationService {
 		}
 
 		return redirectCode;
+	}
+
+	/**
+	 * Redirect by question code
+	 *
+	 * @param code Question code
+	 */
+	public void redirectByTable(String code) {
+		searchService.sendTable(code);
 	}
 
 }

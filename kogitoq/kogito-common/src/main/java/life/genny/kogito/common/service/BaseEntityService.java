@@ -312,4 +312,32 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(be);
 	}
 
+	/**
+	 * Initialize the base entity and assign actual definition
+	 * @param definitionCode Base definition code
+	 * @param detailDefCode Detail definition code
+	 * @return
+	 */
+	public String init(String definitionCode,String detailDefCode) {
+
+		if (definitionCode == null)
+			throw new NullParameterException("definitionCode");
+		if (!definitionCode.startsWith(Prefix.DEF))
+			throw new DebugException("Invalid definitionCode: " + definitionCode);
+
+		// fetch the def baseentity
+		Definition definition = beUtils.getDefinition(definitionCode);
+
+		// change to actual detail definition code
+		definition.setCode(detailDefCode);
+
+		// use entity create function and save to db
+		BaseEntity entity = beUtils.create(definition);
+		log.info("BaseEntity Created: " + entity.getCode());
+
+		entity.setStatus(EEntityStatus.PENDING);
+		beUtils.updateBaseEntity(entity);
+
+		return entity.getCode();
+	}
 }

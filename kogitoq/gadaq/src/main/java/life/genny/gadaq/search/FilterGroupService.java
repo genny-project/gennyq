@@ -1,7 +1,6 @@
 package life.genny.gadaq.search;
 
 import life.genny.kogito.common.service.FilterService;
-import life.genny.kogito.common.service.FilterService.Options;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.FilterConst;
@@ -63,14 +62,14 @@ public class FilterGroupService {
     @Inject
     UserToken userToken;
 
-//    public static final String QUE_TABLE_PREF = "QUE_TABLE_";
+    //    public static final String QUE_TABLE_PREF = "QUE_TABLE_";
     public static final String SBE_TABLE_PREF = "SBE_TABLE_";
 
     /* Bucket */
 //    public static final String PREF_CPY = "CPY_";
 //    public static final String QUE_TAB_BUCKET_VIEW = "QUE_TAB_BUCKET_VIEW";
     public static final String PRI_PREFIX = "PRI_PREFIX";
-//    public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
+    //    public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
     public static final String DELETE = "Delete";
 //    public static final String QUE_ADD_SEARCH = "QUE_ADD_SEARCH";
@@ -825,7 +824,14 @@ public class FilterGroupService {
     public void handleFilter(String code) {
         Map<String,SavedSearch> params = getParamsFromCache();
         String sbeCode = filterService.getSbeTableFromCache();
-        filterService.handleFilter(sbeCode, params);
+
+        // handle bucket
+        if(isBucketSbe(sbeCode)) {
+            filterService.handleFilterBucket(params);
+        } else {
+            // handle table
+            filterService.handleFilter(sbeCode, params);
+        }
 
         BaseEntity base = new BaseEntity(code);
         filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.location(1), base.getCode());
@@ -1109,7 +1115,13 @@ public class FilterGroupService {
             boolean coded = isCode(value);
             String dropdownVal =  getDropdownValue(value);
             String sbe =  filterService.getSbeTableFromCache();
-            filterService.handleQuickSearchDropdown(dropdownVal,coded,sbe);
+            if(isBucketSbe(sbe)){
+                // search bucket
+                filterService.handleQuickSearchDropdownByBucket(dropdownVal, coded);
+            }else {
+                // search table
+                filterService.handleQuickSearchDropdown(dropdownVal, coded, sbe);
+            }
 
         } catch (Exception ex){
             log.error(ex);
@@ -1148,5 +1160,17 @@ public class FilterGroupService {
         } catch (Exception ex){
             log.error(ex);
         }
+    }
+
+    /**
+     * Return being bucket or not
+     * @param code Sbe code
+     * @return being bucket or not
+     */
+    public boolean isBucketSbe(String code) {
+        if(code.equals(SearchEntity.SBE_PROCESS)) {
+            return true;
+        }
+        return false;
     }
 }
