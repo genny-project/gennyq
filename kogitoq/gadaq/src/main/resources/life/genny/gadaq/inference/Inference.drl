@@ -83,7 +83,7 @@ end
 
 rule InferAddress 
 when
-	answer: Answer( attributeCode == "PRI_ADDRESS_JSON" )
+	answer: Answer( attributeCode == "PRI_ADDRESS_FULL" )
 	beUtils : BaseEntityUtils()
 	userToken : UserToken()
 	qwandaUtils : QwandaUtils()
@@ -91,7 +91,13 @@ when
 then
 	System.out.println("InferAddress fired!");
 
-	JsonObject json = jsonb.fromJson(answer.getValue(), JsonObject.class);
+	JsonObject json = null;
+	try {
+		json = jsonb.fromJson(answer.getValue(), JsonObject.class);
+	} catch (Exception e) {
+		return;
+	}
+
 	String country = json.getString("country");
 	String suburb = json.getString("suburb");
 	String state = json.getString("state");

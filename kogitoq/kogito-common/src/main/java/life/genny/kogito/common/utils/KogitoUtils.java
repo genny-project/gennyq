@@ -409,19 +409,6 @@ public class KogitoUtils {
 		throw new GraphQLException("All intances are complete");
 	}
 
-	/**
-	 * Initialise bucket data by rule
-	 */
-	@Deprecated
-	public void initBucketRule() {
-		// start new session
-		KieSession session = kieRuntimeBuilder.newKieSession();
-		initSession(session, "bucket");
-
-		session.fireAllRules();
-		session.dispose();
-	}
-
 	private void initSession(KieSession session, String focus) {
 		if (!StringUtils.isBlank(focus))
 			session.getAgenda().getAgendaGroup(focus).setFocus();

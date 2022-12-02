@@ -512,8 +512,7 @@ public class QwandaUtils {
 		// find all the mandatory booleans
 		Boolean answered = true;
 
-		// iterate entity attributes to check which have been answered
-		// for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
+		// iterate asks to see if mandatorys are answered
 		for (Ask ask : map.values()) {
 
 			String attributeCode = ask.getQuestion().getAttribute().getCode();
@@ -547,16 +546,12 @@ public class QwandaUtils {
 
 		// add current ask attribute code to map
 		map.put(ask.getQuestion().getAttribute().getCode(), ask.getMandatory());
-
 		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
+		if (ask.getChildAsks() == null)
 			return map;
-		}
-
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildAsks()) {
+		for (Ask child : ask.getChildAsks())
 			map = recursivelyFillMandatoryMap(map, child);
-		}
 
 		return map;
 	}
@@ -583,14 +578,11 @@ public class QwandaUtils {
 		}
 
 		// ensure child asks is not null
-		if (ask.hasChildren()) {
+		if (ask.hasChildren())
 			return set;
-		}
-
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildAsks()) {
+		for (Ask child : ask.getChildAsks())
 			set = recursivelyFillFlatSet(set, child);
-		}
 
 		return set;
 	}
