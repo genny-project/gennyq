@@ -312,32 +312,4 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(be);
 	}
 
-	/**
-	 * Create base entity with parent definition and set children definition code in LNK_DEF
-	 * @param definitionCode Parent definition code (For example: DEF_PARENT)
-	 * @param detailDefCode children definition code (For example: DEF_CHILDREN)
-	 * @return
-	 */
-	public String init(String definitionCode,String detailDefCode) {
-
-		if (definitionCode == null)
-			throw new NullParameterException("definitionCode");
-		if (!definitionCode.startsWith(Prefix.DEF))
-			throw new DebugException("Invalid definitionCode: " + definitionCode);
-
-		// fetch the def baseentity
-		Definition definition = beUtils.getDefinition(definitionCode);
-
-		// change to actual detail definition code
-		definition.setCode(detailDefCode);
-
-		// use entity create function and save to db
-		BaseEntity entity = beUtils.create(definition);
-		log.info("BaseEntity Created: " + entity.getCode());
-
-		entity.setStatus(EEntityStatus.PENDING);
-		beUtils.updateBaseEntity(entity);
-
-		return entity.getCode();
-	}
 }
