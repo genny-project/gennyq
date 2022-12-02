@@ -130,12 +130,6 @@ public class DefUtils {
 		if (entity.getCode().startsWith(Prefix.DEF))
 			return Definition.from(entity);
 
-		// NOTE: temporary special check for internmatch
-		String productCode = userToken.getProductCode();
-		if (productCode.equals("alyson") || productCode.equals("internmatch")) {
-			return Definition.from(getInternmatchDEF(entity));
-		}
-
 		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
 		// if no defs specified, go by prefix
@@ -176,114 +170,6 @@ public class DefUtils {
 		}
 
 		return Definition.from(mergedDef);
-	}
-
-	/**
-	 * Find the corresponding definition for a given {@link BaseEntity}.
-	 * NOTE: Temporary special method for Internmatch only.
-	 *
-	 * @param entity The {@link BaseEntity} to check
-	 * @return BaseEntity The corresponding definition {@link BaseEntity}
-	 */
-	// TODO: remove this soon
-	@Deprecated
-	public BaseEntity getInternmatchDEF(final BaseEntity entity) {
-
-		String productCode = userToken.getProductCode();
-		List<EntityAttribute> isAs = entity.findPrefixEntityAttributes("PRI_IS_");
-
-		// remove the non DEF ones
-		Iterator<EntityAttribute> i = isAs.iterator();
-		while (i.hasNext()) {
-
-			EntityAttribute ea = i.next();
-
-			if (ea.getAttributeCode().startsWith("PRI_IS_APPLIED_")) {
-				i.remove();
-				continue;
-			}
-
-			// filter out bad is as attributes
-			switch (ea.getAttributeCode()) {
-				case "PRI_IS_DELETED":
-				case "PRI_IS_EXPANDABLE":
-				case "PRI_IS_FULL":
-				case "PRI_IS_INHERITABLE":
-				case "PRI_IS_PHONE":
-				case "PRI_IS_AGENT_PROFILE_GRP":
-				case "PRI_IS_BUYER_PROFILE_GRP":
-				case "PRI_IS_EDU_PROVIDER_STAFF_PROFILE_GRP":
-				case "PRI_IS_REFERRER_PROFILE_GRP":
-				case "PRI_IS_SELLER_PROFILE_GRP":
-				case "PRI_IS SKILLS":
-				case "PRI_IS_DISABLED":
-				case "PRI_IS_LOGBOOK":
-					log.warn("getDEF -> detected non DEFy attributeCode " + ea.getAttributeCode());
-					i.remove();
-					break;
-				default:
-			}
-		}
-
-		if (!isAs.isEmpty()) {
-
-			// create sorted merge code
-			List<String> codes = isAs.stream()
-					.sorted(Comparator.comparingDouble(EntityAttribute::getWeight))
-					.map(EntityAttribute::getAttributeCode)
-					.collect(Collectors.toList());
-
-			log.info(codes.toString());
-
-			// check for single PRI_IS
-			if (codes.size() == 1) {
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + codes.get(0).substring("PRI_IS_".length()));
-				return def;
-			}
-
-			String mergedCode = "DEF_" + String.join("_", codes);
-			BaseEntity mergedDef = new BaseEntity(mergedCode, mergedCode);
-			log.info("Detected NEW Combination DEF - " + mergedCode);
-
-			// reverse order and begin filling new def
-			Collections.reverse(codes);
-			for (String code : codes) {
-
-				// get def for PRI_IS
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + code.substring("PRI_IS_".length()));
-				if (def == null) {
-					continue;
-				}
-
-				// merge into new def
-				for (EntityAttribute ea : def.getBaseEntityAttributes()) {
-					try {
-						mergedDef.addAttribute(ea);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-			return mergedDef;
-		}
-
-		// search for a def with same prefix
-		String prefix = entity.getCode().substring(0, 3);
-		log.info("Prefix = " + prefix);
-
-		Map<String, String> map = defPrefixMap.get(productCode);
-		String defCode = map.get(prefix);
-
-		BaseEntity def = beUtils.getBaseEntityByCode(defCode);
-
-		if (def != null) {
-			return def;
-		}
-
-		// default to error def
-		log.error("No DEF associated with entity " + entity.getCode());
-		return new BaseEntity("ERR_DEF", "No DEF");
 	}
 
 	/**
