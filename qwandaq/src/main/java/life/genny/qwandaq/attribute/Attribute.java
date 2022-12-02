@@ -145,6 +145,15 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_TOTAL_RESULTS = "PRI_TOTAL_RESULTS";
 	public static final String PRI_INDEX = "PRI_INDEX";
 
+
+	// message
+	public static final String PRI_DEFAULT_MSG_TYPE = "PRI_DEFAULT_MSG_TYPE";
+	public static final String PRI_CONTEXT_LIST = "PRI_CONTEXT_LIST";
+	public static final String PRI_CONTEXT_ASSOCIATIONS = "PRI_CONTEXT_ASSOCIATIONS";
+	public static final String PRI_CC = "PRI_CC";
+	public static final String PRI_BCC = "PRI_BCC";
+	public static final String PRI_BODY = "PRI_BODY";
+
 	// Filter and saved search
 	public static final String LNK_FILTER_COLUMN = "LNK_FILTER_COLUMN";
 	public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
@@ -154,13 +163,6 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_CREATED_DATE="PRI_CREATED_DATE";
 	public static final String LNK_SAVED_SEARCH = "LNK_SAVED_SEARCH";
 
-	// message
-	public static final String PRI_DEFAULT_MSG_TYPE = "PRI_DEFAULT_MSG_TYPE";
-	public static final String PRI_CONTEXT_LIST = "PRI_CONTEXT_LIST";
-	public static final String PRI_CONTEXT_ASSOCIATIONS = "PRI_CONTEXT_ASSOCIATIONS";
-	public static final String PRI_CC = "PRI_CC";
-	public static final String PRI_BCC = "PRI_BCC";
-	public static final String PRI_BODY = "PRI_BODY";
 
 	@Embedded
 	@NotNull

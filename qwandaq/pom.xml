@@ -56,7 +56,7 @@
 		<version.moneta>1.1</version.moneta>
 		<jwt.version>0.10.7</jwt.version>
 		<testcontainers.version>1.17.5</testcontainers.version>
-		<minio.version>8.4.3</minio.version>
+		<minio.version>8.4.6</minio.version>
 	</properties>
 
 	<distributionManagement>

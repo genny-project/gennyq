@@ -40,7 +40,7 @@
     <dependency>
       <groupId>life.genny</groupId>
       <artifactId>serviceq</artifactId>
-	  <version>${genny.version}</version>
+      <version>${genny.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kie.kogito</groupId>
@@ -143,7 +143,7 @@
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-				<version>${jandex.version}</version>
+        <version>${jandex.version}</version>
         <executions>
           <execution>
             <id>make-index</id>
@@ -222,24 +222,24 @@
         </executions>
       </plugin>
 
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven.compiler.version}</version>
-				<configuration>
-					<annotationProcessorPaths>
-						<!-- <annotationProcessorPath> -->
-						<!-- 	<groupId>org.hibernate</groupId> -->
-						<!-- 	<artifactId>hibernate-jpamodelgen</artifactId> -->
-						<!-- 	<version>${hibernate.version}</version> -->
-						<!-- </annotationProcessorPath> -->
-						<annotationProcessorPath>
-							<groupId>io.quarkus</groupId>
-							<artifactId>quarkus-panache-common</artifactId>
-							<version>${quarkus.platform.version}</version>
-						</annotationProcessorPath>
-					</annotationProcessorPaths>
-				</configuration>
-			</plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.version}</version>
+        <configuration>
+          <annotationProcessorPaths>
+            <!-- <annotationProcessorPath> -->
+            <!-- 	<groupId>org.hibernate</groupId> -->
+            <!-- 	<artifactId>hibernate-jpamodelgen</artifactId> -->
+            <!-- 	<version>${hibernate.version}</version> -->
+            <!-- </annotationProcessorPath> -->
+            <annotationProcessorPath>
+              <groupId>io.quarkus</groupId>
+              <artifactId>quarkus-panache-common</artifactId>
+              <version>${quarkus.platform.version}</version>
+            </annotationProcessorPath>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
 
     </plugins>
   </build>

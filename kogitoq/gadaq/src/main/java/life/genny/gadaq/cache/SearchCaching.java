@@ -20,14 +20,12 @@ import life.genny.qwandaq.entity.search.trait.Action;
  * SearchCaching
  */
 @ApplicationScoped
-public class   SearchCaching {
+public class SearchCaching {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
 	Service service;
-
-	public static final String SBE_MESSAGE = "SBE_MESSAGE";
 
 	public void saveToCache() {
 
@@ -96,22 +94,6 @@ public class   SearchCaching {
 		cacheDropdown("DEF_BUILDING",
 				new SearchEntity("SBE_SER_LNK_AREA_UNIT", "Area Unit Dropdown")
 						.setLinkValue("AREA_UNIT"));
-
-		// DEF_MESSAGE
-		cacheSearch(
-				new SearchEntity(SBE_MESSAGE, "Messages")
-						.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "MSG_%"))
-						.add(new Column(Attribute.PRI_NAME, "Code"))
-						.add(new Column(Attribute.PRI_DESCRIPTION, "Description"))
-						.add(new Column(Attribute.PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
-						.add(new Column(Attribute.PRI_CONTEXT_LIST, "Context List"))
-						.add(new Column(Attribute.PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
-						.add(new Column(Attribute.PRI_CC, "CC"))
-						.add(new Column(Attribute.PRI_BCC, "BCC"))
-						.add(new Column(Attribute.PRI_BODY, "Body"))
-						.add(new Action(Action.EDIT, "Edit"))
-						.setPageSize(4)
-						.setPageStart(0));
 	}
 
 	private void cacheSearch(SearchEntity entity) {

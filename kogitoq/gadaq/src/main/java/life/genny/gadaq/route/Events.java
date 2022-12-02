@@ -164,6 +164,7 @@ public class Events {
 		}
 
 		// table view (Default View Mode)
+		code = code.replace("QUE_EXPLORE_", "QUE_TABLE_");
 		if (code.startsWith("QUE_TABLE_")) {
 			filter.init(code);
 			search.sendTable(code);
