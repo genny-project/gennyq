@@ -19,6 +19,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
@@ -145,7 +146,7 @@ public class InitService {
 
 		String productCode = userToken.getProductCode();
 		BaseEntity user = beUtils.getUserBaseEntity();
-		ReqConfig userReqConfig = capMan.getUserCapabilities();
+		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 
 		// get pcms using search
 		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
@@ -180,14 +181,14 @@ public class InitService {
 			}
 
 			Question question = databaseUtils.findQuestionByCode(productCode, questionCode);
-			if(!question.requirementsMet(userReqConfig)) {
+			if(!question.requirementsMet(userCapabilities)) {
 				log.warn("[!] User does not meet capability requirements for question: " + questionCode);
 				return null;
 			} else {
 				log.info("Passed Capabilities check: " + CommonUtils.getArrayString(question.getCapabilityRequirements()));
 			}
 
-			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, user, userReqConfig);
+			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, userCapabilities, reqConfig);
 			if (ask == null) {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + question.getCode());
 			}
@@ -209,68 +210,6 @@ public class InitService {
 		msg.setAliasCode("PCM_INIT_MESSAGE");
 
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
-	}
-
-	private Ask generateAddItemsAsk(String productCode, BaseEntity user) {
-		// find the question in the database
-		Question groupQuestion;
-		try {
-			groupQuestion = databaseUtils.findQuestionByCode(productCode, "QUE_ADD_ITEMS_GRP");
-		} catch (NoResultException e) {
-			throw new ItemNotFoundException("QUE_ADD_ITEMS_GRP", e);
-		}
-
-		Ask parentAsk = new Ask(groupQuestion, user.getCode(), user.getCode());
-		parentAsk.setRealm(productCode);
-
-		ReqConfig userConfig = capMan.getUserCapabilities();
-		
-		// Generate the Add Items asks from the capabilities
-		// Check if there is a def first
-		for(Capability capability : userConfig.userCapabilities) {
-			// If they don't have the capability then don't bother finding the def
-			if(!capability.checkPerms(false, CapabilityNode.get(CapabilityMode.ADD, PermissionMode.ALL)))
-				continue;
-
-			String defCode = CommonUtils.substitutePrefix(capability.code, "DEF");
-			try {
-				// Check for a def
-				beUtils.getBaseEntity(productCode, defCode);
-			} catch (ItemNotFoundException e) {
-				// We don't need to handle this. We don't care if there isn't always a def
-				continue;
-			}
-			// Create the ask (there is a def and we have the capability)
-			String baseCode = CommonUtils.safeStripPrefix(capability.code);
-
-			String eventCode = "EVT_ADD_".concat(baseCode);
-			String name = "Add ".concat(CommonUtils.normalizeString(baseCode));
-			Attribute event = qwandaUtils.createButtonEvent(eventCode, name);
-
-			Question question = new Question("QUE_ADD_".concat(baseCode), name, event);
-
-			Ask addAsk = new Ask(question, user.getCode(), user.getCode());
-			addAsk.setRealm(productCode);
-
-			parentAsk.add(addAsk);
-		}
-		return parentAsk;
-	}
-
-	/**
-	 * Send Add Items Menu
-	 */
-	public void sendAddItems() {
-
-		BaseEntity user = beUtils.getUserBaseEntity();
-
-		Ask ask = generateAddItemsAsk(userToken.getProductCode(), user);
-		// configure msg and send
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-
-		// KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	public void sendDrafts() {

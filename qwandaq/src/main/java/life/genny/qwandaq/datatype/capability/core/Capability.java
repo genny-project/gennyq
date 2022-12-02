@@ -107,36 +107,6 @@ public class Capability implements Serializable {
         return null;
     }
 
-    // /**
-    //  * Check if this capability has at least one or all of the given nodes in the <b>checkSet</b>
-    //  * @param hasAll - whether or not to check if this capability has all of the nodes in the check set or at least one
-    //  * @param checkSet - the set of nodes to check the capabilities
-    //  * @return whether or not this capability object meets the requirements of the checkSet
-    //  * 
-    //  * @see {@link CapabilitiesManager#checkCapability(EntityAttribute, boolean, CapabilityNode...)}
-    //  */
-	// public boolean checkPerms(boolean hasAll, boolean cascade, CapabilityNode... checkSet) {
-	// 	if(CapabilitiesManager.checkCapability(this.nodes, hasAll, cascade, checkSet)) {
-    //         System.out.println("Passed Capability check: " + CommonUtils.getArrayString(checkSet));
-    //         return true;
-    //     } else {
-    //         System.out.println("Failed cap check: " + CommonUtils.getArrayString(checkSet));
-    //         return false;
-    //     }
-	// }
-
-    /**
-    //  * Check if this capability has at least one or all of the given nodes in the <b>checkSet</b>
-    //  * @param hasAll - whether or not to check if this capability has all of the nodes in the check set or at least one
-    //  * @param checkSet - the set of nodes to check the capabilities
-    //  * @return whether or not this capability object meets the requirements of the checkSet
-    //  * 
-    //  * @see {@link CapabilitiesManager#checkCapability(EntityAttribute, boolean, CapabilityNode...)}
-    //  */
-    // public boolean checkPerms(boolean hasAll, boolean cascade, Set<CapabilityNode> checkSet) {
-    //     return CapabilitiesManager.checkCapability(this.nodes, hasAll, cascade, checkSet.toArray(new CapabilityNode[0]));
-    // }
-
     public static Capability getFromEA(EntityAttribute ea) {
         String capCode = ea.getAttributeCode();
         List<CapabilityNode> caps = CapabilitiesManager.deserializeCapArray(ea.getValueString());

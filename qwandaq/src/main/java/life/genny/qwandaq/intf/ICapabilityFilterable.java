@@ -27,8 +27,12 @@ public interface ICapabilityFilterable {
 
     public void setCapabilityRequirements(Set<Capability> requirements);
 
+    public default boolean requirementsMet(CapabilitySet userCapabilities) {
+        return requirementsMet(userCapabilities, new ReqConfig());
+    }
+
     public default boolean requirementsMet(CapabilitySet userCapabilities, ReqConfig requirementsConfig) {
-        return requirementsMetImpl(userCapabilities, getCapabilityRequirements(), requirementsConfig);
+        return requirementsMetImpl(userCapabilities, getCapabilityRequirements(), requirementsConfig != null ? requirementsConfig : new ReqConfig());
     }
 
     public static boolean requirementsMetImpl(CapabilitySet userCapabilities, Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
@@ -39,7 +43,6 @@ public interface ICapabilityFilterable {
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
         boolean requiresAllModes = requirementsConfig.needsAllModes();
-        boolean cascadePermissions = requirementsConfig.cascadePermissions();
 
         getLogger().info("Testing Capability Config: " + requirementsConfig);
 
@@ -55,7 +58,8 @@ public interface ICapabilityFilterable {
 
             // a set of user capabilities should only have 1 entry per capability code
             Capability cap = optCap.get();
-            boolean passesCheck = requirementsConfig.checkCapability(cap.nodes, capabilityRequirements.toArray(new CapabilityNode[0]));
+            boolean passesCheck = requirementsConfig.checkCapability(cap.nodes, 
+                reqCap.nodes.toArray(new CapabilityNode[0]));
             if(!passesCheck) {
                 if(requiresAllCaps) {
                     getLogger().warn("Missing cap permissions " + (requiresAllModes ? "allNodes " : "") + reqCap);

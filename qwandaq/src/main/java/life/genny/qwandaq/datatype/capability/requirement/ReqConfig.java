@@ -26,6 +26,10 @@ public class ReqConfig {
     private boolean requiresAllModes;
     private boolean cascadePermissions;
 
+	public ReqConfig() {
+		this(DEFAULT_ALL_CAPS);
+	}
+
     public ReqConfig(boolean requiresAllCaps) {
         this(requiresAllCaps, DEFAULT_ALL_MODES);
     }

@@ -1,16 +1,11 @@
 package life.genny.test.qwandaq.utils.capabilities;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
@@ -26,7 +21,7 @@ import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-@RunWith(MockitoJUnitRunner.class)
+// @RunWith(MockitoJUnitRunner.class)
 public class CapabilityUtilsTest extends BaseTestCase {
 
     @InjectMocks
@@ -180,53 +175,5 @@ public class CapabilityUtilsTest extends BaseTestCase {
         }).build()
         .assertAll();
 
-    }
-
-    @Test
-    public void testCheckCapability() {
-        // testing checkCapability
-        Set<CapabilityNode> capabilitySet = new HashSet<>(Arrays.asList(
-            new CapabilityNode[] {
-                CapabilityNode.get(ADD, ALL),
-                CapabilityNode.get(EDIT, SELF)
-            }
-        ));
-
-        new JUnitTester<CapabilityNode[], Boolean>()
-        .setTest((input) -> {
-            return Expected(CapabilitiesManager.checkCapability(capabilitySet, false, input.input));
-        })
-        .createTest("Has Any One Capability 1")
-        .setInput(new CapabilityNode[] {
-            CapabilityNode.get(ADD, ALL)
-        }).setExpected(true)
-        .build()
-
-        .createTest("Has Any One Capability 2")
-        .setInput(new CapabilityNode[] {
-            CapabilityNode.get(ADD, SELF), CapabilityNode.get(DELETE, ALL)
-        }).setExpected(true)
-        .build()
-
-        .assertAll()
-        
-        // Next test
-        .setTest((input) -> {
-            return Expected(CapabilitiesManager.checkCapability(capabilitySet, true, input.input));
-        })
-        
-        .createTest("Has All Capabilities 1")
-        .setInput(new CapabilityNode[] {
-            CapabilityNode.get(ADD, SELF)
-        }).setExpected(true)
-        .build()
-
-        .createTest("Has All Capabilities 2")
-        .setInput(new CapabilityNode[] {
-            CapabilityNode.get(ADD, SELF), CapabilityNode.get(DELETE, ALL)
-        }).setExpected(false)
-        .build()
-
-        .assertAll();
     }
 }
