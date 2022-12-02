@@ -172,6 +172,17 @@ public class CacheUtils {
 	}
 
 	/**
+	 * Save a map of {@link CoreEntity} with a {@link CoreEntityKey} as key to the cache.
+	 * 
+	 * @param cacheName The cache to save to
+	 * @param entities The Map of CoreEntity to save with CoreEntityKey as the key
+	 * @return The success status
+	 */
+	public static boolean saveEntityBulk(String cacheName, Map<CoreEntityKey, CoreEntity> entities) {
+		return cache.putEntitiesIntoCache(cacheName, entities);
+	}
+
+	/**
 	 * Get a list of {@link CoreEntity}s to from cache by prefix.
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use

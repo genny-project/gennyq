@@ -184,4 +184,36 @@ public class GennyCache {
 		}
 		return cache.get(key);
 	}
+
+	/**
+	 * Put a map of {@link CoreEntity} with a {@link CoreEntityKey} as key into the cache.
+	 * 
+	 * @param cacheName The cache to save to
+	 * @param entities The Map of CoreEntity to save with CoreEntityKey as the key
+	 * @return The success status
+	 */
+	public boolean putEntitiesIntoCache(String cacheName, Map<CoreEntityKey, CoreEntity> entities) {
+		boolean success = false;
+		if (entities.size() == 0) {
+			log.warn("List of entity size is 0.");
+		}
+
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+
+		RemoteCache<CoreEntityKey, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
+		if (cache == null) {
+			log.error("Could not find a cache called " + cacheName);
+		}
+
+		// TODO: Remove this try catch very soon
+		try {
+			cache.putAll(entities);
+			success = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return success;
+	}
 }
