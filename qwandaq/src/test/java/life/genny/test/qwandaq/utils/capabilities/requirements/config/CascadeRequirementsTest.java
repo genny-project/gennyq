@@ -14,7 +14,7 @@ public class CascadeRequirementsTest extends BaseRequirementsTest {
     public CascadeRequirementsTest() {
         setTestCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
-            CapabilityBuilder("CAP_TENANT").add(SELF).buildCap()
+            CapabilityBuilder("CAP_TENANT").view(SELF).buildCap()
         );
     }
 
@@ -22,7 +22,7 @@ public class CascadeRequirementsTest extends BaseRequirementsTest {
     public void baseCascadeTest() {
         ICapabilityFilterable filterable = createFilterable(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
-            CapabilityBuilder("CAP_TENANT").add(ALL).buildCap()
+            CapabilityBuilder("CAP_TENANT").view(ALL).buildCap()
         );
 
         new JUnitTester<ReqConfig, Boolean>()

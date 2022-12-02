@@ -20,12 +20,14 @@ public class CapabilityBuilder {
     /**
      * Capability Nodes of the constructed capability
      */
-    List<CapabilityNode> nodes = new ArrayList<>();
+    private List<CapabilityNode> nodes = new ArrayList<>();
 
     /**
      * Capability Code of the constructed Capability
      */
-    final String capabilityCode;
+    private final String capabilityCode;
+
+    private boolean negate;
 
     /**
      * Create a new builder for a capability with the given code
@@ -66,6 +68,11 @@ public class CapabilityBuilder {
         for(CapabilityMode mode : modes) {
             addNode(mode, scope);
         }
+        return this;
+    }
+
+    public CapabilityBuilder negate(boolean negate) {
+        this.negate = negate;
         return this;
     }
 
@@ -148,6 +155,7 @@ public class CapabilityBuilder {
      */
     public RoleBuilder build() {
         
+        // TODO: add negate to rolebuilder
         if(roleBuilder == null)
             throw new UnsupportedOperationException("Cannot call build() on a CapabilityBuilder that was instantiated with new CapabilityBuilder(String code). Use .buildCap() instead");
         roleBuilder.getCapabilities().put(capabilityCode, nodes.toArray(new CapabilityNode[0]));
@@ -155,6 +163,8 @@ public class CapabilityBuilder {
     }
 
     public Capability buildCap() {
-        return new Capability(capabilityCode, nodes);
+        Capability c = new Capability(capabilityCode, nodes);
+        c.setNegate(negate);
+        return c;
     }
 }

@@ -21,6 +21,7 @@ import life.genny.qwandaq.serialization.adapters.CapabilitySetAdapter;
 public class CapabilitySetAdapter implements JsonbAdapter<Set<Capability>, JsonArray> {
     private static final String CAPABILITY_DELIMITER = "  ";
 	private static final String ARRAY_START = "[";
+    private static final String NEGATE_KEY = "!";
 	private static final Logger log = Logger.getLogger(CapabilitySetAdapter.class);
 
     // Method handles
@@ -86,12 +87,23 @@ public class CapabilitySetAdapter implements JsonbAdapter<Set<Capability>, JsonA
             log.error("Delimiter: " + ARRAY_START);
             throw new BadDataException("dbData: " + capData);
         }
-        String code = capData.substring(0, delimIndex);
+
+        boolean negate = false;
+        int codeStartIndex = 0;
+        if(capData.startsWith("!")) {
+            codeStartIndex = 1;
+            negate = true;
+        }
+        String code = capData.substring(codeStartIndex, delimIndex);
         String nodes = capData.substring(delimIndex);
-        return new Capability(code, nodes);
+        Capability c = new Capability(code, nodes);
+        c.setNegate(negate);
+        return c;
     }
 
     private static StringBuilder serializeOneCapability(StringBuilder sb, Capability capability) {
+        if(capability.isNegating())
+            sb.append(NEGATE_KEY);
         return sb.append(capability.code).append(CapabilitiesManager.getModeString(capability.nodes));
     }
 }

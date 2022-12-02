@@ -1,7 +1,5 @@
 package life.genny.qwandaq.serialization.adapters;
 
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -31,6 +29,7 @@ public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
         JsonObject obj = Json.createObjectBuilder()
             .add("code", capability.code)
             .add("nodes", nodeArray.build())
+            .add("neg", capability.isNegating())
             .build();
         return obj;
     }
@@ -44,12 +43,17 @@ public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
         System.out.println("Deserializing: " + capJson);
         String code = capJson.getString("code");
         JsonArray nodeArray = capJson.getJsonArray("nodes");
+        boolean negate = capJson.getBoolean("neg");
+
         Set<CapabilityNode> nodes = new LinkedHashSet<>(nodeArray.size());
         for(int i = 0; i < nodeArray.size(); i++) {
             nodes.add(CapabilityNode.parseCapability(nodeArray.getString(i)));
         }
-        // java.lang.ClassCastException: class org.glassfish.json.JsonObjectBuilderImpl$JsonObjectImpl cannot be cast to class javax.json.JsonString:67
-        return new Capability(code, nodes);
+
+        Capability c = new Capability(code, nodes);
+        c.setNegate(true);
+
+        return c;
     }
     
 
