@@ -2,6 +2,8 @@ package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.message.*;
 import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.utils.FilterUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -31,13 +33,10 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.kogito.common.core.Dispatch;
 
 @ApplicationScoped
 public class FilterService {
@@ -61,12 +60,8 @@ public class FilterService {
     @Inject
     SearchUtils searchUtils;
 
-    public static enum Options {
-        PAGINATION,
-        SEARCH,
-        PAGINATION_BUCKET
-    }
-
+    @Inject
+    Dispatch dispatch;
 
     /**
      * Get the list of bucket codes with session id
@@ -524,28 +519,28 @@ public class FilterService {
      * @return Get Search filter by filter value
      */
     public Operator getOperatorByVal(String filterVal){
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN.replaceFirst(Prefix.SEL,""))){
             return Operator.GREATER_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.GREATER_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN.replaceFirst(Prefix.SEL,""))){
             return Operator.LESS_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.LESS_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.NOT_EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE.replaceFirst(Prefix.SEL,""))){
             return Operator.LIKE;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE.replaceFirst(Prefix.SEL,""))){
             return Operator.NOT_LIKE;
         }
 
@@ -868,5 +863,92 @@ public class FilterService {
     public String getCachedAnswerKey() {
         String key = FilterConst.LAST_ANSWERS_MAP + ":" + userToken.getUserCode();
         return key;
+    }
+
+    /**
+     * Build process data
+     * @return Process data
+     */
+    public ProcessData  buildProcessData() {
+        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
+
+        // construct
+        ProcessData processData = new ProcessData();
+        processData.setSourceCode(userToken.getUserCode());
+        processData.setTargetCode(userToken.getUserCode());
+
+        // set pcm
+        processData.setPcmCode(PCM.PCM_PROCESS);
+        processData.setParent(PCM.PCM_CONTENT);
+        processData.setLocation(PCM.location(1));
+
+        // get target
+        BaseEntity target = beUtils.getBaseEntity(userToken.getUserCode());
+
+        // build and send data
+        QBulkMessage msg = dispatch.build(processData, pcm);
+        msg.add(target);
+        dispatch.sendData(msg);
+
+        return processData;
+    }
+    /**
+     * handle filter by string in the table
+     * @param params List of filter parameters
+     */
+    public void handleFilterBucket(Map<String,SavedSearch> params) {
+        ProcessData  processData = buildProcessData();
+
+        // send searches
+        for (String code : processData.getSearches()) {
+            log.info("Sending search: " + code);
+
+            String sessionCode = searchUtils.sessionSearchCode(code);
+            String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
+
+            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+            excludeExtraFilterBySearchBE(searchBE);
+
+            // add conditions by filter parameters
+            setFilterParams(searchBE,params);
+
+            CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+
+            searchUtils.searchTable(code);
+        }
+    }
+
+    /**
+     * Handle quick search
+     * @param value Value
+     * @param coded being coded or not
+     */
+    public void handleQuickSearchDropdownByBucket(String value,boolean coded) {
+        ProcessData  processData = buildProcessData();
+
+        // send searches
+        for (String code : processData.getSearches()) {
+            String sessionCode = searchUtils.sessionSearchCode(code);
+            String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
+
+            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+
+            clearFilters(searchBE);
+
+            // searching by text or search by code
+            Filter filter = null;
+            String newValue = value.replaceFirst("!", "");
+            if (coded) {
+                filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
+            } else {
+                filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+            }
+            searchBE.remove(filter);
+            searchBE.add(filter);
+
+            CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+
+            searchUtils.searchTable(code);
+        }
     }
 }
