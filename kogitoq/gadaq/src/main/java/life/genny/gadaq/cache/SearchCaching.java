@@ -5,6 +5,7 @@ import java.lang.invoke.MethodHandles;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.attribute.Attribute;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.search.SearchEntity;
@@ -12,6 +13,8 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.serviceq.Service;
+import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.trait.Action;
 
 /**
  * SearchCaching
@@ -23,6 +26,8 @@ public class   SearchCaching {
 
 	@Inject
 	Service service;
+
+	public static final String SBE_MESSAGE = "SBE_MESSAGE";
 
 	public void saveToCache() {
 
@@ -95,16 +100,16 @@ public class   SearchCaching {
 		// DEF_MESSAGE
 		cacheSearch(
 				new SearchEntity(SBE_MESSAGE, "Messages")
-						.add(new Filter(PRI_CODE, Operator.LIKE, "MSG_%"))
-						.add(new Column(PRI_NAME, "Code"))
-						.add(new Column(GadaQConstants.PRI_DESCRIPTION, "Description"))
-						.add(new Column(PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
-						.add(new Column(PRI_CONTEXT_LIST, "Context List"))
-						.add(new Column(PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
-						.add(new Column(PRI_CC, "CC"))
-						.add(new Column(PRI_BCC, "BCC"))
-						.add(new Column(PRI_BODY, "Body"))
-						.add(new Action(EDIT, "Edit"))
+						.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, "MSG_%"))
+						.add(new Column(Attribute.PRI_NAME, "Code"))
+						.add(new Column(Attribute.PRI_DESCRIPTION, "Description"))
+						.add(new Column(Attribute.PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
+						.add(new Column(Attribute.PRI_CONTEXT_LIST, "Context List"))
+						.add(new Column(Attribute.PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
+						.add(new Column(Attribute.PRI_CC, "CC"))
+						.add(new Column(Attribute.PRI_BCC, "BCC"))
+						.add(new Column(Attribute.PRI_BODY, "Body"))
+						.add(new Action(Action.EDIT, "Edit"))
 						.setPageSize(4)
 						.setPageStart(0));
 	}
