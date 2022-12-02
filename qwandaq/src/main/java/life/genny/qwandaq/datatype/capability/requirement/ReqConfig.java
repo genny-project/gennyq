@@ -44,6 +44,11 @@ public class ReqConfig {
         this.cascadePermissions = cascadePermissions;
     }
 
+	// Builder instantiation
+	public static Builder builder() {
+		return new Builder();
+	}
+
 	/**
 	 * Check a single EntityAttribute capability if it has one or all of given
 	 * capability modes
@@ -144,4 +149,27 @@ public class ReqConfig {
         .append(" ]")
         .toString();
     }
+
+	public static class Builder {
+		private ReqConfig reqConfig = new ReqConfig();
+		
+		public Builder allCaps(boolean requiresAllCaps) {
+			reqConfig.requiresAllCaps = requiresAllCaps;
+			return this;
+		}
+
+		public Builder allModes(boolean requiresAllModes) {
+			reqConfig.requiresAllModes = requiresAllModes;
+			return this;
+		}
+
+		public Builder cascadePermissions(boolean cascadePermissions) {
+			reqConfig.cascadePermissions = cascadePermissions;
+			return this;
+		}
+
+		public ReqConfig build() {
+			return reqConfig;
+		}
+	}
 }
