@@ -292,7 +292,7 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated
 	public static Set<CapabilityNode> deserializeCapSet(String modeString) {
-		return CommonUtils.getSetFromString(modeString, CapabilityNode::parseCapability);
+		return CommonUtils.getSetFromString(modeString, CapabilityNode::parseNode);
 	}
 
 	/**
@@ -304,7 +304,7 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated
 	public static List<CapabilityNode> deserializeCapArray(String modeString) {
-		return CommonUtils.getListFromString(modeString, CapabilityNode::parseCapability);
+		return CommonUtils.getListFromString(modeString, CapabilityNode::parseNode);
 	}
 
 	/**

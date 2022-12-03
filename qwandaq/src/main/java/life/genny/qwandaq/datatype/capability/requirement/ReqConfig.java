@@ -73,16 +73,18 @@ public class ReqConfig {
     //     return checkCapability(targetNodes, checkModes.toArray(new CapabilityNode[0]));
     // }
 
-	public boolean checkCapability(Collection<CapabilityNode> targetNodes, CapabilityNode... checkModes) {
+	public boolean checkCapability(Collection<CapabilityNode> userNodes, CapabilityNode... checkModes) {
 		if (checkModes == null || checkModes.length == 0)
 			return true;
 
 		if (cascadePermissions)
-            targetNodes = cascadeCapabilities(targetNodes);
+            userNodes = cascadeCapabilities(userNodes);
+
+		System.out.println("User Nodes: " + CommonUtils.getArrayString(userNodes));
 
 		if (requiresAllModes) {
 			for (CapabilityNode checkMode : checkModes) {
-				boolean hasMode = targetNodes.contains(checkMode);
+				boolean hasMode = userNodes.contains(checkMode);
 				if (!hasMode) {
 					return false;
 				}
@@ -91,14 +93,14 @@ public class ReqConfig {
 			return true;
 		} else {
 			for (CapabilityNode checkMode : checkModes) {
-				boolean hasMode = targetNodes.contains(checkMode);
+				boolean hasMode = userNodes.contains(checkMode);
 				if (hasMode) {
 					return true;
 				}
 			}
 
 			System.out.println("Doesn't have at least one of " + CommonUtils.getArrayString(checkModes) + " in "
-					+ CommonUtils.getArrayString(targetNodes));
+					+ CommonUtils.getArrayString(userNodes));
 			return false;
 		}
 

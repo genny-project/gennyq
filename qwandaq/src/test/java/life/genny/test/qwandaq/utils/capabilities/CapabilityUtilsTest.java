@@ -48,11 +48,11 @@ public class CapabilityUtilsTest extends BaseTestCase {
     }
 
     @Test
-    public void serializeCapabilityTest() {
+    public void serializeNodeTest() {
         List<CapabilityNode> caps = new ArrayList<>();
         for(CapabilityMode mode : CapabilityMode.values()) {
             for(PermissionMode permMode : PermissionMode.values()) {
-                caps.add(CapabilityNode.get(mode, permMode));
+                caps.add(new CapabilityNode(mode, permMode));
             }
         }
         
@@ -92,13 +92,13 @@ public class CapabilityUtilsTest extends BaseTestCase {
         List<CapabilityNode> expected = capString.stream().map((String caps) -> {
             CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(0));
             PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(2));
-            return CapabilityNode.get(mode, permMode);
+            return new CapabilityNode(mode, permMode);
         }).collect(Collectors.toList());
         
         // Create tester
         JUnitTester<String, CapabilityNode> unitTester = new JUnitTester<String, CapabilityNode>()
         .setTest((input) -> {
-            return Expected(CapabilityNode.parseCapability(input.input));
+            return Expected(CapabilityNode.parseNode(input.input));
         });
 
         for(int i = 0; i < expected.size(); i++) {
@@ -168,10 +168,10 @@ public class CapabilityUtilsTest extends BaseTestCase {
             assertArrayEquals(expected, result);
         })
         .createTest("Lesser Nodes Test 1")
-        .setInput(CapabilityNode.get(ADD, ALL))
+        .setInput(new CapabilityNode(ADD, ALL))
         .setExpected(new CapabilityNode[] {
-            CapabilityNode.get(ADD, SELF),
-            CapabilityNode.get(ADD, NONE)
+            new CapabilityNode(ADD, SELF),
+            new CapabilityNode(ADD, NONE)
         }).build()
         .assertAll();
 

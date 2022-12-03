@@ -27,8 +27,6 @@ public class CapabilityBuilder {
      */
     private final String capabilityCode;
 
-    private boolean negate;
-
     /**
      * Create a new builder for a capability with the given code
      * @param capabilityCode
@@ -60,91 +58,118 @@ public class CapabilityBuilder {
     }
 
     /**
-     * Set multiple CapabilityModes to the same scope
-     * @param scope - scope to set the modes to
-     * @param modes - modes to set
+     * Set the permission of this Capability with regards to the ADD mode
+     * 
+     * @param scope - permission level to set for adding
+     * @param negate - whether or not to negate the add capability node for this capability (default false)
+     * 
+     * @see CapabilityMode#ADD
      */
-    public CapabilityBuilder setModes(PermissionMode scope, CapabilityMode... modes) {
-        for(CapabilityMode mode : modes) {
-            addNode(mode, scope);
-        }
-        return this;
-    }
-
-    public CapabilityBuilder negate(boolean negate) {
-        this.negate = negate;
-        return this;
+    public CapabilityBuilder add(PermissionMode scope, boolean negate) {
+        return addNode(ADD, scope, negate);
     }
 
     /**
      * Set the permission of this Capability with regards to the ADD mode
      * 
+     * @param scope - permission level to set for adding
+     * 
      * @see CapabilityMode#ADD
      */
     public CapabilityBuilder add(PermissionMode scope) {
-        return addNode(ADD, scope);
+        return add(scope, false);
+    }
+
+    /**
+     * Set the permission of this Capability with regards to the EDIT mode
+     * @param scope - permission level to set for editing
+     * @param negate - whether or not to negate the edit capability node for this capability (default false)
+     * 
+     * @see CapabilityMode#EDIT
+     */
+    public CapabilityBuilder edit(PermissionMode scope, boolean negate) {
+        return addNode(EDIT, scope, negate);
     }
 
     /**
      * Set the permission of this Capability with regards to the EDIT mode
      * 
+     * @param scope - permission level to set for editing
+     * 
      * @see CapabilityMode#EDIT
      */
     public CapabilityBuilder edit(PermissionMode scope) {
-        return addNode(EDIT, scope);
+        return edit(scope, false);
+    }
+
+    /**
+     * Set the permission of this Capability with regards to the DELETE mode
+     * @param scope - permission level to set for deleting
+     * @param negate - whether or not to negate the delete capability node for this capability (default false)
+     * 
+     * @see CapabilityMode#DELETE
+     */
+    public CapabilityBuilder delete(PermissionMode scope, boolean negate) {
+        return addNode(DELETE, scope, negate);
     }
 
     /**
      * Set the permission of this Capability with regards to the DELETE mode
      * 
+     * @param scope - permission level to set for deleting
+     * 
      * @see CapabilityMode#DELETE
      */
     public CapabilityBuilder delete(PermissionMode scope) {
-        return addNode(DELETE, scope);
+        return delete(scope, false);
     }
 
     /**
      * Set the permission of this Capability with regards to the VIEW mode
      * 
+     * @param scope - permission level to set for viewing
+     * @param negate - whether or not to negate the view capability node for this capability (default false)
+     * 
+     * @see CapabilityMode#VIEW
+     */
+    public CapabilityBuilder view(PermissionMode scope, boolean negate) {
+        return addNode(VIEW, scope, negate);
+    }
+
+    /**
+     * Set the permission of this Capability with regards to the VIEW mode
+     * 
+     * @param scope - permission level to set for viewing
+     * 
      * @see CapabilityMode#VIEW
      */
     public CapabilityBuilder view(PermissionMode scope) {
-        return addNode(VIEW, scope);
+        return view(scope, false);
     }
 
     /**
      * Add a new {@link CapabilityNode} to the given Capability
      * @param mode - mode to set (any of {@link CapabilityMode#values()})
      * @param scope - scope (permissions) to set for this capability node (any of {@link PermissionMode#values()})
+     * @param negate - whether or not this {@link CapabilityNode} will negate
      * @return this
      */
-    public CapabilityBuilder addNode(CapabilityMode mode, PermissionMode scope) {
-        nodes.add(CapabilityNode.get(mode, scope));
+    public CapabilityBuilder addNode(CapabilityMode mode, PermissionMode scope, boolean negate) {
+        nodes.add(new CapabilityNode(mode, scope, negate));
         return this;
-    }
-
-    /**
-     * Add a new {@link CapabilityNode} to the given Capability
-     * @param modeString - name of mode to set (any of {@link CapabilityMode#values()})
-     * @param scopeString - name of scope (permissions) to set for this capability node (any of {@link PermissionMode#values()})
-     * @return this
-     */
-    public CapabilityBuilder addNode(String modeString, String scopeString) {
-        CapabilityMode mode = CapabilityMode.valueOf(modeString.toUpperCase());
-        PermissionMode scope = PermissionMode.valueOf(scopeString.toUpperCase());
-        return addNode(mode, scope);
     }
 
     /**
      * Add a new {@link CapabilityNode} to the given Capability
      * @param modeIdentifier - identifier of mode to set (any of {@link CapabilityMode#idMap})
      * @param scopeIdentifier - identifier of scope (permissions) to set for this capability node (any of {@link PermissionMode#idMap})
+     * @param negate - whether or not this {@link CapabilityNode} will negate
      * @return this
      */
-    public CapabilityBuilder addNode(char modeIdentifier, char scopeIdentifier) {
+    public CapabilityBuilder addNode(char modeIdentifier, char scopeIdentifier, boolean negate) {
         CapabilityMode mode = CapabilityMode.getByIdentifier(modeIdentifier);
         PermissionMode scope = PermissionMode.getByIdentifier(scopeIdentifier);
-        return addNode(mode, scope);
+        return addNode(mode, scope, negate);
     }
 
     /**
@@ -164,7 +189,6 @@ public class CapabilityBuilder {
 
     public Capability buildCap() {
         Capability c = new Capability(capabilityCode, nodes);
-        c.setNegate(negate);
         return c;
     }
 }

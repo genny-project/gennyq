@@ -27,8 +27,8 @@ public class CapabilityAdapterTest extends SerialisationTest<Capability> {
         })
 
         .createTest("serialisation 1")
-        .setInput(CapabilityBuilder.code("CAP_PROPERTY").add(ALL).negate(true).buildCap())
-        .setExpected(CapabilityBuilder.code("CAP_PROPERTY").add(ALL).negate(true).buildCap())
+        .setInput(CapabilityBuilder.code("CAP_PROPERTY").add(ALL).buildCap())
+        .setExpected(CapabilityBuilder.code("CAP_PROPERTY").add(ALL).buildCap())
         .build()
 
         .createTest("serialisation 2")
@@ -42,8 +42,8 @@ public class CapabilityAdapterTest extends SerialisationTest<Capability> {
         .build()
 
         .createTest("no code Serialisation 1")
-        .setInput(new Capability("", CapabilityNode.get(ADD, ALL)))
-        .setExpected(new Capability("", CapabilityNode.get(ADD, ALL)))
+        .setInput(new Capability("", new CapabilityNode(ADD, ALL)))
+        .setExpected(new Capability("", new CapabilityNode(ADD, ALL)))
         .build()
 
         .createTest("no code Serialisation 2")

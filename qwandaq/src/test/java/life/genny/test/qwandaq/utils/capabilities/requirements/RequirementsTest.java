@@ -14,7 +14,7 @@ public class RequirementsTest extends BaseRequirementsTest {
 
     // To be run by JUnit
     public RequirementsTest() {
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
     }
@@ -39,7 +39,7 @@ public class RequirementsTest extends BaseRequirementsTest {
     public void testNoRequirementsFilterableCaps() {
 
         ICapabilityFilterable filterable = createFilterable();
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
 
@@ -70,7 +70,7 @@ public class RequirementsTest extends BaseRequirementsTest {
     @Test
     public void testNoRequirementsFilterableNoCaps() {
         ICapabilityFilterable filterable = createFilterable();
-        setTestCaps();
+        setTestUserCaps();
 
         String[] testTags = new String[] {
             "No requirements test1 - User has No Caps. ",
@@ -102,7 +102,7 @@ public class RequirementsTest extends BaseRequirementsTest {
             new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
         
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
 
@@ -146,7 +146,7 @@ public class RequirementsTest extends BaseRequirementsTest {
     @Test
     public void testEmptyReqsFilterable() {
         ICapabilityFilterable filterable = createFilterable();
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
 

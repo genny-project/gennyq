@@ -58,8 +58,16 @@ public interface ICapabilityFilterable {
 
             // a set of user capabilities should only have 1 entry per capability code
             Capability cap = optCap.get();
+            System.out.println("CAP: " + cap.code);
+            
             boolean passesCheck = requirementsConfig.checkCapability(cap.nodes, 
                 reqCap.nodes.toArray(new CapabilityNode[0]));
+
+            // negate test
+            // if reqCap has negate we have success if passesCheck is false
+            // if reqCap doesn't have negate, then false (don't check pass)
+            
+
             if(!passesCheck) {
                 if(requiresAllCaps) {
                     getLogger().warn("Missing cap permissions " + (requiresAllModes ? "allNodes " : "") + reqCap);

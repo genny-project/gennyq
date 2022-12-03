@@ -13,7 +13,7 @@ public class MultipleRequirementsTests extends BaseRequirementsTest {
 
     // To be run by JUnit
     public MultipleRequirementsTests() {
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
             CapabilityBuilder("CAP_TENANT").add(ALL).edit(SELF).buildCap()
         );
@@ -62,7 +62,7 @@ public class MultipleRequirementsTests extends BaseRequirementsTest {
 
     @Test
     public void multipleRequirementsTestLockout() {
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
             CapabilityBuilder("CAP_TENANT").edit(SELF).buildCap()
         );
@@ -107,7 +107,7 @@ public class MultipleRequirementsTests extends BaseRequirementsTest {
 
     @Test
     public void multipleRequirementsTestAllLockout() {
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(SELF).buildCap(),
             CapabilityBuilder("CAP_TENANT").edit(SELF).buildCap()
         );
@@ -153,7 +153,7 @@ public class MultipleRequirementsTests extends BaseRequirementsTest {
 
     @Test
     public void multipleRequirementsTestNoCaps() {
-        setTestCaps();
+        setTestUserCaps();
 
         ICapabilityFilterable filterable = createFilterable(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),

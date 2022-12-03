@@ -30,8 +30,6 @@ public class Capability implements Serializable {
     
     public String code;
 
-    private boolean negate = false;
-
     public Set<CapabilityNode> nodes;
 
     public Capability() {
@@ -119,14 +117,6 @@ public class Capability implements Serializable {
         return CommonUtils.getArrayString(nodes);
     }
 
-    public void setNegate(boolean negate) {
-        this.negate = negate;
-    }
-
-    public boolean isNegating() {
-        return negate;
-    }
-
     @Override
     public boolean equals(Object other) {
         if(!this.getClass().equals(other.getClass())) {
@@ -154,8 +144,7 @@ public class Capability implements Serializable {
     }
 
     public String toString() {
-        return new StringBuilder(negate ? "!" : "")
-            .append(this.code)
+        return new StringBuilder(this.code)
             .append(" = ")
             .append(CommonUtils.getArrayString(nodes))
             .toString();

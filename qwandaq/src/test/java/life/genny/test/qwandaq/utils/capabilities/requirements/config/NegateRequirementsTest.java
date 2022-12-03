@@ -4,24 +4,25 @@ import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.capabilities.requirements.BaseRequirementsTest;
-
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 
 import org.junit.Test;
 
-public class CascadeRequirementsTest extends BaseRequirementsTest {
 
-    public CascadeRequirementsTest() {
+public class NegateRequirementsTest extends BaseRequirementsTest {
+
+    public NegateRequirementsTest() {
         setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap(),
             CapabilityBuilder("CAP_TENANT").view(ALL).buildCap()
         );
-    }
-
+    }    
+    
     @Test
     public void baseCascadeTest() {
         ICapabilityFilterable filterable = createFilterable(
-            CapabilityBuilder("CAP_TENANT").view(SELF).buildCap()
+            // test to make sure user *doesn't* have VIEW:SELF in CAP_TENANT
+            CapabilityBuilder("CAP_TENANT").view(SELF).buildCap() 
         );
 
         new JUnitTester<ReqConfig, Boolean>()
@@ -39,10 +40,5 @@ public class CascadeRequirementsTest extends BaseRequirementsTest {
         .build()
 
         .assertAll();
-    }
-
-    @Test
-    public void basicNonCascadeTest() {
-
     }
 }
