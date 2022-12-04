@@ -356,6 +356,10 @@ public class QwandaUtils {
 		return generateAskFromQuestion(question, source, target, null);
 	}
 
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final CapabilitySet target) {
+		return generateAskFromQuestionCode(code, source, target, new ReqConfig());
+	}
+
 	/**
 	 * Generate an ask for a question using the question code, the
 	 * source and the target. This operation is recursive if the

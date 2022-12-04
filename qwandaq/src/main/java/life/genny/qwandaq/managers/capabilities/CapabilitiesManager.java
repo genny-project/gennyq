@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import life.genny.qwandaq.models.UserToken;
-
 import java.util.List;
 
 import java.util.Map;
@@ -62,23 +60,19 @@ public class CapabilitiesManager extends Manager {
 	/**
 	 * Return a Set of Capabilities based on a BaseEntity's LNK_ROLE and its own set
 	 * of capabilities
-	 * <p>
-	 * If a {@link UserToken} instance is accessible, this will have already been
-	 * called and cached,
-	 * so {@link UserToken#getUserCapabilities()} will be faster
-	 * </p>
 	 * 
-	 * @return
+	 * @param target - the BaseEntity to fetch user capabilities for
+	 * 
+	 * @return a new {@link CapabilitySet} (a HashSet of Capabilities with knowledge of the target)
 	 */
 	@Deprecated(forRemoval = false)
-	public CapabilitySet getUserCapabilities() {
-		// this is a necessary log, since we are trying to minimize how often this
+	public CapabilitySet getUserCapabilities(BaseEntity target) {
+// this is a necessary log, since we are trying to minimize how often this
 		// function is called
 		// it is good to see how often it comes up
 		info("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
-		BaseEntity userBE = beUtils.getUserBaseEntity();
-		List<BaseEntity> roles = roleMan.getRoles(userBE);
+		List<BaseEntity> roles = roleMan.getRoles(target);
 		CapabilitySet capabilities;
 
 		if (!roles.isEmpty()) {
@@ -102,11 +96,11 @@ public class CapabilitiesManager extends Manager {
 				}
 			}
 		} else {
-			capabilities = new CapabilitySet(userBE);
+			capabilities = new CapabilitySet(target);
 		}
 
 		// Now overwrite with user capabilities
-		CapabilitySet userCapabilities = getEntityCapabilities(userBE);
+		CapabilitySet userCapabilities = getEntityCapabilities(target);
 		for (Capability capability : userCapabilities) {
 			// Try and find a preexisting capability to overwrite.
 			// If it exists, remove so we can override the role-based capability
@@ -117,8 +111,17 @@ public class CapabilitiesManager extends Manager {
 			}
 			capabilities.add(capability);
 		}
-
 		return capabilities;
+	}
+
+	/**
+	 * Return a Set of Capabilities based on a BaseEntity's LNK_ROLE and its own set
+	 * of capabilities
+	 * @return a new {@link CapabilitySet} (a HashSet of Capabilities with knowledge of the target)
+	 */
+	@Deprecated(forRemoval = false)
+	public CapabilitySet getUserCapabilities() {
+		return getUserCapabilities(beUtils.getUserBaseEntity());
 	}
 
 	/**

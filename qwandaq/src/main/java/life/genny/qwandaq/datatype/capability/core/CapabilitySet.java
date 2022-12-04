@@ -13,7 +13,7 @@ import life.genny.qwandaq.entity.BaseEntity;
  */
 public class CapabilitySet extends HashSet<Capability> {
 
-    private final BaseEntity entity;
+    private BaseEntity entity;
 
     public CapabilitySet(BaseEntity entity) {
         super();
@@ -36,6 +36,10 @@ public class CapabilitySet extends HashSet<Capability> {
 
     public BaseEntity getEntity() {
         return entity;
+    }
+
+    public void setEntity(BaseEntity e) {
+        this.entity = e;
     }
 
     public String toString() {

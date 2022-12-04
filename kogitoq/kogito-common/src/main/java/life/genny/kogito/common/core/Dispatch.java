@@ -5,7 +5,6 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +18,6 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -28,8 +26,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
-
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -92,13 +89,12 @@ public class Dispatch {
 	 */
 	public QBulkMessage build(ProcessData processData, PCM pcm) {
 
-		ReqConfig reqConfig = capMan.getUserCapabilities();
-
 		// fetch source and target entities
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
 		// ensure pcm is not null
 		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
@@ -110,7 +106,7 @@ public class Dispatch {
 		if (questionCode != null) {
 			// fetch question from DB
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, reqConfig);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
 			msg.add(ask);
 		}
 
@@ -267,9 +263,9 @@ public class Dispatch {
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 
-		ReqConfig reqConfig = capMan.getUserCapabilities();
-		if(!pcm.requirementsMet(reqConfig)) {
-			log.warn("User " + userToken.getUserCode() + " Capability requirements not met for pcm: " + pcm.getCode());
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		if(!pcm.requirementsMet(userCapabilities)) {
+			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
 		log.info("Traversing " + pcm.getCode());
@@ -291,7 +287,7 @@ public class Dispatch {
 				return;
 			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 				// add ask to bulk message
-				ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, reqConfig);
+				ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
 				msg.add(ask);
 			}
 		} else {

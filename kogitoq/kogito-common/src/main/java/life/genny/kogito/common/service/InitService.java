@@ -9,7 +9,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
 
 import org.jboss.logging.Logger;
 
@@ -18,14 +17,8 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
-import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
-import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
@@ -146,7 +139,7 @@ public class InitService {
 
 		String productCode = userToken.getProductCode();
 		BaseEntity user = beUtils.getUserBaseEntity();
-		CapabilitySet userCapabilities = capMan.getUserCapabilities();
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(user);
 
 		// get pcms using search
 		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")
@@ -188,7 +181,7 @@ public class InitService {
 				log.info("Passed Capabilities check: " + CommonUtils.getArrayString(question.getCapabilityRequirements()));
 			}
 
-			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, userCapabilities, reqConfig);
+			Ask ask = qwandaUtils.generateAskFromQuestion(question, user, userCapabilities);
 			if (ask == null) {
 				log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + question.getCode());
 			}
