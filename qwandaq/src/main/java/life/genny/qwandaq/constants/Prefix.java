@@ -41,5 +41,8 @@ public class Prefix {
 	public static final String ACT = "ACT_";
 	public static final String SRT = "SRT_";
 
+	// Table
+	public static final String QUE_TABLE_PREF = "QUE_TABLE_";
+	public static final String FIELD="FIELD_";
 }
 

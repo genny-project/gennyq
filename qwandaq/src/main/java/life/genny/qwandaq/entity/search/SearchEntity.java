@@ -43,6 +43,11 @@ public class SearchEntity extends BaseEntity {
 
 	private static final long serialVersionUID = 1L;
 
+	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
+	public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
+	public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
+	public static final String SBE_PROCESS = "SBE_PROCESS";
+
 	// TODO: Polish this
 	private Map<Class<? extends Trait>, List<? extends Trait>> traits = new HashMap<>();
 
