@@ -83,16 +83,26 @@ public class CapabilityUtilsTest extends BaseTestCase {
         List<String> capString = new ArrayList<>();
 
         // Gen data
-        for(CapabilityMode mode : CapabilityMode.values()) {
-            for(PermissionMode permMode : PermissionMode.values()) {
-                capString.add(mode.getIdentifier() + CapabilityNode.DELIMITER + permMode.getIdentifier());
+        for(int i = 0; i < 2; i++) {
+            for(CapabilityMode mode : CapabilityMode.values()) {
+                for(PermissionMode permMode : PermissionMode.values()) {
+                    capString.add((i != 0 ? "!" : "") + mode.getIdentifier() + CapabilityNode.DELIMITER + permMode.getIdentifier());
+                }
             }
         }
 
         List<CapabilityNode> expected = capString.stream().map((String caps) -> {
-            CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(0));
-            PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(2));
-            return new CapabilityNode(mode, permMode);
+            int startInd = 0;
+            boolean negate = false;
+            if(caps.startsWith("!")) {
+                negate = true;
+                startInd = 1;
+            }
+            CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(startInd));
+            PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(startInd + 2));
+            CapabilityNode node = new CapabilityNode(mode, permMode);
+            node.negate = negate;
+            return node;
         }).collect(Collectors.toList());
         
         // Create tester
@@ -102,7 +112,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         });
 
         for(int i = 0; i < expected.size(); i++) {
-            unitTester.createTest("Serialize test: " + expected.get(i))
+            unitTester.createTest("Serialize test: " + expected.get(i) + ", negate: " + expected.get(i).negate)
             .setInput(capString.get(i))
             .setExpected(expected.get(i))
             .build();
