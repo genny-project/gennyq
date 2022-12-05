@@ -1,7 +1,10 @@
 package life.genny.qwandaq.entity.search;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -10,6 +13,7 @@ import java.util.stream.IntStream;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.annotation.JsonbTransient;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 import org.jboss.logging.Logger;
 
@@ -22,13 +26,13 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.clause.Or;
-
 import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.AssociatedColumn;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
+import life.genny.qwandaq.serialization.adapters.search.TraitMapAdapter;
 
 /* 
  * SearchEntity class implements the search of base entities applying 
@@ -37,17 +41,30 @@ import life.genny.qwandaq.entity.search.trait.Trait;
 @SuppressWarnings("unchecked")
 @RegisterForReflection
 public class SearchEntity extends BaseEntity {
+	private final static Map<Class<? extends Trait>, String> SENDABLE_TRAIT_TYPES = new HashMap<>();
+    static {
+		SENDABLE_TRAIT_TYPES.put(Column.class, Column.PREFIX);
+		SENDABLE_TRAIT_TYPES.put(AssociatedColumn.class, AssociatedColumn.PREFIX);
+		SENDABLE_TRAIT_TYPES.put(Action.class, Action.PREFIX);
+    }
+
+	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
+	public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
+	public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
+	public static final String SBE_PROCESS = "SBE_PROCESS";
 
 	private static final Logger log = Logger.getLogger(SearchEntity.class);
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	private static final long serialVersionUID = 1L;
 
-	// TODO: Polish this
 	private TraitMap traits = new TraitMap();
 
 	private List<ClauseContainer> clauseContainers = new ArrayList<>();
 	
+	/**
+	 * Specify that all results should contain all of their attributes
+	 */
 	private Boolean allColumns = false;
 
 	// TODO: redesign filters
@@ -96,33 +113,6 @@ public class SearchEntity extends BaseEntity {
 
 	public void setClauseContainers(List<ClauseContainer> clauseContainers) {
 		this.clauseContainers = clauseContainers;
-	}
-
-	public List<Sort> getSorts() {
-		return traits.getList(Sort.class);
-	}
-
-	public SearchEntity setSorts(List<Sort> sorts) {
-		this.traits.put(Sort.class, sorts);
-		return this;
-	}
-	
-	public List<Column> getColumns() {
-		return traits.getList(Column.class);
-	}
-
-	public SearchEntity setColumns(List<Column> columns) {
-		this.traits.put(Column.class, columns);
-		return this;
-	}
-
-	public List<Action> getActions() {
-		return traits.getList(Action.class);
-	}
-
-	public SearchEntity setActions(List<Action> actions) {
-		this.traits.put(Action.class, actions);
-		return this;
 	}
 
 	public Boolean getAllColumns() {
@@ -508,11 +498,11 @@ public class SearchEntity extends BaseEntity {
 	/**
 	 * This method allows to remove the attributes from the SearchEntity.
 	 * 
-	 * @param attributeCode the code of the column to remove
+	 * @param attributeCode the code of the column to remove (without COL_)
 	 * @return SearchEntity
 	 */
 	public SearchEntity removeColumn(final String attributeCode) {
-		removeAttribute("COL_" + attributeCode);
+		removeAttribute(Column.PREFIX + attributeCode);
 		return this;
 	}
 
@@ -522,10 +512,9 @@ public class SearchEntity extends BaseEntity {
 	 * @return Set
 	 */
 	public Set<String> allowedColumns() {
-
 		List<Column> allowed = new ArrayList<>();
-		allowed.addAll(traits.getList(Column.class));
-		allowed.addAll(traits.getList(AssociatedColumn.class));
+		allowed.addAll(traits.get(Column.class));
+		allowed.addAll(traits.get(AssociatedColumn.class));
 		return allowed.stream()
 				.map(c -> c.getCode())
 				.collect(Collectors.toSet());
@@ -552,7 +541,7 @@ public class SearchEntity extends BaseEntity {
 			});
 
 		// add sort attributes
-		List<Sort> sorts = traits.getList(Sort.class);
+		List<Sort> sorts = traits.get(Sort.class);
 		IntStream.range(0, sorts.size())
 			.forEach(i -> {
 				Sort sort = sorts.get(i);
@@ -566,14 +555,6 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
-	public void setAssociatedColumns(List<AssociatedColumn> list) {
-		getTraitMap().put(AssociatedColumn.class, list);
-	}
-
-	public List<AssociatedColumn> getAssociatedColumns() {
-		return getTraitMap().getList(AssociatedColumn.class);
-	}
-
 	/**
 	 * Convert to a sendable entity
 	 * 
@@ -581,8 +562,8 @@ public class SearchEntity extends BaseEntity {
 	 */
 	public SearchEntity convertToSendable() {
 		log.info("Converting SBE: " + this.getCode() + " to sendable");
-		for(Entry<Class<? extends Trait>, String> traitEntry : TraitMap.SERIALIZED_TRAIT_TYPES.entrySet()) {
-			List<Trait> list = (List<Trait>) traits.getList(traitEntry.getKey());
+		for(Entry<Class<? extends Trait>, String> traitEntry : SENDABLE_TRAIT_TYPES.entrySet()) {
+			List<Trait> list = (List<Trait>) traits.get(traitEntry.getKey());
 			boolean plural = list.size() > 1;
 			String msg = new StringBuilder("Serializing ")
 							.append(list.size())
@@ -600,6 +581,8 @@ public class SearchEntity extends BaseEntity {
 			}
 		}
 
+		// ensure trait data doesn't get sent out to FE
+		traits.clear();
 		return this;
 	}
 
@@ -621,6 +604,72 @@ public class SearchEntity extends BaseEntity {
 		return this;
 	}
 
+	public <T extends Trait> SearchEntity add(Trait trait) {
+		traits.add(trait);
+		return this;
+	}
+
+	public <T extends Trait> SearchEntity add(AssociatedColumn trait) {
+		List<Column> columns = traits.get(Column.class);
+		if(columns == null) {
+			columns = new ArrayList<Column>();
+			traits.put(Column.class, columns);
+		}
+		columns.add(trait);
+		return this;
+	}
+
+	/**
+	 * Remove filter object from clause container
+	 * @param filter Filter object
+	 * @return Search entity after removing filter
+	 */
+	public SearchEntity remove(Filter filter) {
+		boolean found = false;
+		int index = 0;
+
+		for(ClauseContainer clause : this.clauseContainers) {
+			if(clause.getFilter().getCode().equalsIgnoreCase(filter.getCode())
+					&& clause.getFilter().getOperator().name().equalsIgnoreCase(filter.getOperator().name())) {
+				found = true;break;
+			}
+			index++;
+		}
+
+		if(found) {
+			this.clauseContainers.remove(index);
+		}
+
+		return this;
+	}
+
+	@JsonbTransient
+	public <T extends Trait> Optional<T> getTrait(Class<T> trait, String traitCode) {
+		return getTraits(trait).stream().filter((t) -> t.getCode().equals(traitCode)).findFirst();
+	}
+
+	@JsonbTransient
+	public <T extends Trait> List<T> getTraits(Class<T> traitType) {
+		List<T> t = traits.get(traitType);
+		if(t == null) return new ArrayList<>();
+		return t;
+	}
+
+	@JsonbTransient
+	public <T extends Trait> void setTraits(Class<T> traitType, List<T> traits) {
+		this.traits.put(traitType, traits);
+	}
+
+	@JsonbTypeAdapter(TraitMapAdapter.class)
+	public TraitMap getTraitMap() {
+		return traits;
+	}
+
+	@JsonbTypeAdapter(TraitMapAdapter.class)
+	public void setTraitMap(TraitMap map) {
+		this.traits = map;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -629,16 +678,5 @@ public class SearchEntity extends BaseEntity {
 	@Override
 	public String toString() {
 		return "SearchEntity[ code = " + this.getCode() + "]";
-	}
-
-	public <T extends Trait> SearchEntity add(Trait trait) {
-		// TODO: Could do ClauseArgument check here
-		((List<T>) traits.getList(trait.getClass())).add((T) trait);
-		return this;
-	}
-
-	@JsonbTransient
-	public TraitMap getTraitMap() {
-		return traits;
 	}
 }

@@ -105,6 +105,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";
 
 	public static final String QUE_EVENTS = "QUE_EVENTS";
+	public static final String QUE_BASEENTITY_GRP = "QUE_BASEENTITY_GRP";
 
 	// entity
 	public static final String QUE_NAME = "QUE_NAME";
@@ -114,6 +115,33 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	// navigation
 	public static final String QUE_PROCESS = "QUE_PROCESS";
 	public static final String QUE_DASHBOARD = "QUE_DASHBOARD";
+
+	/* Filter and Saved Search */
+	public static final String QUE_SBE_DETAIL_QUESTION_GRP = "QUE_SBE_DETAIL_QUESTION_GRP";
+	public static final String QUE_FILTER_COLUMN = "QUE_FILTER_COLUMN";
+	public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
+	public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
+	public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
+	public static final String QUE_FILTER_VALUE_DATETIME = "QUE_FILTER_VALUE_DATETIME";
+	public static final String QUE_ADD_FILTER_SBE_GRP = "QUE_ADD_FILTER_SBE_GRP";
+	public static final String QUE_SAVED_SEARCH_SELECT_GRP = "QUE_SAVED_SEARCH_SELECT_GRP";
+	public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";
+	public static final String QUE_SAVED_SEARCH_DELETE = "QUE_SAVED_SEARCH_DELETE";
+	public static final String QUE_SBE_DETAIL_VIEW_DELETE = "QUE_SBE_DETAIL_VIEW_DELETE";
+	public static final String QUE_SAVED_SEARCH_LIST = "QUE_SAVED_SEARCH_LIST";
+	public static final String QUE_SAVED_SEARCH_SELECT = "QUE_SAVED_SEARCH_SELECT";
+	public static final String QUE_SAVED_SEARCH_APPLY = "QUE_SAVED_SEARCH_APPLY";
+	public static final String QUE_SEARCH = "QUE_SEARCH";
+	public static final String QUE_ADD_SEARCH = "QUE_ADD_SEARCH";
+	public static final String QUE_QUICK_SEARCH = "QUE_QUICK_SEARCH";
+	public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
+	public static final String QUE_QUICK_SEARCH_GRP = "QUE_QUICK_SEARCH_GRP";
+	public static final String QUE_TAB_BUCKET_VIEW = "QUE_TAB_BUCKET_VIEW";
+	public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
+	public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
+	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
+	public static final String QUE_TABLE_NEXT_BTN="QUE_TABLE_NEXT_BTN";
+    public static final String QUE_TABLE_PREVIOUS_BTN="QUE_TABLE_PREVIOUS_BTN";
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)

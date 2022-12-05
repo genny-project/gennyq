@@ -40,6 +40,7 @@ import org.keycloak.util.JsonSerialization;
 
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.KeycloakException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.GennyToken;
@@ -246,11 +247,9 @@ public class KeycloakUtils {
      * @return String
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
-        // A necessary evil. I think?
-        // realm = "internmatch";
-        log.info("Realm is " + realm);
 
-        String uri = keycloakUrl + "/auth/realms/" + realm + "/protocol/openid-connect/token";
+        log.info("Keycloak Realm is " + realm);
+        String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
 
         String str = executeEncodedPostRequest(uri, params);
@@ -375,23 +374,19 @@ public class KeycloakUtils {
 
         log.info("CreateUserjsonDummy = " + json);
 
-        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users";
+        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users";
 
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
         HttpResponse<String> response = HttpUtils.post(uri, json, token);
-
-        if (response == null) {
-            log.error("Response was null from keycloak!!!");
-            return null;
-        }
+        if (response == null)
+			throw new KeycloakException("Failed to create user: Response is null");
 
         Integer statusCode = response.statusCode();
         Response.Status status = Response.Status.fromStatusCode(statusCode);
         log.info("Create User Response Status: " + statusCode);
 
         try {
-
             // if user already exists, return their id
             if (status == Response.Status.CONFLICT) {
                 log.warn("Email already taken: " + email);
@@ -404,14 +399,10 @@ public class KeycloakUtils {
             }
 
         } catch (IOException e) {
-            log.error("Error trying to fetch keycloak user Id!");
-            log.error("Response Body: " + response.body());
-            e.printStackTrace();
+			throw new KeycloakException("Failed to create user: ", e);
         }
 
-        log.error("Could not return keycloak user Id");
-        log.error("Response Body: " + response.body());
-        return null;
+		throw new KeycloakException("Failed to create user: " + response.body());
     }
 
     /**
@@ -444,7 +435,7 @@ public class KeycloakUtils {
     public static List<LinkedHashMap<?, ?>> fetchKeycloakUser(final String token, final String realm,
             final String username) {
 
-        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users?username=" + username;
+        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users?username=" + username;
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uri))
@@ -505,7 +496,7 @@ public class KeycloakUtils {
         uuid = uuid.toLowerCase();
 
         String json = "{\"" + field + "\":\"" + value + "\"}";
-        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users/" + uuid;
+        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users/" + uuid;
         HttpResponse<String> response = HttpUtils.put(uri, json, userToken);
 
         return response.statusCode();
@@ -527,7 +518,7 @@ public class KeycloakUtils {
         uuid = uuid.toLowerCase();
 
         String json = "{ \"email\" : \"" + email + "\" , \"enabled\" : true, \"emailVerified\" : true}";
-        String uri = GennySettings.keycloakUrl() + "/auth/admin/realms/" + realm + "/users/" + uuid;
+        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users/" + uuid;
         HttpResponse<String> response = HttpUtils.put(uri, json, userToken);
 
         return response.statusCode();

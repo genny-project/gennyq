@@ -11,6 +11,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.message.QDataAnswerMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -27,6 +28,8 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.gadaq.search.FilterGroupService;
+import life.genny.qwandaq.constants.FilterConst;
 
 /**
  * Events
@@ -52,6 +55,9 @@ public class Events {
 	@Inject
 	TaskService tasks;
 
+	@Inject
+	FilterGroupService filter;
+
 	/**
 	 * @param msg
 	 */
@@ -64,6 +70,16 @@ public class Events {
 
 		String parentCode = data.getParentCode();
 		String targetCode = data.getTargetCode();
+
+		// Filter
+		if(filter.isValidEvent(msg)){
+			filter.handleBtnEvents(msg);
+			return;
+		}
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type()))
+			return;
 
 		// auth init
 		if ("AUTH_INIT".equals(code)) {
@@ -121,6 +137,7 @@ public class Events {
 
 		// bucket view
 		if (Question.QUE_PROCESS.equals(code)) {
+			filter.init(code);
 			search.sendBuckets();
 			return;
 		}
@@ -140,8 +157,16 @@ public class Events {
 			return;
 		}
 
+		// bucket pagination
+		if (Question.QUE_TABLE_LAZY_LOAD.equals(code)) {
+			search.handleSearchPagination(targetCode, false);
+			return;
+		}
+
 		// table view (Default View Mode)
+		code = code.replace("QUE_EXPLORE_", "QUE_TABLE_");
 		if (code.startsWith("QUE_TABLE_")) {
+			filter.init(code);
 			search.sendTable(code);
 			return;
 		}
@@ -172,6 +197,14 @@ public class Events {
 
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
+			}else if ("MSG".equals(prefix)){
+				JsonObject json = Json.createObjectBuilder()
+						.add("definitionCode", "DEF_".concat(code))
+						.add("sourceCode", userToken.getUserCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
+				return;
 			}
 		}
 
@@ -199,5 +232,15 @@ public class Events {
 		 */
 		log.info("Forwarding Event Message...");
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
+	}
+
+	/**
+	 * Event route
+	 * @param msg Message
+	 */
+	public void route(QDataAnswerMessage msg) {
+		if(filter.isValidEvent(msg)){
+			filter.handleDataEvents(msg);
+		}
 	}
 }

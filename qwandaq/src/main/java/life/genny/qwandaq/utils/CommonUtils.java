@@ -87,6 +87,15 @@ public class CommonUtils {
         }
     }
 
+    public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
+        for(K key : map.keySet()) {
+            String msg = new StringBuilder(keyCallback.getString(key))
+                            .append(" = ")
+                            .append(valueCallback.getString(map.get(key)))
+                            .toString();
+            log.info(msg);
+        }
+    }
 
     /**
      * Safe-compare two Objects (null-safe)
@@ -301,6 +310,17 @@ public class CommonUtils {
         return false;
     }
 
+	/**
+	 * Classic Genny style string clean up. This will remove any double quotes,
+	 * whitespaces and square brackets from the string.
+	 * <p>
+	 * Hope this makes our code look a little
+	 * nicer :)
+	 * <p>
+	 * 
+	 * @param value The value to clean
+	 * @return A clean string
+	 */
     public static String cleanUpAttributeValue(String value) {
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;

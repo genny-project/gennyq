@@ -236,7 +236,7 @@ public class FyodorUltra {
 
 		// find orders
 		List<Order> orders = new ArrayList<>();
-		searchEntity.getSorts().stream().forEach(sort -> {
+		searchEntity.getTraits(Sort.class).stream().forEach(sort -> {
 			orders.add(findSortPredicate(cauldron, sort));
 		});
 
@@ -372,8 +372,20 @@ public class FyodorUltra {
 
 		switch (operator) {
 			case EQUALS:
+				if (c == LocalDateTime.class)
+					return cb.equal(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
+				if (c == LocalDate.class)
+					return cb.equal(expression.as(LocalDate.class), LocalDate.parse(value));
+				if (c == LocalTime.class)
+					return cb.equal(expression.as(LocalTime.class), LocalTime.parse(value));
 				return cb.equal(expression, value);
 			case NOT_EQUALS:
+				if (c == LocalDateTime.class)
+					return cb.notEqual(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
+				if (c == LocalDate.class)
+					return cb.notEqual(expression.as(LocalDate.class), LocalDate.parse(value));
+				if (c == LocalTime.class)
+					return cb.notEqual(expression.as(LocalTime.class), LocalTime.parse(value));
 				return cb.notEqual(expression, value);
 			case GREATER_THAN:
 				// TODO: Remove triple ifs (Bryn)

@@ -18,7 +18,6 @@ public interface ICapabilityFilterable {
         return Logger.getLogger(ICapabilityFilterable.class);
     }
     
-    // Please please PLEASE! Do not send these out
     public Set<Capability> getCapabilityRequirements();
 
     public default void setCapabilityRequirements(Capability... requirements) {
@@ -37,14 +36,14 @@ public interface ICapabilityFilterable {
 
     public static boolean requirementsMetImpl(CapabilitySet userCapabilities, Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
         if(capabilityRequirements == null || capabilityRequirements.isEmpty()) {
-            getLogger().info("No capabilityRequirements found!");
+            getLogger().debug("No capabilityRequirements found!");
             return true;
         }
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
         boolean requiresAllModes = requirementsConfig.needsAllModes();
 
-        getLogger().info("Testing Capability Config: " + requirementsConfig);
+        getLogger().debug("Testing Capability Config: " + requirementsConfig);
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks

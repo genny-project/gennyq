@@ -21,11 +21,13 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.exception.runtime.DefinitionException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
@@ -41,6 +43,9 @@ import life.genny.qwandaq.models.UserToken;
  */
 @ApplicationScoped
 public class DefUtils {
+
+	public static final String SBE_DEF = "SBE_DEF";
+	public static final String SBE_DEFINITION_PREFIX = "SBE_DEFINITION_PREFIX";
 
 	static final Logger log = Logger.getLogger(DefUtils.class);
 
@@ -60,8 +65,6 @@ public class DefUtils {
 	@Inject
 	UserToken userToken;
 
-	public static final String PREF_QUE_BASE_GRP = "QUE_BASEENTITY_GRP";
-
 	public DefUtils() {
 	}
 
@@ -74,7 +77,7 @@ public class DefUtils {
 	@Deprecated
 	public void initializeDefPrefixs(String productCode) {
 
-		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
+		SearchEntity searchEntity = new SearchEntity(SBE_DEF, "DEF check")
 				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
 				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF))
 				.setPageStart(0)
@@ -101,12 +104,10 @@ public class DefUtils {
 				log.error("Code is null, skipping DEF prefix");
 				continue;
 			}
-			BaseEntity def = beUtils.getBaseEntity(productCode, code);
-
+			Definition def = Definition.from(beUtils.getBaseEntity(productCode, code));
 			String prefix = def.getValue(Attribute.PRI_PREFIX, null);
-			if (prefix == null) {
+			if (prefix == null)
 				continue;
-			}
 
 			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
 			defPrefixMap.get(productCode).put(prefix, code);
@@ -120,42 +121,33 @@ public class DefUtils {
 	 * @param entity The {@link BaseEntity} to check
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
-	public BaseEntity getDEF(final BaseEntity entity) {
+	public Definition getDEF(final BaseEntity entity) {
 
-		if (entity == null) {
-			throw new ItemNotFoundException("entity");
-		}
+		if (entity == null)
+			throw new NullParameterException("entity");
 
 		// save processing time on particular entities
 		if (entity.getCode().startsWith(Prefix.DEF))
-			return entity;
-		if (entity.getCode().startsWith(Prefix.PRJ))
-			return beUtils.getBaseEntity("DEF_PROJECT");
-		if (entity.getCode().startsWith("DOT_"))
-			return beUtils.getBaseEntity("DEF_DOCUMENT_TEMPLATE");
-
-		// NOTE: temporary special check for internmatch
-		String productCode = userToken.getProductCode();
-		if (productCode.equals("alyson") || productCode.equals("internmatch")) {
-			return getInternmatchDEF(entity);
-		}
+			return Definition.from(entity);
 
 		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
-		// null/empty check the role attribute
-		if (codes == null) {
-			throw new NullParameterException(entity.getCode() + ":LNK_DEF");
-		}
+		// if no defs specified, go by prefix
 		if (codes.isEmpty()) {
-			throw new NullParameterException(entity.getCode() + ":LNK_DEF");
+			String prefix = entity.getCode().substring(0, 3);
+			SearchEntity prefixSearch = new SearchEntity(SBE_DEFINITION_PREFIX, "Definition Prefix Search")
+					.add(new Filter(Attribute.PRI_PREFIX, Operator.EQUALS, prefix))
+					.setAllColumns(true)
+					.setPageSize(1);
+
+			List<BaseEntity> results = searchUtils.searchBaseEntitys(prefixSearch);
+			if (results.isEmpty())
+				throw new DefinitionException("No definition with prefix: " + prefix);
 		}
 
 		// fetch DEF if no merging is needed
-		if (codes.size() == 1) {
-			String definitionCode = codes.get(0);
-			BaseEntity definition = beUtils.getBaseEntity(definitionCode);
-			return definition;
-		}
+		if (codes.size() == 1)
+			return beUtils.getDefinition(codes.get(0));
 
 		String mergedCode = "DEF_" + String.join("_", codes);
 		BaseEntity mergedDef = new BaseEntity(mergedCode, mergedCode);
@@ -165,14 +157,10 @@ public class DefUtils {
 		Collections.reverse(codes);
 		for (String code : codes) {
 
-			BaseEntity def = beUtils.getBaseEntity(code);
-			if (def == null) {
-				log.warn("No DEF for " + code);
-				continue;
-			}
+			Definition definition = beUtils.getDefinition(code);
 
 			// merge into new def
-			for (EntityAttribute ea : def.getBaseEntityAttributes()) {
+			for (EntityAttribute ea : definition.getBaseEntityAttributes()) {
 				try {
 					mergedDef.addAttribute(ea);
 				} catch (Exception e) {
@@ -181,115 +169,7 @@ public class DefUtils {
 			}
 		}
 
-		return mergedDef;
-	}
-
-	/**
-	 * Find the corresponding definition for a given {@link BaseEntity}.
-	 * NOTE: Temporary special method for Internmatch only.
-	 *
-	 * @param entity The {@link BaseEntity} to check
-	 * @return BaseEntity The corresponding definition {@link BaseEntity}
-	 */
-	// TODO: remove this soon
-	@Deprecated
-	public BaseEntity getInternmatchDEF(final BaseEntity entity) {
-
-		String productCode = userToken.getProductCode();
-		List<EntityAttribute> isAs = entity.findPrefixEntityAttributes("PRI_IS_");
-
-		// remove the non DEF ones
-		Iterator<EntityAttribute> i = isAs.iterator();
-		while (i.hasNext()) {
-
-			EntityAttribute ea = i.next();
-
-			if (ea.getAttributeCode().startsWith("PRI_IS_APPLIED_")) {
-				i.remove();
-				continue;
-			}
-
-			// filter out bad is as attributes
-			switch (ea.getAttributeCode()) {
-				case "PRI_IS_DELETED":
-				case "PRI_IS_EXPANDABLE":
-				case "PRI_IS_FULL":
-				case "PRI_IS_INHERITABLE":
-				case "PRI_IS_PHONE":
-				case "PRI_IS_AGENT_PROFILE_GRP":
-				case "PRI_IS_BUYER_PROFILE_GRP":
-				case "PRI_IS_EDU_PROVIDER_STAFF_PROFILE_GRP":
-				case "PRI_IS_REFERRER_PROFILE_GRP":
-				case "PRI_IS_SELLER_PROFILE_GRP":
-				case "PRI_IS SKILLS":
-				case "PRI_IS_DISABLED":
-				case "PRI_IS_LOGBOOK":
-					log.warn("getDEF -> detected non DEFy attributeCode " + ea.getAttributeCode());
-					i.remove();
-					break;
-				default:
-			}
-		}
-
-		if (!isAs.isEmpty()) {
-
-			// create sorted merge code
-			List<String> codes = isAs.stream()
-					.sorted(Comparator.comparingDouble(EntityAttribute::getWeight))
-					.map(EntityAttribute::getAttributeCode)
-					.collect(Collectors.toList());
-
-			log.info(codes.toString());
-
-			// check for single PRI_IS
-			if (codes.size() == 1) {
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + codes.get(0).substring("PRI_IS_".length()));
-				return def;
-			}
-
-			String mergedCode = "DEF_" + String.join("_", codes);
-			BaseEntity mergedDef = new BaseEntity(mergedCode, mergedCode);
-			log.info("Detected NEW Combination DEF - " + mergedCode);
-
-			// reverse order and begin filling new def
-			Collections.reverse(codes);
-			for (String code : codes) {
-
-				// get def for PRI_IS
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + code.substring("PRI_IS_".length()));
-				if (def == null) {
-					continue;
-				}
-
-				// merge into new def
-				for (EntityAttribute ea : def.getBaseEntityAttributes()) {
-					try {
-						mergedDef.addAttribute(ea);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-			return mergedDef;
-		}
-
-		// search for a def with same prefix
-		String prefix = entity.getCode().substring(0, 3);
-		log.info("Prefix = " + prefix);
-
-		Map<String, String> map = defPrefixMap.get(productCode);
-		String defCode = map.get(prefix);
-
-		BaseEntity def = beUtils.getBaseEntityByCode(defCode);
-
-		if (def != null) {
-			return def;
-		}
-
-		// default to error def
-		log.error("No DEF associated with entity " + entity.getCode());
-		return new BaseEntity("ERR_DEF", "No DEF");
+		return Definition.from(mergedDef);
 	}
 
 	/**
@@ -305,23 +185,23 @@ public class DefUtils {
 			throw new NullParameterException("answer");
 
 		BaseEntity target = beUtils.getBaseEntity(answer.getTargetCode());
-		BaseEntity defBE = getDEF(target);
+		Definition definition = getDEF(target);
 
-		return answerValidForDEF(defBE, answer);
+		return answerValidForDEF(definition, answer);
 	}
 
 	/**
 	 * A function to determine the whether or not an attribute is allowed to be
 	 * saved to a {@link BaseEntity}
 	 *
-	 * @param defBE  the defBE to check with
+	 * @param definition  the defBE to check with
 	 * @param answer the answer to check
 	 * @return Boolean
 	 */
-	public Boolean answerValidForDEF(BaseEntity defBE, Answer answer) {
+	public Boolean answerValidForDEF(Definition definition, Answer answer) {
 
-		if (defBE == null)
-			throw new NullParameterException("defBE");
+		if (definition == null)
+			throw new NullParameterException("definition");
 		if (answer == null)
 			throw new NullParameterException("answer");
 
@@ -329,18 +209,17 @@ public class DefUtils {
 		String attributeCode = answer.getAttributeCode();
 
 		// allow if it is Capability saved to a Role
-		if (targetCode.startsWith("ROL_") && attributeCode.startsWith("PRM_")) {
+		if (targetCode.startsWith(Prefix.ROL) && attributeCode.startsWith(Prefix.PRM)) {
 			return true;
-		} else if (targetCode.startsWith("SBE_")
-				&& (attributeCode.startsWith("COL_") || attributeCode.startsWith("CAL_")
-						|| attributeCode.startsWith("SRT_") || attributeCode.startsWith("ACT_"))) {
+		} else if (targetCode.startsWith(Prefix.SBE) && (attributeCode.startsWith(Prefix.COL) 
+						|| attributeCode.startsWith(Prefix.SRT) || attributeCode.startsWith(Prefix.ACT))) {
 			return true;
 		}
 
 		// just make use of the faster attribute lookup
-		if (!defBE.containsEntityAttribute("ATT_" + attributeCode)) {
+		if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {
 			log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
-					+ " with def= " + defBE.getCode() + ANSIColour.RESET);
+					+ " with def= " + definition.getCode() + ANSIColour.RESET);
 			return false;
 		}
 		return true;

@@ -50,7 +50,7 @@ public class GennyScopeInit {
 	 *
 	 * @param data The consumed message from kafka
 	 **/
-	public void init(String data) {
+	public JsonObject init(String data) {
 
 		if (databaseUtils == null) {
 			log.error("NULL DATABASE UTILS");
@@ -63,7 +63,7 @@ public class GennyScopeInit {
 
 		if (data == null) {
 			log.error("Null data received at Scope Init");
-			return;
+			return null;
 		}
 		try {
 
@@ -74,10 +74,12 @@ public class GennyScopeInit {
 			userToken.init(token);
 			log.debug("Token Initialized: " + userToken);
 			beUtils.setUserToken(userToken);
+			return json;
 
 		} catch (Exception e) {
 			log.error("Error initializing token from data: " + data);
 			e.printStackTrace();
+			return null;
 		}
 	}
 

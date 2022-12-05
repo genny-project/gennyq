@@ -58,7 +58,9 @@ public class TokenVerification {
 		}
 
 		log.info("The public cert for realm " + realm + " will be retrieved...");
-		certStore.put(realm, client.fetchRealmCerts(realm));
+		CertsResponse response = client.fetchRealmCerts(realm);
+		
+		certStore.put(realm, response);
 
 		return certStore.get(realm);
 	}
@@ -100,7 +102,7 @@ public class TokenVerification {
 		} catch (InvalidKeySpecException | NoSuchAlgorithmException exception) {
 			throw new GennyKeycloakException(
 					"CERTIFICATE_KEY_ERROR", 
-					"Something wrong with the Certificte key fields"+
+					"Something wrong with the Certificate key fields"+
 					" maybe the wrong algorithm is used or wrong jwt specifications",
 					exception);
 		} catch (ParseException exception) {
@@ -108,8 +110,8 @@ public class TokenVerification {
 					"PARSE_ERROR",
 					"An error occurred when parsing the token",
 					exception);
-		} catch (Exception e) {
-			e.printStackTrace();
+		// } catch (Exception e) {
+		// 	e.printStackTrace();
 		}
 
 		GennyToken payload = new GennyToken(result.getRawToken());

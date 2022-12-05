@@ -1,12 +1,10 @@
-package life.genny.qwandaq.entity.search.trait;
+package life.genny.qwandaq.entity.search;
 
-import java.util.Optional;
 import java.util.Set;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /**

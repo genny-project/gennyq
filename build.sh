@@ -3,7 +3,7 @@
 if [ "$#" -ge 1 ]; then
 	projects=( gennyq $@ )
 else
-	./mvnw clean install -Dcheckstyle.skip -Dstyle.color=always -DskipTests=true
+	./mvnw clean install -Dcheckstyle.skip -Dstyle.color=always
 	if [[ "$?" -ne 0 ]] ; then
 		echo "Build failed"
 		exit 1;
