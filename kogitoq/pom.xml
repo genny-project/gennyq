@@ -5,7 +5,7 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>gennyq</artifactId>
-    <version>10.3.0-lojing</version>
+    <version>10.3.0</version>
   </parent>
   <artifactId>kogitoq</artifactId>
   <packaging>pom</packaging>

@@ -4,12 +4,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>life.genny</groupId>
   <artifactId>dropkick</artifactId>
-  <version>10.3.0-lojing</version>
+  <version>10.3.0</version>
 
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>gennyq</artifactId>
-    <version>10.3.0-lojing</version>
+    <version>10.3.0</version>
   </parent>
 
   <properties>
