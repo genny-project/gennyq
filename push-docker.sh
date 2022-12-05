@@ -1,7 +1,12 @@
 #!/bin/bash
-VERSION=$( ./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
-VERSION=${1-$VERSION}
-echo "Project Version: $VERSION"
+
+if [ -z "$1" ]; then
+	echo "Must supply a version as input"
+	exit 1;
+fi
+
+VERSION=${1}
+echo "Pushin Version: $VERSION"
 
 for project in gadaq bridge fyodor dropkick lauchy messages shleemy
 do
