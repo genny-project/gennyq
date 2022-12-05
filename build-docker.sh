@@ -1,10 +1,10 @@
 #!/bin/bash
 PROJECT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 
-if [ -z "$1" ]; then
+if [ -z "$2" ]; then
 	VERSION=$PROJECT_VERSION
 else
-	VERSION=${1}
+	VERSION=${2}
 fi
 
 echo "Project Version: $VERSION"

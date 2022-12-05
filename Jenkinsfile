@@ -19,25 +19,25 @@ pipeline {
             steps {
                 parallel (
                     "Build GadaQ" : {
-						sh "./build-docker.sh gadaq"
+						sh "./build-docker.sh gadaq ${VERSION_TO_BUILD}"
                     },
 					"Build Bridge" : {
-						sh "./build-docker.sh bridge"
+						sh "./build-docker.sh bridge ${VERSION_TO_BUILD}"
 					},
 					"Build Fyodor" : {
-						sh "./build-docker.sh fyodor"
+						sh "./build-docker.sh fyodor ${VERSION_TO_BUILD}"
 					},
 					"Build Dropkick" : {
-						sh "./build-docker.sh dropkick"
+						sh "./build-docker.sh dropkick ${VERSION_TO_BUILD}"
 					},
 					"Build Lauchy" : {
-						sh "./build-docker.sh lauchy"
+						sh "./build-docker.sh lauchy ${VERSION_TO_BUILD}"
 					},
 					"Build Messages" : {
-						sh "./build-docker.sh messages"
+						sh "./build-docker.sh messages ${VERSION_TO_BUILD}"
 					},
 					"Build Shleemy" : {
-						sh "./build-docker.sh shleemy"
+						sh "./build-docker.sh shleemy ${VERSION_TO_BUILD}"
                     }
                 )
             }
