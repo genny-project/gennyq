@@ -654,11 +654,15 @@ public class QwandaUtils {
 			// check for existing attribute in target
 			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
 
+				log.info("[" + code + "]");
+
 				// otherwise create new attribute
 				Attribute attribute = getAttribute(code);
 				Object value = null;
 				// default toggles to false
 				String className = attribute.getDataType().getClassName();
+
+				log.info("className = [" + className + "]");
 				if (className.contains("Boolean") || className.contains("bool"))
 					value = false;
 
