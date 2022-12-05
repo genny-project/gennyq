@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>life.genny</groupId>
 		<artifactId>gennyq</artifactId>
-		<version>10.3.0</version>
+		<version>10.3.0-lojing</version>
 	</parent>
 
 	<artifactId>shleemy</artifactId>
