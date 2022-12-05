@@ -189,7 +189,7 @@ public class SearchUtils {
 		if (!code.startsWith(Prefix.SBE))
 			throw new DebugException("Code " + code + " does not represent a SearchEntity");
 
-		log.info("SBE CODE   ::   " + code);
+		log.debug("Performing Table Search: " + code);
 
 		// fetch search from cache
 		String sessionCode = sessionSearchCode(code);

@@ -219,7 +219,7 @@ public class Dispatch {
 		msg.getAsks().addAll(asks);
 
 		// filter unwanted attributes
-		log.info("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
+		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
 
 		return processEntity;
 	}
@@ -265,6 +265,8 @@ public class Dispatch {
 		if (questionCode != null) {
 			// use pcm target if one is specified
 			String targetCode = pcm.getTargetCode();
+			log.debug("TARGET.getCode() = " + target.getCode());
+			log.debug("TARGET CODE = " + targetCode);
 			if (targetCode != null && !targetCode.equals(target.getCode())) {
 				// merge targetCode
 				Map<String, Object> ctxMap = new HashMap<>();
@@ -437,12 +439,12 @@ public class Dispatch {
 		if (!msg.getEntities().isEmpty())
 			sendBaseEntities(msg.getEntities());
 		else
-			log.error("No BEs to send!");
+			log.debug("No Entities to send!");
 
 		if (!msg.getAsks().isEmpty())
 			sendAsks(msg.getAsks());
 		else
-			log.error("No Asks to send!");
+			log.debug("No Asks to send!");
 	}
 
 	/**
