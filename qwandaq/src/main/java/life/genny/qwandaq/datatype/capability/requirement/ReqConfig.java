@@ -17,7 +17,7 @@ public class ReqConfig {
 
     // More synchronization of methods that instantiate a ReqConfig
     public static final boolean DEFAULT_ALL_CAPS = true;
-    public static final boolean DEFAULT_ALL_MODES = true;
+    public static final boolean DEFAULT_ALL_NODES = true;
     public static final boolean DEFAULT_CASCADE_PERMS = true;
     
 	/**
@@ -46,7 +46,7 @@ public class ReqConfig {
 	}
 
     public ReqConfig(boolean requiresAllCaps) {
-        this(requiresAllCaps, DEFAULT_ALL_MODES);
+        this(requiresAllCaps, DEFAULT_ALL_NODES);
     }
 
     public ReqConfig(boolean requiresAllCaps, boolean requiresAllModes) {
@@ -85,7 +85,7 @@ public class ReqConfig {
 			for (CapabilityNode checkNode : checkNodes) {
 				boolean hasMode = userNodes.contains(checkNode);
 				if (!hasMode) {
-					return false;
+					return (checkNode.negate);
 				} else {
 					// if the checkNode exists in the user nodes
 					// and the checkNode is negating we don't want it 

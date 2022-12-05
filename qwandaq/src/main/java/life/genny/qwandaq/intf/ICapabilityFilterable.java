@@ -11,6 +11,7 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+import life.genny.qwandaq.utils.CommonUtils;
 
 public interface ICapabilityFilterable {
 
@@ -31,7 +32,7 @@ public interface ICapabilityFilterable {
     }
 
     public default boolean requirementsMet(CapabilitySet userCapabilities, ReqConfig requirementsConfig) {
-        return requirementsMetImpl(userCapabilities, getCapabilityRequirements(), requirementsConfig != null ? requirementsConfig : new ReqConfig());
+        return requirementsMetImpl(userCapabilities, getCapabilityRequirements(), requirementsConfig);
     }
 
     public static boolean requirementsMetImpl(CapabilitySet userCapabilities, Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
@@ -68,7 +69,9 @@ public interface ICapabilityFilterable {
 
             if(!passesCheck) {
                 if(requiresAllCaps) {
-                    getLogger().warn("Missing cap permissions " + (requiresAllModes ? "allNodes " : "") + reqCap);
+                    getLogger().warn("Missing cap permissions " + reqCap);
+                    getLogger().info("User perms: " + cap);
+                    getLogger().info("ReqConfig: " + requirementsConfig);
                     return false;
                 }
             } else {
