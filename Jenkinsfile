@@ -44,7 +44,7 @@ pipeline {
         }
         stage("Push Docker Images") {
             steps {
-                sh "./push-docker.sh"
+                sh "./push-docker.sh ${VERSION_TO_BUILD}"
             }
         }
     }
