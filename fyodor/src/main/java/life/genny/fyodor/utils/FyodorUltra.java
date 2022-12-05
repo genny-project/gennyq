@@ -236,7 +236,7 @@ public class FyodorUltra {
 
 		// find orders
 		List<Order> orders = new ArrayList<>();
-		searchEntity.getSorts().stream().forEach(sort -> {
+		searchEntity.getTraits(Sort.class).stream().forEach(sort -> {
 			orders.add(findSortPredicate(cauldron, sort));
 		});
 

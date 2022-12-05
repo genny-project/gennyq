@@ -30,4 +30,15 @@ public class Sort extends Trait {
 		this.order = order;
 	}
 
+	public void flipOrd() {
+		setOrder(order.getOpposite());
+	}
+
+	public String toString() {
+		return new StringBuilder(super.toString())
+					.append(", ord=")
+					.append(order.name())
+					.toString();
+	}
+
 }

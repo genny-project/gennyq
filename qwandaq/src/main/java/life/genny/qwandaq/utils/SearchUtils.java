@@ -238,6 +238,7 @@ public class SearchUtils {
 	 * @return
 	 */
 	public String sessionSearchCode(String code) {
+		// TODO: optimise this (contains for long patterns is inefficient)
 		String jti = userToken.getJTI().toUpperCase();
 		return (code.contains(jti) ? code : new StringBuilder(code).append("_").append(jti).toString());
 	}
@@ -290,5 +291,4 @@ public class SearchUtils {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
 	}
-
 }

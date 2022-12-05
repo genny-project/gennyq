@@ -1,22 +1,19 @@
 package life.genny.qwandaq.entity.search.trait;
 
 import java.util.Set;
-
-import javax.json.bind.annotation.JsonbTypeAdapter;
-
+import java.io.Serializable;
 import java.util.HashSet;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
-import life.genny.qwandaq.serialization.adapters.CapabilityAdapter;
 
 /**
  * Trait
  */
 @RegisterForReflection
-public abstract class Trait implements ICapabilityFilterable {
+public abstract class Trait implements ICapabilityFilterable, Serializable {
 
 	private String code;
 	private String name;
@@ -78,5 +75,14 @@ public abstract class Trait implements ICapabilityFilterable {
 			return false;
 		
 		return this.getCapabilityRequirements().equals(otherT.getCapabilityRequirements());
+	}
+
+	@Override
+	public String toString() {
+		return new StringBuilder("code=")
+			.append(this.getCode())
+			.append(", name=")
+			.append(this.getName())
+			.toString();
 	}
 }

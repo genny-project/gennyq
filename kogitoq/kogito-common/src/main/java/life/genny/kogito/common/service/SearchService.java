@@ -5,6 +5,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 import static life.genny.qwandaq.entity.PCM.PCM_PROCESS;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,6 +21,8 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.exception.runtime.search.trait.MissingTraitException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
@@ -141,6 +144,31 @@ public class SearchService {
 		// calculate new pageStart
 		Integer pageStart = searchEntity.getPageStart() + diff;
 		searchEntity.setPageStart(pageStart);
+
+		// send updated search
+		searchUtils.searchTable(searchEntity);
+	}
+
+	public void handleSearchSort(String entityCode, Sort sort) {
+		String sessionCode = searchUtils.sessionSearchCode(entityCode);
+		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
+		if (searchEntity == null) {
+			searchEntity = CacheUtils.getObject(userToken.getProductCode(), entityCode, SearchEntity.class);
+			searchEntity.setCode(sessionCode);
+		}
+
+		// Change the sort
+		Optional<Sort> sortOpt = searchEntity.getTrait(Sort.class, sort.getCode());
+		Sort searchSort;
+		if(!sortOpt.isPresent()) {
+			log.warn("Sort missing in SEntity: " + entityCode + ". Adding..");
+			searchEntity.add(sort);
+			searchSort = sort;
+		} else {
+			searchSort = sortOpt.get();
+		}
+
+		searchSort.flipOrd();
 
 		// send updated search
 		searchUtils.searchTable(searchEntity);

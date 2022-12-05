@@ -1,7 +1,5 @@
-package life.genny.qwandaq.serialization.adapters;
+package life.genny.qwandaq.serialization.adapters.capabilities;
 
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

@@ -16,7 +16,6 @@ public interface ICapabilityFilterable {
         return Logger.getLogger(ICapabilityFilterable.class);
     }
     
-    // Please please PLEASE! Do not send these out
     public Set<Capability> getCapabilityRequirements();
 
     public default void setCapabilityRequirements(Capability... requirements) {

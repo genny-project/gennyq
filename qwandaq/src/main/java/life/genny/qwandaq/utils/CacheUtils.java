@@ -146,7 +146,7 @@ public class CacheUtils {
 
 		String json = jsonb.toJson(obj);
 		cache.getRemoteCache(realm).put(key, json);
-		log.tracef("Caching: [%s:%s]=%s", realm , key, obj);
+		log.tracef("Caching: [%s:%s]=%s", realm , key, json);
 	}
 
 	/**

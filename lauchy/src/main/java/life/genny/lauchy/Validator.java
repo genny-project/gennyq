@@ -1,5 +1,5 @@
-package life.genny.lauchy.streams;
-
+package life.genny.lauchy;
+ 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,23 +8,14 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Produced;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
@@ -39,36 +30,21 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.serviceq.Service;
-import life.genny.serviceq.intf.GennyScopeInit;
-import life.genny.qwandaq.utils.FilterUtils;
 
 @ApplicationScoped
-public class TopologyProducer {
+public class Validator {
+    @Inject
+    private Logger log;
 
-	static Logger log = Logger.getLogger(TopologyProducer.class);
-
-	Jsonb jsonb = JsonbBuilder.create();
+	private Jsonb jsonb = JsonbBuilder.create();
 
 	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
-	Boolean enableBlacklist;
-
-	@Inject
-	GennyScopeInit scope;
-
-	@Inject
-	Service service;
+	private Boolean enableBlacklist;
 
 	@Inject
 	UserToken userToken;
-
-	@Inject
-	DefUtils defUtils;
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -76,53 +52,7 @@ public class TopologyProducer {
 	@Inject
 	BaseEntityUtils beUtils;
 
-	@Inject
-	GraphQLUtils gqlUtils;
-
-	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
-	FilterUtils filter;
-
-	void onStart(@Observes StartupEvent ev) {
-
-		if (service.showValues())
-			log.info("Blacklist        :" + (enableBlacklist ? "ON" : "OFF"));
-		service.fullServiceInit(true);
-		log.info("[*] Finished Topology Startup!");
-	}
-
-	@Produces
-	public Topology buildTopology() {
-
-		// Read the input Kafka topic into a KStream instance.
-		StreamsBuilder builder = new StreamsBuilder();
-		builder
-				.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
-				.peek((k, v) -> scope.init(v))
-				.peek((k, v) -> log.info("Received message: " + stripToken(v)))
-				.filter((k, v) -> (v != null))
-				.filter((k, v) -> validateData(v))
-				.mapValues((k, v) -> handleDependentDropdowns(v))
-				.peek((k, v) -> log.info("Forwarding valid message"))
-				.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
-
-		return builder.build();
-	}
-
-	/**
-	 * Helper function to show the data without a token
-	 * 
-	 * @param data
-	 * @return
-	 */
-	public String stripToken(String data) {
-		JsonObject dataJson = jsonb.fromJson(data, JsonObject.class);
-		return javax.json.Json.createObjectBuilder(dataJson).remove("token").build().toString();
-	}
-
-	/**
+    /**
 	 * @param data
 	 * @return
 	 */
@@ -136,18 +66,16 @@ public class TopologyProducer {
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
 					// TODO: Wondering if we can just get the processData from the first processId we get
-					ProcessData processData = qwandaUtils.fetchProcessData(processId);
-					if(processData !=null) {
-						List<Ask> asks = qwandaUtils.fetchAsks(processData);
+					ProcessData processData = qwandaUtils.fetchProcessData(processId); 
+					List<Ask> asks = qwandaUtils.fetchAsks(processData);
 
-						Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-						BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+					Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
+					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-						Map<String, Ask> flatMapAsks = QwandaUtils.buildAskFlatMap(asks);
+					Map<String, Ask> flatMapAsks = QwandaUtils.buildAskFlatMap(asks);
 
-						qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
-						asksToSend.addAll(asks);
-					}
+					qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
+					asksToSend.addAll(asks);
 				});
 
 		QDataAskMessage msg = new QDataAskMessage(asksToSend);
@@ -206,15 +134,8 @@ public class TopologyProducer {
 		// check processId is not blank
 		String processId = answer.getProcessId();
 		log.info("CHECK Integrity of processId [" + processId + "]");
-		if(processId != null && processId.equalsIgnoreCase("no-idq") ) {
-			//TODO : Temporary solution and rethink for filter and saved search
-			if(filter.validFilter(attributeCode)) {
-				return true;
-			}
-		}
-		if (StringUtils.isBlank(processId)) {
+		if (StringUtils.isBlank(processId))
 			return blacklist("ProcessId is blank");
-		}
 
 		// Check if inferredflag is set
 		if (answer.getInferred())
@@ -320,7 +241,7 @@ public class TopologyProducer {
 	 * @param abnCode The ABN to check
 	 * @return {@link Boolean}: ABN is valid
 	 */
-	public static Boolean isValidABN(final String abnCode) {
+	public Boolean isValidABN(final String abnCode) {
 
 		if (abnCode.matches("[0-9]+") && abnCode.length() != 11) {
 			return false;
