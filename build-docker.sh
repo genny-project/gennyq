@@ -1,5 +1,12 @@
 #!/bin/bash
-VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+PROJECT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+
+if [ -z "$1" ]; then
+	VERSION=$PROJECT_VERSION
+else
+	VERSION=${1}
+fi
+
 echo "Project Version: $VERSION"
 ./say.sh "Building: $VERSION"
 if [ "$#" -ge 1 ]; then
