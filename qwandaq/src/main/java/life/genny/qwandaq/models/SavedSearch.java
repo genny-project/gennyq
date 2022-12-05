@@ -1,11 +1,12 @@
 package life.genny.qwandaq.models;
 
 import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.constants.Prefix;
 
-import javax.json.JsonObject;
+
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.lang.reflect.Field;
+
 import java.util.Map;
 
 public class SavedSearch {
@@ -34,8 +35,8 @@ public class SavedSearch {
         this.value = "";
 
         if(splitted.length == 2) {
-            this.operator = splitted[0].replaceFirst(FilterConst.SEL_PREF,"");
-            this.value = splitted[1].replaceFirst(FilterConst.SEL_PREF,"");
+            this.operator = splitted[0].replaceFirst(Prefix.SEL,"");
+            this.value = splitted[1].replaceFirst(Prefix.SEL,"");
         }
         this.column = getColumnName(attributeCode);
         this.valueCode = value;
@@ -161,14 +162,13 @@ public class SavedSearch {
     public String getColumnName(String value) {
         String fieldName = "";
         int priIndex = -1;
-        int fieldIndex = value.lastIndexOf(FilterConst.FIELD);
+        int fieldIndex = value.lastIndexOf(Prefix.FIELD);
         if(fieldIndex > -1) {
-            priIndex = value.indexOf(FilterConst.FIELD) + FilterConst.FIELD.length();
+            priIndex = value.indexOf(Prefix.FIELD) + Prefix.FIELD.length();
             fieldName = value.substring(priIndex);
             return fieldName;
         } else {
-//            priIndex = value.lastIndexOf(FilterConst.PRI_PREFIX) + FilterConst.PRI_PREFIX.length();
-            priIndex = value.lastIndexOf(FilterConst.PRI_PREFIX);
+            priIndex = value.lastIndexOf(Prefix.PRI);
         }
         if(priIndex > -1) {
             fieldName = value.substring(priIndex);

@@ -101,6 +101,8 @@ public class InternalConsumer {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_DATA, msg);
 
+		events.route(msg);
+
 		scope.destroy();
 		// log duration
 		Instant end = Instant.now();
@@ -136,16 +138,7 @@ public class InternalConsumer {
 		if (StringUtils.isBlank(msg.getToken())) {
 			log.error("No token present, so aborting , for event! " + event);
 		} else {
-
-			// If the event is a Dropdown then leave it for DropKick
-			if ("DD".equals(msg.getEvent_type())) {
-				return;
-			}
 			events.route(msg);
-
-			if (filter.isFilterBtn(msg)) {
-				filter.handleBtnEvents(msg);
-			}
 		}
 
 		scope.destroy();
@@ -153,30 +146,4 @@ public class InternalConsumer {
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
-	@Incoming("data")
-	@Blocking
-	public void getEventData(String event) {
-		// init scope and process msg
-		Instant start = Instant.now();
-
-		log.info("Received Event : " + SecurityUtils.obfuscate(event));
-
-		QDataAnswerMessage msg = null;
-		try {
-			msg = jsonb.fromJson(event, QDataAnswerMessage.class);
-		} catch (Exception e) {
-			log.error("Cannot parse this event! " + event);
-			e.printStackTrace();
-			return;
-		}
-
-		scope.init(event);
-		if (filter.isValidEvent(msg)) {
-			filter.handleDataEvents(msg);
-		}
-		scope.destroy();
-
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
 }

@@ -2,8 +2,15 @@ package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.message.*;
 import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.utils.*;
+import life.genny.qwandaq.utils.FilterUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
@@ -26,12 +33,10 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QCmdMessage;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.kogito.common.core.Dispatch;
 
 @ApplicationScoped
 public class FilterService {
@@ -55,27 +60,8 @@ public class FilterService {
     @Inject
     SearchUtils searchUtils;
 
-    public static enum Options {
-        PAGINATION,
-        SEARCH,
-        PAGINATION_BUCKET
-    }
-
-    /**
-     * Send the list of bucket codes to frond-end
-     * @param bucketCodes The list of bucket codes
-     */
-    public void sendBucketCodes(List<String> bucketCodes) {
-        QCmdMessage msgProcess = new QCmdMessage(FilterConst.BUCKET_DISPLAY,FilterConst.BUCKET_PROCESS);
-        msgProcess.setToken(userToken.getToken());
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgProcess);
-
-        QCmdMessage msgCodes = new QCmdMessage(FilterConst.BUCKET_CODES,FilterConst.BUCKET_CODES);
-        msgCodes.setToken(userToken.getToken());
-        msgCodes.setSourceCode(FilterConst.BUCKET_CODES);
-        msgCodes.setTargetCodes(bucketCodes);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgCodes);
-    }
+    @Inject
+    Dispatch dispatch;
 
     /**
      * Get the list of bucket codes with session id
@@ -160,69 +146,6 @@ public class FilterService {
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
-
-    /**
-     * handle sorting, searching in the table
-     * @param code Attribute code
-     * @param attrName Attribute name
-     * @param value  Value String
-     * @param targetCode Target code
-     */
-    public void handleSortAndSearch(String code, String attrName,String value, String targetCode, Options ops) {
-        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
-
-        if(ops.equals(Options.SEARCH)) {
-            EntityAttribute ea = createEntityAttributeBySortAndSearch(code, attrName, value);
-
-            if (ea != null && attrName.isBlank()) { //sorting
-                searchBE.removeAttribute(code);
-                searchBE.addAttribute(ea);
-            }
-
-            if (!attrName.isBlank()) { //searching text
-                Filter filter = new Filter(code, Operator.LIKE, value);
-                searchBE.remove(filter);
-                searchBE.add(filter);
-            }
-
-        }else if(ops.equals(Options.PAGINATION) || ops.equals(Options.PAGINATION_BUCKET)) { //pagination
-            Optional<EntityAttribute> aeIndex = searchBE.findEntityAttribute(FilterConst.PAGINATION_INDEX);
-            Integer pageSize = searchBE.getPageSize();
-            Integer indexVal = 0;
-            Integer pagePos = 0;
-
-            if(aeIndex.isPresent() && pageSize !=null) {
-                if(code.equalsIgnoreCase(FilterConst.PAGINATION_NEXT) ||
-                        code.equalsIgnoreCase(FilterConst.QUE_TABLE_LAZY_LOAD)) {
-                    indexVal = aeIndex.get().getValueInteger() + 1;
-                } else if (code.equalsIgnoreCase(FilterConst.PAGINATION_PREV)) {
-                    indexVal = aeIndex.get().getValueInteger() - 1;
-                }
-
-                pagePos = (indexVal - 1) * pageSize;
-            }
-            //initial stage of bucket pagination
-            else if (aeIndex.isEmpty() && code.equalsIgnoreCase(FilterConst.QUE_TABLE_LAZY_LOAD)) {
-                indexVal = 2;
-                pagePos = pageSize;
-            }
-
-            searchBE.setPageStart(pagePos);
-            searchBE.setPageIndex(indexVal);
-        }
-        CacheUtils.putObject(userToken.getProductCode(), targetCode, searchBE);
-
-
-        if(ops.equals(Options.PAGINATION_BUCKET)) {
-            sendCmdMsgByCodeType(FilterConst.BUCKET_DISPLAY, FilterConst.NONE);
-            sendMessageBySearchEntity(searchBE);
-        } else {
-            sendMessageBySearchEntity(searchBE);
-            sendSearchPCM(FilterConst.PCM_TABLE, targetCode);
-        }
-    }
-
-
     /**
      * Handle search text in bucket page
      * @param code Message code
@@ -231,33 +154,25 @@ public class FilterService {
      * @param targetCodes List of target codes
      */
     public void handleBucketSearch(String code, String name,String value, List<String> targetCodes) {
-        sendBucketCodes(targetCodes);
-
         for(String targetCode : targetCodes) {
             SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
             EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
 
             //remove searching text and filter
             Filter searchText = new Filter(code, Operator.LIKE, value);
-            Filter filter = new Filter(FilterConst.PRI_ASSOC_HC, Operator.EQUALS, value);
 
             searchBE.remove(searchText);
-            searchBE.remove(filter);
 
             //searching text
             if (!name.isBlank()) {
                 searchBE.add(new Filter(code, Operator.LIKE, value));
             }
 
-            //filter by select box
-            if (code.equalsIgnoreCase(FilterConst.LNK_PERSON)) {
-                searchBE.add(filter);
-            }
 
             CacheUtils.putObject(userToken.getProductCode(), targetCode, searchBE);
 
             sendMessageBySearchEntity(searchBE);
-            sendSearchPCM(FilterConst.PCM_PROCESS, targetCode);
+            sendSearchPCM(PCM.PCM_PROCESS, targetCode);
         }
     }
 
@@ -274,13 +189,13 @@ public class FilterService {
 
         // searching text
         String newValue = value.replaceFirst("!","");
-        Filter filter = new Filter(FilterConst.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+        Filter filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
         searchBE.remove(filter);
         searchBE.add(filter);
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
         search.sendTable(queCode);
 
     }
@@ -303,16 +218,16 @@ public class FilterService {
         Filter filter = null;
         String newValue = value.replaceFirst("!","");
         if(coded) {
-            filter = new Filter(FilterConst.PRI_CODE, Operator.EQUALS, value);
+            filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
         }else {
-            filter = new Filter(FilterConst.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+            filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
         }
         searchBE.remove(filter);
         searchBE.add(filter);
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
         search.sendTable(queCode);
     }
 
@@ -380,18 +295,6 @@ public class FilterService {
     }
 
     /**
-     * Send filter details by group
-     * @param queGrp Question group
-     * @param queCode Question code
-     * @param filterCode Filter code
-     * @param params Parameters
-     */
-    public void sendFilterDetailsByGroup(String queGrp,String queCode,String filterCode,Map<String, SavedSearch> params) {
-        Ask ask = filterUtils.getFilterDetailsGroup(queGrp,queCode,filterCode, params);
-        sendAsk(ask,queGrp, false);
-    }
-
-    /**
      * Send values of filter columns
      * @param sbeCode SBE code
      */
@@ -421,10 +324,10 @@ public class FilterService {
         String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());
-        msg.setParentCode(FilterConst.QUE_ADD_FILTER_SBE_GRP);
-        msg.setLinkCode(FilterConst.LNK_CORE);
-        msg.setLinkValue(FilterConst.LNK_ITEMS);
-        msg.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
+        msg.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
+        msg.setLinkCode(Attribute.LNK_CORE);
+        msg.setLinkValue(Attribute.LNK_ITEMS);
+        msg.setQuestionCode(Question.QUE_FILTER_OPTION);
         msg.setTargetCode(sbeCodeJti);
         msg.setReplace(true);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
@@ -468,7 +371,7 @@ public class FilterService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  sbeCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
+        String queCode =  sbeCode.replaceFirst(Prefix.SBE,Prefix.QUE);
         search.sendTable(queCode);
     }
 
@@ -540,13 +443,13 @@ public class FilterService {
      */
     public void sendQuickSearch(String queGroup,String queCode,String attCode, String targetCode) {
         Ask ask = new Ask();
-        ask.setName(FilterConst.FILTER_LABEL);
-        Attribute attribute = new Attribute(FilterConst.QUE_QQQ_GROUP,FilterConst.QUE_QQQ_GROUP,new DataType());
-        Question question = new Question(queGroup,FilterConst.FILTER_LABEL,attribute);
+        ask.setName(queGroup);
+        Attribute attribute = new Attribute(Attribute.QQQ_QUESTION_GROUP,Attribute.QQQ_QUESTION_GROUP,new DataType());
+        Question question = new Question(queGroup,queGroup,attribute);
         ask.setQuestion(question);
 
         Ask childAsk = new Ask();
-        childAsk.setName(FilterConst.FILTER_LABEL);
+        childAsk.setName(queCode);
         childAsk.setQuestionCode(queCode);
         Question childQuestion = new Question();
         childQuestion.setAttributeCode(attCode);
@@ -567,11 +470,11 @@ public class FilterService {
         msg.setToken(userToken.getToken());
         msg.setTargetCode(targetCode);
         msg.setQuestionCode(queGroup);
-        msg.setMessage(FilterConst.FILTER_LABEL);
+        msg.setMessage(queGroup);
         msg.setReplace(true);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
 
-        sendQuickSearchItems(FilterConst.SBE_DROPDOWN,queGroup,queCode,FilterConst.PRI_NAME, "");
+        sendQuickSearchItems(SearchEntity.SBE_DROPDOWN,queGroup,queCode,Attribute.PRI_NAME, "");
     }
 
     /**
@@ -616,28 +519,28 @@ public class FilterService {
      * @return Get Search filter by filter value
      */
     public Operator getOperatorByVal(String filterVal){
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN.replaceFirst(Prefix.SEL,""))){
             return Operator.GREATER_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.GREATER_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN.replaceFirst(Prefix.SEL,""))){
             return Operator.LESS_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.LESS_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
             return Operator.NOT_EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE.replaceFirst(Prefix.SEL,""))){
             return Operator.LIKE;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE)){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE.replaceFirst(Prefix.SEL,""))){
             return Operator.NOT_LIKE;
         }
 
@@ -680,7 +583,7 @@ public class FilterService {
      * @param lnkValue Link value
      */
     public void sendListSavedSearches(String group,String code,String lnkCode,String lnkValue) {
-        String sbeCode = FilterConst.SBE_SAVED_SEARCH;
+        String sbeCode = SearchEntity.SBE_SAVED_SEARCH;
         SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeCode,lnkCode,lnkValue, true);
         QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
@@ -727,7 +630,7 @@ public class FilterService {
      * @return The list of dropdown items
      */
     public List<BaseEntity> getListSavedSearches(String sbeCode,String lnkCode,String lnkValue) {
-        String sbeJti = getSearchBaseEntityCodeByJTI(FilterConst.SBE_SAVED_SEARCH);
+        String sbeJti = getSearchBaseEntityCodeByJTI(SearchEntity.SBE_SAVED_SEARCH);
         SearchEntity search = filterUtils.getListSavedSearch(sbeJti,lnkCode,lnkValue, true);
         List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
         return bases;
@@ -777,7 +680,7 @@ public class FilterService {
         BaseEntity base = beUtils.getBaseEntity(pcmCode);
 
         for(EntityAttribute ea : base.getBaseEntityAttributes()) {
-            if(ea.getAttributeCode().equalsIgnoreCase(FilterConst.PRI_LOC1)) {
+            if(ea.getAttributeCode().equalsIgnoreCase(PCM.location(1))) {
                 ea.setValue(attCode);
                 ea.setValueString(attCode);
             }
@@ -803,8 +706,8 @@ public class FilterService {
             valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
 
             StringBuilder lblBuild = new StringBuilder(att.getName() + FilterConst.SEPARATOR);
-            lblBuild.append(ss.getOperator().replaceFirst(FilterConst.SEL_PREF, "").replaceAll("_"," "));
-            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(FilterConst.SEL_PREF, ""));
+            lblBuild.append(ss.getOperator().replaceFirst(Prefix.SEL, "").replaceAll("_"," "));
+            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(Prefix.SEL, ""));
 
             EntityAttribute ea = new EntityAttribute(base, att, 1.0);
             ea.setAttributeName(lblBuild.toString());
@@ -917,12 +820,12 @@ public class FilterService {
      */
     public void init(String queCode) {
         clearParamsInCache();
-        String sbe = queCode.replaceFirst(FilterConst.QUE_PREF,FilterConst.SBE_PREF);
+        String sbe = queCode.replaceFirst(Prefix.QUE,Prefix.SBE);
         sendFilterColumns(sbe);
         CacheUtils.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
 
-        sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
-                FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
+        sendListSavedSearches(Question.QUE_SAVED_SEARCH_SELECT_GRP,
+                Question.QUE_SAVED_SEARCH_SELECT, Attribute.PRI_NAME,FilterConst.VALUE);
 
     }
 
@@ -960,5 +863,92 @@ public class FilterService {
     public String getCachedAnswerKey() {
         String key = FilterConst.LAST_ANSWERS_MAP + ":" + userToken.getUserCode();
         return key;
+    }
+
+    /**
+     * Build process data
+     * @return Process data
+     */
+    public ProcessData  buildProcessData() {
+        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
+
+        // construct
+        ProcessData processData = new ProcessData();
+        processData.setSourceCode(userToken.getUserCode());
+        processData.setTargetCode(userToken.getUserCode());
+
+        // set pcm
+        processData.setPcmCode(PCM.PCM_PROCESS);
+        processData.setParent(PCM.PCM_CONTENT);
+        processData.setLocation(PCM.location(1));
+
+        // get target
+        BaseEntity target = beUtils.getBaseEntity(userToken.getUserCode());
+
+        // build and send data
+        QBulkMessage msg = dispatch.build(processData, pcm);
+        msg.add(target);
+        dispatch.sendData(msg);
+
+        return processData;
+    }
+    /**
+     * handle filter by string in the table
+     * @param params List of filter parameters
+     */
+    public void handleFilterBucket(Map<String,SavedSearch> params) {
+        ProcessData  processData = buildProcessData();
+
+        // send searches
+        for (String code : processData.getSearches()) {
+            log.info("Sending search: " + code);
+
+            String sessionCode = searchUtils.sessionSearchCode(code);
+            String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
+
+            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+            excludeExtraFilterBySearchBE(searchBE);
+
+            // add conditions by filter parameters
+            setFilterParams(searchBE,params);
+
+            CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+
+            searchUtils.searchTable(code);
+        }
+    }
+
+    /**
+     * Handle quick search
+     * @param value Value
+     * @param coded being coded or not
+     */
+    public void handleQuickSearchDropdownByBucket(String value,boolean coded) {
+        ProcessData  processData = buildProcessData();
+
+        // send searches
+        for (String code : processData.getSearches()) {
+            String sessionCode = searchUtils.sessionSearchCode(code);
+            String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
+
+            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+
+            clearFilters(searchBE);
+
+            // searching by text or search by code
+            Filter filter = null;
+            String newValue = value.replaceFirst("!", "");
+            if (coded) {
+                filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
+            } else {
+                filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+            }
+            searchBE.remove(filter);
+            searchBE.add(filter);
+
+            CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+
+            searchUtils.searchTable(code);
+        }
     }
 }
