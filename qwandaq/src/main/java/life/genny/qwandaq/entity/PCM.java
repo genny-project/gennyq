@@ -36,6 +36,8 @@ public class PCM extends BaseEntity {
 	public static final String PCM_DETAIL_VIEW = "PCM_DETAIL_VIEW";
 	public static final String PCM_PROCESS = "PCM_PROCESS";
 	public static final String PCM_EVENTS = "PCM_EVENTS";
+	public static final String PCM_SBE_ADD_SEARCH = "PCM_SBE_ADD_SEARCH";
+	public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
 
 	public PCM(String code, String name) {
 		super(code, name);
@@ -66,12 +68,10 @@ public class PCM extends BaseEntity {
 	public void addStringAttribute(String code, String name, Double weight, String value) {
 
 		if (findEntityAttribute(code).isPresent()) {
-			log.info("[/] Attribute Present for " + code);
 			setValue(code, value);
 			return;
 		}
 
-		log.info("[X] Attribute NOT Present for " + code);
 		Attribute attribute = new Attribute(code, name, new DataType(String.class));
 		EntityAttribute ea = new EntityAttribute();
 		ea.setAttribute(attribute);

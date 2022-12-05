@@ -127,10 +127,18 @@ public class ProcessAnswers {
 			String currentValue = target.getValueAsString(attributeCode);
 			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
 
+			// check if name needs updating
+			if (Attribute.PRI_NAME.equals(attributeCode)) {
+				String name = answer.getValue();
+				log.debug("Updating BaseEntity Name Value -> " + name);
+				target.setName(name);
+				continue;
+			}
+
 			// update the baseentity
 			target.addAnswer(answer);
 			String value = target.getValueAsString(answer.getAttributeCode());
-			log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
+			log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 		}
 
 		// save these answrs to db and cache

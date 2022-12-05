@@ -32,7 +32,7 @@ public interface ICapabilityFilterable {
         Set<Capability> checkCaps = capabilityRequirements;
 
         if(checkCaps == null || checkCaps.isEmpty()) {
-            getLogger().info("No capabilityRequirements found!");
+            getLogger().debug("No capabilityRequirements found!");
             return true;
         }
 
@@ -40,7 +40,7 @@ public interface ICapabilityFilterable {
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
         boolean requiresAllModes = requirementsConfig.needsAllModes();
 
-        getLogger().info("Testing Capability Config: { AllCaps: " + requiresAllCaps + ", AllModes: " + requiresAllModes + "}");
+        getLogger().debug("Testing Capability Config: { AllCaps: " + requiresAllCaps + ", AllModes: " + requiresAllModes + "}");
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks

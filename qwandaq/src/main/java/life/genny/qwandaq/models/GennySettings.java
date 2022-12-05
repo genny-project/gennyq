@@ -162,4 +162,35 @@ public class GennySettings {
 	public static Integer executorThreadCount() {
 		return Integer.parseInt(getConfig("EXECUTOR_THREAD_COUNT", "200"));
 	}
+
+
+	/**
+	 * Get minIO server url
+	 * @return String
+	 */
+	public static String minIOServerUrl() {
+		return getConfig("MINIO_SERVER_URL", "http://localhost:9000", true);
+	}
+
+	/**
+	 * Get minIO access key
+	 * @return String
+	 */
+	public static String minIOAccessKey() {
+		return getConfig("MINIO_ACCESS_KEY", "accessKey", true);
+	}
+	/**
+	 * Get minIO secret key
+	 * @return String
+	 */
+	public static String minIOSecretKey() {
+		return getConfig("MINIO_SECRET_KEY", "secretKey", true);
+	}
+	/**
+	 * Get minIO bucket name
+	 * @return String
+	 */
+	public static String minIOBucketName() {
+		return getConfig("BUCKET_NAME", "media", true);
+	}
 }

@@ -16,6 +16,7 @@ public class Prefix {
 	// baseentity
 	public static final String PER = "PER_";
 	public static final String CPY = "CPY_";
+	public static final String MSG = "MSG_";
 
 	// attribute
 	public static final String PRI = "PRI_";
@@ -27,7 +28,7 @@ public class Prefix {
 	public static final String ATT = "ATT_";
 	public static final String DFT = "DFT_";
 	public static final String SER = "SER_";
-	public static final String DEP = "SER_";
+	public static final String DEP = "DEP_";
 
 	// pcm
 	public static final String TPL = "TPL_";
@@ -42,6 +43,10 @@ public class Prefix {
 	public static final String COL = "COL_";
 	public static final String ACT = "ACT_";
 	public static final String SRT = "SRT_";
+
+	// Table
+	public static final String QUE_TABLE_PREF = "QUE_TABLE_";
+	public static final String FIELD="FIELD_";
 
 }
 

@@ -109,7 +109,7 @@ public class QwandaUtils {
 
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
 		CacheUtils.putObject(userToken.getProductCode(), key, asks.toArray());
-		log.info("Asks cached for " + processData.getProcessId());
+		log.trace("Asks cached for " + processData.getProcessId());
 	}
 
 	/**
@@ -172,6 +172,7 @@ public class QwandaUtils {
 		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
 
 		if (attribute == null) {
+			// TODO: We may need to make a cached everything check here to avoid recaching everything in the event we go looking for a dud attribute code
 			log.error("Could not find attribute " + attributeCode + " in cache: " + productCode);
 			loadAllAttributesIntoCache(productCode);
 		}
@@ -311,7 +312,7 @@ public class QwandaUtils {
 		// check if it is a question group
 		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
 
-			log.info("[*] Parent Question: " + question.getCode());
+			log.info("[*] Building Question Group: " + question.getCode());
 
 			// groups always readonly
 			ask.setReadonly(true);
@@ -323,7 +324,7 @@ public class QwandaUtils {
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
 
-				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
+				log.debug("   [-] Found Child Question:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
 				if(requirementsConfig != null) {
 					if(!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
@@ -348,7 +349,6 @@ public class QwandaUtils {
 				if (questionQuestion.getIcon() != null) {
 					child.getQuestion().setIcon(questionQuestion.getIcon());
 				}
-				log.info("Adding: " + child.getQuestionCode());
 				ask.add(child);
 			}
 		} else {
@@ -466,8 +466,6 @@ public class QwandaUtils {
 	 * @return
 	 */
 	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
-		target.getBaseEntityAttributes().stream()
-				.forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
 		for (String d : dependencies) {
 			if (!target.getValue(d).isPresent())
 				return false;
@@ -489,9 +487,8 @@ public class QwandaUtils {
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
 			Ask targetAsk = flatMapAsks.get(attributeCode);
-			if (targetAsk == null) {
+			if (targetAsk == null)
 				continue;
-			}
 
 			String[] dependencies = CommonUtils.cleanUpAttributeValue(dep.getValueString()).split(",");
 
@@ -515,8 +512,7 @@ public class QwandaUtils {
 		// find all the mandatory booleans
 		Boolean answered = true;
 
-		// iterate entity attributes to check which have been answered
-		// for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
+		// iterate asks to see if mandatorys are answered
 		for (Ask ask : map.values()) {
 
 			String attributeCode = ask.getQuestion().getAttribute().getCode();
@@ -550,16 +546,12 @@ public class QwandaUtils {
 
 		// add current ask attribute code to map
 		map.put(ask.getQuestion().getAttribute().getCode(), ask.getMandatory());
-
 		// ensure child asks is not null
-		if (ask.getChildAsks() == null) {
+		if (ask.getChildAsks() == null)
 			return map;
-		}
-
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildAsks()) {
+		for (Ask child : ask.getChildAsks())
 			map = recursivelyFillMandatoryMap(map, child);
-		}
 
 		return map;
 	}
@@ -586,14 +578,11 @@ public class QwandaUtils {
 		}
 
 		// ensure child asks is not null
-		if (ask.hasChildren()) {
+		if (ask.hasChildren())
 			return set;
-		}
-
 		// recursively add child ask attribute codes
-		for (Ask child : ask.getChildAsks()) {
+		for (Ask child : ask.getChildAsks())
 			set = recursivelyFillFlatSet(set, child);
-		}
 
 		return set;
 	}
@@ -609,7 +598,7 @@ public class QwandaUtils {
 		String key = String.format("%s:PROCESS_DATA", processData.getProcessId());
 
 		CacheUtils.putObject(productCode, key, processData);
-		log.infof("ProcessData cached to %s", key);
+		log.tracef("ProcessData cached to %s", key);
 	}
 
 	/**
@@ -623,7 +612,7 @@ public class QwandaUtils {
 		String key = String.format("%s:PROCESS_DATA", processId);
 
 		CacheUtils.removeEntry(productCode, key);
-		log.infof("ProcessData removed from cache: %s", key);
+		log.tracef("ProcessData removed from cache: %s", key);
 	}
 
 	/**

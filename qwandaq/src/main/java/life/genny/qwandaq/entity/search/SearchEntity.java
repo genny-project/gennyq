@@ -48,6 +48,10 @@ public class SearchEntity extends BaseEntity {
 		SENDABLE_TRAIT_TYPES.put(Action.class, Action.PREFIX);
     }
 
+	public static final String SBE_SAVED_SEARCH = "SBE_SAVED_SEARCH";
+	public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
+	public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
+	public static final String SBE_PROCESS = "SBE_PROCESS";
 
 	private static final Logger log = Logger.getLogger(SearchEntity.class);
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -612,6 +616,30 @@ public class SearchEntity extends BaseEntity {
 			traits.put(Column.class, columns);
 		}
 		columns.add(trait);
+		return this;
+	}
+
+	/**
+	 * Remove filter object from clause container
+	 * @param filter Filter object
+	 * @return Search entity after removing filter
+	 */
+	public SearchEntity remove(Filter filter) {
+		boolean found = false;
+		int index = 0;
+
+		for(ClauseContainer clause : this.clauseContainers) {
+			if(clause.getFilter().getCode().equalsIgnoreCase(filter.getCode())
+					&& clause.getFilter().getOperator().name().equalsIgnoreCase(filter.getOperator().name())) {
+				found = true;break;
+			}
+			index++;
+		}
+
+		if(found) {
+			this.clauseContainers.remove(index);
+		}
+
 		return this;
 	}
 

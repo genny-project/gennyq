@@ -75,14 +75,14 @@ public class CapabilitiesManager extends Manager {
 	public ReqConfig getUserCapabilities(boolean requiresAllCaps, boolean requiresAllModes) {
 		// this is a necessary log, since we are trying to minimize how often this function is called
 		// it is good to see how often it comes up
-		info("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
+		debug("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		BaseEntity userBE = beUtils.getUserBaseEntity();
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
 		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
-			info("User Roles:");
+			debug("User Roles:");
 			BaseEntity role = roles.get(0);
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
@@ -137,7 +137,7 @@ public class CapabilitiesManager extends Manager {
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
-		info("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
+		debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
 		}

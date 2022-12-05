@@ -5,7 +5,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.utils.HttpUtils;
+import life.genny.qwandaq.utils.LogUtils;
 
 public class GennyResponseException extends GennyRuntimeException {
     
@@ -41,7 +41,7 @@ public class GennyResponseException extends GennyRuntimeException {
         log.debug(token);
 		if (requestHeaders != null) {
 			log.debug("======== RESPONSE HEADERS ===========");
-			// HttpUtils.logHeaders(log::debug, responseHeaders);
+			// LogUtils.logHeaders(log::debug, responseHeaders);
 		}
 
         super.printStackTrace();
