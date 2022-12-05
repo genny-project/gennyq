@@ -653,21 +653,16 @@ public class QwandaUtils {
 
 			// check for existing attribute in target
 			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
-
-				log.info("[" + code + "]");
-
 				// otherwise create new attribute
 				Attribute attribute = getAttribute(code);
-				Object value = null;
-				// default toggles to false
-				String className = attribute.getDataType().getClassName();
-
-				log.info("className = [" + className + "]");
-				if (className.contains("Boolean") || className.contains("bool"))
-					value = false;
-
-				return new EntityAttribute(processEntity, attribute, 1.0, value);
+				return new EntityAttribute(processEntity, attribute, 1.0, null);
 			});
+
+			Attribute attribute = ea.getAttribute();
+			String className = attribute.getDataType().getClassName();
+
+			if (className.contains("Boolean") || className.contains("bool")) 
+				ea.setValue(false);
 
 			processEntity.addAttribute(ea);
 		}
