@@ -91,8 +91,6 @@ public class InternalConsumer {
 		List<Answer> answers = kogitoUtils.runDataInference(data);
 		if (answers.isEmpty())
 			log.warn("[!] No answers after inference");
-		// else
-		// kogitoUtils.funnelAnswers(answers);
 
 		Optional<Answer> searchText = answers.stream()
 				.filter(ans -> ans.getAttributeCode().equals(Attribute.PRI_SEARCH_TEXT))
@@ -113,7 +111,7 @@ public class InternalConsumer {
 		scope.destroy();
 		// log duration
 		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+		log.trace("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	/**
@@ -145,7 +143,7 @@ public class InternalConsumer {
 
 		scope.destroy();
 		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+		log.trace("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 }

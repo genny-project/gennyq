@@ -312,11 +312,9 @@ public class QwandaUtils {
 		// check if it is a question group
 		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
 
-			log.info("[*] Building Question Group: " + question.getCode());
-
+			log.debug("[*] Building Question Group: " + question.getCode());
 			// groups always readonly
 			ask.setReadonly(true);
-
 			// fetch questionQuestions from the DB
 			List<QuestionQuestion> questionQuestions = databaseUtils.findQuestionQuestionsBySourceCode(productCode,
 					question.getCode());
@@ -527,10 +525,10 @@ public class QwandaUtils {
 				answered = false;
 
 			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
-			log.info("===> " + resultLine);
+			log.debug("===> " + resultLine);
 		}
 
-		log.info("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
+		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
 
 		return answered;
 	}
@@ -641,12 +639,12 @@ public class QwandaUtils {
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 
 		// init entity and force the realm
-		log.info("Creating Process Entity " + processData.getProcessEntityCode() + "...");
+		log.debug("Creating Process Entity " + processData.getProcessEntityCode() + "...");
 		BaseEntity processEntity = new BaseEntity(processData.getProcessEntityCode(), target.getName());
 		processEntity.setRealm(userToken.getProductCode());
 
 		List<String> attributeCodes = processData.getAttributeCodes();
-		log.info("Found " + attributeCodes.size() + " active attributes in asks");
+		log.debug("Found " + attributeCodes.size() + " active attributes in asks");
 
 		// add an entityAttribute to process entity for each attribute
 		for (String code : attributeCodes) {
@@ -678,7 +676,7 @@ public class QwandaUtils {
 			processEntity.addAnswer(answer);
 		});
 
-		log.info("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
+		log.debug("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
 
 		return processEntity;
 	}

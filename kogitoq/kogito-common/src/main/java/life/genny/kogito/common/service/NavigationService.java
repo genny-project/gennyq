@@ -95,7 +95,6 @@ public class NavigationService {
 		try {
 			String processId = kogitoUtils.getOutstandingTaskProcessId();
 			kogitoUtils.sendSignal(GADAQ, "processQuestions", processId, "requestion");
-			log.info("Outstanding task triggered");
 			return;
 		} catch (GraphQLException e) {
 			log.debug(e.getMessage());
@@ -112,7 +111,6 @@ public class NavigationService {
 			msg.getData().setTargetCode(userToken.getUserCode());
 			msg.setToken(userToken.getToken());
 			KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
-			log.info("Role Redirect sent");
 			return;
 		} catch (RoleException e) {
 			log.warn(e.getMessage());

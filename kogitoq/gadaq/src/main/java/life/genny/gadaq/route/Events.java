@@ -188,7 +188,6 @@ public class Events {
 			code = StringUtils.removeStart(code, "QUE_ADD_");
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
 
-			log.info("Prefix: " + code);
 			if ("PER".equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
 						.add("definitionCode", "DEF_".concat(code))

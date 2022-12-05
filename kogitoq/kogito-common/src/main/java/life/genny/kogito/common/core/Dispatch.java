@@ -258,7 +258,7 @@ public class Dispatch {
 			log.warn("User " + userToken.getUserCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
-		log.info("Traversing " + pcm.getCode());
+		log.debug("Traversing " + pcm.getCode());
 
 		// check for a question code
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
