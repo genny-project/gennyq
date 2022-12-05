@@ -272,6 +272,8 @@ public class Dispatch {
 				Map<String, Object> ctxMap = new HashMap<>();
 				ctxMap.put("TARGET", target);
 				targetCode = MergeUtils.merge(targetCode, ctxMap);
+				// update targetCode so it does not re-trigger merging
+				pcm.setTargetCode(targetCode);
 				// providing a null parent & location since it is already set in the parent
 				tasks.dispatch(source.getCode(), targetCode, pcm, null, null);
 				return;
