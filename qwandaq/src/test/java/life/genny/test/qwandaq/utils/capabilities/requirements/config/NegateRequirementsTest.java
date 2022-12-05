@@ -19,10 +19,10 @@ public class NegateRequirementsTest extends BaseRequirementsTest {
     }    
     
     @Test
-    public void baseCascadeTest() {
+    public void baseNegateTest() {
         ICapabilityFilterable filterable = createFilterable(
             // test to make sure user *doesn't* have VIEW:SELF in CAP_TENANT
-            CapabilityBuilder("CAP_TENANT").view(SELF).buildCap() 
+            CapabilityBuilder("CAP_TENANT").view(SELF, true).buildCap() 
         );
 
         new JUnitTester<ReqConfig, Boolean>()
@@ -36,6 +36,7 @@ public class NegateRequirementsTest extends BaseRequirementsTest {
                     .cascadePermissions(true)
                     .build()
         )
+        
         .setExpected(true)
         .build()
 

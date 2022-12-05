@@ -4,26 +4,41 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
 
 public class ReqConfig {
+	private static final Logger log = Logger.getLogger(ReqConfig.class.getCanonicalName());
 
     // More synchronization of methods that instantiate a ReqConfig
     public static final boolean DEFAULT_ALL_CAPS = true;
     public static final boolean DEFAULT_ALL_MODES = true;
     public static final boolean DEFAULT_CASCADE_PERMS = true;
     
+	/**
+	 * Whether or not all Capabilities are required to pass the check (for multiple capability requirements)
+	 */
     private boolean requiresAllCaps;
-    private boolean requiresAllModes;
+
+	/**
+	 * Whether or not all capability nodes are required or at least one to pass a single capability check
+	 */
+    private boolean requiresAllNodes;
+
+	/**
+	 * Whether or not to cascade the permission modes on a single capability node.
+	 * e.g a capabilityNode with PermissionMode of ALL and cascading permissions will have:
+	 * <ul>
+	 * 	<li>ALL</li>
+	 *  <li>SELF</li>
+	 *  <li>NONE</li>
+	 * </ul>
+	 */
     private boolean cascadePermissions;
 
 	public ReqConfig() {
@@ -40,7 +55,7 @@ public class ReqConfig {
 
     public ReqConfig(boolean requiresAllCaps, boolean requiresAllModes, boolean cascadePermissions) {
         this.requiresAllCaps = requiresAllCaps;
-        this.requiresAllModes = requiresAllModes;
+        this.requiresAllNodes = requiresAllModes;
         this.cascadePermissions = cascadePermissions;
     }
 
@@ -50,56 +65,45 @@ public class ReqConfig {
 	}
 
 	/**
-	 * Check a single EntityAttribute capability if it has one or all of given
+	 * Check a single capability's nodes if it has one or all of the given
 	 * capability modes
 	 * 
-	 * @param capability
-	 * @param hasAll
-	 * @param checkModes
-	 * @return
-	 */
-	public boolean checkCapability(EntityAttribute capability, Collection<CapabilityNode> checkModes) {
-		if (StringUtils.isBlank(capability.getValueString())) {
-			return false;
-		}
-
-		String modeString = capability.getValueString();
-		Set<CapabilityNode> nodes = CapabilitiesManager.deserializeCapSet(modeString);
-
-		return checkCapability(nodes, checkModes.toArray(new CapabilityNode[0]));
-	}
-
-    // public boolean checkCapability(Collection<Capability> targetNodes, Collection<CapabilityNode> checkModes) {
-    //     return checkCapability(targetNodes, checkModes.toArray(new CapabilityNode[0]));
-    // }
-
-	public boolean checkCapability(Collection<CapabilityNode> userNodes, CapabilityNode... checkModes) {
-		if (checkModes == null || checkModes.length == 0)
+	 * @param userNodes - 
+	 * @param checkNodes - modes to check the usernodes for, according to this RequirementsConfig
+	 * @return whether or not these userNodes pass the checkModes according to this RequirementsConfig
+	 * 
+	 * @see {@link ReqConfig#requiresAllCaps}, {@link ReqConfig#requiresAllNodes}, {@link ReqConfig#cascadePermissions} 
+	 */	
+	public boolean checkCapability(Collection<CapabilityNode> userNodes, CapabilityNode... checkNodes) {
+		if (checkNodes == null || checkNodes.length == 0)
 			return true;
 
 		if (cascadePermissions)
             userNodes = cascadeCapabilities(userNodes);
 
-		System.out.println("User Nodes: " + CommonUtils.getArrayString(userNodes));
-
-		if (requiresAllModes) {
-			for (CapabilityNode checkMode : checkModes) {
-				boolean hasMode = userNodes.contains(checkMode);
+		if (requiresAllNodes) {
+			for (CapabilityNode checkNode : checkNodes) {
+				boolean hasMode = userNodes.contains(checkNode);
 				if (!hasMode) {
 					return false;
+				} else {
+					// if the checkNode exists in the user nodes
+					// and the checkNode is negating we don't want it 
+					if(checkNode.negate)
+						return false;
 				}
 			}
 
 			return true;
 		} else {
-			for (CapabilityNode checkMode : checkModes) {
-				boolean hasMode = userNodes.contains(checkMode);
-				if (hasMode) {
+			for (CapabilityNode checkNode : checkNodes) {
+				boolean hasMode = userNodes.contains(checkNode);
+				if (hasMode && !checkNode.negate) {
 					return true;
 				}
 			}
 
-			System.out.println("Doesn't have at least one of " + CommonUtils.getArrayString(checkModes) + " in "
+			log.debug("Doesn't have at least one of " + CommonUtils.getArrayString(checkNodes) + " in "
 					+ CommonUtils.getArrayString(userNodes));
 			return false;
 		}
@@ -124,8 +128,8 @@ public class ReqConfig {
         return requiresAllCaps;
     }
 
-    public boolean needsAllModes() {
-        return requiresAllModes;
+    public boolean needsAllNodes() {
+        return requiresAllNodes;
     }
 
     public boolean cascadePermissions() {
@@ -133,7 +137,7 @@ public class ReqConfig {
     }
 
     public void setAllModes(boolean requiresAllModes) {
-        this.requiresAllModes = requiresAllModes;
+        this.requiresAllNodes = requiresAllModes;
     }
 
     public void setAllCaps(boolean requiresAllCaps) {
@@ -143,8 +147,8 @@ public class ReqConfig {
     public String toString() {
         return new StringBuilder("[RequirementsConfig: {allCaps: ")
         .append(requiresAllCaps)
-        .append(", allModes: ")
-        .append(requiresAllModes)
+        .append(", allNodes: ")
+        .append(requiresAllNodes)
         .append(", cascade: ")
         .append(cascadePermissions)
         .append("}")
@@ -160,8 +164,8 @@ public class ReqConfig {
 			return this;
 		}
 
-		public Builder allModes(boolean requiresAllModes) {
-			reqConfig.requiresAllModes = requiresAllModes;
+		public Builder allNodes(boolean requiresAllNodes) {
+			reqConfig.requiresAllNodes = requiresAllNodes;
 			return this;
 		}
 

@@ -20,36 +20,6 @@ public class CapabilityNode {
 	public static final String DELIMITER = ":";
 	public static final String NEGATE_IDENTIFIER = "!";
 
-	// // Some optimisation through statics
-	// private static final Map<CapabilityMode, Map<PermissionMode, CapabilityNode>> NODE_MAP = new EnumMap<>(CapabilityMode.class);
-	// static {
-	// 	for(CapabilityMode mode : CapabilityMode.values()) {
-	// 		Map<PermissionMode, CapabilityNode> scopeMap = new EnumMap<>(PermissionMode.class);
-	// 		for(PermissionMode scope : PermissionMode.values()) {
-	// 			scopeMap.put(scope, new CapabilityNode(mode, scope));
-	// 		}
-	// 		NODE_MAP.put(mode, scopeMap);
-	// 	}
-	// 	log.info("Init " + (CapabilityMode.values().length * PermissionMode.values().length) + " CapabilityNodes");
-	// }
-
-	// public static CapabilityNode get(CapabilityMode mode, PermissionMode scope) {
-	// 	return NODE_MAP.get(mode).get(scope);
-	// }
-
-	// public static CapabilityNode get(CapabilityMode mode) {
-	// 	return get(mode, PermissionMode.SELF);
-	// }
-
-	// public static CapabilityNode get(Entry<CapabilityMode, PermissionMode> node) {
-	// 	return get(node.getKey(), node.getValue());
-	// }
-
-	// public static CapabilityNode get(char modeId, char permId) {
-	// 	return get(CapabilityMode.getByIdentifier(modeId),
-	// 		PermissionMode.getByIdentifier(permId));
-	// }
-
 	/**
 	 * This capability's mode
 	 */
@@ -134,7 +104,7 @@ public class CapabilityNode {
 	/**
 	 * Parse a new capability given a String such as
 	 * <pre>
-	 * VIEW:ALL
+	 * V:A
 	 * </pre>
 	 * 
 	 * Each component of the string is to be separated by {@link CapabilityNode#DELIMITER} (currently ':')
@@ -211,7 +181,6 @@ public class CapabilityNode {
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder()
-			.append(negate)
 			.append(capMode.getIdentifier())
 			.append(permMode.getIdentifier())
 			.build();
