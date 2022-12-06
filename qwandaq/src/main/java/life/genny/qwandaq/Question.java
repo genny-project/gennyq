@@ -74,7 +74,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 				"realm" }))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@Inheritance(strategy = InheritanceType.JOINED)
+//@Inheritance(strategy = InheritanceType.JOINED)
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 
 @RegisterForReflection
