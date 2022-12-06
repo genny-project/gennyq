@@ -45,6 +45,14 @@ public class SearchCaching {
 				new SearchEntity("SBE_SER_LNK_GENDER_SELECT", "Select Gender Dropdown")
 						.setLinkValue("GENDER"));
 
+		// DEF_BALI_PERSON
+		cacheDropdown("DEF_BALI_PERSON",
+				new SearchEntity("SBE_SER_LNK_LANGUAGES", "Languages Dropdown")
+						.setLinkValue("LANGUAGES"));
+		cacheDropdown("DEF_BALI_PERSON",
+				new SearchEntity("SBE_SER_LNK_GENDER_SELECT", "Select Gender Dropdown")
+						.setLinkValue("GENDER"));
+
 		// DEF_COMPANY
 		cacheDropdown("DEF_COMPANY",
 				new SearchEntity("SBE_SER_LNK_SPECIFY_ABN", "Specify ABN Dropdown")
