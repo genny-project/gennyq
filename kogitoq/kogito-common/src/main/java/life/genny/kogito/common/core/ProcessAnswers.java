@@ -86,8 +86,14 @@ public class ProcessAnswers {
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
 	public Boolean checkUniqueness(ProcessData processData) {
+		List<BaseEntity> definitions = new ArrayList<>();
 
-		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+		List<String> defCodes = processData.getDefCodes();
+		for (String defCode : defCodes) {
+			BaseEntity def = beUtils.getBaseEntity(defCode);
+			definitions.add(def);
+		}
+
 		List<Answer> answers = processData.getAnswers();
 
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -100,7 +106,7 @@ public class ProcessAnswers {
 		String attributeCode = answer.getAttributeCode();
 
 		Boolean acceptSubmission = true;
-		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
+		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
 			String parentCode = processData.getQuestionCode();

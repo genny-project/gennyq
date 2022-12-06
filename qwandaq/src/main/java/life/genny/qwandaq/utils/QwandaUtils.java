@@ -52,7 +52,8 @@ import life.genny.qwandaq.validation.Validation;
 public class QwandaUtils {
 
 	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
-	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT, Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
+	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT,
+			Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
 
@@ -84,8 +85,8 @@ public class QwandaUtils {
 	private void init() {
 		// Attribute submit = getAttribute("EVT_SUBMIT");
 		// if (submit == null) {
-		// 	log.error("Could not find Attribute: EVT_SUBMIT");
-		// 	return;
+		// log.error("Could not find Attribute: EVT_SUBMIT");
+		// return;
 		// }
 		// DTT_EVENT = submit.getDataType();
 	}
@@ -270,7 +271,8 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target,
+			ReqConfig requirementsConfig) {
 		if (question == null)
 			throw new NullParameterException("question");
 		if (source == null)
@@ -287,7 +289,6 @@ public class QwandaUtils {
 		if ("QUE_BASEENTITY_GRP".equals(question.getCode())) {
 			return generateAskGroupUsingBaseEntity(target);
 		}
-
 
 		// override with Attribute icon if question icon is null
 		if (attribute != null && attribute.getIcon() != null) {
@@ -313,8 +314,10 @@ public class QwandaUtils {
 
 				log.info("   [-] Found Child Question in database:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
-				if(requirementsConfig != null) {
-					if(!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
+				if (requirementsConfig != null) {
+					if (!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll
+																					// make this more comprehensive
+																					// later
 						continue;
 					}
 				}
@@ -360,11 +363,13 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target,
+			ReqConfig requirementsConfig) {
 
 		if (code == null)
 			throw new NullParameterException("code");
-		// don't need to check source, target since they are checked in generateAskFromQuestion
+		// don't need to check source, target since they are checked in
+		// generateAskFromQuestion
 
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if ("QUE_BASEENTITY_GRP".equals(code)) {
@@ -492,7 +497,7 @@ public class QwandaUtils {
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), "DEP_");
 			Ask targetAsk = flatMapAsks.get(attributeCode);
-			if(targetAsk == null) {
+			if (targetAsk == null) {
 				continue;
 			}
 
@@ -509,7 +514,7 @@ public class QwandaUtils {
 	/**
 	 * Check if all Ask mandatory fields are answered for a BaseEntity.
 	 *
-	 * @param asks        The ask to check
+	 * @param asks       The ask to check
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
@@ -811,11 +816,11 @@ public class QwandaUtils {
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
 									Prefix.PRI), Prefix.LNK);
 
-				Question childQues = new Question(questionCode, attribute.getName(), attribute);
-				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
+					Question childQues = new Question(questionCode, attribute.getName(), attribute);
+					Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-				childAsks.add(childAsk);
-			});
+					childAsks.add(childAsk);
+				});
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
@@ -842,15 +847,26 @@ public class QwandaUtils {
 
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * 
 	 * @param definition The definition to check against
-	 * @param answer An incoming answer
-	 * @param targets The target entities to check, usually processEntity and original target
+	 * @param answer     An incoming answer
+	 * @param targets    The target entities to check, usually processEntity and
+	 *                   original target
 	 * @return Boolean
 	 */
-	public Boolean isDuplicate(BaseEntity definition, Answer answer, BaseEntity... targets) {
+	public Boolean isDuplicate(List<BaseEntity> definitions, Answer answer, BaseEntity... targets) {
 
 		// Check if attribute code exists as a UNQ for the DEF
-		List<EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
+		List<EntityAttribute> uniques = new ArrayList<>();
+		BaseEntity definition = null;
+		for (BaseEntity defBE : definitions) {
+			List<EntityAttribute> uniqueAttributes = defBE.findPrefixEntityAttributes("UNQ");
+			if ((uniqueAttributes != null) && (!uniqueAttributes.isEmpty())) {
+				uniques.addAll(uniqueAttributes);
+				definition = defBE;
+			}
+
+		}
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
