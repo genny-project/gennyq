@@ -232,7 +232,8 @@ public class KogitoUtils {
 		json = builder.build();
 
 		// select uri
-		String uri = selectServiceURI(useService) + "/" + id;
+		// String uri = selectServiceURI(useService) + "/" + id;
+		String uri = "http://localhost:8080/" + id;
 		log.info("Triggering workflow with uri: " + uri);
 
 		// make post request

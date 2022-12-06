@@ -253,6 +253,10 @@
 			<artifactId>smallrye-mutiny-vertx-sql-client</artifactId>
 			<version>3.0.0-milestone1</version>
 		</dependency>
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-reactive-routes</artifactId>
+		</dependency>
 		<!-- Nice little reflections library (To be used sparingly) -->
 		<dependency>
 			<groupId>org.reflections</groupId>
