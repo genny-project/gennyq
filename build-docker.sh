@@ -1,7 +1,7 @@
 #!/bin/bash
 VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
 echo "Project Version: $VERSION"
-
+./say.sh "Building: $VERSION"
 if [ "$#" -ge 1 ]; then
 	dependencies=( )
 	projects=( $@ )

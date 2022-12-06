@@ -23,6 +23,10 @@
 		<keycloak.version>15.0.2</keycloak.version>
 		<keycloak.test.port>8680</keycloak.test.port>
 		<mysql.test.port>3333</mysql.test.port>
+
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.release>17</maven.compiler.release>
 	</properties>
 
 	<dependencyManagement>

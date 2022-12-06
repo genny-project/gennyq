@@ -20,7 +20,6 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
@@ -28,6 +27,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.gadaq.search.FilterGroupService;
 
 /**
  * Events
@@ -53,6 +53,9 @@ public class Events {
 	@Inject
 	TaskService tasks;
 
+	@Inject
+	FilterGroupService filter;
+
 	/**
 	 * @param msg
 	 */
@@ -75,6 +78,30 @@ public class Events {
 		// submit
 		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
+			return;
+		}
+
+		// update
+		if (Question.QUE_UPDATE.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "update", "");
+			return;
+		}
+
+		// undo
+		if (Question.QUE_UNDO.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "undo", "");
+			return;
+		}
+
+		// redo
+		if (Question.QUE_REDO.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "redo", "");
+			return;
+		}
+
+		// undo
+		if (Question.QUE_PREVIOUS.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
 			return;
 		}
 
@@ -119,12 +146,13 @@ public class Events {
 
 		// table view (Default View Mode)
 		if (code.startsWith("QUE_TABLE_")) {
+			filter.init(code);
 			search.sendTable(code);
 			return;
 		}
 
 		// test question
-		if (code.startsWith("TEST_QUE_.*")) {
+		if (code.startsWith("TEST_QUE_")) {
 			JsonObject payload = Json.createObjectBuilder()
 					.add("questionCode", code.substring("TEST_".length()))
 					.add("userCode", userToken.getUserCode())
@@ -138,12 +166,12 @@ public class Events {
 		// add item
 		if (code.startsWith("QUE_ADD_")) {
 			code = StringUtils.removeStart(code, "QUE_ADD_");
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_"+code+":PREFIX", String.class);
+			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
 
 			log.info("Prefix: " + code);
 			if ("PER".equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_"+code)
+						.add("definitionCode", "DEF_".concat(code))
 						.add("sourceCode", userToken.getUserCode())
 						.build();
 
@@ -153,7 +181,7 @@ public class Events {
 		}
 
 		// edit item
-		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*") ) {
+		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()
@@ -162,7 +190,7 @@ public class Events {
 						.add("sourceCode", userToken.getUserCode())
 						.add("targetCode", msg.getData().getTargetCode())
 						.build();
-				kogitoUtils.triggerWorkflow(SELF,"testQuestion", payload);
+				kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
 				return;
 			}
 
@@ -177,5 +205,4 @@ public class Events {
 		log.info("Forwarding Event Message...");
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
 	}
-	
 }

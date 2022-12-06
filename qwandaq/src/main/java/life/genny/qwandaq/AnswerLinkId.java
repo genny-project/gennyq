@@ -8,8 +8,8 @@ import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.HBaseEntity;
+import java.util.Objects;
 
 /**
  * AnswerLinkId stores information regarding the source and target BaseEntitys
@@ -88,13 +88,11 @@ public class AnswerLinkId implements java.io.Serializable {
 
     final AnswerLinkId that = (AnswerLinkId) o;
 
-    if (source != null ? !source.equals(that.source) : that.source != null)
-      return false;
-    if (target != null ? !target.equals(that.target) : that.target != null)
-      return false;
-    if (attribute != null ? !attribute.equals(that.attribute) : that.attribute != null)
-      return false;
-    return true;
+      if (!Objects.equals(source, that.source))
+          return false;
+      if (!Objects.equals(target, that.target))
+          return false;
+      return Objects.equals(attribute, that.attribute);
   }
 
   /**

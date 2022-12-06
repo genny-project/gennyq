@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
@@ -166,19 +167,24 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(Collection<T> list, FIGetStringCallBack<T> stringCallback) {
+        if(list == null)
+            return "null";
         StringBuilder result = new StringBuilder("[");
         Iterator<T> iterator = list.iterator();
-        for(int i = 0; i < list.size() - 1; i++) {
+        for(int i = 0; i < list.size(); i++) {
             T object = iterator.next();
             result.append("\"")
-                .append(stringCallback.getString(object))
-                .append("\",");
+                .append(stringCallback.getString(object));
+            if(iterator.hasNext())
+                result.append("\",");
+            else
+                result.append("\"");
         }
 
-        T object = iterator.next();
-        result.append("\"")
-            .append(stringCallback.getString(object))
-            .append("\"]");
+        // T object = iterator.next();
+        // result.append("\"")
+        //     .append(stringCallback.getString(object))
+        result.append("]");
         return result.toString();
     }
 
@@ -190,19 +196,21 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
+        if(array == null) return "null";
         if(array.length == 0) return "[]";
+        
         StringBuilder result = new StringBuilder("[");
         int i;
         for(i = 0; i < array.length - 1; i++) {
             result.append("\"")
-            .append(stringCallback.getString(array[i]))
-            .append("\",");
+                    .append(stringCallback.getString(array[i]))
+                    .append("\",");
         }
 
         result.append("\"")
-        .append(stringCallback.getString(array[i]))
-        .append("\"]");
-        
+                .append(stringCallback.getString(array[i]))
+                .append("\"]");
+
         return result.toString();
     }
 
@@ -221,6 +229,10 @@ public class CommonUtils {
         return instance;
     }
 
+    public static <T> T[] getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
+        return (T[])getListFromString(arrayString, objectCallback).toArray();
+    }
+
     /**
      * Assuming arrayString is of the form "[a,b,c,d]"
      * @param <T>
@@ -228,8 +240,14 @@ public class CommonUtils {
      * @param objectCallback
      * @return
      */
-    public static <T> List<T> getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        String[] components = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").split(",");
+    public static <T> List<T> getListFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        
+
+		if(StringUtils.isBlank(arrayString))
+            return new ArrayList<>(0);
+
+        String components[] = arrayString.split(",");
         List<T> newList = new ArrayList<>(components.length);
         for(String component : components) {
             newList.add(objectCallback.getObject(component));

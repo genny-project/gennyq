@@ -24,42 +24,42 @@
 
 	<properties>
 		<!-- Quarkus Properties -->
-		<quarkus.platform.version>2.13.3.Final</quarkus.platform.version>
+		<quarkus.platform.version>2.14.2.Final</quarkus.platform.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
 		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
 
 		<!-- drools -->
-		<version.org.drools>8.29.0.Final</version.org.drools>
+		<version.org.drools>8.31.0.Final</version.org.drools>
 		<version.org.optaplanner>${version.org.drools}</version.org.optaplanner>
 
 		<!-- kogito -->
-		<kogito.version>1.29.0.Final</kogito.version>
+		<kogito.version>1.31.0.Final</kogito.version>
 		<kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
 		<kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
 		<kogito.bom.version>${kogito.version}</kogito.bom.version>
 
-		<!-- Maven Properties -->
-		<maven.version>3.8.1</maven.version>
-		<maven.compiler.parameters>true</maven.compiler.parameters>
-		<maven.compiler.version>3.8.1</maven.compiler.version>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
-		<maven.compiler.release>11</maven.compiler.release>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
-		<enforcer-plugin.version>3.0.0</enforcer-plugin.version>
-		<jar-plugin.version>3.2.2</jar-plugin.version>
-		<source-plugin.version>3.2.0</source-plugin.version>
-		<deploy-plugin.version>3.0.0-M2</deploy-plugin.version>
-		<version.compiler.plugin>3.0.0-M5</version.compiler.plugin>
+    <!-- Maven Properties -->
+        <maven.version>3.8.1</maven.version>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+        <maven.compiler.version>3.8.1</maven.compiler.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+        <enforcer-plugin.version>3.0.0</enforcer-plugin.version>
+        <jar-plugin.version>3.2.2</jar-plugin.version>
+        <source-plugin.version>3.2.0</source-plugin.version>
+        <deploy-plugin.version>3.0.0-M2</deploy-plugin.version>
+        <version.compiler.plugin>3.0.0-M5</version.compiler.plugin>
 
 		<!-- Global properties -->
 		<genny.version>${project.version}</genny.version>
 
 		<jackson.version>2.13.0</jackson.version>
-		<jandex.version>1.0.7</jandex.version>
+		<jandex.version>3.0.3</jandex.version>
 		<jjwt.version>0.7.0</jjwt.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -511,6 +511,19 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
 			</plugin>
+<plugin>
+      <groupId>org.jboss.jandex</groupId>
+      <artifactId>jandex-maven-plugin</artifactId>
+      <version>1.2.3</version>
+      <executions>
+        <execution>
+          <id>make-index</id>
+          <goals>
+            <goal>jandex</goal>
+          </goals>
+        </execution>
+      </executions>
+    </plugin>
 		</plugins>
 	</build>
 </project>

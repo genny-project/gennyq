@@ -80,7 +80,7 @@ public class ScheduleResource {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with code of " + code + " does not exist.")
 					.build();
 		}
-		if (scheduleMessage.realm != userToken.getProductCode()) {
+		if (!scheduleMessage.realm.equals(userToken.getProductCode())) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with bad realm")
 					.build();
 		}
@@ -97,7 +97,7 @@ public class ScheduleResource {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with id of " + id + " does not exist.")
 					.build();
 		}
-		if (scheduleMessage.realm != userToken.getProductCode()) {
+		if (!scheduleMessage.realm.equals(userToken.getProductCode())) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with id of " + id + " does not exist.")
 					.build();
 		}
@@ -116,7 +116,7 @@ public class ScheduleResource {
 					.build();
 		}
 
-		if (scheduleMessage.realm != userToken.getProductCode()) {
+		if (!scheduleMessage.realm.equals(userToken.getProductCode())) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage with id of " + id + " does not exist.")
 					.build();
 		}
@@ -159,7 +159,7 @@ public class ScheduleResource {
 					.build();
 		}
 
-		if (scheduleMessage.realm != userToken.getProductCode()) {
+		if (!scheduleMessage.realm.equals(userToken.getProductCode())) {
 			return Response.status(Status.NOT_FOUND).entity("ScheduleMessage has a different realm to user.").build();
 		}
 

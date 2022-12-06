@@ -1,8 +1,8 @@
 package life.genny.qwandaq.serialization.baseentity;
 
-import java.io.IOException;
-
 import org.infinispan.protostream.MessageMarshaller;
+
+import java.io.IOException;
 
 public class BaseEntityKeyMessageMarshaller implements MessageMarshaller<BaseEntityKey> {
 

@@ -19,37 +19,28 @@ package life.genny.qwandaq.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlTransient;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ParamDef;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlTransient;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -62,8 +53,8 @@ import org.jboss.logging.Logger;
  * <li>The List of attributes
  * </ul>
  *
- *
- *
+ * 
+ * 
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -91,7 +82,7 @@ import org.jboss.logging.Logger;
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 @RegisterForReflection
-public class BaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf {
+public class BaseEntity extends CodedEntity implements ICapabilityFilterable, CoreEntityPersistable, BaseEntityIntf {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -183,13 +174,28 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param aCode the unique code of the core entity
 	 * @param aName the summary name of the core entity
 	 */
 	@ProtoFactory
 	public BaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
+	}
+
+	private Set<Capability> capabilityRequirements;
+
+	@JsonbTransient
+	@JsonIgnore
+	public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
+	@Override
+	@JsonbTransient
+	@JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
 	}
 
 	/**
@@ -213,12 +219,21 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		this.answers.addAll(answers);
 	}
 
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public Set<EntityAttribute> getBaseEntityAttributes() {
+		return getBaseEntityAttributes(null);
+	}
+
 	/**
 	 * @return the baseEntityAttributes
 	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityAttribute> getBaseEntityAttributes() {
-		return baseEntityAttributes;
+	public Set<EntityAttribute> getBaseEntityAttributes(ReqConfig requirementsConfig) {
+		if(requirementsConfig == null)
+			return baseEntityAttributes;
+
+		return baseEntityAttributes.stream().filter((ea) -> ea.requirementsMet(requirementsConfig))
+			.collect(Collectors.toSet());
 	}
 
 	/**
@@ -246,7 +261,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	/**
 	 * Sets the Links of the BaseEntity with another BaseEntity
-	 *
+	 * 
 	 * @param links the links to set
 	 */
 	public void setLinks(final Set<EntityEntity> links) {
@@ -270,7 +285,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	/**
 	 * Sets the Questions of the BaseEntity with another BaseEntity
-	 *
+	 * 
 	 * @param questions the questions to set
 	 */
 	public void setQuestions(final Set<EntityQuestion> questions) {
@@ -288,7 +303,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	/**
 	 * getDefaultCodePrefix This method is expected to be overridden in specialised
 	 * child classes.
-	 *
+	 * 
 	 * @return the default Code prefix for this class.
 	 */
 
@@ -298,7 +313,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	/**
 	 * containsEntityAttribute This checks if an attribute exists in the baseEntity.
-	 *
+	 * 
 	 * @param attributeCode the attributeCode to check
 	 * @return boolean
 	 */
@@ -318,7 +333,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	/**
 	 * containsLink This checks if an attribute link code is linked to the
 	 * baseEntity.
-	 *
+	 * 
 	 * @param linkAttributeCode the linkAttributeCode to check
 	 * @return boolean
 	 */
@@ -334,7 +349,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	/**
 	 * containsTarget This checks if another baseEntity is linked to the baseEntity.
-	 *
+	 * 
 	 * @param targetCode        the targetCode to check
 	 * @param linkAttributeCode the linkAttributeCode to check
 	 * @return boolean
@@ -353,7 +368,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	/**
 	 * findEntityAttribute This returns an attributeEntity if it exists in the
 	 * baseEntity.
-	 *
+	 * 
 	 * @param attributeCode the attributeCode to find with
 	 * @return Optional
 	 */
@@ -375,24 +390,31 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		return foundEntity;
 	}
 
+	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
+		return findPrefixEntityAttributes(attributePrefix, null);
+	}
+
 	/**
 	 * findEntityAttribute This returns an attributeEntity if it exists in the
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
-	 *
+	 * 
 	 * @param attributePrefix the attributePrefix to find with
 	 * @return EntityAttribute
 	 */
-	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
-		List<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix))).collect(Collectors.toList());
+	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix, ReqConfig requirementsConfig) {
+		Stream<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix)));
 
-		return foundEntitys;
+		if(requirementsConfig != null)
+			foundEntitys.filter(ea -> ea.requirementsMet(requirementsConfig));
+
+		return foundEntitys.collect(Collectors.toList());
 	}
 
 	/**
 	 * findEntityAttributes This returns attributeEntitys if it exists in the
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
-	 *
+	 * 
 	 * @param attribute the attribute to find
 	 * @return EntityAttribute
 	 */
@@ -407,7 +429,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * addAttribute This adds an attribute with default weight of 0.0 to the
 	 * baseEntity. It auto creates the EntityAttribute object. For efficiency we
 	 * assume the attribute does not already exist
-	 *
+	 * 
 	 * @param ea the ea to add
 	 * @return EntityAttribute
 	 * @throws BadDataException if the attribute could not be added
@@ -425,7 +447,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
 	 * It auto creates the EntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
-	 *
+	 * 
 	 * @param attribute tha Attribute to add
 	 * @throws BadDataException if attribute could not be added
 	 * @return EntityAttribute
@@ -439,7 +461,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
 	 * It auto creates the EntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
-	 *
+	 * 
 	 * @param attribute tha Attribute to add
 	 * @param weight    the weight
 	 * @throws BadDataException if attribute could not be added
@@ -454,7 +476,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * addAttribute This adds an attribute and associated weight to the baseEntity.
 	 * It auto creates the EntityAttribute object. For efficiency we assume the
 	 * attribute does not already exist
-	 *
+	 * 
 	 * @param attribute tha Attribute to add
 	 * @param weight    the weight
 	 * @param value     of type String, LocalDateTime, Long, Integer, Boolean
@@ -489,7 +511,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * addAttributeOmitCheck This adds an attribute and associated weight to the
 	 * baseEntity. This method will NOT check and update any existing attributes.
 	 * Use with Caution.
-	 *
+	 * 
 	 * @param attribute tha Attribute to add the omit check to
 	 * @param weight    the weight of the omit check
 	 * @param value     of type String, LocalDateTime, Long, Integer, Boolean
@@ -515,7 +537,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	/**
 	 * removeAttribute This removes an attribute and associated weight from the
 	 * baseEntity. For efficiency we assume the attribute exists
-	 *
+	 * 
 	 * @param attributeCode the code of the Attribute to remove
 	 * @return Boolean
 	 */
@@ -544,7 +566,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
 	 * sets itself to be the source. For efficiency we assume the link does not
 	 * already exist
-	 *
+	 * 
 	 * @param target        the target to add
 	 * @param linkAttribute the attribute link
 	 * @param weight        the weight of the target
@@ -561,7 +583,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
 	 * sets itself to be the source. For efficiency we assume the link does not
 	 * already exist
-	 *
+	 * 
 	 * @param target        the target to add
 	 * @param linkAttribute the attribute link
 	 * @param weight        the weight of the target
@@ -570,7 +592,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * @throws BadDataException if the target could not be added
 	 */
 	public EntityEntity addTarget(final BaseEntity target, final Attribute linkAttribute, final Double weight,
-								  final Object value) throws BadDataException {
+			final Object value) throws BadDataException {
 		if (target == null)
 			throw new BadDataException("missing Target Entity");
 		if (linkAttribute == null)
@@ -588,7 +610,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source and assumes itself to be the target. For efficiency we assume the link
 	 * does not already exist and weight = 0
-	 *
+	 * 
 	 * @param answer the answer to add
 	 * @return AnswerLink
 	 * @throws BadDataException if answer could not be added
@@ -602,7 +624,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source and assumes itself to be the target. For efficiency we assume the link
 	 * does not already exist
-	 *
+	 * 
 	 * @param answer the answer to add
 	 * @param weight the weight of the answer
 	 * @return AnswerLink
@@ -616,7 +638,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * addAnswer This links this baseEntity to a target BaseEntity and associated
 	 * Answer. It auto creates the AnswerLink object and sets itself to be the
 	 * source. For efficiency we assume the link does not already exist
-	 *
+	 * 
 	 * @param source the source entity
 	 * @param answer the answer to add
 	 * @param weight the weight of the answer

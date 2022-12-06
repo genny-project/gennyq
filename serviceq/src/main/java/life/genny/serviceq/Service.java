@@ -129,9 +129,7 @@ public class Service {
 
 		if (allowedProducts != null) {
 			// Ensure we have unique product codes
-			return Arrays.asList(allowedProducts.split(":")).stream()
-				.collect(Collectors.toSet())
-				.toArray(new String[0]);
+			return Arrays.stream(allowedProducts.split(":")).distinct().toArray(String[]::new);
 
 		} else if (projectRealm != null) {
 			return new String[]{ projectRealm };

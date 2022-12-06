@@ -1,15 +1,14 @@
 package life.genny.qwandaq;
 
-import java.lang.invoke.MethodHandles;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.Arrays;
+
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+
 import java.io.StringReader;
 
 import javax.persistence.Convert;
@@ -219,7 +218,6 @@ public class AnswerLink implements java.io.Serializable {
 		}
 
 		switch (className) {
-
 			// TODO: remove the qwanda version once db's are clear of it
 			case "life.genny.qwandaq.entity.HBaseEntity":
 			case "life.genny.qwanda.entity.HBaseEntity":

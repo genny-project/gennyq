@@ -20,7 +20,10 @@
 		<jackson-datatype-money.version>1.0.0</jackson-datatype-money.version>
 		<version.moneta>1.1</version.moneta>
 		<jwt.version>0.10.7</jwt.version>
-	</properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
+  </properties>
 
 	<distributionManagement>
 		<repository>
@@ -54,10 +57,6 @@
 			<artifactId>qwandaq</artifactId>
 			<version>${genny.version}</version>
 		</dependency>
-		<!-- <dependency> -->
-		<!--   <groupId>io.quarkus</groupId> -->
-		<!--   <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>javax.annotation</groupId>
 			<artifactId>javax.annotation-api</artifactId>

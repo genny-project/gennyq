@@ -1,29 +1,5 @@
 package life.genny.lauchy.streams;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.kstream.Consumed;
-import org.apache.kafka.streams.kstream.Produced;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
 import io.quarkus.runtime.StartupEvent;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
@@ -37,14 +13,31 @@ import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.GraphQLUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.*;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.common.serialization.Serdes;
+import org.apache.kafka.streams.StreamsBuilder;
+import org.apache.kafka.streams.Topology;
+import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Produced;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class TopologyProducer {
@@ -129,12 +122,12 @@ public class TopologyProducer {
 		QDataAnswerMessage answers = jsonb.fromJson(data, QDataAnswerMessage.class);
 		List<Ask> asksToSend = new ArrayList<>();
 
-		Arrays.asList(answers.getItems()).stream()
+		Arrays.stream(answers.getItems())
 				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
 					// TODO: Wondering if we can just get the processData from the first processId we get
-					ProcessData processData = qwandaUtils.fetchProcessData(processId); 
+					ProcessData processData = qwandaUtils.fetchProcessData(processId);
 					List<Ask> asks = qwandaUtils.fetchAsks(processData);
 
 					BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());

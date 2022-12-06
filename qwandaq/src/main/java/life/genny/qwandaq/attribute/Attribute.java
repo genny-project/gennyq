@@ -174,7 +174,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	/**

@@ -3,7 +3,6 @@ package life.genny.qwandaq.utils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -34,7 +33,7 @@ import java.util.stream.Collectors;
 /**
  * A non-static utility class used for standard
  * operations involving BaseEntitys.
- *
+ * 
  * @author Adam Crow
  * @author Jasper Robison
  */
@@ -86,7 +85,7 @@ public class BaseEntityUtils {
 
 	/**
 	 * Fetch the user base entity of the {@link UserToken}.
-	 *
+	 * 
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
@@ -96,7 +95,7 @@ public class BaseEntityUtils {
 
 	/**
 	 * Fetch the user base entity of the {@link UserToken}
-	 *
+	 * 
 	 * @return the user's {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
@@ -118,8 +117,8 @@ public class BaseEntityUtils {
 
 	/**
 	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entitiy does not exist.
-	 *
+	 * ItemNotFoundException if the entity does not exist.
+	 * 
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity
 	 */
@@ -131,7 +130,7 @@ public class BaseEntityUtils {
 	/**
 	 * Get a base entity using a code, but throw an
 	 * ItemNotFoundException if the entitiy does not exist.
-	 *
+	 * 
 	 * @param productCode The product to search in
 	 * @param code        The code of the entity to fetch
 	 * @return The BaseEntity
@@ -147,7 +146,7 @@ public class BaseEntityUtils {
 
 	/**
 	 * Get a base entity using the code, or return null if not found.
-	 *
+	 * 
 	 * @param code The code of the entity to fetch
 	 * @return The BaseEntity, or null if not found
 	 */
@@ -158,7 +157,7 @@ public class BaseEntityUtils {
 
 	/**
 	 * Get a base entity using the code, or return null if not found.
-	 *
+	 * 
 	 * @param productCode The product to search in
 	 * @param code        The code of the entity to fetch
 	 * @return The BaseEntity, or null if not found
@@ -380,7 +379,7 @@ public class BaseEntityUtils {
 	 * Hope this makes our code look a little
 	 * nicer :)
 	 * <p>
-	 *
+	 * 
 	 * TODO: Consider moving this to CommonUtils
 	 *
 	 * @param value The value to clean
@@ -517,9 +516,9 @@ public class BaseEntityUtils {
 
 	/**
 	 * Apply the privacy filter to a BaseEntity.
-	 *
+	 * 
 	 * @param entity  The be to apply the filter to
-	 * @param allowed The list of allowed attribute codes
+	 * @param allowed The set of allowed attribute codes
 	 * @return The filtered BaseEntity
 	 */
 	public BaseEntity privacyFilter(BaseEntity entity, Set<String> allowed) {
@@ -538,7 +537,7 @@ public class BaseEntityUtils {
 	// more NonLiteralAttributes than what is already here - Bryn
 	/**
 	 * Add all non literal attributes to the baseentity.
-	 *
+	 * 
 	 * @param entity The entity to update
 	 * @return The updated BaseEntity
 	 */
@@ -678,7 +677,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
-			Attribute attribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), attrCode);
+			Attribute attribute = attributeUtils.getAttributeByCode(defBE.getRealm(), attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);

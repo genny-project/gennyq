@@ -2,7 +2,6 @@ package life.genny.qwandaq.entity;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Optional;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -27,8 +26,8 @@ public class PCM extends BaseEntity {
 
 	public static final String PREFIX = Prefix.PCM;
 
-	public static final String TPL_VERT = "TPL_VERT";
-	public static final String TPL_HORI = "TPL_HORI";
+	public static final String TPL_VERT = "TPL_VERT_ALL";
+	public static final String TPL_HORI = "TPL_HORI_ALL";
 
 	public static final String PCM_TREE = "PCM_TREE";
 	public static final String PCM_ROOT = "PCM_ROOT";
@@ -38,6 +37,7 @@ public class PCM extends BaseEntity {
 	public static final String PCM_TABLE = "PCM_TABLE";
 	public static final String PCM_DETAIL_VIEW = "PCM_DETAIL_VIEW";
 	public static final String PCM_PROCESS = "PCM_PROCESS";
+	public static final String PCM_EVENTS = "PCM_EVENTS";
 
 	public PCM(String code, String name) {
 		super(code, name);
@@ -55,6 +55,10 @@ public class PCM extends BaseEntity {
 
 	public static Integer findLocation(String location) {
 		return Integer.parseInt(StringUtils.removeStart(location, Attribute.PRI_LOC));
+	}
+
+	public static String location(int index) {
+		return Attribute.PRI_LOC.concat(Integer.toString(index));
 	}
 
 	public void addStringAttribute(String code, String name, String value) {
@@ -79,12 +83,12 @@ public class PCM extends BaseEntity {
 	}
 
 	public void setLocation(Integer index, String value) {
-		String code = Attribute.PRI_LOC + index;
+		String code = location(index);
 		addStringAttribute(code, "Location " + index, Double.valueOf(index), value);
 	}
 
 	public String getLocation(Integer index) {
-		return getValueAsString(Attribute.PRI_LOC+index);
+		return getValueAsString(Attribute.PRI_LOC + index);
 	}
 
 	public List<EntityAttribute> getLocations() {

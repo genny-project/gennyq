@@ -12,10 +12,11 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.utils.TimeUtils;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.TimeUtils;
 import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,13 +25,11 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.enterprise.context.ApplicationScoped;
-
 @ApplicationScoped
-public class QSendGridMessageManager extends QMessageProvider {
+public final class QSendGridMessageManager extends QMessageProvider {
 
 	private static final Logger log = Logger.getLogger(QSendGridMessageManager.class);
-	
+
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 
@@ -86,17 +85,17 @@ public class QSendGridMessageManager extends QMessageProvider {
 		// Build a general data map from context BEs
 		HashMap<String, Object> templateData = new HashMap<>();
 
-		for (String key : contextMap.keySet()) {
+		for (Map.Entry<String, Object> entry : contextMap.entrySet()) {
 
-			Object value = contextMap.get(key);
-			if(value == null) {
+			Object value = entry.getValue(); //contextMap.get(key);
+			if (value == null) {
 				log.error("========================== FATAL ==================");
-				log.error("Could not retrieve value for: " + key + " in message " + templateBe.getCode());
+				log.error("Could not retrieve value for: " + entry.getKey() + " in message " + templateBe.getCode());
 				log.error("=================================================");
 				continue;
 			}
 			if (BaseEntity.class.equals(value.getClass())) {
-				log.info("Processing key as BASEENTITY: " + key);
+				log.info("Processing key as BASEENTITY: " + entry.getKey());
 				BaseEntity be = (BaseEntity) value;
 				HashMap<String, String> deepReplacementMap = new HashMap<>();
 				for (EntityAttribute ea : be.getBaseEntityAttributes()) {
@@ -136,10 +135,10 @@ public class QSendGridMessageManager extends QMessageProvider {
 						}
 					}
 				}
-				templateData.put(key, deepReplacementMap);
+				templateData.put(entry.getKey(), deepReplacementMap);
 			} else if(value.getClass().equals(String.class)) {
-				log.info("Processing key as STRING: " + key);
-				templateData.put(key, (String) value);
+				log.info("Processing key as STRING: " + entry.getKey());
+				templateData.put(entry.getKey(), value);
 			}
 		}
 
@@ -202,13 +201,13 @@ public class QSendGridMessageManager extends QMessageProvider {
 
 				if (email != null && !email.equals(to.getEmail())) {
 					personalization.addBcc(new Email(email));
-					log.info(ANSIColour.BLUE+"Found BCC Email: " + email+ANSIColour.RESET);
+					log.info(ANSIColour.BLUE + "Found BCC Email: " + email + ANSIColour.RESET);
 				}
 			}
 		}
 
-		for (String key : templateData.keySet()) {
-			personalization.addDynamicTemplateData(key, templateData.get(key));
+		for (Map.Entry<String, Object> entry : templateData.entrySet()) {
+			personalization.addDynamicTemplateData(entry.getKey(), entry.getValue());
 		}
 
 		Mail mail = new Mail();

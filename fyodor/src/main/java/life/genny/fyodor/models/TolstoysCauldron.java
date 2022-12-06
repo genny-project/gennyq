@@ -1,18 +1,16 @@
 package life.genny.fyodor.models;
 
-import java.util.*;
-
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-
 import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.entity.HBaseEntity;
 import life.genny.qwandaq.entity.HEntityEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.criteria.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * TolstoysCauldron - A cauldron of query ingredients.
@@ -28,7 +26,6 @@ public class TolstoysCauldron {
 	private Map<String, Subquery<HBaseEntity>> subqueryMap = new HashMap<>();
 
 	private List<Predicate> predicates = new ArrayList<>();
-
 	private List<Order> orders = new ArrayList<>();
 
 	public TolstoysCauldron() {

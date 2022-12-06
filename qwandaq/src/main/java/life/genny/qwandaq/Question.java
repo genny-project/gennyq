@@ -18,22 +18,31 @@ package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
-import org.jboss.logging.Logger;
 
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Embedded;
-import javax.persistence.Transient;
+import javax.persistence.*;
 import javax.validation.Valid;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import org.jboss.logging.Logger;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -52,9 +61,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Questions represent the major way of retrieving facts about a target from
  * sources. Each question is associated with an attribute which represents a
  * distinct fact about a target.
- * <p>
- *
- *
+ * </p>
+ * 
+ * 
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -74,7 +83,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 
 @RegisterForReflection
-public class Question extends CodedEntity {
+public class Question extends CodedEntity implements ICapabilityHiddenFilterable {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 
@@ -84,6 +93,10 @@ public class Question extends CodedEntity {
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
 	public static final String QUE_CANCEL = "QUE_CANCEL";
 	public static final String QUE_RESET = "QUE_RESET";
+
+	public static final String QUE_UPDATE = "QUE_UPDATE";
+	public static final String QUE_UNDO = "QUE_UNDO";
+	public static final String QUE_REDO = "QUE_REDO";
 
 	public static final String QUE_NEXT = "QUE_NEXT";
 	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";
@@ -103,7 +116,7 @@ public class Question extends CodedEntity {
 	//@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
 	@JsonManagedReference(value = "questionQuestion")
 	@JsonbTransient
-	private Set<QuestionQuestion> childQuestions = new HashSet<QuestionQuestion>(0);
+	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);
 
 	private Set<String> childQuestionCodes = new HashSet<>(0);
 
@@ -111,6 +124,11 @@ public class Question extends CodedEntity {
 	/*@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "attribute_id", nullable = false)*/
 	private Attribute attribute;
+
+
+	/*@Column(name = "capreqs")
+	@Convert(converter = CapabilityConverter.class)*/
+	private Set<Capability> capabilityRequirements;
 
 	@Embedded
 	@Valid
@@ -158,7 +176,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param code      The unique code for this Question
 	 * @param name      The human readable summary name
 	 * @param attribute The associated attribute
@@ -169,7 +187,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param code        The unique code for this Question
 	 * @param name        The human readable summary name
 	 * @param attribute   The associated attribute
@@ -181,7 +199,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param code      The unique code for this Question
 	 * @param name      The human readable summary name
 	 * @param attribute The associated attribute
@@ -193,7 +211,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param code      The unique code for this Question
 	 * @param name      The human readable summary name
 	 * @param attribute The associated attribute
@@ -201,13 +219,13 @@ public class Question extends CodedEntity {
 	 * @param html      the html of the Question
 	 */
 	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
-					final String html) {
+			final String html) {
 		this(code, name, attribute, mandatory, html, null);
 	}
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param code        The unique code for this Question
 	 * @param name        The human readable summary name
 	 * @param attribute   The associated attribute
@@ -216,7 +234,7 @@ public class Question extends CodedEntity {
 	 * @param placeholder The placeholder text
 	 */
 	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
-					final String html, final String placeholder) {
+			final String html, final String placeholder) {
 		super(code, name);
 		if (attribute == null) {
 			throw new InvalidParameterException("Attribute must not be null");
@@ -230,7 +248,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param code           The unique code for this Question
 	 * @param name           The human readable summary name
 	 * @param childQuestions The associated child Questions in this question Group
@@ -248,7 +266,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * Constructor.
-	 *
+	 * 
 	 * @param code The unique code for this empty Question Group
 	 * @param name The human readable summary name
 	 */
@@ -261,6 +279,14 @@ public class Question extends CodedEntity {
 		this.attributeCode = Attribute.QQQ_QUESTION_GROUP;
 	}
 
+	public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
+	}
+
 	/**
 	 * @param childQuestions the List of child Questions to initialize with
 	 */
@@ -269,7 +295,7 @@ public class Question extends CodedEntity {
 
 		// Assume the list of Questions represents the order
 		Double sortPriority = 10.0;
-		this.setChildQuestions(new HashSet<QuestionQuestion>(0));
+        this.setChildQuestions(new HashSet<>(0));
 
 		for (Question childQuestion : childQuestions) {
 			QuestionQuestion qq = new QuestionQuestion(this, childQuestion, sortPriority);
@@ -283,7 +309,7 @@ public class Question extends CodedEntity {
 	 * addTarget This links this question to a target question and associated weight
 	 * to the question. It auto creates the QuestionQuestion object and sets itself
 	 * to be the source. For efficiency we assume the link does not already exist
-	 *
+	 * 
 	 * @param target the target to add
 	 * @param weight the weight
 	 * @return QuestionQuestion
@@ -352,7 +378,7 @@ public class Question extends CodedEntity {
 
 	/**
 	 * getDefaultCodePrefix This method is overrides the Base class
-	 *
+	 * 
 	 * @return the default Code prefix for this class.
 	 */
 	static public String getDefaultCodePrefix() {
@@ -440,8 +466,8 @@ public class Question extends CodedEntity {
 	 * @param childQuestions the childQuestions to set
 	 */
 	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
-		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);;
-	}
+        this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
+    }
 
 	/**
 	 * addChildQuestion This adds an child Question with default weight of 0.0 to
@@ -496,7 +522,7 @@ public class Question extends CodedEntity {
 	 * @throws BadDataException if something is missing
 	 */
 	public QuestionQuestion addChildQuestion(final String childQuestionCode, final Double weight,
-											 final Boolean mandatory) throws BadDataException {
+			final Boolean mandatory) throws BadDataException {
 		if (childQuestionCode == null)
 			throw new BadDataException("missing Question");
 		if (weight == null)
@@ -516,10 +542,14 @@ public class Question extends CodedEntity {
 	 *
 	 * @param childQuestionCode the code of the child Question used to remove the
 	 *                          child Question
+	 * @return <b>true</b> if child question was present, <b>false</b> otherwise
 	 */
-	public void removeChildQuestion(final String childQuestionCode) {
+	public boolean removeChildQuestion(final String childQuestionCode) {
 		final Optional<QuestionQuestion> optQuestionQuestion = findQuestionLink(childQuestionCode);
-		getChildQuestions().remove(optQuestionQuestion);
+		boolean isPresent = optQuestionQuestion.isPresent();
+		if(isPresent)
+			getChildQuestions().remove(optQuestionQuestion.get());
+		return isPresent;
 	}
 
 	/**

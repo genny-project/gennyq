@@ -11,7 +11,9 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
+
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -301,7 +303,7 @@ public class RoleManager extends Manager {
 			}
 		}
 
-		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+		throw new RoleException(String.format("No redirect in roles %s", roles));
 	}
 
 	/**

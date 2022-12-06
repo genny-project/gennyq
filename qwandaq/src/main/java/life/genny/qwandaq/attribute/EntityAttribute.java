@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -52,26 +53,16 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.converter.MoneyConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
-/*@Entity
-@Table(name = "baseentity_attribute", indexes = {
-		@Index(columnList = "baseEntityCode", name = "ba_idx"),
-		@Index(columnList = "attributeCode", name = "ba_idx"),
-		@Index(columnList = "valueString", name = "ba_idx"),
-		@Index(columnList = "valueBoolean", name = "ba_idx")
-}, uniqueConstraints = @UniqueConstraint(columnNames = { "attributeCode", "baseEntityCode", "realm" }))
-@AssociationOverrides({
-	@AssociationOverride(name = "pk.baseEntity", joinColumns = @JoinColumn(name = "BASEENTITY_ID")),
-	@AssociationOverride(name = "pk.attribute", joinColumns = @JoinColumn(name = "ATTRIBUTE_ID"))
-})
-@RegisterForReflection
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
-public class EntityAttribute implements CoreEntityPersistable, Comparable<Object> {
+public class EntityAttribute implements CoreEntityPersistable, ICapabilityHiddenFilterable, Comparable<Object> {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
@@ -97,19 +88,16 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	/**
 	 * Stores the Created UMT DateTime that this object was created
 	 */
-	//@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
-	//@Column(name = "updated")
 	private LocalDateTime updated;
 
 	/**
 	 * Store the Double value of the attribute for the baseEntity
 	 */
-	//@Column
 	private Double valueDouble;
 
 	/**
@@ -132,26 +120,21 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	//@Column
 	private LocalTime valueTime;
 
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	//@Column
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
-	//@Column
 	private LocalDate valueDate;
 
 	/**
 	 * Store the String value of the attribute for the baseEntity
 	 */
-//	@Type(type = "text")
-//	@Column
 	private String valueString;
 
 	//@Column(name = "money", length = 128)
@@ -179,6 +162,8 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	private Boolean confirmationFlag = false;
 
 	private Attribute attribute;
+
+	private Set<Capability> capabilityRequirements;
 
 	public EntityAttribute() {
 	}
@@ -246,16 +231,14 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		if (value != null) {
 			setValue(value);
 		}
+		setReadonly(false);
 	}
 
-	/**
-	 * @return EntityAttributeId
-	 */
-	/*@JsonIgnore
-	@JsonbTransient
-	public EntityAttributeId getPk() {
-		return pk;
-	}*/
+    @JsonbTransient
+    @JsonIgnore
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
 
 	/**
 	 * @return the baseEntityCode
@@ -573,12 +556,10 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		this.feedback = feedback;
 	}
 
-	//@PreUpdate
 	public void autocreateUpdate() {
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	//@PrePersist
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
@@ -604,7 +585,6 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 	@JsonIgnore
 	@JsonbTransient
 	public Date getUpdatedDate() {
-
 		if (updated == null)
 			return null;
 		final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
@@ -726,10 +706,9 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 							setValueDateTime(dateTime);
 							break;
 
-						} catch (ParseException e) {
-						}
-
-					}
+                        } catch (ParseException e) {
+                        }
+                    }
 
 				} else if (attribute.getDataType().getClassName()
 						.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
@@ -1322,4 +1301,15 @@ public class EntityAttribute implements CoreEntityPersistable, Comparable<Object
 		return bea;
 	}
 
+
+	public boolean isLocked() {
+		return capabilityRequirements != null;
+	}
+
+	@Override
+    @JsonbTransient
+    @JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
+	}
 }

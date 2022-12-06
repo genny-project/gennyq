@@ -1,8 +1,9 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.serialization.adapters.CapabilitySetAdapter;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
@@ -22,7 +23,16 @@ public class QuestionUtils {
 
     private static final Logger log = Logger.getLogger(QuestionUtils.class);
 
-    public BaseEntity getBaseEntityFromQuestion(Question question) {
+    public life.genny.qwandaq.entity.BaseEntity getPersistableBaseEntityFromQuestion(Question question) {
+        life.genny.qwandaq.entity.BaseEntity baseEntity = (life.genny.qwandaq.entity.BaseEntity) getSerializableBaseEntityFromQuestion(question).toPersistableCoreEntity();
+        List<EntityAttribute> persistableBaseEntityAttributes = new LinkedList<>();
+        List<BaseEntityAttribute> serializableBaseEntityAttributes = getSerializableBaseEntityAttributesFromQuestion(question);
+        serializableBaseEntityAttributes.forEach(baseEntityAttribute -> persistableBaseEntityAttributes.add((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
+        baseEntity.setBaseEntityAttributes(persistableBaseEntityAttributes);
+        return baseEntity;
+    }
+
+    public BaseEntity getSerializableBaseEntityFromQuestion(Question question) {
         BaseEntity baseEntity = new BaseEntity();
         baseEntity.setCode(question.getCode());
         baseEntity.setCreated(question.getCreated());
@@ -33,21 +43,21 @@ public class QuestionUtils {
         return baseEntity;
     }
 
-    public List<BaseEntityAttribute> getBaseEntityAttributesFromQuestion(Question question) {
+    public List<BaseEntityAttribute> getSerializableBaseEntityAttributesFromQuestion(Question question) {
         List<BaseEntityAttribute> attributes = new LinkedList<>();
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "attributeCode", question.getAttributeCode()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "directions", question.getDirections()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "helper", question.getHelper()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "html", question.getHtml()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "icon", question.getIcon()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "mandatory", question.getMandatory()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "oneshot", question.getOneshot()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "placeholder", question.getPlaceholder()));
-        attributes.add(createBaseEntityAttributeFromQuestion(question, "readonly", question.getReadonly()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "attributeCode", question.getAttributeCode()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "directions", question.getDirections()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "helper", question.getHelper()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "html", question.getHtml()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "icon", question.getIcon()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "mandatory", question.getMandatory()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "oneshot", question.getOneshot()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "placeholder", question.getPlaceholder()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, "readonly", question.getReadonly()));
         return attributes;
     }
 
-    public BaseEntityAttribute createBaseEntityAttributeFromQuestion(Question question, String attributeCode, Object value) {
+    public BaseEntityAttribute createSerializableBaseEntityAttributeFromQuestion(Question question, String attributeCode, Object value) {
         BaseEntityAttribute attribute = new BaseEntityAttribute();
         attribute.setRealm(question.getRealm());
         attribute.setBaseEntityCode(question.getCode());
@@ -76,7 +86,16 @@ public class QuestionUtils {
         return attribute;
     }
 
-    public BaseEntity getBaseEntityFromQuestionQuestion(QuestionQuestion questionQuestion) {
+    public life.genny.qwandaq.entity.BaseEntity getPersistableBaseEntityFromQuestionQuestion(QuestionQuestion questionQuestion) {
+        life.genny.qwandaq.entity.BaseEntity baseEntity = (life.genny.qwandaq.entity.BaseEntity) getSerializableBaseEntityFromQuestionQuestion(questionQuestion).toPersistableCoreEntity();
+        List<EntityAttribute> persistableBaseEntityAttributes = new LinkedList<>();
+        List<BaseEntityAttribute> serializableBaseEntityAttributes = getSerializableBaseEntityAttributesFromQuestionQuestion(questionQuestion);
+        serializableBaseEntityAttributes.forEach(baseEntityAttribute -> persistableBaseEntityAttributes.add((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
+        baseEntity.setBaseEntityAttributes(persistableBaseEntityAttributes);
+        return baseEntity;
+    }
+
+    public BaseEntity getSerializableBaseEntityFromQuestionQuestion(QuestionQuestion questionQuestion) {
         BaseEntity baseEntity = new BaseEntity();
         baseEntity.setCode(questionQuestion.getParentCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getChildCode());
         baseEntity.setCreated(questionQuestion.getCreated());
@@ -85,25 +104,26 @@ public class QuestionUtils {
         return baseEntity;
     }
 
-    public List<BaseEntityAttribute> getBaseEntityAttributesFromQuestionQuestion(QuestionQuestion questionQuestion) {
+    public List<BaseEntityAttribute> getSerializableBaseEntityAttributesFromQuestionQuestion(QuestionQuestion questionQuestion) {
         List<BaseEntityAttribute> attributes = new LinkedList<>();
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "parentCode", questionQuestion.getParentCode()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "childCode", questionQuestion.getChildCode()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "createOnTrigger", questionQuestion.getCreateOnTrigger()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "dependency", questionQuestion.getDependency()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "disabled", questionQuestion.getDisabled()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "formTrigger", questionQuestion.getFormTrigger()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "hidden", questionQuestion.getHidden()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "icon", questionQuestion.getIcon()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "mandatory", questionQuestion.getMandatory()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "oneshot", questionQuestion.getOneshot()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "readonly", questionQuestion.getReadonly()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "version", questionQuestion.getVersion()));
-        attributes.add(createBaseEntityAttributeFromQuestionQuestion(questionQuestion, "weight", questionQuestion.getWeight()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "parentCode", questionQuestion.getParentCode()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "childCode", questionQuestion.getChildCode()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "createOnTrigger", questionQuestion.getCreateOnTrigger()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "dependency", questionQuestion.getDependency()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "disabled", questionQuestion.getDisabled()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "formTrigger", questionQuestion.getFormTrigger()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "hidden", questionQuestion.getHidden()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "icon", questionQuestion.getIcon()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "mandatory", questionQuestion.getMandatory()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "oneshot", questionQuestion.getOneshot()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "readonly", questionQuestion.getReadonly()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "version", questionQuestion.getVersion()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "weight", questionQuestion.getWeight()));
+        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "capreqs", CapabilitySetAdapter.convertToDBColumn(questionQuestion.getCapabilityRequirements())));
         return attributes;
     }
 
-    public BaseEntityAttribute createBaseEntityAttributeFromQuestionQuestion(QuestionQuestion questionQuestion, String attributeCode, Object value) {
+    public BaseEntityAttribute createSerializableBaseEntityAttributeFromQuestionQuestion(QuestionQuestion questionQuestion, String attributeCode, Object value) {
         BaseEntityAttribute attribute = new BaseEntityAttribute();
         attribute.setRealm(questionQuestion.getRealm());
         attribute.setBaseEntityCode(questionQuestion.getParentCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getChildCode());
@@ -235,6 +255,9 @@ public class QuestionUtils {
                     break;
                 case "weight":
                     questionQuestion.setWeight(attribute.getValueDouble());
+                    break;
+                case "capreqs":
+                    questionQuestion.setCapabilityRequirements(CapabilitySetAdapter.convertToEA(attribute.getValueString()));
                     break;
                 default:
                     log.debug("Attribute not related to 'QuestionQuestion' entity, ignored.");

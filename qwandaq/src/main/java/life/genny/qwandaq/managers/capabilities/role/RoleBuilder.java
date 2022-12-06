@@ -11,8 +11,8 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.datatype.capability.CapabilityBuilder;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -21,16 +21,16 @@ import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 public class RoleBuilder {
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
     
-    private CapabilitiesManager capManager;
-    private RoleManager roleMan;
+    private final CapabilitiesManager capManager;
+    private final RoleManager roleMan;
 
-    private BaseEntity targetRole;
+    private final BaseEntity targetRole;
     
-    private String productCode;
+    private final String productCode;
 
-    private List<BaseEntity> inheritedRoles = new ArrayList<>();
+    private final List<BaseEntity> inheritedRoles = new ArrayList<>();
 
-    private List<String> childrenCodes = new ArrayList<>();
+    private final List<String> childrenCodes = new ArrayList<>();
 
     /**
      * A map from Attribute (Capability) Code to Attribute (Capability)

@@ -1,20 +1,20 @@
 package life.genny.qwandaq.message;
 
-import java.util.List;
-import java.util.ArrayList;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.Ask;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RegisterForReflection
 public class QDataAskMessage extends QDataMessage {
 
-	private static final long serialVersionUID = 1L;
-	private List<Ask> items;
-	private static final String DATATYPE_ASK = Ask.class.getSimpleName();
+    private static final long serialVersionUID = 1L;
+    private List<Ask> items;
+    private static final String DATATYPE_ASK = Ask.class.getSimpleName();
 
-	public QDataAskMessage() {
-		super(DATATYPE_ASK);
+    public QDataAskMessage() {
+        super(DATATYPE_ASK);
 	}
 
 	public QDataAskMessage(List<Ask> items) {
@@ -26,7 +26,7 @@ public class QDataAskMessage extends QDataMessage {
 	public QDataAskMessage(Ask ask) {
 
 		super(DATATYPE_ASK);
-		List<Ask> asks = new ArrayList<Ask>();
+        List<Ask> asks = new ArrayList<>();
 		asks.add(ask);
 		setItems(asks);
 	}

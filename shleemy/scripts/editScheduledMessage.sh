@@ -82,8 +82,8 @@ url=$1
 id=$2
 content=$3
 #echo ${mydate} $url $id $content 
-KEYCLOAK_RESPONSE=`curl -s -X POST https://keycloak.gada.io/auth/realms/internmatch/protocol/openid-connect/token  -H "Content-Type: application/x-www-form-urlencoded" -d 'username=user1' -d 'password=WelcomeToTheHub121!' -d 'grant_type=password' -d 'client_id=internmatch'  -d 'client_secret=dc7d0960-2e1d-4a78-9eef-77678066dbd3'`
-#KEYCLOAK_RESPONSE=`curl -s -X POST https://keycloak.gada.io/auth/realms/internmatch/protocol/openid-connect/token  -H "Content-Type: application/x-www-form-urlencoded" -d 'username=user1' -d 'password=WelcomeToTheHub121!' -d 'grant_type=password' -d 'client_id=backend'  -d 'client_secret=6781baee-3b97-4b01-bcd4-b14aecd38fd8'`
+KEYCLOAK_RESPONSE=$(curl -s -X POST ${GENNY_KEYCLOAK_URL:https://keycloak.gada.io}/realms${GENNY_REALM:internmatch}/protocol/openid-connect/token  -H "Content-Type: application/x-www-form-urlencoded" -d 'username=user1' -d 'password=WelcomeToTheHub121!' -d 'grant_type=password' -d 'client_id=${GENNY_REALM:internmatch}'  -d 'client_secret=dc7d0960-2e1d-4a78-9eef-77678066dbd3')
+#KEYCLOAK_RESPONSE=`curl -s -X POST ${GENNY_KEYCLOAK_URL:https://keycloak.gada.io}/realms${GENNY_REALM:internmatch}/protocol/openid-connect/token  -H "Content-Type: application/x-www-form-urlencoded" -d 'username=user1' -d 'password=WelcomeToTheHub121!' -d 'grant_type=password' -d 'client_id=backend'  -d 'client_secret=6781baee-3b97-4b01-bcd4-b14aecd38fd8'`
 #echo $KEYCLOAK_RESPONSE
 #printf "${RED}Parsing access_token field, as we don't need the other elements:${NORMAL}\n"
 TOKEN=`echo "$KEYCLOAK_RESPONSE" | jq -r '.access_token'`

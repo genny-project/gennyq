@@ -1,35 +1,32 @@
 package life.genny.bridge.live.data;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.enterprise.inject.Default;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
 import io.quarkus.grpc.GrpcService;
 import io.smallrye.mutiny.Multi;
-import io.smallrye.mutiny.TimeoutException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.operators.multi.processors.BroadcastProcessor;
 import io.vertx.core.json.JsonObject;
 import life.genny.bridge.model.grpc.Empty;
 import life.genny.bridge.model.grpc.Item;
 import life.genny.bridge.model.grpc.Stream;
-import life.genny.qwandaq.session.bridge.BridgeSwitch;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
+import life.genny.qwandaq.session.bridge.BridgeSwitch;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.inject.Default;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Implementation of {@link Stream} that handles GRPC communication
  * between bridge and the frontend. Needs refining to use infispan cache rather
  * than a local hashmap
- * 
+ *
  * @author Dan
  */
 @GrpcService
@@ -38,7 +35,7 @@ import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 public class BridgeGrpcService implements Stream {
 
     @ConfigProperty(name = "bridge.id", defaultValue = "false")
-	String bridgeId;
+    String bridgeId;
 
     private static final Logger LOG = Logger.getLogger(BridgeGrpcService.class);
 
@@ -48,18 +45,18 @@ public class BridgeGrpcService implements Stream {
     /**
      * Duration to wait before a timeout is fired
      */
-    private Duration timeout = Duration.ofSeconds(15);
+    private final Duration timeout = Duration.ofSeconds(15);
 
     /**
      * Stores a map between jti and
      * a broadcast processor
      */
-    private static Map<String, BroadcastProcessor<Item>> processors = new HashMap<>();
+    private final static Map<String, BroadcastProcessor<Item>> processors = new HashMap<>();
 
 
     /**
      * Called when a connection errors out in some way
-     * 
+     *
      * @param jti
      */
     private static void onError(String jti) {
@@ -86,9 +83,7 @@ public class BridgeGrpcService implements Stream {
         Multi<Item> multi = processor
                 // .onItem().invoke() // - Called when an item is being sent
                 .ifNoItem().after(timeout).failWith(io.grpc.Status.ABORTED.withDescription("Client timed out!").asRuntimeException())
-                .onFailure().invoke(() -> {
-                    onError(payload.jti);
-                });
+                .onFailure().invoke(() -> onError(payload.jti));
 
         processors.put(payload.jti, processor);
 
@@ -99,7 +94,7 @@ public class BridgeGrpcService implements Stream {
 
     /**
      * Is called by the Frontend when they want to send data
-     * 
+     *
      * @param request - A multi of Items containing the data
      */
     @Override
@@ -114,10 +109,10 @@ public class BridgeGrpcService implements Stream {
 
     /**
      * Call this to send data to the frontend based on a jti
-     * 
-     * @param jti - User to send to
-     * @param data  - Data to send. Can possibly be a Multi if we want to send a few
-     *              things
+     *
+     * @param jti  - User to send to
+     * @param data - Data to send. Can possibly be a Multi if we want to send a few
+     *             things
      */
     public void send(String jti, Item data) {
 
@@ -131,7 +126,7 @@ public class BridgeGrpcService implements Stream {
 
     /**
      * Broadcast data to all connected clients
-     * 
+     *
      * @param data
      */
     public void broadcast(Item data) {
@@ -158,6 +153,7 @@ public class BridgeGrpcService implements Stream {
 
     /**
      * Takes an item sent through {@link BridgeGrpcService#sink} and sends it through to kafka
+     *
      * @param request
      */
     public void routeMessage(Item request) {
@@ -165,8 +161,8 @@ public class BridgeGrpcService implements Stream {
         LOG.info("JTI " + payload.jti + " " + payload.sid);
         JsonObject object = new JsonObject(request.getBody());
         // put bridgeId into users cached info
-		BridgeSwitch.put(new GennyToken(request.getToken()), bridgeId);
-		BridgeSwitch.addActiveBridgeId(new GennyToken(request.getToken()), bridgeId);
+        BridgeSwitch.put(new GennyToken(request.getToken()), bridgeId);
+        BridgeSwitch.addActiveBridgeId(new GennyToken(request.getToken()), bridgeId);
         handler.routeDataByMessageType(object, new GennyToken(request.getToken()));
     }
 
@@ -176,8 +172,7 @@ public class BridgeGrpcService implements Stream {
      * @return
      */
     private KeycloakTokenPayload getPayload(Item request) {
-        KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(request.getToken());
-        return payload;
+        return KeycloakTokenPayload.decodeToken(request.getToken());
     }
 
 }

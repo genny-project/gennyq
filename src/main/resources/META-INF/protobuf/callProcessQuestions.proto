@@ -10,26 +10,26 @@ message CallProcessQuestions {
 	option java_package = "life.genny.gadaq";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional S2SData data = 1; 
+	optional string buttonEvents = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input,required") */ 
-	optional string events = 2; 
+ @VariableInfo(tags="") */ 
+	optional S2SData data = 2; 
 	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
 	optional string id = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input,required") */ 
+ @VariableInfo(tags="") */ 
 	optional string pcmCode = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
 	optional string processBEJson = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input,required") */ 
+ @VariableInfo(tags="") */ 
 	optional string questionCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input,required") */ 
+ @VariableInfo(tags="") */ 
 	optional string sourceCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input,required") */ 
+ @VariableInfo(tags="") */ 
 	optional string targetCode = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional org.kie.kogito.index.model.KogitoMetadata metadata = 9; 
@@ -40,7 +40,7 @@ message S2SData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional EAbortReason abortReason = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string events = 2; 
+	optional string buttonEvents = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string location = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
@@ -68,17 +68,17 @@ message TimerData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional int64 elapsedMin = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated TimerEvent events = 3; 
+	optional bool expired = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional bool expired = 4; 
+	optional int64 expiryMin = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryMin = 5; 
+	optional int64 expiryTimeStamp = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 expiryTimeStamp = 6; 
+	optional int64 intervalMin = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 intervalMin = 7; 
+	optional int64 startEpoch = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated TimerEvent timereventsArray = 8; 
+	repeated TimerEvent timerEventsArray = 8; 
 }
 /* @Indexed */ 
 message TimerEvent { 
@@ -92,7 +92,7 @@ message TimerEvent {
 }
 enum EAbortReason { 
 	option java_package = "life.genny.kogito.common.models.S2SData";
-	CANCEL = 1;
+	CANCEL = 0;
 	TIMEOUT = 2;
-	NONE = 0;
+	NONE = 1;
 }

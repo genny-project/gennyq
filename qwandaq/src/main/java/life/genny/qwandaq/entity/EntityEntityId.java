@@ -1,18 +1,15 @@
 package life.genny.qwandaq.entity;
 
-import javax.persistence.Embeddable;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.attribute.Attribute;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-
-import life.genny.qwandaq.attribute.Attribute;
+import javax.persistence.Embeddable;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToOne;
 
 @Embeddable
 @RegisterForReflection
@@ -90,18 +87,18 @@ public class EntityEntityId implements java.io.Serializable {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof EntityEntityId)) {
-			return false;
-		}
-		EntityEntityId that = (EntityEntityId) obj;
-		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(attribute, that.attribute);
-		eb.append(source.getCode(), that.source.getCode());
-		eb.append(targetCode, that.targetCode);
-		return eb.isEquals();
-	}
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof EntityEntityId that) {
+            EqualsBuilder eb = new EqualsBuilder();
+            eb.append(attribute, that.attribute);
+            eb.append(source.getCode(), that.source.getCode());
+            eb.append(targetCode, that.targetCode);
+            return eb.isEquals();
+        } else {
+            return false;
+        }
+    }
 
 }

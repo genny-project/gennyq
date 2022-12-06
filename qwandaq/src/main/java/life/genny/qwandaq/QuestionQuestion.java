@@ -1,21 +1,20 @@
 package life.genny.qwandaq;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Transient;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Transient;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
 
 /*@Entity
 @QueryExclude
@@ -28,7 +27,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 })
 @Cacheable*/
 @RegisterForReflection
-public class QuestionQuestion implements java.io.Serializable, Comparable<Object> {
+public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -70,6 +69,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	private String dependency;
 
 	private String icon;
+
+	private Set<Capability> capabilityRequirements;
 
 	private Set<String> parentQuestionCodes = new HashSet<>(0);
 
@@ -603,4 +604,14 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public void setChildQuestionQuestions(Set<QuestionQuestion> childQuestionQuestions) {
 		this.childQuestionQuestions = childQuestionQuestions;
 	}
+
+    public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
+	@Override
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
+	}
+
 }

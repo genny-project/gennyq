@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 import java.math.BigDecimal;
 import java.io.StringReader;
+import java.util.Set;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -43,7 +44,10 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.HBaseEntity;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -83,7 +87,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class HEntityAttribute implements java.io.Serializable, Comparable<Object> {
+public class HEntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
 
 	private static final Logger log = Logger.getLogger(HEntityAttribute.class);
 
@@ -200,6 +204,13 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 	 */
 	private Boolean confirmationFlag = false;
 
+	// // please do not send this out to frontend no matter what
+	// @JsonbTransient
+	// @JsonIgnore
+	@Column(name = "capreqs")
+	@Convert(converter = CapabilityConverter.class)
+	private Set<Capability> capabilityRequirements;
+
 	public HEntityAttribute() {
 	}
 
@@ -270,6 +281,12 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 		}
 	}
 
+	@JsonbTransient
+	@JsonIgnore
+	public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
 	/**
 	 * @return HEntityAttributeId
 	 */
@@ -320,6 +337,12 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 		getPk().setBaseEntity(baseEntity);
 		this.baseEntityCode = baseEntity.getCode();
 		this.realm = baseEntity.getRealm();
+	}
+
+	@Transient
+	@JsonbTransient
+	public HBaseEntity getBaseEntity() {
+		return getPk().getBaseEntity();
 	}
 
 	/**
@@ -1344,6 +1367,17 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 	 */
 	public void setConfirmationFlag(Boolean confirmationFlag) {
 		this.confirmationFlag = confirmationFlag;
+	}
+
+	public boolean isLocked() {
+		return capabilityRequirements != null;
+	}
+
+	@Override
+	@JsonbTransient
+	@JsonIgnore
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
 	}
 
 }

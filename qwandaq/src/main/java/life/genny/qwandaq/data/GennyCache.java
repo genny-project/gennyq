@@ -1,15 +1,23 @@
 package life.genny.qwandaq.data;
 
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
 import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeInitializerImpl;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKeyInitializerImpl;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityentity.EntityEntityInitializerImpl;
 import life.genny.qwandaq.serialization.entityentity.EntityEntityKeyInitializerImpl;
 import org.infinispan.client.hotrod.DefaultTemplate;
@@ -19,20 +27,19 @@ import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.exceptions.HotRodClientException;
 import org.infinispan.commons.api.CacheContainerAdmin;
-import org.infinispan.commons.util.CloseableIterator;
 import org.infinispan.commons.util.FileLookupFactory;
 import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import java.io.InputStream;
-import java.util.*;
+import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 /**
  * A remote cache management class for accessing realm caches.
- *
+ * 
  * @author Jasper Robison
  * @author Varun Shastry
  */
@@ -41,9 +48,9 @@ public class GennyCache {
 
 	static final Logger log = Logger.getLogger(GennyCache.class);
 
-	Set<String> realms = new HashSet<String>();
+    private final Set<String> realms = new HashSet<>();
 
-	private Map<String, RemoteCache> caches = new HashMap<>();
+    private final Map<String, RemoteCache> caches = new HashMap<>();
 
 	private RemoteCacheManager remoteCacheManager;
 
@@ -79,13 +86,12 @@ public class GennyCache {
 		}
 
 		// create cache manager
-		getAllSerializationContextInitializers().stream().forEach(builder::addContextInitializer);
+        getAllSerializationContextInitializers().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
 		if (remoteCacheManager == null) {
 			remoteCacheManager = new RemoteCacheManager(config);
 			remoteCacheManager.getConfiguration().marshallerClass();
 		}
-
 	}
 
 	/**
@@ -136,9 +142,9 @@ public class GennyCache {
 	 * Return a remote cache for the given realm.
 	 *
 	 * @param realm
-	 * 		the associated realm of the desired cache
+	 *              the associated realm of the desired cache
 	 * @return RemoteCache&lt;String, String&gt;
-	 * 		the remote cache associatd with the realm
+	 *         the remote cache associatd with the realm
 	 */
 	public RemoteCache<String, String> getRemoteCache(final String realm) {
 
@@ -173,7 +179,7 @@ public class GennyCache {
 	 * Get a CoreEntity from the cache.
 	 *
 	 * @param cacheName The cache to get from
-	 * @param key The key to the entity to fetch
+	 * @param key       The key to the entity to fetch
 	 * @return The entity
 	 */
 	public CoreEntitySerializable getEntityFromCache(String cacheName, CoreEntityKey key) {
@@ -210,11 +216,11 @@ public class GennyCache {
 
 	/**
 	 * Put a CoreEntity into the cache.
-	 *
+	 * 
 	 * @param cacheName The cache to get from
-	 * @param key The key to put the entity under
-	 * @param value The persistable entity
-	 * @return True if the entity is successfully inserted into cache, False otherwise
+	 * @param key       The key to put the entity under
+	 * @param value     The entity
+	 * @return The Entity
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
 		return putEntityIntoCache(cacheName, key, value.toSerializableCoreEntity());

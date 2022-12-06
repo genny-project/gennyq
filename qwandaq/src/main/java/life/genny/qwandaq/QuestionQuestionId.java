@@ -94,17 +94,17 @@ public class QuestionQuestionId implements java.io.Serializable {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof QuestionQuestionId)) {
-			return false;
-		}
-		QuestionQuestionId that = (QuestionQuestionId) obj;
-		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(sourceCode, that.sourceCode);
-		eb.append(targetCode, that.targetCode);
-		return eb.isEquals();
-	}
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof QuestionQuestionId that) {
+            EqualsBuilder eb = new EqualsBuilder();
+            eb.append(sourceCode, that.sourceCode);
+            eb.append(targetCode, that.targetCode);
+            return eb.isEquals();
+        } else {
+            return false;
+        }
+    }
 
 }

@@ -1,8 +1,21 @@
 package life.genny.qwandaq.utils;
 
-import java.lang.invoke.MethodHandles;
-import java.util.LinkedList;
-import java.util.List;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Link;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HAttribute;
+import life.genny.qwandaq.attribute.HEntityAttribute;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.validation.Validation;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -11,19 +24,11 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.persistence.Table;
 import javax.transaction.Transactional;
-
-import life.genny.qwandaq.attribute.HAttribute;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.HBaseEntity;
-import org.jboss.logging.Logger;
-
-import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Link;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.validation.Validation;
+import java.lang.invoke.MethodHandles;
+import java.util.LinkedList;
+import java.util.List;
 
 /*
  * A utility class used for standard read and write 
@@ -41,6 +46,8 @@ public class DatabaseUtils {
 	@Inject
 	EntityManager entityManager;
 
+	@Inject
+	BaseEntityUtils beUtils;
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
@@ -92,7 +99,7 @@ public class DatabaseUtils {
 	public Long countAttributes(String realm) {
 
 		return (Long) entityManager
-				.createQuery("SELECT count(1) FROM HAttribute WHERE realm=:realmStr AND name not like 'App\\_%'")
+				.createQuery("SELECT count(1) FROM Attribute WHERE realm=:realmStr AND name not like 'App\\_%'")
 				.setParameter("realmStr", realm)
 				.getResultList().get(0);
 	}
@@ -260,10 +267,10 @@ public class DatabaseUtils {
 	public Attribute findAttributeByCode(String realm, String code) {
 
 		return entityManager
-				.createQuery("FROM HAttribute WHERE realm=:realmStr AND code =:code", HAttribute.class)
+				.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
-				.getSingleResult().toAttribute();
+				.getSingleResult();
 	}
 
 	/**
@@ -276,10 +283,10 @@ public class DatabaseUtils {
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 
 		return entityManager
-				.createQuery("FROM HBaseEntity WHERE realm=:realmStr AND code=:code", HBaseEntity.class)
+				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
-				.getSingleResult().toBaseEntity();
+				.getSingleResult();
 	}
 
 	/**
@@ -292,11 +299,17 @@ public class DatabaseUtils {
 
 	public Question findQuestionByCode(String realm, String code) {
 
-		return entityManager
-				.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
-				.setParameter("realmStr", realm)
-				.setParameter("code", code)
-				.getSingleResult();
+		try {
+			return entityManager
+					.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
+					.setParameter("realmStr", realm)
+					.setParameter("code", code)
+					.getSingleResult();
+		} catch(NoResultException e) {
+			log.error("Could not find Question: " + realm + ":" + code);
+			log.error(e.getMessage());
+			return null;
+		}
 	}
 
 	/**
@@ -336,6 +349,17 @@ public class DatabaseUtils {
 						QuestionQuestion.class)
 				.setParameter("realmStr", realm)
 				.setParameter("sourceCode", sourceCode)
+				.getResultList();
+	}
+
+	public List<QuestionQuestion> findParentQuestionQuestionsByTargetCode(String realm, String targetCode) {
+
+		return entityManager
+				.createQuery(
+						"FROM QuestionQuestion WHERE realm=:realmStr AND targetCode = :targetCode order by weight ASC",
+						QuestionQuestion.class)
+				.setParameter("realmStr", realm)
+				.setParameter("targetCode", targetCode)
 				.getResultList();
 	}
 
@@ -429,11 +453,21 @@ public class DatabaseUtils {
 
 	/**
 	 * Save a {@link BaseEntity} to the database.
-	 * 
+	 *
 	 * @param entity A {@link BaseEntity} object to save
 	 */
 	@Transactional
 	public void saveBaseEntity(BaseEntity entity) {
+		saveBaseEntity(entity.toHBaseEntity());
+	}
+
+	/**
+	 * Save a {@link HBaseEntity} to the database.
+	 * 
+	 * @param entity A {@link HBaseEntity} object to save
+	 */
+	@Transactional
+	public void saveBaseEntity(HBaseEntity entity) {
 
 		log.debug("Saving BaseEntity " + entity.getRealm() + ":" + entity.getCode());
 
@@ -446,11 +480,11 @@ public class DatabaseUtils {
 
 		if (existingEntity == null) {
 			log.debug("New BaseEntity being saved to DB -> " + entity.getCode());
-			entityManager.persist(entity.toHBaseEntity());
+			entityManager.persist(entity);
 		} else {
 			if (entity.getId() == null)
 				entity.setId(existingEntity.getId());
-			entityManager.merge(entity.toHBaseEntity());
+			entityManager.merge(entity);
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
 	}
@@ -618,4 +652,109 @@ public class DatabaseUtils {
 		this.entityManager = entityManager;
 	}
 
+
+	/**
+	 * @param filterable
+	 * @param capabilityRequirements
+	 * @return
+	 */
+	@Transactional
+	public boolean updateCapabilityRequirements(String realm, ICapabilityFilterable filterable, Capability... capabilityRequirements) {
+		if(capabilityRequirements == null) {
+			log.error("Attempted to set Capability Requirements to null. Call updateCapabilityRequirements(filterable) instead of updateCapabilityRequirements(filterable, null)");
+			throw new NullParameterException("capabilityRequirements");
+		}
+
+		filterable.setCapabilityRequirements(capabilityRequirements);
+
+		// TODO: Turn this into a sustainable solution
+
+		if(filterable instanceof HBaseEntity) {
+			HBaseEntity be = (HBaseEntity)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to BaseEntity: " + realm + ":" + be.getCode());
+			saveBaseEntity(be);
+			return true;
+		}
+
+		if(filterable instanceof QuestionQuestion) {
+			QuestionQuestion qq = (QuestionQuestion)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getParentCode() + ":" + qq.getChildCode());
+			// TODO: Potentially update sub questions
+			saveQuestionQuestion(qq);
+			return true;
+		}
+
+		if(filterable instanceof Question) {
+			Question q = (Question)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
+			saveQuestion(q);
+			return true;
+		}
+
+		if(filterable instanceof HEntityAttribute) {
+			HEntityAttribute ea = (HEntityAttribute)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
+			HBaseEntity be = ea.getBaseEntity();
+			saveBaseEntity(be);
+			return true;
+
+		}
+
+		return false;
+	}
+
+	/**
+	 * Get the database table name of anything annotated with {@link javax.persistence.Table}
+	 * @param tableObject - object to retrieve table name of
+	 * @return the SQL Table name
+	 */
+	public String getTableName(Object tableObject) {
+		Class<?> clazz = tableObject.getClass();
+		Table table = clazz.getAnnotation(Table.class);
+		if(table == null)
+			throw new BadDataException("Class: " + clazz + " is not annotated with javax.persistence.Table!");
+		return table.name();
+	}
+
+	/**
+	 * Get the database table name of anything annotated with {@link javax.persistence.Table}
+	 * @param tableObject - object to retrieve table name of
+	 * @return the HQL Table name
+	 */
+	public String getHQLTableName(Object tableObject) {
+		Class<?> clazz = tableObject.getClass();
+		Table table = clazz.getAnnotation(Table.class);
+		if(table == null)
+			throw new BadDataException("Class: " + clazz + " is not annotated with javax.persistence.Table!");
+		return clazz.getSimpleName();
+	}
+
+	/**
+	 * Delete a BaseEntity from the database.
+	 *
+	 * @param realm realm to delete in
+	 * @param code  Code of the BaseEntity to delete.
+	 */
+	@Transactional
+	public void deleteBaseEntityAndAttribute(String realm, String code) {
+
+		try {
+			log.info("Deleting baseEntity attribute  " + code);
+			entityManager.createQuery("DELETE EntityAttribute WHERE realm=:realm AND baseEntityCode=:baseCode")
+					.setParameter("realm", realm)
+					.setParameter("baseCode", code)
+					.executeUpdate();
+
+			log.info("Deleting baseEntity " + code);
+
+			entityManager.createQuery("DELETE BaseEntity WHERE realm=:realmStr AND code=:code")
+					.setParameter("realmStr", realm)
+					.setParameter("code", code)
+					.executeUpdate();
+
+			log.info("Successfully deleted BaseEntity " + code + " in realm " + realm);
+		} catch (Exception ex) {
+			log.error(ex);
+		}
+	}
 }

@@ -21,7 +21,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
@@ -93,7 +93,7 @@ public class DefUtils {
 		}
 
 		log.info("DEF code search returned " + codes.size() + " results for product " + productCode);
-		defPrefixMap.put(productCode, new ConcurrentHashMap<String, String>());
+		defPrefixMap.put(productCode, new ConcurrentHashMap<>());
 
 		for (String code : codes) {
 

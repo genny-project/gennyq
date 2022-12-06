@@ -64,7 +64,7 @@ public class GennyToken implements Serializable {
 	public String[] allowedProducts;
 
 	public Map<String, Object> adecodedTokenMap = null;
-	public Set<String> userRoles = new HashSet<String>();
+	public Set<String> userRoles = new HashSet<>();
 
 	/**
 	 * Constructor. Default.
@@ -400,9 +400,8 @@ public class GennyToken implements Serializable {
 			if (m.find()) {
 				String[] roles = m.group(1).split(",");
 				for (String role : roles) {
-					userRoles.add((String) role.trim());
+					userRoles.add(role.trim());
 				}
-				;
 			}
 		}
 
@@ -467,7 +466,7 @@ public class GennyToken implements Serializable {
 	@JsonbTransient
 	@JsonIgnore
 	public LocalDateTime getAuthDateTime() {
-		Long auth_timestamp = null;
+		Long auth_timestamp;
 		try {
 			auth_timestamp = ((Number) adecodedTokenMap.get("auth_time")).longValue();
 		} catch (Exception e) {
@@ -604,19 +603,15 @@ public class GennyToken implements Serializable {
 	@JsonIgnore
 	public static Map<String, Object> getJsonMap(final JsonObject jsonObj) {
 		final String json = jsonObj.toString();
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new HashMap<>();
 		try {
 			final ObjectMapper mapper = new ObjectMapper();
 			// convert JSON string to Map
-			final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<HashMap<String, Object>>() {
+			final TypeReference<HashMap<String, Object>> typeRef = new TypeReference<>() {
 			};
 
 			map = mapper.readValue(json, typeRef);
 
-		} catch (final JsonGenerationException e) {
-			e.printStackTrace();
-		} catch (final JsonMappingException e) {
-			e.printStackTrace();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}

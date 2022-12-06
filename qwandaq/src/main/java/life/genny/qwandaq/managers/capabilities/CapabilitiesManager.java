@@ -27,10 +27,13 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.datatype.capability.Capability;
-import life.genny.qwandaq.datatype.capability.CapabilityMode;
-import life.genny.qwandaq.datatype.capability.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.PermissionMode;
+
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -69,20 +72,22 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	@Deprecated(forRemoval = false)
-	public Set<Capability> getUserCapabilities() {
+	public ReqConfig getUserCapabilities(boolean requiresAllCaps, boolean requiresAllModes) {
 		// this is a necessary log, since we are trying to minimize how often this function is called
 		// it is good to see how often it comes up
 		info("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		BaseEntity userBE = beUtils.getUserBaseEntity();
 		List<BaseEntity> roles = roleMan.getRoles(userBE);
-		Set<Capability> capabilities;
+		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
+			info("User Roles:");
 			BaseEntity role = roles.get(0);
 			capabilities = getEntityCapabilities(role);
 			for(int i = 1; i < roles.size(); i++) {
-				Set<Capability> roleCaps = getEntityCapabilities(role);
+				role = roles.get(i);
+				CapabilitySet roleCaps = getEntityCapabilities(role);
 				// Being careful about accidentally duplicating capabilities 
 				// (given the nature of the hashCode and equals methods in Capability.java)
 				for(Capability cap : roleCaps) {
@@ -97,11 +102,11 @@ public class CapabilitiesManager extends Manager {
 				}
 			}
 		} else {
-			capabilities = new HashSet<>();
+			capabilities = new CapabilitySet(userBE);
 		}
 
 		// Now overwrite with user capabilities
-		Set<Capability> userCapabilities = getEntityCapabilities(userBE);
+		CapabilitySet userCapabilities = getEntityCapabilities(userBE);
 		for(Capability capability : userCapabilities) {
 			// Try and find a preexisting capability to overwrite.
 			// If it exists, remove so we can override the role-based capability
@@ -112,8 +117,16 @@ public class CapabilitiesManager extends Manager {
 			}
 			capabilities.add(capability);
 		}
+		
+		return new ReqConfig(capabilities, requiresAllCaps, requiresAllModes);
+	}
 
-		return capabilities;
+	public ReqConfig getUserCapabilities(boolean requiresAllCaps) {
+		return getUserCapabilities(requiresAllCaps, ReqConfig.DEFAULT_ALL_MODES);
+	}
+
+	public ReqConfig getUserCapabilities() {
+		return getUserCapabilities(ReqConfig.DEFAULT_ALL_CAPS);
 	}
 	
 	/**
@@ -122,14 +135,20 @@ public class CapabilitiesManager extends Manager {
 	 * @param target
 	 * @return
 	 */
-	public Set<Capability> getEntityCapabilities(final BaseEntity target) {
+	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
+		info("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
-			return new HashSet<>();
+			return new CapabilitySet(target);
 		}
-		return capabilities.stream()
-			.map((EntityAttribute ea) -> Capability.getFromEA(ea))
-			.collect(Collectors.toSet());
+		CapabilitySet cSet = new CapabilitySet(target);
+		cSet.addAll(capabilities.stream()
+			.map((EntityAttribute ea) -> {
+				System.out.println("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
+				return Capability.getFromEA(ea);
+			})
+			.collect(Collectors.toSet()));
+		return cSet;
 	}
 
 	/**
@@ -138,10 +157,10 @@ public class CapabilitiesManager extends Manager {
 	 * @param productCode    The product code
 	 * @param target         The target entity
 	 * @param code The capability code
-	 * @param modes          The modes to set
+	 * @param nodes          The nodes to set
 	 */
 	private void updateCapability(String productCode, BaseEntity target, final Attribute capability,
-			final CapabilityNode... modes) {
+			final CapabilityNode... nodes) {
 		// Update base entity
 		if (capability == null) {
 			throw new NullParameterException("capability");
@@ -151,8 +170,8 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(modes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(modes));
+		target.addAttribute(capability, 0.0, getModeString(nodes));
+		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -225,6 +244,7 @@ public class CapabilitiesManager extends Manager {
 					return false;
 				}
 			}
+
 			return true;
 		} else {
 			for (CapabilityNode checkMode : checkModes) {
@@ -233,11 +253,13 @@ public class CapabilitiesManager extends Manager {
 					return true;
 				}
 			}
+
+			System.out.println("Doesn't have at least one of " + CommonUtils.getArrayString(checkModes) + " in " + CommonUtils.getArrayString(capabilitySet));
 			return false;
 		}
 	}
 
-	private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSet) {
+private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSet) {
 		// Allocate new list with max size of all combinations of CapMode and PermMode
 		List<CapabilityNode> newCaps = new ArrayList<>(capSet.size() * CapabilityMode.values().length * PermissionMode.values().length);
 		for(CapabilityNode node : capSet) {
@@ -414,7 +436,7 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated
 	public static List<CapabilityNode> deserializeCapArray(String modeString) {
-		return CommonUtils.getArrayFromString(modeString, CapabilityNode::parseCapability);
+		return CommonUtils.getListFromString(modeString, CapabilityNode::parseCapability);
 	}
 
 	/**
@@ -460,7 +482,7 @@ public class CapabilitiesManager extends Manager {
 		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
 	}
 
-	public static String getModeString(List<CapabilityNode> capabilities) {
+	public static String getModeString(Collection<CapabilityNode> capabilities) {
 		return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
 	}
 
@@ -543,7 +565,7 @@ public class CapabilitiesManager extends Manager {
 
 	private boolean shouldOverride() {
 		// allow keycloak admin and devcs to do anything
-		return (userToken.hasRole("admin", "dev") || ("service".equals(userToken.getUsername())));
+		return (userToken.hasRole("service", "admin", "dev") || ("service".equals(userToken.getUsername())));
 	}
 
 	// For use in builder patterns

@@ -1,11 +1,12 @@
 package life.genny.qwandaq.exception;
 
-import java.io.ByteArrayInputStream;
+import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
+
 import javax.annotation.Priority;
 import javax.validation.ValidationException;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
-import org.eclipse.microprofile.rest.client.ext.ResponseExceptionMapper;
+import java.io.ByteArrayInputStream;
 
 /**
  * ResponseException --- Get the corresponding web exception
@@ -17,21 +18,18 @@ public class ResponseException implements ResponseExceptionMapper<RuntimeExcepti
 	@Override
 	public RuntimeException toThrowable(Response response) {
 
-		String msg = getBody(response); 
-		int status = response.getStatus();                    
-		RuntimeException re;
+        String msg = getBody(response);
+        int status = response.getStatus();
+        RuntimeException re;
 
-		switch (status) 
-		{
-			case 412:
-				re = new ValidationException(msg);         
-				break;
-			default:
-				re = new WebApplicationException(status);         
-		}
+        if (status == 412) {
+            re = new ValidationException(msg);
+        } else {
+            re = new WebApplicationException(status);
+        }
 
-		return re;
-	}
+        return re;
+    }
 
 	private String getBody(Response response) {
 

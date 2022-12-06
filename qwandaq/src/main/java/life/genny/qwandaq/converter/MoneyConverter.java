@@ -1,12 +1,10 @@
 package life.genny.qwandaq.converter;
 
-import java.lang.invoke.MethodHandles;
 import java.io.StringReader;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
-import org.jboss.logging.Logger;
 import org.javamoney.moneta.Money;
 
 import javax.money.CurrencyUnit;
@@ -18,8 +16,6 @@ import javax.json.JsonObject;
 
 @Converter
 public class MoneyConverter implements AttributeConverter<Money, String> {
-
-	private static final Logger log = Logger.getLogger(MoneyConverter.class);
 
 	/** 
 	 * Convert a Money object to a String
@@ -53,8 +49,7 @@ public class MoneyConverter implements AttributeConverter<Money, String> {
 		CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
 		Double amount = Double.valueOf(obj.getString("amount"));
 
-		Money money = Money.of(amount, currency);
-		return money;
+        return Money.of(amount, currency);
 	}
 
 

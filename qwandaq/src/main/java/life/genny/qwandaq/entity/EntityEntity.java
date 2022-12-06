@@ -70,19 +70,16 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 	 */
 	public Link getLink() {
 		return link;
-
 	}
 
 	/**
 	 * Stores the Created UMT DateTime that this object was created
 	 */
-	//@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
-	//@Column(name = "updated")
 	private LocalDateTime updated;
 
 	/**
@@ -108,29 +105,24 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateTimeAdapter.class)
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalDateAdapter.class)
 	private LocalDate valueDate;
 
 	/**
 	 * Store the LocalTime value of the attribute for the baseEntity
 	 */
-	//  @XmlJavaTypeAdapter(LocalTimeAdapter.class)
 	private LocalTime valueTime;
 
-	//@Column(name = "money", length = 128)
 	@Convert(converter = MoneyConverter.class)
 	Money valueMoney;
 
 	/**
 	 * Store the String value of the attribute for the baseEntity
 	 */
-	//@Type(type="text")
 	private String valueString;
 
 	/**
@@ -223,7 +215,7 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 	}
 
 
-	/**
+	/** 
 	 * @return EntityEntityId
 	 */
 	/*@JsonIgnore
@@ -233,7 +225,7 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 	}*/
 
 
-	/**
+	/** 
 	 * @param pk the pk to set
 	 */
 	/*public void setPk(final EntityEntityId pk) {
@@ -427,18 +419,16 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 		this.link = link;
 	}
 
-	//@PreUpdate
 	public void autocreateUpdate() {
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	//@PrePersist
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	/**
+	/** 
 	 * @return Date
 	 */
 	@Transient
@@ -448,34 +438,33 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 		return out;
 	}
 
-	/**
+	/** 
 	 * @return Date
 	 */
 	@Transient
 	@JsonbTransient
 	public Date getUpdatedDate() {
 		if (updated!=null) {
-			final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
-			return out;
+			return Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
 		} else {
 			return null;
 		}
 	}
 
-	/**
+	/** 
 	 * @param o the object to compare to
 	 * @return int
 	 */
-	@Override
+ @Override
 	public int compareTo(Object o) {
 		EntityEntity myClass = (EntityEntity) o;
 		return new CompareToBuilder()
-				//	       .appendSuper(super.compareTo(o)
-				.append(this.weight, myClass.weight)
-				.toComparison();
+			//	       .appendSuper(super.compareTo(o)
+			.append(this.weight, myClass.weight)
+			.toComparison();
 	}
 
-	/**
+	/** 
 	 * @return int
 	 */
 	@Override
@@ -484,7 +473,7 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 				valueLong, valueMoney, valueString, valueTime, weight);
 	}
 
-	/**
+	/** 
 	 * @param obj the object to compare to
 	 * @return boolean
 	 */
@@ -496,20 +485,19 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof EntityEntity)) {
+		if (!(obj instanceof EntityEntity other)) {
 			return false;
 		}
-		EntityEntity other = (EntityEntity) obj;
 		return  Objects.equals(link, other.link)
-				&& Objects.equals(realm, other.realm) && Objects.equals(valueBoolean, other.valueBoolean)
-				&& Objects.equals(valueDate, other.valueDate) && Objects.equals(valueDateTime, other.valueDateTime)
-				&& Objects.equals(valueDouble, other.valueDouble) && Objects.equals(valueInteger, other.valueInteger)
-				&& Objects.equals(valueLong, other.valueLong) && Objects.equals(valueMoney, other.valueMoney)
-				&& Objects.equals(valueString, other.valueString) && Objects.equals(valueTime, other.valueTime)
-				&& Objects.equals(weight, other.weight);
+			&& Objects.equals(realm, other.realm) && Objects.equals(valueBoolean, other.valueBoolean)
+			&& Objects.equals(valueDate, other.valueDate) && Objects.equals(valueDateTime, other.valueDateTime)
+			&& Objects.equals(valueDouble, other.valueDouble) && Objects.equals(valueInteger, other.valueInteger)
+			&& Objects.equals(valueLong, other.valueLong) && Objects.equals(valueMoney, other.valueMoney)
+			&& Objects.equals(valueString, other.valueString) && Objects.equals(valueTime, other.valueTime)
+			&& Objects.equals(weight, other.weight);
 	}
 
-	/**
+	/** 
 	 * @param <T> the Type to return
 	 * @return T
 	 */
@@ -520,26 +508,18 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 	@XmlTransient
 	public <T> T getValue() {
 		final String dataType = attribute.getDataType().getClassName();
-		switch (dataType) {
-			case "java.lang.Integer":
-				return (T) getValueInteger();
-			case "java.time.LocalDateTime":
-				return (T) getValueDateTime();
-			case "java.time.LocalTime":
-				return (T) getValueTime();
-			case "java.lang.Long":
-				return (T) getValueLong();
-			case "java.lang.Double":
-				return (T) getValueDouble();
-			case "java.lang.Boolean":
-				return (T) getValueBoolean();
-			case "java.time.LocalDate":
-				return (T) getValueDate();
+		return switch (dataType) {
+			case "java.lang.Integer" -> (T) getValueInteger();
+			case "java.time.LocalDateTime" -> (T) getValueDateTime();
+			case "java.time.LocalTime" -> (T) getValueTime();
+			case "java.lang.Long" -> (T) getValueLong();
+			case "java.lang.Double" -> (T) getValueDouble();
+			case "java.lang.Boolean" -> (T) getValueBoolean();
+			case "java.time.LocalDate" -> (T) getValueDate();
 
-			case "java.lang.String":
-			default:
-				return (T) getValueString();
-		}
+//			case "java.lang.String" ->
+			default -> (T) getValueString();
+		};
 
 	}
 
@@ -551,7 +531,7 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 	}
 
 
-	/**
+	/** 
 	 * @return Boolean
 	 */
 	public Boolean isValueBoolean() {
@@ -579,7 +559,7 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 		this.valueDate = valueDate;
 	}
 
-	/**
+	/** 
 	 * @param <T> the type to return
 	 * @param value the value to set
 	 */
@@ -602,7 +582,7 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 						try {
 							Date olddate = new SimpleDateFormat(formatString).parse(result);
 							final LocalDateTime dateTime = olddate.toInstant().atZone(ZoneId.systemDefault())
-									.toLocalDateTime();
+								.toLocalDateTime();
 							setValueDateTime(dateTime);
 							break;
 						} catch (ParseException e) {
@@ -665,50 +645,23 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 		} else {
 
 			switch (this.attribute.getDataType().getClassName()) {
-				case "java.lang.Integer":
-				case "Integer":
-					setValueInteger((Integer) value);
-					break;
-				case "java.time.LocalDateTime":
-				case "LocalDateTime":
-					setValueDateTime((LocalDateTime) value);
-					break;
-				case "java.time.LocalDate":
-				case "LocalDate":
-					setValueDate((LocalDate) value);
-					break;
-				case "java.lang.Long":
-				case "Long":
-					setValueLong((Long) value);
-					break;
-				case "java.time.LocalTime":
-				case "LocalTime":
-					setValueTime((LocalTime) value);
-					break;
-				case "org.javamoney.moneta.Money":
-				case "Money":
-					setValueMoney((Money) value);
-					break;
-				case "java.lang.Double":
-				case "Double":
-					setValueDouble((Double) value);
-					break;
-				case "java.lang.Boolean":
-				case "Boolean":
-					setValueBoolean((Boolean) value);
-					break;
-
-				case "java.lang.String":
-				default:
-					setValueString((String) value);
-					break;
+				case "java.lang.Integer", "Integer" -> setValueInteger((Integer) value);
+				case "java.time.LocalDateTime", "LocalDateTime" -> setValueDateTime((LocalDateTime) value);
+				case "java.time.LocalDate", "LocalDate" -> setValueDate((LocalDate) value);
+				case "java.lang.Long", "Long" -> setValueLong((Long) value);
+				case "java.time.LocalTime", "LocalTime" -> setValueTime((LocalTime) value);
+				case "org.javamoney.moneta.Money", "Money" -> setValueMoney((Money) value);
+				case "java.lang.Double", "Double" -> setValueDouble((Double) value);
+				case "java.lang.Boolean", "Boolean" -> setValueBoolean((Boolean) value);
+//				case "java.lang.String" ->
+				default -> setValueString((String) value);
 			}
 		}
 
 		this.link.setLinkValue(getObjectAsString(getValue()));
 	}
 
-	/**
+	/** 
 	 * @return String
 	 */
 	@JsonIgnore
@@ -721,37 +674,29 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 			dataType = attribute.getDataType().getClassName();
 		} catch (Exception e) {
 		}
-		switch (dataType) {
-			case "java.lang.Integer":
-				return "" + getValueInteger();
-			case "java.time.LocalDateTime":
+		return switch (dataType) {
+			case "java.lang.Integer" -> "" + getValueInteger();
+			case "java.time.LocalDateTime" -> {
 				DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 				Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-				return df.format(datetime);
-			case "java.lang.Long":
-				return "" + getValueLong();
-			case "java.time.LocalTime":
-				return getValueTime().toString();
-			case "org.javamoney.moneta.Money":
-				return getValueMoney().toString();
-
-			case "java.lang.Double":
-				return getValueDouble().toString();
-			case "java.lang.Boolean":
-				return getValueBoolean() ? "TRUE" : "FALSE";
-			case "java.time.LocalDate":
+				yield df.format(datetime);
+			}
+			case "java.lang.Long" -> "" + getValueLong();
+			case "java.time.LocalTime" -> getValueTime().toString();
+			case "org.javamoney.moneta.Money" -> getValueMoney().toString();
+			case "java.lang.Double" -> getValueDouble().toString();
+			case "java.lang.Boolean" -> Boolean.TRUE.equals(getValueBoolean()) ? "TRUE" : "FALSE";
+			case "java.time.LocalDate" -> {
 				DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 				Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-				return df2.format(date);
-
-			case "java.lang.String":
-			default:
-				return getValueString();
-		}
-
+				yield df2.format(date);
+			}
+//			case "java.lang.String" ->
+			default -> getValueString();
+		};
 	}
 
-	/**
+	/** 
 	 * @param value the value to get
 	 * @return String
 	 */
@@ -764,35 +709,31 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 			return ""+value;
 		if (value instanceof LocalDateTime) {
 			LocalDateTime val = (LocalDateTime)value;
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS"); 
 			Date datetime = Date.from(val.atZone(ZoneId.systemDefault()).toInstant());
 			return df.format(datetime);
 		}
 		if (value instanceof Long)
-			return ""+value;
-		if (value instanceof Double) {
-			return ((Double) value).toString();
+			return "" + value;
+		if (value instanceof Double val) {
+			return val.toString();
 		}
-		if (value instanceof Boolean) {
-			Boolean val = (Boolean)value;
-			return val?"TRUE":"FALSE";
+		if (value instanceof Boolean val) {
+			return Boolean.TRUE.equals(val) ? "TRUE" : "FALSE";
 		}
-		if (value instanceof LocalDate) {
-			LocalDate val = (LocalDate)value;
+		if (value instanceof LocalDate val) {
 			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 			Date date = Date.from(val.atStartOfDay(ZoneId.systemDefault()).toInstant());
 			return df2.format(date);
 		}
 
-		if (value instanceof Money) {
-			Money val = (Money)value;
+		if (value instanceof Money val) {
 			return val.toString();
 		}
-		if (value instanceof LocalTime) {
-			LocalTime val = (LocalTime)value;
+		if (value instanceof LocalTime val) {
 			return val.toString();
 		}
-		return (String)value;
+		return (String) value;
 	}
 
 	/**
@@ -809,7 +750,7 @@ public class EntityEntity implements CoreEntityPersistable, Comparable<Object> {
 		this.realm = realm;
 	}
 
-	/**
+	/** 
 	 * @return String
 	 */
 	@Override

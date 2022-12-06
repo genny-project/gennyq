@@ -1,28 +1,21 @@
 package life.genny.kogito.common.service;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.List;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.utils.*;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.RevisionSyntaxException;
-import org.jboss.logging.Logger;
-
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.GithubUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.DefUtils;
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
 @ApplicationScoped
 public class ImportGithubService {

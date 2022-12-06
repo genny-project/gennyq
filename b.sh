@@ -21,4 +21,10 @@ mvn clean package -U -DskipTests=true
 cd ../fyodor
 mvn clean package -U -DskipTests=true
 ./build-docker.sh
+cd ../messages
+mvn clean package -U -DskipTests=true
+./build-docker.sh
+cd ../shleemy
+mvn clean package -U -DskipTests=true
+./build-docker.sh
 cd ..

@@ -1,40 +1,17 @@
 package life.genny.qwandaq.utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-
-import life.genny.qwandaq.attribute.HAttribute;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
@@ -48,6 +25,22 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.validation.Validation;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -59,11 +52,9 @@ import life.genny.qwandaq.validation.Validation;
 public class QwandaUtils {
 
 	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
-	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT };
+	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT, Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
-
-	private final ExecutorService executorService = Executors.newFixedThreadPool(GennySettings.executorThreadCount());
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -87,18 +78,18 @@ public class QwandaUtils {
 
 	public QwandaUtils() {
 	}
-
-	private static DataType DTT_EVENT;
+	// private static DataType DTT_EVENT;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
 	@PostConstruct
 	private void init() {
-		Attribute submit = getAttribute("EVT_SUBMIT");
-		if (submit == null) {
-			log.error("Could not find Attribute: EVT_SUBMIT");
-		}
-		DTT_EVENT = submit.getDataType();
+		// Attribute submit = getAttribute("EVT_SUBMIT");
+		// if (submit == null) {
+		// 	log.error("Could not find Attribute: EVT_SUBMIT");
+		// 	return;
+		// }
+		// DTT_EVENT = submit.getDataType();
 	}
 
 	/**
@@ -246,7 +237,7 @@ public class QwandaUtils {
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);
 
-				if (attributeList.size() > 0) {
+				if (!attributeList.isEmpty()) {
 					log.debug("Start AttributeID:"
 							+ attributeList.get(0).getId() + ", End AttributeID:"
 							+ attributeList.get(attributeList.size() - 1).getId());
@@ -267,6 +258,7 @@ public class QwandaUtils {
 			code = Prefix.EVT.concat(code);
 		}
 		code = code.toUpperCase();
+		DataType DTT_EVENT = getAttribute(userToken.getProductCode(), "EVT_SUBMIT").getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
@@ -280,7 +272,92 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
+		if (question == null)
+			throw new NullParameterException("question");
+		if (source == null)
+			throw new NullParameterException("source");
+		if (target == null)
+			throw new NullParameterException("target");
+
+		String productCode = userToken.getProductCode();
+		// init new parent ask
+		Ask ask = new Ask(question, source.getCode(), target.getCode());
+		ask.setRealm(productCode);
+
+		Attribute attribute = question.getAttribute();
+		if ("QUE_BASEENTITY_GRP".equals(question.getCode())) {
+			return generateAskGroupUsingBaseEntity(target);
+		}
+
+
+		// override with Attribute icon if question icon is null
+		if (attribute != null && attribute.getIcon() != null) {
+			if (question.getIcon() == null) {
+				question.setIcon(attribute.getIcon());
+			}
+		}
+
+		// check if it is a question group
+		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
+
+			log.info("[*] Parent Question: " + question.getCode());
+
+			List<QuestionQuestion> questionQuestions = cacheUtils.getQuestionQuestionByQuestionCode(productCode, question.getCode());
+
+			// recursively operate on child questions
+			for (QuestionQuestion questionQuestion : questionQuestions) {
+
+				log.info("   [-] Found Child Question in database:  " + questionQuestion.getParentCode() + ":"
+						+ questionQuestion.getChildCode());
+				if(requirementsConfig != null) {
+					if(!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
+						continue;
+					}
+				}
+				Ask child = generateAskFromQuestionCode(questionQuestion.getChildCode(), source, target);
+
+				// Do not include PRI_SUBMIT
+				if ("PRI_SUBMIT".equals(child.getQuestion().getAttribute().getCode())) {
+					continue;
+				}
+
+				// set boolean fields
+				child.setMandatory(questionQuestion.getMandatory());
+				child.setDisabled(questionQuestion.getDisabled());
+				child.setHidden(questionQuestion.getHidden());
+				child.setDisabled(questionQuestion.getDisabled());
+				child.setReadonly(questionQuestion.getReadonly());
+
+				// override with QuestionQuestion icon if exists
+				if (questionQuestion.getIcon() != null) {
+					child.getQuestion().setIcon(questionQuestion.getIcon());
+				}
+				log.info("Adding: " + child.getQuestionCode());
+				ask.add(child);
+			}
+		} else {
+			ask.setReadonly(question.getReadonly());
+		}
+
+		return ask;
+	}
+
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target) {
+		return generateAskFromQuestion(question, source, target, null);
+	}
+
+	/**
+	 * Generate an ask for a question using the question code, the
+	 * source and the target. This operation is recursive if the
+	 * question is a group.
+	 *
+	 * @param code   The code of the question
+	 * @param source The source entity
+	 * @param target The target entity
+	 * @return The generated Ask
+	 */
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
 
 		if (code == null)
 			throw new NullParameterException("code");
@@ -306,58 +383,11 @@ public class QwandaUtils {
 			throw new ItemNotFoundException(code, e);
 		}
 
-		// init new parent ask
-		Ask ask = new Ask(question, source.getCode(), target.getCode());
-		ask.setRealm(productCode);
+		return generateAskFromQuestion(question, source, target, requirementsConfig);
+	}
 
-		Attribute attribute = question.getAttribute();
-
-		// override with Attribute icon if question icon is null
-		if (attribute != null && attribute.getIcon() != null) {
-			if (question.getIcon() == null) {
-				question.setIcon(attribute.getIcon());
-			}
-		}
-
-		// check if it is a question group
-		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
-
-			log.info("[*] Parent Question: " + question.getCode());
-
-			List<QuestionQuestion> questionQuestions = cacheUtils.getQuestionQuestionByQuestionCode(productCode, question.getCode());
-
-			// recursively operate on child questions
-			for (QuestionQuestion questionQuestion : questionQuestions) {
-
-				log.info("   [-] Found Child Question in database:  " + questionQuestion.getParentCode() + ":"
-						+ questionQuestion.getChildCode());
-
-				Ask child = generateAskFromQuestionCode(questionQuestion.getChildCode(), source, target);
-
-				// Do not include PRI_SUBMIT
-				if ("PRI_SUBMIT".equals(child.getQuestion().getAttribute().getCode())) {
-					continue;
-				}
-
-				// set boolean fields
-				child.setMandatory(questionQuestion.getMandatory());
-				child.setDisabled(questionQuestion.getDisabled());
-				child.setHidden(questionQuestion.getHidden());
-				child.setDisabled(questionQuestion.getDisabled());
-				child.setReadonly(questionQuestion.getReadonly());
-
-				// override with QuestionQuestion icon if exists
-				if (questionQuestion.getIcon() != null) {
-					child.getQuestion().setIcon(questionQuestion.getIcon());
-				}
-
-				ask.add(child);
-			}
-		} else {
-			ask.setReadonly(question.getReadonly());
-		}
-
-		return ask;
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
+		return generateAskFromQuestionCode(code, source, target, null);
 	}
 
 	/**
@@ -410,31 +440,6 @@ public class QwandaUtils {
 
 	/**
 	 * @param asks
-	 * @return
-	 */
-	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks) {
-		return getAllAsksRecursively(asks, new HashMap<String, Ask>());
-	}
-
-	/**
-	 * @param asks
-	 * @param map
-	 * @return
-	 */
-	private Map<String, Ask> getAllAsksRecursively(List<Ask> asks, Map<String, Ask> map) {
-
-		for (Ask ask : asks) {
-			if (ask.hasChildren()) {
-				map.put(ask.getQuestion().getAttribute().getCode(), ask);
-				map = getAllAsksRecursively(ask.getChildAsks(), map);
-			}
-		}
-
-		return map;
-	}
-
-	/**
-	 * @param asks
 	 */
 	public Map<String, Ask> buildAskFlatMap(List<Ask> asks) {
 		return buildAskFlatMap(new HashMap<String, Ask>(), asks);
@@ -465,10 +470,9 @@ public class QwandaUtils {
 	 * @return
 	 */
 	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
-		target.getBaseEntityAttributes().stream()
-				.forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
+		target.getBaseEntityAttributes().forEach(ea -> log.info(ea.getAttributeCode() + " = " + ea.getValue()));
 		for (String d : dependencies) {
-			if (!target.getValue(d).isPresent()) {
+			if (target.getValue(d).isEmpty()) {
 				return false;
 			}
 		}
@@ -489,7 +493,7 @@ public class QwandaUtils {
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), "DEP_");
 			Ask targetAsk = flatMapAsks.get(attributeCode);
-			if (targetAsk == null) {
+			if(targetAsk == null) {
 				continue;
 			}
 
@@ -499,7 +503,7 @@ public class QwandaUtils {
 			targetAsk.setDisabled(!depsAnswered);
 			targetAsk.setHidden(!depsAnswered);
 		}
-		
+
 		return flatMapAsks;
 	}
 
@@ -688,7 +692,7 @@ public class QwandaUtils {
 		}
 
 		// now apply all incoming answers
-		processData.getAnswers().stream().forEach(answer -> {
+		processData.getAnswers().forEach(answer -> {
 			// ensure the attribute is set
 			String attributeCode = answer.getAttributeCode();
 			Attribute attribute = getAttribute(attributeCode);
@@ -710,9 +714,9 @@ public class QwandaUtils {
 	 */
 	public BaseEntity saveAnswer(Answer answer) {
 
-		List<BaseEntity> targets = saveAnswers(Arrays.asList(answer));
+		List<BaseEntity> targets = saveAnswers(Collections.singletonList(answer));
 
-		if (targets != null && targets.size() > 0) {
+		if (targets != null && !targets.isEmpty()) {
 			return targets.get(0);
 		}
 
@@ -733,14 +737,14 @@ public class QwandaUtils {
 		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()
 				.collect(Collectors.groupingBy(Answer::getTargetCode));
 
-		for (String targetCode : answersPerTargetCodeMap.keySet()) {
+		for (Map.Entry<String, List<Answer>> targetCode : answersPerTargetCodeMap.entrySet()) {
 
 			// fetch target and target DEF
-			BaseEntity target = beUtils.getBaseEntity(targetCode);
+			BaseEntity target = beUtils.getBaseEntity(targetCode.getKey());
 			BaseEntity defBE = defUtils.getDEF(target);
 
 			// filter Non-valid answers using def
-			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
+			List<Answer> group = targetCode.getValue();
 			List<Answer> validAnswers = group.stream()
 					.filter(item -> defUtils.answerValidForDEF(defBE, item))
 					.collect(Collectors.toList());
@@ -812,11 +816,11 @@ public class QwandaUtils {
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
 									Prefix.PRI), Prefix.LNK);
 
-					Question childQues = new Question(questionCode, attribute.getName(), attribute);
-					Ask childAsk = new Ask(childQues, sourceCode, targetCode);
+				Question childQues = new Question(questionCode, attribute.getName(), attribute);
+				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-					childAsks.add(childAsk);
-				});
+				childAsks.add(childAsk);
+			});
 
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
@@ -843,11 +847,9 @@ public class QwandaUtils {
 
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
-	 * 
 	 * @param definition The definition to check against
-	 * @param answer     An incoming answer
-	 * @param targets    The target entities to check, usually processEntity and
-	 *                   original target
+	 * @param answer An incoming answer
+	 * @param targets The target entities to check, usually processEntity and original target
 	 * @return Boolean
 	 */
 	public Boolean isDuplicate(BaseEntity definition, Answer answer, BaseEntity... targets) {

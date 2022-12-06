@@ -28,8 +28,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.entity.*;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -76,7 +76,7 @@ public class FyodorUltra {
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.
-	 *
+	 * 
 	 * @param searchEntity
 	 * @return
 	 */
@@ -120,7 +120,7 @@ public class FyodorUltra {
 
 	/**
 	 * Fetch an array of BaseEntitiy codes using a SearchEntity.
-	 *
+	 * 
 	 * @param searchEntity
 	 * @return
 	 */
@@ -207,7 +207,7 @@ public class FyodorUltra {
 
 	/**
 	 * Use a cauldron to build a search query from a CriteriaQuery base.
-	 *
+	 * 
 	 * @param query
 	 * @param baseEntity
 	 * @param searchEntity
@@ -265,7 +265,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find predicates for a clause.
-	 *
+	 * 
 	 * @param cauldron
 	 * @param clauseContainer
 	 * @return
@@ -298,7 +298,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate of a filter.
-	 *
+	 * 
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param filter
@@ -318,39 +318,25 @@ public class FyodorUltra {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-		switch (operator) {
-			case LIKE:
-				return cb.like((Expression<String>) expression, String.class.cast(value));
-			case NOT_LIKE:
-				return cb.notLike((Expression<String>) expression, String.class.cast(value));
-			case CONTAINS:
-				return cb.like((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case NOT_CONTAINS:
-				return cb.notLike((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case STARTS_WITH:
-				return cb.like((Expression<String>) expression, String.class.cast(value) + "%");
-			case NOT_STARTS_WITH:
-				return cb.notLike((Expression<String>) expression, String.class.cast(value) + "%");
-			case EQUALS:
-				return cb.equal(expression, value);
-			case NOT_EQUALS:
-				return cb.notEqual(expression, value);
-			case GREATER_THAN:
-				return cb.gt((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN:
-				return cb.lt((Expression<Number>) expression, Number.class.cast(value));
-			case GREATER_THAN_OR_EQUAL:
-				return cb.ge((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN_OR_EQUAL:
-				return cb.le((Expression<Number>) expression, Number.class.cast(value));
-			default:
-				throw new QueryBuilderException("Invalid Operator: " + operator);
-		}
+		return switch (operator) {
+			case LIKE -> cb.like((Expression<String>) expression, (String) value);
+			case NOT_LIKE -> cb.notLike((Expression<String>) expression, (String) value);
+			case CONTAINS -> cb.like((Expression<String>) expression, "%\"" + (String) value + "\"%");
+			case NOT_CONTAINS -> cb.notLike((Expression<String>) expression, "%\"" + (String) value + "\"%");
+			case STARTS_WITH -> cb.like((Expression<String>) expression, (String) value + "%");
+			case NOT_STARTS_WITH -> cb.notLike((Expression<String>) expression, (String) value + "%");
+			case EQUALS -> cb.equal(expression, value);
+			case NOT_EQUALS -> cb.notEqual(expression, value);
+			case GREATER_THAN -> cb.gt((Expression<Number>) expression, (Number) value);
+			case LESS_THAN -> cb.lt((Expression<Number>) expression, (Number) value);
+			case GREATER_THAN_OR_EQUAL -> cb.ge((Expression<Number>) expression, (Number) value);
+			case LESS_THAN_OR_EQUAL -> cb.le((Expression<Number>) expression, (Number) value);
+			default -> throw new QueryBuilderException("Invalid Operator: " + operator);
+		};
 	}
 
 	/**
 	 * Find a predicate of a DateTime type filter.
-	 *
 	 * <br>
 	 * This method requires that the the incoming stringified 
 	 * chrono unit is in the most standard format, effectively 
@@ -412,13 +398,13 @@ public class FyodorUltra {
 
 	/**
 	 * Find predicates for a link related fields.
-	 *
+	 * 
 	 * @param root
 	 * @param cauldron
 	 * @param searchEntity
 	 */
 	public List<Predicate> findLinkPredicates(CriteriaQuery<?> query, TolstoysCauldron cauldron,
-											  SearchEntity searchEntity) {
+			SearchEntity searchEntity) {
 
 		String sourceCode = searchEntity.getSourceCode();
 		String targetCode = searchEntity.getTargetCode();
@@ -460,7 +446,7 @@ public class FyodorUltra {
 	/**
 	 * Return a clean entity code to use in query for valueString containing a
 	 * single entity code array.
-	 *
+	 * 
 	 * @param root
 	 * @return
 	 */
@@ -478,7 +464,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate for a wildcard filter.
-	 *
+	 * 
 	 * @param root
 	 * @param cauldron
 	 * @param wildcard
@@ -498,7 +484,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a search order for a sort.
-	 *
+	 * 
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param sort
@@ -536,7 +522,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find the expression for an attribute code.
-	 *
+	 * 
 	 * @param cauldron
 	 * @param code
 	 * @return
@@ -592,7 +578,7 @@ public class FyodorUltra {
 	/**
 	 * Create a select case to use in status check. When used, this instructs the
 	 * search to select a status' ordinal so that number comparison can be done.
-	 *
+	 * 
 	 * @param root
 	 * @return
 	 */
@@ -612,7 +598,7 @@ public class FyodorUltra {
 
 	/**
 	 * Check if a class is of DateTime type
-	 *
+	 * 
 	 * @param c
 	 * @return
 	 */
@@ -623,7 +609,7 @@ public class FyodorUltra {
 	/**
 	 * Get an existing join for an attribute code, or create if not existing
 	 * already.
-	 *
+	 * 
 	 * @param cb
 	 * @param code
 	 * @return
@@ -651,7 +637,7 @@ public class FyodorUltra {
 		Set<String> columns = searchEntity.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith(Column.PREFIX))
 				.map(ea -> ea.getAttributeCode())
-				.map(code -> (String) StringUtils.removeStart(code, Column.PREFIX))
+				.map(code -> StringUtils.removeStart(code, Column.PREFIX))
 				.collect(Collectors.toSet());
 
 		return columns;
@@ -659,7 +645,7 @@ public class FyodorUltra {
 
 	/**
 	 * Get an entity value of an associated column code.
-	 *
+	 * 
 	 * @param entity
 	 * @param code
 	 * @return
@@ -683,7 +669,7 @@ public class FyodorUltra {
 	/**
 	 * Recursively search an entity using an associated column code and return the
 	 * value.
-	 *
+	 * 
 	 * @param entity
 	 * @param code
 	 * @return

@@ -31,6 +31,9 @@ import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
+
+
+
 /**
  * Entities --- Endpoints providing database entity access
  *
@@ -61,8 +64,6 @@ public class Entities {
 
 	@Inject
 	QwandaUtils qwandaUtils;
-
-	public static final String BE_NOT_FOUND_LOG = "BaseEntity not found for: ";
 
 	private static final String NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST = "Not authorized to make this request";
 
@@ -106,7 +107,7 @@ public class Entities {
 	/**
 	 * Read an item from the cache.
 	 *
-	 * @param code The key of the cache item
+	 * @param key The key of the cache item
 	 * @return The json item
 	 */
 	@DELETE
@@ -210,7 +211,7 @@ public class Entities {
 		be.setRealm(productCode);
 		databaseUtils.saveBaseEntity(be);
 
-		BaseEntity entity = databaseUtils.findBaseEntityByCode(productCode, be.getCode());
+	BaseEntity entity = databaseUtils.findBaseEntityByCode(productCode, be.getCode());
 
 		if (entity == null) {
 			log.error(getBaseEntityNotFoundLog(productCode, be.getCode()));

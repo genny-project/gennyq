@@ -1,18 +1,11 @@
 package life.genny.kogito.common.models;
 
-import java.io.Serializable;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
-import javax.json.bind.annotation.JsonbTransient;
-
-import java.time.ZoneOffset;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.jboss.logging.Logger;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import javax.json.bind.annotation.JsonbTransient;
+import java.io.Serializable;
+import java.time.*;
 
 public class TimerEvent implements Serializable {
 
@@ -62,7 +55,7 @@ public class TimerEvent implements Serializable {
         log.info("2TimerEvent incoming timeStamp = " + timeStamp + " , final:" + this.timeStamp + " , "
                 + getDateTime(this.timeStamp));
         this.uniqueCode = uniqueCode;
-        this.updatePairs = updatePairs;
+        this.updatePairs = updatepairs;
     }
 
     public TimerEvent(final LocalDateTime startDateTimeUTC, final Long minutes, final String uniqueCode,
