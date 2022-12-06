@@ -141,6 +141,7 @@ public class Events {
 
 		// bucket view
 		if (Question.QUE_PROCESS.equals(code)) {
+			filter.init(code);
 			search.sendBuckets();
 			return;
 		}
@@ -157,6 +158,12 @@ public class Events {
 			return;
 		} else if (GennyConstants.PAGINATION_PREV.equals(code)) {
 			search.handleSearchPagination(targetCode, true);
+			return;
+		}
+
+		// bucket pagination
+		if (Question.QUE_TABLE_LAZY_LOAD.equals(code)) {
+			search.handleSearchPagination(targetCode, false);
 			return;
 		}
 
