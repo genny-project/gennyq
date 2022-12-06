@@ -46,12 +46,15 @@ public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
         log.trace("Deserializing: " + capJson);
         String code = capJson.getString("code");
         JsonArray nodeArray = capJson.getJsonArray("nodes");
+
         Set<CapabilityNode> nodes = new LinkedHashSet<>(nodeArray.size());
         for(int i = 0; i < nodeArray.size(); i++) {
-            nodes.add(CapabilityNode.parseCapability(nodeArray.getString(i)));
+            nodes.add(CapabilityNode.parseNode(nodeArray.getString(i)));
         }
-        // java.lang.ClassCastException: class org.glassfish.json.JsonObjectBuilderImpl$JsonObjectImpl cannot be cast to class javax.json.JsonString:67
-        return new Capability(code, nodes);
+
+        Capability c = new Capability(code, nodes);
+
+        return c;
     }
     
 

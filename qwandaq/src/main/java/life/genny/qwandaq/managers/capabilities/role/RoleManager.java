@@ -53,12 +53,11 @@ public class RoleManager extends Manager {
 	 * @return
 	 */
 	public BaseEntity attachRole(BaseEntity target, String roleCode) {
+		if(target == null)
+			throw new NullParameterException("person target when attaching role: " + roleCode);
 
-		if (target == null)
-			throw new NullParameterException("target");
-		
 		// Check we're working with a person
-		if (!target.isPerson())
+		if(!target.isPerson())
 			throw new RoleException("Error attaching role to target: " + target.getCode() + ". Target is not a person");
 		
 		roleCode = cleanRoleCode(roleCode);
