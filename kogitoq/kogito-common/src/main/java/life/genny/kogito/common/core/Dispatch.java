@@ -219,7 +219,7 @@ public class Dispatch {
 		msg.getAsks().addAll(asks);
 
 		// filter unwanted attributes
-		log.info("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
+		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
 
 		return processEntity;
 	}
@@ -258,18 +258,22 @@ public class Dispatch {
 			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
-		log.info("Traversing " + pcm.getCode());
+		log.debug("Traversing " + pcm.getCode());
 
 		// check for a question code
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
 		if (questionCode != null) {
 			// use pcm target if one is specified
 			String targetCode = pcm.getTargetCode();
+			log.debug("TARGET.getCode() = " + target.getCode());
+			log.debug("TARGET CODE = " + targetCode);
 			if (targetCode != null && !targetCode.equals(target.getCode())) {
 				// merge targetCode
 				Map<String, Object> ctxMap = new HashMap<>();
 				ctxMap.put("TARGET", target);
 				targetCode = MergeUtils.merge(targetCode, ctxMap);
+				// update targetCode so it does not re-trigger merging
+				pcm.setTargetCode(targetCode);
 				// providing a null parent & location since it is already set in the parent
 				tasks.dispatch(source.getCode(), targetCode, pcm, null, null);
 				return;
@@ -437,12 +441,12 @@ public class Dispatch {
 		if (!msg.getEntities().isEmpty())
 			sendBaseEntities(msg.getEntities());
 		else
-			log.error("No BEs to send!");
+			log.debug("No Entities to send!");
 
 		if (!msg.getAsks().isEmpty())
 			sendAsks(msg.getAsks());
 		else
-			log.error("No Asks to send!");
+			log.debug("No Asks to send!");
 	}
 
 	/**

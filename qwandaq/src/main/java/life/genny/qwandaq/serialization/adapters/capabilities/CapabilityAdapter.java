@@ -9,10 +9,14 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.bind.adapter.JsonbAdapter;
 
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 
 public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
+
+	static Logger log = Logger.getLogger(CapabilityAdapter.class);
     
     @Override
     public JsonObject adaptToJson(Capability capability) {
@@ -20,7 +24,7 @@ public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
     }
 
     public static JsonObject toJson(Capability capability) {
-        System.out.println("Serialising: " + capability);
+        log.trace("Serialising: " + capability);
         JsonArrayBuilder nodeArray = Json.createArrayBuilder();
         for(CapabilityNode node : capability.nodes) {
             nodeArray.add(node.toString());
@@ -39,7 +43,7 @@ public class CapabilityAdapter implements JsonbAdapter<Capability, JsonObject> {
     }
 
     public static Capability fromJson(JsonObject capJson) {
-        System.out.println("Deserializing: " + capJson);
+        log.trace("Deserializing: " + capJson);
         String code = capJson.getString("code");
         JsonArray nodeArray = capJson.getJsonArray("nodes");
 

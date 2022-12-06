@@ -226,9 +226,10 @@ public class Validator {
 		String uuid = userToken.getUuid();
 		log.error(err);
 		log.info("BLACKLIST " + (enableBlacklist ? "ON" : "OFF") + " " + userToken.getEmail() + ":" + uuid);
-		if (!enableBlacklist)
-			return true;
-		KafkaUtils.writeMsg(KafkaTopic.BLACKLIST, uuid);
+
+		if (enableBlacklist)
+			KafkaUtils.writeMsg(KafkaTopic.BLACKLIST, uuid);
+
 		return false;
 	}
 

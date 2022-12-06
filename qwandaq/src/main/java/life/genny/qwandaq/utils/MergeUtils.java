@@ -207,8 +207,6 @@ public class MergeUtils {
 				return (Long) attributeValue;
 			} else if (attributeValue instanceof java.lang.Double) {
 				return (Double) attributeValue;
-			} else {
-				return be.findEntityAttribute(attributeCode).get().getValueString();
 			}
 
 		} else if (value.getClass().equals(String.class)) {

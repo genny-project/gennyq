@@ -126,10 +126,8 @@ public class TaskService {
 		dispatch.sendData(msg);
 
 		// send searches
-		for (String code : processData.getSearches()) {
-			log.info("Sending search: " + code);
+		for (String code : processData.getSearches())
 			search.searchTable(code);
-		}
 	}
 
 	/**
