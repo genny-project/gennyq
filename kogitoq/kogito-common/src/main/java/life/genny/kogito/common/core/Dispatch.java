@@ -25,7 +25,8 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
@@ -87,13 +88,12 @@ public class Dispatch {
 	 */
 	public QBulkMessage build(ProcessData processData, PCM pcm) {
 
-		ReqConfig reqConfig = capMan.getUserCapabilities();
-
 		// fetch source and target entities
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
 		// ensure pcm is not null
 		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
@@ -105,7 +105,7 @@ public class Dispatch {
 		if (questionCode != null) {
 			// fetch question from DB
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, reqConfig);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
 			msg.add(ask);
 		}
 
@@ -253,9 +253,9 @@ public class Dispatch {
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 
-		ReqConfig reqConfig = capMan.getUserCapabilities();
-		if(!pcm.requirementsMet(reqConfig)) {
-			log.warn("User " + userToken.getUserCode() + " Capability requirements not met for pcm: " + pcm.getCode());
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		if(!pcm.requirementsMet(userCapabilities)) {
+			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
 		log.debug("Traversing " + pcm.getCode());
@@ -279,7 +279,7 @@ public class Dispatch {
 				return;
 			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 				// add ask to bulk message
-				Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, reqConfig);
+				Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
 				msg.add(ask);
 			}
 		} else {

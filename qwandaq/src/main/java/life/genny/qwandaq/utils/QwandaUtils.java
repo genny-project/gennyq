@@ -33,6 +33,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
@@ -286,7 +287,7 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final CapabilitySet target, ReqConfig requirementsConfig) {
 		if (question == null)
 			throw new NullParameterException("question");
 		if (source == null)
@@ -296,11 +297,11 @@ public class QwandaUtils {
 
 		String productCode = userToken.getProductCode();
 		// init new parent ask
-		Ask ask = new Ask(question, source.getCode(), target.getCode());
+		Ask ask = new Ask(question, source.getCode(), target.getEntityCode());
 		ask.setRealm(productCode);
 
 		if (Question.QUE_BASEENTITY_GRP.equals(question.getCode()))
-			return generateAskGroupUsingBaseEntity(target);
+			return generateAskGroupUsingBaseEntity(target.getEntity());
 
 		// override with Attribute icon if question icon is null
 		Attribute attribute = question.getAttribute();
@@ -324,12 +325,10 @@ public class QwandaUtils {
 
 				log.debug("   [-] Found Child Question:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
-				if(requirementsConfig != null) {
-					if(!questionQuestion.requirementsMet(requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
-						continue;
-					}
+				if(!questionQuestion.requirementsMet(target, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
+					continue;
 				}
-				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target);
+				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target.getEntity());
 
 				// Do not include PRI_SUBMIT
 				if (Attribute.PRI_SUBMIT.equals(child.getQuestion().getAttribute().getCode())) {
@@ -356,8 +355,12 @@ public class QwandaUtils {
 		return ask;
 	}
 
-	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target) {
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final CapabilitySet target) {
 		return generateAskFromQuestion(question, source, target, null);
+	}
+
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final CapabilitySet target) {
+		return generateAskFromQuestionCode(code, source, target, new ReqConfig());
 	}
 
 	/**
@@ -370,7 +373,7 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target, ReqConfig requirementsConfig) {
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final CapabilitySet target, ReqConfig requirementsConfig) {
 
 		if (code == null)
 			throw new NullParameterException("code");
@@ -378,7 +381,7 @@ public class QwandaUtils {
 
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if (Question.QUE_BASEENTITY_GRP.equals(code)) {
-			return generateAskGroupUsingBaseEntity(target);
+			return generateAskGroupUsingBaseEntity(target.getEntity());
 		}
 
 		String productCode = userToken.getProductCode();
@@ -396,7 +399,7 @@ public class QwandaUtils {
 	}
 
 	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
-		return generateAskFromQuestionCode(code, source, target, null);
+		return generateAskFromQuestionCode(code, source, new CapabilitySet(target), null);
 	}
 
 	/**

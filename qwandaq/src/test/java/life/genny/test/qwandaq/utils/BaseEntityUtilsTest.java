@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import io.quarkus.test.junit.mockito.InjectMock;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -19,7 +18,7 @@ import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
-@RunWith(MockitoJUnitRunner.class)
+// @RunWith(MockitoJUnitRunner.class)
 public class BaseEntityUtilsTest extends BaseTestCase {
 
 	static Jsonb jsonb = JsonbBuilder.create();

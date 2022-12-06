@@ -7,7 +7,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
@@ -107,15 +107,12 @@ public class CapHandler extends Manager {
 		boolean isService = hasSecureToken(userToken);
 		if(!isService) {
 			// TODO: Move this call
-			ReqConfig reqConfig = capMan.getUserCapabilities();
+			CapabilitySet userCapabilities = capMan.getUserCapabilities();
 			getLogger().info("Checking: " + trait);
 			getLogger().info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
-			return trait.requirementsMet(reqConfig); //traitCapabilitiesMet(reqConfig, trait);
+			return trait.requirementsMet(userCapabilities);
 		}
 		return true;
-	}
-	public static boolean traitCapabilitiesMet(ReqConfig reqs, Trait trait) {
-		return trait.requirementsMet(reqs);
 	}
 
 	public static boolean hasSecureToken(UserToken userToken) {
