@@ -1,12 +1,12 @@
 package life.genny.test.qwandaq.utils.capabilities.requirements.config;
 
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.capabilities.requirements.BaseRequirementsTest;
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.Test;
 
@@ -109,11 +109,45 @@ public class NegateRequirementsTest extends BaseRequirementsTest {
             CapabilityBuilder("CAP_ADMIN").add(SELF).buildCap(),
             CapabilityBuilder("CAP_TENANT").view(SELF, true).buildCap()
         ))
+        
         .setExpected(false)
         .build()
 
         .assertAll();
+    }
 
+    @Test
+    public void useCaseTests() {
+        ICapabilityFilterable useCase1 = createFilterable(
+            CapabilityBuilder("CAP_TENANT").view(ALL, true).view(SELF).buildCap()
+        );
+
+        ReqConfig reqConfig = ReqConfig.builder()
+                    .allCaps(false)
+                    .allNodes(true)
+                    .cascadePermissions(true)
+                    .build();
+
+        new JUnitTester<CapabilitySet, Boolean>()
+        .setTest((input) -> {
+            return Expected(useCase1.requirementsMet(input.input, reqConfig));
+        })
+
+        .createTest("USE CASE 1a")
+        .setInput(createTestSet(
+            CapabilityBuilder("CAP_TENANT").view(SELF).buildCap()
+        ))
+        .setExpected(true)
+        .build()
+
+        .createTest("USE CASE 1b")
+        .setInput(createTestSet(
+            CapabilityBuilder("CAP_TENANT").view(ALL).buildCap()
+        ))
+        .setExpected(false)
+        .build()
+
+        .assertAll();
     }
 
     @Test

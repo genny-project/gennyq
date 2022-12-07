@@ -24,10 +24,13 @@ public class BaseRequirementsTest extends BaseTestCase {
         );
     }
 
+    protected static CapabilitySet createTestSet(Capability... capabilities) {
+        return new CapabilitySet(DUMMY_BASE_ENTITY, Arrays.asList(capabilities));
+    }
+
     protected static Set<Capability> setTestUserCaps(Capability... capabilities) {
-        CapabilitySet capSet = new CapabilitySet(DUMMY_BASE_ENTITY, Arrays.asList(capabilities));
-        USER_TEST_CAPS = capSet;
-        return capSet;
+        USER_TEST_CAPS = createTestSet(capabilities);
+        return USER_TEST_CAPS;
     }
 
     protected static CapabilityBuilder CapabilityBuilder(String capCode) {
