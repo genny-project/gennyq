@@ -848,25 +848,34 @@ public class QwandaUtils {
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
 	 * 
-	 * @param definition The definition to check against
+	 * @param definition The definitions to check against
 	 * @param answer     An incoming answer
 	 * @param targets    The target entities to check, usually processEntity and
 	 *                   original target
 	 * @return Boolean
 	 */
 	public Boolean isDuplicate(List<BaseEntity> definitions, Answer answer, BaseEntity... targets) {
+		for (BaseEntity definition : definitions) {
+			if (isDuplicate(definition, answer, targets)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * 
+	 * @param definition The definition to check against
+	 * @param answer     An incoming answer
+	 * @param targets    The target entities to check, usually processEntity and
+	 *                   original target
+	 * @return Boolean
+	 */
+	public Boolean isDuplicate(BaseEntity definition, Answer answer, BaseEntity... targets) {
 
 		// Check if attribute code exists as a UNQ for the DEF
-		List<EntityAttribute> uniques = new ArrayList<>();
-		BaseEntity definition = null;
-		for (BaseEntity defBE : definitions) {
-			List<EntityAttribute> uniqueAttributes = defBE.findPrefixEntityAttributes("UNQ");
-			if ((uniqueAttributes != null) && (!uniqueAttributes.isEmpty())) {
-				uniques.addAll(uniqueAttributes);
-				definition = defBE;
-			}
-
-		}
+		List<EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
 		String prefix = definition.getValueAsString("PRI_PREFIX");
