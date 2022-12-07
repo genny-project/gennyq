@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,6 +37,7 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.EntityEntity;
@@ -52,25 +55,31 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.models.Page;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class FyodorUltra {
 
-	private static final Logger log = Logger.getLogger(FyodorUltra.class);
+	@Inject
+	Logger log;
 
 	@Inject
-	private EntityManager entityManager;
+	UserToken userToken;
 
 	@Inject
-	private QwandaUtils qwandaUtils;
+	EntityManager entityManager;
 
 	@Inject
-	private BaseEntityUtils beUtils;
+	QwandaUtils qwandaUtils;
 
 	@Inject
-	private CapHandler capHandler;
+	BaseEntityUtils beUtils;
+
+	@Inject
+	CapHandler capHandler;
 
 	private static Jsonb jsonb = JsonbBuilder.create();
 
@@ -130,13 +139,24 @@ public class FyodorUltra {
 			throw new NullParameterException("searchEntity");
 
 		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
-		log.info("Applying capabilities...");
-		log.info("SearchEntity: " + jsonb.toJson(searchEntity));
+		log.debug("Applying capabilities...");
+		log.debug("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
 		capHandler.refineFiltersFromCapabilities(searchEntity);
 		capHandler.refineSortsFromCapabilities(searchEntity);
 		capHandler.refineColumnsFromCapabilities(searchEntity);
 		capHandler.refineActionsFromCapabilities(searchEntity);
+
+		if (!GennyConstants.PER_SERVICE.equals(userToken.getUserCode())) {
+			Map<String, Object> ctxMap = new HashMap<>();
+			ctxMap.put("USER", beUtils.getUserBaseEntity());
+
+			searchEntity.getTraits(Filter.class).stream()
+				.filter(f -> f.getC() == String.class)
+				.forEach(f -> {
+					f.setValue(MergeUtils.wordMerge((String) f.getValue(), ctxMap));
+			});
+		}
 
 		// setup search query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();

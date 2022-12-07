@@ -265,8 +265,6 @@ public class Dispatch {
 		if (questionCode != null) {
 			// use pcm target if one is specified
 			String targetCode = pcm.getTargetCode();
-			log.debug("TARGET.getCode() = " + target.getCode());
-			log.debug("TARGET CODE = " + targetCode);
 			if (targetCode != null && !targetCode.equals(target.getCode())) {
 				// merge targetCode
 				Map<String, Object> ctxMap = new HashMap<>();

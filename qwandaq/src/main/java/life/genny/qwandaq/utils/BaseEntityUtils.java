@@ -207,35 +207,12 @@ public class BaseEntityUtils {
 		if (StringUtils.isBlank(code))
 			throw new NullParameterException("code");
 
-		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
 		// check for entity in the cache
-		// BaseEntityKey key = new BaseEntityKey(productCode, code);
-		// BaseEntity entity = (BaseEntity)
-		// CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
-
-		// NOTE: No more hacks, keep it simple and reliable until infinispan auto
-		// updates are working.
+		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
 
 		// check in database if not in cache
 		if (entity == null) {
 			try {
-				if (databaseUtils == null) {
-					log.error("databaseUtils is null");
-					Arc.container().instance(DatabaseUtils.class);
-					EntityManagerFactory factory = Persistence.createEntityManagerFactory("genny");
-					entityManager = factory.createEntityManager();
-					if (entityManager == null) {
-						log.error("entityManager is null");
-					}
-					if (databaseUtils == null) {
-						log.error("databaseUtils is still null");
-						databaseUtils = new DatabaseUtils();
-
-						databaseUtils.setEntityManager(entityManager);
-					} else {
-						databaseUtils.setEntityManager(entityManager);
-					}
-				}
 				entity = databaseUtils.findBaseEntityByCode(productCode, code);
 				log.debug(code + " not in cache for product " + productCode + " but "
 						+ (entity == null ? "not found in db" : "found in db"));
