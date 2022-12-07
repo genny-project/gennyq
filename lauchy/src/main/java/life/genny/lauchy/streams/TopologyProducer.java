@@ -132,17 +132,17 @@ public class TopologyProducer {
 					// TODO: Wondering if we can just get the processData from the first processId
 					// we get
 					ProcessData processData = qwandaUtils.fetchProcessData(processId);
-						if(processData !=null) {
-							List<Ask> asks = qwandaUtils.fetchAsks(processData);
+					if (processData != null) {
+						List<Ask> asks = qwandaUtils.fetchAsks(processData);
 
-							BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
-							BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+						BaseEntity defBE = beUtils.getBaseEntity(processData.getDefinitionCode());
+						BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-							Map<String, Ask> flatMapAsks = qwandaUtils.buildAskFlatMap(asks);
+						Map<String, Ask> flatMapAsks = qwandaUtils.buildAskFlatMap(asks);
 
-							qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapAsks);
-							asksToSend.addAll(asks);
-						}
+						qwandaUtils.updateDependentAsks(processEntity, defBE, flatMapAsks);
+						asksToSend.addAll(asks);
+					}
 				});
 
 		QDataAskMessage msg = new QDataAskMessage(asksToSend);
@@ -217,9 +217,9 @@ public class TopologyProducer {
 		// check processId is not blank
 		String processId = answer.getProcessId();
 		log.info("CHECK Integrity of processId [" + processId + "]");
-		if(processId != null && processId.equalsIgnoreCase("no-idq") ) {
-			//TODO : Temporary solution and rethink for filter and saved search
-			if(filter.validFilter(attributeCode)) {
+		if (processId != null && processId.equalsIgnoreCase("no-idq")) {
+			// TODO : Temporary solution and rethink for filter and saved search
+			if (filter.validFilter(attributeCode)) {
 				return true;
 			}
 		}
