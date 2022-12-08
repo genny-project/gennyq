@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.*;
 import life.genny.qwandaq.models.SavedSearch;
@@ -206,13 +207,20 @@ public class FilterService {
      * @param coded being coded or not
      * @param targetCode Target code
      */
-    public void handleQuickSearchDropdown(String value,boolean coded,String targetCode) {
+    public void handleQuickSearchDropdown(String value,boolean coded,String targetCode,List<String> definitions) {
         String sessionCode = searchUtils.sessionSearchCode(targetCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
         SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
 
         clearFilters(searchBE);
+
+        // add definitions
+        for(int i=0;i< definitions.size(); i++){
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i)));
+            } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i))));
+        }
 
         // searching by text or search by code
         Filter filter = null;
@@ -365,6 +373,15 @@ public class FilterService {
 
         SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
         excludeExtraFilterBySearchBE(searchBE);
+
+        // add definitions
+        List<String> definitions = getListDefinitionCodes(sbeCode);
+
+        for(int i=0;i< definitions.size(); i++){
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i)));
+            } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i))));
+        }
 
         // add conditions by filter parameters
         setFilterParams(searchBE,params);
@@ -910,6 +927,15 @@ public class FilterService {
             SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
             excludeExtraFilterBySearchBE(searchBE);
 
+            // add definitions
+            List<String> definitions = getListDefinitionCodes(code);
+
+            for(int i=0;i< definitions.size(); i++){
+                if(i== 0) {
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i)));
+                } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i))));
+            }
+
             // add conditions by filter parameters
             setFilterParams(searchBE,params);
 
@@ -936,6 +962,15 @@ public class FilterService {
 
             clearFilters(searchBE);
 
+            // add definitions
+            List<String> definitions = getListDefinitionCodes(code);
+
+            for(int i=0;i< definitions.size(); i++){
+                if(i== 0) {
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i)));
+                } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i))));
+            }
+
             // searching by text or search by code
             Filter filter = null;
             String newValue = value.replaceFirst("!", "");
@@ -950,6 +985,63 @@ public class FilterService {
             CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
             searchUtils.searchTable(code);
+        }
+    }
+
+    /**
+     * Return the list of base entity code
+     * @param sbeCode Search base entity code
+     * @return List of base entity code
+     */
+    public List<String> getListDefinitionCodes(String sbeCode) {
+        List<String> definitions = new ArrayList<>();
+
+        // bucket page
+        if(SearchEntity.SBE_PROCESS.equals(sbeCode)) {
+            addDefinitionCodeByBucket(definitions);
+            // Table
+        } else {
+            String defCode = getDefinitionCode(sbeCode);
+            if(!defCode.isEmpty()) {
+                definitions.add(defCode);
+            }
+        }
+
+        return definitions;
+    }
+
+    /**
+     * Return definition code
+     * @param sbeCode search base entity code
+     * @return definition code
+     */
+    public String getDefinitionCode(String sbeCode) {
+        SearchEntity search = CacheUtils.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
+        List<ClauseContainer> clauses = search.getClauseContainers();
+        for(ClauseContainer clause : clauses) {
+            if(clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
+                return clause.getFilter().getValue().toString();
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Add definition to the list of definition codes
+     * @param definitions List of definition codes
+     */
+    public void addDefinitionCodeByBucket(List<String> definitions) {
+        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
+
+        List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
+        for (EntityAttribute entityAttribute : locations) {
+            String value = entityAttribute.getAsString();
+            if (value.startsWith(Prefix.SBE)) {
+                String defCode = getDefinitionCode(value);
+                if(!defCode.isEmpty()) {
+                    definitions.add(defCode);
+                }
+            }
         }
     }
 }
