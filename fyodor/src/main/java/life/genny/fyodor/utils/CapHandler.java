@@ -71,7 +71,7 @@ public class CapHandler extends Manager {
 				// .filter(container -> traitCapabilitiesMet(container))
 				.collect(Collectors.toList());
 
-		info("Filtered down to " + containers.size() + " clause containers");
+		info("Filtered down to " + containers.size() + " filters");
 		searchEntity.setClauseContainers(containers);
 	}
 

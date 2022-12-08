@@ -106,11 +106,16 @@ public class MergeUtils {
 	}
 	
 	
+	public static Object wordMergeRefactor(String mergeText, Map<String, Object> ctxMap) {
+		
+	}
+
 	/** 
 	 * @param mergeText the mergeText to merge
 	 * @param entitymap the entitymap to merge with
 	 * @return Object
 	 */
+	@Deprecated
 	public static Object wordMerge(String mergeText, Map<String, Object> entitymap) {
 
 		if (mergeText == null || mergeText.isEmpty())
