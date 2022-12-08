@@ -133,6 +133,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
 			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
 	})
+	// TODO: Make this a Hashmap as with Line 736 TODO
 	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
 
 	@XmlTransient
