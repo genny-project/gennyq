@@ -335,10 +335,16 @@ public class FilterUtils {
      * @param lnkCode link code
      * @param lnkValue Link value
      * @param typing Typing value
+     * @param defs List of definition
      * @return Search entity
      */
-    public SearchEntity getListQuickSearches(String sbeCode,String lnkCode,String lnkValue,String typing) {
+    public SearchEntity getListQuickSearches(String sbeCode,String lnkCode,String lnkValue,String typing,List<String> defs) {
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
+        for(int i=0;i< defs.size(); i++){
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, defs.get(i)));
+            } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, defs.get(i))));
+        }
         searchBE.add(new Filter(Attribute.PRI_NAME, Operator.LIKE, typing+ "_%"))
                 .add(new Column(lnkCode, lnkValue));
 

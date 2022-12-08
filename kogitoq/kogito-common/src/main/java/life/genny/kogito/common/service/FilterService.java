@@ -808,8 +808,9 @@ public class FilterService {
      * @param lnkCode Link code
      * @param lnkValue Link value
      */
-    public void sendListQuickSearches(String queGrp, String code,String sbeCode,String lnkCode,String lnkValue,String typing) {
-        SearchEntity searchEntity = filterUtils.getListQuickSearches(sbeCode,lnkCode,lnkValue,typing);
+    public void sendListQuickSearches(String queGrp, String code,String sbeCode,String lnkCode,String lnkValue,
+                                      String typing,List<String> defs) {
+        SearchEntity searchEntity = filterUtils.getListQuickSearches(sbeCode,lnkCode,lnkValue,typing,defs);
         QDataBaseEntityMessage msg = getBaseItemsMsg(queGrp,code,lnkCode,lnkValue,searchEntity);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
