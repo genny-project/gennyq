@@ -79,7 +79,7 @@ public class CapHandler extends Manager {
 	public void refineFiltersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
 		info("Filtering " + containers.size() + " filters"); 
-		containers = searchEntity.getClauseContainers().stream()
+		containers = containers.stream()
 				.filter(container -> {
 					info("Filtering " + container.getFilter().getCode());
 					return container.requirementsMet(userCapabilities);
