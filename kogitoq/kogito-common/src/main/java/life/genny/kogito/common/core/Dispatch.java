@@ -453,7 +453,7 @@ public class Dispatch {
 	public void sendBaseEntities(List<BaseEntity> baseEntities) {
 
 		Map<String, Object> contexts = new HashMap<>();
-		contexts.put("USER", beUtils.getUserBaseEntity());
+		contexts.put("USER_CODE", beUtils.getUserBaseEntity());
 
 		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 

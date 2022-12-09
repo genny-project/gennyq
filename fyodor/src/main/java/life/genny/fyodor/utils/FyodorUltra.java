@@ -142,20 +142,20 @@ public class FyodorUltra {
 		log.debug("Applying capabilities...");
 		log.debug("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
-		capHandler.refineFiltersFromCapabilities(searchEntity);
-		capHandler.refineSortsFromCapabilities(searchEntity);
-		capHandler.refineColumnsFromCapabilities(searchEntity);
-		capHandler.refineActionsFromCapabilities(searchEntity);
+		capHandler.refineSearchFromCapabilities(searchEntity);
 
-		if (!GennyConstants.PER_SERVICE.equals(userToken.getUserCode())) {
+		if (!CapHandler.hasSecureToken(userToken)) {
+			log.info("Mail merging!");
 			Map<String, Object> ctxMap = new HashMap<>();
-			ctxMap.put("USER", beUtils.getUserBaseEntity());
-
-			searchEntity.getTraits(Filter.class).stream()
+			ctxMap.put("USER_CODE", beUtils.getUserBaseEntity().getCode());
+			List<Filter> filters = searchEntity.getTraits(Filter.class);
+			filters.stream()
 				.filter(f -> f.getC() == String.class)
 				.forEach(f -> {
 					f.setValue(MergeUtils.wordMerge((String) f.getValue(), ctxMap));
 			});
+
+			filters.stream().forEach(f -> log.info(f.getValue()));
 		}
 
 		// setup search query

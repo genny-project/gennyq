@@ -1,6 +1,7 @@
 package life.genny.qwandaq.entity.search.clause;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.entity.search.trait.Filter;
 
 /**
@@ -52,4 +53,7 @@ public class ClauseContainer {
     this.or = or;
   }
 
+  public boolean requirementsMet(CapabilitySet userCapabilities) {
+    return filter.requirementsMet(userCapabilities);
+  }
 }
