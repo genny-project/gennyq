@@ -148,14 +148,17 @@ public class FyodorUltra {
 			log.info("Mail merging!");
 			Map<String, Object> ctxMap = new HashMap<>();
 			ctxMap.put("USER_CODE", beUtils.getUserBaseEntity().getCode());
-			List<Filter> filters = searchEntity.getTraits(Filter.class);
+			List<ClauseContainer> filters = searchEntity.getClauseContainers();
 			filters.stream()
-				.filter(f -> f.getC() == String.class)
+				.filter(f -> f.getFilter().getC() == String.class)
 				.forEach(f -> {
-					f.setValue(MergeUtils.wordMerge((String) f.getValue(), ctxMap));
+					log.info("Attempting to merge on " + f.getFilter().getValue());
+					// TODO: Make MergeUtils better
+					if("USER_CODE".equals(f.getFilter().getValue()))
+						f.getFilter().setValue(ctxMap.get("USER_CODE"));
 			});
 
-			filters.stream().forEach(f -> log.info(f.getValue()));
+			filters.stream().forEach(f -> log.info(f.getFilter().getValue()));
 		}
 
 		// setup search query

@@ -4,6 +4,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.collections.MapBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
@@ -15,7 +17,8 @@ public class BaseTests extends BaseTestCase {
     public void wordMergeTest() {
         new JUnitTester<Map<String, Object>, Object>()
         .setTest((input) -> {
-            return Expected(MergeUtils.wordMerge("USER", input.input));
+            Filter filter = new Filter("LNK_TENANT", Operator.CONTAINS, "USER");
+            return Expected(MergeUtils.wordMerge((String)filter.getValue(), input.input));
         })
         
         .createTest("Word Merge test")
