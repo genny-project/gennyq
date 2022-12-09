@@ -109,9 +109,13 @@ public class FilterUtils {
         String fieldName = "";
         int priIndex = -1;
         int fieldIndex = value.lastIndexOf(Prefix.FIELD);
+        int lnkIndex = value.lastIndexOf(Prefix.LNK);
         if(fieldIndex > -1) {
             priIndex = value.indexOf(Prefix.PRI) + Prefix.PRI.length();
             fieldName = value.substring(priIndex,fieldIndex - 1);
+            return fieldName;
+        }else if(lnkIndex > -1) {
+            fieldName = value.substring(lnkIndex);
             return fieldName;
         } else {
             priIndex = value.lastIndexOf(Prefix.PRI) + Prefix.PRI.length();
@@ -209,10 +213,11 @@ public class FilterUtils {
     /**
      * Return ask with filter option
      *
-     * @param value Value
+     * @param queCode Value
+     * @param attCode Value
      * @return Ask
      */
-    public QDataBaseEntityMessage getFilterOptionByCode(String value) {
+    public QDataBaseEntityMessage getFilterOptionByCode(String queCode,String attCode) {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
         base.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
@@ -220,7 +225,7 @@ public class FilterUtils {
         base.setLinkValue(Attribute.LNK_ITEMS);
         base.setQuestionCode(Question.QUE_FILTER_OPTION);
 
-        if (value.contains(FilterConst.DATETIME)){
+        if (queCode.contains(FilterConst.DATETIME)){
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN));
@@ -228,9 +233,12 @@ public class FilterUtils {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
-        } else if (value.contains(FilterConst.SELECT)) {
+        } else if (queCode.contains(FilterConst.SELECT)) {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
+            return base;
+        } else if (attCode.contains(FilterConst.YES_NO)) {
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             return base;
         } else {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
@@ -268,7 +276,7 @@ public class FilterUtils {
 
         List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(searchBE);
         List<BaseEntity> basesSorted =  baseEntities.stream()
-                .sorted(Comparator.comparing(BaseEntity::getName))
+                .sorted(Comparator.comparing(BaseEntity::getIndex))
                 .collect(Collectors.toList());
 
         base.setItems(basesSorted);

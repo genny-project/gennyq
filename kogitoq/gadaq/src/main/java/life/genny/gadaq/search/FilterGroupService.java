@@ -62,20 +62,8 @@ public class FilterGroupService {
     @Inject
     UserToken userToken;
 
-    //    public static final String QUE_TABLE_PREF = "QUE_TABLE_";
-    public static final String SBE_TABLE_PREF = "SBE_TABLE_";
-
-    /* Bucket */
-//    public static final String PREF_CPY = "CPY_";
-//    public static final String QUE_TAB_BUCKET_VIEW = "QUE_TAB_BUCKET_VIEW";
     public static final String PRI_PREFIX = "PRI_PREFIX";
-    //    public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
-    public static final String DELETE = "Delete";
-//    public static final String QUE_ADD_SEARCH = "QUE_ADD_SEARCH";
-//    public static final String QUE_QUICK_SEARCH = "QUE_QUICK_SEARCH";
-//    public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
-//    public static final String QUE_QUICK_SEARCH_GRP = "QUE_QUICK_SEARCH_GRP";
 
     /**
      * Check code whether is filter select question or not
@@ -185,6 +173,7 @@ public class FilterGroupService {
     public String getQuestionCodeByValue(String value){
         if(value.contains(FilterConst.DATETIME)) return Question.QUE_FILTER_VALUE_DATETIME;
         if(value.contains(FilterConst.COUNTRY)) return Question.QUE_FILTER_VALUE_COUNTRY;
+        if(value.contains(FilterConst.YES_NO)) return Question.QUE_FILTER_VALUE_TEXT;
         if(!isSelectBox(value)) return Question.QUE_FILTER_VALUE_TEXT;
 
         String valSuffix = getLinkValCode(value);
@@ -262,28 +251,6 @@ public class FilterGroupService {
         boolean result = false;
         if(eventCode.startsWith(Question.QUE_SELECT_INTERN) && targetCode.startsWith(FilterConst.BKT_APPLICATIONS)
                 && !value.isEmpty())
-            return true;
-
-        return result;
-    }
-
-
-    /**
-     * Being whether bucket filter select options or not
-     * @param code Event code
-     * @param attrCode Attribute code
-     * @param targetCode Target code
-     * @param value Event value
-     * @return Being whether bucket filter select options or not
-     */
-    public boolean isQuickSearchSelectChanged(String code, String attrCode, String targetCode, String value) {
-        boolean result = false;
-        String newVal =  getStripSelectValue(value);
-
-        if(code!=null && code.startsWith(Question.QUE_SELECT_INTERN)
-                && attrCode.startsWith(Attribute.LNK_PERSON)
-                && targetCode.startsWith(FilterConst.BKT_APPLICATIONS)
-                && newVal.startsWith(Prefix.CPY))
             return true;
 
         return result;
@@ -433,11 +400,15 @@ public class FilterGroupService {
     public String selectFilerColumn(String value) {
         String sbeCode = filterService.getCachedSbeTable();
         String queCode = getQuestionCodeByValue(value);
-        String attCode = getAttributeCodeByQuestion(queCode);
+        String attCode = "";
+        if(value.contains(FilterConst.YES_NO))
+            attCode = getLinkValCode(value);
+        else
+            attCode = getAttributeCodeByQuestion(queCode);
 
         String filterCode = "";
         Map<String, Map<String, String>> params = new HashMap<>();
-        filterService.sendFilterOption(queCode, sbeCode);
+        filterService.sendFilterOption(queCode, sbeCode,attCode);
         filterService.sendAddFilterGroup(Question.QUE_ADD_FILTER_SBE_GRP,queCode,filterCode,params);
 
         boolean selectBox = isSelectBox(value);
@@ -731,37 +702,6 @@ public class FilterGroupService {
     }
 
     /**
-     * Send filter and quick search data
-     * @param code Code
-     * @param queGroup Question group
-     * @param sbeCode Search base entity code
-     * @params filters Filter parameters
-     */
-    public void sendFilterAndQuickSearch(String code,String queGroup, String sbeCode, String filterCode,
-                                         Map<String,Map<String, String>> filters, boolean isSubmitted) {
-
-        filterService.sendQuickSearch(queGroup,Question.QUE_SELECT_INTERN, Attribute.LNK_PERSON,
-                FilterConst.BKT_APPLICATIONS);
-
-        /* get the latest filter code if filterCode is empty */
-        if(filterCode.isEmpty()) {
-            filterCode = getLatestFilterCode(sbeCode);
-        }
-
-        /* get the latest of filter */
-        filterService.sendFilterColumns(sbeCode);
-
-        /* send saved searches */
-        String newSbe = filterService.getSearchBaseEntityCodeByJTI(sbeCode);
-        String queCode = Question.QUE_SAVED_SEARCH_LIST;
-
-        /* send saved search list */
-        filterService.sendListSavedSearches(queGroup,queCode,Attribute.PRI_NAME,FilterConst.VALUE);
-
-    }
-
-
-    /**
      * Handle saved search selected
      * @param queCode Event code
      */
@@ -1012,6 +952,7 @@ public class FilterGroupService {
 
         } catch (Exception ex){
             log.error(ex);
+            ex.printStackTrace();
         }
     }
 

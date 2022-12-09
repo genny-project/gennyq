@@ -326,9 +326,10 @@ public class FilterService {
      * Send filter option
      * @param questionCode Question Code
      * @param sbeCode Search Base Entiy Code
+     * @param attCode Attribute code
      */
-    public void sendFilterOption(String questionCode, String sbeCode) {
-        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(questionCode);
+    public void sendFilterOption(String questionCode, String sbeCode,String attCode) {
+        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(questionCode,attCode);
         String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());
@@ -438,14 +439,14 @@ public class FilterService {
                 value = "%" + value + "%";
             }
 
-            boolean isDate = isDateTimeSelected(ss.getCode());
             Filter filter = null;
-
-            if (isDate) {
+            if (ss.getDataType().equalsIgnoreCase(FilterConst.DATETIME)) {
                 LocalDateTime dateTime = parseStringToDate(value);
-                filter = new Filter(ss.getColumn(), operator, dateTime);
+                filter = new Filter(ss.getColumn(),operator, dateTime);
+            } else if (ss.getDataType().equalsIgnoreCase(FilterConst.YES_NO)) {
+                filter = new Filter(ss.getColumn(),Boolean.valueOf(value.equalsIgnoreCase("YES")?true:false));
             } else {
-                filter = new Filter(ss.getColumn(), operator, value);
+                filter = new Filter(ss.getColumn(),operator, value);
             }
 
             searchBE.remove(filter);
@@ -691,19 +692,6 @@ public class FilterService {
             }
         }
         sendBaseEntity(pcm);
-    }
-
-    public void sendFilterDetailsByPcm(String pcmCode,String queCode,String attCode,String value) {
-        BaseEntity base = beUtils.getBaseEntity(pcmCode);
-
-        for(EntityAttribute ea : base.getBaseEntityAttributes()) {
-            if(ea.getAttributeCode().equalsIgnoreCase(PCM.location(1))) {
-                ea.setValue(attCode);
-                ea.setValueString(attCode);
-            }
-        }
-
-        sendBaseEntity(base);
     }
 
     /**
