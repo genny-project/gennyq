@@ -1,7 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import java.io.Serializable;
-
+import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -20,9 +20,11 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 public class KafkaUtils implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private static final Logger log = Logger.getLogger(KafkaUtils.class);
 	private static Jsonb jsonb = JsonbBuilder.create();
 	private static KafkaInterface kafkaInterface;
+
+	@Inject
+	static Logger log;
 
 	/**
 	 * Initialise the kafka interface

@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -41,6 +40,7 @@ import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -64,9 +64,11 @@ public class QwandaUtils {
 	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
 	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT, Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
-	static final Logger log = Logger.getLogger(QwandaUtils.class);
+	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	static Logger log = Logger.getLogger(QwandaUtils.class);
 
 	@Inject
 	DatabaseUtils databaseUtils;
@@ -84,20 +86,6 @@ public class QwandaUtils {
 	UserToken userToken;
 
 	public QwandaUtils() {
-	}
-
-	// private static DataType DTT_EVENT;
-
-	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
-
-	@PostConstruct
-	private void init() {
-		// Attribute submit = getAttribute("EVT_SUBMIT");
-		// if (submit == null) {
-		// 	log.error("Could not find Attribute: EVT_SUBMIT");
-		// 	return;
-		// }
-		// DTT_EVENT = submit.getDataType();
 	}
 
 	/**
@@ -149,9 +137,7 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Get an attribute from the in memory attribute map. If productCode not found,
-	 * it
-	 * will try to fetch attributes from the DB.
+	 * Get an attribute from the cache
 	 *
 	 * @param attributeCode the code of the attribute to get
 	 * @return Attribute
@@ -161,9 +147,7 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Get an attribute from the in memory attribute map. If productCode not found,
-	 * it
-	 * will try to fetch attributes from the DB.
+	 * Get an attribute from the cache.
 	 *
 	 * @param attributeCode the code of the attribute to get
 	 * @param productCode   the product code
@@ -171,19 +155,8 @@ public class QwandaUtils {
 	 */
 	public Attribute getAttribute(final String productCode, final String attributeCode) {
 		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
-
-		if (attribute == null) {
-			// TODO: We may need to make a cached everything check here to avoid recaching everything in the event we go looking for a dud attribute code
-			log.error("Could not find attribute " + attributeCode + " in cache: " + productCode);
-			loadAllAttributesIntoCache(productCode);
-		}
-
-		attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
-
-		if (attribute == null) {
+		if (attribute == null)
 			throw new ItemNotFoundException(productCode, attributeCode);
-		}
-
 		return attribute;
 	}
 
@@ -193,21 +166,18 @@ public class QwandaUtils {
 	 * @param productCode The product of the attributes to initialize
 	 */
 	public void loadAllAttributesIntoCache(String productCode) {
+		if (productCode == null)
+			throw new NullParameterException("productCode");
+		if (StringUtils.isBlank(productCode))
+			throw new DebugException("productCode is blank");
 
-		if (StringUtils.isBlank(productCode)) {
-			log.error("RECEIVED NULL PRODUCT CODE WHILE LOADING ATTRIBUTES INTO CACHE!");
-		}
-
+		// count attributes in DB for product
 		Long attributeCount = databaseUtils.countAttributes(productCode);
 		final Integer CHUNK_LOAD_SIZE = 200;
-
 		final int TOTAL_PAGES = (int) Math.ceil(attributeCount / CHUNK_LOAD_SIZE);
-
 		Long totalAttribsCached = 0L;
 
-		log.info("About to load all attributes for productCode " + productCode);
-		log.info("Found " + attributeCount + " attributes");
-
+		log.info("About to load " + attributeCount + " attributes for productCode " + productCode);
 		CacheUtils.putObject(productCode, "ATTRIBUTE_PAGES", TOTAL_PAGES);
 
 		try {
@@ -752,7 +722,6 @@ public class QwandaUtils {
 	 * @param code the code of the schedule message to delete
 	 */
 	public void deleteSchedule(String code) {
-
 		String uri = GennySettings.shleemyServiceUrl() + "/api/schedule/code/" + code;
 		HttpUtils.delete(uri, userToken);
 	}

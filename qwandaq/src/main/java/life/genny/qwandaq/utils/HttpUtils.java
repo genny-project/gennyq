@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
 import java.time.Duration;
 import java.net.http.HttpResponse;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
@@ -28,7 +29,6 @@ import life.genny.qwandaq.models.GennyToken;
  */
 public class HttpUtils {
 
-	static final Logger log = Logger.getLogger(HttpUtils.class);
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	public static final String PUT = "PUT";
@@ -37,6 +37,9 @@ public class HttpUtils {
 	public static final String DELETE = "DELETE";
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
+
+	@Inject
+	static Logger log;
 
 	/**
 	 * Create and send a PUT request.

@@ -1,5 +1,12 @@
 package life.genny.qwandaq.utils;
 
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED_DATE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED;
+import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED_DATE;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,15 +22,12 @@ import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import io.quarkus.arc.Arc;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -51,8 +55,10 @@ import life.genny.qwandaq.models.UserToken;
 @ActivateRequestContext
 public class BaseEntityUtils {
 
-	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	static Logger log;
 
 	@Inject
 	ServiceToken serviceToken;
@@ -68,10 +74,6 @@ public class BaseEntityUtils {
 
 	@Inject
 	EntityManagerFactory emf;
-
-	@Inject
-	// @PersistenceUnit("genny")
-	EntityManager entityManager;
 
 	public BaseEntityUtils() {
 	}
@@ -512,7 +514,7 @@ public class BaseEntityUtils {
 	public BaseEntity addNonLiteralAttributes(BaseEntity entity) {
 
 		// Handle Created and Updated attributes
-		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
+		Attribute createdAttr = new Attribute(PRI_CREATED, "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
 
 		if (entity.getCreated() == null) {
@@ -524,20 +526,20 @@ public class BaseEntityUtils {
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
 
-		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
+		Attribute createdDateAttr = new Attribute(PRI_CREATED_DATE, "Created", new DataType(LocalDate.class));
 		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
 
 		// Ensure createdDate is not null
 		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
 
-		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
+		Attribute updatedAttr = new Attribute(PRI_UPDATED, "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
 		try {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
 
-			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
+			Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
 			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
 			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
 			entity.addAttribute(updatedDate);
@@ -545,12 +547,12 @@ public class BaseEntityUtils {
 			log.error("NPE for PRI_UPDATED");
 		}
 
-		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
+		Attribute codeAttr = new Attribute(PRI_CODE, "Code", new DataType(String.class));
 		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
 		code.setValueString(entity.getCode());
 		entity.addAttribute(code);
 
-		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
+		Attribute nameAttr = new Attribute(PRI_NAME, "Name", new DataType(String.class));
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
@@ -631,7 +633,7 @@ public class BaseEntityUtils {
 			}
 
 			// Find any default val for this Attr
-			String defaultDefValueAttr = "DFT_" + attrCode;
+			String defaultDefValueAttr = Prefix.DFT.concat(attrCode);
 			Object defaultVal = definition.getValue(defaultDefValueAttr, attribute.getDefaultValue());
 
 			// Only process mandatory attributes, or defaults
@@ -717,12 +719,12 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity addValue(final BaseEntity be, final String attributeCode, final String value) {
 
-		if (be == null)
+		if (be == null) {
 			throw new NullParameterException("be");
-		if (attributeCode == null)
+		}
+		if (attributeCode == null) {
 			throw new NullParameterException("attributeCode");
-		// if (value == null)
-		// throw new NullParameterException("value");
+		}
 
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 

@@ -14,7 +14,7 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 public class LogUtils {
 
 	@Inject
-	public static Logger log;
+	static Logger log;
 
 	/**
 	 * Log a set of {@link HttpHeaders}

@@ -86,7 +86,9 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_CODE = "PRI_CODE";
 	public static final String PRI_CREATED = "PRI_CREATED";
+	public static final String PRI_CREATED_DATE = "PRI_CREATED_DATE";
 	public static final String PRI_UPDATED = "PRI_UPDATED";
+	public static final String PRI_UPDATED_DATE = "PRI_UPDATED_DATE";
 	public static final String PRI_UUID = "PRI_UUID";
 	public static final String PRI_USERNAME = "PRI_USERNAME";
 
@@ -154,13 +156,12 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_BCC = "PRI_BCC";
 	public static final String PRI_BODY = "PRI_BODY";
 
-	// Filter and saved search
+	// saved searches
 	public static final String LNK_FILTER_COLUMN = "LNK_FILTER_COLUMN";
 	public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
 	public static final String LNK_PERSON = "LNK_PERSON";
 	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
 	public static final String LNK_QUICK_SEARCH = "LNK_QUICK_SEARCH";
-	public static final String PRI_CREATED_DATE="PRI_CREATED_DATE";
 	public static final String LNK_SAVED_SEARCH = "LNK_SAVED_SEARCH";
 
 	@Embedded

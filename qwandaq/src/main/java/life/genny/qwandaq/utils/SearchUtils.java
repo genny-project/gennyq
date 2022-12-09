@@ -1,11 +1,7 @@
 package life.genny.qwandaq.utils;
 
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -13,23 +9,17 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
-import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
@@ -46,8 +36,10 @@ import life.genny.qwandaq.models.UserToken;
 @ApplicationScoped
 public class SearchUtils {
 
-	static Logger log = Logger.getLogger(SearchUtils.class);
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	static Logger log;
 
 	@Inject
 	QwandaUtils qwandaUtils;
