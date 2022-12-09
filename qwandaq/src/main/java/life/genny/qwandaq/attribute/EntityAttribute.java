@@ -1,11 +1,7 @@
 package life.genny.qwandaq.attribute;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -45,19 +41,13 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.quarkus.arc.Arc;
-import life.genny.qwandaq.constants.QwandaQConstant;
 import life.genny.qwandaq.converter.MinIOConverter;
-import life.genny.qwandaq.dto.FileUpload;
 import life.genny.qwandaq.handler.AttributeMinIOHandler;
-import life.genny.qwandaq.utils.ConfigUtils;
-import life.genny.qwandaq.utils.MinIOUtils;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Type;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
@@ -66,7 +56,6 @@ import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 @Entity

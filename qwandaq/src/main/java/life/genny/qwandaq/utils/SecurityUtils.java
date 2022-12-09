@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Map;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
@@ -28,9 +29,11 @@ import life.genny.qwandaq.models.GennyToken;
  */
 public class SecurityUtils {
 
-	static final Logger log = Logger.getLogger(SecurityUtils.class);
 	static Jsonb jsonb = JsonbBuilder.create();
 	public static final String SERVICE_USERNAME = "service";
+
+	@Inject
+	static Logger log;
 
 	/**
 	* Function to validate the authority for a given token string

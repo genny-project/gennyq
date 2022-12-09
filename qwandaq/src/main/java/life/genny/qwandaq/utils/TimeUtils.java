@@ -1,11 +1,11 @@
 package life.genny.qwandaq.utils;
 
-import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
@@ -16,7 +16,8 @@ import org.jboss.logging.Logger;
  */
 public class TimeUtils {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+	@Inject
+	static Logger log;
 
 	/** 
 	 * Format a LocalTime object to a string

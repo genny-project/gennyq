@@ -1,6 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.lang.invoke.MethodHandles;
 import java.net.http.HttpResponse;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,8 +27,10 @@ import life.genny.qwandaq.graphql.ProcessData;
 @ApplicationScoped
 public class GraphQLUtils {
 
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	private static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	static Logger log;
 
 	@Inject
 	UserToken userToken;

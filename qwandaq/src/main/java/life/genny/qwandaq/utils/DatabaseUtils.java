@@ -39,14 +39,17 @@ import life.genny.qwandaq.validation.Validation;
 @ApplicationScoped
 public class DatabaseUtils {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	Logger log;
 
 	@Inject
 	EntityManager entityManager;
 	
 	@Inject
 	BaseEntityUtils beUtils;
+
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
