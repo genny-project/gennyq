@@ -178,7 +178,7 @@ public class CacheUtils {
 	 * @param entities The Map of CoreEntity to save with CoreEntityKey as the key
 	 * @return The success status
 	 */
-	public static boolean saveEntityBulk(String cacheName, Map<CoreEntityKey, CoreEntity> entities) {
+	public static boolean saveEntities(String cacheName, Map<CoreEntityKey, CoreEntity> entities) {
 		return cache.putEntitiesIntoCache(cacheName, entities);
 	}
 
