@@ -142,10 +142,7 @@ public class FyodorUltra {
 		log.debug("Applying capabilities...");
 		log.debug("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
-		capHandler.refineFiltersFromCapabilities(searchEntity);
-		capHandler.refineSortsFromCapabilities(searchEntity);
-		capHandler.refineColumnsFromCapabilities(searchEntity);
-		capHandler.refineActionsFromCapabilities(searchEntity);
+		capHandler.refineSearchFromCapabilities(searchEntity);
 
 		if (!GennyConstants.PER_SERVICE.equals(userToken.getUserCode())) {
 			Map<String, Object> ctxMap = new HashMap<>();

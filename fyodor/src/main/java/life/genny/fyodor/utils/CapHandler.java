@@ -32,14 +32,27 @@ public class CapHandler extends Manager {
 	CapabilitiesManager capMan;
 
 	/**
+	 * 
 	 * @param searchEntity
 	 */
-	public void refineColumnsFromCapabilities(SearchEntity searchEntity) {
+	public void refineSearchFromCapabilities(SearchEntity searchEntity) {
+		CapabilitySet userCapabilities = capMan.getUserCapabilities();
+		refineColumnsFromCapabilities(searchEntity, userCapabilities);
+		refineActionsFromCapabilities(searchEntity, userCapabilities);
+		refineFiltersFromCapabilities(searchEntity, userCapabilities);
+		refineSortsFromCapabilities(searchEntity, userCapabilities);
+
+	}
+
+	/**
+	 * @param searchEntity
+	 */
+	public void refineColumnsFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 
 		List<Column> columns = searchEntity.getTraits(Column.class);
 		info("Filtering " + columns.size() + " columns");
 		columns = columns.stream()
-				.filter(column -> traitCapabilitiesMet(column))
+				.filter(column -> traitCapabilitiesMet(column, userCapabilities))
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + columns.size() + " columns");
@@ -49,12 +62,12 @@ public class CapHandler extends Manager {
 	/**
 	 * @param searchEntity
 	 */
-	public void refineSortsFromCapabilities(SearchEntity searchEntity) {
+	public void refineSortsFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<Sort> sorts = searchEntity.getTraits(Sort.class);
 		info("Filtering " + sorts.size() + " sorts");
 
 		sorts = sorts.stream()
-				.filter(sort -> traitCapabilitiesMet(sort))
+				.filter(sort -> traitCapabilitiesMet(sort, userCapabilities))
 				.collect(Collectors.toList());
 		info("Filtered down to " + sorts.size() + " sorts");
 		searchEntity.setTraits(Sort.class, sorts);
@@ -63,12 +76,14 @@ public class CapHandler extends Manager {
 	/**
 	 * @param searchEntity
 	 */
-	public void refineFiltersFromCapabilities(SearchEntity searchEntity) {
-		// TODO: Handle filters and clauses
+	public void refineFiltersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
 		info("Filtering " + containers.size() + " filters"); 
 		containers = searchEntity.getClauseContainers().stream()
-				// .filter(container -> traitCapabilitiesMet(container))
+				.filter(container -> {
+					info("Filtering " + container.getFilter().getCode());
+					return container.requirementsMet(userCapabilities);
+				})
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + containers.size() + " filters");
@@ -78,13 +93,13 @@ public class CapHandler extends Manager {
 	/**
 	 * @param searchEntity
 	 */
-	public void refineActionsFromCapabilities(SearchEntity searchEntity) {
+	public void refineActionsFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 
 		List<Action> actions = searchEntity.getTraits(Action.class);
 		info("Filtering " + actions.size() + " actions");
 		
 		actions = actions.stream()
-				.filter(action -> traitCapabilitiesMet(action))
+				.filter(action -> traitCapabilitiesMet(action, userCapabilities))
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + actions.size() + " actions");
@@ -95,7 +110,7 @@ public class CapHandler extends Manager {
 	 * @param trait
 	 * @return
 	 */
-	public boolean traitCapabilitiesMet(Trait trait) {
+	public boolean traitCapabilitiesMet(Trait trait, CapabilitySet userCapabilities) {
 
 		if(userToken == null) {
 			error("[!] No UserToken, cannot verify capabilities");
@@ -106,11 +121,11 @@ public class CapHandler extends Manager {
 		// TODO: We also need to consolidate what it means to be a service user
 		boolean isService = hasSecureToken(userToken);
 		if(!isService) {
-			// TODO: Move this call
-			CapabilitySet userCapabilities = capMan.getUserCapabilities();
 			getLogger().info("Checking: " + trait);
 			getLogger().info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
 			return trait.requirementsMet(userCapabilities);
+		} else {
+			getLogger().info("Service token. Bypassing requirements");
 		}
 		return true;
 	}
