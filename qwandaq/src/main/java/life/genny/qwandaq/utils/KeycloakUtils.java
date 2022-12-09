@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -55,8 +54,7 @@ import life.genny.qwandaq.models.ServiceToken;
  */
 public class KeycloakUtils {
 
-	@Inject
-    static Logger log;
+	private static Logger log = Logger.getLogger(KeycloakUtils.class);
 
     static Jsonb jsonb = JsonbBuilder.create();
 

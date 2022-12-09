@@ -1,6 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -39,7 +40,7 @@ public class HttpUtils {
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
 
 	@Inject
-	static Logger log;
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * Create and send a PUT request.

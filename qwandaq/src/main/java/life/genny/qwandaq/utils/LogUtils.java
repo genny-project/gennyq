@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.invoke.MethodHandles;
 import java.net.http.HttpHeaders;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +15,7 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 public class LogUtils {
 
 	@Inject
-	static Logger log;
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * Log a set of {@link HttpHeaders}

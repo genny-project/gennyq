@@ -33,7 +33,7 @@ public class CacheUtils {
 	private static GennyCache cache = null;
 
 	@Inject
-	static Logger log;
+	private static final Logger log = Logger.getLogger(CacheUtils.class);
 
 	/** 
 	 * @param gennyCache the gennyCache to set

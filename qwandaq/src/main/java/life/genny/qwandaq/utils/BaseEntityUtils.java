@@ -7,6 +7,7 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED_DATE;
 import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED;
 import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED_DATE;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -58,7 +59,7 @@ public class BaseEntityUtils {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	static Logger log;
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
 	ServiceToken serviceToken;

@@ -1,6 +1,8 @@
 package life.genny.qwandaq.utils;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
+
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -24,7 +26,7 @@ public class KafkaUtils implements Serializable {
 	private static KafkaInterface kafkaInterface;
 
 	@Inject
-	static Logger log;
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * Initialise the kafka interface
