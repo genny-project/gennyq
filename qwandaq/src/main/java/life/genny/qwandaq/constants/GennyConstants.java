@@ -19,8 +19,6 @@ public final class GennyConstants {
 
 	// service user
 	public static final String PER_SERVICE = "PER_SERVICE";
-    // event
-	public static final String EVENT_WEBCMDS = "webcmds";
 
 	// caching
 	public static final String SBE_HOST_COMPANIES_VIEW = "SBE_HOST_COMPANIES_VIEW";

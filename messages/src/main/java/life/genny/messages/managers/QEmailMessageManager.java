@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ApplicationScoped
-public class QEmailMessageManager extends QMessageProvider {
+public final class QEmailMessageManager extends QMessageProvider {
 
 	private static final Logger log = Logger.getLogger(QEmailMessageManager.class);
 
@@ -85,12 +85,12 @@ public class QEmailMessageManager extends QMessageProvider {
 		// Build a general data map from context BEs
 		HashMap<String, Object> templateData = new HashMap<>();
 
-		for (String key : contextMap.keySet()) {
+		for (Map.Entry<String, Object> entry : contextMap.entrySet()) {
 
-			Object value = contextMap.get(key);
+			Object value = entry.getValue(); //contextMap.get(entry.getKey());
 
 			if (value.getClass().equals(BaseEntity.class)) {
-				log.info("Processing key as BASEENTITY: " + key);
+				log.info("Processing key as BASEENTITY: " + entry.getKey());
 				BaseEntity be = (BaseEntity) value;
 				HashMap<String, String> deepReplacementMap = new HashMap<>();
 				for (EntityAttribute ea : be.getBaseEntityAttributes()) {
@@ -132,10 +132,10 @@ public class QEmailMessageManager extends QMessageProvider {
 						}
 					}
 				}
-				templateData.put(key, deepReplacementMap);
+				templateData.put(entry.getKey(), deepReplacementMap);
 			} else if (value.getClass().equals(String.class)) {
-				log.info("Processing key as STRING: " + key);
-				templateData.put(key, (String) value);
+				log.info("Processing key as STRING: " + entry.getKey());
+				templateData.put(entry.getKey(), value);
 			}
 		}
 		// Base Wrapper
@@ -240,12 +240,7 @@ public class QEmailMessageManager extends QMessageProvider {
 			personalizationInnerObjectWrapper.add("bcc", bccJsonArrayBuilder.build());
 		}
 
-		Map<String, Object> finalData = new HashMap<>();
-
-		for (String key : templateData.keySet()) {
-			finalData.put(key, templateData.get(key));
-		}
-
+		Map<String, Object> finalData = new HashMap<>(templateData);
 		personalizationArrayBuilder.add(personalizationInnerObjectWrapper.build());
 
 		mailJsonObjectBuilder.add("personalizations", personalizationArrayBuilder.build());

@@ -369,7 +369,7 @@ public class CapabilitiesManager extends Manager {
 
 	private boolean shouldOverride() {
 		// allow keycloak admin and devcs to do anything
-		return (userToken.hasRole("admin", "dev") || ("service".equals(userToken.getUsername())));
+		return (userToken.hasRole("service", "admin", "dev") || ("service".equals(userToken.getUsername())));
 	}
 
 	// For use in builder patterns

@@ -1,16 +1,15 @@
 package life.genny.qwandaq.datatype;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+import javax.json.Json;
+import javax.json.JsonValue;
+import javax.json.bind.adapter.JsonbAdapter;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
-
-import javax.json.Json;
-import javax.json.JsonValue;
-import javax.json.bind.adapter.JsonbAdapter;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public class PanacheLocalDateTimeAdapter implements JsonbAdapter<LocalDateTime, JsonValue> {

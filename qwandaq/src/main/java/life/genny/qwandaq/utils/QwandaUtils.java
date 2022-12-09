@@ -4,6 +4,7 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,8 @@ import life.genny.qwandaq.validation.Validation;
 public class QwandaUtils {
 
 	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
-	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT, Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
+	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT,
+			Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
 	static final Logger log = Logger.getLogger(QwandaUtils.class);
 
@@ -94,8 +96,8 @@ public class QwandaUtils {
 	private void init() {
 		// Attribute submit = getAttribute("EVT_SUBMIT");
 		// if (submit == null) {
-		// 	log.error("Could not find Attribute: EVT_SUBMIT");
-		// 	return;
+		// log.error("Could not find Attribute: EVT_SUBMIT");
+		// return;
 		// }
 		// DTT_EVENT = submit.getDataType();
 	}
@@ -246,7 +248,7 @@ public class QwandaUtils {
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);
 
-				if (attributeList.size() > 0) {
+				if (!attributeList.isEmpty()) {
 					log.debug("Start AttributeID:"
 							+ attributeList.get(0).getId() + ", End AttributeID:"
 							+ attributeList.get(attributeList.size() - 1).getId());
@@ -278,11 +280,11 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Generate an ask for a question, the
+	 * Generate an ask for a question using the question code, the
 	 * source and the target. This operation is recursive if the
 	 * question is a group.
 	 *
-	 * @param question The question to generate from
+	 * @param code   The code of the question
 	 * @param source The source entity
 	 * @param target The target entity
 	 * @return The generated Ask
@@ -374,7 +376,6 @@ public class QwandaUtils {
 	 * @return The generated Ask
 	 */
 	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final CapabilitySet target, ReqConfig requirementsConfig) {
-
 		if (code == null)
 			throw new NullParameterException("code");
 		// don't need to check source, target since they are checked in generateAskFromQuestion
@@ -497,14 +498,14 @@ public class QwandaUtils {
 			targetAsk.setDisabled(!depsAnswered);
 			targetAsk.setHidden(!depsAnswered);
 		}
-		
+
 		return flatMapAsks;
 	}
 
 	/**
 	 * Check if all Ask mandatory fields are answered for a BaseEntity.
 	 *
-	 * @param asks        The ask to check
+	 * @param asks       The ask to check
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
@@ -618,7 +619,7 @@ public class QwandaUtils {
 
 	/**
 	 * Fetch process data from cache.
-	 * 
+	 *
 	 * @param processId The id of the data to fetch
 	 * @return The saved data
 	 */
@@ -670,7 +671,7 @@ public class QwandaUtils {
 		}
 
 		// now apply all incoming answers
-		processData.getAnswers().stream().forEach(answer -> {
+		processData.getAnswers().forEach(answer -> {
 			// ensure the attribute is set
 			String attributeCode = answer.getAttributeCode();
 			Attribute attribute = getAttribute(attributeCode);
@@ -692,9 +693,9 @@ public class QwandaUtils {
 	 */
 	public BaseEntity saveAnswer(Answer answer) {
 
-		List<BaseEntity> targets = saveAnswers(Arrays.asList(answer));
+		List<BaseEntity> targets = saveAnswers(Collections.singletonList(answer));
 
-		if (targets != null && targets.size() > 0) {
+		if (targets != null && !targets.isEmpty()) {
 			return targets.get(0);
 		}
 
@@ -715,14 +716,14 @@ public class QwandaUtils {
 		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()
 				.collect(Collectors.groupingBy(Answer::getTargetCode));
 
-		for (String targetCode : answersPerTargetCodeMap.keySet()) {
+		for (Map.Entry<String, List<Answer>> map : answersPerTargetCodeMap.entrySet()) {
 
 			// fetch target and target DEF
-			BaseEntity target = beUtils.getBaseEntity(targetCode);
+			BaseEntity target = beUtils.getBaseEntity(map.getKey());
 			Definition definition = defUtils.getDEF(target);
 
 			// filter Non-valid answers using def
-			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
+			List<Answer> group = map.getValue();
 			List<Answer> validAnswers = group.stream()
 					.filter(item -> defUtils.answerValidForDEF(definition, item))
 					.collect(Collectors.toList());
@@ -821,6 +822,24 @@ public class QwandaUtils {
 		askMsg.setReplace(true);
 		String json = jsonb.toJson(askMsg);
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json);
+	}
+
+	/**
+	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * 
+	 * @param definition The definitions to check against
+	 * @param answer     An incoming answer
+	 * @param targets    The target entities to check, usually processEntity and
+	 *                   original target
+	 * @return Boolean
+	 */
+	public Boolean isDuplicate(List<Definition> definitions, Answer answer, BaseEntity... targets) {
+		for (Definition definition : definitions) {
+			if (isDuplicate(definition, answer, targets)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -931,7 +950,7 @@ public class QwandaUtils {
 
 		// send to commands topic
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
-		log.info("Sent error message to frontend : " + json.toString());
+		log.info("Sent error message to frontend : " + json);
 	}
 
 	/**

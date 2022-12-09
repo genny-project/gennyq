@@ -60,7 +60,7 @@ public class EntityAttributeId implements java.io.Serializable {
 	 */
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -90,17 +90,14 @@ public class EntityAttributeId implements java.io.Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		EntityAttributeId other = (EntityAttributeId) obj;
-		if (attribute == null) {
-			if (other.attribute != null)
-				return false;
-		} else if (!attribute.equals(other.attribute))
-			return false;
-		if (baseEntity == null) {
-			if (other.baseEntity != null)
-				return false;
-		} else if (!baseEntity.equals(other.baseEntity))
-			return false;
-		return true;
+        if (attribute == null) {
+            if (other.attribute != null)
+                return false;
+        } else if (!attribute.equals(other.attribute))
+            return false;
+        if (baseEntity == null) {
+            return other.baseEntity == null;
+        } else return baseEntity.equals(other.baseEntity);
 	}
 
 }

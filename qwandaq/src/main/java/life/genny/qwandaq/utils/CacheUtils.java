@@ -1,23 +1,22 @@
 package life.genny.qwandaq.utils;
 
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.jboss.logging.Logger;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import org.apache.commons.lang3.StringUtils;
+import org.infinispan.client.hotrod.RemoteCache;
+import org.jboss.logging.Logger;
+
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /*
  * A static utility class used for standard read and write 
@@ -189,9 +188,7 @@ public class CacheUtils {
 
 			return currentKey.getEntityCode().startsWith(prefix) ? jsonb.fromJson(entry.getValue(), CoreEntity.class) : null;
 		})
-		.filter((CoreEntity entity) -> {
-			return entity != null;
-		}).collect(Collectors.toList());
+		.filter(Objects::nonNull).toList();
 
 		return entities;
 	}
@@ -205,7 +202,7 @@ public class CacheUtils {
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
 	public static List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
-		return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
-		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
+        return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
+                .stream().map(BaseEntity.class::cast).toList();
 	}
 }

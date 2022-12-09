@@ -17,6 +17,9 @@
   <properties>
     <sendgrid.version>4.6.3</sendgrid.version>
     <twilio.version>8.23.0</twilio.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
   <dependencyManagement>
@@ -128,7 +131,7 @@
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-        <version>${jandex.version}</version>
+        <version>1.2.3</version>
         <executions>
           <execution>
             <id>make-index</id>

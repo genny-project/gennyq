@@ -1,21 +1,21 @@
 package life.genny.test.qwandaq.utils;
 
+import io.quarkus.test.junit.mockito.InjectMock;
+
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 
-import io.quarkus.test.junit.mockito.InjectMock;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 // @RunWith(MockitoJUnitRunner.class)
@@ -23,9 +23,9 @@ public class BaseEntityUtilsTest extends BaseTestCase {
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	private static String PRODUCT = "genny";
-	private static String ENTITY_CODE = "TST_ENTITY";
-	private static String DUMMY_CODE = "DUMMY";
+	private static final String PRODUCT = "genny";
+	private static final String ENTITY_CODE = "TST_ENTITY";
+	private static final String DUMMY_CODE = "DUMMY";
 
 	@InjectMock
 	UserToken userToken;

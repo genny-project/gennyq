@@ -49,8 +49,7 @@ public class MoneyConverter implements AttributeConverter<Money, String> {
 		CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
 		Double amount = Double.valueOf(obj.getString("amount"));
 
-		Money money = Money.of(amount, currency);
-		return money;
+        return Money.of(amount, currency);
 	}
 
 

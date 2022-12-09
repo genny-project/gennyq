@@ -10,12 +10,12 @@ public class DebugTimer {
 	private static final Logger defaultLogger = Logger.getLogger(DebugTimer.class);
     public static final String DEFAULT_MESSAGE = "[!] Timing took: ";
 
-    private Long start;
+    private final Long start;
     private Long end;
     
-    private String message;
+    private final String message;
 
-    private FILogCallback logLevel;
+    private final FILogCallback logLevel;
 
     /**
      * Create a new timer and start it

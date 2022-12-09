@@ -3,6 +3,7 @@ package life.genny.kogito.common.core;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -25,8 +27,8 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
-
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
@@ -37,6 +39,7 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
@@ -99,7 +102,7 @@ public class Dispatch {
 		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
 
 		QBulkMessage msg = new QBulkMessage();
-
+		msg.setTag("Dispatch:build:line93");
 		// check for a provided question code
 		String questionCode = processData.getQuestionCode();
 		if (questionCode != null) {
@@ -168,12 +171,10 @@ public class Dispatch {
 	 * @return
 	 */
 	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks) {
-
 		for (Ask ask : flatMapOfAsks.values()) {
 			if (!ask.getReadonly())
 				return true;
 		}
-
 		return false;
 	}
 
@@ -206,8 +207,10 @@ public class Dispatch {
 		Boolean answered = QwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
 
 		// pre-send ask updates
-		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-		qwandaUtils.updateDependentAsks(processEntity, definition, flatMapOfAsks);
+		for (String defCode : processData.getDefCodes()) {
+			Definition definition = beUtils.getDefinition(defCode);
+			qwandaUtils.updateDependentAsks(processEntity, definition, flatMapOfAsks);
+		}
 
 		// update any button Events
 		for (String event : BUTTON_EVENTS) {
@@ -234,7 +237,7 @@ public class Dispatch {
 	 * @param msg
 	 * @param processData
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
+	public void traversePCM(String code, BaseEntity source, BaseEntity target,
 			QBulkMessage msg, ProcessData processData) {
 
 		// add pcm to bulk message
@@ -250,7 +253,7 @@ public class Dispatch {
 	 * @param target
 	 * @return
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
+	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target,
 			QBulkMessage msg, ProcessData processData) {
 
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
@@ -380,7 +383,7 @@ public class Dispatch {
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
 					ask.getQuestion().getAttribute().getCode());
-			
+
 			if (codes == null || codes.isEmpty())
 				sendDropdownItems(ask, target, parentCode);
 			else
@@ -414,21 +417,55 @@ public class Dispatch {
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
 
-		// trigger dropdown search in dropkick
-		JsonObject json = Json.createObjectBuilder()
-		.add("event_type", "DD")
-		.add("data", Json.createObjectBuilder()
-			.add("questionCode", question.getCode())
-			.add("sourceCode", ask.getSourceCode())
-			.add("targetCode", ask.getTargetCode())
-			.add("parentCode", parentCode)
-			.add("value", "")
-			.add("processId", ask.getProcessId()))
-		.add("attributeCode", attribute.getCode())
-		.add("token", userToken.getToken())
-		.build();
+		if (attribute.getCode().startsWith(Prefix.LNK)) {
 
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
+			// check for already selected items
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
+			if (codes != null && !codes.isEmpty()) {
+
+				// grab selection baseentitys
+				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
+				for (String code : codes) {
+					if (StringUtils.isBlank(code)) {
+						continue;
+					}
+
+					BaseEntity selection = beUtils.getBaseEntity(code);
+
+					// Ensure only the PRI_NAME attribute exists in the selection
+					selection = beUtils.addNonLiteralAttributes(selection);
+					selection = beUtils.privacyFilter(selection,
+							Collections.singleton(Attribute.PRI_NAME));
+					selectionMsg.add(selection);
+				}
+
+				// send selections
+				if (selectionMsg.getItems() != null) {
+					selectionMsg.setToken(userToken.getToken());
+					selectionMsg.setReplace(true);
+					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
+					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
+				} else {
+					log.info("No selection items found for " + attribute.getCode());
+				}
+			}
+
+			// trigger dropdown search in dropkick
+			JsonObject json = Json.createObjectBuilder()
+					.add("event_type", "DD")
+					.add("data", Json.createObjectBuilder()
+							.add("questionCode", question.getCode())
+							.add("sourceCode", ask.getSourceCode())
+							.add("targetCode", ask.getTargetCode())
+							.add("parentCode", parentCode)
+							.add("value", "")
+							.add("processId", ask.getProcessId()))
+					.add("attributeCode", attribute.getCode())
+					.add("token", userToken.getToken())
+					.build();
+
+			KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
+		}
 	}
 
 	/**
@@ -457,7 +494,7 @@ public class Dispatch {
 
 		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 
-		baseEntities.stream().forEach(entity -> {
+		baseEntities.forEach(entity -> {
 			if (entity.findEntityAttribute(Attribute.PRI_NAME).isEmpty())
 				entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
 

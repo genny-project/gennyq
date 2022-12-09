@@ -13,7 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Answers implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
-	private List<Answer> answers = new CopyOnWriteArrayList<Answer>();
+    private List<Answer> answers = new CopyOnWriteArrayList<>();
 
 	public Answers() { }
 	

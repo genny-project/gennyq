@@ -10,6 +10,9 @@
   <artifactId>kogito-common</artifactId>
   <name>Genny Kogito Dependencies</name>
   <properties>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <maven.compiler.release>17</maven.compiler.release>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -118,6 +121,10 @@
       <version>${kogito.bom.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>jakarta.json.bind</groupId>
+      <artifactId>jakarta.json.bind-api</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -143,7 +150,7 @@
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-				<version>${jandex.version}</version>
+				<version>1.2.3</version>
         <executions>
           <execution>
             <id>make-index</id>

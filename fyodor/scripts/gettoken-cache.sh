@@ -1,5 +1,5 @@
 #!/bin/bash
-realm=internmatch
+realm=${GENNY_REALM:internmatch}
 key=TOKEN:PER_0F6169E1-FDD5-4DAF-BEC3-4126C6626752
 TOKEN=`./gettoken-prod.sh`
 

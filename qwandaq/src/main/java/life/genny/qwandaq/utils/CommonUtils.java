@@ -213,14 +213,14 @@ public class CommonUtils {
         int i;
         for(i = 0; i < array.length - 1; i++) {
             result.append("\"")
-            .append(stringCallback.getString(array[i]))
-            .append("\",");
+                    .append(stringCallback.getString(array[i]))
+                    .append("\",");
         }
 
         result.append("\"")
-        .append(stringCallback.getString(array[i]))
-        .append("\"]");
-        
+                .append(stringCallback.getString(array[i]))
+                .append("\"]");
+
         return result.toString();
     }
 

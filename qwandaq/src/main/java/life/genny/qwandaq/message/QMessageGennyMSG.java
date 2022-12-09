@@ -1,19 +1,18 @@
 package life.genny.qwandaq.message;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-
-import java.util.concurrent.CopyOnWriteArrayList;
-import org.jboss.logging.Logger;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import org.jboss.logging.Logger;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @RegisterForReflection
 public class QMessageGennyMSG extends QMessage {
@@ -92,16 +91,16 @@ public class QMessageGennyMSG extends QMessage {
 	public QMessageGennyMSG(String templateCode) {
 		super("COM_MSG");
 		this.templateCode = templateCode;
-		this.messageTypeArr = new QBaseMSGMessageType[0];
-		this.messageContextMap = new HashMap<String, String>();
-		this.recipientArr = new String[0];
+        this.messageTypeArr = new QBaseMSGMessageType[0];
+        this.messageContextMap = new HashMap<>();
+        this.recipientArr = new String[0];
 	}
 
 	public QMessageGennyMSG(QBaseMSGMessageType messageType) {
 		super("COM_MSG");
-		this.messageTypeArr = new QBaseMSGMessageType[]{ messageType };
-		this.messageContextMap = new HashMap<String, String>();
-		this.recipientArr = new String[0];
+        this.messageTypeArr = new QBaseMSGMessageType[]{messageType};
+        this.messageContextMap = new HashMap<>();
+        this.recipientArr = new String[0];
 	}
 
 	public QMessageGennyMSG(String msg_type, QBaseMSGMessageType[] messageType, String templateCode, Map<String, String> contextMap, String[] recipientArr) {

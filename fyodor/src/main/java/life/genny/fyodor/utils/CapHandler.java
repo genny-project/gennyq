@@ -1,5 +1,6 @@
 package life.genny.fyodor.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,7 +40,7 @@ public class CapHandler extends Manager {
 		List<Column> columns = searchEntity.getTraits(Column.class);
 		info("Filtering " + columns.size() + " columns");
 		columns = columns.stream()
-				.filter(column -> traitCapabilitiesMet(column))
+				.filter(this::traitCapabilitiesMet)
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + columns.size() + " columns");
@@ -54,22 +55,20 @@ public class CapHandler extends Manager {
 		info("Filtering " + sorts.size() + " sorts");
 
 		sorts = sorts.stream()
-				.filter(sort -> traitCapabilitiesMet(sort))
+				.filter(this::traitCapabilitiesMet)
 				.collect(Collectors.toList());
 		info("Filtered down to " + sorts.size() + " sorts");
 		searchEntity.setTraits(Sort.class, sorts);
 	}
-	
+
 	/**
 	 * @param searchEntity
 	 */
 	public void refineFiltersFromCapabilities(SearchEntity searchEntity) {
 		// TODO: Handle filters and clauses
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
-		info("Filtering " + containers.size() + " filters"); 
-		containers = searchEntity.getClauseContainers().stream()
-				// .filter(container -> traitCapabilitiesMet(container))
-				.collect(Collectors.toList());
+		info("Filtering " + containers.size() + " filters");
+		containers = new ArrayList<>(searchEntity.getClauseContainers());
 
 		info("Filtered down to " + containers.size() + " clause containers");
 		searchEntity.setClauseContainers(containers);
@@ -82,9 +81,9 @@ public class CapHandler extends Manager {
 
 		List<Action> actions = searchEntity.getTraits(Action.class);
 		info("Filtering " + actions.size() + " actions");
-		
+
 		actions = actions.stream()
-				.filter(action -> traitCapabilitiesMet(action))
+				.filter(this::traitCapabilitiesMet)
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + actions.size() + " actions");
@@ -112,6 +111,7 @@ public class CapHandler extends Manager {
 			getLogger().info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
 			return trait.requirementsMet(userCapabilities);
 		}
+		// TODO: implement capabilities
 		return true;
 	}
 

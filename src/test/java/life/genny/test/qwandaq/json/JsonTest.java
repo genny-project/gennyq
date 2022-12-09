@@ -1,12 +1,11 @@
 package life.genny.test.qwandaq.json;
 
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
 import org.junit.jupiter.api.Test;
 
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.SearchEntity;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 
 public class JsonTest {
 

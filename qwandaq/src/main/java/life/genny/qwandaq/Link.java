@@ -17,12 +17,11 @@
 
 package life.genny.qwandaq;
 
-import java.io.Serializable;
-import java.util.Objects;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import javax.persistence.Embeddable;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * A Link object
@@ -36,8 +35,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
  * <p>
  * Link class represents a simple pojo about baseentity links are stored. 
  * </p>
- * 
- * 
+ *
+ *
  * @author Adam Crow
  * @author Byron Aguirre
  * @version %I%, %G%
@@ -294,17 +293,16 @@ public class Link implements Serializable {
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
-			return false;
-		}
-		if (!(obj instanceof Link)) {
-			return false;
-		}
-		Link other = (Link) obj;
-		return Objects.equals(attributeCode, other.attributeCode) && Objects.equals(childColor, other.childColor)
-			&& Objects.equals(linkValue, other.linkValue) && Objects.equals(parentColor, other.parentColor)
-			&& Objects.equals(sourceCode, other.sourceCode) && Objects.equals(targetCode, other.targetCode)
-			&& Objects.equals(weight, other.weight);
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof Link other)) {
+            return false;
+        }
+        return Objects.equals(attributeCode, other.attributeCode) && Objects.equals(childColor, other.childColor)
+                && Objects.equals(linkValue, other.linkValue) && Objects.equals(parentColor, other.parentColor)
+                && Objects.equals(sourceCode, other.sourceCode) && Objects.equals(targetCode, other.targetCode)
+                && Objects.equals(weight, other.weight);
 	}
 
 

@@ -30,6 +30,7 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.FilterUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
@@ -52,6 +53,9 @@ public class Validator {
 	@Inject
 	BaseEntityUtils beUtils;
 
+	@Inject
+	FilterUtils filter;
+
     /**
 	 * @param data
 	 * @return
@@ -61,21 +65,23 @@ public class Validator {
 		QDataAnswerMessage answers = jsonb.fromJson(data, QDataAnswerMessage.class);
 		List<Ask> asksToSend = new ArrayList<>();
 
-		Arrays.asList(answers.getItems()).stream()
+		Arrays.stream(answers.getItems())
 				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
-					// TODO: Wondering if we can just get the processData from the first processId we get
-					ProcessData processData = qwandaUtils.fetchProcessData(processId); 
-					List<Ask> asks = qwandaUtils.fetchAsks(processData);
+					// TODO: Wondering if we can just get the processData from the first processId
+					// we get
+					ProcessData processData = qwandaUtils.fetchProcessData(processId);
+					if (processData != null) {
+						List<Ask> asks = qwandaUtils.fetchAsks(processData);
+						Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
+						BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-					Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+						Map<String, Ask> flatMapAsks = QwandaUtils.buildAskFlatMap(asks);
 
-					Map<String, Ask> flatMapAsks = QwandaUtils.buildAskFlatMap(asks);
-
-					qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
-					asksToSend.addAll(asks);
+						qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
+						asksToSend.addAll(asks);
+					}
 				});
 
 		QDataAskMessage msg = new QDataAskMessage(asksToSend);
@@ -137,6 +143,13 @@ public class Validator {
 		if (StringUtils.isBlank(processId))
 			return blacklist("ProcessId is blank");
 
+		if (processId.equalsIgnoreCase("no-idq")) {
+			// TODO : Temporary solution and rethink for filter and saved search
+			if (filter.validFilter(attributeCode)) {
+				return true;
+			}
+		}
+
 		// Check if inferredflag is set
 		if (answer.getInferred())
 			return blacklist("InferredFlag is set");
@@ -160,30 +173,38 @@ public class Validator {
 		if (!target.getCode().equals(answer.getTargetCode()))
 			return blacklist("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
 
-		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-		log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
-
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-		if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
-			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
-				log.error("Duplicate answer detected for target " + answer.getTargetCode());
-				String feedback = "Error: This value already exists and must be unique.";
+		boolean notValidForAnyDefinition = false;
+		for (String code : processData.getDefCodes()) {
+			Definition definition = beUtils.getDefinition(code);
+			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
-				String parentCode = processData.getQuestionCode();
-				String questionCode = answer.getCode();
+			if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+				if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
+					log.error("Duplicate answer detected for target " + answer.getTargetCode());
+					String feedback = "Error: This value already exists and must be unique.";
 
-				qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-				return false;
+					String parentCode = processData.getQuestionCode();
+					String questionCode = answer.getCode();
+
+					qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
+					return false;
+				}
 			}
+			// check attribute code is allowed by target DEF
+			if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {
+				log.warn("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
+				notValidForAnyDefinition = true;
+			}
+		}
+
+		if (notValidForAnyDefinition) {
+			return blacklist("Attribute NOT Valid for any definition!");
 		}
 
 		// TODO: The attribute should be retrieved from askMessage
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-
-		// check attribute code is allowed by target DEF
-		if (!definition.containsEntityAttribute("ATT_" + attributeCode))
-			return blacklist("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
 
 		temporaryBucketSearchHandler(answer, target, attribute);
 

@@ -1,15 +1,13 @@
 package life.genny.qwandaq.session.bridge;
 
-import java.util.HashSet;
-import java.util.Set;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.utils.CacheUtils;
+import org.jboss.logging.Logger;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import org.jboss.logging.Logger;
-
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.utils.CacheUtils;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A Bridge ID management class for data message route selection.
@@ -37,8 +35,9 @@ public class BridgeSwitch {
 		String product = gennyToken.getProductCode();
 		Set<String> activeBridgeIds = CacheUtils.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
 		// create new set if none found
-		if (activeBridgeIds == null)
-			activeBridgeIds = new HashSet<String>();
+		if (activeBridgeIds == null) {
+            activeBridgeIds = new HashSet<>();
+		}
 
 		activeBridgeIds.add(bridgeId);
 		CacheUtils.putObject(product, BRIDGE_SWITCH_KEY, activeBridgeIds);

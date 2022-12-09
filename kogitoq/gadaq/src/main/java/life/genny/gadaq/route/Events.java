@@ -29,7 +29,6 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.gadaq.search.FilterGroupService;
-import life.genny.qwandaq.constants.FilterConst;
 
 /**
  * Events
@@ -88,7 +87,7 @@ public class Events {
 		}
 
 		// submit
-		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code)) {
+		if (Question.QUE_SUBMIT.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
 			return;
 		}
@@ -111,7 +110,12 @@ public class Events {
 			return;
 		}
 
-		// undo
+		// next
+		if (Question.QUE_NEXT.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "next", "");
+			return;
+		}
+		// previous
 		if (Question.QUE_PREVIOUS.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
 			return;
@@ -172,7 +176,7 @@ public class Events {
 		}
 
 		// test question
-		if (code.startsWith("TEST_QUE_.*")) {
+		if (code.startsWith("TEST_QUE_")) {
 			JsonObject payload = Json.createObjectBuilder()
 					.add("questionCode", code.substring("TEST_".length()))
 					.add("userCode", userToken.getUserCode())
@@ -207,7 +211,7 @@ public class Events {
 			}
 		}
 
-		// edit item
+		// edit item (TODO This needs to be moved into a timer based bpmn)
 		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
 
 			if (parentCode.startsWith("SBE_")) {

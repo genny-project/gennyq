@@ -1,7 +1,7 @@
 package life.genny.bridge.exception;
 
 public class ProductCodeException extends BridgeException {
-    
+
     public ProductCodeException(String message) {
         this(BridgeException.MALFORMED_PRODUCT_CODES, message);
     }

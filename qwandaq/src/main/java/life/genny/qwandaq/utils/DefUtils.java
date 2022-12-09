@@ -96,7 +96,7 @@ public class DefUtils {
 		}
 
 		log.info("DEF code search returned " + codes.size() + " results for product " + productCode);
-		defPrefixMap.put(productCode, new ConcurrentHashMap<String, String>());
+		defPrefixMap.put(productCode, new ConcurrentHashMap<>());
 
 		for (String code : codes) {
 

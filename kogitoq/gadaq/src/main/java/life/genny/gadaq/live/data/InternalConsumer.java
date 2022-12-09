@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -139,7 +140,12 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
-		events.route(msg);
+		// Check if a token is present, if not then log an error and abort
+		if (StringUtils.isBlank(msg.getToken())) {
+			log.error("No token present, so aborting , for event! " + event);
+		} else {
+			events.route(msg);
+		}
 
 		scope.destroy();
 		Instant end = Instant.now();

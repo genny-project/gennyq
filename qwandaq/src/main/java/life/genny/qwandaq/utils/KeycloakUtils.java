@@ -1,5 +1,15 @@
 package life.genny.qwandaq.utils;
 
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.ServiceToken;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+import org.keycloak.representations.account.UserRepresentation;
+import org.keycloak.util.JsonSerialization;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -17,14 +27,12 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -33,18 +41,7 @@ import javax.json.bind.JsonbBuilder;
 import javax.net.ssl.HttpsURLConnection;
 import javax.ws.rs.core.Response;
 
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.keycloak.representations.account.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
-
-import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.KeycloakException;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.ServiceToken;
 
 /**
  * A static utility class used for standard requests and
@@ -247,8 +244,8 @@ public class KeycloakUtils {
      * @return String
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
-
         log.info("Keycloak Realm is " + realm);
+
         String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
 
@@ -463,7 +460,7 @@ public class KeycloakUtils {
 
             List<LinkedHashMap<?, ?>> results = new ArrayList<LinkedHashMap<?, ?>>();
 
-            final InputStream is = new ByteArrayInputStream(response.body().getBytes(StandardCharsets.UTF_8));
+            final InputStream is = new ByteArrayInputStream(response.body().getBytes("UTF-8"));
             try {
                 results = JsonSerialization.readValue(is, (new ArrayList<UserRepresentation>()).getClass());
             } finally {

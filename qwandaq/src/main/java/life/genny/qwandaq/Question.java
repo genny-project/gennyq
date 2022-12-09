@@ -18,19 +18,16 @@ package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
-
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
-
-import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
-
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
+import org.jboss.logging.Logger;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.*;
@@ -39,14 +36,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -82,7 +74,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 				"realm" }))
 @Entity
 @DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@Inheritance(strategy = InheritanceType.JOINED)
+//@Inheritance(strategy = InheritanceType.JOINED)
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 
 @RegisterForReflection
@@ -96,7 +88,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_SUBMIT = "QUE_SUBMIT";
 	public static final String QUE_CANCEL = "QUE_CANCEL";
 	public static final String QUE_RESET = "QUE_RESET";
-	
+
 	public static final String QUE_UPDATE = "QUE_UPDATE";
 	public static final String QUE_UNDO = "QUE_UNDO";
 	public static final String QUE_REDO = "QUE_REDO";
@@ -140,14 +132,14 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
 	public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
 	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
-	public static final String QUE_TABLE_NEXT_BTN="QUE_TABLE_NEXT_BTN";
-    public static final String QUE_TABLE_PREVIOUS_BTN="QUE_TABLE_PREVIOUS_BTN";
+	public static final String QUE_TABLE_NEXT_BTN = "QUE_TABLE_NEXT_BTN";
+	public static final String QUE_TABLE_PREVIOUS_BTN = "QUE_TABLE_PREVIOUS_BTN";
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
 	@JsonManagedReference(value = "questionQuestion")
 	@JsonbTransient
-	private Set<QuestionQuestion> childQuestions = new HashSet<QuestionQuestion>(0);
+	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);
 
 	@XmlTransient
 	@ManyToOne(fetch = FetchType.EAGER)
@@ -316,7 +308,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 
 		// Assume the list of Questions represents the order
 		Double sortPriority = 10.0;
-		this.setChildQuestions(new HashSet<QuestionQuestion>(0));
+        this.setChildQuestions(new HashSet<>(0));
 
 		for (Question childQuestion : childQuestions) {
 			QuestionQuestion qq = new QuestionQuestion(this, childQuestion, sortPriority);
@@ -487,12 +479,10 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 * @param childQuestions the childQuestions to set
 	 */
 	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
-		this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
-		;
-	}
+        this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
+    }
 
 	/**
-	 * 
 	 * addChildQuestion This adds an child Question with default weight of 0.0 to
 	 * the question. It auto creates the QuestionQuestion object. For efficiency we
 	 * assume the child question link does not exist

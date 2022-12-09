@@ -20,6 +20,12 @@
 
 package life.genny.qwandaq;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.jboss.logging.Logger;
+
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -28,13 +34,6 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * CoreEntity represents a base level core set of class attributes. It is the
@@ -172,13 +171,13 @@ public abstract class CodedEntity extends CoreEntity {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof CodedEntity)) {
+		if (obj instanceof CodedEntity that) {
+			EqualsBuilder eb = new EqualsBuilder();
+			eb.append(code, that.getCode());
+			return eb.isEquals();
+		} else {
 			return false;
 		}
-		CodedEntity that = (CodedEntity) obj;
-		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(code, that.getCode());
-		return eb.isEquals();
 	}
 
 	/**
