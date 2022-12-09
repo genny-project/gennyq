@@ -149,7 +149,7 @@ public class FyodorUltra {
 
 		if (!GennyConstants.PER_SERVICE.equals(userToken.getUserCode())) {
 			Map<String, Object> ctxMap = new HashMap<>();
-			ctxMap.put("USER", beUtils.getUserBaseEntity());
+			ctxMap.put("USER_CODE", beUtils.getUserBaseEntity().getCode());
 
 			searchEntity.getTraits(Filter.class).stream()
 				.filter(f -> f.getC() == String.class)
