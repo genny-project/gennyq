@@ -174,41 +174,31 @@ public class InternalConsumer {
 			}
 		}
 
-		SearchEntity searchEntity = null;
+		// grab search entity
+		String productCode = userToken.getProductCode();
+		String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
+		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
+		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
 
-		if (searchEA.isPresent()) {
-			log.info("Search Attribute is " + searchEA.get());
-			searchEntity = createSearchEntity(definition, attrCode, source, target);
-		} else {
+		if (searchEntity == null)
+		throw new ItemNotFoundException(key);
 
-			// Now look for any search attribute
+		// Filter by name wildcard provided by user
+		searchEntity.add(new Or(
+			new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
+			new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
 
-			// grab search entity
-			String productCode = userToken.getProductCode();
-			String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
-			String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
-			searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
+		searchEntity.add(new Column("PRI_NAME", "Name"));
 
-			if (searchEntity == null)
-				throw new ItemNotFoundException(key);
+		// init context map
+		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
+		if (source != null)
+		ctxMap.put("SOURCE", source);
+		if (target != null)
+		ctxMap.put("TARGET", target);
 
-			// Filter by name wildcard provided by user
-			searchEntity.add(new Or(
-					new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
-					new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
-
-			searchEntity.add(new Column("PRI_NAME", "Name"));
-
-			// init context map
-			Map<String, Object> ctxMap = new ConcurrentHashMap<>();
-			if (source != null)
-				ctxMap.put("SOURCE", source);
-			if (target != null)
-				ctxMap.put("TARGET", target);
-
-			searchEntity.setRealm(userToken.getProductCode());
-			searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
-		}
+		searchEntity.setRealm(userToken.getProductCode());
+		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
 
 		// Perform search and evaluate columns
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
