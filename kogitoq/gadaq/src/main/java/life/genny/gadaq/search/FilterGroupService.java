@@ -408,7 +408,7 @@ public class FilterGroupService {
 
         String filterCode = "";
         Map<String, Map<String, String>> params = new HashMap<>();
-        filterService.sendFilterOption(queCode, sbeCode,attCode);
+        filterService.sendFilterOption(queCode, sbeCode,value);
         filterService.sendAddFilterGroup(Question.QUE_ADD_FILTER_SBE_GRP,queCode,filterCode,params);
 
         boolean selectBox = isSelectBox(value);

@@ -214,10 +214,10 @@ public class FilterUtils {
      * Return ask with filter option
      *
      * @param queCode Value
-     * @param attCode Value
+     * @param value Selected Value
      * @return Ask
      */
-    public QDataBaseEntityMessage getFilterOptionByCode(String queCode,String attCode) {
+    public QDataBaseEntityMessage getFilterOptionByCode(String queCode,String value) {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
         base.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
@@ -237,7 +237,7 @@ public class FilterUtils {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
-        } else if (attCode.contains(FilterConst.YES_NO)) {
+        } else if (value.contains(FilterConst.YES_NO)) {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             return base;
         } else {

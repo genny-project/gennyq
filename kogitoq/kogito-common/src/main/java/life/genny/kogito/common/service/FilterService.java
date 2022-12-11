@@ -326,10 +326,10 @@ public class FilterService {
      * Send filter option
      * @param questionCode Question Code
      * @param sbeCode Search Base Entiy Code
-     * @param attCode Attribute code
+     * @param value Selected value
      */
-    public void sendFilterOption(String questionCode, String sbeCode,String attCode) {
-        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(questionCode,attCode);
+    public void sendFilterOption(String questionCode, String sbeCode,String value) {
+        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(questionCode,value);
         String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());

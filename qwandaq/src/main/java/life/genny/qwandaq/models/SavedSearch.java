@@ -41,7 +41,7 @@ public class SavedSearch {
         this.column = getColumnName(attributeCode);
         this.valueCode = value;
 
-        if(this.column.contains(FilterConst.DATETIME)) {
+        if(this.code.contains(FilterConst.DATETIME)) {
             this.dataType = FilterConst.DATETIME;
         }
 
