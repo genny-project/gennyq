@@ -58,7 +58,6 @@ public class BaseEntityUtils {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
 	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject

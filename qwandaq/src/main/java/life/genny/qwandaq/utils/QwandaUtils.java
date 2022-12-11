@@ -68,7 +68,7 @@ public class QwandaUtils {
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	static Logger log = Logger.getLogger(QwandaUtils.class);
+	private static Logger log = Logger.getLogger(QwandaUtils.class);
 
 	@Inject
 	DatabaseUtils databaseUtils;

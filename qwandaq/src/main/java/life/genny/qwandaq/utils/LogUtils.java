@@ -6,15 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 public class LogUtils {
 
-	@Inject
 	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**

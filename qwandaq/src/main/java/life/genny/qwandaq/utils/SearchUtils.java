@@ -39,7 +39,7 @@ public class SearchUtils {
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	static Logger log;
+	Logger log;
 
 	@Inject
 	QwandaUtils qwandaUtils;

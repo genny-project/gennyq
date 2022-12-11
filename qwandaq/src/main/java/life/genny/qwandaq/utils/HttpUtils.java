@@ -8,7 +8,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
 import java.time.Duration;
 import java.net.http.HttpResponse;
-import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
@@ -39,7 +38,6 @@ public class HttpUtils {
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
 
-	@Inject
 	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**

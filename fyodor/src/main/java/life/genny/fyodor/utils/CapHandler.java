@@ -36,6 +36,9 @@ public class CapHandler extends Manager {
 	 * @param searchEntity
 	 */
 	public void refineSearchFromCapabilities(SearchEntity searchEntity) {
+		// NOTE: This line may be a double up, but there are issues otherwise.
+		if (hasSecureToken(userToken))
+			return;
 		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 		refineColumnsFromCapabilities(searchEntity, userCapabilities);
 		refineActionsFromCapabilities(searchEntity, userCapabilities);

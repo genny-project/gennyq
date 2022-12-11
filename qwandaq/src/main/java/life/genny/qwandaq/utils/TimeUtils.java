@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
@@ -17,7 +16,6 @@ import org.jboss.logging.Logger;
  */
 public class TimeUtils {
 
-	@Inject
 	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/** 

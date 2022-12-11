@@ -30,7 +30,6 @@ public class GraphQLUtils {
 
 	private static Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject
 	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
