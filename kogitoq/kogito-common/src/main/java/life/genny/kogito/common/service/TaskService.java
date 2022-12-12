@@ -85,9 +85,6 @@ public class TaskService {
 	 */
 	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
 			String pcmCode, String parent, String location, String buttonEvents) {
-
-		log.info("Dispatching...");
-
 		if (sourceCode == null)
 			throw new NullParameterException("sourceCode");
 		if (targetCode == null)
@@ -106,7 +103,7 @@ public class TaskService {
 		log.info("[ ========== ProcessId : " + processId + " ========== ]");
 		log.info("[  sourceCode : " + sourceCode + " || targetCode : " + targetCode + "  ]");
 		log.info("[  pcmCode : " + pcmCode + " || parent : " + parent + " || location : " + location + "  ]");
-		log.info("[  buttonEvents : " + buttonEvents + "questionCode : " + questionCode + "  ]");
+		log.info("[  buttonEvents : " + buttonEvents + " || questionCode : " + questionCode + "  ]");
 		log.info("[ ================================================================== ]");
 
 		// init process data
