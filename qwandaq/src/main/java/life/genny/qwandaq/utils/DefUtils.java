@@ -134,10 +134,11 @@ public class DefUtils {
 			SearchEntity prefixSearch = new SearchEntity(SBE_DEFINITION_PREFIX, "Definition Prefix Search")
 					.add(new Filter(Attribute.PRI_PREFIX, Operator.EQUALS, prefix))
 					.setAllColumns(true)
-					.setPageSize(1);
+					.setPageSize(1)
+					.setRealm(userToken.getProductCode());
 
 			List<BaseEntity> results = searchUtils.searchBaseEntitys(prefixSearch);
-			if (results.isEmpty())
+			if (results == null || results.isEmpty())
 				throw new DefinitionException("No definition with prefix: " + prefix);
 		}
 

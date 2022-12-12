@@ -103,16 +103,11 @@ public class TaskService {
 		if (location == null)
 			location = PCM.location(1);
 
-		log.info("==========================================");
-		log.info("processId : " + processId);
+		log.info("========== ProcessId : " + processId + "==========");
 		log.info("questionCode : " + questionCode);
-		log.info("sourceCode : " + sourceCode);
-		log.info("targetCode : " + targetCode);
-		log.info("pcmCode : " + pcmCode);
-		log.info("parent : " + parent);
-		log.info("location : " + location);
+		log.info("sourceCode : " + sourceCode + " || targetCode : " + targetCode);
+		log.info("pcmCode : " + pcmCode + " || parent : " + parent + " || location : " + location);
 		log.info("buttonEvents : " + buttonEvents);
-		log.info("==========================================");
 
 		// init process data
 		ProcessData processData = new ProcessData();
