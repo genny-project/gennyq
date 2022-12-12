@@ -129,7 +129,7 @@ public class DefUtils {
 		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
 		// if no defs specified, go by prefix
-		if (codes.isEmpty()) {
+		if (codes == null || codes.isEmpty()) {
 			String prefix = entity.getCode().substring(0, 3);
 			SearchEntity prefixSearch = new SearchEntity(SBE_DEFINITION_PREFIX, "Definition Prefix Search")
 					.add(new Filter(Attribute.PRI_PREFIX, Operator.EQUALS, prefix))

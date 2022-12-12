@@ -17,6 +17,7 @@ import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -69,68 +70,6 @@ public class TaskService {
 	}
 
 	/**
-	 * Fetch PCM and dispatch a readonly PCM tree update.
-	 *
-	 * @param sourceCode
-	 * @param targetCode
-	 * @param pcmCode
-	 * @param parent
-	 * @param location
-	 */
-	public void dispatch(String sourceCode, String targetCode, String pcmCode, String parent, String location) {
-
-		if (pcmCode == null)
-			throw new NullParameterException("pcmCode");
-		PCM pcm = beUtils.getPCM(pcmCode);
-
-		dispatch(sourceCode, targetCode, pcm, parent, location);
-	}
-
-	/**
-	 * Dispatch a readonly PCM tree update.
-	 *
-	 * @param sourceCode
-	 * @param targetCode
-	 * @param pcmCode
-	 * @param parent
-	 * @param location
-	 */
-	public void dispatch(String sourceCode, String targetCode, PCM pcm, String parent, String location) {
-
-		if (sourceCode == null)
-			throw new NullParameterException("sourceCode");
-		if (targetCode == null)
-			throw new NullParameterException("targetCode");
-		if (pcm == null)
-			throw new NullParameterException("pcm");
-		/*
-		 * no need to check parent and location as they can sometimes be null
-		 */
-
-		// construct basic processData
-		ProcessData processData = new ProcessData();
-		processData.setSourceCode(sourceCode);
-		processData.setTargetCode(targetCode);
-
-		// pcm data
-		processData.setPcmCode(pcm.getCode());
-		processData.setParent(parent);
-		processData.setLocation(location);
-
-		// fetch target
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		// build and send data
-		QBulkMessage msg = dispatch.build(processData, pcm);
-		msg.add(target);
-		dispatch.sendData(msg);
-
-		// send searches
-		for (String code : processData.getSearches())
-			search.searchTable(code);
-	}
-
-	/**
 	 * Build a question group and assign to the PCM before dispatching a PCM tree
 	 * update.
 	 *
@@ -157,8 +96,6 @@ public class TaskService {
 			throw new NullParameterException("processId");
 		if (pcmCode == null)
 			throw new NullParameterException("pcmCode");
-		if (buttonEvents == null)
-			throw new NullParameterException("buttonEvents");
 
 		// defaults
 		if (parent == null)
@@ -192,7 +129,7 @@ public class TaskService {
 		processData.setProcessId(processId);
 		processData.setAnswers(new ArrayList<Answer>());
 
-		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
+		String processEntityCode = Prefix.QBE.concat(targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
 		String userCode = userToken.getUserCode();
@@ -217,6 +154,7 @@ public class TaskService {
 		// perform basic checks on attribute codes
 		processData.setAttributeCodes(
 			flatMapOfAsks.values().stream()
+					.filter(ask -> !ask.getReadonly())
 					.map(ask -> ask.getQuestion().getAttribute().getCode())
 					.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
 					.collect(Collectors.toList())
@@ -224,7 +162,8 @@ public class TaskService {
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
 		// handle non-readonly if necessary
-		if (dispatch.containsNonReadonly(flatMapOfAsks)) {
+		// use dispatch.containsNonReadonly(flatMapOfAsks) if this does not work
+		if (!processData.getAttributeCodes().isEmpty()) {
 			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 			msg.add(processEntity);
 
@@ -234,17 +173,18 @@ public class TaskService {
 
 			// handle initial dropdown selections
 			// TODO: change to use flatMap
-			for (Ask ask : asks)
+			for (Ask ask : asks) {
 				dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), processEntity, msg);
-
-		} else
+			}
+		} else {
 			msg.add(target);
+		}
 
 		dispatch.sendData(msg);
 
 		// send searches
 		for (String code : processData.getSearches()) {
-			log.info("Sending search: " + code);
+			log.debug("Sending search: " + code);
 			search.searchTable(code);
 		}
 

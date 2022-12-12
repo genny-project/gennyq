@@ -7,6 +7,7 @@ public class Prefix {
 
 	// core
 	public static final String QUE = "QUE_";
+	public static final String QBE = "QBE_";
 	public static final String PCM = "PCM_";
 	public static final String ROL = "ROL_";
 	public static final String PRJ = "PRJ_";

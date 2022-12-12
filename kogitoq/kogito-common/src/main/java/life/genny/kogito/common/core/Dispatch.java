@@ -1,5 +1,6 @@
 package life.genny.kogito.common.core;
 
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import javax.json.bind.JsonbBuilder;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -67,6 +69,8 @@ public class Dispatch {
 	BaseEntityUtils beUtils;
 	@Inject
 	SearchUtils search;
+	@Inject
+	KogitoUtils kogitoUtils;
 
 	@Inject
 	TaskService tasks;
@@ -77,17 +81,6 @@ public class Dispatch {
 	 * @param processData
 	 */
 	public QBulkMessage build(ProcessData processData) {
-		return build(processData, null);
-	}
-
-	/**
-	 * Send Asks, PCMs and Searches
-	 *
-	 * @param processData
-	 * @param pcm
-	 */
-	public QBulkMessage build(ProcessData processData, PCM pcm) {
-
 		// fetch source and target entities
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
@@ -95,8 +88,9 @@ public class Dispatch {
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
-		// ensure pcm is not null
-		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
+		PCM pcm = beUtils.getPCM(processData.getPcmCode());
+		// ensure target codes match
+		pcm.setTargetCode(targetCode);
 
 		QBulkMessage msg = new QBulkMessage();
 
@@ -114,21 +108,6 @@ public class Dispatch {
 		if (buttonEvents != null) {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
-
-			boolean hasEvents = msg.getEntities().stream()
-				.map(entity -> entity.getCode())
-				.filter(Objects::nonNull)
-				.anyMatch(code -> code.equals(PCM.PCM_EVENTS));
-
-			// TODO: fix this as it removes flexibility
-			if (!hasEvents) {
-				PCM eventsPCM = beUtils.getPCM(PCM.PCM_EVENTS);
-				// Now set the unique code of the PCM_EVENTS so that it is unique
-				msg.add(eventsPCM);
-				// Now update the PCM to point the last location to the PCM_EVENTS
-				if (pcm.getLocation(2) == null)
-				pcm.setLocation(2, PCM.PCM_EVENTS);
-			}
 		}
 
 		// init if null to stop null pointers
@@ -273,7 +252,14 @@ public class Dispatch {
 				// update targetCode so it does not re-trigger merging
 				pcm.setTargetCode(targetCode);
 				// providing a null parent & location since it is already set in the parent
-				tasks.dispatch(source.getCode(), targetCode, pcm, null, null);
+				JsonObject payload = Json.createObjectBuilder()
+						.add("sourceCode", source.getCode())
+						.add("targetCode", targetCode)
+						.add("pcmCode", pcm.getCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+
 				return;
 			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 				// add ask to bulk message

@@ -29,7 +29,6 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.gadaq.search.FilterGroupService;
-import life.genny.qwandaq.constants.FilterConst;
 
 /**
  * Events

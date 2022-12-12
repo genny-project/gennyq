@@ -41,7 +41,6 @@ public class ProcessAnswers {
 	@Inject BaseEntityUtils beUtils;
 	@Inject DefUtils defUtils;
 
-	@Inject Dispatch dispatch;
 	@Inject TaskService taskService;
 
 	/**

@@ -1,5 +1,6 @@
 package life.genny.kogito.common.service;
 
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 import static life.genny.qwandaq.entity.PCM.PCM_PROCESS;
@@ -9,12 +10,15 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
@@ -52,6 +56,9 @@ public class SearchService {
 	QwandaUtils qwandaUtils;
 
 	@Inject
+	KogitoUtils kogitoUtils;
+
+	@Inject
 	TaskService tasks;
 
 	/**
@@ -59,7 +66,16 @@ public class SearchService {
 	 */
 	public void sendBuckets() {
 		String userCode = userToken.getUserCode();
-		tasks.dispatch(userCode, userCode, PCM_PROCESS, PCM_CONTENT, "PRI_LOC1");
+
+		JsonObject payload = Json.createObjectBuilder()
+				.add("sourceCode", userCode)
+				.add("targetCode", userCode)
+				.add("pcmCode", PCM_PROCESS)
+				.add("parent", PCM_CONTENT)
+				.add("location", PCM.location(1))
+				.build();
+
+		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
 	}
 
 	/**
@@ -71,14 +87,19 @@ public class SearchService {
 
 		// trim TREE_ITEM_ from code if present
 		code = StringUtils.replaceOnce(code, "_TREE_ITEM_", "_");
-		String searchCode = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.SBE);
-		log.info("Sending Table :: " + searchCode);
+		code = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.PCM);
+		log.info("Sending Table :: " + code);
 
-		// send pcm with correct template code
 		String userCode = userToken.getUserCode();
-		PCM pcm = beUtils.getPCM(PCM.PCM_TABLE);
-		pcm.setLocation(1, searchCode);
-		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, PCM.location(1));
+		JsonObject payload = Json.createObjectBuilder()
+				.add("sourceCode", userCode)
+				.add("targetCode", userCode)
+				.add("pcmCode", code)
+				.add("parent", PCM_CONTENT)
+				.add("location", PCM.location(1))
+				.build();
+
+		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
 	}
 
 	/**
@@ -94,11 +115,20 @@ public class SearchService {
 		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF);
 
 		// construct template and question codes from type
-		String pcmCode = Prefix.PCM + type + "_DETAIL_VIEW";
+		String pcmCode = new StringBuilder(Prefix.PCM).append(type).append("_DETAIL_VIEW").toString();
 
 		// send pcm with correct info
 		String userCode = userToken.getUserCode();
-		tasks.dispatch(userCode, targetCode, pcmCode, PCM_CONTENT, PCM.location(1));
+
+		JsonObject payload = Json.createObjectBuilder()
+				.add("sourceCode", userCode)
+				.add("targetCode", targetCode)
+				.add("pcmCode", pcmCode)
+				.add("parent", PCM_CONTENT)
+				.add("location", PCM.location(1))
+				.build();
+
+		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
 	}
 
 	/**
