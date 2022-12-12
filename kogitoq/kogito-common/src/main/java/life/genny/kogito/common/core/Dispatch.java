@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -102,20 +101,19 @@ public class Dispatch {
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
 			msg.add(ask);
 		}
-
 		// generate events if specified
 		String buttonEvents = processData.getButtonEvents();
 		if (buttonEvents != null) {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
 		}
-
 		// init if null to stop null pointers
-		if (processData.getAttributeCodes() == null)
+		if (processData.getAttributeCodes() == null) {
 			processData.setAttributeCodes(new ArrayList<String>());
-		if (processData.getSearches() == null)
+		}
+		if (processData.getSearches() == null) {
 			processData.setSearches(new ArrayList<String>());
-
+		}
 		// traverse pcm to build data
 		traversePCM(pcm, source, target, msg, processData);
 		// update questionCode after traversing
@@ -171,23 +169,16 @@ public class Dispatch {
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		String code = processEntity.getCode();
 		String processId = processData.getProcessId();
-		for (Ask ask : flatMapOfAsks.values()) {
-			ask.setTargetCode(code);
-			ask.setProcessId(processId);
+		// TODO: This should be done with the flat map, but it was causing issues
+		for (Ask ask : asks) {
+			qwandaUtils.recursivelySetInformation(ask, processId, code);
 		}
-
-		// TODO: This should not be necessary, but is
-		for (Ask ask : asks)
-			qwandaUtils.recursivelySetProcessId(ask, processId);
-
 		// check mandatory fields
 		// TODO: change to use flatMap
 		Boolean answered = QwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
-
 		// pre-send ask updates
 		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 		qwandaUtils.updateDependentAsks(processEntity, definition, flatMapOfAsks);
-
 		// update any button Events
 		for (String event : BUTTON_EVENTS) {
 			Ask evt = flatMapOfAsks.get(event);
@@ -196,7 +187,6 @@ public class Dispatch {
 		}
 		// this is ok since flatmap is referencing asks
 		msg.getAsks().addAll(asks);
-
 		// filter unwanted attributes
 		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
 
@@ -215,7 +205,6 @@ public class Dispatch {
 	 */
 	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
-
 		// add pcm to bulk message
 		PCM pcm = beUtils.getPCM(code);
 		traversePCM(pcm, source, target, msg, processData);
@@ -231,14 +220,12 @@ public class Dispatch {
 	 */
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
-
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
-		if(!pcm.requirementsMet(userCapabilities)) {
+		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
 		log.debug("Traversing " + pcm.getCode());
-
 		// check for a question code
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
 		if (questionCode != null) {
@@ -259,7 +246,6 @@ public class Dispatch {
 						.build();
 
 				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
-
 				return;
 			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 				// add ask to bulk message

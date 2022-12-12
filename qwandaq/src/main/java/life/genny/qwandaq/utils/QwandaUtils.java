@@ -378,13 +378,14 @@ public class QwandaUtils {
 	 * @param ask       The ask to traverse
 	 * @param processId The processId to set
 	 */
-	public void recursivelySetProcessId(Ask ask, String processId) {
+	public void recursivelySetInformation(Ask ask, String processId, String targetCode) {
 
 		ask.setProcessId(processId);
+		ask.setTargetCode(targetCode);
 
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
-				recursivelySetProcessId(child, processId);
+				recursivelySetInformation(child, processId, targetCode);
 			}
 		}
 	}

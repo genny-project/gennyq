@@ -25,6 +25,7 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -85,8 +86,6 @@ public class SearchService {
 	 */
 	public void sendTable(String code) {
 
-		// trim TREE_ITEM_ from code if present
-		code = StringUtils.replaceOnce(code, "_TREE_ITEM_", "_");
 		code = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.PCM);
 		log.info("Sending Table :: " + code);
 
@@ -138,25 +137,24 @@ public class SearchService {
 	 * @param nameWildcard
 	 */
 	public void sendNameSearch(String code, String nameWildcard) {
-
 		log.info("Sending Name Search :: " + code);
-
+		// find in cache
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
 				code, SearchEntity.class);
-
-		// TODO: remove this from alyson
+		// TODO: remove this char from alyson
 		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
-
+		// add filter on name and resend search
 		searchEntity.add(new Filter(PRI_NAME, Operator.LIKE, "%"+nameWildcard+"%"));
 		searchUtils.searchTable(searchEntity);
 	}
 
 	/**
+	 * Handle a pagination event.
+	 *
 	 * @param code
-	 * @param code
+	 * @param reverse
 	 */
 	public void handleSearchPagination(String code, Boolean reverse) {
-
 		// fetch search from cache
 		String sessionCode = searchUtils.sessionSearchCode(code);
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
@@ -164,41 +162,41 @@ public class SearchService {
 			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
-
 		// find direction
 		Integer diff = searchEntity.getPageSize();
 		if (reverse)
 			diff = diff * -1;
-
 		// calculate new pageStart
 		Integer pageStart = searchEntity.getPageStart() + diff;
 		searchEntity.setPageStart(pageStart);
-
 		// send updated search
 		searchUtils.searchTable(searchEntity);
 	}
 
-	public void handleSearchSort(String entityCode, Sort sort) {
-		String sessionCode = searchUtils.sessionSearchCode(entityCode);
+	/**
+	 * Handle a sort click event.
+	 *
+	 * @param code
+	 */
+	public void handleSearchSort(String code) {
+		// fetch from the cache
+		String sessionCode = searchUtils.sessionSearchCode(code);
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			searchEntity = CacheUtils.getObject(userToken.getProductCode(), entityCode, SearchEntity.class);
+			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
-
-		// Change the sort
-		Optional<Sort> sortOpt = searchEntity.getTrait(Sort.class, sort.getCode());
-		Sort searchSort;
+		// find the sort
+		Optional<Sort> sortOpt = searchEntity.getTrait(Sort.class, code);
+		Sort sort;
 		if(!sortOpt.isPresent()) {
-			log.warn("Sort missing in SEntity: " + entityCode + ". Adding..");
+			log.warn("Sort missing in SEntity: " + code + ". Adding..");
+			sort = new Sort(code, Ord.ASC);
 			searchEntity.add(sort);
-			searchSort = sort;
 		} else {
-			searchSort = sortOpt.get();
+			sort = sortOpt.get();
+			sort.flipOrd();
 		}
-
-		searchSort.flipOrd();
-
 		// send updated search
 		searchUtils.searchTable(searchEntity);
 	}

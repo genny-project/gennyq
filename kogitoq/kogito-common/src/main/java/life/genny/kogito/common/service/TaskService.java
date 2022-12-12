@@ -66,7 +66,7 @@ public class TaskService {
 		// check if task exists
 		log.info("Checking if task exists...");
 
-		// re-questions if it does
+		// TODO: re-questions if it does
 	}
 
 	/**
@@ -85,20 +85,26 @@ public class TaskService {
 	 */
 	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
 			String pcmCode, String parent, String location, String buttonEvents) {
-		if (sourceCode == null)
+		if (sourceCode == null) {
 			throw new NullParameterException("sourceCode");
-		if (targetCode == null)
+		}
+		if (targetCode == null) {
 			throw new NullParameterException("targetCode");
-		if (processId == null)
+		}
+		if (processId == null) {
 			throw new NullParameterException("processId");
-		if (pcmCode == null)
+		}
+		if (pcmCode == null) {
 			throw new NullParameterException("pcmCode");
+		}
 
 		// defaults
-		if (parent == null)
+		if (parent == null) {
 			parent = PCM.PCM_CONTENT;
-		if (location == null)
+		}
+		if (location == null) {
 			location = PCM.location(1);
+		}
 
 		log.info("[ ========== ProcessId : " + processId + " ========== ]");
 		log.info("[  sourceCode : " + sourceCode + " || targetCode : " + targetCode + "  ]");
