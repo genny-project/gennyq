@@ -140,6 +140,8 @@ public class DefUtils {
 			List<BaseEntity> results = searchUtils.searchBaseEntitys(prefixSearch);
 			if (results == null || results.isEmpty())
 				throw new DefinitionException("No definition with prefix: " + prefix);
+
+			return Definition.from(results.get(0));
 		}
 
 		// fetch DEF if no merging is needed

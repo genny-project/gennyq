@@ -103,11 +103,11 @@ public class TaskService {
 		if (location == null)
 			location = PCM.location(1);
 
-		log.info("========== ProcessId : " + processId + "==========");
-		log.info("questionCode : " + questionCode);
-		log.info("sourceCode : " + sourceCode + " || targetCode : " + targetCode);
-		log.info("pcmCode : " + pcmCode + " || parent : " + parent + " || location : " + location);
-		log.info("buttonEvents : " + buttonEvents);
+		log.info("[ ========== ProcessId : " + processId + " ========== ]");
+		log.info("[  sourceCode : " + sourceCode + " || targetCode : " + targetCode + "  ]");
+		log.info("[  pcmCode : " + pcmCode + " || parent : " + parent + " || location : " + location + "  ]");
+		log.info("[  buttonEvents : " + buttonEvents + "questionCode : " + questionCode + "  ]");
+		log.info("[ ================================================================== ]");
 
 		// init process data
 		ProcessData processData = new ProcessData();
@@ -137,21 +137,21 @@ public class TaskService {
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
 
-		// dispatch data
-		if (!sourceCode.equals(userCode)) // TODO: Not every task has a userCode
+		// TODO: Not every task has a userCode
+		if (!sourceCode.equals(userCode))
 			return processData;
 
 		// build data
 		QBulkMessage msg = dispatch.build(processData);
 		List<Ask> asks = msg.getAsks();
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		// perform basic checks on attribute codes
 		processData.setAttributeCodes(
 			flatMapOfAsks.values().stream()
 					.filter(ask -> !ask.getReadonly())
 					.map(ask -> ask.getQuestion().getAttribute().getCode())
-					.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
+					.filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
 					.collect(Collectors.toList())
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
