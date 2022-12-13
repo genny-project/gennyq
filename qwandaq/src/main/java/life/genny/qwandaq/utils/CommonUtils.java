@@ -377,4 +377,38 @@ public class CommonUtils {
 			return code.substring(4);
 		}
 	}
+
+    /**
+     * Add an entry to a jsonified String array. This assumes the String array
+     * is not malformed, but it can be null or empty
+     * @param array - array to append to
+     * @param entries - entries to append
+     * @return the array with the entry appended to it
+     */
+    public static String addToStringArray(String array, String... entries) {
+        // return the entries as an array if there is no array
+        if(StringUtils.isBlank(array)) {
+            return CommonUtils.getArrayString(entries);
+        }
+        
+        // chop off the ending "]"
+        array = array.substring(0, array.length() - 1);
+        StringBuilder sb = new StringBuilder(array);
+        
+        // add all entries such that each entry is "entry",
+        // with the exception of the last one, which should not have a comma
+        if(entries.length > 0) {
+            for(int i = 0; i < entries.length - 1; i++) {
+                sb.append("\"")
+                    .append(entries[i])
+                    .append("\",");
+            }
+
+            sb.append("\"")
+            .append(entries[entries.length - 1]);
+        }
+
+        // reattach our missing "]" in all cases
+        return sb.append("]").toString();
+    }
 }
