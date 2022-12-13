@@ -4,12 +4,14 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -373,16 +375,15 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Recursively set the processId down through an ask tree.
+	 * Recursively set the processId and target down through an ask tree.
 	 *
 	 * @param ask       The ask to traverse
 	 * @param processId The processId to set
+	 * @param targetCode    The target code to set
 	 */
 	public void recursivelySetInformation(Ask ask, String processId, String targetCode) {
-
 		ask.setProcessId(processId);
 		ask.setTargetCode(targetCode);
-
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
 				recursivelySetInformation(child, processId, targetCode);
@@ -662,14 +663,17 @@ public class QwandaUtils {
 	 * @return The target BaseEntity
 	 */
 	public BaseEntity saveAnswer(Answer answer) {
-
-		List<BaseEntity> targets = saveAnswers(Arrays.asList(answer));
-
-		if (targets != null && targets.size() > 0) {
+		Set<BaseEntity> targets = saveAnswers(Collections.singleton(answer));
+		if (targets != null && !targets.isEmpty()) {
 			return targets.get(0);
 		}
-
 		return null;
+	}
+
+	public Collection<BaseEntity> saveAnswers(Collection<Answer> answers) {
+	}
+
+	public Collection<BaseEntity> saveAnswers(Collection<Answer> answers, BaseEntity target) {
 	}
 
 	/**
@@ -678,9 +682,10 @@ public class QwandaUtils {
 	 * @param answers The list of answers to save
 	 * @return The target BaseEntitys
 	 */
-	public List<BaseEntity> saveAnswers(List<Answer> answers) {
+	public List<BaseEntity> saveAnswers(Collection<Answer> answers, Collection<BaseEntity> targets) {
 
-		List<BaseEntity> targets = new ArrayList<>();
+		Map<String, BaseEntity> targetMap = targets.stream()
+				.collect(Collectors.toMap(BaseEntity::getCode, Function.identity(), (prev, next) -> next, HashMap::new));
 
 		// sort answers into target BaseEntitys
 		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()

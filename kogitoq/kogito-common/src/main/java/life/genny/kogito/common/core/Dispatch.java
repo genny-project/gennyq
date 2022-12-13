@@ -220,49 +220,38 @@ public class Dispatch {
 	 */
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
+		// check capability requirements are met
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
 		log.debug("Traversing " + pcm.getCode());
-		// check for a question code
-		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
-		if (questionCode != null) {
-			// use pcm target if one is specified
-			String targetCode = pcm.getTargetCode();
-			if (targetCode != null && !targetCode.equals(target.getCode())) {
-				// merge targetCode
-				Map<String, Object> ctxMap = new HashMap<>();
-				ctxMap.put("TARGET", target);
-				targetCode = MergeUtils.merge(targetCode, ctxMap);
-				// update targetCode so it does not re-trigger merging
-				pcm.setTargetCode(targetCode);
-				// providing a null parent & location since it is already set in the parent
-				JsonObject payload = Json.createObjectBuilder()
-						.add("sourceCode", source.getCode())
-						.add("targetCode", targetCode)
-						.add("pcmCode", pcm.getCode())
-						.build();
 
-				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
-				return;
-			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
-				// add ask to bulk message
-				Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
-				msg.add(ask);
-			}
-		} else {
-			log.warn("Question Code is null for " + pcm.getCode());
+		// use pcm target if one is specified
+		String targetCode = pcm.getTargetCode();
+		if (targetCode != null && !targetCode.equals(target.getCode())) {
+			// merge targetCode
+			Map<String, Object> ctxMap = new HashMap<>();
+			ctxMap.put("TARGET", target);
+			targetCode = MergeUtils.merge(targetCode, ctxMap);
+			// update targetCode so it does not re-trigger merging
+			pcm.setTargetCode(targetCode);
+			// providing a null parent & location since it is already set in the parent
+			JsonObject payload = Json.createObjectBuilder()
+					.add("sourceCode", source.getCode())
+					.add("targetCode", targetCode)
+					.add("pcmCode", pcm.getCode())
+					.build();
+			kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+			return;
 		}
 
 		// add pcm for sending
 		msg.add(pcm);
-
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
 		for (EntityAttribute entityAttribute : locations) {
-
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
@@ -272,6 +261,16 @@ public class Dispatch {
 				processData.getSearches().add(value);
 				continue;
 			}
+		}
+
+		// check for a question code
+		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
+		if (!Question.QUE_EVENTS.equals(questionCode)) {
+			// add ask to bulk message
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
+			msg.add(ask);
+		} else if (questionCode == null) {
+			log.warn("Question Code is null for " + pcm.getCode());
 		}
 	}
 
