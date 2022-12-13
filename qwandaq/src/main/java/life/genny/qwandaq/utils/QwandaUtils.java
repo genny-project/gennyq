@@ -4,12 +4,14 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -373,16 +375,15 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Recursively set the processId down through an ask tree.
+	 * Recursively set the processId and target down through an ask tree.
 	 *
 	 * @param ask       The ask to traverse
 	 * @param processId The processId to set
+	 * @param targetCode    The target code to set
 	 */
 	public void recursivelySetInformation(Ask ask, String processId, String targetCode) {
-
 		ask.setProcessId(processId);
 		ask.setTargetCode(targetCode);
-
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
 				recursivelySetInformation(child, processId, targetCode);
@@ -656,65 +657,110 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Save an {@link Answer} object.
+	 * Save an Answer.
 	 *
 	 * @param answer The answer to save
-	 * @return The target BaseEntity
+	 * @return The updated BaseEntity
 	 */
 	public BaseEntity saveAnswer(Answer answer) {
-
-		List<BaseEntity> targets = saveAnswers(Arrays.asList(answer));
-
-		if (targets != null && targets.size() > 0) {
-			return targets.get(0);
-		}
-
-		return null;
+		BaseEntity target = beUtils.getBaseEntity(answer.getTargetCode());
+		return saveAnswer(answer, target);
 	}
 
 	/**
-	 * Save a List of {@link Answer} objects.
+	 * Save an Answer to a target.
+	 *
+	 * @param answer The answer to save
+	 * @param target The target to save to
+	 * @return The updated BaseEntity
+	 */
+	public BaseEntity saveAnswer(Answer answer, BaseEntity target) {
+		return saveAnswers(Collections.singleton(answer), target);
+	}
+
+	/**
+	 * Save a Collection of Answers.
+	 *
+	 * @param answers The answers to save
+	 * @return The updated BaseEntitys
+	 */
+	public Set<BaseEntity> saveAnswers(Collection<Answer> answers) {
+		// find concerned targets
+		Set<BaseEntity> targets = answers.stream()
+				.map(a -> a.getTargetCode())
+				.distinct()
+				.map(code -> beUtils.getBaseEntity(code))
+				.collect(Collectors.toSet());
+		// save answers
+		return saveAnswers(answers, targets);
+	}
+
+	/**
+	 * Save a Collection of Answers.
+	 *
+	 * @param answers The answers to save
+	 * @param target The target to save to
+	 * @return The updated BaseEntity
+	 */
+	public BaseEntity saveAnswers(Collection<Answer> answers, BaseEntity target) {
+		Set<BaseEntity> results = saveAnswers(answers, Collections.singleton(target));
+		if (results.size() != 1) {
+			throw new DebugException("Error returning updated BaseEntity. Results size was " + results.size());
+		}
+		return results.iterator().next();
+	}
+
+	/**
+	 * Save a Collection of Answers.
 	 *
 	 * @param answers The list of answers to save
 	 * @return The target BaseEntitys
 	 */
-	public List<BaseEntity> saveAnswers(List<Answer> answers) {
-
-		List<BaseEntity> targets = new ArrayList<>();
-
+	public Set<BaseEntity> saveAnswers(Collection<Answer> answers, Collection<BaseEntity> targets) {
+		// build map of targets
+		Map<String, BaseEntity> targetMap = targets.stream()
+				.collect(Collectors.toMap(BaseEntity::getCode, Function.identity(), (prev, next) -> next, HashMap::new));
 		// sort answers into target BaseEntitys
-		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()
-				.collect(Collectors.groupingBy(Answer::getTargetCode));
+		Map<String, Set<Answer>> answersPerTargetCodeMap = answers.stream()
+				.collect(Collectors.groupingBy(Answer::getTargetCode, Collectors.toSet()));
 
 		for (String targetCode : answersPerTargetCodeMap.keySet()) {
-
 			// fetch target and target DEF
-			BaseEntity target = beUtils.getBaseEntity(targetCode);
+			BaseEntity target = targetMap.get(targetCode);
+			if (target == null) {
+				log.error("Target " + targetCode + " not in map");
+				continue;
+			}
 			Definition definition = defUtils.getDEF(target);
-
 			// filter Non-valid answers using def
-			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
-			List<Answer> validAnswers = group.stream()
+			Set<Answer> group = answersPerTargetCodeMap.get(targetCode);
+			Set<Answer> validAnswers = group.stream()
 					.filter(item -> defUtils.answerValidForDEF(definition, item))
-					.collect(Collectors.toList());
-
+					.collect(Collectors.toSet());
 			// update target using valid answers
 			for (Answer answer : validAnswers) {
-				Attribute attribute = getAttribute(answer.getAttributeCode());
+				// find the attribute
+				String attributeCode = answer.getAttributeCode();
+				Attribute attribute = getAttribute(attributeCode);
 				answer.setAttribute(attribute);
-				try {
-					target.addAnswer(answer);
-				} catch (BadDataException e) {
-					log.error(e);
+				// check if name needs updating
+				if (Attribute.PRI_NAME.equals(attributeCode)) {
+					String name = answer.getValue();
+					log.debug("Updating BaseEntity Name Value -> " + name);
+					target.setName(name);
+					continue;
 				}
+				// update the baseentity
+				target.addAnswer(answer);
+				String value = target.getValueAsString(answer.getAttributeCode());
+				log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 			}
-
 			// update target in the cache and DB
 			beUtils.updateBaseEntity(target);
 			targets.add(target);
 		}
 
-		return targets;
+		return targetMap.values().stream().collect(Collectors.toSet());
 	}
 
 	/**

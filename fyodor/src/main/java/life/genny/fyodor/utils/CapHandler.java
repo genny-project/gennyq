@@ -84,6 +84,10 @@ public class CapHandler extends Manager {
 		info("Filtering " + containers.size() + " filters"); 
 		containers = containers.stream()
 				.filter(container -> {
+					// no filter => no capability requirements => let it through
+					if(container.getFilter() == null)
+						return true;
+					
 					info("Filtering " + container.getFilter().getCode());
 					return container.requirementsMet(userCapabilities);
 				})

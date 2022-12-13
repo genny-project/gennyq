@@ -96,28 +96,6 @@ message DataType {
 	repeated Validation validationList = 6; 
 }
 /* @Indexed */ 
-message MessageData { 
-	option java_package = "life.genny.qwandaq.message";
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string code = 1; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string content = 2; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional int64 id = 3; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string parentCode = 4; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string processId = 5; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string rootCode = 6; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 7; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 8; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string value = 9; 
-}
-/* @Indexed */ 
 message MessageLifecycle { 
 	option java_package = "life.genny.gadaq";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
@@ -142,39 +120,36 @@ message MessageLifecycle {
  @VariableInfo(tags="") */ 
 	optional string entityCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input") */ 
-	optional QEventMessage eventMessage = 8; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string existing_pid = 9; 
+	optional string existing_pid = 8; 
 	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
-	optional string id = 10; 
+	optional string id = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional bool mandatoryFieldsCompleted = 11; 
+	optional bool mandatoryFieldsCompleted = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string pcmCode = 12; 
+	optional string pcmCode = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional ProcessData processData = 13; 
+	optional ProcessData processData = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string processId = 14; 
+	optional string processId = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string questionCode = 15; 
+	optional string questionCode = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string sourceCode = 16; 
+	optional string sourceCode = 15; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string summary = 17; 
+	optional string summary = 16; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string targetCode = 18; 
+	optional string targetCode = 17; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 19; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 18; 
 }
 /* @Indexed */ 
 message ProcessData { 
@@ -205,34 +180,6 @@ message ProcessData {
 	optional string targetCode = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string processId = 13; 
-}
-/* @Indexed */ 
-message QEventMessage { 
-	option java_package = "life.genny.qwandaq.message";
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional MessageData data = 1; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string event_type = 2; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string attributeCode = 3; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string message = 4; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string msg_type = 5; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 6; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated string recipientCodeArray = 7; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 8; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string tag = 9; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 10; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated string targetCodes = 11; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 12; 
 }
 /* @Indexed */ 
 message S2SData { 

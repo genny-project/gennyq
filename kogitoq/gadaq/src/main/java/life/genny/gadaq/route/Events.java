@@ -21,6 +21,7 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
@@ -35,6 +36,15 @@ import life.genny.gadaq.search.FilterGroupService;
  */
 @ApplicationScoped
 public class Events {
+
+	public static final String AUTH_INIT = "AUTH_INIT";
+
+	public static final String ACT_VIEW = "ACT_VIEW";
+	public static final String ACT_EDIT = "ACT_EDIT";
+
+	public static final String QUE_TABLE_ = "QUE_TABLE_";
+	public static final String QUE_EXPLORE_ = "QUE_EXPLORE_";
+	public static final String QUE_ADD_ = "QUE_ADD_";
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -81,7 +91,7 @@ public class Events {
 			return;
 
 		// auth init
-		if ("AUTH_INIT".equals(code)) {
+		if (AUTH_INIT.equals(code)) {
 			kogitoUtils.triggerWorkflow(SELF, "authInit", "userCode", userToken.getUserCode());
 			return;
 		}
@@ -142,7 +152,7 @@ public class Events {
 		}
 
 		// detail view
-		if ("ACT_VIEW".equals(code)) {
+		if (ACT_VIEW.equals(code)) {
 			search.sendDetailView(targetCode);
 			return;
 		}
@@ -163,8 +173,8 @@ public class Events {
 		}
 
 		// table view (Default View Mode)
-		code = code.replace("QUE_EXPLORE_", "QUE_TABLE_");
-		if (code.startsWith("QUE_TABLE_")) {
+		code = code.replace(QUE_EXPLORE_, QUE_TABLE_);
+		if (code.startsWith(QUE_TABLE_)) {
 			filter.init(code);
 			search.sendTable(code);
 			return;
@@ -183,9 +193,9 @@ public class Events {
 		}
 
 		// add item
-		if (code.startsWith("QUE_ADD_")) {
-			code = StringUtils.removeStart(code, "QUE_ADD_");
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
+		if (code.startsWith(QUE_ADD_)) {
+			code = StringUtils.removeStart(code, QUE_ADD_);
+			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF + code + ":PREFIX", String.class);
 
 			if ("PER".equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
@@ -206,8 +216,8 @@ public class Events {
 			}
 		}
 
-		// edit item
-		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
+		// edit item (TODO This needs to be moved into a timer based bpmn)
+		if (ACT_EDIT.equals(code) && parentCode.startsWith(Prefix.SBE)) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()

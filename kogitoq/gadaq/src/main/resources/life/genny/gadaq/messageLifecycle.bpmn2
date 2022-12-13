@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_d2dWgEYUEDuQ0v2jnlOBqw" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_-Clh4FzgEDu_u5jQ22sYFg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_entityCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_definitionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
@@ -15,7 +15,6 @@
   <bpmn2:itemDefinition id="_answerItem" structureRef="life.genny.qwandaq.Answer"/>
   <bpmn2:itemDefinition id="_dataItem" structureRef="life.genny.kogito.common.models.S2SData"/>
   <bpmn2:itemDefinition id="_summaryItem" structureRef="String"/>
-  <bpmn2:itemDefinition id="_eventMessageItem" structureRef="life.genny.qwandaq.message.QEventMessage"/>
   <bpmn2:itemDefinition id="_buttonEventsItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__E8E5CAB8-F76B-4392-8743-AEE83FA364B2_definitionCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__E8E5CAB8-F76B-4392-8743-AEE83FA364B2_entityCodeOutputXItem" structureRef="String"/>
@@ -29,8 +28,8 @@
   <bpmn2:interface id="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2_ServiceInterface" name="life.genny.kogito.common.service.BaseEntityService" implementationRef="life.genny.kogito.common.service.BaseEntityService">
     <bpmn2:operation id="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2_ServiceOperation" name="commission" implementationRef="commission"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_BBF5E448-7330-4786-BE55-04FA42A13DEB" name="Default Collaboration">
-    <bpmn2:participant id="_27FBEE8E-D6AE-4120-8E19-CE91831A2D22" name="Pool Participant" processRef="messageLifecycle"/>
+  <bpmn2:collaboration id="_0B21DC04-9C48-4772-85D8-865F62565D4E" name="Default Collaboration">
+    <bpmn2:participant id="_70385A99-B1B5-4B82-A2DA-E5E6296D2F0E" name="Pool Participant" processRef="messageLifecycle"/>
   </bpmn2:collaboration>
   <bpmn2:process id="messageLifecycle" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="PersonLifecycle" isExecutable="true" processType="Public">
     <bpmn2:property id="entityCode" itemSubjectRef="_entityCodeItem" name="entityCode"/>
@@ -54,13 +53,6 @@
     <bpmn2:property id="answer" itemSubjectRef="_answerItem" name="answer"/>
     <bpmn2:property id="data" itemSubjectRef="_dataItem" name="data"/>
     <bpmn2:property id="summary" itemSubjectRef="_summaryItem" name="summary"/>
-    <bpmn2:property id="eventMessage" itemSubjectRef="_eventMessageItem" name="eventMessage">
-      <bpmn2:extensionElements>
-        <drools:metaData name="customTags">
-          <drools:metaValue><![CDATA[input]]></drools:metaValue>
-        </drools:metaData>
-      </bpmn2:extensionElements>
-    </bpmn2:property>
     <bpmn2:property id="buttonEvents" itemSubjectRef="_buttonEventsItem" name="buttonEvents"/>
     <bpmn2:sequenceFlow id="_3609BAC4-635F-4BD2-92F9-CADD0E810692" sourceRef="_E114B7BF-66BF-46CF-BC3A-BBC2C6FC5CEF" targetRef="_AF4B97AD-1EE9-4411-B95A-331DA5C2CD03"/>
     <bpmn2:sequenceFlow id="_968AD6B0-BF94-4402-9254-4FA64AA2FD23" sourceRef="_E8E5CAB8-F76B-4392-8743-AEE83FA364B2" targetRef="_E114B7BF-66BF-46CF-BC3A-BBC2C6FC5CEF">
@@ -264,7 +256,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_d2dWgEYUEDuQ0v2jnlOBqw</bpmn2:source>
-    <bpmn2:target>_d2dWgEYUEDuQ0v2jnlOBqw</bpmn2:target>
+    <bpmn2:source>_-Clh4FzgEDu_u5jQ22sYFg</bpmn2:source>
+    <bpmn2:target>_-Clh4FzgEDu_u5jQ22sYFg</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
