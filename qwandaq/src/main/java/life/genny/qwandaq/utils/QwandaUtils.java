@@ -45,6 +45,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.exception.runtime.QwandaException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -728,8 +729,7 @@ public class QwandaUtils {
 			// fetch target and target DEF
 			BaseEntity target = targetMap.get(targetCode);
 			if (target == null) {
-				log.error("Target " + targetCode + " not in map");
-				continue;
+				throw new QwandaException("Target " + targetCode + " not in answer target map");
 			}
 			Definition definition = defUtils.getDEF(target);
 			// filter Non-valid answers using def
