@@ -18,7 +18,7 @@ public class SavedSearch {
     private String value;
     private String valueCode;
 
-    private boolean beingDate;
+    private String dataType = "String";
 
     public SavedSearch(){}
 
@@ -41,9 +41,12 @@ public class SavedSearch {
         this.column = getColumnName(attributeCode);
         this.valueCode = value;
 
-        this.beingDate = false;
-        if(this.column.contains(FilterConst.DATETIME)) {
-            this.beingDate = true;
+        if(this.code.contains(FilterConst.DATETIME)) {
+            this.dataType = FilterConst.DATETIME;
+        }
+
+        if(this.code.contains(FilterConst.YES_NO)) {
+            this.dataType = FilterConst.YES_NO;
         }
     }
 
@@ -139,22 +142,6 @@ public class SavedSearch {
     }
 
     /**
-     * Being date type
-     * @return being date type
-     */
-    public boolean isBeingDate() {
-        return beingDate;
-    }
-
-    /**
-     * Set date type
-     * @param beingDate Being date type
-     */
-    public void setBeingDate(boolean beingDate) {
-        this.beingDate = beingDate;
-    }
-
-    /**
      * Return the column name
      * @param value Value
      * @return Return the column name
@@ -163,9 +150,13 @@ public class SavedSearch {
         String fieldName = "";
         int priIndex = -1;
         int fieldIndex = value.lastIndexOf(Prefix.FIELD);
+        int lnkIndex = value.lastIndexOf(Prefix.LNK);
         if(fieldIndex > -1) {
             priIndex = value.indexOf(Prefix.FIELD) + Prefix.FIELD.length();
             fieldName = value.substring(priIndex);
+            return fieldName;
+        }else if(lnkIndex > -1) {
+            fieldName = value.substring(lnkIndex);
             return fieldName;
         } else {
             priIndex = value.lastIndexOf(Prefix.PRI);
@@ -177,4 +168,11 @@ public class SavedSearch {
         return fieldName;
     }
 
+    public String getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(String dataType) {
+        this.dataType = dataType;
+    }
 }
