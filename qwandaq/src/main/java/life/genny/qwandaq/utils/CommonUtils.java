@@ -165,7 +165,7 @@ public class CommonUtils {
      */
     public static <T> String getArrayString(T[] arr) {
         return getArrayString(arr, (item) -> {
-            return item.toString();
+            return item != null ? item.toString() : "null";
         });
     }
 
@@ -377,4 +377,52 @@ public class CommonUtils {
 			return code.substring(4);
 		}
 	}
+
+    /**
+     * Add an entry to a jsonified String array. This assumes the String array
+     * is not malformed, but it can be null or empty
+     * 
+     * If the set of entries is null, the array will be returned
+     * @param array - array to append to
+     * @param entries - entries to append
+     * @return the array with the entry appended to it or the preexisting array if
+     *  the entries param is null. If the array is null, a new stringified array containing the entries
+     * will be created
+     */
+    public static String addToStringArray(String array, String... entries) {
+        // no entries array == no entries to add
+        if(entries == null)
+            return StringUtils.isBlank(array) ? "[]" : array;
+
+        // return the entries as an array if there is no array
+        if(StringUtils.isBlank(array)) {
+            return CommonUtils.getArrayString(entries);
+        }
+        
+        // chop off the ending "]"
+        array = array.substring(0, array.length() - 1);
+        StringBuilder sb = new StringBuilder(array);
+        
+
+        // add all entries such that each entry is "entry",
+        // with the exception of the last one, which should not have a comma
+        if(entries.length > 0) {
+            // check if we're adding to a preexisting array
+            if(!array.equals("["))
+                sb.append(",");
+
+            for(int i = 0; i < entries.length - 1; i++) {
+                sb.append("\"")
+                    .append(entries[i])
+                    .append("\",");
+            }
+
+            sb.append("\"")
+            .append(entries[entries.length - 1])
+            .append("\"");
+        }
+
+        // reattach our missing "]" in all cases
+        return sb.append("]").toString();
+    }
 }
