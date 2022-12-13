@@ -379,7 +379,53 @@ public class CommonUtils {
 	}
 
     /**
-     * Add an entry to a jsonified String array. This assumes the String array
+     * Remove an entry or entries from a jsonified string array
+     * @param array
+     * @param entries
+     * @return the new array (an empty array if array is null)
+     */
+    public static String removeFromStringArray(String array, String... entries) {
+        // no entries array == no entries to remove
+        if(entries == null)
+            return StringUtils.isBlank(array) ? "[]" : array;
+
+        // return new array if there is no array
+        if(StringUtils.isBlank(array)) {
+            return "[]";
+        }
+        
+        StringBuilder sb = new StringBuilder(array);
+        for(String entry : entries) {
+            // ensure we're not trying to remove from empty array
+            if(sb.charAt(0) == '[') {
+                if(sb.charAt(1) == ']')
+                    return "[]";
+            }
+
+            if(StringUtils.isBlank(entry))
+                continue;
+            int start = sb.indexOf(entry);
+            if(start == -1)
+                continue;
+
+            // Deal with quotes
+            int end = start + entry.length() + 1;
+            start -= 1;
+            // deal with start/end
+            if(start == 1) {
+                if(sb.length() - end != 1)
+                    end += 1;
+            }
+            else
+                start -= 1;
+            sb.delete(start, end);
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Add an entry or entries to a jsonified String array. This assumes the String array
      * is not malformed, but it can be null or empty
      * 
      * If the set of entries is null, the array will be returned
