@@ -721,8 +721,8 @@ public class QwandaUtils {
 		Map<String, BaseEntity> targetMap = targets.stream()
 				.collect(Collectors.toMap(BaseEntity::getCode, Function.identity(), (prev, next) -> next, HashMap::new));
 		// sort answers into target BaseEntitys
-		Map<String, List<Answer>> answersPerTargetCodeMap = answers.stream()
-				.collect(Collectors.groupingBy(Answer::getTargetCode));
+		Map<String, Set<Answer>> answersPerTargetCodeMap = answers.stream()
+				.collect(Collectors.groupingBy(Answer::getTargetCode, Collectors.toSet()));
 
 		for (String targetCode : answersPerTargetCodeMap.keySet()) {
 			// fetch target and target DEF
@@ -733,10 +733,10 @@ public class QwandaUtils {
 			}
 			Definition definition = defUtils.getDEF(target);
 			// filter Non-valid answers using def
-			List<Answer> group = answersPerTargetCodeMap.get(targetCode);
-			List<Answer> validAnswers = group.stream()
+			Set<Answer> group = answersPerTargetCodeMap.get(targetCode);
+			Set<Answer> validAnswers = group.stream()
 					.filter(item -> defUtils.answerValidForDEF(definition, item))
-					.collect(Collectors.toList());
+					.collect(Collectors.toSet());
 			// update target using valid answers
 			for (Answer answer : validAnswers) {
 				// find the attribute
