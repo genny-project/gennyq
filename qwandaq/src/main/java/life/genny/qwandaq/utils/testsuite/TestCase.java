@@ -38,7 +38,10 @@ public class TestCase<I, E> {
     }
     
     private void printData(String tag, Object object) {
-        if(!object.getClass().isArray()) {
+        if(object == null) {
+            System.out.println("       "+ tag +": null");
+        }
+        else if(!object.getClass().isArray()) {
             System.out.println("       "+ tag +": " + object);
         } else {
             Object[] objects = (Object[])object;
