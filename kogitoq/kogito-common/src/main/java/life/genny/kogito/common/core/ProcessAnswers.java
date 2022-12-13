@@ -148,6 +148,8 @@ public class ProcessAnswers {
 				String name = answer.getValue();
 				log.debug("Updating BaseEntity Name Value -> " + name);
 				target.setName(name);
+				// save PRI_NAME to database
+				target.addAnswer(answer);
 				continue;
 			}
 
