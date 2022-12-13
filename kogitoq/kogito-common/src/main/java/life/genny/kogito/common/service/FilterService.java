@@ -920,8 +920,8 @@ public class FilterService {
 
             for(int i=0;i< definitions.size(); i++){
                 if(i== 0) {
-                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i)));
-                } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i))));
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+                } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
             }
 
             // add conditions by filter parameters
@@ -955,8 +955,8 @@ public class FilterService {
 
             for(int i=0;i< definitions.size(); i++){
                 if(i== 0) {
-                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i)));
-                } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, definitions.get(i))));
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+                } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
             }
 
             // searching by text or search by code
