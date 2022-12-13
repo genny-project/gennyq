@@ -22,9 +22,10 @@ import life.genny.qwandaq.models.UserToken;
 @Provider
 public class GennyRequestFilter implements ContainerRequestFilter {
 
-	static final Logger log = Logger.getLogger(GennyRequestFilter.class);
-
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	Logger log;
 
 	@Inject
 	UserToken userToken;
@@ -32,22 +33,17 @@ public class GennyRequestFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
 
+		// grab auth header
         String token = requestContext.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-
-		if (token == null) {
-			// log.warn("No Authorization header sent in request!");
+		if (token == null)
 			return;
-		}
 
+		// strip token string
 		token = StringUtils.removeStart(token, "Bearer ");
 
-		try {
-			// build GennyToken from token string in headers
-			userToken.init(token);
-			log.debug("Token Initialized: " + userToken);
+		// build GennyToken from token string in headers
+		userToken.init(token);
+		log.debug("Token Initialized: " + userToken);
+	}
 
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-    }
 }

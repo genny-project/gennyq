@@ -15,6 +15,7 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -63,10 +64,8 @@ public class ProcessAnswers {
 		}
 
 		// check if the answer is valid for the target
-		// TODO, only need to check the actual attributes in the processQuestion
-		// Attribute list
 		for (String defCode : processData.getDefCodes()) {
-			BaseEntity definition = beUtils.getBaseEntity(defCode);
+			Definition definition = beUtils.getDefinition(defCode);
 			if (!defUtils.answerValidForDEF(definition, answer)) {
 				log.error("Bad incoming answer... Not saving!");
 				return false;
@@ -86,12 +85,12 @@ public class ProcessAnswers {
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
 	public Boolean checkUniqueness(ProcessData processData) {
-		List<BaseEntity> definitions = new ArrayList<>();
 
+		List<Definition> definitions = new ArrayList<>();
 		List<String> defCodes = processData.getDefCodes();
 		for (String defCode : defCodes) {
-			BaseEntity def = beUtils.getBaseEntity(defCode);
-			definitions.add(def);
+			Definition definition = beUtils.getDefinition(defCode);
+			definitions.add(definition);
 		}
 
 		List<Answer> answers = processData.getAnswers();
@@ -101,11 +100,13 @@ public class ProcessAnswers {
 
 		// send error for last answer in the list
 		// NOTE: This should be reconsidered
+		Boolean acceptSubmission = true;
+		if (answers.isEmpty())
+			return acceptSubmission;
 
 		Answer answer = answers.get(answers.size() - 1);
 		String attributeCode = answer.getAttributeCode();
 
-		Boolean acceptSubmission = true;
 		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
@@ -142,10 +143,18 @@ public class ProcessAnswers {
 			String currentValue = target.getValueAsString(attributeCode);
 			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
 
+			// check if name needs updating
+			if (Attribute.PRI_NAME.equals(attributeCode)) {
+				String name = answer.getValue();
+				log.debug("Updating BaseEntity Name Value -> " + name);
+				target.setName(name);
+				continue;
+			}
+
 			// update the baseentity
 			target.addAnswer(answer);
 			String value = target.getValueAsString(answer.getAttributeCode());
-			log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
+			log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 		}
 
 		// save these answrs to db and cache

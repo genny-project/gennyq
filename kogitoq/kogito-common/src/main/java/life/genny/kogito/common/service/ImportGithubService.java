@@ -3,24 +3,31 @@ package life.genny.kogito.common.service;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.utils.*;
+
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.jboss.logging.Logger;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.List;
+
+import life.genny.qwandaq.entity.Definition;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.GithubUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.DefUtils;
 
 @ApplicationScoped
 public class ImportGithubService {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+	@Inject
+	static Logger log;
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -64,11 +71,10 @@ public class ImportGithubService {
 		try {
 			bes = githubUtils.getLayoutBaseEntitys(beUtils, gitUrl, branch, realm, gitrealm, recursive);
 		} catch (RevisionSyntaxException | GitAPIException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		log.info("bes = " + bes.size());
-		BaseEntity dotDef = beUtils.getBaseEntityByCode(realm, "DEF_DOCUMENT_TEMPLATE");
+		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
 		for (BaseEntity be : bes) {
 			if (be != null) {
 				log.info("saving be = " + be.getCode() + ":" + be.getName());

@@ -174,41 +174,31 @@ public class InternalConsumer {
 			}
 		}
 
-		SearchEntity searchEntity = null;
+		// grab search entity
+		String productCode = userToken.getProductCode();
+		String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
+		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
+		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
 
-		if (searchEA.isPresent()) {
-			log.info("Search Attribute is " + searchEA.get());
-			searchEntity = createSearchEntity(definition, attrCode, source, target);
-		} else {
+		if (searchEntity == null)
+		throw new ItemNotFoundException(key);
 
-			// Now look for any search attribute
+		// Filter by name wildcard provided by user
+		searchEntity.add(new Or(
+			new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
+			new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
 
-			// grab search entity
-			String productCode = userToken.getProductCode();
-			String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
-			String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
-			searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
+		searchEntity.add(new Column("PRI_NAME", "Name"));
 
-			if (searchEntity == null)
-				throw new ItemNotFoundException(key);
+		// init context map
+		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
+		if (source != null)
+		ctxMap.put("SOURCE", source);
+		if (target != null)
+		ctxMap.put("TARGET", target);
 
-			// Filter by name wildcard provided by user
-			searchEntity.add(new Or(
-					new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
-					new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
-
-			searchEntity.add(new Column("PRI_NAME", "Name"));
-
-			// init context map
-			Map<String, Object> ctxMap = new ConcurrentHashMap<>();
-			if (source != null)
-				ctxMap.put("SOURCE", source);
-			if (target != null)
-				ctxMap.put("TARGET", target);
-
-			searchEntity.setRealm(userToken.getProductCode());
-			searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
-		}
+		searchEntity.setRealm(userToken.getProductCode());
+		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
 
 		// Perform search and evaluate columns
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
@@ -243,228 +233,6 @@ public class InternalConsumer {
 		scope.destroy();
 		Instant end = Instant.now();
 		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
-
-	SearchEntity createSearchEntity(BaseEntity defBE, String attrCode, BaseEntity source, BaseEntity target) {
-		// Because it is a drop down event we will search the DEF for the search
-		// attribute
-		Optional<EntityAttribute> searchAttribute = defBE.findEntityAttribute("SER_" + attrCode);
-		if (searchAttribute.isEmpty()) {
-			throw new ItemNotFoundException(String.format("%s -> %s", defBE.getCode(), "SER_" + attrCode));
-		}
-
-		String searchValue = searchAttribute.get().getValueString();
-		log.info("Search Attribute Value = " + searchValue);
-
-		JsonObject searchValueJson = jsonb.fromJson(searchValue, JsonObject.class);
-		log.info("SearchValueJson = " + searchValueJson);
-
-		Integer pageStart = 0;
-		Integer pageSize = searchValueJson.containsKey("dropdownSize") ? searchValueJson.getInt("dropdownSize")
-				: GennySettings.defaultDropDownPageSize();
-		Boolean searchingOnLinks = false;
-
-		// SearchEntity searchBE = new SearchEntity("SBE_DROPDOWN", " Search")
-		// .addColumn("PRI_CODE", "Code")
-		// .addColumn("PRI_NAME", "Name");
-
-		SearchEntity searchBE = new SearchEntity("SBE_DROPDOWN", " Search");
-		searchBE.add(new Column("PRI_CODE", "Code"));
-		searchBE.add(new Column("PRI_NAME", "Name"));
-
-		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
-
-		if (source != null) {
-			ctxMap.put("SOURCE", source);
-		}
-		if (target != null) {
-			ctxMap.put("TARGET", target);
-		}
-
-		// JsonArray jsonParms = searchValueJson.getJsonArray("parms");
-		// int size = jsonParms.size();
-
-		// for (int i = 0; i < size; i++) {
-
-		// JsonObject json = null;
-
-		// try {
-
-		// json = jsonParms.getJsonObject(i);
-
-		// // conditionals
-		// Boolean conditionsAreMet = true;
-		// if (json.containsKey("conditions")) {
-		// JsonArray conditions = json.getJsonArray("conditions");
-		// for (Object cond : conditions) {
-		// if (!capabilityUtils.conditionMet(cond.toString().replaceAll("\"", ""))) {
-		// conditionsAreMet = false;
-		// }
-		// }
-		// }
-
-		// if (conditionsAreMet) {
-
-		// String attributeCode = json.getString("attributeCode");
-
-		// // Filters
-		// if (attributeCode != null) {
-
-		// Attribute att = qwandaUtils.getAttribute(attributeCode);
-
-		// String val = json.getString("value");
-
-		// String logic = null;
-		// if (json.containsKey("logic")) {
-		// logic = json.getString("logic");
-		// }
-
-		// String filterStr = null;
-		// if (val.contains(":")) {
-		// String[] valSplit = val.split(":");
-		// filterStr = valSplit[0];
-		// val = valSplit[1];
-		// }
-
-		// DataType dataType = att.getDataType();
-
-		// if (dataType.getClassName().equals("life.genny.qwanda.entity.BaseEntity")) {
-
-		// // These represent EntityEntity
-		// if (attributeCode.equals("LNK_CORE") || attributeCode.equals("LNK_IND")) {
-
-		// log.info("Adding CORE/IND DTT filter");
-		// // This is used for the sort defaults
-		// searchingOnLinks = true;
-
-		// // For using the search source and target and merge any data
-		// String paramSourceCode = null;
-		// if (json.containsKey("sourceCode")) {
-		// paramSourceCode = json.getString("sourceCode");
-
-		// // These will return True by default if source or target are null
-		// if (!MergeUtils.contextsArePresent(paramSourceCode, ctxMap)) {
-		// throw new DebugException(
-		// String.format(
-		// "A Parent value is missing for %s, Not sending dropdown results",
-		// paramSourceCode));
-		// }
-
-		// paramSourceCode = MergeUtils.merge(paramSourceCode, ctxMap);
-		// }
-
-		// String paramTargetCode = null;
-		// if (json.containsKey("targetCode")) {
-		// paramTargetCode = json.getString("targetCode");
-
-		// if (!MergeUtils.contextsArePresent(paramTargetCode, ctxMap)) {
-		// throw new DebugException(
-		// String.format(
-		// "A Parent value is missing for %s, Not sending dropdown results",
-		// paramTargetCode));
-		// }
-
-		// paramTargetCode = MergeUtils.merge(paramTargetCode, ctxMap);
-		// }
-
-		// log.info("attributeCode = " + json.getString("attributeCode"));
-		// log.info("val = " + val);
-		// log.info("link paramSourceCode = " + paramSourceCode);
-		// log.info("link paramTargetCode = " + paramTargetCode);
-
-		// // Set Source and Target if found it parameter
-		// if (paramSourceCode != null) {
-		// searchBE.setSourceCode(paramSourceCode);
-		// }
-		// if (paramTargetCode != null) {
-		// searchBE.setTargetCode(paramTargetCode);
-		// }
-
-		// // Set LinkCode and LinkValue
-		// searchBE.setLinkCode(att.getCode());
-		// searchBE.setLinkValue(val);
-		// } else {
-		// // This is a DTT_LINK style that has class = baseentity -->
-		// Baseentity_Attribute
-		// // TODO equals?
-		// SearchEntity.StringFilter stringFilter = SearchEntity.StringFilter.LIKE;
-		// if (filterStr != null) {
-		// stringFilter = SearchEntity.convertOperatorToStringFilter(filterStr);
-		// }
-		// log.info("Adding BE DTT filter");
-
-		// if (logic != null && logic.equals("AND")) {
-		// searchBE.addAnd(attributeCode, stringFilter, val);
-		// } else if (logic != null && logic.equals("OR")) {
-		// searchBE.addOr(attributeCode, stringFilter, val);
-		// } else {
-		// searchBE.addFilter(attributeCode, stringFilter, val);
-		// }
-
-		// }
-
-		// } else if (dataType.getClassName().equals("java.lang.String")) {
-		// SearchEntity.StringFilter stringFilter = SearchEntity.StringFilter.LIKE;
-		// if (filterStr != null) {
-		// stringFilter = SearchEntity.convertOperatorToStringFilter(filterStr);
-		// }
-		// log.info("Adding string DTT filter");
-
-		// if (logic != null && logic.equals("AND")) {
-		// searchBE.addAnd(attributeCode, stringFilter, val);
-		// } else if (logic != null && logic.equals("OR")) {
-		// searchBE.addOr(attributeCode, stringFilter, val);
-		// } else {
-		// searchBE.addFilter(attributeCode, stringFilter, val);
-		// }
-		// } else {
-		// SearchEntity.Filter filter = SearchEntity.Filter.EQUALS;
-		// if (filterStr != null) {
-		// filter = SearchEntity.convertOperatorToFilter(filterStr);
-		// }
-		// log.info("Adding Other DTT filter");
-		// searchBE.addFilterAsString(attributeCode, filter, val);
-		// }
-		// }
-		// }
-
-		// // sorts
-		// String sortBy = null;
-		// if (json.containsKey("sortBy")) {
-		// sortBy = json.getString("sortBy");
-		// }
-		// if (sortBy != null) {
-		// String order = json.getString("order");
-		// SearchEntity.Sort sortOrder = order.equals("DESC") ? SearchEntity.Sort.DESC :
-		// SearchEntity.Sort.ASC;
-		// searchBE.addSort(sortBy, sortBy, sortOrder);
-		// }
-
-		// } catch (Exception e) {
-		// log.error(e);
-		// log.error("DROPDOWN :Bad Json Value ---> " + json.toString());
-		// continue;
-		// }
-		// }
-
-		// // default to sorting by name if no sorts were specified and if not searching
-		// // for EntityEntitys
-		// Boolean hasSort = searchBE.getBaseEntityAttributes().stream()
-		// .anyMatch(item -> item.getAttributeCode().startsWith("SRT_"));
-		// if (!hasSort && !searchingOnLinks) {
-		// searchBE.addSort("PRI_NAME", "Name", SearchEntity.Sort.ASC);
-		// }
-
-		// // Filter by name wildcard provided by user
-		// searchBE.addFilter("PRI_NAME", SearchEntity.StringFilter.LIKE, searchText +
-		// "%")
-		// .addOr("PRI_NAME", SearchEntity.StringFilter.LIKE, "% " + searchText + "%");
-
-		searchBE.setRealm(userToken.getProductCode());
-		searchBE.setPageStart(pageStart);
-		searchBE.setPageSize(pageSize);
-
-		return searchBE;
 	}
 
 }

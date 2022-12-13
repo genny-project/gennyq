@@ -23,7 +23,6 @@ import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
-import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * ExternalConsumerConfig --- This class contains configurations for {@link CorsHandler}

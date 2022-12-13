@@ -3,8 +3,13 @@ package life.genny.bridge.live.data;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
-import life.genny.bridge.blacklisting.BlackListInfo;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+
 import life.genny.bridge.model.grpc.Item;
+import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
@@ -121,42 +126,43 @@ public class InternalConsumer {
      */
     public void handleIncomingMessage(String arg) {
 
-        log.debug("Outgoing Payload = " + arg);
+		log.debug("Outgoing Payload = " + arg);
 
-        String incoming = arg;
-        if ("{}".equals(incoming)) {
-            log.warn("The payload sent from the webcmd producer is empty");
-            return;
-        }
+		String incoming = arg;
+		if ("{}".equals(incoming)) {
+			log.warn("The payload sent from the webcmd producer is empty");
+			return;
+		}
 
-        try {
-            final JsonObject json = new JsonObject(incoming);
-            GennyToken gennyToken = new GennyToken(json.getString("token"));
-            verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
-            KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
+		final JsonObject json = new JsonObject(incoming);
+		GennyToken gennyToken = new GennyToken(json.getString("token"));
+		try {
+			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
+		} catch (Exception e) {
+			log.error("The token verification has failed somehow this token was able to penatrate other "
+				+ "security barriers please check this exception in more depth");
+			e.printStackTrace();
+		}
+		// KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
 
-            if (json.containsKey("data_type")) {
-                log.info("QBEM ebing sent outside:" + json);
-            } else {
-                /// is this really empty body ?
-            }
+		if (json.containsKey("data_type")) {
+			log.info("QBEM being sent outside:" + json);
+		} else {
+			/// is this really empty body ?
+		}
 
-            if (!incoming.contains("<body>Unauthorized</body>")) {
-                String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");
-                log.info("Publishing message to session " + sessionState);
-                grpcService.send(payload.jti, Item.newBuilder().setBody(removeKeys(json).toString()).build());
-                bus.publish(sessionState, removeKeys(json));
+		if (!incoming.contains("<body>Unauthorized</body>")) {
+			String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");
+			log.info("Publishing message to session " + sessionState);
 
-            } else {
-                log.error("The host service of channel producer tried to accessed an endpoint and gotan"
-                        + " unauthorised message potentially from api and the producer hosted in rulesservice");
-            }
+			KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
+			grpcService.send(payload.jti, Item.newBuilder().setBody(removeKeys(json).toString()).build());
+			bus.publish(sessionState, removeKeys(json));
 
-        } catch (Exception e) {
-            log.error("The token verification has failed somehow this token was able to penatrate other "
-                    + "security barriers please check this exception in more depth");
-            e.printStackTrace();
-        }
+		} else {
+			log.error("The host service of channel producer tried to accessed an endpoint and got an"
+				+ " unauthorised message potentially from api and the producer hosted in rulesservice");
+		}
     }
 
 }

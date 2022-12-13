@@ -2,10 +2,7 @@ package life.genny.qwandaq.utils;
 
 import java.io.StringReader;
 import java.text.DecimalFormat;
-import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,10 +12,8 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 import org.jboss.logging.Logger;
-import org.javamoney.moneta.Money;
 
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
 
 /**
  * A utiltity used in the MailMerge feature of Genny.

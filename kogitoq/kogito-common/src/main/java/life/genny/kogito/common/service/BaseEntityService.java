@@ -14,7 +14,9 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -62,22 +64,17 @@ public class BaseEntityService {
 	 * @return
 	 */
 	public String commission(String definitionCode) {
-		// TODO
-		// String randomCode = UUID.randomUUID().toString().substring(0,
-		// 32).toUpperCase();
-		// return commission(definitionCode, randomCode);
 
 		if (definitionCode == null)
 			throw new NullParameterException("definitionCode");
-
-		if (!definitionCode.startsWith("DEF_"))
+		if (!definitionCode.startsWith(Prefix.DEF))
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity
-		BaseEntity def = beUtils.getBaseEntity(definitionCode);
+		Definition definition = beUtils.getDefinition(definitionCode);
 
 		// use entity create function and save to db
-		BaseEntity entity = beUtils.create(def);
+		BaseEntity entity = beUtils.create(definition);
 		log.info("BaseEntity Created: " + entity.getCode());
 
 		entity.setStatus(EEntityStatus.PENDING);
@@ -103,12 +100,12 @@ public class BaseEntityService {
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity
-		BaseEntity def = beUtils.getBaseEntity(definitionCode);
+		Definition definition = beUtils.getDefinition(definitionCode);
 
 		// use entity create function and save to db
-		String defaultName = StringUtils.capitalize(def.getCode().substring(4));
-		BaseEntity entity = beUtils.create(def, defaultName,
-				def.getValueAsString("PRI_PREFIX") + "_" + processId.toUpperCase());
+		String defaultName = StringUtils.capitalize(definition.getCode().substring(4));
+		BaseEntity entity = beUtils.create(definition, defaultName,
+				definition.getValueAsString("PRI_PREFIX") + "_" + processId.toUpperCase());
 		log.info("BaseEntity Created: " + entity.getCode());
 
 		entity.setStatus(status);

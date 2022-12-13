@@ -4,6 +4,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -125,10 +126,8 @@ public class TaskService {
 		dispatch.sendData(msg);
 
 		// send searches
-		for (String code : processData.getSearches()) {
-			log.info("Sending search: " + code);
+		for (String code : processData.getSearches())
 			search.searchTable(code);
-		}
 	}
 
 	/**
@@ -145,7 +144,7 @@ public class TaskService {
 	 * @param events
 	 * @return
 	 */
-	public ProcessData dispatchFull(String sourceCode, String targetCode, String questionCode, String processId,
+	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
 			String pcmCode, String parent, String location, String buttonEvents) {
 
 		log.info("Dispatching...");
@@ -221,8 +220,17 @@ public class TaskService {
 		List<Ask> asks = msg.getAsks();
 		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
 
+		// perform basic checks on attribute codes
+		processData.setAttributeCodes(
+			flatMapOfAsks.values().stream()
+					.map(ask -> ask.getQuestion().getAttribute().getCode())
+					.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
+					.collect(Collectors.toList())
+		);
+		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
+
 		// handle non-readonly if necessary
-		if (dispatch.containsNonReadonly(flatMapOfAsks, processData)) {
+		if (dispatch.containsNonReadonly(flatMapOfAsks)) {
 			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 			msg.add(processEntity);
 

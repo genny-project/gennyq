@@ -20,6 +20,7 @@ public class CapabilityAdapterTest extends SerialisationTest<Capability> {
         .setTest((input) -> {
             Capability inputCap = input.input;
             String json = jsonb.toJson(inputCap);
+            System.out.println("Serialised as: " + json);
             Capability outputCap = jsonb.fromJson(json, Capability.class);
 
             return new Expected<>(outputCap);
@@ -41,8 +42,8 @@ public class CapabilityAdapterTest extends SerialisationTest<Capability> {
         .build()
 
         .createTest("no code Serialisation 1")
-        .setInput(new Capability("", CapabilityNode.get(ADD, ALL)))
-        .setExpected(new Capability("", CapabilityNode.get(ADD, ALL)))
+        .setInput(new Capability("", new CapabilityNode(ADD, ALL)))
+        .setExpected(new Capability("", new CapabilityNode(ADD, ALL)))
         .build()
 
         .createTest("no code Serialisation 2")

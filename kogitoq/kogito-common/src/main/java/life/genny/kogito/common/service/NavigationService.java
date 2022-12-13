@@ -95,7 +95,6 @@ public class NavigationService {
 		try {
 			String processId = kogitoUtils.getOutstandingTaskProcessId();
 			kogitoUtils.sendSignal(GADAQ, "processQuestions", processId, "requestion");
-			log.info("Outstanding task triggered");
 			return;
 		} catch (GraphQLException e) {
 			log.debug(e.getMessage());
@@ -112,7 +111,6 @@ public class NavigationService {
 			msg.getData().setTargetCode(userToken.getUserCode());
 			msg.setToken(userToken.getToken());
 			KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
-			log.info("Role Redirect sent");
 			return;
 		} catch (RoleException e) {
 			log.warn(e.getMessage());
@@ -143,6 +141,7 @@ public class NavigationService {
 	 * 
 	 * @param questionCode Question code
 	 */
+	@Deprecated
 	public void redirectByQuestionCode(String questionCode) {
 		String redirectCode = getRedirectCodeByQuestionCode(questionCode);
 
@@ -176,6 +175,7 @@ public class NavigationService {
 	 * @param questionCode Question code
 	 * @return redirect question code
 	 */
+	@Deprecated
 	public String getRedirectCodeByQuestionCode(String questionCode) {
 		String defaultRedirectCode = "";
 		String defCode = getDefCodeByQuestionCode(questionCode);
@@ -207,6 +207,7 @@ public class NavigationService {
 	 * 
 	 * @return redirect code
 	 */
+	@Deprecated
 	public String getRedirectCodeByUser() {
 		String redirectCode = "";
 		String defCode = "";
@@ -225,6 +226,15 @@ public class NavigationService {
 		}
 
 		return redirectCode;
+	}
+
+	/**
+	 * Redirect by question code
+	 *
+	 * @param code Question code
+	 */
+	public void redirectByTable(String code) {
+		searchService.sendTable(code);
 	}
 
 }

@@ -97,6 +97,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_PREVIOUS = "QUE_PREVIOUS";
 
 	public static final String QUE_EVENTS = "QUE_EVENTS";
+	public static final String QUE_BASEENTITY_GRP = "QUE_BASEENTITY_GRP";
 
 	// entity
 	public static final String QUE_NAME = "QUE_NAME";
@@ -131,8 +132,8 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
 	public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
 	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
-	public static final String QUE_TABLE_NEXT_BTN="QUE_TABLE_NEXT_BTN";
-	public static final String QUE_TABLE_PREVIOUS_BTN="QUE_TABLE_PREVIOUS_BTN";
+	public static final String QUE_TABLE_NEXT_BTN = "QUE_TABLE_NEXT_BTN";
+	public static final String QUE_TABLE_PREVIOUS_BTN = "QUE_TABLE_PREVIOUS_BTN";
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)

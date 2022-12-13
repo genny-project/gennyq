@@ -6,7 +6,7 @@
   <parent>
     <groupId>life.genny</groupId>
     <artifactId>gennyq</artifactId>
-    <version>10.2.0</version>
+    <version>10.3.0</version>
   </parent>
 
   <artifactId>lauchy</artifactId>
@@ -40,20 +40,11 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-kafka-streams</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-container-image-docker</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.kafka</groupId>
-      <artifactId>kafka-streams-test-utils</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

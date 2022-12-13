@@ -10,15 +10,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.representations.account.UserRepresentation;
 import org.keycloak.util.JsonSerialization;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.net.ssl.HttpsURLConnection;
-import javax.ws.rs.core.Response;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -26,7 +27,21 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.net.ssl.HttpsURLConnection;
+import javax.ws.rs.core.Response;
+
+import life.genny.qwandaq.exception.runtime.KeycloakException;
 
 /**
  * A static utility class used for standard requests and
@@ -229,7 +244,7 @@ public class KeycloakUtils {
      * @return String
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
-        log.info("Realm is " + realm);
+        log.info("Keycloak Realm is " + realm);
 
         String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
@@ -361,18 +376,14 @@ public class KeycloakUtils {
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
         HttpResponse<String> response = HttpUtils.post(uri, json, token);
-
-        if (response == null) {
-            log.error("Response was null from keycloak!!!");
-            return null;
-        }
+        if (response == null)
+			throw new KeycloakException("Failed to create user: Response is null");
 
         Integer statusCode = response.statusCode();
         Response.Status status = Response.Status.fromStatusCode(statusCode);
         log.info("Create User Response Status: " + statusCode);
 
         try {
-
             // if user already exists, return their id
             if (status == Response.Status.CONFLICT) {
                 log.warn("Email already taken: " + email);
@@ -385,14 +396,10 @@ public class KeycloakUtils {
             }
 
         } catch (IOException e) {
-            log.error("Error trying to fetch keycloak user Id!");
-            log.error("Response Body: " + response.body());
-            e.printStackTrace();
+			throw new KeycloakException("Failed to create user: ", e);
         }
 
-        log.error("Could not return keycloak user Id");
-        log.error("Response Body: " + response.body());
-        return null;
+		throw new KeycloakException("Failed to create user: " + response.body());
     }
 
     /**

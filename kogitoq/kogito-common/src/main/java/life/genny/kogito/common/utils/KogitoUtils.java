@@ -26,7 +26,6 @@ import life.genny.kogito.common.service.BaseEntityService;
 import life.genny.kogito.common.service.ImportGithubService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -253,6 +252,7 @@ public class KogitoUtils {
 		// ensure request was a success
 		if (Response.Status.Family.familyOf(response.statusCode()) != Response.Status.Family.SUCCESSFUL) {
 			log.error("Error, Response Status: " + response.statusCode());
+			log.error("Body: " + response.body());
 			return null;
 		}
 
@@ -274,49 +274,6 @@ public class KogitoUtils {
 			case SELF -> GennySettings.kogitoServiceUrl();
 			default -> GennySettings.kogitoServiceUrl();
 		};
-	}
-
-	/**
-	 * Process an event message using EventRoutes
-	 *
-	 * @param event The stringified event message
-	 */
-	public void routeEvent(String event) {
-
-		// check if event is a valid event
-		QEventMessage msg = null;
-		try {
-			msg = jsonb.fromJson(event, QEventMessage.class);
-		} catch (Exception e) {
-			log.error("Cannot parse this event! " + event);
-			e.printStackTrace();
-			return;
-		}
-
-		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type())) {
-			return;
-		}
-
-		if (msg.getData().getSourceCode() == null) {
-			log.warn("Event message has no sourceCode, setting sourceCode using userToken...");
-			msg.getData().setSourceCode(userToken.getUserCode());
-		}
-
-		// start new session
-		KieSession session = kieRuntimeBuilder.newKieSession();
-		initSession(session, "EventRoutes");
-
-		// Insert Extras
-		session.insert(gqlUtils);
-		session.insert(qwandaUtils);
-		session.insert(importGithubService);
-		session.insert(baseEntityService);
-		session.insert(msg);
-
-		// trigger EventRoutes rules
-		session.fireAllRules();
-		session.dispose();
 	}
 
 	/**
@@ -457,19 +414,6 @@ public class KogitoUtils {
 		throw new GraphQLException("All intances are complete");
 	}
 
-	/**
-	 * Initialise bucket data by rule
-	 */
-	@Deprecated
-	public void initBucketRule() {
-		// start new session
-		KieSession session = kieRuntimeBuilder.newKieSession();
-		initSession(session, "bucket");
-
-		session.fireAllRules();
-		session.dispose();
-	}
-
 	private void initSession(KieSession session, String focus) {
 		if (!StringUtils.isBlank(focus))
 			session.getAgenda().getAgendaGroup(focus).setFocus();
@@ -478,6 +422,7 @@ public class KogitoUtils {
 		session.insert(kogitoUtils);
 		session.insert(jsonb);
 		session.insert(defUtils);
+		session.insert(qwandaUtils);
 		session.insert(beUtils);
 		session.insert(userToken);
 		session.insert(baseEntityService);

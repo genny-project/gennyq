@@ -86,15 +86,21 @@ public class Events {
 			return;
 		}
 
-		// submit
-		if (Question.QUE_SUBMIT.equals(code)) {
+		// submit, next or update
+		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
 			return;
 		}
 
-		// update
-		if (Question.QUE_UPDATE.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "update", "");
+		// cancel
+		if (Question.QUE_CANCEL.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
+			return;
+		}
+
+		// reset
+		if (Question.QUE_RESET.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
 			return;
 		}
 
@@ -110,26 +116,9 @@ public class Events {
 			return;
 		}
 
-		// next
-		if (Question.QUE_NEXT.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "next", "");
-			return;
-		}
 		// previous
 		if (Question.QUE_PREVIOUS.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
-			return;
-		}
-
-		// cancel
-		if (Question.QUE_CANCEL.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
-			return;
-		}
-
-		// reset
-		if (Question.QUE_RESET.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
 			return;
 		}
 
@@ -168,6 +157,7 @@ public class Events {
 		}
 
 		// table view (Default View Mode)
+		code = code.replace("QUE_EXPLORE_", "QUE_TABLE_");
 		if (code.startsWith("QUE_TABLE_")) {
 			filter.init(code);
 			search.sendTable(code);
@@ -191,7 +181,6 @@ public class Events {
 			code = StringUtils.removeStart(code, "QUE_ADD_");
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
 
-			log.info("Prefix: " + code);
 			if ("PER".equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
 						.add("definitionCode", "DEF_".concat(code))
@@ -199,6 +188,14 @@ public class Events {
 						.build();
 
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
+				return;
+			}else if ("MSG".equals(prefix)){
+				JsonObject json = Json.createObjectBuilder()
+						.add("definitionCode", "DEF_".concat(code))
+						.add("sourceCode", userToken.getUserCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
 				return;
 			}
 		}

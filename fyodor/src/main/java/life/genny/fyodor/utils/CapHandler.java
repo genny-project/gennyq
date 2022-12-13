@@ -8,7 +8,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
@@ -37,28 +37,28 @@ public class CapHandler extends Manager {
 	 */
 	public void refineColumnsFromCapabilities(SearchEntity searchEntity) {
 
-		List<Column> columns = searchEntity.getColumns();
+		List<Column> columns = searchEntity.getTraits(Column.class);
 		info("Filtering " + columns.size() + " columns");
 		columns = columns.stream()
 				.filter(this::traitCapabilitiesMet)
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + columns.size() + " columns");
-		searchEntity.setColumns(columns);
+		searchEntity.setTraits(Column.class, columns);
 	}
 
 	/**
 	 * @param searchEntity
 	 */
 	public void refineSortsFromCapabilities(SearchEntity searchEntity) {
-		List<Sort> sorts = searchEntity.getSorts();
+		List<Sort> sorts = searchEntity.getTraits(Sort.class);
 		info("Filtering " + sorts.size() + " sorts");
 
 		sorts = sorts.stream()
 				.filter(this::traitCapabilitiesMet)
 				.collect(Collectors.toList());
 		info("Filtered down to " + sorts.size() + " sorts");
-		searchEntity.setSorts(sorts);
+		searchEntity.setTraits(Sort.class, sorts);
 	}
 
 	/**
@@ -79,7 +79,7 @@ public class CapHandler extends Manager {
 	 */
 	public void refineActionsFromCapabilities(SearchEntity searchEntity) {
 
-		List<Action> actions = searchEntity.getActions();
+		List<Action> actions = searchEntity.getTraits(Action.class);
 		info("Filtering " + actions.size() + " actions");
 
 		actions = actions.stream()
@@ -87,7 +87,7 @@ public class CapHandler extends Manager {
 				.collect(Collectors.toList());
 
 		info("Filtered down to " + actions.size() + " actions");
-		searchEntity.setActions(actions);
+		searchEntity.setTraits(Action.class, actions);
 	}
 
 	/**
@@ -106,16 +106,13 @@ public class CapHandler extends Manager {
 		boolean isService = hasSecureToken(userToken);
 		if(!isService) {
 			// TODO: Move this call
-			ReqConfig reqConfig = capMan.getUserCapabilities();
+			CapabilitySet userCapabilities = capMan.getUserCapabilities();
 			getLogger().info("Checking: " + trait);
 			getLogger().info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
-			return trait.requirementsMet(reqConfig); //traitCapabilitiesMet(reqConfig, trait);
+			return trait.requirementsMet(userCapabilities);
 		}
 		// TODO: implement capabilities
 		return true;
-	}
-	public static boolean traitCapabilitiesMet(ReqConfig reqs, Trait trait) {
-		return trait.requirementsMet(reqs);
 	}
 
 	public static boolean hasSecureToken(UserToken userToken) {

@@ -1,5 +1,10 @@
 package life.genny.gadaq.inference;
 
+import java.lang.NullPointerException;
+
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.models.UserToken;
@@ -76,4 +81,70 @@ then
 	Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_NAME", name);
 	a.setProcessId(answer.getProcessId());
 	insert(a);
+end
+
+rule InferAddress 
+when
+	answer: Answer( attributeCode == "PRI_ADDRESS_FULL" )
+	beUtils : BaseEntityUtils()
+	userToken : UserToken()
+	qwandaUtils : QwandaUtils()
+	jsonb : Jsonb()
+then
+	System.out.println("InferAddress fired!");
+
+	JsonObject json = null;
+	try {
+		json = jsonb.fromJson(answer.getValue(), JsonObject.class);
+	} catch (Exception e) {
+		return;
+	}
+
+	String processId = answer.getProcessId();
+
+
+	try {
+		String country = json.getString("country");
+		Answer a = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_COUNTRY", country);
+		a.setProcessId(answer.getProcessId());
+		insert(a);
+	} catch (NullPointerException e) {
+		e.printStackTrace();
+	}
+	 
+	try {
+		String suburb = json.getString("suburb");
+		Answer b = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_SUBURB", suburb);
+		b.setProcessId(answer.getProcessId());
+		insert(b);
+	} catch (NullPointerException e) {
+		e.printStackTrace();
+	}
+
+	try {
+		String state = json.getString("state");
+		Answer c = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_STATE", state);
+		c.setProcessId(answer.getProcessId());
+		insert(c);
+	} catch (NullPointerException e) {
+		e.printStackTrace();
+	}
+
+	try {
+		Double latitude = json.getJsonNumber("latitude").doubleValue();
+		Answer d = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_LATITUDE", latitude);
+		d.setProcessId(answer.getProcessId());
+		insert(d);
+	} catch (NullPointerException e) {
+		e.printStackTrace();
+	}
+
+	try {
+		Double longitude = json.getJsonNumber("longitude").doubleValue();
+		Answer e = new Answer(answer.getSourceCode(), answer.getTargetCode(), "PRI_ADDRESS_LONGITUDE", longitude);
+		e.setProcessId(answer.getProcessId());
+		insert(e);
+	} catch (NullPointerException e) {
+		e.printStackTrace();
+	}
 end

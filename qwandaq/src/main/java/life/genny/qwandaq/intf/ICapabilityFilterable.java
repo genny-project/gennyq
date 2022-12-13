@@ -8,7 +8,10 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+import life.genny.qwandaq.utils.CommonUtils;
 
 public interface ICapabilityFilterable {
 
@@ -16,7 +19,6 @@ public interface ICapabilityFilterable {
         return Logger.getLogger(ICapabilityFilterable.class);
     }
     
-    // Please please PLEASE! Do not send these out
     public Set<Capability> getCapabilityRequirements();
 
     public default void setCapabilityRequirements(Capability... requirements) {
@@ -25,37 +27,51 @@ public interface ICapabilityFilterable {
 
     public void setCapabilityRequirements(Set<Capability> requirements);
 
-    public default boolean requirementsMet(ReqConfig requirementsConfig) {
-        return requirementsMetImpl(getCapabilityRequirements(), requirementsConfig);
+    public default boolean requirementsMet(CapabilitySet userCapabilities) {
+        return requirementsMet(userCapabilities, new ReqConfig());
     }
 
-    public static boolean requirementsMetImpl(Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
-        Set<Capability> checkCaps = capabilityRequirements;
+    public default boolean requirementsMet(CapabilitySet userCapabilities, ReqConfig requirementsConfig) {
+        return requirementsMetImpl(userCapabilities, getCapabilityRequirements(), requirementsConfig);
+    }
 
-        if(checkCaps == null || checkCaps.isEmpty()) {
-            getLogger().info("No capabilityRequirements found!");
+    public static boolean requirementsMetImpl(CapabilitySet userCapabilities, Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
+        if(capabilityRequirements == null || capabilityRequirements.isEmpty()) {
+            getLogger().debug("No capabilityRequirements found!");
             return true;
         }
 
-        Set<Capability> userCapabilities = requirementsConfig.getUserCaps();
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
-        boolean requiresAllModes = requirementsConfig.needsAllModes();
+        boolean requiresAllModes = requirementsConfig.needsAllNodes();
 
-        getLogger().info("Testing Capability Config: { AllCaps: " + requiresAllCaps + ", AllModes: " + requiresAllModes + "}");
+        getLogger().debug("Testing Capability Config: " + requirementsConfig);
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks
-        for(Capability reqCap : checkCaps) {
+        for(Capability reqCap : capabilityRequirements) {
             Optional<Capability> optCap = userCapabilities.parallelStream()
                 .filter(cap -> cap.code.equals(reqCap.code)).findFirst();
             if(!optCap.isPresent()) {
                 getLogger().warn("Could not find cap in user caps: " + reqCap.code);
                 return false;
             }
+
             // a set of user capabilities should only have 1 entry per capability code
-            if(!optCap.get().checkPerms(requiresAllModes, reqCap)) {
+            Capability cap = optCap.get();
+
+            boolean passesCheck = requirementsConfig.checkCapability(cap.nodes, 
+                reqCap.nodes.toArray(new CapabilityNode[0]));
+            
+            // negate test
+            // if reqCap has negate we have success if passesCheck is false
+            // if reqCap doesn't have negate, then false (don't check pass)
+            
+
+            if(!passesCheck) {
                 if(requiresAllCaps) {
-                    getLogger().warn("Missing cap permissions " + (requiresAllModes ? "allNodes " : "") + reqCap);
+                    getLogger().warn("Missing cap permissions " + reqCap);
+                    getLogger().info("User perms: " + cap);
+                    getLogger().info("ReqConfig: " + requirementsConfig);
                     return false;
                 }
             } else {

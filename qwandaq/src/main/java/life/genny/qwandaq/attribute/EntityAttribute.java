@@ -1,7 +1,11 @@
 package life.genny.qwandaq.attribute;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -41,6 +45,13 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.quarkus.arc.Arc;
+import life.genny.qwandaq.constants.QwandaQConstant;
+import life.genny.qwandaq.converter.MinIOConverter;
+import life.genny.qwandaq.dto.FileUpload;
+import life.genny.qwandaq.handler.AttributeMinIOHandler;
+import life.genny.qwandaq.utils.ConfigUtils;
+import life.genny.qwandaq.utils.MinIOUtils;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -161,8 +172,8 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	/**
 	 * Store the String value of the attribute for the baseEntity
 	 */
-	@Type(type = "text")
-	@Column
+	@Column(columnDefinition = "TEXT")
+	@Convert(converter = MinIOConverter.class)
 	private String valueString;
 
 	@Column(name = "money", length = 128)
@@ -616,6 +627,11 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 
 	@PreUpdate
 	public void autocreateUpdate() {
+
+		if (getValueString() != null) {
+            this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
+		}
+
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
@@ -623,6 +639,11 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
+
+		if (getValueString() != null) {
+			this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
+		}
+
 	}
 
 	/**
