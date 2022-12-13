@@ -90,7 +90,6 @@ public class Dispatch {
 		PCM pcm = beUtils.getPCM(processData.getPcmCode());
 		// ensure target codes match
 		pcm.setTargetCode(targetCode);
-
 		QBulkMessage msg = new QBulkMessage();
 
 		// check for a provided question code
@@ -145,12 +144,11 @@ public class Dispatch {
 	 * @return
 	 */
 	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks) {
-
 		for (Ask ask : flatMapOfAsks.values()) {
-			if (!ask.getReadonly())
+			if (!ask.getReadonly()) {
 				return true;
+			}
 		}
-
 		return false;
 	}
 
@@ -169,6 +167,9 @@ public class Dispatch {
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		String code = processEntity.getCode();
 		String processId = processData.getProcessId();
+
+		log.info("Target will be: " + code);
+
 		// TODO: This should be done with the flat map, but it was causing issues
 		for (Ask ask : asks) {
 			qwandaUtils.recursivelySetInformation(ask, processId, code);
@@ -265,12 +266,12 @@ public class Dispatch {
 
 		// check for a question code
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
-		if (!Question.QUE_EVENTS.equals(questionCode)) {
+		if (questionCode == null) {
+			log.warn("Question Code is null for " + pcm.getCode());
+		} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 			// add ask to bulk message
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
 			msg.add(ask);
-		} else if (questionCode == null) {
-			log.warn("Question Code is null for " + pcm.getCode());
 		}
 	}
 

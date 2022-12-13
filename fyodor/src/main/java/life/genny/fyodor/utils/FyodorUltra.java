@@ -150,7 +150,7 @@ public class FyodorUltra {
 			ctxMap.put("USER_CODE", beUtils.getUserBaseEntity().getCode());
 			List<ClauseContainer> filters = searchEntity.getClauseContainers();
 			filters.stream()
-				.filter(f -> f.getFilter().getC() == String.class)
+				.filter(f -> f.getFilter() != null && f.getFilter().getC() == String.class)
 				.forEach(f -> {
 					log.info("Attempting to merge on " + f.getFilter().getValue());
 					// TODO: Make MergeUtils better
