@@ -112,6 +112,7 @@ public class ProcessAnswers {
 	public void saveAllAnswers(ProcessData processData) {
 		// save answers
 		String targetCode = processData.getTargetCode();
+		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		qwandaUtils.saveAnswers(processData.getAnswers(), target);
 		// send target to FE
