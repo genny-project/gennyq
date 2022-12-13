@@ -180,8 +180,7 @@ public class InternalConsumer {
 		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
 		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
 
-		if (searchEntity == null)
-		throw new ItemNotFoundException(key);
+		if (searchEntity == null) throw new ItemNotFoundException(key);
 
 		// Filter by name wildcard provided by user
 		searchEntity.add(new Or(
@@ -192,10 +191,8 @@ public class InternalConsumer {
 
 		// init context map
 		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
-		if (source != null)
-		ctxMap.put("SOURCE", source);
-		if (target != null)
-		ctxMap.put("TARGET", target);
+		if (source != null) ctxMap.put("SOURCE", source);
+		if (target != null) ctxMap.put("TARGET", target);
 
 		searchEntity.setRealm(userToken.getProductCode());
 		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
