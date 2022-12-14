@@ -97,7 +97,6 @@ public class TaskService {
 		if (pcmCode == null) {
 			throw new NullParameterException("pcmCode");
 		}
-
 		// defaults
 		if (parent == null) {
 			parent = PCM.PCM_CONTENT;
@@ -168,18 +167,18 @@ public class TaskService {
 			qwandaUtils.storeProcessData(processData);
 			// only cache for non-readonly invocation
 			qwandaUtils.cacheAsks(processData, asks);
-
-			// handle initial dropdown selections
-			// TODO: change to use flatMap
-			for (Ask ask : asks) {
-				dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), processEntity, msg);
-			}
+			// ProcessEntity essentially becomes our target
+			target = processEntity;
 		} else {
 			msg.add(target);
 		}
-
+		// handle initial dropdown selections
+		// TODO: change to use flatMap
+		for (Ask ask : asks) {
+			dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), target, msg);
+		}
+		// send asks and BEs
 		dispatch.sendData(msg);
-
 		// send searches
 		for (String code : processData.getSearches()) {
 			log.debug("Sending search: " + code);

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -361,13 +362,22 @@ public class Dispatch {
 	}
 
 	/**
+	 * Collect the already selected entities for a dropdown
+	 * and add them to the bulk message.
+	 *
 	 * @param codes
 	 * @param msg
 	 */
 	public void collectSelections(List<String> codes, QBulkMessage msg) {
-
+		// we don't want to overwrite if the entity is already being sent
+		Set<String> existing = msg.getEntities().stream()
+				.map(e -> e.getCode())
+				.collect(Collectors.toSet());
 		// fetch entity for each and add to msg
 		for (String code : codes) {
+			if (existing.contains(code)) {
+				continue;
+			}
 			BaseEntity be = beUtils.getBaseEntity(code);
 			msg.add(be);
 		}
