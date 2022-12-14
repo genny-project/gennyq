@@ -757,7 +757,6 @@ public class QwandaUtils {
 			}
 			// update target in the cache and DB
 			beUtils.updateBaseEntity(target);
-			targets.add(target);
 		}
 
 		return targetMap.values().stream().collect(Collectors.toSet());
