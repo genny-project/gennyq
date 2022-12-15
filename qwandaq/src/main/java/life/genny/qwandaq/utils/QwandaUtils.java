@@ -676,6 +676,12 @@ public class QwandaUtils {
 	 * @return The updated BaseEntity
 	 */
 	public BaseEntity saveAnswer(Answer answer, BaseEntity target) {
+		if (answer == null) {
+			throw new NullParameterException("answer");
+		}
+		if (target == null) {
+			throw new NullParameterException("target");
+		}
 		return saveAnswers(Collections.singleton(answer), target);
 	}
 
@@ -718,6 +724,12 @@ public class QwandaUtils {
 	 * @return The target BaseEntitys
 	 */
 	public Set<BaseEntity> saveAnswers(Collection<Answer> answers, Collection<BaseEntity> targets) {
+		if (answers == null) {
+			throw new NullParameterException("answers");
+		}
+		if (targets == null) {
+			throw new NullParameterException("targets");
+		}
 		// build map of targets
 		Map<String, BaseEntity> targetMap = targets.stream()
 				.collect(Collectors.toMap(BaseEntity::getCode, Function.identity(), (prev, next) -> next, HashMap::new));
