@@ -1,11 +1,10 @@
 package life.genny.qwandaq.serialization.userstore;
 
-import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.entity.UserStore;
+
 import org.infinispan.protostream.MessageMarshaller;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 public class UserStoreMessageMarshaller implements MessageMarshaller<UserStore> {
 
