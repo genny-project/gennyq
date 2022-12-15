@@ -1,9 +1,11 @@
 package life.genny.qwandaq.serialization.userstore;
 
+import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDateTime;
 
@@ -24,10 +26,10 @@ public class UserStore implements CoreEntitySerializable {
 	private String jtiAccess;
 
 	@ProtoField(4)
-	private LocalDateTime lastActive;
+	private long lastActive;
 
 	@ProtoFactory
-	public UserStore(String realm, String usercode, String jtiAccess, LocalDateTime lastActive) {
+	public UserStore(String realm, String usercode, String jtiAccess, long lastActive) {
 		super();
 		this.realm = realm;
 		this.usercode = usercode;
@@ -62,17 +64,16 @@ public class UserStore implements CoreEntitySerializable {
 		this.jtiAccess = jtiAccess;
 	}
 
-	public LocalDateTime getLastActive() {
+	public long getLastActive() {
 		return lastActive;
 	}
 
-	public void setLastActive(LocalDateTime lastActive) {
+	public void setLastActive(long lastActive) {
 		this.lastActive = lastActive;
 	}
 
 	@Override
 	public CoreEntityPersistable toPersistableCoreEntity() {
-		throw new UnsupportedOperationException();
+		return new life.genny.qwandaq.entity.UserStore(realm,usercode,jtiAccess,lastActive);
 	}
-
 }

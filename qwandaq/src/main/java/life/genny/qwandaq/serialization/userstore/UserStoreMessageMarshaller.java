@@ -25,10 +25,7 @@ public class UserStoreMessageMarshaller implements MessageMarshaller<UserStore> 
 		userStore.setRealm(reader.readString("realm"));
 		userStore.setUsercode(reader.readString("usercode"));
 		userStore.setJtiAccess(reader.readString("jti_access"));
-		Long lastActiveLong = reader.readLong("last_active");
-		if (lastActiveLong != null) {
-			userStore.setLastActive(LocalDateTime.ofEpochSecond(lastActiveLong / 1000, 0, ZoneOffset.UTC));
-		}
+		userStore.setLastActive(reader.readLong("last_active"));
 		return userStore;
 	}
 
@@ -37,9 +34,7 @@ public class UserStoreMessageMarshaller implements MessageMarshaller<UserStore> 
 		writer.writeString("realm", userStore.getRealm());
 		writer.writeString("usercode", userStore.getUsercode());
 		writer.writeString("jti_access", userStore.getJtiAccess());
-		LocalDateTime lastActive = userStore.getLastActive();
-		Long lastActiveLong = lastActive != null ? lastActive.toEpochSecond(ZoneOffset.UTC)*1000 : null;
-		writer.writeLong("last_active", lastActiveLong);
+		writer.writeLong("last_active", userStore.getLastActive());
 	}
 
 }
