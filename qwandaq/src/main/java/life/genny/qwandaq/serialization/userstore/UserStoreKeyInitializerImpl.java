@@ -12,7 +12,7 @@ public class UserStoreKeyInitializerImpl implements SerializationContextInitiali
 
 	@Override
 	public String getProtoFileName() {
-		return "userstore-persistence.proto";
+		return "userstore_key.proto";
 	}
 
 	@Override
