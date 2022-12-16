@@ -4,6 +4,7 @@ import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 /*
@@ -20,6 +21,16 @@ public class UserStore extends CodedEntity implements CoreEntityPersistable {
     private String jtiAccess;
 
     private long lastActive;
+
+    public UserStore(String realm, String usercode, String jtiAccess) {
+        super();
+        this.realm = realm;
+        this.usercode = usercode;
+        this.jtiAccess = jtiAccess;
+        this.lastActive = Instant.now().getEpochSecond();
+        this.setCode(realm + "-" + this.usercode);
+        this.setName(realm + "-" + this.usercode);
+    }
 
     public UserStore(String realm, String usercode, String jtiAccess, long lastActive) {
         super();

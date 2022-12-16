@@ -7,6 +7,7 @@ import org.infinispan.protostream.annotations.ProtoFactory;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 /*
@@ -27,6 +28,15 @@ public class UserStore implements CoreEntitySerializable {
 
 	@ProtoField(4)
 	private long lastActive;
+
+	@ProtoFactory
+	public UserStore(String realm, String usercode, String jtiAccess) {
+		super();
+		this.realm = realm;
+		this.usercode = usercode;
+		this.jtiAccess = jtiAccess;
+		this.lastActive = Instant.now().getEpochSecond();
+	}
 
 	@ProtoFactory
 	public UserStore(String realm, String usercode, String jtiAccess, long lastActive) {
@@ -74,6 +84,6 @@ public class UserStore implements CoreEntitySerializable {
 
 	@Override
 	public CoreEntityPersistable toPersistableCoreEntity() {
-		return new life.genny.qwandaq.entity.UserStore(realm,usercode,jtiAccess,lastActive);
+		return new life.genny.qwandaq.entity.UserStore(realm,usercode,jtiAccess);
 	}
 }
