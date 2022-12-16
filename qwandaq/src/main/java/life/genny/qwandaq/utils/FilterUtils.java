@@ -16,6 +16,8 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.search.trait.*;
 import life.genny.qwandaq.models.SavedSearch;
 import org.jboss.logging.Logger;
@@ -134,7 +136,7 @@ public class FilterUtils {
         BaseEntity source = beUtils.getBaseEntity(sourceCode);
         BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
-        Ask ask = qwandaUtils.generateAskFromQuestionCode(Question.QUE_ADD_FILTER_SBE_GRP, source, target);
+        Ask ask = qwandaUtils.generateAskFromQuestionCode(Question.QUE_ADD_FILTER_SBE_GRP, source, target, new CapabilitySet(target), new ReqConfig());
         ask.getChildAsks().stream().forEach(e -> {
             if (e.getQuestionCode().equalsIgnoreCase(Question.QUE_FILTER_COLUMN)
                     || e.getQuestionCode().equalsIgnoreCase(Question.QUE_FILTER_OPTION)
@@ -149,7 +151,7 @@ public class FilterUtils {
             e.setTargetCode(sourceCode);
         });
 
-        Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(Question.QUE_SUBMIT, source, target);
+        Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(Question.QUE_SUBMIT, source, target, new CapabilitySet(target), new ReqConfig());
 
         ask.setTargetCode(sourceCode);
         ask.add(askSubmit);

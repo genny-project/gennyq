@@ -29,6 +29,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
@@ -98,7 +99,7 @@ public class Dispatch {
 		if (questionCode != null) {
 			// fetch question from DB
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
 		// generate events if specified
@@ -224,6 +225,7 @@ public class Dispatch {
 			QBulkMessage msg, ProcessData processData) {
 		// check capability requirements are met
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
+		log.info("userCaps = " + userCapabilities);
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
@@ -271,7 +273,7 @@ public class Dispatch {
 			log.warn("Question Code is null for " + pcm.getCode());
 		} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 			// add ask to bulk message
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
 	}
