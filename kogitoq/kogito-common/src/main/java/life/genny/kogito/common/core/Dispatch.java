@@ -223,9 +223,9 @@ public class Dispatch {
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 		// check capability requirements are met
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
 		if (!pcm.requirementsMet(userCapabilities)) {
-			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
+			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
 		log.debug("Traversing " + pcm.getCode());
