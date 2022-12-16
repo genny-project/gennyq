@@ -296,7 +296,7 @@ public class Dispatch {
 
 		// split events string by comma
 		for (String name : buttonEvents.split(",")) {
-			String code = name.toUpperCase();
+			String code = name.toUpperCase().replaceAll(" ", "_");
 			// create child and add to ask
 			Attribute attribute = qwandaUtils.createButtonEvent(code, name);
 			Question question = new Question(Prefix.QUE + code, name, attribute);
