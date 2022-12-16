@@ -140,8 +140,10 @@ public class TaskService {
 		qwandaUtils.storeProcessData(processData);
 
 		// TODO: Not every task has a userCode
-		if (!sourceCode.equals(userCode))
+		if (!sourceCode.equals(userCode)) {
+			log.info("Task on hold: User is not source");
 			return processData;
+		}
 
 		// build data
 		QBulkMessage msg = dispatch.build(processData);

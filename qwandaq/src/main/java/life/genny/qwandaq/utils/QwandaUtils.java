@@ -399,11 +399,15 @@ public class QwandaUtils {
 	 * @return boolean
 	 */
 	public static boolean attributeCodeMeetsBasicRequirements(String code) {
-
-		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4)))
+		if (code == null) {
+			throw new NullParameterException("code");
+		}
+		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
 			return false;
-		else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code))
+		}
+		if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			return false;
+		}
 
 		return true;
 	}
@@ -490,6 +494,9 @@ public class QwandaUtils {
 		for (Ask ask : map.values()) {
 
 			String attributeCode = ask.getQuestion().getAttribute().getCode();
+			if (!attributeCodeMeetsBasicRequirements(attributeCode)) {
+				continue;
+			}
 
 			Boolean mandatory = ask.getMandatory();
 			Boolean readonly = ask.getReadonly();
