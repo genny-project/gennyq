@@ -133,16 +133,19 @@ public class DefUtils {
 		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
 		// if no defs specified, go by prefix
-		if (codes.isEmpty()) {
+		if ((codes == null) || codes.isEmpty()) {
 			String prefix = entity.getCode().substring(0, 3);
 			SearchEntity prefixSearch = new SearchEntity(SBE_DEFINITION_PREFIX, "Definition Prefix Search")
 					.add(new Filter(Attribute.PRI_PREFIX, Operator.EQUALS, prefix))
 					.setAllColumns(true)
-					.setPageSize(1);
+					.setPageSize(1)
+					.setRealm(userToken.getProductCode());
 
 			List<BaseEntity> results = searchUtils.searchBaseEntitys(prefixSearch);
-			if (results.isEmpty())
+			if (results == null || results.isEmpty())
 				throw new DefinitionException("No definition with prefix: " + prefix);
+
+			return Definition.from(results.get(0));
 		}
 
 		// fetch DEF if no merging is needed
@@ -194,8 +197,8 @@ public class DefUtils {
 	 * A function to determine the whether or not an attribute is allowed to be
 	 * saved to a {@link BaseEntity}
 	 *
-	 * @param definition  the defBE to check with
-	 * @param answer the answer to check
+	 * @param definition the defBE to check with
+	 * @param answer     the answer to check
 	 * @return Boolean
 	 */
 	public Boolean answerValidForDEF(Definition definition, Answer answer) {
@@ -211,8 +214,8 @@ public class DefUtils {
 		// allow if it is Capability saved to a Role
 		if (targetCode.startsWith(Prefix.ROL) && attributeCode.startsWith(Prefix.PRM)) {
 			return true;
-		} else if (targetCode.startsWith(Prefix.SBE) && (attributeCode.startsWith(Prefix.COL) 
-						|| attributeCode.startsWith(Prefix.SRT) || attributeCode.startsWith(Prefix.ACT))) {
+		} else if (targetCode.startsWith(Prefix.SBE) && (attributeCode.startsWith(Prefix.COL)
+				|| attributeCode.startsWith(Prefix.SRT) || attributeCode.startsWith(Prefix.ACT))) {
 			return true;
 		}
 
