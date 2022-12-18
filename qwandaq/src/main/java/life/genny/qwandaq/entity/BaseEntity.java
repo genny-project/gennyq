@@ -119,11 +119,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 
 	private static final String DEFAULT_CODE_PREFIX = "BAS_";
 
-	public static final String PRI_NAME = "PRI_NAME";
-	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
-	public static final String PRI_PHONE = "PRI_PHONE";
-	public static final String PRI_ADDRESS_FULL = "PRI_ADDRESS_FULL";
-	public static final String PRI_EMAIL = "PRI_EMAIL";
+	public static final String PER_TARGET = "PER_TARGET";
+	public static final String PER_SOURCE = "PER_SOURCE";
 
 	@XmlTransient
 	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)

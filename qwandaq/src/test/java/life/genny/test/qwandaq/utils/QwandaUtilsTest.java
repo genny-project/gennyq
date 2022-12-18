@@ -1,6 +1,13 @@
 package life.genny.test.qwandaq.utils;
 
+import static life.genny.qwandaq.entity.BaseEntity.PER_TARGET;
+import static life.genny.qwandaq.entity.Definition.DEF_PERSON;
+import static org.mockito.ArgumentMatchers.any;
+import static life.genny.qwandaq.attribute.Attribute.LNK_DEF;
+import static life.genny.qwandaq.entity.BaseEntity.PER_SOURCE;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -21,15 +28,14 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 @QuarkusTest
 public class QwandaUtilsTest extends BaseTestCase {
-
-	private static String PER_SOURCE = "PER_SOURCE";
-	private static String PER_TARGET = "PER_TARGET";
 
 	private static Attribute QQQ_QUESTION_GRP = new Attribute(Attribute.QQQ_QUESTION_GROUP, "Question Group",
 			new DataType(String.class));
@@ -41,22 +47,31 @@ public class QwandaUtilsTest extends BaseTestCase {
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	@BeforeAll
-	public static void setup() {
-		BaseEntityUtils beUtilsMock = Mockito.mock(BaseEntityUtils.class);
-		Mockito.when(beUtilsMock.getBaseEntity(PER_TARGET)).thenReturn(new BaseEntity(PER_TARGET, "Target"));
-		QuarkusMock.installMockForType(beUtilsMock, BaseEntityUtils.class);
-
-		QwandaUtils qwandaUtilsMock = Mockito.mock(QwandaUtils.class);
-		QuarkusMock.installMockForType(qwandaUtilsMock, QwandaUtils.class);
-	}
-
 	@Test
 	public void testSaveAnswers() {
 
+		// mock BaseEntityUtils
+		BaseEntityUtils beUtilsMock = Mockito.mock(BaseEntityUtils.class);
+
+		// mock get target entity
+		BaseEntity target = new BaseEntity(PER_TARGET, "Target");
+		Mockito.when(beUtilsMock.getBaseEntity(PER_TARGET)).thenReturn(target);
+
+		// mock getting entity def codes
+		Mockito.when(beUtilsMock.getBaseEntityCodeArrayFromLinkAttribute(target, LNK_DEF)).thenReturn(Arrays.asList(DEF_PERSON));
+
+		// mock get def
+		Definition defPerson = new Definition(DEF_PERSON, "Person");
+		defPerson.addAttribute(new Attribute("ATT_PRI_FIRSTNAME", "FirstName", new DataType(Boolean.class)), 1.0, false);
+		Mockito.when(beUtilsMock.getDefinition(DEF_PERSON)).thenReturn(defPerson);
+
+		// install mock
+		QuarkusMock.installMockForType(beUtilsMock, BaseEntityUtils.class);
+
 		Answer a = new Answer(PER_SOURCE, PER_TARGET, Attribute.PRI_FIRSTNAME, "Boris");
-		System.out.println("Asserting");
-		Assertions.assertDoesNotThrow(() -> qwandaUtils.saveAnswer(a));
+		// Assertions.assertDoesNotThrow(() -> qwandaUtils.saveAnswer(a));
+		Answer b = new Answer(PER_SOURCE, PER_TARGET, Attribute.PRI_CREATED, "NotADateTime");
+		// Assertions.assertThrows(BadDataException.class, () -> qwandaUtils.saveAnswer(b));
 	}
 
 	@Test

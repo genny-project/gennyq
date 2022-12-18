@@ -520,9 +520,11 @@ public class BaseEntityUtils {
 		if (entity.getCreated() == null) {
 			log.error("NPE for PRI_CREATED. Generating created date");
 			entity.autocreateCreated();
+			databaseUtils.saveBaseEntity(entity);
 		}
 
 		// Ensure createdDate is not null
+		log.info("CREATED = [" + entity.getCreated() + "]");
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
 
