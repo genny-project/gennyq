@@ -45,6 +45,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.exception.runtime.QwandaException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -250,6 +251,41 @@ public class QwandaUtils {
 	}
 
 	/**
+	 * Generate an ask for a question using the question code, the
+	 * source and the target. This operation is recursive if the
+	 * question is a group.
+	 *
+	 * @param code   The code of the question
+	 * @param source The source entity
+	 * @param target The target entity
+	 * @return The generated Ask
+	 */
+	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target, final CapabilitySet capSet, ReqConfig requirementsConfig) {
+
+		if (code == null)
+			throw new NullParameterException("code");
+		// don't need to check source, target since they are checked in generateAskFromQuestion
+
+		// if the code is QUE_BASEENTITY_GRP then display all the attributes
+		if (Question.QUE_BASEENTITY_GRP.equals(code)) {
+			return generateAskGroupUsingBaseEntity(target);
+		}
+
+		String productCode = userToken.getProductCode();
+		log.debug("Fetching Question: " + code);
+
+		// find the question in the database
+		Question question;
+		try {
+			question = databaseUtils.findQuestionByCode(productCode, code);
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException(code, e);
+		}
+
+		return generateAskFromQuestion(question, source, target, capSet, requirementsConfig);
+	}
+
+	/**
 	 * Generate an ask for a question, the
 	 * source and the target. This operation is recursive if the
 	 * question is a group.
@@ -259,7 +295,7 @@ public class QwandaUtils {
 	 * @param target The target entity
 	 * @return The generated Ask
 	 */
-	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final CapabilitySet target, ReqConfig requirementsConfig) {
+	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final BaseEntity target, final CapabilitySet capSet, ReqConfig requirementsConfig) {
 		if (question == null)
 			throw new NullParameterException("question");
 		if (source == null)
@@ -269,11 +305,11 @@ public class QwandaUtils {
 
 		String productCode = userToken.getProductCode();
 		// init new parent ask
-		Ask ask = new Ask(question, source.getCode(), target.getEntityCode());
+		Ask ask = new Ask(question, source.getCode(), target.getCode());
 		ask.setRealm(productCode);
 
 		if (Question.QUE_BASEENTITY_GRP.equals(question.getCode()))
-			return generateAskGroupUsingBaseEntity(target.getEntity());
+			return generateAskGroupUsingBaseEntity(target);
 
 		// override with Attribute icon if question icon is null
 		Attribute attribute = question.getAttribute();
@@ -297,10 +333,10 @@ public class QwandaUtils {
 
 				log.debug("   [-] Found Child Question:  " + questionQuestion.getSourceCode() + ":"
 						+ questionQuestion.getTargetCode());
-				if(!questionQuestion.requirementsMet(target, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
+				if(!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
 					continue;
 				}
-				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target.getEntity());
+				Ask child = generateAskFromQuestionCode(questionQuestion.getTargetCode(), source, target, capSet, requirementsConfig);
 
 				// Do not include PRI_SUBMIT
 				if (Attribute.PRI_SUBMIT.equals(child.getQuestion().getAttribute().getCode())) {
@@ -327,53 +363,6 @@ public class QwandaUtils {
 		return ask;
 	}
 
-	public Ask generateAskFromQuestion(final Question question, final BaseEntity source, final CapabilitySet target) {
-		return generateAskFromQuestion(question, source, target, null);
-	}
-
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final CapabilitySet target) {
-		return generateAskFromQuestionCode(code, source, target, new ReqConfig());
-	}
-
-	/**
-	 * Generate an ask for a question using the question code, the
-	 * source and the target. This operation is recursive if the
-	 * question is a group.
-	 *
-	 * @param code   The code of the question
-	 * @param source The source entity
-	 * @param target The target entity
-	 * @return The generated Ask
-	 */
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final CapabilitySet target, ReqConfig requirementsConfig) {
-
-		if (code == null)
-			throw new NullParameterException("code");
-		// don't need to check source, target since they are checked in generateAskFromQuestion
-
-		// if the code is QUE_BASEENTITY_GRP then display all the attributes
-		if (Question.QUE_BASEENTITY_GRP.equals(code)) {
-			return generateAskGroupUsingBaseEntity(target.getEntity());
-		}
-
-		String productCode = userToken.getProductCode();
-		log.debug("Fetching Question: " + code);
-
-		// find the question in the database
-		Question question;
-		try {
-			question = databaseUtils.findQuestionByCode(productCode, code);
-		} catch (NoResultException e) {
-			throw new ItemNotFoundException(code, e);
-		}
-
-		return generateAskFromQuestion(question, source, target, requirementsConfig);
-	}
-
-	public Ask generateAskFromQuestionCode(final String code, final BaseEntity source, final BaseEntity target) {
-		return generateAskFromQuestionCode(code, source, new CapabilitySet(target), null);
-	}
-
 	/**
 	 * Recursively set the processId and target down through an ask tree.
 	 *
@@ -398,11 +387,15 @@ public class QwandaUtils {
 	 * @return boolean
 	 */
 	public static boolean attributeCodeMeetsBasicRequirements(String code) {
-
-		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4)))
+		if (code == null) {
+			throw new NullParameterException("code");
+		}
+		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
 			return false;
-		else if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code))
+		}
+		if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
 			return false;
+		}
 
 		return true;
 	}
@@ -489,6 +482,9 @@ public class QwandaUtils {
 		for (Ask ask : map.values()) {
 
 			String attributeCode = ask.getQuestion().getAttribute().getCode();
+			if (!attributeCodeMeetsBasicRequirements(attributeCode)) {
+				continue;
+			}
 
 			Boolean mandatory = ask.getMandatory();
 			Boolean readonly = ask.getReadonly();
@@ -675,6 +671,12 @@ public class QwandaUtils {
 	 * @return The updated BaseEntity
 	 */
 	public BaseEntity saveAnswer(Answer answer, BaseEntity target) {
+		if (answer == null) {
+			throw new NullParameterException("answer");
+		}
+		if (target == null) {
+			throw new NullParameterException("target");
+		}
 		return saveAnswers(Collections.singleton(answer), target);
 	}
 
@@ -717,6 +719,12 @@ public class QwandaUtils {
 	 * @return The target BaseEntitys
 	 */
 	public Set<BaseEntity> saveAnswers(Collection<Answer> answers, Collection<BaseEntity> targets) {
+		if (answers == null) {
+			throw new NullParameterException("answers");
+		}
+		if (targets == null) {
+			throw new NullParameterException("targets");
+		}
 		// build map of targets
 		Map<String, BaseEntity> targetMap = targets.stream()
 				.collect(Collectors.toMap(BaseEntity::getCode, Function.identity(), (prev, next) -> next, HashMap::new));
@@ -728,8 +736,7 @@ public class QwandaUtils {
 			// fetch target and target DEF
 			BaseEntity target = targetMap.get(targetCode);
 			if (target == null) {
-				log.error("Target " + targetCode + " not in map");
-				continue;
+				throw new QwandaException("Target " + targetCode + " not in answer target map");
 			}
 			Definition definition = defUtils.getDEF(target);
 			// filter Non-valid answers using def
@@ -757,7 +764,6 @@ public class QwandaUtils {
 			}
 			// update target in the cache and DB
 			beUtils.updateBaseEntity(target);
-			targets.add(target);
 		}
 
 		return targetMap.values().stream().collect(Collectors.toSet());

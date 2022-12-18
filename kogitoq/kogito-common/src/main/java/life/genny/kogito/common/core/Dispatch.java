@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -28,6 +29,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
@@ -97,7 +99,7 @@ public class Dispatch {
 		if (questionCode != null) {
 			// fetch question from DB
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
 		// generate events if specified
@@ -222,9 +224,10 @@ public class Dispatch {
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 		// check capability requirements are met
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
+		log.info("userCaps = " + userCapabilities);
 		if (!pcm.requirementsMet(userCapabilities)) {
-			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
+			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
 		log.debug("Traversing " + pcm.getCode());
@@ -270,7 +273,7 @@ public class Dispatch {
 			log.warn("Question Code is null for " + pcm.getCode());
 		} else if (!Question.QUE_EVENTS.equals(questionCode)) {
 			// add ask to bulk message
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
 	}
@@ -295,7 +298,7 @@ public class Dispatch {
 
 		// split events string by comma
 		for (String name : buttonEvents.split(",")) {
-			String code = name.toUpperCase();
+			String code = name.toUpperCase().replaceAll(" ", "_");
 			// create child and add to ask
 			Attribute attribute = qwandaUtils.createButtonEvent(code, name);
 			Question question = new Question(Prefix.QUE + code, name, attribute);
@@ -361,13 +364,22 @@ public class Dispatch {
 	}
 
 	/**
+	 * Collect the already selected entities for a dropdown
+	 * and add them to the bulk message.
+	 *
 	 * @param codes
 	 * @param msg
 	 */
 	public void collectSelections(List<String> codes, QBulkMessage msg) {
-
+		// we don't want to overwrite if the entity is already being sent
+		Set<String> existing = msg.getEntities().stream()
+				.map(e -> e.getCode())
+				.collect(Collectors.toSet());
 		// fetch entity for each and add to msg
 		for (String code : codes) {
+			if (existing.contains(code)) {
+				continue;
+			}
 			BaseEntity be = beUtils.getBaseEntity(code);
 			msg.add(be);
 		}
