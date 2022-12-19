@@ -22,7 +22,6 @@ import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,10 +60,6 @@ public class BaseEntityUtils {
 
 	@Inject
 	EntityManagerFactory emf;
-
-	@Inject
-	// @PersistenceUnit("genny")
-	EntityManager entityManager;
 
 	public BaseEntityUtils() {
 	}

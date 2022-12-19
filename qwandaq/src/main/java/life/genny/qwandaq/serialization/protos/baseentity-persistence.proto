@@ -17,4 +17,5 @@ message BaseEntity {
   /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
   optional string code = 7;
   optional int32 status = 8;
+  optional string capreqs = 9;
 }

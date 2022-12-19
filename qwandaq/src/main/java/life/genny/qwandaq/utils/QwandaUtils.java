@@ -82,16 +82,6 @@ public class QwandaUtils {
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
-	@PostConstruct
-	private void init() {
-		// Attribute submit = getAttribute("EVT_SUBMIT");
-		// if (submit == null) {
-		// 	log.error("Could not find Attribute: EVT_SUBMIT");
-		// 	return;
-		// }
-		// DTT_EVENT = submit.getDataType();
-	}
-
 	/**
 	 * Cache an ask for a processId and questionCode combination.
 	 * 
@@ -222,11 +212,6 @@ public class QwandaUtils {
 						+ " attributes");
 				log.debug("Current memory usage: " + lastMemory + "MB");
 
-				for (Attribute attribute : attributeList) {
-					String key = attribute.getCode();
-					CacheUtils.putObject(productCode, key, attribute);
-					totalAttribsCached++;
-				}
 				long currentMemory = PerformanceUtils.getMemoryUsage(PerformanceUtils.MemoryMeasurement.MEGABYTES);
 				long memoryUsed = currentMemory - lastMemory;
 

@@ -28,4 +28,5 @@ message Attribute {
   optional string help = 18;
   optional string icon = 19;
   optional string placeholder = 20;
+  optional string capreqs = 21;
 }

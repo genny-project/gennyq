@@ -5,6 +5,7 @@ import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -236,6 +237,24 @@ public class CacheUtils {
 	public static List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
 		return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
 		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
+	}
+
+	/**
+	 * Fetch all attributes for a product.
+	 *
+	 * @param productCode
+	 * @return
+	 */
+	public List<Attribute> getAllAttributes(String productCode) {
+		// get attribute cache
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE);
+		// init query
+		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
+		Query<Attribute> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode + "'");
+		// perform search
+		QueryResult<Attribute> queryResult = query.execute();
+		return queryResult.list();
 	}
 
 	/**

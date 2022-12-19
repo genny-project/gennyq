@@ -57,7 +57,6 @@ public class InternalConsumer {
 
 		service.initToken();
 		service.initCache();
-		service.initAttributes();
 		service.initKafka();
 		log.info("[*] Finished Startup!");
 	}

@@ -34,5 +34,6 @@ message BaseEntityAttribute {
   optional int64 baseentity_id = 21;
   optional string icon = 22;
   optional bool confirmationFlag = 23;
+  optional string capreqs = 24;
 }
 

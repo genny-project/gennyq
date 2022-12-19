@@ -9,4 +9,5 @@ message BaseEntity {
   optional int64 updated = 6;
   optional string code = 7;
   optional int32 status = 8;
+  optional string capreqs = 9;
 }

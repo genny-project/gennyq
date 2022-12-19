@@ -66,55 +66,6 @@ public class DefUtils {
 	}
 
 	/**
-	 * Initialize the in memory DEF store
-	 *
-	 * @param productCode The product of DEFs to initialize
-	 */
-	// TODO: remove this soon
-	@Deprecated
-	public void initializeDefPrefixs(String productCode) {
-
-		SearchEntity searchEntity = new SearchEntity("SBE_DEF", "DEF check")
-				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
-				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF))
-				.setPageStart(0)
-				.setPageSize(10000);
-
-		log.info("########  PRODUCT CODE ===== " + productCode);
-		searchEntity.setRealm(productCode);
-
-		log.info("Search Entity: " + jsonb.toJson(searchEntity));
-
-		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
-
-		if (codes == null) {
-			log.error("Could not fetch DEF codes!");
-			return;
-		}
-
-		log.info("DEF code search returned " + codes.size() + " results for product " + productCode);
-		defPrefixMap.put(productCode, new ConcurrentHashMap<>());
-
-		for (String code : codes) {
-
-			if (code == null) {
-				log.error("Code is null, skipping DEF prefix");
-				continue;
-			}
-			BaseEntity def = beUtils.getBaseEntity(productCode, code);
-
-			String prefix = def.getValue(Attribute.PRI_PREFIX, null);
-			if (prefix == null) {
-				continue;
-			}
-
-			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
-			defPrefixMap.get(productCode).put(prefix, code);
-			CacheUtils.putObject(productCode, def.getCode() + ":PREFIX", prefix);
-		}
-	}
-
-	/**
 	 * Find the corresponding definition for a given {@link BaseEntity}.
 	 *
 	 * @param entity The {@link BaseEntity} to check
