@@ -11,7 +11,6 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
-import life.genny.qwandaq.utils.CommonUtils;
 
 public interface ICapabilityFilterable {
 
@@ -42,7 +41,6 @@ public interface ICapabilityFilterable {
         }
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
-        boolean requiresAllModes = requirementsConfig.needsAllNodes();
 
         getLogger().debug("Testing Capability Config: " + requirementsConfig);
 
@@ -66,7 +64,6 @@ public interface ICapabilityFilterable {
             // if reqCap has negate we have success if passesCheck is false
             // if reqCap doesn't have negate, then false (don't check pass)
             
-
             if(!passesCheck) {
                 if(requiresAllCaps) {
                     getLogger().warn("Missing cap permissions " + reqCap);
@@ -81,6 +78,13 @@ public interface ICapabilityFilterable {
         }
 
         return requiresAllCaps;
+    }
+
+    public static default boolean checkSingleRequirement(CapabilitySet userCapabilities, Capability capabilityRequirement, ReqConfig requirementsConfig) {
+        if(capabilityRequirement == null || capabilityRequirement.nodes.isEmpty()) {
+            getLogger().debug("No capabilityRequirements found!");
+            return true;
+        }
     }
 
 }

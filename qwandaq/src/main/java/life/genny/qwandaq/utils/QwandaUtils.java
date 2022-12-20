@@ -35,6 +35,9 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
@@ -268,7 +271,7 @@ public class QwandaUtils {
 
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if (Question.QUE_BASEENTITY_GRP.equals(code)) {
-			return generateAskGroupUsingBaseEntity(target);
+			return generateAskGroupUsingBaseEntity(target, capSet);
 		}
 
 		String productCode = userToken.getProductCode();
@@ -309,7 +312,7 @@ public class QwandaUtils {
 		ask.setRealm(productCode);
 
 		if (Question.QUE_BASEENTITY_GRP.equals(question.getCode()))
-			return generateAskGroupUsingBaseEntity(target);
+			return generateAskGroupUsingBaseEntity(target, capSet);
 
 		// override with Attribute icon if question icon is null
 		Attribute attribute = question.getAttribute();
@@ -785,7 +788,7 @@ public class QwandaUtils {
 	 * @param baseEntity the baseEntity to create for
 	 * @return Ask
 	 */
-	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
+	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity, CapabilitySet userCapabilities) {
 
 		// grab def entity
 		Definition definition = defUtils.getDEF(baseEntity);
@@ -794,6 +797,7 @@ public class QwandaUtils {
 		String targetCode = baseEntity.getCode();
 
 		// create GRP ask
+		// Is it better to get the name from PRI_NAME here?
 		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
 				"Edit " + targetCode + " : " + baseEntity.getName(),
@@ -805,9 +809,20 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
-		// create a child ask for every valid atribute
+		// create a child ask for every valid attribute
 		definition.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
+				.filter(ea -> ReqConfig.builder()
+				.allCaps(false)
+				.allNodes(false)
+				.cascadePermissions(false)
+				.build().checkCapability(userCapabilities, CapabilityNode.get(CapabilityMode.EDIT, PermissionMode.ALL)))
+					
+				// ea -> ea.requirementsMet(userCapabilities, ReqConfig.builder()
+				// 										.allCaps(false) // Satisfy the union of constraints
+				// 										.allNodes(false) // This is a single check for edit
+				// 										.cascadePermissions(false)
+				// 										.build()))
 				.forEach((ea) -> {
 					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
 					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);

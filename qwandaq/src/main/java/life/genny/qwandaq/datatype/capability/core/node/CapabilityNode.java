@@ -1,5 +1,8 @@
 package life.genny.qwandaq.datatype.capability.core.node;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 import javax.json.bind.annotation.JsonbTransient;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -29,6 +32,38 @@ public class CapabilityNode {
 	 * This capability's permission for the given mode
 	 */
 	public PermissionMode permMode;
+
+	/**
+	 * Cache map to reduce overhead on CapabilityNode
+	 */
+	private static final Map<CapabilityMode, EnumMap<PermissionMode, CapabilityNode>> cacheMap
+	 = new EnumMap<>(CapabilityMode.class);
+	static {
+		for(CapabilityMode cap : CapabilityMode.values()) {
+			EnumMap<PermissionMode, CapabilityNode> capMap = new EnumMap<>(PermissionMode.class);
+			for(PermissionMode perm : PermissionMode.values()) {
+				capMap.put(perm, new CapabilityNode(cap, perm, false));
+			}
+			cacheMap.put(cap, capMap);
+		}
+	}
+
+	public static CapabilityNode get(CapabilityMode capMode, PermissionMode permMode) {
+		return get(capMode, permMode, false);
+	}
+
+	public static CapabilityNode get(CapabilityMode capMode, PermissionMode permMode, boolean negate) {
+		CapabilityNode node = cacheMap.get(capMode).get(permMode);
+		
+		// paranoia over negate value
+		if(negate) {
+			CapabilityNode newNode = node.clone();
+			newNode.negate = true;
+			return newNode;
+		}
+
+		return node;
+	}
 
 	/**
 	 * Whether or not to negate this particular node or not
@@ -184,5 +219,10 @@ public class CapabilityNode {
 			.append(capMode.getIdentifier())
 			.append(permMode.getIdentifier())
 			.build();
+	}
+
+	@Override
+	public CapabilityNode clone() {
+		return new CapabilityNode(capMode, permMode, negate);
 	}
 }
