@@ -6,12 +6,10 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.HAttribute;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
@@ -42,7 +40,7 @@ public class BaseEntityAttributeUtils {
 	 */
     public BaseEntityAttribute getBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
         BaseEntityAttributeKey key = new BaseEntityAttributeKey(productCode, baseEntityCode, attributeCode);
-        return (BaseEntityAttribute) cm.getEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
+        return (BaseEntityAttribute) cm.getEntity(CacheManager.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
     }
 
     /**

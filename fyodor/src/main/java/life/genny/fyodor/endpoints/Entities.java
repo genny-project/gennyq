@@ -20,7 +20,6 @@ import org.jboss.resteasy.annotations.jaxrs.PathParam;
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
@@ -86,7 +85,7 @@ public class Entities {
 		String productCode = userToken.getProductCode();
 		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
 		log.info("$$$$$$$$$$$$$$$$     reading entity from cache..");
-		BaseEntity entity = (BaseEntity) cm.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
+		BaseEntity entity = (BaseEntity) cm.getEntity(CacheManager.CACHE_NAME_BASEENTITY, beKey);
 		if (entity != null) {
 			log.info("$$$$$$$$$$$$$$$$    entity in cache.. returning...  ");
 		} else {
@@ -94,7 +93,7 @@ public class Entities {
 			if (entity != null) {
 				// Entity found in DB but not cache. Add it to cache..
 				log.info("$$$$$$$$$$$$$$$$    entity not in cache, but in DB.. adding to cache...  ");
-				cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey, entity);
+				cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, beKey, entity);
 				log.info("$$$$$$$$$$$$$$$$    entity not in cache, but in DB.. added to cache...  ");
 			} else {
 				log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
@@ -169,7 +168,7 @@ public class Entities {
 
 		log.info("received request to create entity");
 
-		BaseEntity be = new BaseEntity("Test Entity");
+		BaseEntity be = new BaseEntity("TST_ENTITY", "Test Entity");
 
 		log.info("Created BaseEntity " + be.getCode());
 		Attribute attr = qwandaUtils.getAttribute("LNK_AUTHOR");

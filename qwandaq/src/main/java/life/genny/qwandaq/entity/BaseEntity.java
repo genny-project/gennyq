@@ -36,9 +36,7 @@ import org.jboss.logging.Logger;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlTransient;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,27 +58,6 @@ import java.util.stream.Stream;
  * @version %I%, %G%
  * @since 1.0
  */
-
-/*@XmlRootElement
-@XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
-	@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
-	"code",
-	"realm"
-	}
-))
-@Entity
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@FilterDefs({
-	@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
-		@ParamDef(name = "attributeCodes", type = "string")
-		}),
-	@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
-		@ParamDef(name = "attributeCode", type = "string")
-	})
-})
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 @RegisterForReflection
 public class BaseEntity extends CodedEntity implements ICapabilityFilterable, CoreEntityPersistable, BaseEntityIntf {
 
@@ -89,101 +66,41 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 
 	private static final Logger log = Logger.getLogger(BaseEntity.class);
 
-	private static final String DEFAULT_CODE_PREFIX = "BAS_";
-
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
 	public static final String PRI_PHONE = "PRI_PHONE";
 	public static final String PRI_ADDRESS_FULL = "PRI_ADDRESS_FULL";
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
-	@XmlTransient
-	/*@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)
-	@JsonBackReference(value = "entityAttribute")
-	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
-	@Filters({
-			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
-			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
-	})*/
 	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
 
-	/*@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
-	@JsonBackReference(value = "entityEntity")*/
-	// @Cascade({ CascadeType.MERGE, CascadeType.REMOVE })
-	/* Stores the links of BaseEntity to another BaseEntity */
 	private Set<EntityEntity> links = new LinkedHashSet<>();
 
 	@Transient
 	@JsonbTransient
 	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
-	/*
-	 * @JsonIgnore
-	 * 
-	 * @XmlTransient
-	 * 
-	 * @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
-	 * 
-	 * @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	 * 
-	 * @JsonbTransient
-	 */
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
 
-	@XmlTransient
-	@Transient
-	private Boolean fromCache = false;
-
-	@JsonIgnore
-	@JsonbTransient
-	@XmlTransient
-	@Transient
-	private transient Map<String, EntityAttribute> attributeMap = null;
-
-	/**
-	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
-	 */
-	public Map<String, EntityAttribute> getAttributeMap() {
-		return attributeMap;
-	}
-
-	/**
-	 * @param attributeMap the attributeMap to set
-	 */
-	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
-		this.attributeMap = attributeMap;
-	}
+	private Set<Capability> capabilityRequirements;
 
 	/**
 	 * Constructor.
 	 */
 	public BaseEntity() {
-		// super();
-		// dummy
-	}
-
-	/**
-	 * Constructor.
-	 *
-	 * @param aName the summary name of the core entity
-	 */
-	public BaseEntity(final String aName) {
-		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
+		super();
 	}
 
 	/**
 	 * Constructor.
 	 * 
-	 * @param aCode the unique code of the core entity
-	 * @param aName the summary name of the core entity
+	 * @param code the unique code of the core entity
+	 * @param name the summary name of the core entity
 	 */
 	@ProtoFactory
-	public BaseEntity(final String aCode, final String aName) {
-		super(aCode, aName);
+	public BaseEntity(final String code, final String name) {
+		super(code, name);
 	}
-
-	private Set<Capability> capabilityRequirements;
 
 	@JsonbTransient
 	@JsonIgnore
@@ -198,23 +115,14 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		this.capabilityRequirements = requirements;
 	}
 
-	/**
-	 * @return Set The Answers.
-	 */
 	public Set<AnswerLink> getAnswers() {
 		return answers;
 	}
 
-	/**
-	 * @param answers the answers to set
-	 */
 	public void setAnswers(final Set<AnswerLink> answers) {
 		this.answers = answers;
 	}
 
-	/**
-	 * @param answers the answers to set
-	 */
 	public void setAnswers(final List<AnswerLink> answers) {
 		this.answers.addAll(answers);
 	}
@@ -224,91 +132,48 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		return getBaseEntityAttributes(null);
 	}
 
-	/**
-	 * @return the baseEntityAttributes
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Set<EntityAttribute> getBaseEntityAttributes(ReqConfig requirementsConfig) {
-		if(requirementsConfig == null)
+		if (requirementsConfig == null) {
 			return baseEntityAttributes;
-
+		}
 		return baseEntityAttributes.stream().filter((ea) -> ea.requirementsMet(requirementsConfig))
 			.collect(Collectors.toSet());
 	}
 
-	/**
-	 * @param baseEntityAttributes the baseEntityAttributes to set
-	 */
 	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
 		this.baseEntityAttributes = baseEntityAttributes;
 	}
 
-	/**
-	 * @param baseEntityAttributes the baseEntityAttributes to set
-	 */
 	public void setBaseEntityAttributes(final List<EntityAttribute> baseEntityAttributes) {
 		this.baseEntityAttributes.addAll(baseEntityAttributes);
 	}
 
-	/**
-	 * @return the links
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	// @JsonbTransient
 	public Set<EntityEntity> getLinks() {
 		return links;
 	}
 
-	/**
-	 * Sets the Links of the BaseEntity with another BaseEntity
-	 * 
-	 * @param links the links to set
-	 */
 	public void setLinks(final Set<EntityEntity> links) {
 		this.links = links;
 	}
 
-	/**
-	 * @param links the links to set
-	 */
 	public void setLinks(final List<EntityEntity> links) {
 		this.links.addAll(links);
 	}
 
-	/**
-	 * @return the questions
-	 */
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Set<EntityQuestion> getQuestions() {
 		return this.questions;
 	}
 
-	/**
-	 * Sets the Questions of the BaseEntity with another BaseEntity
-	 * 
-	 * @param questions the questions to set
-	 */
 	public void setQuestions(final Set<EntityQuestion> questions) {
 		this.questions = questions;
 	}
 
-	/**
-	 * @param questions the questions to set
-	 */
 	@JsonbTransient
 	public void setQuestions(final List<EntityQuestion> questions) {
 		this.questions.addAll(questions);
-	}
-
-	/**
-	 * getDefaultCodePrefix This method is expected to be overridden in specialised
-	 * child classes.
-	 * 
-	 * @return the default Code prefix for this class.
-	 */
-
-	static public String getDefaultCodePrefix() {
-		return DEFAULT_CODE_PREFIX;
 	}
 
 	/**
@@ -319,10 +184,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 */
 	public boolean containsEntityAttribute(final String attributeCode) {
 		boolean ret = false;
-
-		if (attributeMap != null) {
-			return attributeMap.containsKey(attributeCode);
-		}
 		// Check if this code exists in the baseEntityAttributes
 		if (getBaseEntityAttributes().parallelStream().anyMatch(ti -> ti.getAttributeCode().equals(attributeCode))) {
 			ret = true;
@@ -339,7 +200,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 */
 	public boolean containsLink(final String linkAttributeCode) {
 		boolean ret = false;
-
 		// Check if this code exists in the baseEntityAttributes
 		if (getLinks().parallelStream().anyMatch(ti -> ti.getAttribute().getCode().equals(linkAttributeCode))) {
 			ret = true;
@@ -356,7 +216,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 */
 	public boolean containsTarget(final String targetCode, final String linkAttributeCode) {
 		boolean ret = false;
-
 		// Check if this code exists in the baseEntityAttributes
 		if (getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
 				&& (ti.getLink().getTargetCode().equals(targetCode))))) {
@@ -373,23 +232,20 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @return Optional
 	 */
 	public Optional<EntityAttribute> findEntityAttribute(final String attributeCode) {
-
-		if (attributeMap != null) {
-			return Optional.ofNullable(attributeMap.get(attributeCode));
-		}
-		Optional<EntityAttribute> foundEntity = Optional.empty();
-
-		try {
-			foundEntity = getBaseEntityAttributes().stream()
-					.filter(x -> (x.getAttributeCode().equals(attributeCode)))
-					.findFirst();
-		} catch (Exception e) {
-			log.error("Error in fetching attribute value: " + attributeCode);
-		}
-
-		return foundEntity;
+		Optional<EntityAttribute> ea = Optional.empty();
+		ea = getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().equals(attributeCode)))
+				.findFirst();
+		return ea;
 	}
 
+	/**
+	 * findEntityAttribute This returns an attributeEntity if it exists in the
+	 * baseEntity.
+	 *
+	 * @param attributePrefix
+	 * @return
+	 */
 	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
 		return findPrefixEntityAttributes(attributePrefix, null);
 	}
@@ -435,11 +291,9 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @throws BadDataException if the attribute could not be added
 	 */
 	public EntityAttribute addAttribute(final EntityAttribute ea) throws BadDataException {
-
 		if (ea == null) {
 			throw new BadDataException("missing Attribute");
 		}
-
 		return addAttribute(ea.getAttribute(), ea.getWeight(), ea.getValue());
 	}
 
@@ -453,7 +307,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @return EntityAttribute
 	 */
 	public EntityAttribute addAttribute(final Attribute attribute) throws BadDataException {
-
 		return addAttribute(attribute, 1.0);
 	}
 
@@ -468,7 +321,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @return EntityAttribute
 	 */
 	public EntityAttribute addAttribute(final Attribute attribute, final Double weight) throws BadDataException {
-
 		return addAttribute(attribute, weight, null);
 	}
 
@@ -543,7 +395,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 */
 	public Boolean removeAttribute(final String attributeCode) {
 		Boolean removed = false;
-
 		Iterator<EntityAttribute> i = this.baseEntityAttributes.iterator();
 		while (i.hasNext()) {
 			EntityAttribute ea = i.next();
@@ -553,11 +404,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 				break;
 			}
 		}
-
-		if (attributeMap != null) {
-			attributeMap.remove(attributeCode);
-		}
-
 		return removed;
 	}
 
@@ -681,54 +527,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	}
 
 	/**
-	 * Merge a BaseEntity.
-	 *
-	 * @param entity the entity to merge
-	 * @return Set
-	 */
-	@Transient
-	@XmlTransient
-	@JsonIgnore
-	@JsonbTransient
-	public Set<EntityAttribute> merge(final BaseEntity entity) {
-		final Set<EntityAttribute> changes = new HashSet<EntityAttribute>();
-
-		// go through the attributes in the entity and check if already existing , if so
-		// then check the
-		// value and override, else add new attribute
-
-		for (final EntityAttribute ea : entity.getBaseEntityAttributes()) {
-			final Attribute attribute = ea.getAttribute();
-			if (this.containsEntityAttribute(attribute.getCode())) {
-				// check for update value
-				final Object oldValue = this.getValue(attribute);
-				final Object newValue = this.getValue(ea);
-				if (newValue != null) {
-					if (!newValue.equals(oldValue)) {
-						// override the old value // TODO allow versioning
-						try {
-							this.setValue(attribute, this.getValue(ea), ea.getValueDouble());
-						} catch (BadDataException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				}
-			} else {
-				// add this new entityAttribute
-				try {
-					addAttribute(ea);
-					changes.add(ea);
-				} catch (final BadDataException e) {
-					// TODO - log error and continue
-				}
-			}
-		}
-
-		return changes;
-	}
-
-	/**
 	 * @param <T>       The Type to return
 	 * @param attribute
 	 * @return T
@@ -736,7 +534,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	private <T> T getValue(final Attribute attribute) {
 		// TODO Dumb find for attribute. needs a hashMap
 
@@ -756,7 +553,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	private <T> T getValue(final EntityAttribute ea) {
 		return ea.getValue();
 
@@ -770,7 +566,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> getValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -794,7 +589,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> getLoopValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -813,7 +607,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public String getValueAsString(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -839,7 +632,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> T getValue(final String attributeCode, T defaultValue) {
 
 		Optional<T> result = getValue(attributeCode);
@@ -862,7 +654,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> T getLoopValue(final String attributeCode, T defaultValue) {
 
 		Optional<T> result = getLoopValue(attributeCode);
@@ -881,7 +672,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public Boolean is(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -910,7 +700,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final Attribute attribute, T value, Double weight) throws BadDataException {
 
 		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attribute.getCode());
@@ -941,7 +730,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final Attribute attribute, T value) throws BadDataException {
 		return setValue(attribute, value, 0.0);
 	}
@@ -958,7 +746,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final String attributeCode, T value) throws BadDataException {
 		return setValue(attributeCode, value, 0.0);
 	}
@@ -976,7 +763,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final String attributeCode, T value, Double weight) throws BadDataException {
 		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attributeCode);
 
@@ -1068,113 +854,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 			EntityAttribute ea = optEa.get();
 			ea.setReadonly(state);
 		}
-	}
-
-	/**
-	 * @return the fromCache
-	 */
-	public Boolean getFromCache() {
-		return fromCache;
-	}
-
-	/**
-	 * @return Boolean
-	 */
-	public Boolean isFromCache() {
-		return getFromCache();
-	}
-
-	/**
-	 * @param fromCache the fromCache to set
-	 */
-	public void setFromCache(Boolean fromCache) {
-		this.fromCache = fromCache;
-	}
-
-	/**
-	 * @return String[]
-	 */
-	@Transient
-	@JsonbTransient
-	public String[] getPushCodes() {
-		return getPushCodes(new String[0]);
-	}
-
-	/**
-	 * @param initialCodes the initialCodes to set
-	 * @return String[]
-	 */
-	@Transient
-	@JsonbTransient
-	public String[] getPushCodes(String... initialCodes) {
-		// go through all the links
-		Set<String> codes = new HashSet<String>();
-		codes.addAll(new HashSet<>(Arrays.asList(initialCodes)));
-		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
-			for (EntityAttribute ea : this.baseEntityAttributes) {
-				// if (ea.getAttributeCode().startsWith("LNK_")) {
-				String value = ea.getValueString();
-				if (value != null) {
-					if (value.startsWith("[") && !value.equals("[]")) {
-						value = value.substring(2, value.length() - 2);
-					}
-					if (value.startsWith("PER") || (value.startsWith("CPY"))) {
-						codes.add(value);
-					}
-				}
-			}
-			// }
-			if (this.getCode().startsWith("PER") || (this.getCode().startsWith("CPY"))) {
-				codes.add(this.getCode());
-			}
-		}
-
-		return codes.toArray(new String[0]);
-	}
-
-	/**
-	 * @param prefix the prefix to set
-	 * @return Optional&lt;EntityAttribute&gt;
-	 */
-	@Transient
-	@JsonbTransient
-	public Optional<EntityAttribute> getHighestEA(final String prefix) {
-		// go through all the EA
-		Optional<EntityAttribute> highest = Optional.empty();
-		Double weight = -1000.0;
-
-		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
-			for (EntityAttribute ea : this.baseEntityAttributes) {
-				if (ea.getAttributeCode().startsWith(prefix)) {
-					if (ea.getWeight() > weight) {
-						highest = Optional.of(ea);
-						weight = ea.getWeight();
-					}
-
-				}
-			}
-
-		}
-
-		return highest;
-	}
-
-	/**
-	 * @param fastMode the fastMode to set
-	 */
-	@Transient
-	@JsonbTransient
-	public void setFastAttributes(Boolean fastMode) {
-		if (fastMode) {
-			attributeMap = new ConcurrentHashMap<String, EntityAttribute>();
-			// Grab all the entityAttributes and create a fast HashMap lookup
-			for (EntityAttribute ea : this.baseEntityAttributes) {
-				attributeMap.put(ea.getAttributeCode(), ea);
-			}
-		} else {
-			attributeMap = null;
-		}
-
 	}
 
 	@JsonbTransient

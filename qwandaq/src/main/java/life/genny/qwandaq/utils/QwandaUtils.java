@@ -368,7 +368,6 @@ public class QwandaUtils {
 		// find the question in the database
 		Question question;
 		try {
-			// question = databaseUtils.findQuestionByCode(productCode, code);
 			question = cm.getQuestion(productCode, code);
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);

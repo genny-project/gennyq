@@ -3,7 +3,6 @@ package life.genny.qwandaq.utils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
@@ -180,10 +179,8 @@ public class BaseEntityUtils {
 		// fetch entity attributes
 		if (bundleAttributes) {
 			Map<String, EntityAttribute> attributeMap = new HashMap<>();
-			entity.setAttributeMap(attributeMap);
 			beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
 				entity.getBaseEntityAttributes().add(bea);
-				attributeMap.put(bea.getAttributeCode(), bea);
 			});
 			log.debugf("Added %s BaseEntityAttributes to BE.", entity.getBaseEntityAttributes().size());
 		}
@@ -199,7 +196,7 @@ public class BaseEntityUtils {
 	public BaseEntity getPersistableBaseEntity(String productCode, String code) {
 		// check for entity in the cache
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(CacheManager.CACHE_NAME_BASEENTITY, key);
 		if (baseEntity == null) {
 			throw new ItemNotFoundException(productCode, code);
 		}
@@ -223,7 +220,7 @@ public class BaseEntityUtils {
 				ea.setBaseEntityCode(baseEntity.getCode());
 			}
 			if (ea.getAttribute() == null) {
-				Attribute attribute = attributeManager.getAttributeByCode(baseEntity.getRealm(), ea.getAttributeCode());
+				Attribute attribute = attributeManager.getAttribute(baseEntity.getRealm(), ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
 		}
@@ -232,7 +229,7 @@ public class BaseEntityUtils {
 		// cache.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
 
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		boolean savedSuccssfully = cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		boolean savedSuccssfully = cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntity);
 		return savedSuccssfully ? baseEntity : null;
 	}
 
@@ -649,7 +646,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
-			Attribute attribute = attributeManager.getAttributeByCode(defBE.getRealm(), attrCode);
+			Attribute attribute = attributeManager.getAttribute(defBE.getRealm(), attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -682,11 +679,11 @@ public class BaseEntityUtils {
 			}
 		}
 
-		Attribute linkDef = attributeManager.getAttributeByCode(userToken.getProductCode(), "LNK_DEF");
+		Attribute linkDef = attributeManager.getAttribute(userToken.getProductCode(), "LNK_DEF");
 		item.addAnswer(new Answer(item, item, linkDef, "[\"" + defBE.getCode() + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = attributeManager.getAttributeByCode(userToken.getProductCode(), "LNK_AUTHOR");
+		Attribute lnkAuthorAttr = attributeManager.getAttribute(userToken.getProductCode(), "LNK_AUTHOR");
 		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item);
@@ -709,10 +706,8 @@ public class BaseEntityUtils {
 			throw new NullParameterException("be");
 		if (attributeCode == null)
 			throw new NullParameterException("attributeCode");
-		// if (value == null)
-		// throw new NullParameterException("value");
 
-		Attribute attribute = attributeManager.getAttributeByCode(userToken.getProductCode(), attributeCode);
+		Attribute attribute = attributeManager.getAttribute(userToken.getProductCode(), attributeCode);
 
 		EntityAttribute ea = new EntityAttribute(1.0, value);
 		ea.setRealm(userToken.getProductCode());
@@ -738,7 +733,6 @@ public class BaseEntityUtils {
 		if (uuidEA.isEmpty()) {
 			throw new DebugException("Passed defBE is not a user def!" + defBE.getCode());
 		}
-
 		if (!StringUtils.isBlank(email)) {
 			// TODO: run a regexp check to see if the email is valid
 		}
@@ -760,18 +754,18 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_EMAIL");
+			Attribute emailAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_EMAIL");
 			item.addAnswer(new Answer(item, item, emailAttribute, email));
-			Attribute usernameAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_USERNAME");
+			Attribute usernameAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_USERNAME");
 			item.addAnswer(new Answer(item, item, usernameAttribute, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_UUID");
+		Attribute uuidAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_UUID");
 		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
 
 		// keycloak UUID
-		Attribute keycloakAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
+		Attribute keycloakAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
 		item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
 
 		return item;

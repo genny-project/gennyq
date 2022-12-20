@@ -1,11 +1,11 @@
 package life.genny.qwandaq.managers;
 
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.serialization.attribute.AttributeKey;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.attribute.AttributeKey;
 
 /**
  * A non-static utility class used for standard
@@ -17,10 +17,18 @@ import javax.inject.Inject;
 public class AttributeManager {
 
 	@Inject
+	UserToken userToken;
+
+	@Inject
 	CacheManager cm;
 
-    public Attribute getAttributeByCode(String productCode, String attributeCode) {
-        AttributeKey key = new AttributeKey(productCode, attributeCode);
-        return (Attribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
+    public Attribute getAttribute(String code) {
+		return getAttribute(userToken.getUserCode(), code);
     }
+
+    public Attribute getAttribute(String productCode, String code) {
+        AttributeKey key = new AttributeKey(productCode, code);
+        return (Attribute) cm.getPersistableEntity(CacheManager.CACHE_NAME_ATTRIBUTE, key);
+    }
+
 }

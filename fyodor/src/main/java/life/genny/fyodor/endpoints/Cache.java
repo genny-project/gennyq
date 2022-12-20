@@ -25,7 +25,6 @@ import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.Question;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -189,7 +188,7 @@ public class Cache {
 
 				BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, key);
 
-				// BaseEntity baseEntity = (BaseEntity) cm.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+				// BaseEntity baseEntity = (BaseEntity) cm.getEntity(CacheManager.CACHE_NAME_BASEENTITY,
 				// 		baseEntityKey);
 
 				if (baseEntity == null) {
@@ -280,7 +279,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+			cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY,
 					baseEntityKey, entity);
 		} else {
 			cm.writeCache(productCode, key, value);
@@ -367,7 +366,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+			cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY,
 					baseEntityKey, entity);
 		} else {
 			cm.writeCache(productCode, key, value);

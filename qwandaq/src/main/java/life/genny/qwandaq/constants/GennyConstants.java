@@ -2,10 +2,6 @@ package life.genny.qwandaq.constants;
 
 public final class GennyConstants {
 
-    public static final String CACHE_NAME_BASEENTITY = "baseentity";
-    public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
-    public static final String CACHE_NAME_ATTRIBUTE = "attribute";
-
 	public static final String PATH_TO_PROTOS = "/life/genny/qwandaq/serialization/protos/";
 
     public static final String PACKAGE_PREFIX = "life.genny";

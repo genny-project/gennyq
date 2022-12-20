@@ -14,7 +14,6 @@ import life.genny.fyodor.utils.CapHandler;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
@@ -71,7 +70,7 @@ public class CapabilitiesEndpoint {
         ICapabilityFilterable filterable = entityAttributeOpt.get();
         dbUtils.updateCapabilityRequirements(productCode, filterable, capabilityRequirements);
         BaseEntityAttributeKey key = new BaseEntityAttributeKey(productCode, baseEntityCode, attributeCode);
-        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, (EntityAttribute) filterable);
+        cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, (EntityAttribute) filterable);
         return Response.status(Status.OK).build();
     }
 
@@ -95,7 +94,7 @@ public class CapabilitiesEndpoint {
         
         dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
         BaseEntityKey key = new BaseEntityKey(productCode, baseEntityCode);
-        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, (BaseEntity) filterableQuestion);
+        cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, (BaseEntity) filterableQuestion);
         return Response.status(Status.OK).build();
     }
     
@@ -120,11 +119,11 @@ public class CapabilitiesEndpoint {
         dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
         life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = questionUtils.getSerializableBaseEntityFromQuestion((Question) filterableQuestion);
         BaseEntityKey key = new BaseEntityKey(productCode, questionCode);
-        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
+        cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
         List<BaseEntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
         baseEntityAttributes.forEach(baseEntityAttribute -> {
             BaseEntityAttributeKey beaKey = new BaseEntityAttributeKey(productCode, questionCode, baseEntityAttribute.getAttributeCode());
-            cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
+            cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
         });
         return Response.status(Status.OK).build();
     }
@@ -152,11 +151,11 @@ public class CapabilitiesEndpoint {
         life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = questionUtils.getSerializableBaseEntityFromQuestionQuestion((QuestionQuestion) filterableQuestion);
         String beCode = baseEntitySerializable.getCode();
         BaseEntityKey key = new BaseEntityKey(productCode, beCode);
-        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
+        cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
         List<BaseEntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
         baseEntityAttributes.forEach(baseEntityAttribute -> {
             BaseEntityAttributeKey beaKey = new BaseEntityAttributeKey(productCode, beCode, baseEntityAttribute.getAttributeCode());
-            cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
+            cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
         });
         return Response.status(Status.OK).build();
     }

@@ -46,12 +46,16 @@ import life.genny.qwandaq.utils.QuestionUtils;
  * 
  * @author Jasper Robison
  */
-@RegisterForReflection
 @ApplicationScoped
 public class CacheManager {
 
+    public static final String CACHE_NAME_BASEENTITY = "baseentity";
+    public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
+    public static final String CACHE_NAME_ATTRIBUTE = "attribute";
+
 	Jsonb jsonb = JsonbBuilder.create();
-	private GennyCache cache = null;
+
+	private GennyCache cache;
 
 	@Inject
 	Logger log;
@@ -246,7 +250,7 @@ public class CacheManager {
 	 */
 	public List<Attribute> getAllAttributes(String productCode) {
 		// get attribute cache
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE);
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_ATTRIBUTE);
 		// init query
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<Attribute> query = queryFactory
@@ -266,7 +270,7 @@ public class CacheManager {
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
 	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY));
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm = '" + productCode
 						+ "' and code like '" + prefix + "%'");
@@ -279,7 +283,7 @@ public class CacheManager {
 	 * @return
 	 */
 	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesUsingIckle(String ickleQuery) {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY));
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory.create(ickleQuery);
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.execute();
 		return queryResult.list();
@@ -295,7 +299,7 @@ public class CacheManager {
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
 	public List<BaseEntityAttribute> getBaseEntityAttributesForBaseEntityUsingIckle(String productCode, String baseEntityCode) {
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm = '" + productCode
@@ -307,10 +311,10 @@ public class CacheManager {
 	public void saveQuestion(Question question) {
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getSerializableBaseEntityFromQuestion(question);
 		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY, bek, baseEntity);
+		cache.putEntityIntoCache(CACHE_NAME_BASEENTITY, bek, baseEntity);
 		questionUtils.getSerializableBaseEntityAttributesFromQuestion(question).parallelStream().forEach(baseEntityAttribute -> {
 			BaseEntityAttributeKey beak = new BaseEntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
-			cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
+			cache.putEntityIntoCache(CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
 		});
 		question.getChildQuestions().parallelStream().forEach(questionQuestion -> saveQuestionQuestion(questionQuestion));
 	}
@@ -318,10 +322,10 @@ public class CacheManager {
 	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getSerializableBaseEntityFromQuestionQuestion(questionQuestion);
 		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY, bek, baseEntity);
+		cache.putEntityIntoCache(CACHE_NAME_BASEENTITY, bek, baseEntity);
 		questionUtils.getSerializableBaseEntityAttributesFromQuestionQuestion(questionQuestion).parallelStream().forEach(baseEntityAttribute -> {
 			BaseEntityAttributeKey beak = new BaseEntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
-			cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
+			cache.putEntityIntoCache(CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
 		});
 	}
 
@@ -343,7 +347,7 @@ public class CacheManager {
 	}
 
 	public List<QuestionQuestion> getQuestionQuestionByQuestionCode(String productCode, String questionCode) {
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm = '" + productCode

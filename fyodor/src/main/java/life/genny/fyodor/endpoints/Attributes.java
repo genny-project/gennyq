@@ -63,8 +63,7 @@ public class Attributes {
 		}
 
 		String productCode = userToken.getProductCode();
-		// Attribute attribute = databaseUtils.findAttributeByCode(productCode, code);
-		Attribute attribute = attributeManager.getAttributeByCode(productCode, code);
+		Attribute attribute = attributeManager.getAttribute(productCode, code);
 
 		return Response.ok(attribute).build();
 	}

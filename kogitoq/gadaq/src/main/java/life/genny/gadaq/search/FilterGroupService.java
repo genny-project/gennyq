@@ -308,7 +308,7 @@ public class FilterGroupService {
      * @return Base entity name
      */
     public String getBaseNameByCode(String baseEntityCode) {
-        return beUtils.getBaseEntityByCode(baseEntityCode).getName();
+        return beUtils.getBaseEntity(baseEntityCode).getName();
     }
 
     /**
@@ -542,7 +542,6 @@ public class FilterGroupService {
      */
     public void saveSearch(String nameOrName) {
         Map<String,SavedSearch> params = getParamsFromCache();
-        BaseEntity base = saveBaseEntity(nameOrName,params);
 
         filterService.sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP, FilterConst.QUE_SAVED_SEARCH_SELECT,
                 FilterConst.PRI_NAME,FilterConst.VALUE);
@@ -558,7 +557,7 @@ public class FilterGroupService {
 
         try {
             String prefix = FilterConst.SBE_SAVED_SEARCH + "_";
-            BaseEntity defBE = new BaseEntity(prefix);
+            BaseEntity defBE = new BaseEntity("DEF_SEARCH_ENTITY", prefix);
             defBE.setRealm(user.getProductCode());
             String baseCode = prefix + UUID.randomUUID().toString();
 
@@ -583,7 +582,7 @@ public class FilterGroupService {
 
             // create child base entities
             Attribute childAttr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
-            BaseEntity childDefBE = new BaseEntity(prefix);
+            BaseEntity childDefBE = new BaseEntity("DEF_SEARCH_ENTITY", prefix);
             childDefBE.setRealm(user.getProductCode());
             childDefBE.addAttribute(childAttr, 1.0, prefix);
 
@@ -706,7 +705,7 @@ public class FilterGroupService {
         }
 
         // send pcm  and base entities
-        BaseEntity base = new BaseEntity(targetCode);
+        BaseEntity base = new BaseEntity(targetCode, targetCode);
         filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
 
@@ -743,7 +742,7 @@ public class FilterGroupService {
         String value = "";
         try {
             // get the filter by base entity code
-            BaseEntity base = beUtils.getBaseEntityByCode(filterCode);
+            BaseEntity base = beUtils.getBaseEntity(filterCode);
             value = getValueStringByAttCode(base,LNK_SAVED_SEARCHES);
 
             result = jsonb.fromJson(value, Map.class);
@@ -836,7 +835,7 @@ public class FilterGroupService {
     public void handleSearchSelected(String queCode,String filterCode) {
         Map<String,SavedSearch>  params = getFilterParamsByBaseCode(filterCode);
 
-        BaseEntity base = new BaseEntity(queCode);
+        BaseEntity base = new BaseEntity(queCode, queCode);
         filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
@@ -851,7 +850,7 @@ public class FilterGroupService {
         String sbeCode = filterService.getSbeTableFromCache();
         filterService.handleFilter(sbeCode, params);
 
-        BaseEntity base = new BaseEntity(code);
+        BaseEntity base = new BaseEntity(code, code);
         filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
@@ -878,7 +877,7 @@ public class FilterGroupService {
     public void sendFilterDetails(String queCode,String attCode,String value) {
         Map<String,SavedSearch> params = getParamsFromCache();
 
-        BaseEntity base = new BaseEntity(queCode);
+        BaseEntity base = new BaseEntity(queCode, queCode);
         filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
     }
