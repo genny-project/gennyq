@@ -59,14 +59,6 @@ import javax.validation.constraints.Size;
 @RegisterForReflection
 public abstract class CodedEntity extends CoreEntity {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	/**
-	 * Stores logger object.
-	 */
 	private static final Logger log = Logger.getLogger(CodedEntity.class);
 
 	static public final String REGEX_CODE = "[A-Z]{3}\\_[A-Z0-9\\.\\-\\@\\_]*";
@@ -91,13 +83,8 @@ public abstract class CodedEntity extends CoreEntity {
 	@Enumerated(EnumType.ORDINAL)
 	private EEntityStatus status = EEntityStatus.ACTIVE;
 
-	/**
-	 * Constructor.
-	 */
 	protected CodedEntity() {
-		// dummy
-		// super();
-		// setIndex(0);
+		super();
 	}
 
 	/**

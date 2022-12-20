@@ -366,8 +366,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY,
-					baseEntityKey, entity);
+			cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, baseEntityKey, entity);
 		} else {
 			cm.writeCache(productCode, key, value);
 		}
