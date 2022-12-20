@@ -1,4 +1,26 @@
-package life.genny.qwandaq.utils;
+package life.genny.qwandaq.managers;
+
+import java.lang.reflect.Type;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.client.hotrod.Search;
+import org.infinispan.query.dsl.Query;
+import org.infinispan.query.dsl.QueryFactory;
+import org.infinispan.query.dsl.QueryResult;
+import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
@@ -14,51 +36,39 @@ import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
-import org.apache.commons.lang3.StringUtils;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.Search;
-import org.infinispan.query.dsl.Query;
-import org.infinispan.query.dsl.QueryFactory;
-import org.infinispan.query.dsl.QueryResult;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.reflect.Type;
-import java.util.*;
-import java.util.stream.Collectors;
+import life.genny.qwandaq.utils.BaseEntityAttributeUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.QuestionUtils;
 
 /*
- * A static utility class used for standard read and write 
+ * A utility class used for standard read and write 
  * operations to the cache.
  * 
  * @author Jasper Robison
  */
 @RegisterForReflection
 @ApplicationScoped
-public class CacheUtils {
+public class CacheManager {
 
-	static final Logger log = Logger.getLogger(CacheUtils.class);
-
-	static Jsonb jsonb = JsonbBuilder.create();
-
-	private static GennyCache cache = null;
+	Jsonb jsonb = JsonbBuilder.create();
+	private GennyCache cache = null;
 
 	@Inject
-	private QuestionUtils questionUtils;
+	Logger log;
 
 	@Inject
-	private BaseEntityUtils baseEntityUtils;
+	QuestionUtils questionUtils;
 
 	@Inject
-	private BaseEntityAttributeUtils baseEntityAttributeUtils;
+	BaseEntityUtils baseEntityUtils;
+
+	@Inject
+	BaseEntityAttributeUtils baseEntityAttributeUtils;
 
 	/**
 	 * @param gennyCache the gennyCache to set
 	 */
-	public static void init(GennyCache gennyCache) {
+	public void init(GennyCache gennyCache) {
 		cache = gennyCache;
 	}
 
@@ -67,8 +77,7 @@ public class CacheUtils {
 	*
 	* @param realm The realm of the cache to clear
 	 */
-	public static void clear(String realm) {
-
+	public void clear(String realm) {
 		cache.getRemoteCache(realm).clear();
 	}
 
@@ -79,8 +88,7 @@ public class CacheUtils {
 	 * @param key the key to read
 	 * @return Object
 	 */
-	public static Object readCache(String realm, String key) {
-
+	public Object readCache(String realm, String key) {
 		Object ret = cache.getRemoteCache(realm).get(key);
 		return ret;
 	}
@@ -94,12 +102,10 @@ public class CacheUtils {
 	 * 
 	 * @return returns the newly written value
 	 */
-	public static String writeCache(String realm, String key, String value) {
-
+	public String writeCache(String realm, String key, String value) {
 		log.debugf("realm: %s, key: %s", realm, key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
 		remoteCache.put(key, value);
-
 		return remoteCache.get(key);
 	}
 
@@ -109,8 +115,7 @@ public class CacheUtils {
 	* @param realm The realm cache to remove from.
 	* @param key The key of the entry to remove.
 	 */
-	public static void removeEntry(String realm, String key) {
-		
+	public void removeEntry(String realm, String key) {
 		cache.getRemoteCache(realm).remove(key);
 	}
 
@@ -123,16 +128,12 @@ public class CacheUtils {
 	 * @param c the Class to get as
 	 * @return T
 	 */
-	public static <T> T getObject(String realm, String key, Class<T> c) {
-
-		log.tracef("realm: %s, key: %s", realm, key);
+	public <T> T getObject(String realm, String key, Class<T> c) {
 		String data = (String) readCache(realm, key);
 		log.tracef("key: %s, value: %s", key, data);
-
 		if (StringUtils.isEmpty(data)) {
 			return null;
 		}
-
 		T object = jsonb.fromJson(data, c);
 		return object;
 	}
@@ -146,8 +147,7 @@ public class CacheUtils {
 	 * @param t the Type to get as
 	 * @return T
 	 */
-	public static <T> T getObject(String realm, String key, Type t) {
-
+	public <T> T getObject(String realm, String key, Type t) {
 		String data = (String) readCache(realm, key);
 		if (data == null) {
 			return null;
@@ -163,8 +163,7 @@ public class CacheUtils {
 	 * @param key the key to put object under
 	 * @param obj the obj to put
 	 */
-	public static void putObject(String realm, String key, Object obj) {
-
+	public void putObject(String realm, String key, Object obj) {
 		String json = jsonb.toJson(obj);
 		cache.getRemoteCache(realm).put(key, json);
 		log.tracef("Caching: [%s:%s]=%s", realm , key, obj);
@@ -177,7 +176,7 @@ public class CacheUtils {
 	* @param key The key they item is saved against
 	* @return The CoreEntity returned
 	 */
-	public static CoreEntitySerializable getEntity(String cacheName, CoreEntityKey key) {
+	public CoreEntitySerializable getEntity(String cacheName, CoreEntityKey key) {
 		return cache.getEntityFromCache(cacheName, key);
 	}
 
@@ -188,7 +187,7 @@ public class CacheUtils {
 	 * @param key The key they item is saved against
 	 * @return The CoreEntity returned
 	 */
-	public static CoreEntityPersistable getPersistableEntity(String cacheName, CoreEntityKey key) {
+	public CoreEntityPersistable getPersistableEntity(String cacheName, CoreEntityKey key) {
 		return cache.getPersistableEntityFromCache(cacheName, key);
 	}
 
@@ -200,7 +199,7 @@ public class CacheUtils {
 	* @param entity The CoreEntity to save
 	* @return The CoreEntity being saved
 	 */
-	public static boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntityPersistable entity) {
+	public boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntityPersistable entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 
@@ -213,7 +212,7 @@ public class CacheUtils {
 	 * 
 	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
 	 */
-	static List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
+	public List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
 		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
 		.entrySet().stream().map((Map.Entry<String, String> entry) -> {
 			String key = entry.getKey();
@@ -232,9 +231,9 @@ public class CacheUtils {
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
 	 * 
-	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
+	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public static List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
+	public List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
 		return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
 		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
 	}
@@ -259,13 +258,14 @@ public class CacheUtils {
 
 	/**
 	 * Get a list of {@link BaseEntity}s to from cache by prefix.
+	 *
 	 * @param productCode - Product Code to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
 	 *
-	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
+	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public static List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
+	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm = '" + productCode
@@ -274,9 +274,12 @@ public class CacheUtils {
 		return queryResult.list();
 	}
 
-	public static List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesUsingIckle(String ickleQuery) {
+	/**
+	 * @param ickleQuery
+	 * @return
+	 */
+	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesUsingIckle(String ickleQuery) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
-		log.info("##################### got here......");
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory.create(ickleQuery);
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.execute();
 		return queryResult.list();
@@ -284,13 +287,14 @@ public class CacheUtils {
 
 	/**
 	 * Get a list of {@link BaseEntityAttribute}s to from cache for a BaseEntity.
+	 *
 	 * @param productCode - Product Code / Cache to retrieve from
 	 * @param baseEntityCode - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
 	 *
-	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
+	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public static List<BaseEntityAttribute> getBaseEntityAttributesForBaseEntityUsingIckle(String productCode, String baseEntityCode) {
+	public List<BaseEntityAttribute> getBaseEntityAttributesForBaseEntityUsingIckle(String productCode, String baseEntityCode) {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory

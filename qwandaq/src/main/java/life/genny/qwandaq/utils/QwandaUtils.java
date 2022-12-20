@@ -1,5 +1,27 @@
 package life.genny.qwandaq.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
@@ -19,28 +41,13 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.validation.Validation;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -71,14 +78,13 @@ public class QwandaUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CacheUtils cacheUtils;
+	CacheManager cm;
 
 	@Inject
 	UserToken userToken;
 
 	public QwandaUtils() {
 	}
-	// private static DataType DTT_EVENT;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
@@ -91,7 +97,7 @@ public class QwandaUtils {
 	public void cacheAsks(ProcessData processData, List<Ask> asks) {
 
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
-		CacheUtils.putObject(userToken.getProductCode(), key, asks.toArray());
+		cm.putObject(userToken.getProductCode(), key, asks.toArray());
 		log.info("Asks cached for " + processData.getProcessId());
 	}
 
@@ -104,7 +110,7 @@ public class QwandaUtils {
 	public List<Ask> fetchAsks(ProcessData processData) {
 
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
-		Ask[] asks = CacheUtils.getObject(userToken.getProductCode(), key, Ask[].class);
+		Ask[] asks = cm.getObject(userToken.getProductCode(), key, Ask[].class);
 		return Arrays.asList(asks);
 	}
 
@@ -113,7 +119,7 @@ public class QwandaUtils {
 	}
 
 	public Attribute saveAttribute(final String productCode, final Attribute attribute) {
-		HAttribute existingAttrib = CacheUtils.getObject(productCode, attribute.getCode(), HAttribute.class);
+		HAttribute existingAttrib = cm.getObject(productCode, attribute.getCode(), HAttribute.class);
 
 		if (existingAttrib != null) {
 			if (CommonUtils.compare(attribute, existingAttrib)) {
@@ -123,11 +129,11 @@ public class QwandaUtils {
 			log.info("Updating existing attribute!: " + existingAttrib.getCode());
 		}
 
-		CacheUtils.putObject(productCode, attribute.getCode(), attribute);
+		cm.putObject(productCode, attribute.getCode(), attribute);
 		attribute.setRealm(productCode);
 		databaseUtils.saveAttribute(attribute);
 
-		return CacheUtils.getObject(productCode, attribute.getCode(), HAttribute.class).toAttribute();
+		return cm.getObject(productCode, attribute.getCode(), HAttribute.class).toAttribute();
 	}
 
 	/**
@@ -152,14 +158,14 @@ public class QwandaUtils {
 	 * @return Attribute
 	 */
 	public Attribute getAttribute(final String productCode, final String attributeCode) {
-		HAttribute attribute = CacheUtils.getObject(productCode, attributeCode, HAttribute.class);
+		HAttribute attribute = cm.getObject(productCode, attributeCode, HAttribute.class);
 
 		if (attribute == null) {
 			log.error("Could not find attribute " + attributeCode + " in cache: " + productCode);
 			loadAllAttributesIntoCache(productCode);
 		}
 
-		attribute = CacheUtils.getObject(productCode, attributeCode, HAttribute.class);
+		attribute = cm.getObject(productCode, attributeCode, HAttribute.class);
 
 		if (attribute == null) {
 			throw new ItemNotFoundException(productCode, attributeCode);
@@ -189,7 +195,7 @@ public class QwandaUtils {
 		log.info("About to load all attributes for productCode " + productCode);
 		log.info("Found " + attributeCount + " attributes");
 
-		CacheUtils.putObject(productCode, "ATTRIBUTE_PAGES", TOTAL_PAGES);
+		cm.putObject(productCode, "ATTRIBUTE_PAGES", TOTAL_PAGES);
 
 		try {
 			for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
@@ -228,7 +234,7 @@ public class QwandaUtils {
 							+ attributeList.get(attributeList.size() - 1).getId());
 				}
 
-				CacheUtils.putObject(productCode, "ATTRIBUTES_P" + currentPage, msg);
+				cm.putObject(productCode, "ATTRIBUTES_P" + currentPage, msg);
 			}
 
 			log.debug("Cached " + totalAttribsCached + " attributes");
@@ -288,7 +294,7 @@ public class QwandaUtils {
 
 			log.info("[*] Parent Question: " + question.getCode());
 
-			List<QuestionQuestion> questionQuestions = cacheUtils.getQuestionQuestionByQuestionCode(productCode, question.getCode());
+			List<QuestionQuestion> questionQuestions = cm.getQuestionQuestionByQuestionCode(productCode, question.getCode());
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {
@@ -363,7 +369,7 @@ public class QwandaUtils {
 		Question question;
 		try {
 			// question = databaseUtils.findQuestionByCode(productCode, code);
-			question = cacheUtils.getQuestion(productCode, code);
+			question = cm.getQuestion(productCode, code);
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);
 		}
@@ -601,7 +607,7 @@ public class QwandaUtils {
 		String productCode = userToken.getProductCode();
 		String key = String.format("%s:PROCESS_DATA", processData.getProcessId());
 
-		CacheUtils.putObject(productCode, key, processData);
+		cm.putObject(productCode, key, processData);
 		log.infof("ProcessData cached to %s", key);
 	}
 
@@ -615,7 +621,7 @@ public class QwandaUtils {
 		String productCode = userToken.getProductCode();
 		String key = String.format("%s:PROCESS_DATA", processId);
 
-		CacheUtils.removeEntry(productCode, key);
+		cm.removeEntry(productCode, key);
 		log.infof("ProcessData removed from cache: %s", key);
 	}
 
@@ -630,7 +636,7 @@ public class QwandaUtils {
 		String productCode = userToken.getProductCode();
 		String key = String.format("%s:PROCESS_DATA", processId);
 
-		return CacheUtils.getObject(productCode, key, ProcessData.class);
+		return cm.getObject(productCode, key, ProcessData.class);
 	}
 
 	/**

@@ -1,16 +1,12 @@
 package life.genny.qwandaq.utils;
 
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -20,33 +16,29 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
 
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.constants.FilterConst;
-import life.genny.qwandaq.constants.Prefix;
-
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QEventDropdownMessage;
-import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 
@@ -76,6 +68,9 @@ public class SearchUtils {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	CacheManager cm;
 
 	/**
 	 * Call the Fyodor API to fetch a list of {@link BaseEntity}
@@ -206,9 +201,9 @@ public class SearchUtils {
 
 		// fetch search from cache
 		String sessionCode = sessionSearchCode(code);
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
+		SearchEntity searchEntity = cm.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			searchEntity = cm.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
 
@@ -225,7 +220,7 @@ public class SearchUtils {
 		if (searchEntity == null)
 			throw new NullPointerException("searchEntity");
 
-		CacheUtils.putObject(userToken.getProductCode(), "LAST-SEARCH:" + searchEntity.getCode(),
+		cm.putObject(userToken.getProductCode(), "LAST-SEARCH:" + searchEntity.getCode(),
 				searchEntity);
 
 		// remove JTI from code
@@ -397,7 +392,7 @@ public class SearchUtils {
 
 			String bucketMapCode = bucketMap.getString("code");
 
-			SearchEntity baseSearch = CacheUtils.getObject(productCode, bucketMapCode, SearchEntity.class);
+			SearchEntity baseSearch = cm.getObject(productCode, bucketMapCode, SearchEntity.class);
 
 			if (baseSearch == null) {
 				log.error("SearchEntity " + bucketMapCode + " is NULL in cache!");
@@ -492,7 +487,7 @@ public class SearchUtils {
 				}
 
 				// fetch each search from cache
-				SearchEntity searchBE = CacheUtils.getObject(productCode, targetedBucketCode + "_" + sessionCode,
+				SearchEntity searchBE = cm.getObject(productCode, targetedBucketCode + "_" + sessionCode,
 						SearchEntity.class);
 
 				if (searchBE == null) {
@@ -534,7 +529,7 @@ public class SearchUtils {
 				Attribute attribute = qwandaUtils.getAttribute("PRI_TOTAL_RESULTS");
 				searchBE.addAnswer(
 					new Answer(searchBE, searchBE, attribute, Long.valueOf(finalResultList.size()) + ""));
-				CacheUtils.putObject(productCode, searchBE.getCode(), searchBE);
+				cm.putObject(productCode, searchBE.getCode(), searchBE);
 
 				log.info("Sending Search Entity : " + searchBE.getCode());
 

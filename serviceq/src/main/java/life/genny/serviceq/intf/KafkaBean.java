@@ -26,6 +26,9 @@ public class KafkaBean implements KafkaInterface {
 	@Inject 
 	UserToken userToken;
 
+	@Inject 
+	BridgeSwitch bridgeSwitch;
+
 	static final Logger log = Logger.getLogger(KafkaBean.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -56,11 +59,11 @@ public class KafkaBean implements KafkaInterface {
 
 		if (topic == KafkaTopic.WEBCMDS || topic == KafkaTopic.WEBDATA) {
 
-			String bridgeId = BridgeSwitch.get(userToken);
+			String bridgeId = bridgeSwitch.get(userToken);
 
 			if (bridgeId == null) {
 				log.warn("No Bridge ID found for " + userToken.getUserCode() + " : " + userToken.getJTI());
-				bridgeId = BridgeSwitch.findActiveBridgeId(userToken);
+				bridgeId = bridgeSwitch.findActiveBridgeId(userToken);
 			}
 
 			if (bridgeId != null) {

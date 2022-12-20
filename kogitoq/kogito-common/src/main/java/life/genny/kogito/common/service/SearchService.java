@@ -20,9 +20,9 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
@@ -44,7 +44,7 @@ public class SearchService {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	CacheUtils cacheUtils;
+	CacheManager cm;
 
 	@Inject
 	DefUtils defUtils;
@@ -117,7 +117,7 @@ public class SearchService {
 
 		log.info("Sending Name Search :: " + code);
 
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
+		SearchEntity searchEntity = cm.getObject(userToken.getProductCode(),
 				code, SearchEntity.class);
 
 		// TODO: remove this from alyson
@@ -135,9 +135,9 @@ public class SearchService {
 
 		// fetch search from cache
 		String sessionCode = searchUtils.sessionSearchCode(code);
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
+		SearchEntity searchEntity = cm.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			searchEntity = cm.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
 

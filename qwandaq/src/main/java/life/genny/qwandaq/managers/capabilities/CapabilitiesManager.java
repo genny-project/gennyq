@@ -5,11 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-
-import life.genny.qwandaq.models.UserToken;
-
 import java.util.List;
-
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -18,8 +14,6 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import life.genny.qwandaq.utils.DebugTimer;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -27,7 +21,6 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
@@ -38,10 +31,12 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
-import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.DebugTimer;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -56,6 +51,9 @@ public class CapabilitiesManager extends Manager {
 
 	@Inject
 	private RoleManager roleMan;
+
+	@Inject
+	CacheManager cm;
 
 	public CapabilitiesManager() {
 		super();
@@ -171,7 +169,7 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		target.addAttribute(capability, 0.0, getModeString(nodes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
+		cm.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -187,7 +185,7 @@ public class CapabilitiesManager extends Manager {
 			}
 
 			target.addAttribute(capability, 0.0, getModeString(modeList));
-			CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), modeList.toArray(new CapabilityNode[0]));
+			cm.putObject(productCode, target.getCode() + ":" + capability.getCode(), modeList.toArray(new CapabilityNode[0]));
 			beUtils.updateBaseEntity(target);
 		}
 
@@ -498,7 +496,7 @@ private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSe
 
 		String key = getCacheKey(targetCode, capabilityCode);
 
-		CapabilityNode[] modes = CacheUtils.getObject(productCode, key, CapabilityNode[].class);
+		CapabilityNode[] modes = cm.getObject(productCode, key, CapabilityNode[].class);
 		if (modes == null)
 			throw new RoleException("Nothing present for capability combination: ".concat(key));
 		Capability cap = new Capability(capabilityCode, modes);

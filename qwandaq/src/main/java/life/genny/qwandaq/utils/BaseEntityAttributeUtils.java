@@ -12,6 +12,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
 
@@ -26,7 +27,10 @@ public class BaseEntityAttributeUtils {
     static final Logger log = Logger.getLogger(BaseEntityAttributeUtils.class);
 
 	@Inject
-	private QwandaUtils qwandaUtils;
+	QwandaUtils qwandaUtils;
+
+	@Inject
+	CacheManager cm;
 
     /**
 	 * Fetch a {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
@@ -38,7 +42,7 @@ public class BaseEntityAttributeUtils {
 	 */
     public BaseEntityAttribute getBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
         BaseEntityAttributeKey key = new BaseEntityAttributeKey(productCode, baseEntityCode, attributeCode);
-        return (BaseEntityAttribute) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
+        return (BaseEntityAttribute) cm.getEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
     }
 
     /**
@@ -65,7 +69,7 @@ public class BaseEntityAttributeUtils {
 	 * @return The corresponding list of all BaseEntityAttributes, or empty list if not found.
 	 */
     public List<BaseEntityAttribute> getAllBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-        return CacheUtils.getBaseEntityAttributesForBaseEntityUsingIckle(productCode, baseEntityCode);
+        return cm.getBaseEntityAttributesForBaseEntityUsingIckle(productCode, baseEntityCode);
     }
 
     /**
@@ -109,7 +113,7 @@ public class BaseEntityAttributeUtils {
         getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
                 .forEach((baseEntityAttribute) -> {
 					EntityAttribute ea = (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity();
-					HAttribute hAttribute = CacheUtils.getObject(productCode, ea.getAttributeCode(), HAttribute.class);
+					HAttribute hAttribute = cm.getObject(productCode, ea.getAttributeCode(), HAttribute.class);
 					if (hAttribute != null) {
 						log.infof("############### Read attribute for [realm, beCode, attCode]: [%s, %s, %s]", ea.getRealm(), ea.getBaseEntityCode(), ea.getAttributeCode());
 					} else {

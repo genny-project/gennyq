@@ -32,11 +32,11 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -60,6 +60,9 @@ public class InternalConsumer {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	DefUtils defUtils;
@@ -146,7 +149,7 @@ public class InternalConsumer {
 		String productCode = userToken.getProductCode();
 		String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
 		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
-		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
+		SearchEntity searchEntity = cm.getObject(productCode, key, SearchEntity.class);
 
 		if (searchEntity == null)
 			throw new ItemNotFoundException(key);

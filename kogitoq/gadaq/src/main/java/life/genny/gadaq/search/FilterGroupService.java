@@ -8,11 +8,11 @@ import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import org.jboss.logging.Logger;
@@ -43,6 +43,12 @@ public class FilterGroupService {
     static Jsonb jsonb = JsonbBuilder.create();
 
     @Inject
+    UserToken userToken;
+
+    @Inject
+    CacheManager cm;
+
+    @Inject
     BaseEntityUtils beUtils;
 
     @Inject
@@ -56,9 +62,6 @@ public class FilterGroupService {
 
     @Inject
     DatabaseUtils databaseUtils;
-
-    @Inject
-    UserToken userToken;
 
     public static final String QUE_TABLE_PREF = "QUE_TABLE_";
     public static final String SBE_TABLE_PREF = "SBE_TABLE_";
@@ -707,7 +710,7 @@ public class FilterGroupService {
         filterService.sendPartialPCM(FilterConst.PCM_SBE_DETAIL_VIEW, FilterConst.PRI_LOC1, base.getCode());
         filterService.sendFilterDetailsByBase(base,FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
 
-        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
+        cm.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -772,7 +775,7 @@ public class FilterGroupService {
             log.error(ex);
         }
 
-        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),result);
+        cm.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),result);
         return result;
     }
 
@@ -887,11 +890,11 @@ public class FilterGroupService {
      * @param value Values
      */
     public void putAnswerstoCache(String attCode,String value) {
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = cm.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         SavedSearch savedSearch = new SavedSearch(attCode,value);
 
         params.put(UUID.randomUUID().toString() ,savedSearch);
-        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
+        cm.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -1162,7 +1165,7 @@ public class FilterGroupService {
      * @return Parameters from cache
      */
     public Map<String,SavedSearch> getParamsFromCache() {
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = cm.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         if(params == null) params = new HashMap<>();
         return params;
     }

@@ -1,8 +1,6 @@
 package life.genny.kogito.common.service;
 
-import java.util.Arrays;
 import java.util.List;
-
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -14,7 +12,6 @@ import javax.persistence.NoResultException;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
-
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
@@ -25,21 +22,15 @@ import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
@@ -58,7 +49,7 @@ public class InitService {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	private CacheUtils cacheUtils;
+	private CacheManager cm;
 
 	@Inject
 	private BaseEntityUtils beUtils;
@@ -68,9 +59,6 @@ public class InitService {
 
 	@Inject
 	private QwandaUtils qwandaUtils;
-
-	@Inject
-	private SearchUtils searchUtils;
 
 	@Inject
 	private CapabilitiesManager capMan;
@@ -116,7 +104,7 @@ public class InitService {
 		String productCode = userToken.getProductCode();
 
 		QDataAttributeMessage msg = new QDataAttributeMessage();
-		List<Attribute> allAttributes = cacheUtils.getAllAttributes(productCode);
+		List<Attribute> allAttributes = cm.getAllAttributes(productCode);
 		Attribute[] attributes = allAttributes.stream()
 			// Filter capability attributes
 			.filter((attribute) -> !attribute.getCode().startsWith(Prefix.CAP))
@@ -134,7 +122,7 @@ public class InitService {
 		// find the question in the database
 		Question groupQuestion;
 		try {
-			groupQuestion = cacheUtils.getQuestion(productCode, "QUE_ADD_ITEMS_GRP");
+			groupQuestion = cm.getQuestion(productCode, "QUE_ADD_ITEMS_GRP");
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException("QUE_ADD_ITEMS_GRP", e);
 		}

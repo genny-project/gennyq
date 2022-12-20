@@ -1,5 +1,16 @@
 package life.genny.qwandaq.managers.capabilities.role;
 
+import static life.genny.qwandaq.constants.GennyConstants.DEF_ROLE_CODE;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -11,27 +22,14 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static life.genny.qwandaq.constants.GennyConstants.DEF_ROLE_CODE;
 
 @ApplicationScoped
 public class RoleManager extends Manager {
@@ -41,6 +39,9 @@ public class RoleManager extends Manager {
     private BaseEntity roleDef;
 	private Attribute lnkRolAttribute;
 	private Attribute lnkChildrenAttribute;
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	CapabilitiesManager capManager;
@@ -322,7 +323,7 @@ public class RoleManager extends Manager {
 		String key = roleCode.concat(":REDIRECT");
 
 		// TODO: grab redirect for role
-		String redirectCode = CacheUtils.getObject(product, key, String.class);
+		String redirectCode = cm.getObject(product, key, String.class);
 
 		if (redirectCode == null)
 			throw new RoleException("No redirect found in role ".concat(roleCode));
@@ -364,7 +365,7 @@ public class RoleManager extends Manager {
 	 * @param redirectCode The code to set as redirect
 	 */
 	public void setRoleRedirect(String productCode, BaseEntity role, String redirectCode) {
-		CacheUtils.putObject(productCode, String.format("%s:REDIRECT", role.getCode()), redirectCode);
+		cm.putObject(productCode, String.format("%s:REDIRECT", role.getCode()), redirectCode);
 	}
 	
 	public List<String> getRoleCodes(BaseEntity personBaseEntity) {

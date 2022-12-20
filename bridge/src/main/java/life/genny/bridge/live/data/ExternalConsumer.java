@@ -19,10 +19,10 @@ import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.security.keycloak.RoleBasedPermission;
 import life.genny.qwandaq.session.bridge.BridgeSwitch;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -43,11 +43,16 @@ public class ExternalConsumer {
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	RoleBasedPermission permissions;
 	@Inject
 	BlackListInfo blacklist;
 	@Inject
 	Service service;
+	@Inject
+	BridgeSwitch bridgeSwitch;
 
 	@Inject
 	InternalConsumer consumer;
@@ -136,12 +141,12 @@ public class ExternalConsumer {
 		}
 
 		// put bridgeId into users cached info
-		BridgeSwitch.put(gennyToken, bridgeId);
-		BridgeSwitch.addActiveBridgeId(gennyToken, bridgeId);
+		bridgeSwitch.put(gennyToken, bridgeId);
+		bridgeSwitch.addActiveBridgeId(gennyToken, bridgeId);
 
 		if (gennyToken.hasRole("test")) {
 			log.info("Saving token -> Key: TOKEN:" + gennyToken.getUserCode() + ", Value: " + gennyToken.getToken());
-			CacheUtils.writeCache(gennyToken.getProductCode(), "TOKEN:"+gennyToken.getUserCode(), gennyToken.getToken());
+			cm.writeCache(gennyToken.getProductCode(), "TOKEN:"+gennyToken.getUserCode(), gennyToken.getToken());
 		}
 
 		routeDataByMessageType(rawMessageBody.getJsonObject("data"), gennyToken);

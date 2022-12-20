@@ -10,6 +10,8 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.managers.AttributeManager;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
@@ -50,32 +52,18 @@ public class BaseEntityUtils {
 	UserToken userToken;
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
+	AttributeManager attributeManager;
+
+	@Inject
 	DatabaseUtils databaseUtils;
 
 	@Inject
 	BaseEntityAttributeUtils beaUtils;
 
-	@Inject
-	AttributeUtils attributeUtils;
-
-	@Inject
-	EntityManagerFactory emf;
-
 	public BaseEntityUtils() {
-	}
-
-	public BaseEntityUtils(ServiceToken serviceToken, UserToken userToken) {
-		this.serviceToken = serviceToken;
-		this.userToken = userToken;
-	}
-
-	public BaseEntityUtils(ServiceToken serviceToken) {
-		this.serviceToken = serviceToken;
-		this.userToken = new UserToken(serviceToken.getToken());
-	}
-
-	public void setUserToken(UserToken userToken) {
-		this.userToken = userToken;
 	}
 
 	/**
@@ -84,7 +72,6 @@ public class BaseEntityUtils {
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-
 		return getBaseEntity("PRJ_" + userToken.getProductCode().toUpperCase());
 	}
 
@@ -94,7 +81,6 @@ public class BaseEntityUtils {
 	 * @return the user's {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
-
 		return getBaseEntity(userToken.getUserCode());
 	}
 
@@ -106,7 +92,6 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public PCM getPCM(String code) {
-
 		return PCM.from(getBaseEntity(code));
 	}
 
@@ -118,7 +103,6 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-
 		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
 	}
 
@@ -131,11 +115,9 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
-
 		BaseEntity baseEntity = getBaseEntityOrNull(productCode, code);
 		if (baseEntity == null)
 			throw new ItemNotFoundException(productCode + ":" + code);
-
 		return baseEntity;
 	}
 
@@ -158,7 +140,6 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity, or null if not found
 	 */
 	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
-
 		return getBaseEntityByCode(productCode, code);
 	}
 
@@ -188,42 +169,41 @@ public class BaseEntityUtils {
 		return getBaseEntityByCode(productCode, code, true);
 	}
 
+	@Deprecated
 	public BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
+		// fetch entity
 		final BaseEntity entity = getPersistableBaseEntity(productCode, code);
 		if (entity == null) {
 			log.errorf("No baseentity found in cache for [ productCode , code ]: [ %s , %s]", productCode, code);
-		} else {
-			log.infof("Converted cached BE to entity BE. [productCode, code] : [%s, %s]", productCode, code);
-			if (bundleAttributes) {
-				Map<String, EntityAttribute> attributeMap = new HashMap<>();
-				entity.setAttributeMap(attributeMap);
-				beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
-					entity.getBaseEntityAttributes().add(bea);
-					attributeMap.put(bea.getAttributeCode(), bea);
-				});
-				log.infof("Added %s BaseEntityAttributes to BE.", entity.getBaseEntityAttributes().size());
-			}
+			return null;
+		}
+		// fetch entity attributes
+		if (bundleAttributes) {
+			Map<String, EntityAttribute> attributeMap = new HashMap<>();
+			entity.setAttributeMap(attributeMap);
+			beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
+				entity.getBaseEntityAttributes().add(bea);
+				attributeMap.put(bea.getAttributeCode(), bea);
+			});
+			log.debugf("Added %s BaseEntityAttributes to BE.", entity.getBaseEntityAttributes().size());
 		}
 		return entity;
 	}
 
+	/**
+	 * Get the persistable Entity
+	 * @param productCode
+	 * @param code
+	 * @return
+	 */
 	public BaseEntity getPersistableBaseEntity(String productCode, String code) {
-		if (productCode == null) {
-			throw new NullParameterException("productCode");
-		}
-		if (code == null) {
-			throw new NullParameterException("code");
-		}
-		if (StringUtils.isBlank(productCode)) {
-			throw new DebugException("productCode is empty");
-		}
-		if (StringUtils.isBlank(code)) {
-			throw new DebugException("code is empty");
-		}
-
 		// check for entity in the cache
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		return (BaseEntity) CacheUtils.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		if (baseEntity == null) {
+			throw new ItemNotFoundException(productCode, code);
+		}
+		return baseEntity;
 	}
 
 	/**
@@ -236,26 +216,23 @@ public class BaseEntityUtils {
 
 		// ensure for all entityAttribute that baseentity and attribute are not null
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
-
 			if (ea.getRealm() == null) {
 				ea.setRealm(baseEntity.getRealm());
 			}
-
 			if (ea.getBaseEntityCode() == null) {
 				ea.setBaseEntityCode(baseEntity.getCode());
 			}
-
 			if (ea.getAttribute() == null) {
-				Attribute attribute = attributeUtils.getAttributeByCode(baseEntity.getRealm(), ea.getAttributeCode());
+				Attribute attribute = attributeManager.getAttributeByCode(baseEntity.getRealm(), ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
 		}
 
 		// databaseUtils.saveBaseEntity(baseEntity);
-		// CacheUtils.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
+		// cache.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
 
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		boolean savedSuccssfully = CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		boolean savedSuccssfully = cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
 		return savedSuccssfully ? baseEntity : null;
 	}
 
@@ -672,7 +649,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
-			Attribute attribute = attributeUtils.getAttributeByCode(defBE.getRealm(), attrCode);
+			Attribute attribute = attributeManager.getAttributeByCode(defBE.getRealm(), attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -705,11 +682,11 @@ public class BaseEntityUtils {
 			}
 		}
 
-		Attribute linkDef = attributeUtils.getAttributeByCode(userToken.getProductCode(), "LNK_DEF");
+		Attribute linkDef = attributeManager.getAttributeByCode(userToken.getProductCode(), "LNK_DEF");
 		item.addAnswer(new Answer(item, item, linkDef, "[\"" + defBE.getCode() + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = attributeUtils.getAttributeByCode(userToken.getProductCode(), "LNK_AUTHOR");
+		Attribute lnkAuthorAttr = attributeManager.getAttributeByCode(userToken.getProductCode(), "LNK_AUTHOR");
 		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item);
@@ -735,7 +712,7 @@ public class BaseEntityUtils {
 		// if (value == null)
 		// throw new NullParameterException("value");
 
-		Attribute attribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), attributeCode);
+		Attribute attribute = attributeManager.getAttributeByCode(userToken.getProductCode(), attributeCode);
 
 		EntityAttribute ea = new EntityAttribute(1.0, value);
 		ea.setRealm(userToken.getProductCode());
@@ -783,24 +760,21 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_EMAIL");
+			Attribute emailAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_EMAIL");
 			item.addAnswer(new Answer(item, item, emailAttribute, email));
-			Attribute usernameAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_USERNAME");
+			Attribute usernameAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_USERNAME");
 			item.addAnswer(new Answer(item, item, usernameAttribute, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_UUID");
+		Attribute uuidAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_UUID");
 		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
 
 		// keycloak UUID
-		Attribute keycloakAttribute = attributeUtils.getAttributeByCode(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
+		Attribute keycloakAttribute = attributeManager.getAttributeByCode(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
 		item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
 
 		return item;
 	}
 
-	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntityUsingIckleQuery(String ickleQuery) {
-		return CacheUtils.getBaseEntitiesUsingIckle(ickleQuery);
-	}
 }

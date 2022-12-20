@@ -18,8 +18,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -70,7 +70,7 @@ public class Service {
 	KafkaBean kafkaBean;
 
 	@Inject
-	DatabaseUtils databaseUtils;
+	CacheManager cm;
 
 	@Inject
 	DefUtils defUtils;
@@ -142,7 +142,7 @@ public class Service {
 	 * Initialize the cache connection
 	 */
 	public void initCache() {
-		CacheUtils.init(cache);
+		cm.init(cache);
 	}
 
 	/**
@@ -194,23 +194,17 @@ public class Service {
 	 * Perform a full initialization of the service.
 	 */
 	public void fullServiceInit(Boolean hasTopology) {
-
 		if (initialised) {
 			log.warn("Attempted initialisation again. Are you calling this method in more than one place?");
 			return;
 		}
-
 		// log our service config
 		showConfiguration();
-
 		// init all
 		initToken();
 		initCache();
 		initKafka();
-		// attempt to stop topology producers from failing on startup
-
 		initialised = true;
-
 		log.info("[@] Service Initialised!");
 	}
 

@@ -6,6 +6,8 @@ import java.time.*;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.infinispan.protostream.MessageMarshaller;
 import org.javamoney.moneta.Money;
 
@@ -53,16 +55,19 @@ public class BaseEntityAttributeMessageMarshaller implements MessageMarshaller<B
 		bea.setValueDouble(reader.readDouble("valueDouble"));
 		bea.setValueInteger(reader.readInt("valueInteger"));
 		bea.setValueLong(reader.readLong("valueLong"));
-		Money money = null;
-		JsonObject jsonObj = (JsonObject) Json.decodeValue(reader.readString("money"));
-		if (jsonObj != null) {
-			CurrencyUnit currency = Monetary.getCurrency(jsonObj.getString("currency"));
-			Double amount = Double.valueOf(jsonObj.getString("amount"));
-			if (amount != null && currency != null) {
-				money = Money.of(amount, currency);
+		String moneyStr = reader.readString("money");
+		if (!StringUtils.isEmpty(moneyStr) && !"null".equals(moneyStr)) {
+			JsonObject jsonObj = (JsonObject) Json.decodeValue(moneyStr);
+			if (jsonObj != null) {
+				Money money = null;
+				CurrencyUnit currency = Monetary.getCurrency(jsonObj.getString("currency"));
+				Double amount = Double.valueOf(jsonObj.getString("amount"));
+				if (amount != null && currency != null) {
+					money = Money.of(amount, currency);
+				}
+				bea.setMoney(money);
 			}
 		}
-		bea.setMoney(money);
 		bea.setValueString(reader.readString("valueString"));
 		Long valueTimeLong = reader.readLong("valueTime");
 		if (valueTimeLong != null) {

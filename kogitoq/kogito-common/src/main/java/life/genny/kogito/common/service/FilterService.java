@@ -1,37 +1,47 @@
 package life.genny.kogito.common.service;
 
-import life.genny.qwandaq.constants.FilterConst;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.utils.*;
-import org.jboss.logging.Logger;
-
-import javax.inject.Inject;
-import javax.enterprise.context.ApplicationScoped;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
-import java.util.*;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import life.genny.qwandaq.entity.search.clause.ClauseContainer;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.models.UserToken;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.models.SavedSearch;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.FilterUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class FilterService {
@@ -40,6 +50,9 @@ public class FilterService {
 
     @Inject
     UserToken userToken;
+
+	@Inject
+	CacheManager cm;
 
     @Inject
     FilterUtils filterUtils;
@@ -52,6 +65,7 @@ public class FilterService {
 
     @Inject
     SearchService search;
+
     @Inject
     SearchUtils searchUtils;
 
@@ -85,7 +99,7 @@ public class FilterService {
     public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes){
         List<String> bucketCodes = new ArrayList<>();
         originBucketCodes.stream().forEach(e -> {
-            SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),e, SearchEntity.class);
+            SearchEntity searchEntity = cm.getObject(userToken.getProductCode(),e, SearchEntity.class);
             String searchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
             bucketCodes.add(searchCode);
         });
@@ -169,7 +183,7 @@ public class FilterService {
      * @param targetCode Target code
      */
     public void handleSortAndSearch(String code, String attrName,String value, String targetCode, Options ops) {
-        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
+        SearchEntity searchBE = cm.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
 
         if(ops.equals(Options.SEARCH)) {
             EntityAttribute ea = createEntityAttributeBySortAndSearch(code, attrName, value);
@@ -210,7 +224,7 @@ public class FilterService {
             searchBE.setPageStart(pagePos);
             searchBE.setPageIndex(indexVal);
         }
-        CacheUtils.putObject(userToken.getProductCode(), targetCode, searchBE);
+        cm.putObject(userToken.getProductCode(), targetCode, searchBE);
 
 
         if(ops.equals(Options.PAGINATION_BUCKET)) {
@@ -234,7 +248,7 @@ public class FilterService {
         sendBucketCodes(targetCodes);
 
         for(String targetCode : targetCodes) {
-            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
+            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
             EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
 
             //remove searching text and filter
@@ -254,7 +268,7 @@ public class FilterService {
                 searchBE.add(filter);
             }
 
-            CacheUtils.putObject(userToken.getProductCode(), targetCode, searchBE);
+            cm.putObject(userToken.getProductCode(), targetCode, searchBE);
 
             sendMessageBySearchEntity(searchBE);
             sendSearchPCM(FilterConst.PCM_PROCESS, targetCode);
@@ -270,7 +284,7 @@ public class FilterService {
         String sessionCode = searchUtils.sessionSearchCode(targetCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+        SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
 
         // searching text
         String newValue = value.replaceFirst("!","");
@@ -278,7 +292,7 @@ public class FilterService {
         searchBE.remove(filter);
         searchBE.add(filter);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+        cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
         String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
         search.sendTable(queCode);
@@ -295,7 +309,7 @@ public class FilterService {
         String sessionCode = searchUtils.sessionSearchCode(targetCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+        SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
 
         clearFilters(searchBE);
 
@@ -310,7 +324,7 @@ public class FilterService {
         searchBE.remove(filter);
         searchBE.add(filter);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+        cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
         String queCode =  targetCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
         search.sendTable(queCode);
@@ -338,7 +352,7 @@ public class FilterService {
     public void sendFilterGroup(String sbeCode, String queGrp,String questionCode,boolean addedJti,String filterCode,
                                 Map<String, Map<String,String>> listFilterParams) {
         try {
-            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
+            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
 
             if (searchBE != null) {
                 QDataBaseEntityMessage msgColumn = filterUtils.getFilterValuesByColum(searchBE);
@@ -397,7 +411,7 @@ public class FilterService {
      */
     public void sendFilterColumns(String sbeCode) {
         try {
-            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
+            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
 
             if (searchBE != null) {
                 QDataBaseEntityMessage msgColumn = filterUtils.getFilterValuesByColum(searchBE);
@@ -460,13 +474,13 @@ public class FilterService {
         String sessionCode = searchUtils.sessionSearchCode(sbeCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+        SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
         excludeExtraFilterBySearchBE(searchBE);
 
         // add conditions by filter parameters
         setFilterParams(searchBE,params);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+        cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
         String queCode =  sbeCode.replaceFirst(FilterConst.SBE_PREF,FilterConst.QUE_PREF);
         search.sendTable(queCode);
@@ -604,7 +618,7 @@ public class FilterService {
      * @return the list of search entity code
      */
     public List<String> getBucketCodesBySBE(String searchCode) {
-        List<String> originBucketCodes = CacheUtils.getObject(userToken.getProductCode(), searchCode, List.class);
+        List<String> originBucketCodes = cm.getObject(userToken.getProductCode(), searchCode, List.class);
         List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
 
         return bucketCodes;
@@ -919,7 +933,7 @@ public class FilterService {
         clearParamsInCache();
         String sbe = queCode.replaceFirst(FilterConst.QUE_PREF,FilterConst.SBE_PREF);
         sendFilterColumns(sbe);
-        CacheUtils.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
+        cm.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
 
         sendListSavedSearches(FilterConst.QUE_SAVED_SEARCH_SELECT_GRP,
                 FilterConst.QUE_SAVED_SEARCH_SELECT, FilterConst.PRI_NAME,FilterConst.VALUE);
@@ -931,7 +945,7 @@ public class FilterService {
      */
     public void clearParamsInCache() {
         Map<String, SavedSearch> params = new HashMap<>();
-        CacheUtils.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
+        cm.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
     }
 
     /**
@@ -939,7 +953,7 @@ public class FilterService {
      * @return sbe code from cache
      */
     public String getSbeTableFromCache() {
-        String sbe = CacheUtils.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
+        String sbe = cm.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
         if(sbe == null) return sbe = "";
         return sbe;
     }

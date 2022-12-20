@@ -21,10 +21,10 @@ import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.gadaq.search.FilterGroupService;
@@ -40,6 +40,8 @@ public class Events {
 
 	@Inject
 	UserToken userToken;
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	KogitoUtils kogitoUtils;
@@ -166,7 +168,7 @@ public class Events {
 		// add item
 		if (code.startsWith("QUE_ADD_")) {
 			code = StringUtils.removeStart(code, "QUE_ADD_");
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
+			String prefix = cm.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
 
 			log.info("Prefix: " + code);
 			if ("PER".equals(prefix)) {

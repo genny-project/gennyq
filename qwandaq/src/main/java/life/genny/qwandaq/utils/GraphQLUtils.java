@@ -18,6 +18,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.managers.CacheManager;
 
 /*
  * A non-static utility class used for operations regarding the GraphQL data-index.
@@ -33,6 +34,9 @@ public class GraphQLUtils {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	CacheManager cm;
 
 	/**
 	 * Fetch the Process Id of from a GraphQL table using a query.
@@ -160,7 +164,7 @@ public class GraphQLUtils {
 		log.info("Fetching targetCode for processId : " + processId);
 
 		// check in cache first
-		String targetCode = CacheUtils.getObject(userToken.getProductCode(), processId + ":TARGET_CODE", String.class);
+		String targetCode = cm.getObject(userToken.getProductCode(), processId + ":TARGET_CODE", String.class);
 		if (targetCode != null) {
 			return targetCode;
 		}
@@ -170,7 +174,7 @@ public class GraphQLUtils {
 
 		// grab the targetCode from process questions variables
 		targetCode = variables.getString("targetCode");
-		CacheUtils.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
+		cm.putObject(userToken.getProductCode(), processId + ":TARGET_CODE", targetCode);
 
 		return targetCode;
 	}
@@ -188,7 +192,7 @@ public class GraphQLUtils {
 		String key = String.format("%s:PROCESS_DATA", processId);
 
 		// check cache first
-		ProcessData processData = CacheUtils.getObject(userToken.getProductCode(), key, ProcessData.class);
+		ProcessData processData = cm.getObject(userToken.getProductCode(), key, ProcessData.class);
 		if (processData != null) {
 			return processData;
 		}
@@ -206,7 +210,7 @@ public class GraphQLUtils {
 		processData = jsonb.fromJson(processJson, ProcessData.class);
 
 		// cache the object for quicker retrieval
-		CacheUtils.putObject(userToken.getProductCode(), key, processData);
+		cm.putObject(userToken.getProductCode(), key, processData);
 
 		return processData;
 	}

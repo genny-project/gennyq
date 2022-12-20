@@ -22,17 +22,14 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
-
-
-
 
 /**
  * Entities --- Endpoints providing database entity access
@@ -49,6 +46,9 @@ public class Entities {
 
 	@Context
 	HttpServerRequest request;
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	DatabaseUtils databaseUtils;
@@ -86,7 +86,7 @@ public class Entities {
 		String productCode = userToken.getProductCode();
 		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
 		log.info("$$$$$$$$$$$$$$$$     reading entity from cache..");
-		BaseEntity entity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
+		BaseEntity entity = (BaseEntity) cm.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
 		if (entity != null) {
 			log.info("$$$$$$$$$$$$$$$$    entity in cache.. returning...  ");
 		} else {
@@ -94,7 +94,7 @@ public class Entities {
 			if (entity != null) {
 				// Entity found in DB but not cache. Add it to cache..
 				log.info("$$$$$$$$$$$$$$$$    entity not in cache, but in DB.. adding to cache...  ");
-				CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey, entity);
+				cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey, entity);
 				log.info("$$$$$$$$$$$$$$$$    entity not in cache, but in DB.. added to cache...  ");
 			} else {
 				log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
@@ -149,7 +149,7 @@ public class Entities {
 		userToken.setProductCode(productCode);
 
 		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
-		CacheUtils.saveEntity(productCode, beKey, entity);
+		cm.saveEntity(productCode, beKey, entity);
 		// beUtils.updateBaseEntity(entity);
 
 		return Response.ok(entity).build();

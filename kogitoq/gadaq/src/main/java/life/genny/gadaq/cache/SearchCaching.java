@@ -10,7 +10,7 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.serviceq.Service;
 
 /**
@@ -23,6 +23,9 @@ public class SearchCaching {
 
 	@Inject
 	Service service;
+
+	@Inject
+	CacheManager cm;
 
 	public void saveToCache() {
 
@@ -96,7 +99,7 @@ public class SearchCaching {
 	private void cacheSearch(SearchEntity entity) {
 		for (String productCode : service.getProductCodes()) {
 			entity.setRealm(productCode);
-			CacheUtils.putObject(productCode, entity.getCode(), entity);
+			cm.putObject(productCode, entity.getCode(), entity);
 		}
 	}
 
@@ -104,7 +107,7 @@ public class SearchCaching {
 		for (String productCode : service.getProductCodes()) {
 			entity.setRealm(productCode);
 			String key = new StringBuilder(definitionCode).append(":").append(entity.getCode()).toString();
-			CacheUtils.putObject(productCode, key, entity);
+			cm.putObject(productCode, key, entity);
 		}
 	}
 

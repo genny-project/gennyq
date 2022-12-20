@@ -18,15 +18,19 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
-import life.genny.qwandaq.utils.*;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.QuestionUtils;
 
 @Path("/v1/caps")
 public class CapabilitiesEndpoint {
-    
+
+    @Inject
+    CacheManager cm;
  
     @Inject
     DatabaseUtils dbUtils;
@@ -67,7 +71,7 @@ public class CapabilitiesEndpoint {
         ICapabilityFilterable filterable = entityAttributeOpt.get();
         dbUtils.updateCapabilityRequirements(productCode, filterable, capabilityRequirements);
         BaseEntityAttributeKey key = new BaseEntityAttributeKey(productCode, baseEntityCode, attributeCode);
-        CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, (EntityAttribute) filterable);
+        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, (EntityAttribute) filterable);
         return Response.status(Status.OK).build();
     }
 
@@ -91,7 +95,7 @@ public class CapabilitiesEndpoint {
         
         dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
         BaseEntityKey key = new BaseEntityKey(productCode, baseEntityCode);
-        CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, (BaseEntity) filterableQuestion);
+        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, (BaseEntity) filterableQuestion);
         return Response.status(Status.OK).build();
     }
     
@@ -116,11 +120,11 @@ public class CapabilitiesEndpoint {
         dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
         life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = questionUtils.getSerializableBaseEntityFromQuestion((Question) filterableQuestion);
         BaseEntityKey key = new BaseEntityKey(productCode, questionCode);
-        CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
+        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
         List<BaseEntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
         baseEntityAttributes.forEach(baseEntityAttribute -> {
             BaseEntityAttributeKey beaKey = new BaseEntityAttributeKey(productCode, questionCode, baseEntityAttribute.getAttributeCode());
-            CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
+            cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
         });
         return Response.status(Status.OK).build();
     }
@@ -148,11 +152,11 @@ public class CapabilitiesEndpoint {
         life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = questionUtils.getSerializableBaseEntityFromQuestionQuestion((QuestionQuestion) filterableQuestion);
         String beCode = baseEntitySerializable.getCode();
         BaseEntityKey key = new BaseEntityKey(productCode, beCode);
-        CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
+        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
         List<BaseEntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
         baseEntityAttributes.forEach(baseEntityAttribute -> {
             BaseEntityAttributeKey beaKey = new BaseEntityAttributeKey(productCode, beCode, baseEntityAttribute.getAttributeCode());
-            CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
+            cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beaKey, baseEntityAttribute.toPersistableCoreEntity());
         });
         return Response.status(Status.OK).build();
     }

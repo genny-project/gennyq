@@ -1,10 +1,11 @@
-package life.genny.qwandaq.utils;
+package life.genny.qwandaq.managers;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 /**
  * A non-static utility class used for standard
@@ -13,10 +14,13 @@ import javax.enterprise.context.ApplicationScoped;
  * @author Varun Shastry
  */
 @ApplicationScoped
-public class AttributeUtils {
+public class AttributeManager {
+
+	@Inject
+	CacheManager cm;
 
     public Attribute getAttributeByCode(String productCode, String attributeCode) {
         AttributeKey key = new AttributeKey(productCode, attributeCode);
-        return (Attribute) CacheUtils.getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
+        return (Attribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
     }
 }

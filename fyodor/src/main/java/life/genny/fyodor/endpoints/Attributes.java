@@ -2,9 +2,9 @@ package life.genny.fyodor.endpoints;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.managers.AttributeManager;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import org.jboss.logging.Logger;
@@ -41,7 +41,7 @@ public class Attributes {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	AttributeUtils attributeUtils;
+	AttributeManager attributeManager;
 
 	@Inject
 	UserToken userToken;
@@ -64,7 +64,7 @@ public class Attributes {
 
 		String productCode = userToken.getProductCode();
 		// Attribute attribute = databaseUtils.findAttributeByCode(productCode, code);
-		Attribute attribute = attributeUtils.getAttributeByCode(productCode, code);
+		Attribute attribute = attributeManager.getAttributeByCode(productCode, code);
 
 		return Response.ok(attribute).build();
 	}
