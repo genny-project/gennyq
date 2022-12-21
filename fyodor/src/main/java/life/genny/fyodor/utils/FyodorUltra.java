@@ -57,6 +57,7 @@ import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
@@ -341,6 +342,14 @@ public class FyodorUltra {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		switch (operator) {
+			// use locate to find the expression within the value
+			// if locate returns 0, expression is not found
+			case IN:
+				// we want to check in, so check locate does not equal 0
+				return cb.notEqual(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
+			case NOT_IN:
+				// we want to check not in, so check locate equals 0
+				return cb.equal(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
 			case LIKE:
 				return cb.like((Expression<String>) expression, String.class.cast(value));
 			case NOT_LIKE:
