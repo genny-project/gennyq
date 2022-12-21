@@ -16,16 +16,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-/*@Entity
-@QueryExclude
-@Table(name = "question_question", uniqueConstraints = @UniqueConstraint(columnNames = { "sourceCode", "targetCode",
-		"realm" }), indexes = {
-				@Index(columnList = "sourceCode", name = "source_idx"),
-				@Index(columnList = "realm", name = "code_idx")
-		})
-@AssociationOverrides({ @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))
-})
-@Cacheable*/
 @RegisterForReflection
 public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
 
@@ -37,36 +27,21 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 
 	private LocalDateTime created;
 
-	/**
-	 * Stores the Last Modified UMT DateTime that this object was last updated
-	 */
 	private LocalDateTime updated;
 
-	/**
-	 * Store the relative importance of this question link
-	 */
 	private Double weight;
 
 	private Long version = 1L;
 
-	Boolean mandatory = false;
-
-	// If this is set to true then attribute needs to be set to readonly after value
-	// set.
-	Boolean oneshot = false;
+	private Boolean mandatory = false;
 
 	private Boolean disabled = false;
+
 	private Boolean hidden = false;
 
 	private Boolean readonly = false;
 
 	private String realm;
-
-	private Boolean formTrigger;
-
-	private Boolean createOnTrigger;
-
-	private String dependency;
 
 	private String icon;
 
@@ -83,130 +58,15 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public QuestionQuestion() {
 	}
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param source
-	 *                   the source baseEntity
-	 * @param childCode
-	 *                   the target code of the entity that is linked to
-	 * @param weight
-	 *                   the associated weight
-	 * @param mandatory
-	 *                   Is the question mandatory
-	 * @param disabled
-	 *                   Is the question read only
-	 * @param readonly
-	 *                   Is the question readonly
-	 * @param hidden
-	 *                   Is the question hidden * @param Weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 */
-	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory,
-							boolean disabled, boolean hidden, boolean readonly) {
-		autocreateCreated();
-		setParentCode(source.getCode());
-		setChildCode(childCode);
-		setMandatory(mandatory);
-		setDisabled(disabled);
-		setHidden(hidden);
-		setReadonly(readonly);
-		if (weight == null) {
-			// This permits ease of adding attributes and hides attribute from scoring.
-			weight = 0.0;
-		}
-		setWeight(weight);
+	public QuestionQuestion(final Question source, final Question target) {
+		this(source, target, 0.0);
 	}
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param source
-	 *                   the source baseEntity
-	 * @param childCode
-	 *                   the target code of the entity that is linked to
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 * @param mandatory
-	 *                   Is the question mandatory
-	 * @param disabled
-	 *                   Is the question read only
-	 * @param hidden
-	 *                   Is the question hidden
-	 */
-	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory,
-							boolean disabled, boolean hidden) {
-		this(source, childCode, weight, mandatory, disabled, hidden, false);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param source
-	 *                   the source baseEntity
-	 * @param childCode
-	 *                   the target code of the entity that is linked to
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 * @param mandatory
-	 *                   Is the question mandatory
-	 * @param disabled
-	 *                   Is the question read only
-	 */
-	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory,
-							boolean disabled) {
-		this(source, childCode, weight, mandatory, disabled, false);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param source
-	 *                   the source baseEntity
-	 * @param childCode
-	 *                   the target code of the entity that is linked to
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 * @param mandatory
-	 *                   The mandatory status of this QuestionQuestion
-	 */
-	public QuestionQuestion(final Question source, final String childCode, Double weight, boolean mandatory) {
-		this(source, childCode, weight, mandatory, false);
-	}
-
-	/**
-	 * Constructor.
-	 *
-	 * @param source
-	 *               The Source Question.
-	 * @param target
-	 *               The Target Question.
-	 * @param weight
-	 *               the weighted importance of this attribute (relative to the
-	 *               other
-	 *               attributes)
-	 */
 	public QuestionQuestion(final Question source, final Question target, Double weight) {
 		autocreateCreated();
-
 		this.setParentCode(source.getCode());
-
 		this.setChildCode(target.getCode());
-
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-							// attribute from scoring.
-		}
 		setWeight(weight);
-
 	}
 
 	public void setParentCode(String parentCode) {
@@ -297,27 +157,6 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 */
 	public void setMandatory(Boolean mandatory) {
 		this.mandatory = mandatory;
-	}
-
-	/**
-	 * @return the oneshot
-	 */
-	public Boolean getOneshot() {
-		return oneshot;
-	}
-
-	/**
-	 * @return the oneshot
-	 */
-	public Boolean isOneshot() {
-		return getOneshot();
-	}
-
-	/**
-	 * @param oneshot , if true then attribute must be set to readonly
-	 */
-	public void setOneshot(Boolean oneshot) {
-		this.oneshot = oneshot;
 	}
 
 	/**
@@ -480,83 +319,26 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	}
 
 	/**
-	 * @return the formTrigger
-	 */
-	public Boolean getFormTrigger() {
-		return formTrigger;
-	}
-
-	/**
-	 * @return the formTrigger
-	 */
-	public Boolean isFormTrigger() {
-		return getFormTrigger();
-	}
-
-	/**
-	 * @param formTrigger the formTrigger to set
-	 */
-	public void setFormTrigger(Boolean formTrigger) {
-		this.formTrigger = formTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean getCreateOnTrigger() {
-		return createOnTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean isCreateOnTrigger() {
-		return getCreateOnTrigger();
-	}
-
-	/**
-	 * @param createOnTrigger the createOnTrigger to set
-	 */
-	public void setCreateOnTrigger(Boolean createOnTrigger) {
-		this.createOnTrigger = createOnTrigger;
-	}
-
-	/**
 	 * @return String
 	 */
 	@Override
 	public String toString() {
 		return "SRC:" + getParentCode() + " - " + getChildCode() + " "
-				+ (this.getMandatory() ? "MANDATORY" : "OPTIONAL") + " " + (this.getReadonly() ? "RO" : "RW") + " "
-				+ (this.getFormTrigger() ? "FT" : "NFT") + " " + (this.getCreateOnTrigger() ? "COT" : "NCOT");
+				+ (this.getMandatory() ? "MANDATORY" : "OPTIONAL") + " " + (this.getReadonly() ? "RO" : "RW");
 	}
 
 	/**
 	 * @return String
 	 */
 	public String getParentCode() {
-		return getParentCode();
+		return parentCode;
 	}
 
 	/**
 	 * @return String
 	 */
 	public String getChildCode() {
-		return getChildCode();
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getDependency() {
-		return dependency;
-	}
-
-	/**
-	 * @param dependency the dependency to set
-	 */
-	public void setDependency(String dependency) {
-		this.dependency = dependency;
+		return childCode;
 	}
 
 	/**

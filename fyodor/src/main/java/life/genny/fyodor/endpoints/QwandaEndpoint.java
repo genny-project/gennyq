@@ -97,8 +97,8 @@ public class QwandaEndpoint {
 			source = new BaseEntity(sourceCode, "SourceCode");
 			target = new BaseEntity(targetCode, "TargetCode");
 		} else {
-			source = beUtils.getBaseEntityByCode(sourceCode);
-			target = beUtils.getBaseEntityByCode(targetCode);
+			source = beUtils.getBaseEntity(sourceCode);
+			target = beUtils.getBaseEntity(targetCode);
 		}
 
 		if (source == null) {

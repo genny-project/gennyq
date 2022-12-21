@@ -2,7 +2,7 @@ package life.genny.fyodor.endpoints;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.managers.AttributeManager;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
@@ -41,7 +41,7 @@ public class Attributes {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	AttributeManager attributeManager;
+	CacheManager cm;
 
 	@Inject
 	UserToken userToken;
@@ -63,7 +63,7 @@ public class Attributes {
 		}
 
 		String productCode = userToken.getProductCode();
-		Attribute attribute = attributeManager.getAttribute(productCode, code);
+		Attribute attribute = cm.getAttribute(productCode, code);
 
 		return Response.ok(attribute).build();
 	}

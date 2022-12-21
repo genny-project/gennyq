@@ -64,8 +64,8 @@ public class Service2Service {
 		if (userToken == null) {
 			// We need to fetch the latest token for the sourceUser
 			log.debug(data.getSourceCode() + ": No token found, fetching latest token");
-			BaseEntity userBE = beUtils.getBaseEntityByCode(data.getSourceCode());
-			BaseEntity project = beUtils.getBaseEntityByCode(userBE.getRealm());
+			BaseEntity userBE = beUtils.getBaseEntity(data.getSourceCode());
+			BaseEntity project = beUtils.getBaseEntity(userBE.getRealm());
 			log.debug("Fetching impersonated token for " + userBE.getCode() + " in " + project.getCode());
 
 			String userTokenStr = KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project);

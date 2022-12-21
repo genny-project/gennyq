@@ -315,7 +315,7 @@ public class SearchUtils {
 						continue;
 					}
 
-					BaseEntity associatedBe = beUtils.getBaseEntityByCode(code);
+					BaseEntity associatedBe = beUtils.getBaseEntity(code);
 					if (associatedBe == null) {
 						log.warn("associatedBe DOES NOT exist ->" + code);
 						return null;
@@ -363,9 +363,9 @@ public class SearchUtils {
 		// convert to entity list
 		log.info("dropdownValue = " + dropdownValue);
 		String cleanCode = beUtils.cleanUpAttributeValue(dropdownValue);
-		BaseEntity target = beUtils.getBaseEntityByCode(cleanCode);
+		BaseEntity target = beUtils.getBaseEntity(cleanCode);
 
-		BaseEntity project = beUtils.getBaseEntityByCode("PRJ_" + productCode.toUpperCase());
+		BaseEntity project = beUtils.getBaseEntity("PRJ_" + productCode.toUpperCase());
 
 		if (project == null) {
 			log.error("Null project Entity!!!");

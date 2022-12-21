@@ -194,7 +194,7 @@ public class DefUtils {
 
 			// check for single PRI_IS
 			if (codes.size() == 1) {
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + codes.get(0).substring("PRI_IS_".length()));
+				BaseEntity def = beUtils.getBaseEntity("DEF_" + codes.get(0).substring("PRI_IS_".length()));
 				return def;
 			}
 
@@ -207,7 +207,7 @@ public class DefUtils {
 			for (String code : codes) {
 
 				// get def for PRI_IS
-				BaseEntity def = beUtils.getBaseEntityByCode("DEF_" + code.substring("PRI_IS_".length()));
+				BaseEntity def = beUtils.getBaseEntity("DEF_" + code.substring("PRI_IS_".length()));
 				if (def == null) {
 					continue;
 				}
@@ -232,7 +232,7 @@ public class DefUtils {
 		Map<String, String> map = defPrefixMap.get(productCode);
 		String defCode = map.get(prefix);
 
-		BaseEntity def = beUtils.getBaseEntityByCode(defCode);
+		BaseEntity def = beUtils.getBaseEntity(defCode);
 
 		if (def != null) {
 			return def;
@@ -378,7 +378,7 @@ public class DefUtils {
 							Object value = ctxMap.get(key);
 							if (value.getClass().equals(BaseEntity.class)) {
 								BaseEntity baseEntity = (BaseEntity) value;
-								BaseEntity savedEntity = beUtils.getBaseEntityByCode(baseEntity.getCode());
+								BaseEntity savedEntity = beUtils.getBaseEntity(baseEntity.getCode());
 								if (savedEntity != null)
 									baseEntity = savedEntity;
 								ctxMap.put(key, baseEntity);

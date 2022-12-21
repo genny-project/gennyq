@@ -68,7 +68,7 @@ public class ImportGithubService {
 			e.printStackTrace();
 		}
 		log.info("bes = " + bes.size());
-		BaseEntity dotDef = beUtils.getBaseEntityByCode(realm, "DEF_DOCUMENT_TEMPLATE");
+		BaseEntity dotDef = beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE");
 		for (BaseEntity be : bes) {
 			if (be != null) {
 				log.info("saving be = " + be.getCode() + ":" + be.getName());

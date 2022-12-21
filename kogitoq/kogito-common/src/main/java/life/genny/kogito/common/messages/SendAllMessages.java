@@ -83,7 +83,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             log.info("messages : " + messageCodes.size());
             messageCodes.parallelStream().forEach((messageCode) -> {
                 log.info("messageCode : " + messageCode);
-                BaseEntity message = beUtils.getBaseEntityByCode(messageCode);
+                BaseEntity message = beUtils.getBaseEntity(messageCode);
 
                 // Determine the recipientBECode
                 String recipientLnkValue = message.getValueAsString(PRI_RECIPIENT_LNK);

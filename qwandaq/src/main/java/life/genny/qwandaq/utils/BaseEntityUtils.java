@@ -9,7 +9,6 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.managers.AttributeManager;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
@@ -52,9 +51,6 @@ public class BaseEntityUtils {
 
 	@Inject
 	CacheManager cm;
-
-	@Inject
-	AttributeManager attributeManager;
 
 	@Inject
 	DatabaseUtils databaseUtils;
@@ -114,91 +110,31 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
-		BaseEntity baseEntity = getBaseEntityOrNull(productCode, code);
-		if (baseEntity == null)
-			throw new ItemNotFoundException(productCode + ":" + code);
-		return baseEntity;
+		return getBaseEntity(productCode, code, true);
 	}
 
 	/**
-	 * Get a base entity using the code, or return null if not found.
-	 * 
-	 * @param code The code of the entity to fetch
-	 * @return The BaseEntity, or null if not found
-	 */
-	public BaseEntity getBaseEntityOrNull(String code) {
-
-		return getBaseEntityOrNull(userToken.getProductCode(), code);
-	}
-
-	/**
-	 * Get a base entity using the code, or return null if not found.
-	 * 
-	 * @param productCode The product to search in
-	 * @param code        The code of the entity to fetch
-	 * @return The BaseEntity, or null if not found
-	 */
-	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
-		return getBaseEntityByCode(productCode, code);
-	}
-
-	/**
-	 * Fetch A {@link BaseEntity} from the cache using a code.
+	 * Get a base entity using a code, but throw an
+	 * ItemNotFoundException if the entitiy does not exist.
 	 *
-	 * @param code The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityByCode(String code) {
-		if (userToken == null) {
-			throw new NullParameterException("User Token");
-		}
-		return getBaseEntityByCode(serviceToken.getProductCode(), code);
-	}
-
-	/**
-	 * Fetch A {@link BaseEntity} from the cache using a code.
-	 *
-	 * @param productCode The productCode to use
-	 * @param code        The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity bundled with BaseEntityAttributes, or null if not found.
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityByCode(String productCode, String code) {
-		return getBaseEntityByCode(productCode, code, true);
-	}
-
-	@Deprecated
-	public BaseEntity getBaseEntityByCode(String productCode, String code, boolean bundleAttributes) {
-		// fetch entity
-		final BaseEntity entity = getPersistableBaseEntity(productCode, code);
-		if (entity == null) {
-			log.errorf("No baseentity found in cache for [ productCode , code ]: [ %s , %s]", productCode, code);
-			return null;
-		}
-		// fetch entity attributes
-		if (bundleAttributes) {
-			Map<String, EntityAttribute> attributeMap = new HashMap<>();
-			beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
-				entity.getBaseEntityAttributes().add(bea);
-			});
-			log.debugf("Added %s BaseEntityAttributes to BE.", entity.getBaseEntityAttributes().size());
-		}
-		return entity;
-	}
-
-	/**
-	 * Get the persistable Entity
 	 * @param productCode
 	 * @param code
+	 * @param bundleAttributes
 	 * @return
 	 */
-	public BaseEntity getPersistableBaseEntity(String productCode, String code) {
-		// check for entity in the cache
+	public BaseEntity getBaseEntity(String productCode, String code, boolean bundleAttributes) {
+		// fetch entity
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
 		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(CacheManager.CACHE_NAME_BASEENTITY, key);
 		if (baseEntity == null) {
-			throw new ItemNotFoundException(productCode, code);
+			throw new ItemNotFoundException(productCode + ":" + code);
+		}
+		// fetch entity attributes
+		if (bundleAttributes) {
+			beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
+				baseEntity.getBaseEntityAttributes().add(bea);
+			});
+			log.debugf("Added %s BaseEntityAttributes to BE.", baseEntity.getBaseEntityAttributes().size());
 		}
 		return baseEntity;
 	}
@@ -220,7 +156,7 @@ public class BaseEntityUtils {
 				ea.setBaseEntityCode(baseEntity.getCode());
 			}
 			if (ea.getAttribute() == null) {
-				Attribute attribute = attributeManager.getAttribute(baseEntity.getRealm(), ea.getAttributeCode());
+				Attribute attribute = cm.getAttribute(baseEntity.getRealm(), ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
 		}
@@ -242,8 +178,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(String baseEntityCode, String attributeCode) {
-
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityFromLinkAttribute(be, attributeCode);
 	}
 
@@ -255,14 +190,13 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
-
 		String newBaseEntityCode = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		// return null if attributeCode valueString is null or empty
 		if (StringUtils.isEmpty(newBaseEntityCode)) {
 			return null;
 		}
 		try {
-			BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
+			BaseEntity newBe = getBaseEntity(newBaseEntityCode);
 			return newBe;
 		} catch (ItemNotFoundException e) {
 			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
@@ -278,8 +212,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity code stored in the attribute
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(String baseEntityCode, String attributeCode) {
-
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityCodeFromLinkAttribute(be, attributeCode);
 	}
 
@@ -317,7 +250,7 @@ public class BaseEntityUtils {
 	 */
 	public List<String> getBaseEntityCodeArrayFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityCodeArrayFromLinkAttribute(be, attributeCode);
 	}
 
@@ -370,7 +303,7 @@ public class BaseEntityUtils {
 	 */
 	public Object getBaseEntityValue(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		if (be != null) {
 			Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 			if (ea.isPresent()) {
@@ -411,7 +344,7 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityValueAsString(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityAttrValueAsString(be, attributeCode);
 	}
 
@@ -424,7 +357,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalDateTime getBaseEntityValueAsLocalDateTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDateTime();
@@ -440,7 +373,7 @@ public class BaseEntityUtils {
 	 * @return The value as a LocalDate
 	 */
 	public LocalDate getBaseEntityValueAsLocalDate(final String baseEntityCode, final String attributeCode) {
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDate();
@@ -457,7 +390,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalTime getBaseEntityValueAsLocalTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueTime();
@@ -477,7 +410,7 @@ public class BaseEntityUtils {
 		String[] arr = strArr.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "").split(",");
 		List<BaseEntity> entityList = Arrays.stream(arr)
 				.filter(item -> !item.isEmpty())
-				.map(item -> (BaseEntity) getBaseEntityOrNull(item))
+				.map(item -> (BaseEntity) getBaseEntity(item))
 				.collect(Collectors.toList());
 
 		return entityList;
@@ -646,7 +579,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = defBE.findPrefixEntityAttributes("ATT_");
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
-			Attribute attribute = attributeManager.getAttribute(defBE.getRealm(), attrCode);
+			Attribute attribute = cm.getAttribute(defBE.getRealm(), attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -679,11 +612,11 @@ public class BaseEntityUtils {
 			}
 		}
 
-		Attribute linkDef = attributeManager.getAttribute(userToken.getProductCode(), "LNK_DEF");
+		Attribute linkDef = cm.getAttribute(userToken.getProductCode(), "LNK_DEF");
 		item.addAnswer(new Answer(item, item, linkDef, "[\"" + defBE.getCode() + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = attributeManager.getAttribute(userToken.getProductCode(), "LNK_AUTHOR");
+		Attribute lnkAuthorAttr = cm.getAttribute(userToken.getProductCode(), "LNK_AUTHOR");
 		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item);
@@ -707,7 +640,7 @@ public class BaseEntityUtils {
 		if (attributeCode == null)
 			throw new NullParameterException("attributeCode");
 
-		Attribute attribute = attributeManager.getAttribute(userToken.getProductCode(), attributeCode);
+		Attribute attribute = cm.getAttribute(userToken.getProductCode(), attributeCode);
 
 		EntityAttribute ea = new EntityAttribute(1.0, value);
 		ea.setRealm(userToken.getProductCode());
@@ -754,18 +687,18 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_EMAIL");
+			Attribute emailAttribute = cm.getAttribute(userToken.getProductCode(), "PRI_EMAIL");
 			item.addAnswer(new Answer(item, item, emailAttribute, email));
-			Attribute usernameAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_USERNAME");
+			Attribute usernameAttribute = cm.getAttribute(userToken.getProductCode(), "PRI_USERNAME");
 			item.addAnswer(new Answer(item, item, usernameAttribute, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_UUID");
+		Attribute uuidAttribute = cm.getAttribute(userToken.getProductCode(), "PRI_UUID");
 		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
 
 		// keycloak UUID
-		Attribute keycloakAttribute = attributeManager.getAttribute(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
+		Attribute keycloakAttribute = cm.getAttribute(userToken.getProductCode(), "PRI_KEYCLOAK_UUID");
 		item.addAnswer(new Answer(item, item, keycloakAttribute, uuid.toUpperCase()));
 
 		return item;

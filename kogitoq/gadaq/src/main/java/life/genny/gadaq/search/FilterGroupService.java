@@ -566,7 +566,7 @@ public class FilterGroupService {
             Attribute attr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
             defBE.addAttribute(attr, 1.0, FilterConst.SBE_PREF);
             if(nameOrCode.startsWith(FilterConst.SBE_SAVED_SEARCH)) {
-                baseEntity = beUtils.getBaseEntityOrNull(userToken.getProductCode(), nameOrCode);
+                baseEntity = beUtils.getBaseEntity(userToken.getProductCode(), nameOrCode);
             } else {
                 baseEntity = beUtils.create(defBE, nameOrCode, baseCode);
             }

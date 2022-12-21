@@ -108,18 +108,13 @@ public class QuestionUtils {
         List<BaseEntityAttribute> attributes = new LinkedList<>();
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "parentCode", questionQuestion.getParentCode()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "childCode", questionQuestion.getChildCode()));
-        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "createOnTrigger", questionQuestion.getCreateOnTrigger()));
-        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "dependency", questionQuestion.getDependency()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "disabled", questionQuestion.getDisabled()));
-        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "formTrigger", questionQuestion.getFormTrigger()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "hidden", questionQuestion.getHidden()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "icon", questionQuestion.getIcon()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "mandatory", questionQuestion.getMandatory()));
-        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "oneshot", questionQuestion.getOneshot()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "readonly", questionQuestion.getReadonly()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "version", questionQuestion.getVersion()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "weight", questionQuestion.getWeight()));
-        attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, "capreqs", CapabilitySetAdapter.convertToDBColumn(questionQuestion.getCapabilityRequirements())));
         return attributes;
     }
 
@@ -195,7 +190,7 @@ public class QuestionUtils {
                     question.setReadonly(attribute.getValueBoolean());
                     break;
                 default:
-                    log.debug("Attribute not related to 'Question' entity, ignored.");
+                    log.trace("Attribute not related to 'Question' entity, ignored.");
                     break;
             }
         });
@@ -223,17 +218,8 @@ public class QuestionUtils {
                 case "targetCode":
                     questionQuestion.setChildCode(attribute.getValueString());
                     break;
-                case "createOnTrigger":
-                    questionQuestion.setCreateOnTrigger(attribute.getValueBoolean());
-                    break;
-                case "dependency":
-                    questionQuestion.setDependency(attribute.getValueString());
-                    break;
                 case "disabled":
                     questionQuestion.setDisabled(attribute.getValueBoolean());
-                    break;
-                case "formTrigger":
-                    questionQuestion.setFormTrigger(attribute.getValueBoolean());
                     break;
                 case "hidden":
                     questionQuestion.setHidden(attribute.getValueBoolean());
@@ -244,9 +230,6 @@ public class QuestionUtils {
                 case "mandatory":
                     questionQuestion.setMandatory(attribute.getValueBoolean());
                     break;
-                case "oneshot":
-                    questionQuestion.setOneshot(attribute.getValueBoolean());
-                    break;
                 case "readonly":
                     questionQuestion.setReadonly(attribute.getValueBoolean());
                     break;
@@ -255,9 +238,6 @@ public class QuestionUtils {
                     break;
                 case "weight":
                     questionQuestion.setWeight(attribute.getValueDouble());
-                    break;
-                case "capreqs":
-                    questionQuestion.setCapabilityRequirements(CapabilitySetAdapter.convertToEA(attribute.getValueString()));
                     break;
                 default:
                     log.debug("Attribute not related to 'QuestionQuestion' entity, ignored.");

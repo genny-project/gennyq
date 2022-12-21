@@ -279,7 +279,7 @@ public class GithubUtils {
                     String existingUrl = lays.get(layoutCode);
                     BaseEntity layout = null;
                     try {
-                        layout = beUtils.getBaseEntityOrNull(realm, layoutCode);
+                        layout = beUtils.getBaseEntity(realm, layoutCode);
                     } catch (ItemNotFoundException e) {
                         log.info("No be found for " + layoutCode);
                     }

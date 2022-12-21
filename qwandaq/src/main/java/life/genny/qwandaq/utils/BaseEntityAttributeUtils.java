@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.attribute.HAttribute;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
@@ -64,17 +64,6 @@ public class BaseEntityAttributeUtils {
 	 *
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttribute to fetch
-	 * @return The corresponding list of all BaseEntityAttributes, or empty list if not found.
-	 */
-    public List<BaseEntityAttribute> getAllBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-        return cm.getBaseEntityAttributesForBaseEntityUsingIckle(productCode, baseEntityCode);
-    }
-
-    /**
-	 * Fetch a {@link BaseEntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
-	 *
-	 * @param productCode The productCode to use
-	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttribute to fetch
      * @param attributeCode        The Attribute code of the BaseEntityAttribute to fetch
 	 * @return The corresponding EntityAttribute, or null if not found.
 	 */
@@ -108,17 +97,17 @@ public class BaseEntityAttributeUtils {
 	 */
     public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
         List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
-        getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
+        cm.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
                 .forEach((baseEntityAttribute) -> {
 					EntityAttribute ea = (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity();
-					HAttribute hAttribute = cm.getObject(productCode, ea.getAttributeCode(), HAttribute.class);
-					if (hAttribute != null) {
+					Attribute attribute = cm.getAttribute(productCode, ea.getAttributeCode());
+					if (attribute != null) {
 						log.infof("############### Read attribute for [realm, beCode, attCode]: [%s, %s, %s]", ea.getRealm(), ea.getBaseEntityCode(), ea.getAttributeCode());
 					} else {
 						log.infof("############### Can't find attribute for [realm, attCode]: [%s, %s]", productCode, ea.getAttributeCode());
 						throw new RuntimeException("Attribute is null");
 					}
-					ea.setAttribute(hAttribute.toAttribute());
+					ea.setAttribute(attribute);
 					baseEntityAttributes.add(ea);
 				});
         return baseEntityAttributes;

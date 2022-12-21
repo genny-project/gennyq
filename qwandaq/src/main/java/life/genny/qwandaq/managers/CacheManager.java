@@ -1,6 +1,7 @@
 package life.genny.qwandaq.managers;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,11 +32,14 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttributeKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityAttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
@@ -59,6 +63,9 @@ public class CacheManager {
 
 	@Inject
 	Logger log;
+
+	@Inject
+	UserToken userToken;
 
 	@Inject
 	QuestionUtils questionUtils;
@@ -242,6 +249,43 @@ public class CacheManager {
 		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
 	}
 
+    /**
+     * @param productCode
+     * @param code
+     * @return
+     */
+    public Attribute get(String productCode, String code) {
+        AttributeKey key = new AttributeKey(productCode, code);
+		Attribute attribute = (Attribute) getPersistableEntity(CacheManager.CACHE_NAME_ATTRIBUTE, key);
+		if (attribute == null) {
+			throw new ItemNotFoundException(productCode, code);
+		}
+        return attribute;
+    }
+
+    /**
+     * @param code
+     * @return
+     */
+    public Attribute getAttribute(String code) {
+		return getAttribute(userToken.getUserCode(), code);
+    }
+
+    /**
+     * @param productCode
+     * @param code
+     * @return
+     */
+    public Attribute getAttribute(String productCode, String code) {
+        AttributeKey key = new AttributeKey(productCode, code);
+		Attribute attribute = (Attribute) getPersistableEntity(CacheManager.CACHE_NAME_ATTRIBUTE, key);
+		if (attribute == null) {
+			throw new ItemNotFoundException(productCode, code);
+		}
+		log.info("attribute = " + jsonb.toJson(attribute));
+        return attribute;
+    }
+
 	/**
 	 * Fetch all attributes for a product.
 	 *
@@ -257,7 +301,15 @@ public class CacheManager {
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode + "'");
 		// perform search
 		QueryResult<Attribute> queryResult = query.execute();
-		return queryResult.list();
+		List<Attribute> attributes = queryResult.list();
+
+		int pageSize = query.getMaxResults();
+		while (queryResult.hitCount().getAsLong() > attributes.size()) {
+			query.startOffset(query.getStartOffset()+pageSize);
+			queryResult = query.execute();
+			attributes.addAll(queryResult.list());
+		}
+		return attributes;
 	}
 
 	/**
@@ -298,7 +350,7 @@ public class CacheManager {
 	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public List<BaseEntityAttribute> getBaseEntityAttributesForBaseEntityUsingIckle(String productCode, String baseEntityCode) {
+	public List<BaseEntityAttribute> getAllBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<BaseEntityAttribute> query = queryFactory
@@ -308,6 +360,55 @@ public class CacheManager {
 		return queryResult.list();
 	}
 
+	/**
+	 * @param productCode
+	 * @param questionCode
+	 * @param fetchChildQuestions
+	 * @return
+	 */
+	public Question getQuestion(String productCode, String questionCode) {
+		// fetch baseentity representation
+		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(productCode, questionCode);
+		// fetch attributes and convert to question
+		Set<BaseEntityAttribute> attributes = new HashSet<>(getAllBaseEntityAttributesForBaseEntity(productCode, questionCode));
+		Question question = questionUtils.getQuestionFromBaseEntity(baseEntity, attributes);
+		// ensure attribute field is non null
+		Attribute attribute = getAttribute(productCode, question.getAttributeCode());
+		question.setAttribute(attribute);
+		return question;
+	}
+
+	/**
+	 * @param productCode
+	 * @param parentCode
+	 * @return
+	 */
+	public List<QuestionQuestion> getQuestionQuestions(String productCode, String parentCode) {
+		// get bea remote cache for querying
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY_ATTRIBUTE);
+		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
+		log.info("QuestionQuestion -> productCode = " + productCode + ", questionCode = " + parentCode);
+		// init query
+		Query<BaseEntityAttribute> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where baseEntityCode like '"+parentCode+"|%'"
+					 + "and realm = '"+productCode+"'");
+		// execute query
+		QueryResult<BaseEntityAttribute> queryResult = query.execute();
+		Question parent = getQuestion(productCode, parentCode);
+		// begin building QQ objects
+		List<QuestionQuestion> questionQuestions = new LinkedList<>();
+		for (BaseEntityAttribute entityAttribute : queryResult.list()) {
+			String childCode = entityAttribute.getBaseEntityCode().split("|")[1];
+			Question child = getQuestion(productCode, childCode);
+			QuestionQuestion questionQuestion = new QuestionQuestion(parent, child);
+			questionQuestions.add(questionQuestion);
+		}
+		return questionQuestions;
+	}
+
+	/**
+	 * @param question
+	 */
 	public void saveQuestion(Question question) {
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getSerializableBaseEntityFromQuestion(question);
 		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
@@ -319,6 +420,9 @@ public class CacheManager {
 		question.getChildQuestions().parallelStream().forEach(questionQuestion -> saveQuestionQuestion(questionQuestion));
 	}
 
+	/**
+	 * @param questionQuestion
+	 */
 	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getSerializableBaseEntityFromQuestionQuestion(questionQuestion);
 		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
@@ -329,59 +433,5 @@ public class CacheManager {
 		});
 	}
 
-	public Question getQuestion(String productCode, String questionCode) {
-		return getQuestion(productCode, questionCode, false);
-	}
-
-	public Question getQuestion(String productCode, String questionCode, boolean fetchChildQuestions) {
-		BaseEntity baseEntity = baseEntityUtils.getPersistableBaseEntity(productCode, questionCode);
-		Set<BaseEntityAttribute> attributes = new HashSet<>();
-		attributes.addAll(baseEntityAttributeUtils.getAllBaseEntityAttributesForBaseEntity(productCode, questionCode));
-		Question question = questionUtils.getQuestionFromBaseEntity(baseEntity, attributes);
-		if(fetchChildQuestions) {
-			question.getChildQuestionCodesAsStrings().parallelStream().forEach(code -> {
-				question.getChildQuestions().add(getQuestionQuestionRecursively(productCode, code, true));
-			});
-		}
-		return question;
-	}
-
-	public List<QuestionQuestion> getQuestionQuestionByQuestionCode(String productCode, String questionCode) {
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY_ATTRIBUTE);
-		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
-		Query<BaseEntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentityattribute.BaseEntityAttribute where realm = '" + productCode
-						+ "' and valueString = '" + questionCode + "'  and attributeCode = 'parentCode' order by baseEntityCode");
-		List<QuestionQuestion> questionQuestions = new LinkedList<>();
-		QueryResult<BaseEntityAttribute> queryResult = query.execute();
-		String prevBaseEntityCode = null;
-		List<BaseEntityAttribute> allAttributes = queryResult.list();
-		Set<BaseEntityAttribute> attributesForBaseEntity = new HashSet<>();
-		for (BaseEntityAttribute baseEntityAttribute : allAttributes) {
-			String curBaseEntityCode = baseEntityAttribute.getBaseEntityCode();
-			if (prevBaseEntityCode != null && !prevBaseEntityCode.equals(curBaseEntityCode)) {
-				BaseEntity baseEntity = baseEntityUtils.getPersistableBaseEntity(productCode, curBaseEntityCode);
-				questionQuestions.add(questionUtils.getQuestionQuestionFromBaseEntityBaseEntityAttributes(baseEntity, attributesForBaseEntity));
-				attributesForBaseEntity.clear();
-			} else {
-				attributesForBaseEntity.add(baseEntityAttribute);
-			}
-			prevBaseEntityCode = curBaseEntityCode;
-		}
-		return questionQuestions;
-	}
-
-	public QuestionQuestion getQuestionQuestionRecursively(String productCode, String baseEntityCode, boolean fetchChildQuestions) {
-		BaseEntity baseEntity = baseEntityUtils.getPersistableBaseEntity(productCode, baseEntityCode);
-		Set<BaseEntityAttribute> attributes = new HashSet<>();
-		attributes.addAll(baseEntityAttributeUtils.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode));
-		QuestionQuestion questionQuestion = questionUtils.getQuestionQuestionFromBaseEntityBaseEntityAttributes(baseEntity, attributes);
-		if (fetchChildQuestions) {
-			questionQuestion.getChildQuestionCodes().parallelStream().forEach(code -> {
-				questionQuestion.getChildQuestionQuestions().add(getQuestionQuestionRecursively(productCode, code, true));
-			});
-		}
-		return questionQuestion;
-	}
 }
 

@@ -3,7 +3,7 @@ package life.genny.qwandaq.serialization.baseentity;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 public class BaseEntityKey implements CoreEntityKey {
-	public static final String BE_KEY_DELIMITER = ":";
+	public static final String BE_KEY_DELIMITER = "|";
 
 	private String realm;
 	private String code;

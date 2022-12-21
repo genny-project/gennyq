@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -23,44 +22,22 @@ import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Type;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.CodedEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 public class EntityAttribute implements CoreEntityPersistable, ICapabilityHiddenFilterable, Comparable<Object> {
 

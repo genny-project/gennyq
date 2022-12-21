@@ -164,8 +164,8 @@ public class FilterUtils {
      */
     public Ask getAddFilterGroupBySearchBE(String questionCode) {
         String sourceCode = userToken.getUserCode();
-        BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
-        BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
+        BaseEntity source = beUtils.getBaseEntity(sourceCode);
+        BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
         Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_ADD_FILTER_SBE_GRP, source, target);
         ask.getChildAsks().stream().forEach(e -> {
@@ -199,8 +199,8 @@ public class FilterUtils {
      */
     public Ask getFilterDetailsGroup(String queGrp,String queCode,String filterCode,Map<String, SavedSearch> params) {
         String sourceCode = userToken.getUserCode();
-        BaseEntity source = beUtils.getBaseEntityOrNull(sourceCode);
-        BaseEntity target = beUtils.getBaseEntityOrNull(sourceCode);
+        BaseEntity source = beUtils.getBaseEntity(sourceCode);
+        BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
         Ask ask = qwandaUtils.generateAskFromQuestionCode(FilterConst.QUE_SBE_DETAIL_QUESTION_GRP,source,target);
         ask.setHidden(true);
@@ -282,22 +282,22 @@ public class FilterUtils {
         base.setQuestionCode(FilterConst.QUE_FILTER_OPTION);
 
         if (value.contains(FilterConst.DATETIME)){
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LESS_THAN));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
         } else if (value.contains(FilterConst.SELECT)) {
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
         } else {
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_EQUAL_TO));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_LIKE));
-            base.add(beUtils.getBaseEntityOrNull(FilterConst.SEL_NOT_LIKE));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_LIKE));
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_LIKE));
         }
 
         return base;

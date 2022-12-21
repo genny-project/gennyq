@@ -294,7 +294,7 @@ public class QwandaUtils {
 
 			log.info("[*] Parent Question: " + question.getCode());
 
-			List<QuestionQuestion> questionQuestions = cm.getQuestionQuestionByQuestionCode(productCode, question.getCode());
+			List<QuestionQuestion> questionQuestions = cm.getQuestionQuestions(productCode, question.getCode());
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {

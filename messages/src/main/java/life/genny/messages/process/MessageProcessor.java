@@ -76,7 +76,7 @@ public class MessageProcessor {
 
         log.debug("Realm is " + realm + " - Incoming Message :: " + message.toString());
 
-        BaseEntity projectBe = beUtils.getBaseEntityByCode("PRJ_" + realm.toUpperCase());
+        BaseEntity projectBe = beUtils.getBaseEntity("PRJ_" + realm.toUpperCase());
 
         // try {
         //     log.warn("*** HORRIBLE ACC HACK TO DELAY FOR 10 SEC TO ALLOW CACHE ITEM TO BE COMPLETE");
@@ -90,7 +90,7 @@ public class MessageProcessor {
 
         BaseEntity templateBe = null;
         if (message.getTemplateCode() != null) {
-            templateBe = beUtils.getBaseEntityByCode(message.getTemplateCode());
+            templateBe = beUtils.getBaseEntity(message.getTemplateCode());
         }
 
         if (templateBe != null) {
@@ -199,7 +199,7 @@ public class MessageProcessor {
             if (recipient.contains("[\"") && recipient.contains("\"]")) {
                 // This is a BE Code
                 String code = beUtils.cleanUpAttributeValue(recipient);
-                recipientBe = beUtils.getBaseEntityByCode(code);
+                recipientBe = beUtils.getBaseEntity(code);
             } else {
                 // Probably an actual email
                 String code = "RCP_" + UUID.randomUUID().toString().toUpperCase();
@@ -236,7 +236,7 @@ public class MessageProcessor {
     private void sendToProvider(QMessageGennyMSG message, Map<String, Object> baseEntityContextMap, 
                     BaseEntity templateBe, BaseEntity recipientBe, List<QBaseMSGMessageType> messageTypeList) {
         final String templateCode = message.getTemplateCode() + "_UNSUBSCRIBE";
-        final BaseEntity unsubscriptionBe = beUtils.getBaseEntityByCode("COM_EMAIL_UNSUBSCRIPTION");
+        final BaseEntity unsubscriptionBe = beUtils.getBaseEntity("COM_EMAIL_UNSUBSCRIPTION");
         if(unsubscriptionBe == null) {
             log.warn("Unsubscription Base Entity is null! All users will be treated at subscribed");
         }
@@ -293,7 +293,7 @@ public class MessageProcessor {
                     log.info("Fetching contextCodeArray :: " + Arrays.toString(codeArr));
                     // Convert to BEs
                     BaseEntity[] beArray = Arrays.stream(codeArr)
-                            .map(itemCode -> beUtils.getBaseEntityByCode(itemCode))
+                            .map(itemCode -> beUtils.getBaseEntity(itemCode))
                             .toArray(BaseEntity[]::new);
 
                     if (beArray.length == 1) {

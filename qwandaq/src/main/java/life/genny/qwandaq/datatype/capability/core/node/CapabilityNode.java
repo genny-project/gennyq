@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import javax.json.bind.annotation.JsonbTransient;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.jboss.logging.Logger;
 
@@ -143,7 +144,10 @@ public class CapabilityNode {
 		CapabilityMode capMode;
 		PermissionMode permMode;
 
-		if(capabilityString.length() != 3) {
+		// TODO: merge latest to remove this
+		capabilityString = StringUtils.removeStart(capabilityString, "!");
+
+		if (capabilityString.length() != 3) {
 			log.error("Expected length 3. Got: " + capabilityString.length());
 			throw new BadDataException("Could not deserialize capability node: " + capabilityString);
 		}
