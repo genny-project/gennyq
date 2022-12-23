@@ -135,11 +135,12 @@
 				<module>serviceq</module>
 				<module>kogitoq</module>
 				<module>bridge</module>
+				<module>fyodor</module>
 				<module>dropkick</module>
 				<module>lauchy</module>
 				<module>messages</module>
 				<module>shleemy</module>
-				<module>fyodor</module>
+				<module>bootq</module>
 			</modules>
 		</profile>
 		<!-- Native Profile -->

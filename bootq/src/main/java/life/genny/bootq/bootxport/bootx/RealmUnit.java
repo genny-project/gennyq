@@ -11,6 +11,7 @@ import org.jboss.logging.Logger;
 import com.google.common.collect.Maps;
 
 public class RealmUnit extends DataUnit {
+
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().getClass());
 
     private String code;
@@ -129,7 +130,7 @@ public class RealmUnit extends DataUnit {
     };
 
 
-    public RealmUnit(BatchLoadMode mode, Map<String, String> realm) {
+    public RealmUnit(Map<String, String> realm) {
         Optional<String> disabelStr = Optional.ofNullable(realm.get("disable"));
         Boolean disableProject = disabelStr.map(Boolean::valueOf).orElse(false);
         Optional<String> skipGoogleDocStr = Optional.ofNullable(realm.get("skipGoogleDoc".toLowerCase().replaceAll("^\"|\"$|_|-", "")));
@@ -149,7 +150,7 @@ public class RealmUnit extends DataUnit {
         if (skipgoogledoc) {
             log.info("Skipping google doc for realm " + this.name);
         } else {
-            module = new Module(mode, realm.get("sheetID".toLowerCase()));
+            module = new Module(realm.get("sheetID".toLowerCase()));
             Optional<HashMap<String, Map<String, String>>> tmpOptional = module.getDataUnits().stream()
                     .map(moduleUnit -> Maps.newHashMap(moduleUnit.baseEntitys))
                     .reduce(overrideByPrecedence);

@@ -24,6 +24,8 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.EntityEntity;
+import life.genny.qwandaq.entity.EntityEntityId;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
@@ -269,7 +271,7 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Fetch A {@link BaseEntity} from the database using the entity code.
+	 * Fetch a {@link BaseEntity} from the database using the entity code.
 	 *
 	 * @param realm The realm that the {@link BaseEntity} is saved under
 	 * @param code  The code of the {@link BaseEntity} to fetch
@@ -284,7 +286,24 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Fetch A {@link Question} from the database using the question code.
+	 * Fetch a {@link EntityEntity} from the database using the entity code.
+	 *
+	 * @param realm
+	 * @param sourceCode
+	 * @param targetCode
+	 * @return
+	 */
+	public EntityEntity findEntityEntityBySourceAndTarget(String realm, String sourceCode, String targetCode) {
+		return entityManager
+				.createQuery("FROM EntityEntity WHERE realm=:realmStr AND sourceCode=:sourceCode AND targetCode=:targetCode", EntityEntity.class)
+				.setParameter("realmStr", realm)
+				.setParameter("sourceCode", sourceCode)
+				.setParameter("targetCode", targetCode)
+				.getSingleResult();
+	}
+
+	/**
+	 * Fetch a {@link Question} from the database using the question code.
 	 * 
 	 * @param realm the realm to find in
 	 * @param code  the code to find by
@@ -339,6 +358,11 @@ public class DatabaseUtils {
 				.getResultList();
 	}
 
+	/**
+	 * @param realm
+	 * @param targetCode
+	 * @return
+	 */
 	public List<QuestionQuestion> findParentQuestionQuestionsByTargetCode(String realm, String targetCode) {
 
 		return entityManager
@@ -464,6 +488,35 @@ public class DatabaseUtils {
 			entityManager.merge(entity);
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
+	}
+
+	/**
+	 * Save a {@link BaseEntity} to the database.
+	 * 
+	 * @param entityEntity A {@link BaseEntity} object to save
+	 */
+	@Transactional
+	public void saveEntityEntity(EntityEntity entityEntity) {
+
+		EntityEntityId pk = entityEntity.getPk();
+		String sourceCode = pk.getSource().getCode();
+		String targetCode = pk.getTargetCode();
+		log.debug("Saving EntityEntity " + entityEntity.getRealm() + ":" + sourceCode + ":" + targetCode);
+
+		EntityEntity existingEntity = null;
+		try {
+			existingEntity = findEntityEntityBySourceAndTarget(entityEntity.getRealm(), sourceCode, targetCode);
+		} catch (NoResultException e) {
+			log.debugf("%s not found in database, creating new row...", sourceCode + ":" + targetCode);
+		}
+
+		if (existingEntity == null) {
+			log.debug("New BaseEntity being saved to DB -> " + sourceCode + ":" + targetCode);
+			entityManager.persist(entityEntity);
+		} else {
+			entityManager.merge(entityEntity);
+		}
+		log.debug("Successfully saved BaseEntity " + sourceCode + ":" + targetCode);
 	}
 
 	/**

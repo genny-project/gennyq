@@ -11,9 +11,9 @@ public abstract class SheetReferralType<T> {
 
     public final String sheetURI;
 
-    public SheetReferralType(BatchLoadMode mode, String sheetURI) {
+    public SheetReferralType(String sheetURI) {
         this.sheetURI = sheetURI;
-        setService(new ImportService(mode, SheetState.getState()));
+        setService(new ImportService());
         init();
     }
 

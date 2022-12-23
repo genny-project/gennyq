@@ -23,10 +23,9 @@ public abstract class XlsxImport {
         if (!data.isEmpty()) {
             List<String> header = data.get(0).stream()
                     .map(d -> d.toString().toLowerCase().replaceAll("^\"|\"$|_|-", ""))
-//				.peek(System.out::println)
                     .collect(Collectors.toList());
             data.remove(0);
-            headerAndValues = Tuple.of(header, data);
+            headerAndValues = Tuple2.of(header, data);
         } else {
             log.error("Data to be sliced and Diced to HEader and Values is empty");
         }

@@ -13,32 +13,13 @@ public class ImportService {
 
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().getClass());
 
-    private Map<String, XlsxImport> state;
-    private BatchLoadMode mode;
-
-    public XlsxImport createXlsImport(String key) {
-        if (SheetState.getUpdateState().contains(key)) {
-            XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(GoogleImportService.getInstance().getService());
-            state.put(key, xlsxImportOnline);
-            SheetState.removeUpdateState(key);
-            log.info("The state it is being updated... " + key);
-            return xlsxImportOnline;
-        }
-        if (state.containsKey(key))
-            return state.get(key);
-        if (mode == BatchLoadMode.ONLINE) {
-            log.info("Creating a new Import service for " + key);
-            XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(GoogleImportService.getInstance().getService());
-            state.put(key, xlsxImportOnline);
-            return xlsxImportOnline;
-        } else {
-            return new XlsxImportOffline(null);
-        }
+    public ImportService() {
     }
 
-    public ImportService(BatchLoadMode mode, Map<String, XlsxImport> state) {
-        this.mode = mode;
-        this.state = state;
+    public XlsxImport createXlsImport(String key) {
+		log.info("Creating a new Import service for " + key);
+		XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(GoogleImportService.getInstance().getService());
+		return xlsxImportOnline;
     }
 
     public List<RealmUnit> fetchRealmUnit(String sheetURI) {
@@ -49,7 +30,7 @@ public class ImportService {
         for (Map<String, String> rawData : createXlsImport
                 .mappingRawToHeaderAndValuesFmt(sheetURI, projects)) {
             if (!rawData.isEmpty()) {
-                RealmUnit name = new RealmUnit(mode, rawData);
+                RealmUnit name = new RealmUnit(rawData);
                 list.add(name);
             }
         }
@@ -64,7 +45,7 @@ public class ImportService {
                 .stream()
                 .filter(rawData -> !rawData.isEmpty())
                 .map(d1 -> {
-                    ModuleUnit moduleUnit = new ModuleUnit(mode, d1.get("sheetID".toLowerCase()));
+                    ModuleUnit moduleUnit = new ModuleUnit(d1.get("sheetID".toLowerCase()));
                     moduleUnit.setName(d1.get("name"));
                     return moduleUnit;
                 })

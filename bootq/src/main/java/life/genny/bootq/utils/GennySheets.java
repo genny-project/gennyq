@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -31,13 +32,15 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
-import life.genny.qwanda.attribute.AttributeLink;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.EntityEntity;
+import life.genny.qwandaq.validation.Validation;
 
 public class GennySheets {
 	/**
@@ -145,41 +148,21 @@ public class GennySheets {
 	public Credential authorize() throws Exception {
 		Optional<String> path = Optional.ofNullable(System.getenv("GOOGLE_SVC_ACC_PATH"));
 
-        if(!path.isPresent()){
+        if (!path.isPresent()) {
 		    final InputStream in = IOUtils.toInputStream(clientSecret, "UTF-8");
 		    final GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
 
 		    final GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(HTTP_TRANSPORT, JSON_FACTORY,
 		    		clientSecrets, SCOPES).setDataStoreFactory(DATA_STORE_FACTORY).setAccessType("offline").build();
-		    final Credential credential = new AuthorizationCodeInstalledApp(flow, new LocalServerReceiver())
-		    		.authorize("user");
-		    return credential;
-        }else{
+			LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
+		    return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+        } else {
 		    GoogleCredential credential = GoogleCredential
                 .fromStream(new FileInputStream(path.get()),HTTP_TRANSPORT,JSON_FACTORY)
                 .createScoped(SCOPES);
 
 		    return credential;
         }
-	}
-
-	public <T> List<T> transform(final List<List<Object>> values, final Class object) {
-		final List<String> keys = new ArrayList<String>();
-		final List<T> k = new ArrayList<T>();
-		for (final Object key : values.get(0)) {
-			keys.add((String) key);
-		}
-		values.remove(0);
-		for (final List row : values) {
-			final Map<String, Object> mapper = new HashMap<String, Object>();
-			for (int counter = 0; counter < row.size(); counter++) {
-				mapper.put(keys.get(counter), row.get(counter));
-			}
-			// out.println(mapper);
-			final T lo = (T) JsonUtils.fromJson(mapper.toString(), object);
-			k.add(lo);
-		}
-		return k;
 	}
 
 	public <T> List<T> transformNotKnown(final List<List<Object>> values) {
@@ -197,13 +180,6 @@ public class GennySheets {
 			k.add((T) mapper);
 		}
 		return k;
-	}
-
-	public <T> List<T> getBeans(final Class clazz) throws IOException {
-		final String range = clazz.getSimpleName() + RANGE;
-		final ValueRange response = service.spreadsheets().values().get(sheetId, range).execute();
-		final List<List<Object>> values = response.getValues();
-		return transform(values, clazz);
 	}
 
 	public List<List<Object>> getStrings(final String sheetName, final String range) throws IOException {
@@ -314,7 +290,6 @@ public class GennySheets {
 		try {
 			obj = row2DoubleTuples(Attribute.class.getSimpleName());
 		} catch (final IOException e1) {
-			// TODO Auto-generated catch block
 			return null;
 		}
 		return obj.stream().map(object -> {
@@ -344,33 +319,6 @@ public class GennySheets {
 				fields.put("defaultValue", defaultValue);
 				map.put(code, fields);
 			}
-			return map;
-		}).reduce((ac, acc) -> {
-			ac.putAll(acc);
-			return ac;
-		}).get();
-	}
-
-	public Map<String, Map> newGetAttrLink() {
-		List<Map> obj = new ArrayList<Map>();
-		try {
-			obj = row2DoubleTuples(AttributeLink.class.getSimpleName());
-		} catch (final IOException e1) {
-			// TODO Auto-generated catch block
-			return null;
-		}
-		return obj.stream().map(object -> {
-			final Map<String, Map> map = new HashMap<String, Map>();
-			final String code = (String) object.get("code");
-			final String name = (String) object.get("name");
-			final String dataType = (String) object.get("datatype");
-			final String privacy = (String) object.get("privacy");
-			Map<String, String> fields = new HashMap<String, String>();
-			fields.put("code", code);
-			fields.put("name", name);
-			fields.put("dataType", dataType);
-			fields.put("privacy", privacy);
-			map.put(code, fields);
 			return map;
 		}).reduce((ac, acc) -> {
 			ac.putAll(acc);

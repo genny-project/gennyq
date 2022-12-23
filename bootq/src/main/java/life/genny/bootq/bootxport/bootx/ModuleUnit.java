@@ -77,7 +77,7 @@ public class ModuleUnit extends DataUnit {
         return keyColumnsMapping;
     }
 
-    public ModuleUnit(BatchLoadMode mode, String sheetURI) {
+    public ModuleUnit(String sheetURI) {
         Set<String> validSheetsTitle = initValidTitles();
         Map<String, Set<String>> keyColumnsMapping  = initKeyColumnsMapping();
 

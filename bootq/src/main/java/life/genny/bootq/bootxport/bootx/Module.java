@@ -12,8 +12,8 @@ public class Module extends SheetReferralType<ModuleUnit> {
         this.name = name;
     }
 
-    public Module(BatchLoadMode mode, String sheetURI) {
-        super(mode, sheetURI);
+    public Module(String sheetURI) {
+        super(sheetURI);
     }
 
     @Override

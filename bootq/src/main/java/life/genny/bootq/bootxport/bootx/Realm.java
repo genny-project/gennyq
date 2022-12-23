@@ -2,14 +2,12 @@ package life.genny.bootq.bootxport.bootx;
 
 public class Realm extends SheetReferralType<RealmUnit> {
 
-    public Realm(BatchLoadMode mode, String sheetURI) {
-        super(mode, sheetURI);
+    public Realm(String sheetURI) {
+        super(sheetURI);
     }
 
     public Realm(XlsxImport service, String sheetURI) {
-        this(
-                service instanceof XlsxImportOnline
-                        ? BatchLoadMode.ONLINE : BatchLoadMode.OFFLINE, sheetURI);
+        this(sheetURI);
     }
 
     @Override
