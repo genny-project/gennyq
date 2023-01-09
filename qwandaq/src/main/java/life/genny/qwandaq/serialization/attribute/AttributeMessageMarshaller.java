@@ -3,10 +3,12 @@ package life.genny.qwandaq.serialization.attribute;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-
+import java.util.List;
 import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.converter.ValidationListConverter;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.attribute.Attribute;
-
+import life.genny.qwandaq.validation.Validation;
 import org.infinispan.protostream.MessageMarshaller;
 
 public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> {
@@ -37,16 +39,21 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 		if (updatedLong != null) {
 			att.setUpdated(LocalDateTime.ofEpochSecond(updatedLong / 1000, 0, ZoneOffset.UTC));
 		}
-		/*att.setClassName(reader.readString("className"));
-		att.setDttCode(reader.readString("dttCode"));
-		att.setInputMask(reader.readString("inputmask"));
-		att.setTypeName(reader.readString("typeName"));
-		att.setValidationList(reader.readString("validation_list"));*/
 		att.setDefaultPrivacyFlag(reader.readBoolean("defaultPrivacyFlag"));
 		att.setDefaultValue(reader.readString("defaultValue"));
 		att.setDescription(reader.readString("description"));
 		att.setHelp(reader.readString("help"));
 		att.setPlaceholder(reader.readString("placeholder"));
+
+		DataType dataType = new DataType();
+		dataType.setDttCode(reader.readString("dttCode"));
+		dataType.setClassName(reader.readString("className"));
+		dataType.setComponent(reader.readString("component"));
+		dataType.setTypeName(reader.readString("typeName"));
+		List<Validation> validations = new ValidationListConverter().convertToEntityAttribute(reader.readString("validation_list"));
+		dataType.setValidationList(validations);
+		att.setDataType(dataType);
+
 		// att.setComponent(reader.readString("component"));
 		att.setIcon(reader.readString("icon"));
 		Integer statusInt = reader.readInt("status");
@@ -66,11 +73,11 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 		LocalDateTime updated = att.getUpdated();
 		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeLong("updated", updatedLong);
-		/*writer.writeString("className", att.getClassName());
-		writer.writeString("dttCode", att.getDttCode());
-		writer.writeString("inputmask", att.getInputMask());
-		writer.writeString("typeName", att.getTypeName());
-		writer.writeString("validation_list", att.getValidationList());*/
+		writer.writeString("className", att.getDataType().getClassName());
+		writer.writeString("dttCode", att.getDataType().getDttCode());
+		writer.writeString("inputmask", att.getDataType().getInputmask());
+		writer.writeString("typeName", att.getDataType().getTypeName());
+		writer.writeString("validation_list", new ValidationListConverter().convertToDatabaseColumn(att.getDataType().getValidationList()));
 		writer.writeBoolean("defaultPrivacyFlag", att.getDefaultPrivacyFlag());
 		writer.writeString("defaultValue", att.getDefaultValue());
 		writer.writeString("description", att.getDescription());

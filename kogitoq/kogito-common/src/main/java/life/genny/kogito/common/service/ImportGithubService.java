@@ -1,21 +1,25 @@
 package life.genny.kogito.common.service;
 
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.utils.*;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.RevisionSyntaxException;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.jboss.logging.Logger;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.GithubUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class ImportGithubService {
@@ -25,7 +29,7 @@ public class ImportGithubService {
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	CacheManager cm;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -75,9 +79,9 @@ public class ImportGithubService {
 				BaseEntity newBe = beUtils.create(dotDef, be.getName(), be.getCode());
 				newBe.setRealm(be.getRealm());
 
-				newBe.addAnswer(new Answer(newBe, newBe, qwandaUtils.getAttribute("PRI_NAME"), be.getName()));
-				newBe.addAnswer(new Answer(newBe, newBe, qwandaUtils.getAttribute("PRI_CODE"), be.getCode()));
-				newBe.addAnswer(new Answer(newBe, newBe, qwandaUtils.getAttribute("PRI_HTML_MERGE"),
+				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_NAME"), be.getName()));
+				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_CODE"), be.getCode()));
+				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_HTML_MERGE"),
 						be.getValueAsString("PRI_HTML_MERGE")));
 
 				beUtils.updateBaseEntity(newBe);

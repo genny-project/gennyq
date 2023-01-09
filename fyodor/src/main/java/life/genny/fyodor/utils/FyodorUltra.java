@@ -51,9 +51,9 @@ import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class FyodorUltra {
@@ -64,7 +64,7 @@ public class FyodorUltra {
 	private EntityManager entityManager;
 
 	@Inject
-	private QwandaUtils qwandaUtils;
+	private CacheManager cm;
 
 	@Inject
 	private BaseEntityUtils beUtils;
@@ -542,7 +542,7 @@ public class FyodorUltra {
 
 		Join<HBaseEntity, HEntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
 
-		Attribute attr = qwandaUtils.getAttribute(cauldron.getProductCode(), code);
+		Attribute attr = cm.getAttribute(cauldron.getProductCode(), code);
 		DataType dtt = attr.getDataType();
 		String className = dtt.getClassName();
 		Class<?> c = null;
@@ -709,7 +709,7 @@ public class FyodorUltra {
 		// create answer
 		Answer answer = new Answer(entity.getCode(), entity.getCode(), attributeCode, value);
 		log.info(code);
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+		Attribute attribute = cm.getAttribute(attributeCode);
 		answer.setAttribute(attribute);
 
 		return answer;

@@ -127,11 +127,11 @@ public class BaseEntityUtils {
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
 		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(CacheManager.CACHE_NAME_BASEENTITY, key);
 		if (baseEntity == null) {
-			throw new ItemNotFoundException(productCode + ":" + code);
+			throw new ItemNotFoundException(productCode, code);
 		}
 		// fetch entity attributes
 		if (bundleAttributes) {
-			beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream().forEach(bea -> {
+			beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream() .forEach(bea -> {
 				baseEntity.getBaseEntityAttributes().add(bea);
 			});
 			log.debugf("Added %s BaseEntityAttributes to BE.", baseEntity.getBaseEntityAttributes().size());

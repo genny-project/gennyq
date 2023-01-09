@@ -18,6 +18,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -44,6 +45,9 @@ public class BaseEntityService {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	DefUtils defUtils;
@@ -226,7 +230,7 @@ public class BaseEntityService {
 
 			if (ea.getAttribute() == null) {
 				log.debug("Attribute is null, fetching " + ea.getAttributeCode());
-				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
+				Attribute attribute = cm.getAttribute(ea.getAttributeCode());
 				ea.setAttribute(attribute);
 			}
 			ea.setBaseEntityCode(entity.getCode());

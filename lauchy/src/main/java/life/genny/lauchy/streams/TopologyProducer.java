@@ -9,6 +9,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -57,6 +58,9 @@ public class TopologyProducer {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	DefUtils defUtils;
@@ -266,7 +270,7 @@ public class TopologyProducer {
 		}
 
 		// TODO: The attribute should be retrieved from askMessage
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+		Attribute attribute = cm.getAttribute(attributeCode);
 
 		// check attribute code is allowed by target DEF
 		if (!definition.containsEntityAttribute("ATT_" + attributeCode)) {

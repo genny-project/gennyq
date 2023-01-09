@@ -313,6 +313,15 @@ public class CacheManager {
 	}
 
 	/**
+	 * @param attribute
+	 */
+	public void saveAttribute(Attribute attribute) {
+		life.genny.qwandaq.serialization.attribute.Attribute attr = (life.genny.qwandaq.serialization.attribute.Attribute) attribute.toSerializableCoreEntity();
+		AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
+		cache.putEntityIntoCache(CACHE_NAME_ATTRIBUTE, key, attr);
+	}
+
+	/**
 	 * Get a list of {@link BaseEntity}s to from cache by prefix.
 	 *
 	 * @param productCode - Product Code to retrieve from
@@ -369,9 +378,11 @@ public class CacheManager {
 	public Question getQuestion(String productCode, String questionCode) {
 		// fetch baseentity representation
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(productCode, questionCode);
+		log.info("Question BaseEntity Code = " + baseEntity.getCode());
 		// fetch attributes and convert to question
 		Set<BaseEntityAttribute> attributes = new HashSet<>(getAllBaseEntityAttributesForBaseEntity(productCode, questionCode));
 		Question question = questionUtils.getQuestionFromBaseEntity(baseEntity, attributes);
+		log.info("Question Code = " + question.getCode());
 		// ensure attribute field is non null
 		Attribute attribute = getAttribute(productCode, question.getAttributeCode());
 		question.setAttribute(attribute);
@@ -398,6 +409,7 @@ public class CacheManager {
 		// begin building QQ objects
 		List<QuestionQuestion> questionQuestions = new LinkedList<>();
 		for (BaseEntityAttribute entityAttribute : queryResult.list()) {
+			log.info("Fetching QuesQues -> " + entityAttribute.getBaseEntityCode());
 			String childCode = entityAttribute.getBaseEntityCode().split("|")[1];
 			Question child = getQuestion(productCode, childCode);
 			QuestionQuestion questionQuestion = new QuestionQuestion(parent, child);

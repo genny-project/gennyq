@@ -40,7 +40,6 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.FilterUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
@@ -59,9 +58,6 @@ public class FilterService {
 
     @Inject
     BaseEntityUtils beUtils;
-
-    @Inject
-    QwandaUtils qwandaUtils;
 
     @Inject
     SearchService search;
@@ -128,7 +124,7 @@ public class FilterService {
         EntityAttribute ea = null;
         try {
             BaseEntity base = beUtils.getBaseEntity(attrCode);
-            Attribute attribute = qwandaUtils.getAttribute(attrCode);
+            Attribute attribute = cm.getAttribute(attrCode);
             ea = new EntityAttribute(1.0, attrCode);
             if(!attrName.isEmpty()) {
                 ea.setAttributeName(attrName);
@@ -157,7 +153,7 @@ public class FilterService {
 
         // update content
         BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
-        Attribute attribute = qwandaUtils.getAttribute("PRI_LOC1");
+        Attribute attribute = cm.getAttribute("PRI_LOC1");
         EntityAttribute ea = new EntityAttribute(1.0, pcmCode);
         content.addAttribute(ea);
 
@@ -567,7 +563,7 @@ public class FilterService {
         childQuestion.setCode(queCode);
         childAsk.setAttributeCode(attCode);
 
-        Attribute childAttr = qwandaUtils.getAttribute(attCode);
+        Attribute childAttr = cm.getAttribute(attCode);
         childAttr.setCode(attCode);
         childAttr.setName(attCode);
         childQuestion.setAttribute(childAttr);
@@ -811,7 +807,7 @@ public class FilterService {
             String strJson = jsonb.toJson(param.getValue());
             SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-            Attribute att= qwandaUtils.getAttribute(ss.getColumn());
+            Attribute att= cm.getAttribute(ss.getColumn());
             StringBuilder valBuild = new StringBuilder(ss.getColumn());
             valBuild.append(FilterConst.SEPARATOR+ss.getOperator());
             valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());

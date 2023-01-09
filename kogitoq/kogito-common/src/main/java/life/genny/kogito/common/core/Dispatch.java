@@ -11,6 +11,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
@@ -50,6 +51,9 @@ public class Dispatch {
 
 	@Inject
 	CapabilitiesManager capMan;
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -276,6 +280,7 @@ public class Dispatch {
 		// check for a question code
 		Ask ask = null;
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
+		log.info("PcmCode = " + pcm.getCode() + ", QuestionCode = " + questionCode);
 		if (questionCode != null) {
 			// use pcm target if one is specified
 			String targetCode = pcm.getTargetCode();
@@ -326,7 +331,7 @@ public class Dispatch {
 	public Ask createButtonEvents(String buttonEvents, String sourceCode, String targetCode) {
 
 		// fetch attributes and create group
-		Attribute groupAttribute = qwandaUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP);
+		Attribute groupAttribute = cm.getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question groupQuestion = new Question(Question.QUE_EVENTS, "", groupAttribute);
 
 		// init ask

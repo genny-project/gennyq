@@ -55,9 +55,6 @@ public class SearchUtils {
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
 	BaseEntityUtils beUtils;
 
 	@Inject
@@ -294,7 +291,7 @@ public class SearchUtils {
 
 		// Fetch The Attribute of the last code
 		String primaryAttrCode = calFields[calFields.length - 1];
-		Attribute primaryAttribute = qwandaUtils.getAttribute(primaryAttrCode);
+		Attribute primaryAttribute = cm.getAttribute(primaryAttrCode);
 
 		Answer ans = new Answer(baseBE.getCode(), baseBE.getCode(), finalAttributeCode, "");
 		Attribute att = new Attribute(finalAttributeCode, primaryAttribute.getName(), primaryAttribute.getDataType());
@@ -526,7 +523,7 @@ public class SearchUtils {
 				// updateBaseEntity(searchBE, "PRI_TOTAL_RESULTS",
 				// Long.valueOf(finalResultList.size()) + "");
 
-				Attribute attribute = qwandaUtils.getAttribute("PRI_TOTAL_RESULTS");
+				Attribute attribute = cm.getAttribute("PRI_TOTAL_RESULTS");
 				searchBE.addAnswer(
 					new Answer(searchBE, searchBE, attribute, Long.valueOf(finalResultList.size()) + ""));
 				cm.putObject(productCode, searchBE.getCode(), searchBE);

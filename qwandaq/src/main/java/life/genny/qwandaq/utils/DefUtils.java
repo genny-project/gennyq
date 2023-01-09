@@ -7,14 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
 import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -22,12 +19,9 @@ import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.AttributeCodeValueString;
 import life.genny.qwandaq.models.UserToken;
@@ -47,6 +41,9 @@ public class DefUtils {
 	static Map<String, Map<String, String>> defPrefixMap = new ConcurrentHashMap<>();
 
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -315,7 +312,7 @@ public class DefUtils {
 		if (acvs == null)
 			throw new NullParameterException("acvs");
 
-		Attribute attribute = qwandaUtils.getAttribute(acvs.getAttributeCode());
+		Attribute attribute = cm.getAttribute(acvs.getAttributeCode());
 
 		if (attribute == null)
 			throw new NullParameterException("attribute");
@@ -359,7 +356,7 @@ public class DefUtils {
 				String[] attributeCodeArray = ea.getAttributeCode().split("\\.");
 				String attributeCode = attributeCodeArray[attributeCodeArray.length - 1];
 				// fetch the corresponding attribute
-				Attribute att = qwandaUtils.getAttribute(attributeCode);
+				Attribute att = cm.getAttribute(attributeCode);
 				DataType dataType = att.getDataType();
 
 				Object attributeFilterValue = ea.getValue();

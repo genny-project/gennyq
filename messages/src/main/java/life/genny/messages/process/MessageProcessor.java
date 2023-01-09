@@ -13,6 +13,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
+import life.genny.qwandaq.managers.CacheManager;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
@@ -40,7 +41,7 @@ public class MessageProcessor {
     ServiceToken serviceToken;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	CacheManager cm;
 
     public void processGenericMessage(QMessageGennyMSG message) {
         executor.supplyAsync(() -> {
@@ -188,8 +189,8 @@ public class MessageProcessor {
     }
 
     private List<BaseEntity> getRecipientBeList(String[] recipientArr) {
-        Attribute emailAttr = qwandaUtils.getAttribute("PRI_EMAIL");
-        Attribute mobileAttr = qwandaUtils.getAttribute("PRI_MOBILE");
+        Attribute emailAttr = cm.getAttribute("PRI_EMAIL");
+        Attribute mobileAttr = cm.getAttribute("PRI_MOBILE");
         List<BaseEntity> recipientBeList = new ArrayList<>();
 
         for (String recipient : recipientArr) {

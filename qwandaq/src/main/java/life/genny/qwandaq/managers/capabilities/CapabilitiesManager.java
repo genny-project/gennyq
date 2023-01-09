@@ -197,7 +197,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanedCode ? rawCapabilityCode : cleanCapabilityCode(rawCapabilityCode);
 		Attribute attribute = null;
 		try {
-			attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+			attribute = cm.getAttribute(productCode, cleanCapabilityCode);
 		} catch(ItemNotFoundException e) {
 			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
 		}
@@ -205,7 +205,8 @@ public class CapabilitiesManager extends Manager {
 		if (attribute == null) {
 			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
 			attribute = new Attribute(cleanCapabilityCode, name, new DataType(String.class));
-			qwandaUtils.saveAttribute(productCode, attribute);
+			attribute.setRealm(productCode);
+			cm.saveAttribute(attribute);
 		}
 
 		return attribute;
@@ -322,7 +323,7 @@ private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSe
 				String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 
 				// Don't need to catch here since we don't want to create
-				Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+				Attribute attribute = cm.getAttribute(productCode, cleanCapabilityCode);
 
 				return addCapabilityToBaseEntity(productCode, targetBe, attribute, modes);
 	}
@@ -333,7 +334,7 @@ private static Set<CapabilityNode> cascadeCapabilities(Set<CapabilityNode> capSe
 				String cleanCapabilityCode = cleanCapabilityCode(rawCapCode);
 
 				// Don't need to catch here since we don't want to create
-				Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+				Attribute attribute = cm.getAttribute(productCode, cleanCapabilityCode);
 				return addCapabilityToBaseEntity(productCode, target, attribute, capabilityList);
 			}
 

@@ -82,10 +82,10 @@ public class KafkaBean implements KafkaInterface {
 			case EVENTS -> producer.getToEvents().send(payload);
 			case VALID_EVENTS -> producer.getToValidEvents().send(payload);
 			case GENNY_EVENTS -> producer.getToGennyEvents().send(payload);
-			case GENNY_DATA -> producer.getToGennyData().send(payload);
 			case SEARCH_EVENTS -> producer.getToSearchEvents().send(payload);
 			case DATA -> producer.getToData().send(payload);
 			case VALID_DATA -> producer.getToValidData().send(payload);
+			case GENNY_DATA -> producer.getToGennyData().send(payload);
 			case SEARCH_DATA -> producer.getToSearchData().send(payload);
 			case MESSAGES -> producer.getToMessages().send(payload);
 			case SCHEDULE -> producer.getToSchedule().send(payload);

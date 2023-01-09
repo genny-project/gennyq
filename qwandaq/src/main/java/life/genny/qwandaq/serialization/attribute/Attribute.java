@@ -1,10 +1,14 @@
 package life.genny.qwandaq.serialization.attribute;
 
 import java.time.LocalDateTime;
-
+import java.util.List;
 import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.converter.ValidationListConverter;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.validation.Validation;
+import life.genny.qwandaq.validation.ValidationList;
 
 /*
  * A representation of BaseEntity in the cache
@@ -215,16 +219,24 @@ public class Attribute implements CoreEntitySerializable {
 
 	@Override
 	public CoreEntityPersistable toPersistableCoreEntity() {
-		life.genny.qwandaq.entity.BaseEntity baseEntity = new life.genny.qwandaq.entity.BaseEntity();
-		baseEntity.setCode(getCode());
-		baseEntity.setCreated(getCreated());
-		// baseEntity.setDtype();
-		baseEntity.setId(getId());
-		baseEntity.setName(getName());
-		baseEntity.setRealm(getRealm());
-		baseEntity.setStatus(EEntityStatus.valueOf(getStatus()));
-		baseEntity.setUpdated(getUpdated());
-		return baseEntity;
+		life.genny.qwandaq.attribute.Attribute attribute = new life.genny.qwandaq.attribute.Attribute();
+		attribute.setCode(getCode());
+		attribute.setCreated(getCreated());
+		attribute.setId(getId());
+		attribute.setName(getName());
+		attribute.setRealm(getRealm());
+		attribute.setStatus(EEntityStatus.valueOf(getStatus()));
+		attribute.setUpdated(getUpdated());
+		attribute.setDefaultPrivacyFlag(getDefaultPrivacyFlag());
+		DataType dataType = new DataType();
+		dataType.setDttCode(getDttCode());
+		dataType.setClassName(getClassName());
+		dataType.setComponent(getComponent());
+		dataType.setTypeName(getTypeName());
+		List<Validation> validations = new ValidationListConverter().convertToEntityAttribute(getValidationList());
+		dataType.setValidationList(validations);
+		attribute.setDataType(dataType);
+		return attribute;
 	}
 
 }

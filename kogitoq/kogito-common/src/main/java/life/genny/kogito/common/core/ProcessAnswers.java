@@ -17,6 +17,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -34,14 +35,23 @@ public class ProcessAnswers {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject UserToken userToken;
+	@Inject
+	UserToken userToken;
 
-	@Inject QwandaUtils qwandaUtils;
-	@Inject BaseEntityUtils beUtils;
-	@Inject DefUtils defUtils;
+	@Inject
+	CacheManager cm;
 
-	@Inject Dispatch dispatch;
-	@Inject TaskService taskService;
+	@Inject
+	QwandaUtils qwandaUtils;
+	@Inject
+	BaseEntityUtils beUtils;
+	@Inject
+	DefUtils defUtils;
+
+	@Inject
+	Dispatch dispatch;
+	@Inject
+	TaskService taskService;
 
 	/**
 	 * @param answer
@@ -117,7 +127,7 @@ public class ProcessAnswers {
 
 			// find the attribute
 			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+			Attribute attribute = cm.getAttribute(attributeCode);
 			answer.setAttribute(attribute);
 
 			// debug log the value before saving

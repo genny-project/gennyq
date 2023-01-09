@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
@@ -98,15 +99,9 @@ public class BaseEntityAttributeUtils {
     public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
         List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
         cm.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
-                .forEach((baseEntityAttribute) -> {
-					EntityAttribute ea = (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity();
+                .map((baseEntityAttribute) -> (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity())
+                .forEach((ea) -> {
 					Attribute attribute = cm.getAttribute(productCode, ea.getAttributeCode());
-					if (attribute != null) {
-						log.infof("############### Read attribute for [realm, beCode, attCode]: [%s, %s, %s]", ea.getRealm(), ea.getBaseEntityCode(), ea.getAttributeCode());
-					} else {
-						log.infof("############### Can't find attribute for [realm, attCode]: [%s, %s]", productCode, ea.getAttributeCode());
-						throw new RuntimeException("Attribute is null");
-					}
 					ea.setAttribute(attribute);
 					baseEntityAttributes.add(ea);
 				});

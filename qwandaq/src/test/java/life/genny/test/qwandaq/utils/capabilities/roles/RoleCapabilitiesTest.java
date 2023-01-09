@@ -12,6 +12,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import io.quarkus.test.junit.mockito.InjectMock;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.models.UserToken;
@@ -48,9 +49,9 @@ public class RoleCapabilitiesTest extends BaseTestCase {
     // @Test
     public void testRoleCreation() {
 		
-        QwandaUtils qwandaUtils = Mockito.mock(QwandaUtils.class);
-		Mockito.when(qwandaUtils.getAttribute(PRODUCT_CODE, Attribute.LNK_ROLE)).thenReturn(LNK_ROLE);
-		Mockito.when(qwandaUtils.getAttribute(PRODUCT_CODE, Attribute.LNK_CHILDREN)).thenReturn(LNK_CHILDREN);
+        CacheManager cm = Mockito.mock(CacheManager.class);
+		Mockito.when(cm.getAttribute(PRODUCT_CODE, Attribute.LNK_ROLE)).thenReturn(LNK_ROLE);
+		Mockito.when(cm.getAttribute(PRODUCT_CODE, Attribute.LNK_CHILDREN)).thenReturn(LNK_CHILDREN);
         
         String[][] capData = {
             {"CAP_TEST_1", "Capability Test 1"},

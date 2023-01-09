@@ -149,6 +149,7 @@ public class QuestionUtils {
 
     public Question getQuestionFromBaseEntity(life.genny.qwandaq.entity.BaseEntity baseEntity, Set<BaseEntityAttribute> attributes) {
         Question question = new Question();
+		log.info("Question Code From BaseEntity = " + baseEntity.getCode());
         question.setCode(baseEntity.getCode());
         question.setCreated(baseEntity.getCreated());
         question.setName(baseEntity.getName());

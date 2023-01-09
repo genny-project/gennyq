@@ -57,18 +57,18 @@ public class RoleManager extends Manager {
 		if(roleDef == null)
 			throw new NullParameterException(DEF_ROLE_CODE);
 		
-		lnkRolAttribute = qwandaUtils.getAttribute(userToken.getProductCode(), Attribute.LNK_ROLE);
+		lnkRolAttribute = cm.getAttribute(userToken.getProductCode(), Attribute.LNK_ROLE);
 		if(lnkRolAttribute == null) {
 			error(Attribute.LNK_ROLE + " is missing. Adding!");
 			lnkRolAttribute = new Attribute(Attribute.LNK_ROLE, "Role Link", dtt);
 			qwandaUtils.saveAttribute(lnkRolAttribute);
 		}
 		try {
-			lnkChildrenAttribute = qwandaUtils.getAttribute(userToken.getProductCode(), Attribute.LNK_CHILDREN);
+			lnkChildrenAttribute = cm.getAttribute(userToken.getProductCode(), Attribute.LNK_CHILDREN);
 		} catch(NoResultException e) {
 			error(Attribute.LNK_CHILDREN + " is missing. Adding!");
 			lnkChildrenAttribute = new Attribute(Attribute.LNK_CHILDREN, "Children Role Link", dtt);
-			qwandaUtils.saveAttribute(lnkChildrenAttribute);
+			cm.saveAttribute(lnkChildrenAttribute);
 		}
 	}
 

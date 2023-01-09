@@ -14,7 +14,6 @@ import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -50,9 +49,6 @@ public class FilterGroupService {
 
     @Inject
     BaseEntityUtils beUtils;
-
-    @Inject
-    QwandaUtils qwandaUtils;
 
     @Inject
     UserToken user;
@@ -571,7 +567,7 @@ public class FilterGroupService {
                 baseEntity = beUtils.create(defBE, nameOrCode, baseCode);
             }
 
-            Attribute attrFound = qwandaUtils.getAttribute(user.getProductCode(),attCode);
+            Attribute attrFound = cm.getAttribute(user.getProductCode(),attCode);
 
             // array of parameters
             List<String> listUUID = getListUUID(prefix,params.entrySet().size());

@@ -27,7 +27,6 @@ import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 
 /**
@@ -60,9 +59,6 @@ public class Entities {
 
 	@Inject
 	BaseEntityUtils beUtils;
-
-	@Inject
-	QwandaUtils qwandaUtils;
 
 	private static final String NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST = "Not authorized to make this request";
 
@@ -171,7 +167,7 @@ public class Entities {
 		BaseEntity be = new BaseEntity("TST_ENTITY", "Test Entity");
 
 		log.info("Created BaseEntity " + be.getCode());
-		Attribute attr = qwandaUtils.getAttribute("LNK_AUTHOR");
+		Attribute attr = cm.getAttribute("LNK_AUTHOR");
 		EntityAttribute attribute = new EntityAttribute(1.0, "TEST");
 		attribute.setBaseEntityCode(be.getCode());
 		attribute.setAttribute(attr);
