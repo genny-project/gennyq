@@ -10,7 +10,6 @@ public final class GennyConstants {
     public static final String PAGINATION_PREV="QUE_TABLE_PREVIOUS_BTN";
 
     // ================================== CAPABILITY CONSTANTS =============================================
-	// Capability Attribute Prefix
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 	public static final String[] ACCEPTED_CAP_PREFIXES = { Prefix.ROL, Prefix.PER, Prefix.DEF };
 	public static final String DEF_ROLE_CODE = "DEF_ROLE";

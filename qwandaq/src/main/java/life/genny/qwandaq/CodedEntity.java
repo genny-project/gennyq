@@ -21,6 +21,8 @@
 package life.genny.qwandaq;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.constants.Delimiter;
+
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -69,8 +71,8 @@ public abstract class CodedEntity extends CoreEntity {
 	 */
 	private static final Logger log = Logger.getLogger(CodedEntity.class);
 
-	static public final String REGEX_CODE = "[A-Z]{3}\\_[A-Z0-9\\.\\-\\@\\_]*";
-
+	static public final String REGEX_CODE = "[A-Z]{3}_[A-Z0-9\\.\\-\\@\\_]+(" + Delimiter.CAPABILITY + ")*[A-Z0-9\\.\\-\\@\\_]+";
+	
 	/**
 	 * A field that stores the unique code name of the entity.
 	 * <p>

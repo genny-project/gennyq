@@ -13,6 +13,7 @@ import java.util.Set;
 
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -32,6 +33,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Delimiter;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.Capability;
@@ -306,7 +308,7 @@ public class QwandaUtils {
 		ask.setRealm(productCode);
 
 		if (Question.QUE_BASEENTITY_GRP.equals(question.getCode()))
-			return generateAskGroupUsingBaseEntity(target.getEntity());
+			return generateAskGroupUsingBaseEntity(target.getEntity(), target);
 
 		// override with Attribute icon if question icon is null
 		Attribute attribute = question.getAttribute();
@@ -385,7 +387,7 @@ public class QwandaUtils {
 
 		// if the code is QUE_BASEENTITY_GRP then display all the attributes
 		if (Question.QUE_BASEENTITY_GRP.equals(code)) {
-			return generateAskGroupUsingBaseEntity(target.getEntity());
+			return generateAskGroupUsingBaseEntity(target.getEntity(), target);
 		}
 
 		String productCode = userToken.getProductCode();
@@ -789,25 +791,7 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid attribute
-		definition.getBaseEntityAttributes().stream()
-				.filter(ea -> {
-					// Initial filter (merged for less overhead)
-					if(!ea.getAttributeCode().startsWith(Prefix.ATT))
-						return false;
-					
-					// Only get requirements with edit
-					// need to check only capability requirements with edit here
-					// 1. find all capability requirements with edit, and only check the edit nodes
-					Set<Capability> filteredRequirements = ea.getCapabilityRequirements(true, CapabilityMode.EDIT);
-
-					// 2. check em against user capabilities
-					return ICapabilityFilterable.requirementsMetImpl(userCapabilities, filteredRequirements, 
-						ReqConfig.builder()
-					.allCaps(false)
-					.allNodes(false)
-					.cascadePermissions(false)
-					.build());
-				})
+		capabilityFilteredStream(definition, userCapabilities)
 				.forEach((ea) -> {
 					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
 					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
@@ -826,6 +810,49 @@ public class QwandaUtils {
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
 		return ask;
+	}
+
+	/**
+	 * Return an open stream of definition entity attributes with a filter operation applied, based on the
+	 * BASE_ENTITY:~:ATTRIBUTE capability requirement
+	 * 
+	 * @see <a href="https://gada.atlassian.net/wiki/spaces/GEN/pages/53248008/Edit+Flow+Filter+Logic">Edit flow logic Confluence</a>
+	 */
+	private Stream<EntityAttribute> capabilityFilteredStream(Definition definition, CapabilitySet userCapabilities) {
+		return definition.getBaseEntityAttributes().stream()
+				.filter(ea -> {
+					// Initial filter (merged for less overhead)
+					if(!ea.getAttributeCode().startsWith(Prefix.ATT))
+						return false;
+					
+					// Only get requirements with edit
+					// need to check only BASE_ENTITY:~:ATTRIBUTE with edit here
+					// 1. find BASE_ENTITY:~:ATTRIBUTE, and only check the edit nodes
+
+					// TODO: Once bootq patch is in place, move up the inheritance tree!
+
+					Optional<Capability> optEditRequirement = ea.getCapabilityRequirement(
+								new StringBuilder(ea.getBaseEntityCode())
+									.append(Delimiter.CAPABILITY)
+									.append(ea.getAttributeCode())
+									.toString()
+							);
+
+					// Once bootq patch is in place we can move this outside of the loop to be put in place
+					if(!optEditRequirement.isPresent())
+						return false;
+
+					Capability editRequirement = optEditRequirement.get();
+					
+					// 2. check em against BASE_ENTITY:~:ENTITY_ATTRIBUTE
+					return ICapabilityFilterable.requirementsMetImpl(userCapabilities, 
+						ReqConfig.builder()
+					.allCaps(false)
+					.allNodes(false)
+					.cascadePermissions(false)
+					.build(),
+					editRequirement);
+				});
 	}
 
 

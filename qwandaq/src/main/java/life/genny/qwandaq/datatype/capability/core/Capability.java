@@ -13,6 +13,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.serialization.adapters.capabilities.CapabilityAdapter;
@@ -39,7 +40,8 @@ public class Capability implements Serializable {
 
     public Capability(String capabilityCode, Set<CapabilityNode> nodes) {
         this.code = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
-        this.nodes = nodes;
+        // force linked hash set to keep this consistent with the other constructors
+        this.nodes = new LinkedHashSet<>(nodes);
     }
 
     public Capability(String capabilityCode, String capNodes) {
@@ -91,6 +93,27 @@ public class Capability implements Serializable {
         return new Capability(this.code, newNodes);
     }
 
+
+    /**
+     * Return a new Capability with the nodes filtered by these modes
+     * @param modes - {@link CapabilityMode}s to filter down by
+     * @return a new Capability only containing nodes from this Capability corresponding to the supplied modes
+     */
+    public Capability filterByModes(CapabilityMode... modes) {
+        Set<CapabilityNode> newNodes = new LinkedHashSet<>();
+        for(CapabilityNode node : nodes) {
+            // See if this node has one of the modes
+            for(CapabilityMode mode : modes) {
+                if(node.capMode.equals(mode)) {
+                    newNodes.add(node);
+                    break;
+                }
+            }
+        }
+
+        return new Capability(code, newNodes);
+    }
+
     /**
      * Check if this capability already belongs in a specified set of capabilities (code-based equality).
      * If it exists then return that capability object
@@ -106,6 +129,22 @@ public class Capability implements Serializable {
 
         return null;
     }
+    
+    /**
+     * Check whether or not this capability has a specific node, based on the mode
+     * @param mode - mode to check
+     * @return whether or not this capability has the mode
+     */
+    public boolean hasNode(CapabilityMode mode) {
+        for(CapabilityNode node : nodes) {
+            if(node.capMode.ordinal() == mode.ordinal()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
     public static Capability getFromEA(EntityAttribute ea) {
         String capCode = ea.getAttributeCode();

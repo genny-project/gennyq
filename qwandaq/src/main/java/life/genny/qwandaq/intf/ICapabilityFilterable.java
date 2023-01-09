@@ -18,10 +18,8 @@ import life.genny.qwandaq.utils.CommonUtils;
 
 public interface ICapabilityFilterable {
 
-    public static Logger getLogger() {
-        return Logger.getLogger(ICapabilityFilterable.class);
-    }
-    
+    static final Logger log = Logger.getLogger(ICapabilityFilterable.class);
+
     public Set<Capability> getCapabilityRequirements();
 
     /**
@@ -35,6 +33,9 @@ public interface ICapabilityFilterable {
         Set<Capability> requirements = getCapabilityRequirements();
         Set<Capability> filteredRequirements = new HashSet<>(requirements.size());
         
+
+        // maintain this for loop order
+        // Constructs a new requirement for each requirement with found modes
         for(Capability requirement : requirements) {
             for(CapabilityMode mode : modes) {
                 if(requirement.hasNode(mode)) {
@@ -58,6 +59,21 @@ public interface ICapabilityFilterable {
         return filteredRequirements;
     }
 
+    /**
+     * Fetch the capability requirement with matching code, if it exists
+     * @param capCode - code of the capability to find
+     * @return an optional containing the capability if it exists, empty otherwise
+     */
+    public default Optional<Capability> getCapabilityRequirement(String capCode) {
+        for(Capability requirement : getCapabilityRequirements()) {
+            if(capCode.equals(requirement.code)) {
+                return Optional.of(requirement);
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public default void setCapabilityRequirements(Capability... requirements) {
         setCapabilityRequirements(new HashSet<>(Arrays.asList(requirements)));
     }
@@ -69,27 +85,27 @@ public interface ICapabilityFilterable {
     }
 
     public default boolean requirementsMet(CapabilitySet userCapabilities, ReqConfig requirementsConfig) {
-        return requirementsMetImpl(userCapabilities, getCapabilityRequirements(), requirementsConfig);
+        return requirementsMetImpl(userCapabilities, requirementsConfig, getCapabilityRequirements());
     }
 
-    public static boolean requirementsMetImpl(CapabilitySet userCapabilities, Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
-        if(capabilityRequirements == null || capabilityRequirements.isEmpty()) {
-            getLogger().debug("No capabilityRequirements found!");
+    public static boolean requirementsMetImpl(CapabilitySet userCapabilities, ReqConfig requirementsConfig, Capability... capabilityRequirements) {
+        if(capabilityRequirements == null || capabilityRequirements.length == 0) {
+            log.debug("No capabilityRequirements found!");
             return true;
         }
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
-        boolean requiresAllModes = requirementsConfig.needsAllNodes();
+        // boolean requiresAllModes = requirementsConfig.needsAllNodes();
 
-        getLogger().debug("Testing Capability Config: " + requirementsConfig);
+        log.debug("Testing Capability Config: " + requirementsConfig);
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks
         for(Capability reqCap : capabilityRequirements) {
-            Optional<Capability> optCap = userCapabilities.parallelStream()
+            Optional<Capability> optCap = userCapabilities.stream()
                 .filter(cap -> cap.code.equals(reqCap.code)).findFirst();
             if(!optCap.isPresent()) {
-                getLogger().warn("Could not find cap in user caps: " + reqCap.code);
+                log.warn("Could not find cap in user caps: " + reqCap.code);
                 return false;
             }
 
@@ -106,9 +122,9 @@ public interface ICapabilityFilterable {
 
             if(!passesCheck) {
                 if(requiresAllCaps) {
-                    getLogger().warn("Missing cap permissions " + reqCap);
-                    getLogger().info("User perms: " + cap);
-                    getLogger().info("ReqConfig: " + requirementsConfig);
+                    log.warn("Missing cap permissions " + reqCap);
+                    log.info("User perms: " + cap);
+                    log.info("ReqConfig: " + requirementsConfig);
                     return false;
                 }
             } else {
@@ -118,6 +134,11 @@ public interface ICapabilityFilterable {
         }
 
         return requiresAllCaps;
+
+    }
+
+    public static boolean requirementsMetImpl(CapabilitySet userCapabilities, ReqConfig requirementsConfig, Set<Capability> capabilityRequirements) {
+        return requirementsMetImpl(userCapabilities, requirementsConfig, capabilityRequirements.toArray(new Capability[0]));
     }
 
 }
