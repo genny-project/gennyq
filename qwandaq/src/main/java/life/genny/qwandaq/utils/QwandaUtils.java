@@ -34,7 +34,9 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
@@ -45,6 +47,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -764,7 +767,7 @@ public class QwandaUtils {
 	 * @param baseEntity the baseEntity to create for
 	 * @return Ask
 	 */
-	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
+	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity, CapabilitySet userCapabilities) {
 
 		// grab def entity
 		Definition definition = defUtils.getDEF(baseEntity);
@@ -773,6 +776,7 @@ public class QwandaUtils {
 		String targetCode = baseEntity.getCode();
 
 		// create GRP ask
+		// Is it better to get the name from PRI_NAME here?
 		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
 				"Edit " + targetCode + " : " + baseEntity.getName(),
@@ -784,9 +788,26 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
-		// create a child ask for every valid atribute
+		// create a child ask for every valid attribute
 		definition.getBaseEntityAttributes().stream()
-				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
+				.filter(ea -> {
+					// Initial filter (merged for less overhead)
+					if(!ea.getAttributeCode().startsWith(Prefix.ATT))
+						return false;
+					
+					// Only get requirements with edit
+					// need to check only capability requirements with edit here
+					// 1. find all capability requirements with edit, and only check the edit nodes
+					Set<Capability> filteredRequirements = ea.getCapabilityRequirements(true, CapabilityMode.EDIT);
+
+					// 2. check em against user capabilities
+					return ICapabilityFilterable.requirementsMetImpl(userCapabilities, filteredRequirements, 
+						ReqConfig.builder()
+					.allCaps(false)
+					.allNodes(false)
+					.cascadePermissions(false)
+					.build());
+				})
 				.forEach((ea) -> {
 					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
 					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
@@ -806,6 +827,7 @@ public class QwandaUtils {
 
 		return ask;
 	}
+
 
 	/**
 	 * Update the status of the disabled field for an Ask on the web.
