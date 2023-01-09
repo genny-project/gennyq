@@ -4,6 +4,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @RegisterForReflection
 public enum Operator {
+	IN,
+	NOT_IN,
 	LIKE,
 	NOT_LIKE,
 	EQUALS,
