@@ -27,7 +27,9 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
@@ -51,6 +53,12 @@ public class InternalConsumer {
 	KogitoUtils kogitoUtils;
 	@Inject
 	SearchService search;
+
+	@Inject
+	SearchUtils searchUtils;
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	@Inject
 	Events events;
@@ -84,8 +92,6 @@ public class InternalConsumer {
 		List<Answer> answers = kogitoUtils.runDataInference(data);
 		if (answers.isEmpty())
 			log.warn("[!] No answers after inference");
-		// else
-		// kogitoUtils.funnelAnswers(answers);
 
 		Optional<Answer> searchText = answers.stream()
 				.filter(ans -> ans.getAttributeCode().equals(Attribute.PRI_SEARCH_TEXT))
@@ -101,10 +107,12 @@ public class InternalConsumer {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_DATA, msg);
 
+		events.route(msg);
+
 		scope.destroy();
 		// log duration
 		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+		log.trace("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	/**
@@ -132,25 +140,11 @@ public class InternalConsumer {
 
 		log.info("Received Event : " + SecurityUtils.obfuscate(event));
 
-		// Check if a token is present, if not then log an error and abort
-		if (StringUtils.isBlank(msg.getToken())) {
-			log.error("No token present, so aborting , for event! " + event);
-		} else {
-
-			// If the event is a Dropdown then leave it for DropKick
-			if ("DD".equals(msg.getEvent_type())) {
-				return;
-			}
-			events.route(msg);
-
-			if (filter.isFilterBtn(msg)) {
-				filter.handleBtnEvents(msg);
-			}
-		}
+		events.route(msg);
 
 		scope.destroy();
 		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
+		log.trace("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
 
 	@Incoming("data")

@@ -3,7 +3,6 @@ package life.genny.qwandaq.utils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.serialization.adapters.CapabilitySetAdapter;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;

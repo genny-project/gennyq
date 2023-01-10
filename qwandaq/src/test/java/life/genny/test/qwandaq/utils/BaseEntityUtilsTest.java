@@ -11,12 +11,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import io.quarkus.test.junit.mockito.InjectMock;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
-@RunWith(MockitoJUnitRunner.class)
+// @RunWith(MockitoJUnitRunner.class)
 public class BaseEntityUtilsTest extends BaseTestCase {
 
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -57,13 +64,30 @@ public class BaseEntityUtilsTest extends BaseTestCase {
 
 	public void cleanAttributeValueTest() {
 
-		assert(beUtils.cleanUpAttributeValue("[\"SEL_ONE\"]").equals("SEL_ONE"));
-		assert(beUtils.cleanUpAttributeValue("[\"SEL_ONE\", \"SEL_TWO\"]").equals("SEL_ONE,SEL_TWO"));
-		assert(beUtils.cleanUpAttributeValue("[\"SEL_ONE\", \"SEL_TWO\", \"SEL_THREE\"]").equals("SEL_ONE,SEL_TWO,SEL_THREE"));
+        new JUnitTester<String, String>()
+            .setTest((input) -> {
+                return Expected(CommonUtils.cleanUpAttributeValue(input.input));
+            })
+            
+            .createTest("Clean Value 1")
+            .setInput("[\"SEL_ONE\"]")
+            .setExpected("SEL_ONE")
+            .build()
+
+            .createTest("Clean Value 2")
+            .setInput("[\"SEL_ONE\", \"SEL_TWO\"]")
+            .setExpected("SEL_ONE,SEL_TWO")
+            .build()
+
+            .createTest("Clean Value 3")
+            .setInput("[\"SEL_ONE\", \"SEL_TWO\", \"SEL_THREE\"]")
+            .setExpected("SEL_ONE,SEL_TWO,SEL_THREE")
+            .build()
+
+            .assertAll();
 	}
 
 	// TODO: Get Code Array
-
 
 	// TODO: Create BaseEntity Test
 

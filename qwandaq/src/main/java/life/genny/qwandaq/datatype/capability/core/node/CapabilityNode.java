@@ -1,9 +1,5 @@
 package life.genny.qwandaq.datatype.capability.core.node;
 
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import javax.json.bind.annotation.JsonbTransient;
 
 import org.apache.commons.lang3.StringUtils;
@@ -23,36 +19,7 @@ public class CapabilityNode {
 	
 	// Leave this here please
 	public static final String DELIMITER = ":";
-
-	// Some optimisation through statics
-	private static final Map<CapabilityMode, Map<PermissionMode, CapabilityNode>> NODE_MAP = new EnumMap<>(CapabilityMode.class);
-	static {
-		for(CapabilityMode mode : CapabilityMode.values()) {
-			Map<PermissionMode, CapabilityNode> scopeMap = new EnumMap<>(PermissionMode.class);
-			for(PermissionMode scope : PermissionMode.values()) {
-				scopeMap.put(scope, new CapabilityNode(mode, scope));
-			}
-			NODE_MAP.put(mode, scopeMap);
-		}
-		log.info("Init " + (CapabilityMode.values().length * PermissionMode.values().length) + "CapabilityNodes");
-	}
-
-	public static CapabilityNode get(CapabilityMode mode, PermissionMode scope) {
-		return NODE_MAP.get(mode).get(scope);
-	}
-
-	public static CapabilityNode get(CapabilityMode mode) {
-		return get(mode, PermissionMode.SELF);
-	}
-
-	public static CapabilityNode get(Entry<CapabilityMode, PermissionMode> node) {
-		return get(node.getKey(), node.getValue());
-	}
-
-	public static CapabilityNode get(char modeId, char permId) {
-		return get(CapabilityMode.getByIdentifier(modeId),
-			PermissionMode.getByIdentifier(permId));
-	}
+	public static final String NEGATE_IDENTIFIER = "!";
 
 	/**
 	 * This capability's mode
@@ -63,6 +30,11 @@ public class CapabilityNode {
 	 * This capability's permission for the given mode
 	 */
 	public PermissionMode permMode;
+
+	/**
+	 * Whether or not to negate this particular node or not
+	 */
+	public boolean negate;
 
 	/**
 	 * Create a new capability with the given mode and permissions
@@ -77,9 +49,14 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	private CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
+	public CapabilityNode(CapabilityMode capMode, PermissionMode permMode, boolean negate) {
 		this.capMode = capMode;
 		this.permMode = permMode;
+		this.negate = negate;
+	}
+
+	public CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
+		this(capMode, permMode, false);
 	}
 
 	@Deprecated
@@ -107,10 +84,6 @@ public class CapabilityNode {
 		return result;
 	}
 
-	public CapabilityNode compareNodes(Entry<CapabilityMode, PermissionMode> other, boolean mostPermissive) {
-		return compareNodes(get(other), mostPermissive);
-	}
-
 	/**
 	 * Get all CapabilityNodes with less permissions than this one for it's given Mode
 	 * @return
@@ -120,7 +93,10 @@ public class CapabilityNode {
 		int size = this.permMode.ordinal();
 		CapabilityNode[] lesserNodes = new CapabilityNode[size];
 		for(int i = 0; i < size; i++) {
-			lesserNodes[i] = get(capMode, PermissionMode.getByOrd(size - (i + 1)));
+			PermissionMode mode = PermissionMode.getByOrd(size - (i + 1));
+			CapabilityNode node = new CapabilityNode(capMode, mode);
+			node.negate = negate;
+			lesserNodes[i] = node;
 		}
 
 		return lesserNodes;
@@ -129,7 +105,7 @@ public class CapabilityNode {
 	/**
 	 * Parse a new capability given a String such as
 	 * <pre>
-	 * VIEW:ALL
+	 * V:A
 	 * </pre>
 	 * 
 	 * Each component of the string is to be separated by {@link CapabilityNode#DELIMITER} (currently ':')
@@ -139,30 +115,45 @@ public class CapabilityNode {
 	 * 
 	 * @see {@link CapabilityMode}, {@link PermissionMode}
 	 */
-	public static CapabilityNode parseCapability(String capabilityString)
+	public static CapabilityNode parseNode(String capabilityString) 
 		throws BadDataException {
 		CapabilityMode capMode;
 		PermissionMode permMode;
+		boolean negate = false;
 
-		// TODO: merge latest to remove this
-		capabilityString = StringUtils.removeStart(capabilityString, "!");
-
-		if (capabilityString.length() != 3) {
-			log.error("Expected length 3. Got: " + capabilityString.length());
+		int len = capabilityString.length();
+		if(!(len == 3 || len == 4)) {
+			log.error("Expected length 3 - 4. Got: " + len);
 			throw new BadDataException("Could not deserialize capability node: " + capabilityString);
 		}
+		int offset = 0;
+		if(capabilityString.startsWith(NEGATE_IDENTIFIER)) {
+			offset = 1;
+			negate = true;
+		}
+		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(offset));
+		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(offset + 2));
 
-		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(0));
-		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(2));
-
-		return get(capMode, permMode);
+		CapabilityNode node = new CapabilityNode(capMode, permMode);
+		node.negate = negate;
+		
+		return node;
 	}
 
 	public String toString(boolean verbose) {
+		StringBuilder sb = new StringBuilder();
+		if(negate)
+			sb.append(NEGATE_IDENTIFIER);
 		if(verbose) {
-			return capMode.name() + DELIMITER + permMode.name();
+			return sb.append(capMode.name())
+					.append(DELIMITER)
+					.append(permMode.name())
+					.toString();
 		} else {
-			return capMode.getIdentifier() + DELIMITER + permMode.getIdentifier();
+			return sb.append(capMode.getIdentifier())
+					.append(DELIMITER)
+					.append(permMode.getIdentifier())
+					.toString();
 		}
 	}
 

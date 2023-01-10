@@ -13,8 +13,8 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
@@ -42,16 +42,16 @@ public class ProcessAnswers {
 	CacheManager cm;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	TaskService taskService;
+
 	@Inject
 	BaseEntityUtils beUtils;
+
 	@Inject
 	DefUtils defUtils;
 
 	@Inject
-	Dispatch dispatch;
-	@Inject
-	TaskService taskService;
+	QwandaUtils qwandaUtils;
 
 	/**
 	 * @param answer
@@ -67,7 +67,7 @@ public class ProcessAnswers {
 		}
 
 		// check if the answer is valid for the target
-		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 		if (!defUtils.answerValidForDEF(definition, answer)) {
 			log.error("Bad incoming answer... Not saving!");
 			return false;
@@ -86,7 +86,7 @@ public class ProcessAnswers {
 	 */
 	public Boolean checkUniqueness(ProcessData processData) {
 
-		BaseEntity definition = beUtils.getBaseEntity(processData.getDefinitionCode());
+		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 		List<Answer> answers = processData.getAnswers();
 
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -94,11 +94,13 @@ public class ProcessAnswers {
 
 		// send error for last answer in the list
 		// NOTE: This should be reconsidered
+		Boolean acceptSubmission = true;
+		if (answers.isEmpty())
+			return acceptSubmission;
 
 		Answer answer = answers.get(answers.size()-1);
 		String attributeCode = answer.getAttributeCode();
 
-		Boolean acceptSubmission = true;
 		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
@@ -118,36 +120,15 @@ public class ProcessAnswers {
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
 	public void saveAllAnswers(ProcessData processData) {
-
+		// save answers
 		String targetCode = processData.getTargetCode();
+		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		// iterate our stored process updates and create an answer
-		for (Answer answer : processData.getAnswers()) {
-
-			// find the attribute
-			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = cm.getAttribute(attributeCode);
-			answer.setAttribute(attribute);
-
-			// debug log the value before saving
-			String currentValue = target.getValueAsString(attributeCode);
-			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
-
-			// update the baseentity
-			target.addAnswer(answer);
-			String value = target.getValueAsString(answer.getAttributeCode());
-			log.info("Value Saved -> " + answer.getAttributeCode() + " = " + value);
-		}
-
-		// save these answrs to db and cache
-		beUtils.updateBaseEntity(target);
-		log.info("Saved answers for target " + targetCode);
-
+		qwandaUtils.saveAnswers(processData.getAnswers(), target);
+		// send target to FE
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(target);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
@@ -159,7 +140,6 @@ public class ProcessAnswers {
 	 * @return Boolean existed
 	 */
 	public Boolean clearProcessCacheEntries(String processId, String targetCode) {
-
 		qwandaUtils.clearProcessData(processId);
 		log.infof("Cleared caches for %s",processId);
 		return true;
@@ -170,9 +150,7 @@ public class ProcessAnswers {
 	 * @return
 	 */
 	public ProcessData deleteStoredAnswers(ProcessData processData) {
-
 		processData.setAnswers(new ArrayList<>());
-
 		return processData;
 	}
 }

@@ -11,6 +11,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.message.QDataAnswerMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -20,6 +21,7 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.MessageData;
@@ -34,6 +36,15 @@ import life.genny.gadaq.search.FilterGroupService;
  */
 @ApplicationScoped
 public class Events {
+
+	public static final String AUTH_INIT = "AUTH_INIT";
+
+	public static final String ACT_VIEW = "ACT_VIEW";
+	public static final String ACT_EDIT = "ACT_EDIT";
+
+	public static final String QUE_TABLE_ = "QUE_TABLE_";
+	public static final String QUE_EXPLORE_ = "QUE_EXPLORE_";
+	public static final String QUE_ADD_ = "QUE_ADD_";
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -71,8 +82,18 @@ public class Events {
 		String parentCode = data.getParentCode();
 		String targetCode = data.getTargetCode();
 
+		// Filter
+		if(filter.isValidEvent(msg)){
+			filter.handleBtnEvents(msg);
+			return;
+		}
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type()))
+			return;
+
 		// auth init
-		if ("AUTH_INIT".equals(code)) {
+		if (AUTH_INIT.equals(code)) {
 			kogitoUtils.triggerWorkflow(SELF, "authInit", "userCode", userToken.getUserCode());
 			return;
 		}
@@ -127,12 +148,13 @@ public class Events {
 
 		// bucket view
 		if (Question.QUE_PROCESS.equals(code)) {
+			filter.init(code);
 			search.sendBuckets();
 			return;
 		}
 
 		// detail view
-		if ("ACT_VIEW".equals(code)) {
+		if (ACT_VIEW.equals(code)) {
 			search.sendDetailView(targetCode);
 			return;
 		}
@@ -146,8 +168,15 @@ public class Events {
 			return;
 		}
 
+		// bucket pagination
+		if (Question.QUE_TABLE_LAZY_LOAD.equals(code)) {
+			search.handleSearchPagination(targetCode, false);
+			return;
+		}
+
 		// table view (Default View Mode)
-		if (code.startsWith("QUE_TABLE_")) {
+		code = code.replace(QUE_EXPLORE_, QUE_TABLE_);
+		if (code.startsWith(QUE_TABLE_)) {
 			filter.init(code);
 			search.sendTable(code);
 			return;
@@ -166,11 +195,10 @@ public class Events {
 		}
 
 		// add item
-		if (code.startsWith("QUE_ADD_")) {
-			code = StringUtils.removeStart(code, "QUE_ADD_");
-			String prefix = cm.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
+		if (code.startsWith(QUE_ADD_)) {
+			code = StringUtils.removeStart(code, QUE_ADD_);
+			String prefix = cm.getObject(userToken.getProductCode(), Prefix.DEF + code + ":PREFIX", String.class);
 
-			log.info("Prefix: " + code);
 			if ("PER".equals(prefix)) {
 				JsonObject json = Json.createObjectBuilder()
 						.add("definitionCode", "DEF_".concat(code))
@@ -179,11 +207,19 @@ public class Events {
 
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
+			}else if ("MSG".equals(prefix)){
+				JsonObject json = Json.createObjectBuilder()
+						.add("definitionCode", "DEF_".concat(code))
+						.add("sourceCode", userToken.getUserCode())
+						.build();
+
+				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
+				return;
 			}
 		}
 
-		// edit item
-		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
+		// edit item (TODO This needs to be moved into a timer based bpmn)
+		if (ACT_EDIT.equals(code) && parentCode.startsWith(Prefix.SBE)) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()
@@ -206,5 +242,15 @@ public class Events {
 		 */
 		log.info("Forwarding Event Message...");
 		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
+	}
+
+	/**
+	 * Event route
+	 * @param msg Message
+	 */
+	public void route(QDataAnswerMessage msg) {
+		if(filter.isValidEvent(msg)){
+			filter.handleDataEvents(msg);
+		}
 	}
 }

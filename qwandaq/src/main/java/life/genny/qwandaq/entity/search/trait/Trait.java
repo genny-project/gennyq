@@ -1,5 +1,6 @@
 package life.genny.qwandaq.entity.search.trait;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,7 +13,7 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
  * Trait
  */
 @RegisterForReflection
-public abstract class Trait implements ICapabilityFilterable {
+public abstract class Trait implements ICapabilityFilterable, Serializable {
 
 	private String code;
 	private String name;
@@ -25,6 +26,10 @@ public abstract class Trait implements ICapabilityFilterable {
 	public Trait(String code, String name) {
 		this.code = code;
 		this.name = name;
+	}
+
+	public static <T extends Trait> Decorator<T> decorator(T trait) {
+		return new Decorator<T>(trait);
 	}
 
 	public String getCode() {
@@ -74,5 +79,32 @@ public abstract class Trait implements ICapabilityFilterable {
 			return false;
 		
 		return this.getCapabilityRequirements().equals(otherT.getCapabilityRequirements());
+	}
+
+	@Override
+	public String toString() {
+		return new StringBuilder("code=")
+			.append(this.getCode())
+			.append(", name=")
+			.append(this.getName())
+			.toString();
+	}
+
+	public static class Decorator<T extends Trait> {
+		private final T trait;
+
+		public Decorator(T trait) {
+			this.trait = trait;
+		}
+
+		public Decorator<T> addCapabilityRequirement(Capability c) {
+			trait.addCapabilityRequirement(c);
+			return this;
+		}
+
+		public T build() {
+			return trait;
+		}
+
 	}
 }

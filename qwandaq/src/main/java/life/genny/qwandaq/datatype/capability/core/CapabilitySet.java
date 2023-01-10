@@ -6,9 +6,14 @@ import java.util.Optional;
 
 import life.genny.qwandaq.entity.BaseEntity;
 
+/**
+ * A container class that extends HashSet of Capability. This allows the Capability Set
+ * of a particular BaseEntity to be directly related to the BaseEntity itself, by storing a local
+ * reference to the base entity
+ */
 public class CapabilitySet extends HashSet<Capability> {
 
-    private final BaseEntity entity;
+    private BaseEntity entity;
 
     public CapabilitySet(BaseEntity entity) {
         super();
@@ -31,6 +36,10 @@ public class CapabilitySet extends HashSet<Capability> {
 
     public BaseEntity getEntity() {
         return entity;
+    }
+
+    public void setEntity(BaseEntity e) {
+        this.entity = e;
     }
 
     public String toString() {

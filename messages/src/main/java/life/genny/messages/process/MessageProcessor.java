@@ -101,12 +101,12 @@ public class MessageProcessor {
             if (cc != null) {
                 log.debug("Using CC from template BaseEntity");
 
-                cc = beUtils.cleanUpAttributeValue(cc);
+                cc = CommonUtils.cleanUpAttributeValue(cc);
                 message.getMessageContextMap().put("CC", cc);
             }
             if (bcc != null) {
                 log.debug("Using BCC from template BaseEntity");
-                bcc = beUtils.cleanUpAttributeValue(bcc);
+                bcc = CommonUtils.cleanUpAttributeValue(bcc);
                 message.getMessageContextMap().put("BCC", bcc);
             }
         }
@@ -199,7 +199,7 @@ public class MessageProcessor {
 
             if (recipient.contains("[\"") && recipient.contains("\"]")) {
                 // This is a BE Code
-                String code = beUtils.cleanUpAttributeValue(recipient);
+                String code = CommonUtils.cleanUpAttributeValue(recipient);
                 recipientBe = beUtils.getBaseEntity(code);
             } else {
                 // Probably an actual email
@@ -207,13 +207,9 @@ public class MessageProcessor {
                 recipientBe = new BaseEntity(code, recipient);
 
                 try {
-                    EntityAttribute email = new EntityAttribute(1.0, recipient);
-                    email.setBaseEntityCode(recipientBe.getCode());
-                    email.setAttribute(emailAttr);
+                    EntityAttribute email = new EntityAttribute(recipientBe, emailAttr, 1.0, recipient);
                     recipientBe.addAttribute(email);
-                    EntityAttribute mobile = new EntityAttribute(1.0, recipient);
-                    mobile.setBaseEntityCode(recipientBe.getCode());
-                    mobile.setAttribute(mobileAttr);
+                    EntityAttribute mobile = new EntityAttribute(recipientBe, mobileAttr, 1.0, recipient);
                     recipientBe.addAttribute(mobile);
                 } catch (Exception e) {
                     log.error("Exception when passing recipient BE: " + recipient);
@@ -290,7 +286,7 @@ public class MessageProcessor {
                 // MUST CONTAIN A BE CODE
                 if (value.matches("[A-Z]{3}\\_.*") && !key.startsWith("URL")) {
                     // Create Array of Codes
-                    String[] codeArr = beUtils.cleanUpAttributeValue(value).split(",");
+                    String[] codeArr = CommonUtils.cleanUpAttributeValue(value).split(",");
                     log.info("Fetching contextCodeArray :: " + Arrays.toString(codeArr));
                     // Convert to BEs
                     BaseEntity[] beArray = Arrays.stream(codeArr)

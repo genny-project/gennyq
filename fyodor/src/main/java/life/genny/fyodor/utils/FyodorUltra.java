@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,6 +40,8 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.HEntityAttribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
@@ -53,24 +57,32 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.Page;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.MergeUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class FyodorUltra {
 
-	private static final Logger log = Logger.getLogger(FyodorUltra.class);
+	@Inject
+	Logger log;
 
 	@Inject
-	private EntityManager entityManager;
+	UserToken userToken;
+
+	@Inject
+	EntityManager entityManager;
 
 	@Inject
 	private CacheManager cm;
 
 	@Inject
-	private BaseEntityUtils beUtils;
+	BaseEntityUtils beUtils;
 
 	@Inject
-	private CapHandler capHandler;
+	CapHandler capHandler;
 
 	private static Jsonb jsonb = JsonbBuilder.create();
 
@@ -130,13 +142,26 @@ public class FyodorUltra {
 			throw new NullParameterException("searchEntity");
 
 		log.infof("Performing Search: code = (%s), realm = (%s)", searchEntity.getCode(), searchEntity.getRealm());
-		log.info("Applying capabilities...");
-
+		log.debug("Applying capabilities...");
+		log.debug("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
-		capHandler.refineFiltersFromCapabilities(searchEntity);
-		capHandler.refineSortsFromCapabilities(searchEntity);
-		capHandler.refineColumnsFromCapabilities(searchEntity);
-		capHandler.refineActionsFromCapabilities(searchEntity);
+		capHandler.refineSearchFromCapabilities(searchEntity);
+
+		if (!CapHandler.hasSecureToken(userToken)) {
+			log.info("Mail merging!");
+			Map<String, Object> ctxMap = new HashMap<>();
+			ctxMap.put("USER_CODE", beUtils.getUserBaseEntity().getCode());
+			List<ClauseContainer> filters = searchEntity.getClauseContainers();
+			filters.stream()
+				.filter(f -> f.getFilter() != null && f.getFilter().getC() == String.class)
+				.peek(f -> log.info(f.getFilter().getValue()))
+				.forEach(f -> {
+					log.info("Attempting to merge on " + f.getFilter().getValue());
+					// TODO: Make MergeUtils better
+					if("USER_CODE".equals(f.getFilter().getValue()))
+						f.getFilter().setValue(ctxMap.get("USER_CODE"));
+			});
+		}
 
 		// setup search query
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -236,7 +261,7 @@ public class FyodorUltra {
 
 		// find orders
 		List<Order> orders = new ArrayList<>();
-		searchEntity.getSorts().stream().forEach(sort -> {
+		searchEntity.getTraits(Sort.class).stream().forEach(sort -> {
 			orders.add(findSortPredicate(cauldron, sort));
 		});
 
@@ -359,8 +384,20 @@ public class FyodorUltra {
 
 		switch (operator) {
 			case EQUALS:
+				if (c == LocalDateTime.class)
+					return cb.equal(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
+				if (c == LocalDate.class)
+					return cb.equal(expression.as(LocalDate.class), LocalDate.parse(value));
+				if (c == LocalTime.class)
+					return cb.equal(expression.as(LocalTime.class), LocalTime.parse(value));
 				return cb.equal(expression, value);
 			case NOT_EQUALS:
+				if (c == LocalDateTime.class)
+					return cb.notEqual(expression.as(LocalDateTime.class), LocalDateTime.parse(value));
+				if (c == LocalDate.class)
+					return cb.notEqual(expression.as(LocalDate.class), LocalDate.parse(value));
+				if (c == LocalTime.class)
+					return cb.notEqual(expression.as(LocalTime.class), LocalTime.parse(value));
 				return cb.notEqual(expression, value);
 			case GREATER_THAN:
 				// TODO: Remove triple ifs (Bryn)

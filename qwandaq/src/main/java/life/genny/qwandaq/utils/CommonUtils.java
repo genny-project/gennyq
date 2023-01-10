@@ -87,6 +87,16 @@ public class CommonUtils {
         }
     }
 
+    public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
+        for(K key : map.keySet()) {
+            String msg = new StringBuilder(keyCallback.getString(key))
+                            .append(" = ")
+                            .append(valueCallback.getString(map.get(key)))
+                            .toString();
+            log.info(msg);
+        }
+    }
+
     /**
      * Safe-compare two Objects (null-safe)
      * @param <T> type
@@ -155,7 +165,7 @@ public class CommonUtils {
      */
     public static <T> String getArrayString(T[] arr) {
         return getArrayString(arr, (item) -> {
-            return item.toString();
+            return item != null ? item.toString() : "null";
         });
     }
 
@@ -300,6 +310,17 @@ public class CommonUtils {
         return false;
     }
 
+	/**
+	 * Classic Genny style string clean up. This will remove any double quotes,
+	 * whitespaces and square brackets from the string.
+	 * <p>
+	 * Hope this makes our code look a little
+	 * nicer :)
+	 * <p>
+	 * 
+	 * @param value The value to clean
+	 * @return A clean string
+	 */
     public static String cleanUpAttributeValue(String value) {
 		String cleanCode = value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 		return cleanCode;
@@ -356,4 +377,98 @@ public class CommonUtils {
 			return code.substring(4);
 		}
 	}
+
+    /**
+     * Remove an entry or entries from a jsonified string array
+     * @param array
+     * @param entries
+     * @return the new array (an empty array if array is null)
+     */
+    public static String removeFromStringArray(String array, String... entries) {
+        // no entries array == no entries to remove
+        if(entries == null)
+            return StringUtils.isBlank(array) ? "[]" : array;
+
+        // return new array if there is no array
+        if(StringUtils.isBlank(array)) {
+            return "[]";
+        }
+        
+        StringBuilder sb = new StringBuilder(array);
+        for(String entry : entries) {
+            // ensure we're not trying to remove from empty array
+            if(sb.charAt(0) == '[') {
+                if(sb.charAt(1) == ']')
+                    return "[]";
+            }
+
+            if(StringUtils.isBlank(entry))
+                continue;
+            int start = sb.indexOf(entry);
+            if(start == -1)
+                continue;
+
+            // Deal with quotes
+            int end = start + entry.length() + 1;
+            start -= 1;
+            // deal with start/end
+            if(start == 1) {
+                if(sb.length() - end != 1)
+                    end += 1;
+            }
+            else
+                start -= 1;
+            sb.delete(start, end);
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Add an entry or entries to a jsonified String array. This assumes the String array
+     * is not malformed, but it can be null or empty
+     * 
+     * If the set of entries is null, the array will be returned
+     * @param array - array to append to
+     * @param entries - entries to append
+     * @return the array with the entry appended to it or the preexisting array if
+     *  the entries param is null. If the array is null, a new stringified array containing the entries
+     * will be created
+     */
+    public static String addToStringArray(String array, String... entries) {
+        // no entries array == no entries to add
+        if(entries == null)
+            return StringUtils.isBlank(array) ? "[]" : array;
+
+        // return the entries as an array if there is no array
+        if(StringUtils.isBlank(array)) {
+            return CommonUtils.getArrayString(entries);
+        }
+        
+        // chop off the ending "]"
+        array = array.substring(0, array.length() - 1);
+        StringBuilder sb = new StringBuilder(array);
+        
+
+        // add all entries such that each entry is "entry",
+        // with the exception of the last one, which should not have a comma
+        if(entries.length > 0) {
+            // check if we're adding to a preexisting array
+            if(!array.equals("["))
+                sb.append(",");
+
+            for(int i = 0; i < entries.length - 1; i++) {
+                sb.append("\"")
+                    .append(entries[i])
+                    .append("\",");
+            }
+
+            sb.append("\"")
+            .append(entries[entries.length - 1])
+            .append("\"");
+        }
+
+        // reattach our missing "]" in all cases
+        return sb.append("]").toString();
+    }
 }

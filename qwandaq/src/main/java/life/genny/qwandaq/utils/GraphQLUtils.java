@@ -29,8 +29,9 @@ import life.genny.qwandaq.managers.CacheManager;
 @ApplicationScoped
 public class GraphQLUtils {
 
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	private static Jsonb jsonb = JsonbBuilder.create();
+
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
 	UserToken userToken;
@@ -141,7 +142,7 @@ public class GraphQLUtils {
 		String query = String.format("query { %s ( where: { %s }){ %s }}",
 				table, queryFields, String.join(" ", returns));
 
-		log.info("GraphQL Query: " + query);
+		log.debug("GraphQL Query: " + query);
 
 		String uri = GennySettings.dataIndexUrl() + "/graphql";
 		HttpResponse<String> response = HttpUtils.post(uri, query, "application/GraphQL", userToken);

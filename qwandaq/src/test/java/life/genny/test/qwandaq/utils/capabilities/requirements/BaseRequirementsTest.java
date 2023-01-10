@@ -19,12 +19,12 @@ public class BaseRequirementsTest extends BaseTestCase {
     private static final BaseEntity DUMMY_BASE_ENTITY = new BaseEntity("DUMMY_CAP_USER", "Idiot Capabilities User");
 
     static {
-        setTestCaps(
+        setTestUserCaps(
             CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap()
         );
     }
 
-    protected static Set<Capability> setTestCaps(Capability... capabilities) {
+    protected static Set<Capability> setTestUserCaps(Capability... capabilities) {
         CapabilitySet capSet = new CapabilitySet(DUMMY_BASE_ENTITY, Arrays.asList(capabilities));
         USER_TEST_CAPS = capSet;
         return capSet;

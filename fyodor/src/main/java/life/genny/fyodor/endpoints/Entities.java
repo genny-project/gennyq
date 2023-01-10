@@ -168,7 +168,7 @@ public class Entities {
 
 		log.info("Created BaseEntity " + be.getCode());
 		Attribute attr = cm.getAttribute("LNK_AUTHOR");
-		EntityAttribute attribute = new EntityAttribute(1.0, "TEST");
+		EntityAttribute attribute = new EntityAttribute(be, attr, 1.0, "TEST");
 		attribute.setBaseEntityCode(be.getCode());
 		attribute.setAttribute(attr);
 

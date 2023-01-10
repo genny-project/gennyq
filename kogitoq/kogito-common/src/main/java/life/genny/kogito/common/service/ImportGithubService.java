@@ -11,6 +11,9 @@ import javax.json.bind.JsonbBuilder;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.jboss.logging.Logger;
+
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.CacheManager;
@@ -68,11 +71,10 @@ public class ImportGithubService {
 		try {
 			bes = githubUtils.getLayoutBaseEntitys(beUtils, gitUrl, branch, realm, gitrealm, recursive);
 		} catch (RevisionSyntaxException | GitAPIException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		log.info("bes = " + bes.size());
-		BaseEntity dotDef = beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE");
+		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
 		for (BaseEntity be : bes) {
 			if (be != null) {
 				log.info("saving be = " + be.getCode() + ":" + be.getName());

@@ -60,6 +60,7 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<maven.compiler.release>17</maven.compiler.release>
+		<minio.version>8.4.3</minio.version>
 	</properties>
 
 	<distributionManagement>
@@ -77,10 +78,16 @@
 		<dependencies>
 			<dependency>
 				<groupId>${quarkus.platform.group-id}</groupId>
-				<artifactId>${quarkus.platform.artifact-id}</artifactId>
+				<artifactId>quarkus-bom</artifactId>
 				<version>${quarkus.platform.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -250,20 +257,37 @@
 			<artifactId>org.eclipse.jgit</artifactId>
 			<version>5.2.1.201812262042-r</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/io.smallrye.reactive/smallrye-mutiny-vertx-sql-client -->
 		<dependency>
 			<groupId>io.smallrye.reactive</groupId>
 			<artifactId>smallrye-mutiny-vertx-sql-client</artifactId>
 			<version>3.0.0-milestone1</version>
 		</dependency>
-
+		<dependency>
+			<groupId>io.quarkus</groupId>
+			<artifactId>quarkus-reactive-routes</artifactId>
+		</dependency>
 		<!-- Nice little reflections library (To be used sparingly) -->
 		<dependency>
 			<groupId>org.reflections</groupId>
 			<artifactId>reflections</artifactId>
 			<version>0.10.2</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>${minio.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.squareup.okhttp3</groupId>
+					<artifactId>okhttp</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.10.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

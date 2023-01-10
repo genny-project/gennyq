@@ -16,9 +16,23 @@
 
 package life.genny.qwandaq.entity;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Transient;
+
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
@@ -27,18 +41,9 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import org.infinispan.protostream.annotations.ProtoFactory;
-import org.jboss.logging.Logger;
-
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Transient;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -129,16 +134,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public Set<EntityAttribute> getBaseEntityAttributes() {
-		return getBaseEntityAttributes(null);
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityAttribute> getBaseEntityAttributes(ReqConfig requirementsConfig) {
-		if (requirementsConfig == null) {
-			return baseEntityAttributes;
-		}
-		return baseEntityAttributes.stream().filter((ea) -> ea.requirementsMet(requirementsConfig))
-			.collect(Collectors.toSet());
+		return baseEntityAttributes;
 	}
 
 	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
@@ -241,30 +237,15 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 
 	/**
 	 * findEntityAttribute This returns an attributeEntity if it exists in the
-	 * baseEntity.
-	 *
-	 * @param attributePrefix
-	 * @return
-	 */
-	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
-		return findPrefixEntityAttributes(attributePrefix, null);
-	}
-
-	/**
-	 * findEntityAttribute This returns an attributeEntity if it exists in the
 	 * baseEntity. Could be more efficient in retrival (ACC: test)
 	 * 
 	 * @param attributePrefix the attributePrefix to find with
 	 * @return EntityAttribute
 	 */
-	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix, ReqConfig requirementsConfig) {
-		Stream<EntityAttribute> foundEntitys = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix)));
-
-		if(requirementsConfig != null)
-			foundEntitys.filter(ea -> ea.requirementsMet(requirementsConfig));
-
-		return foundEntitys.collect(Collectors.toList());
+	public List<EntityAttribute> findPrefixEntityAttributes(final String attributePrefix) {
+		return getBaseEntityAttributes().stream()
+				.filter(x -> (x.getAttributeCode().startsWith(attributePrefix)))
+				.collect(Collectors.toList());
 	}
 
 	/**
@@ -343,10 +324,8 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityAttribute entityAttribute = new EntityAttribute(weight, value);
+		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		entityAttribute.setRealm(getRealm());
-		entityAttribute.setBaseEntityCode(getCode());
-		entityAttribute.setAttribute(attribute);
 		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
 		if (existing.isPresent()) {
 			if (value != null)
@@ -377,7 +356,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		if (weight == null)
 			throw new BadDataException("missing weight");
 
-		final EntityAttribute entityAttribute = new EntityAttribute(weight, value);
+		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		entityAttribute.setRealm(getRealm());
 		entityAttribute.setBaseEntityCode(getCode());
 		entityAttribute.setAttribute(attribute);
@@ -515,7 +494,9 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 			ea.get().setRealm(getRealm());
 			ea.get().setBaseEntityCode(getCode());
 		} else {
-			EntityAttribute newEA = new EntityAttribute(weight, answerLink.getValue());
+			Attribute attribute = new Attribute();
+			attribute.setCode(answer.getAttributeCode());
+			EntityAttribute newEA = new EntityAttribute(this, attribute, weight, answerLink.getValue());
 			newEA.setRealm(getRealm());
 			newEA.setBaseEntityCode(getCode());
 			newEA.setAttributeCode(answerLink.getAttributeCode());

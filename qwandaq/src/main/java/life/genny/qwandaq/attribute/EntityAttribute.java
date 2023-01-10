@@ -35,6 +35,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.handler.AttributeMinIOHandler;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
@@ -146,69 +148,22 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	}
 
 	/**
-	 * Constructor.
-	 *
+	 * @param baseEntity
+	 * @param attribute
 	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 */
-	public EntityAttribute(Double weight) {
-		autocreateCreated();
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-			// attribute from scoring.
-		}
-		setWeight(weight);
-		setReadonly(false);
-	}
-
-	/**
-	 * Constructor.
-	 *
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
 	 * @param value
-	 *                   the value associated with this attribute
 	 */
-	public EntityAttribute(Double weight, final Object value) {
+	public EntityAttribute(BaseEntity baseEntity, Attribute attribute, Double weight, final Object value) {
 		autocreateCreated();
+		this.baseEntityCode = baseEntity.getCode();
+		setAttribute(attribute);
 		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
+			weight = 0.0;
 		}
 		setWeight(weight);
-		// Assume that Attribute Validation has been performed
 		if (value != null) {
 			setValue(value);
 		}
-	}
-
-	/**
-	 * Constructor.
-	 *
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 * @param value
-	 *                   the value associated with this attribute
-	 * @param privacyFlag
-	 *                   the value for privacy of this attribute
-	 */
-	public EntityAttribute(Double weight, final Object value, final boolean privacyFlag) {
-		autocreateCreated();
-		this.setPrivacyFlag(privacyFlag);
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
-		}
-		setWeight(weight);
-		// Assume that Attribute Validation has been performed
-		if (value != null) {
-			setValue(value);
-		}
-		setReadonly(false);
 	}
 
     @JsonbTransient
@@ -534,12 +489,22 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	}
 
 	public void autocreateUpdate() {
+
+		if (getValueString() != null) {
+            this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
+		}
+
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
+
+		if (getValueString() != null) {
+			this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
+		}
+
 	}
 
 	/**

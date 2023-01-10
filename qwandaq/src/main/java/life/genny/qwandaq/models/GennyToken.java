@@ -155,7 +155,7 @@ public class GennyToken implements Serializable {
 		if(prodCodeStr != null) {
 			String[] productCodes = prodCodeStr.split(":");
 			if(productCodes.length == 1) {
-				log.info("Overriding Product code with: " + productCodes[0]);
+				log.debug("Overriding Product code with: " + productCodes[0]);
 				this.productCode = productCodes[0];
 			}
 		} 

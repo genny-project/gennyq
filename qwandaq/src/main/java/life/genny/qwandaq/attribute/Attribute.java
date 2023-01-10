@@ -76,18 +76,25 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 
 	private static final long serialVersionUID = 1L;
 
-	public static final String DEFAULT_CODE_PREFIX = "PRI_";
-
 	// core
 	public static final String QQQ_QUESTION_GROUP = "QQQ_QUESTION_GROUP";
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_CODE = "PRI_CODE";
 	public static final String PRI_CREATED = "PRI_CREATED";
+	public static final String PRI_CREATED_DATE = "PRI_CREATED_DATE";
 	public static final String PRI_UPDATED = "PRI_UPDATED";
+	public static final String PRI_UPDATED_DATE = "PRI_UPDATED_DATE";
 	public static final String PRI_UUID = "PRI_UUID";
-	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
+	public static final String PRI_USERNAME = "PRI_USERNAME";
+
 	public static final String PRI_EVENT = "PRI_EVENT";
 	public static final String PRI_SUBMIT = "PRI_SUBMIT";
+
+	// display
+	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
+	public static final String PRI_IMAGE = "PRI_IMAGE";
+	public static final String PRI_IMAGES = "PRI_IMAGES";
+	public static final String PRI_DESCRIPTION = "PRI_DESCRIPTION";
 
 	// links
 	public static final String LNK_CORE = "LNK_CORE";
@@ -120,6 +127,10 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public static final String EVT_NEXT = "EVT_NEXT";
 	public static final String EVT_PREVIOUS = "EVT_PREVIOUS";
 
+	// person
+	public static final String PRI_FIRSTNAME = "PRI_FIRSTNAME";
+	public static final String PRI_LASTNAME = "PRI_LASTNAME";
+
 	// contact
 	public static final String PRI_MOBILE = "PRI_MOBILE";
 	public static final String PRI_EMAIL = "PRI_EMAIL";
@@ -130,6 +141,23 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
 	public static final String PRI_TOTAL_RESULTS = "PRI_TOTAL_RESULTS";
 	public static final String PRI_INDEX = "PRI_INDEX";
+
+
+	// message
+	public static final String PRI_DEFAULT_MSG_TYPE = "PRI_DEFAULT_MSG_TYPE";
+	public static final String PRI_CONTEXT_LIST = "PRI_CONTEXT_LIST";
+	public static final String PRI_CONTEXT_ASSOCIATIONS = "PRI_CONTEXT_ASSOCIATIONS";
+	public static final String PRI_CC = "PRI_CC";
+	public static final String PRI_BCC = "PRI_BCC";
+	public static final String PRI_BODY = "PRI_BODY";
+
+	// saved searches
+	public static final String LNK_FILTER_COLUMN = "LNK_FILTER_COLUMN";
+	public static final String LNK_FILTER_OPTION = "LNK_FILTER_OPTION";
+	public static final String LNK_PERSON = "LNK_PERSON";
+	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
+	public static final String LNK_QUICK_SEARCH = "LNK_QUICK_SEARCH";
+	public static final String LNK_SAVED_SEARCH = "LNK_SAVED_SEARCH";
 
 	@Embedded
 	@NotNull

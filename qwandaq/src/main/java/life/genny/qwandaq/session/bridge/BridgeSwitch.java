@@ -40,13 +40,11 @@ public class BridgeSwitch {
 
 		String product = gennyToken.getProductCode();
 		Set<String> activeBridgeIds = cm.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
-
-		if (activeBridgeIds == null) {
-            activeBridgeIds = new HashSet<>();
-		}
+		// create new set if none found
+		if (activeBridgeIds == null)
+			activeBridgeIds = new HashSet<String>();
 
 		activeBridgeIds.add(bridgeId);
-
 		cm.putObject(product, BRIDGE_SWITCH_KEY, activeBridgeIds);
 	}
 
@@ -59,18 +57,13 @@ public class BridgeSwitch {
 	public String findActiveBridgeId(GennyToken gennyToken) {
 
 		String product = gennyToken.getProductCode();
-
 		Set<String> activeBridgeIds = cm.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
-
 		// null check
-		if (activeBridgeIds == null) {
+		if (activeBridgeIds == null)
 			return null;
-		}
-
 		// find first
-		if (activeBridgeIds.iterator().hasNext()) {
+		if (activeBridgeIds.iterator().hasNext())
 			return activeBridgeIds.iterator().next();
-		}
 
 		return null;
 	}
@@ -85,20 +78,14 @@ public class BridgeSwitch {
 
 		String product = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
-
 		log.debug("Adding Switch to Cache --- " + key + " :: " + bridgeId);
-		
 		// grab from cache or create if null
 		BridgeInfo info = cm.getObject(product, key, BridgeInfo.class);
-		
-		if (info == null) {
+		if (info == null)
 			info = new BridgeInfo();
-		}
-
 		// add entry for jti and update in cache
 		String jti = gennyToken.getJTI();
 		info.mappings.put(jti, bridgeId);
-
 		cm.putObject(product, key, info);
 	}
 
@@ -113,19 +100,15 @@ public class BridgeSwitch {
 
 		String product = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
-		
 		// grab from cache
 		BridgeInfo info = cm.getObject(product, key, BridgeInfo.class);
-		
 		if (info == null) {
 			log.debug("No BridgeInfo object found for user " + gennyToken.getUserCode());
 			return null;
 		}
-
 		// grab entry for jti
 		String jti = gennyToken.getJTI();
 		String bridgeId = info.mappings.get(jti);
-
 		log.debug("Found Switch --- " + key + " :: " + bridgeId);
 
 		return bridgeId;

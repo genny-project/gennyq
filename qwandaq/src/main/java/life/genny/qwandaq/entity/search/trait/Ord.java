@@ -6,4 +6,8 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 public enum Ord {
 	ASC,
 	DESC;
+
+	public Ord getOpposite() {
+		return values()[Math.abs(this.ordinal() - 1)];
+	}
 }

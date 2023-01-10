@@ -14,9 +14,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.serialization.adapters.CapabilityAdapter;
+import life.genny.qwandaq.serialization.adapters.capabilities.CapabilityAdapter;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /**
@@ -108,33 +107,14 @@ public class Capability implements Serializable {
         return null;
     }
 
-    public boolean checkPerms(boolean hasAll, Capability cap) {
-        System.out.println("Checking " + (hasAll ? "hasAll" : "") + cap);
-        if(cap.nodes == null || cap.nodes.isEmpty())
-            throw new RuntimeException("Tried to check capability: " + cap);
-        if(!code.equals(cap.code))
-            return false;
-        return checkPerms(hasAll, cap.nodes);
-    }
-
-	public boolean checkPerms(boolean hasAll, CapabilityNode... checkSet) {
-		if(CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet)) {
-            System.out.println("Passed Capability check: " + CommonUtils.getArrayString(checkSet));
-            return true;
-        } else {
-            System.out.println("Failed cap check: " + CommonUtils.getArrayString(checkSet));
-            return false;
-        }
-	}
-
-    public boolean checkPerms(boolean hasAll, Set<CapabilityNode> checkSet) {
-        return CapabilitiesManager.checkCapability(this.nodes, hasAll, checkSet.toArray(new CapabilityNode[0]));
-    }
-
     public static Capability getFromEA(EntityAttribute ea) {
         String capCode = ea.getAttributeCode();
         List<CapabilityNode> caps = CapabilitiesManager.deserializeCapArray(ea.getValueString());
         return new Capability(capCode, caps);
+    }
+
+    public String nodeString() {
+        return CommonUtils.getArrayString(nodes);
     }
 
     @Override
@@ -155,10 +135,6 @@ public class Capability implements Serializable {
         return true;
     }
 
-    public String nodeString() {
-        return CommonUtils.getArrayString(nodes);
-    }
-
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
@@ -168,6 +144,9 @@ public class Capability implements Serializable {
     }
 
     public String toString() {
-        return this.code + " = " + CommonUtils.getArrayString(nodes);
+        return new StringBuilder(this.code)
+            .append(" = ")
+            .append(CommonUtils.getArrayString(nodes))
+            .toString();
     }
 }

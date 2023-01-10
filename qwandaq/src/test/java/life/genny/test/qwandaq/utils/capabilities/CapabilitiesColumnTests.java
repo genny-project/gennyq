@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Test;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
-import life.genny.qwandaq.utils.SetBuilder;
 import life.genny.test.qwandaq.utils.BaseTestCase;
+import life.genny.qwandaq.utils.collections.SetBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
@@ -34,7 +34,7 @@ public class CapabilitiesColumnTests extends BaseTestCase {
         })
         .createTest("Serialize Database Capability 1")
         .setInput(
-            new SetBuilder<Capability>()
+            (Set<Capability>) new SetBuilder<Capability>()
             .add(new CapabilityBuilder("CAP_ADMIN").add(ALL).edit(SELF).buildCap())
             .build()
         )
@@ -43,7 +43,7 @@ public class CapabilitiesColumnTests extends BaseTestCase {
 
         .createTest("Serialize Database Capability 2")
         .setInput(
-            new SetBuilder<Capability>()
+            (Set<Capability>) new SetBuilder<Capability>()
             .add(new CapabilityBuilder("CAP_TEST_CAP").buildCap())
             .add(new CapabilityBuilder("CAP_TEST_CAP2").add(ALL).buildCap())
             .build()
@@ -63,7 +63,7 @@ public class CapabilitiesColumnTests extends BaseTestCase {
         .createTest("Serialize Database Capability 1")
         .setInput("CAP_ADMIN[\"A:A\",\"E:S\"]  CAP_ADMIN2[\"A:S\",\"E:N\"]")
         .setExpected(
-            new SetBuilder<Capability>()
+            (Set<Capability>)new SetBuilder<Capability>()
             .add(new CapabilityBuilder("CAP_ADMIN").add(ALL).edit(SELF).buildCap())
             .add(new CapabilityBuilder("CAP_ADMIN2").add(SELF).edit(NONE).buildCap())
             .build()
@@ -73,7 +73,7 @@ public class CapabilitiesColumnTests extends BaseTestCase {
         .createTest("Serialize Database Capability 2")
         .setInput("CAP_TEST_CAP[]")
         .setExpected(
-            new SetBuilder<Capability>()
+            (Set<Capability>)new SetBuilder<Capability>()
             .add(new CapabilityBuilder("CAP_TEST_CAP").buildCap())
             .build()
         )

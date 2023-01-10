@@ -40,14 +40,17 @@ import java.util.List;
 @ApplicationScoped
 public class DatabaseUtils {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	Logger log;
 
 	@Inject
 	EntityManager entityManager;
 
 	@Inject
 	BaseEntityUtils beUtils;
+
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
@@ -265,7 +268,6 @@ public class DatabaseUtils {
 	 */
 
 	public Attribute findAttributeByCode(String realm, String code) {
-
 		return entityManager
 				.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
 				.setParameter("realmStr", realm)
@@ -281,7 +283,6 @@ public class DatabaseUtils {
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
-
 		return entityManager
 				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
 				.setParameter("realmStr", realm)
@@ -298,18 +299,11 @@ public class DatabaseUtils {
 	 */
 
 	public Question findQuestionByCode(String realm, String code) {
-
-		try {
-			return entityManager
-					.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
-					.setParameter("realmStr", realm)
-					.setParameter("code", code)
-					.getSingleResult();
-		} catch(NoResultException e) {
-			log.error("Could not find Question: " + realm + ":" + code);
-			log.error(e.getMessage());
-			return null;
-		}
+		return entityManager
+				.createQuery("FROM Question WHERE realm=:realmStr AND code=:code", Question.class)
+				.setParameter("realmStr", realm)
+				.setParameter("code", code)
+				.getSingleResult();
 	}
 
 	/**
