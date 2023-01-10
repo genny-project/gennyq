@@ -268,7 +268,7 @@ public class CacheManager {
      * @return
      */
     public Attribute getAttribute(String code) {
-		return getAttribute(userToken.getUserCode(), code);
+		return getAttribute(userToken.getProductCode(), code);
     }
 
     /**
