@@ -1,23 +1,26 @@
-package life.genny.bootq.bootxport.bootx;
+package life.genny.bootq.imprt;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.google.common.collect.Lists;
 
 import io.smallrye.mutiny.tuples.Tuple2;
 
-public class XlsxImportOnline extends XlsxImport {
+@ApplicationScoped
+public class XlsxImport {
 
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().getClass());
 
@@ -25,13 +28,31 @@ public class XlsxImportOnline extends XlsxImport {
 
     private Sheets service;
 
+    public XlsxImport() {
+    }
+
+    public Tuple2<List<String>, List<List<Object>>> sliceDataToHeaderAndValues(List<List<Object>> data) {
+        Tuple2<List<String>, List<List<Object>>> headerAndValues = null;
+        if (!data.isEmpty()) {
+            List<String> header = data.get(0).stream()
+                    .map(d -> d.toString().toLowerCase().replaceAll("^\"|\"$|_|-", ""))
+                    .collect(Collectors.toList());
+            data.remove(0);
+            headerAndValues = Tuple2.of(header, data);
+        } else {
+            log.error("Data to be sliced and Diced to HEader and Values is empty");
+        }
+
+        return headerAndValues;
+    }
+
     private List<Map<String, String>> mappingAndCacheHeaderToValues(String sheetURI, String sheetName) {
 
 		log.info("SheetID: " + sheetURI + ", sheetName: " + sheetName);
 
 		List<List<Object>> data;
 		try {
-			data = Lists.newArrayList(fetchSpreadSheet(sheetURI, sheetName));
+			data = List.copyOf(fetchSpreadSheet(sheetURI, sheetName));
 		} catch (IOException e) {
 			log.error("Error " + e.getMessage() + " in SheetName:" + sheetName + " and SheetID:" + sheetURI);
 			return new ArrayList<>();
@@ -39,10 +60,10 @@ public class XlsxImportOnline extends XlsxImport {
 		return mappingHeaderToValues(data);
 	};
 
-    private Map<String, Map<String, String>> mappingAndCacheKeyHeaderToHeaderValues(String sheetURI, String sheetName, Set<String> keys) {
+    private Map<String, Map<String, String>> mappingAndCacheKeyHeaderToHeaderValues(String sheetURI, String sheetName, String[] keys) {
 		List<List<Object>> data;
 		try {
-			data = Lists.newArrayList(fetchSpreadSheet(sheetURI, sheetName));
+			data = List.copyOf(fetchSpreadSheet(sheetURI, sheetName));
 			log.info("sheetID:" + sheetURI + ", SheetName:" + sheetName + ", Value size:" + data.size());
 		} catch (IOException e) {
 			log.error("Error " + e.getMessage() + " in SheetName:" + sheetName + " and SheetID:" + sheetURI);
@@ -51,17 +72,11 @@ public class XlsxImportOnline extends XlsxImport {
 		return mappingKeyHeaderToHeaderValues(data, keys);
 	};
 
-    public XlsxImportOnline(Sheets service) {
-        this.service = service;
-    }
-
-    @Override
     public List<Map<String, String>> mappingRawToHeaderAndValuesFmt(String sheetURI, String sheetName) {
         return mappingAndCacheHeaderToValues(sheetURI, sheetName);
     }
 
-    @Override
-    public Map<String, Map<String, String>> mappingRawToHeaderAndValuesFmt(String sheetURI, String sheetName, Set<String> keys) {
+    public Map<String, Map<String, String>> mappingRawToHeaderAndValuesFmt(String sheetURI, String sheetName, String[] keys) {
         return mappingAndCacheKeyHeaderToHeaderValues(sheetURI, sheetName, keys);
     }
 
@@ -80,7 +95,7 @@ public class XlsxImportOnline extends XlsxImport {
     }
 
     public Map<String, Map<String, String>> mappingKeyHeaderToHeaderValues(
-            final List<List<Object>> values, Set<String> keyColumns) {
+            final List<List<Object>> values, String[] keys) {
         final Map<String, Map<String, String>> k = new HashMap<>();
         Tuple2<List<String>, List<List<Object>>> headerAndValues = sliceDataToHeaderAndValues(values);
         for (final List<Object> row : headerAndValues.getItem2()) {
@@ -89,7 +104,9 @@ public class XlsxImportOnline extends XlsxImport {
                 mapper.put(headerAndValues.getItem2().get(counter).toString(), row.get(counter).toString());
             }
             String join = mapper.keySet().stream()
-                    .filter(keyColumns::contains).map(mapper::get).collect(Collectors.joining());
+					.filter(Arrays.asList(keys)::contains)
+					.map(mapper::get)
+					.collect(Collectors.joining());
             k.put(join, mapper);
         }
         return k;
@@ -102,9 +119,4 @@ public class XlsxImportOnline extends XlsxImport {
         
     }
 
-
-    Map<String, List<List<Object>>> responseState = new HashMap<>();
-
-    public void memoized() {
-    }
 }

@@ -18,9 +18,11 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import life.genny.bootq.bootxport.bootx.Realm;
-import life.genny.bootq.bootxport.bootx.RealmUnit;
-import life.genny.bootq.bootxport.xlsimport.BatchLoading;
+import life.genny.bootq.imprt.BatchLoading;
+import life.genny.bootq.imprt.ImportService;
+import life.genny.bootq.models.RealmUnit;
+import life.genny.bootq.security.BootSecurity;
+import life.genny.serviceq.Service;
 
 @Path("/bootq/")
 public class App {
@@ -29,8 +31,17 @@ public class App {
 
     private boolean isBatchLoadingRunning = false;
 
+	@Inject
+	ImportService is;
+
     @Inject
     BatchLoading bl;
+
+    @Inject
+    BootSecurity security;
+
+	@Inject
+	Service service;
 
     @GET
     @Path("/loadsheets")
@@ -62,25 +73,16 @@ public class App {
         }
 
         isBatchLoadingRunning = true;
-
-        Realm realm = new Realm(sheetId);
-        List<RealmUnit> realmUnits = realm.getDataUnits();
-
-		for (RealmUnit realmUnit : realmUnits) {
-			if (realmUnit.getDisable() || realmUnit.getSkipGoogleDoc()) {
-				continue;
-			}
-			bl.persistProjectOptimization(realmUnit);
-			log.info("Finished loading sheet:" + realmUnit.getUri() + ", realm:" + realmUnit.getName());
-		}
+        is.process(sheetId);
 		log.info("Finished batch loading for all realms in google sheets");
         return Response.ok().build();
     }
 
     @Transactional
     void onStart(@Observes StartupEvent ev) {
-        log.info("Bootq Endpoint starting");
-
+		service.initCache();
+		security.init();
+        log.info("Bootq Endpoint started!");
     }
 
     @Transactional

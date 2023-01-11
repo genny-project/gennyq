@@ -1,12 +1,12 @@
-package life.genny.bootq.bootxport.xlsimport;
+package life.genny.bootq.imprt;
 
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -14,16 +14,13 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.persistence.NoResultException;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.common.util.Base64;
 
-import life.genny.bootq.bootxport.bootx.QwandaRepository;
-import life.genny.bootq.bootxport.bootx.RealmUnit;
+import life.genny.bootq.models.ModuleUnit;
+import life.genny.bootq.models.RealmUnit;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
@@ -31,12 +28,9 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.EntityEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.qwandaq.validation.ValidationList;
 
@@ -80,172 +74,163 @@ public class BatchLoading {
     public BatchLoading() {
     }
 
-    public void persistProjectOptimization(RealmUnit rx) {
-
-        String realm = rx.getCode();
-        String debugStr = "Time profile";
+    public void persistProject(RealmUnit realmUnit) {
         Instant start = Instant.now();
+		// persist each module
+		List<ModuleUnit> modules = realmUnit.getModules();
+		for (ModuleUnit moduleUnit : realmUnit.getModules()) {
+			persistModuleUnit(moduleUnit);
+		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
-        log.info(debugStr + " Finished get user from keycloak, cost:" + timeElapsed.toMillis() + " millSeconds.");
+        log.info("Finished get user from keycloak, cost:" + timeElapsed.toMillis() + " millSeconds.");
+    }
 
-        start = Instant.now();
-        buildValidations(rx.getValidations(), rx.getCode());
-        timeElapsed = Duration.between(start, Instant.now());
+	/**
+	 * @param moduleUnit
+	 */
+	public void persistModuleUnit(ModuleUnit moduleUnit) {
+
+        Instant start = Instant.now();
+        buildValidations(moduleUnit);
+        Duration timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished validations, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
-        Map<String, DataType> dataTypes = buildDataTypes(rx.getDataTypes(), realm);
+        Map<String, DataType> dataTypes = buildDataTypes(moduleUnit);
 
         start = Instant.now();
-        buildAttributes(rx.getAttributes(), dataTypes, rx.getCode());
+        buildAttributes(moduleUnit, dataTypes);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished attribute, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
         start = Instant.now();
-        buildDefBaseEntitys(rx.getDef_baseEntitys(), rx.getCode());
+        buildDefBaseEntitys(moduleUnit);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished def_baseentity, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
         start = Instant.now();
-        buildDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode(), dataTypes);
+        buildDefBaseEntityAttributes(moduleUnit, dataTypes);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished def_baseentity_attribute, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
         start = Instant.now();
-        buildBaseEntitys(rx.getBaseEntitys(), rx.getCode());
+        buildBaseEntitys(moduleUnit);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished baseentity, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
         start = Instant.now();
-        buildBaseEntityAttributes(rx.getEntityAttributes(), rx.getCode());
+        buildBaseEntityAttributes(moduleUnit);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished baseentity_attribute, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
         start = Instant.now();
-        buildEntityEntitys(rx.getEntityEntitys(), rx.getCode());
+        buildEntityEntitys(moduleUnit);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished entity_entity, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
         start = Instant.now();
-        buildQuestions(rx.getQuestions(), rx.getCode());
+        buildQuestions(moduleUnit);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished question, cost:" + timeElapsed.toMillis() + " millSeconds.");
 
         start = Instant.now();
-        buildQuestionQuestions(rx.getQuestionQuestions(), rx.getCode());
+        buildQuestionQuestions(moduleUnit);
         timeElapsed = Duration.between(start, Instant.now());
         log.info(debugStr + " Finished question_question, cost:" + timeElapsed.toMillis() + " millSeconds.");
-    }
+	}
 
     /**
      * @param table
      * @param realm
      */
-    public void buildValidations(Map<String, Map<String, String>> table, String realm) {
-
-        for (Map<String, String> validations : table.values()) {
+    public void buildValidations(ModuleUnit moduleUnit) {
+		// iterate validations table
+        for (Map<String, String> validations : moduleUnit.getValidations().values()) {
+			// init validation
             String code = validations.get("code");
 			String name = validations.get("name");
 			String regex = validations.get("regex");
 			String errorMessage = validations.get("error_message");
 			String options = validations.get("options");
-
 			Validation validation = new Validation(code, name, regex, options);
-
-			validation.setRealm(realm);
+			// set realm and err
+			validation.setRealm(moduleUnit.getProductCode());
 			validation.setErrormsg(errorMessage);
-
+			// persist
 			databaseUtils.saveValidation(validation);
         }
     }
 
     /**
-     * @param table
-     * @param realm
+     * @param moduleUnit
      * @return
      */
-    public Map<String, DataType> buildDataTypes(Map<String, Map<String, String>> table, String realm) {
+    public Map<String, DataType> buildDataTypes(ModuleUnit moduleUnit) {
+		// iterate datatypes table
         final Map<String, DataType> dataTypeMap = new HashMap<>();
-        table.entrySet().stream().filter(d -> !d.getKey().matches("\\s*")).forEach(data -> {
-            Map<String, String> dataType = data.getValue();
-            String validations = dataType.get("validations");
-            String code = (dataType.get("code")).trim().replaceAll("^\"|\"$", "");
-            String className = (dataType.get("classname")).replaceAll("^\"|\"$", "");
-            String name = (dataType.get("name")).replaceAll("^\"|\"$", "");
-            String inputmask = dataType.get("inputmask");
-            String component = dataType.get("component");
-            final ValidationList validationList = new ValidationList();
+        moduleUnit.getDataTypes().entrySet().stream()
+				.filter(d -> !d.getKey().matches("\\s*"))
+				.forEach(data -> {
+            Map<String, String> fields = data.getValue();
+            String validations = fields.get("validations");
+            String code = (fields.get("code"));
+            String className = fields.get("classname");
+            String name = fields.get("name");
+            String inputmask = fields.get("inputmask");
+            String component = fields.get("component");
+			// build validation list
+            ValidationList validationList = new ValidationList();
             validationList.setValidationList(new ArrayList<Validation>());
             if (validations != null) {
                 final String[] validationListStr = validations.split(",");
-                for (final String validationCode : validationListStr) {
-                    try {
-                        Validation validation = databaseUtils.findValidationByCode(realm, validationCode);
-                        validationList.getValidationList().add(validation);
-                    } catch (NoResultException e) {
-                        log.error("Could not load Validation " + validationCode);
-                    }
+                for (String validationCode : validationListStr) {
+					Validation validation = databaseUtils.findValidationByCode(moduleUnit.getProductCode(), validationCode);
+					validationList.getValidationList().add(validation);
                 }
             }
-            if (!dataTypeMap.containsKey(code)) {
-                DataType dataTypeRecord;
-                if (component == null) {
-                    dataTypeRecord = new DataType(className, validationList, name, inputmask);
-                } else {
-                    dataTypeRecord = new DataType(className, validationList, name, inputmask, component);
-                }
-                dataTypeRecord.setDttCode(code);
-                dataTypeMap.put(code, dataTypeRecord);
-            }
+			DataType dataType = new DataType(className, validationList, name, inputmask, component);
+			dataType.setDttCode(code);
+			dataTypeMap.put(code, dataType);
         });
         return dataTypeMap;
     }
 
-
     /**
-     * @param table
+     * @param moduleUnit
      * @param dataTypeMap
-     * @param realm
      */
-    public void buildAttributes(Map<String, Map<String, String>> table, Map<String, DataType> dataTypeMap, String realm) {
-
-        Instant start = Instant.now();
-        for (Map.Entry<String, Map<String, String>> data : table.entrySet()) {
-            Map<String, String> fields = data.getValue();
-
+    public void buildAttributes(ModuleUnit moduleUnit, Map<String, DataType> dataTypeMap) {
+		// iterate attributes table
+        for (Map<String, String> fields : moduleUnit.getAttributes().values()) {
 			String code = fields.get("code");
 			String dataType = fields.get("datatype");
 			String name = fields.get("name");
+			// find datatype
 			DataType dataTypeRecord = dataTypeMap.get(dataType);
-
+			// build attribute
 			Attribute attr = new Attribute(code, name, dataTypeRecord);
-			attr.setRealm(realm);
-
+			attr.setRealm(moduleUnit.getProductCode());
+			// persist attribute
 			databaseUtils.saveAttribute(attr);
 		}
-        Instant end = Instant.now();
-        Duration timeElapsed = Duration.between(start, end);
-        log.info("Finished building Attributes: " + timeElapsed.toMillis() + " millSeconds.");
     }
 
     /**
-     * @param table
-     * @param realm
+     * @param moduleUnit
      */
-    public void buildBaseEntityAttributes(Map<String, Map<String, String>> table, String realm) {
-
-        for (Map.Entry<String, Map<String, String>> entry : table.entrySet()) {
-            Map<String, String> fields = entry.getValue();
-
+    public void buildBaseEntityAttributes(ModuleUnit moduleUnit) {
+		String productCode = moduleUnit.getProductCode();
+		// iterate EA table
+        for (Map<String, String> fields : moduleUnit.getBaseEntitys().values()) {
             String baseEntityCode = fields.get("baseEntityCode");
             String attributeCode = fields.get("attributeCode");
-
-			BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(realm, baseEntityCode);
-			Attribute attribute = databaseUtils.findAttributeByCode(realm, attributeCode);
-
-			EntityAttribute ea = buildEntityAttribute(fields, realm, baseEntity, attribute);
-
+			// fetch BE and Attribute
+			BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, baseEntityCode);
+			Attribute attribute = databaseUtils.findAttributeByCode(productCode, attributeCode);
+			// build EntityAttribute
+			EntityAttribute ea = buildEntityAttribute(fields, productCode, baseEntity, attribute);
 			baseEntity.addAttribute(ea);
+			// persist
 			databaseUtils.saveBaseEntity(baseEntity);
         }
     }
@@ -291,19 +276,15 @@ public class BatchLoading {
 	}
 
     /**
-     * @param table
-     * @param realm
+     * @param moduleUnit
      */
-    public void buildBaseEntitys(Map<String, Map<String, String>> table, String realm) {
-        Instant start = Instant.now();
-        for (Map.Entry<String, Map<String, String>> entry : table.entrySet()) {
-            Map<String, String> fields = entry.getValue();
-			BaseEntity baseEntity = buildBaseEntity(fields, realm);
+    public void buildBaseEntitys(ModuleUnit moduleUnit) {
+		// iterate baseEntitys
+        for (Map<String, String> fields : moduleUnit.getBaseEntitys().values()) {
+			// build and persist
+			BaseEntity baseEntity = buildBaseEntity(fields, moduleUnit.getProductCode());
 			databaseUtils.saveBaseEntity(baseEntity);
         }
-        Instant end = Instant.now();
-        Duration timeElapsed = Duration.between(start, end);
-        log.info("Finished building BaseEntity: cost:" + timeElapsed.toMillis() + " millSeconds.");
     }
 
 	/**
@@ -320,23 +301,22 @@ public class BatchLoading {
 	}
 
     /**
-     * @param table
-     * @param realm
+     * @param moduleUnit
      */
-    public void buildEntityEntitys(Map<String, Map<String, String>> table, String realm) {
-
-        for (Map.Entry<String, Map<String, String>> entry : table.entrySet()) {
-            Map<String, String> fields = entry.getValue();
+    public void buildEntityEntitys(ModuleUnit moduleUnit) {
+		String productCode = moduleUnit.getProductCode();
+		// iterate table
+        for (Map<String, String> fields : moduleUnit.getEntityEntitys().values()) {
             String linkCode = fields.get("linkCode");
             String parentCode = fields.get("parentCode");
             String targetCode = fields.get("targetCode");
-
             double weight = Double.valueOf(fields.get("weight"));
             String valueString = fields.get("valueString".toLowerCase().replaceAll("^\"|\"$|_|-", "").replaceAll("\n", ""));
-
-            Attribute linkAttribute = databaseUtils.findAttributeByCode(realm, linkCode);
-            BaseEntity source = databaseUtils.findBaseEntityByCode(realm, parentCode);
-            BaseEntity target = databaseUtils.findBaseEntityByCode(realm, targetCode);
+			// fetch link attribute
+			Attribute linkAttribute = databaseUtils.findAttributeByCode(productCode, linkCode);
+			// find source and target
+            BaseEntity source = databaseUtils.findBaseEntityByCode(productCode, parentCode);
+            BaseEntity target = databaseUtils.findBaseEntityByCode(productCode, targetCode);
             if (linkAttribute == null) {
                 log.error("EntityEntity Link code:" + linkCode + " doesn't exist in Attribute table.");
                 continue;
@@ -356,40 +336,34 @@ public class BatchLoading {
     }
 
     /**
-     * @param table
-     * @param realm
+     * @param moduleUnit
      */
-    public void buildQuestionQuestions(Map<String, Map<String, String>> table, String realm) {
-
-        for (Map.Entry<String, Map<String, String>> entry : table.entrySet()) {
-            Map<String, String> fields = entry.getValue();
-
+    public void buildQuestionQuestions(ModuleUnit moduleUnit) {
+		String productCode = moduleUnit.getProductCode();
+        for (Map<String, String> fields : moduleUnit.getQuestionQuestions().values()) {
+			// get parent and child
             String parentCode = fields.get("parentCode");
             String targetCode = fields.get("targetCode");
-
-			Question parent = databaseUtils.findQuestionByCode(realm, parentCode);
-			Question child = databaseUtils.findQuestionByCode(realm, targetCode);
-
+			Question parent = databaseUtils.findQuestionByCode(productCode, parentCode);
+			Question child = databaseUtils.findQuestionByCode(productCode, targetCode);
+			// find fields
 			Double weight = Double.parseDouble(fields.get(WEIGHT));
-
 			Boolean mandatory = "TRUE".equalsIgnoreCase(fields.get(MANDATORY));
 			Boolean readonly = "TRUE".equalsIgnoreCase(fields.get(READONLY));
 			Boolean formTrigger = "TRUE".equalsIgnoreCase(fields.get("formtrigger"));
 			Boolean createOnTrigger = "TRUE".equalsIgnoreCase(fields.get("createontrigger"));
 			String dependency = fields.get("dependency");
 			String icon = fields.get("icon");
-			Boolean disabled = fields.get("disabled") != null && "TRUE".equalsIgnoreCase(fields.get("disabled"));
-			Boolean hidden = fields.get("hidden") != null && "TRUE".equalsIgnoreCase(fields.get("hidden"));
-
-
+			Boolean disabled = "TRUE".equalsIgnoreCase(fields.get("disabled"));
+			Boolean hidden = "TRUE".equalsIgnoreCase(fields.get("hidden"));
 			Boolean oneshot = "TRUE".equalsIgnoreCase(fields.get(ONESHOT));
-
+			// init QQ
 			QuestionQuestion qq = new QuestionQuestion(parent, child, weight);
 			qq.setOneshot(oneshot);
 			qq.setReadonly(readonly);
 			qq.setCreateOnTrigger(createOnTrigger);
 			qq.setFormTrigger(formTrigger);
-			qq.setRealm(realm);
+			qq.setRealm(productCode);
 			qq.setDependency(dependency);
 			qq.setIcon(icon);
 			qq.setDisabled(disabled);
@@ -398,30 +372,23 @@ public class BatchLoading {
         }
     }
 
-    /**
-     * @param table
-     * @param realm
-     */
-    public void buildQuestions(Map<String, Map<String, String>> table, String realm) {
-
-        for (Map.Entry<String, Map<String, String>> rawData : table.entrySet()) {
-
-            Map<String, String> questions = rawData.getValue();
-            String code = questions.get("code");
-			String name = questions.get("name");
-			String placeholder = questions.get("placeholder");
-			String directions = questions.get("directions");
-			String attributeCode = questions.get("attribute_code");
-			String html = questions.get("html");
-			String helper = questions.get("helper");
-			String icon = questions.get("icon");
-
-			Boolean oneshot = "TRUE".equalsIgnoreCase(questions.get("oneshot"));
-			Boolean readonly = "TRUE".equalsIgnoreCase(questions.get(READONLY));
-			Boolean mandatory = "TRUE".equalsIgnoreCase(questions.get(MANDATORY));
-
-			Attribute attribute = databaseUtils.findAttributeByCode(realm, attributeCode);
-
+    public void buildQuestions(ModuleUnit moduleUnit) {
+		String productCode = moduleUnit.getProductCode();
+        for (Map<String, String> fields : moduleUnit.getQuestions().values()) {
+            String code = fields.get("code");
+			String name = fields.get("name");
+			String placeholder = fields.get("placeholder");
+			String directions = fields.get("directions");
+			String attributeCode = fields.get("attribute_code");
+			String html = fields.get("html");
+			String helper = fields.get("helper");
+			String icon = fields.get("icon");
+			Boolean oneshot = "TRUE".equalsIgnoreCase(fields.get("oneshot"));
+			Boolean readonly = "TRUE".equalsIgnoreCase(fields.get(READONLY));
+			Boolean mandatory = "TRUE".equalsIgnoreCase(fields.get(MANDATORY));
+			// find attr
+			Attribute attribute = databaseUtils.findAttributeByCode(productCode, attributeCode);
+			// init Question
 			Question q = new Question(code, name, attribute);
 			q.setAttributeCode(attributeCode.toUpperCase());
 			q.setOneshot(oneshot);
@@ -429,7 +396,7 @@ public class BatchLoading {
 			q.setReadonly(readonly);
 			q.setMandatory(mandatory);
 			q.setPlaceholder(placeholder);
-			q.setRealm(realm);
+			q.setRealm(productCode);
 			q.setDirections(directions);
 			q.setHelper(helper);
 			q.setIcon(icon);
@@ -437,43 +404,39 @@ public class BatchLoading {
 	}
 
     /**
-     * @param table
-     * @param realm
+     * @param moduleUnit
      * @param dataTypes
      */
-    public void buildDefBaseEntityAttributes(Map<String, Map<String, String>> table, String realm, Map<String, DataType> dataTypes) {
-
-        for (Map.Entry<String, Map<String, String>> entry : table.entrySet()) {
-            Map<String, String> fields = entry.getValue();
-
+    public void buildDefBaseEntityAttributes(ModuleUnit moduleUnit, Map<String, DataType> dataTypes) {
+		String productCode = moduleUnit.getProductCode();
+        for (Map<String, String> fields : moduleUnit.getDef_entityAttributes().values()) {
             String baseEntityCode = fields.get("baseEntityCode");
             String defAttributeCode = fields.get("attributeCode");
-
 			String prefix = defAttributeCode.substring(0, 3);
 			String attributeCode = defAttributeCode.substring(4);
-
-			BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(realm, baseEntityCode);
+			// init BE
+			BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, baseEntityCode);
 
 			DataType dataType = dataTypes.get(defPrefixDataTypeMapping.get(prefix));
 			// If default, then find the datatype of the actual attribute
 			if (prefix.equals(DFT_PREFIX)) {
 				attributeCode = attributeCode.substring(DFT_PREFIX.length());
-				Attribute attribute = databaseUtils.findAttributeByCode(realm, attributeCode);
+				Attribute attribute = databaseUtils.findAttributeByCode(productCode, attributeCode);
 				dataType = attribute.getDataType();
 			}
 
-			Attribute attribute = databaseUtils.findAttributeByCode(realm, attributeCode);
+			Attribute attribute = databaseUtils.findAttributeByCode(productCode, attributeCode);
 			// update datatype in case real attribute datatype changed
 			if (attribute != null) {
 				attribute.setDataType(dataType);
 			} else {
 				// ATT_ doesn't exist in database, create and persist
 				log.info("Create new virtual Attribute:" + attributeCode);
-				attribute = createVirtualDefAttribute(attributeCode, realm, dataType);
+				attribute = createVirtualDefAttribute(attributeCode, productCode, dataType);
 			}
 			databaseUtils.saveAttribute(attribute);
 
-			EntityAttribute ea = buildEntityAttribute(fields, realm, baseEntity, attribute);
+			EntityAttribute ea = buildEntityAttribute(fields, productCode, baseEntity, attribute);
 			baseEntity.addAttribute(ea);
 			databaseUtils.saveBaseEntity(baseEntity);
 
@@ -494,31 +457,24 @@ public class BatchLoading {
     }
 
     /**
-     * @param table
-     * @param realm
+     * @param moduleUnit
      */
-    public void buildDefBaseEntitys(Map<String, Map<String, String>> table, String realm) {
-
-        Instant start = Instant.now();
-        for (Map.Entry<String, Map<String, String>> entry : table.entrySet()) {
-            Map<String, String> fields = entry.getValue();
-			BaseEntity baseEntity = buildBaseEntity(fields, realm);
+    public void buildDefBaseEntitys(ModuleUnit moduleUnit) {
+		String productCode = moduleUnit.getProductCode();
+        for (Map<String, String> fields : moduleUnit.getDef_baseEntitys().values()) {
+			BaseEntity baseEntity = buildBaseEntity(fields, productCode);
 			databaseUtils.saveBaseEntity(baseEntity);
         }
-
-        Instant end = Instant.now();
-        Duration timeElapsed = Duration.between(start, end);
-        log.info(debugStr + " Finished for loop Def Entity, cost:" + timeElapsed.toMillis() + " millSeconds.");
     }
 
     /**
-     * @param realm
+     * @param productCode
      * @param securityKey
      * @param servicePass
      * @return
      */
-    private String decodePassword(String realm, String securityKey, String servicePass) {
-        String initVector = "PRJ_" + realm.toUpperCase();
+    private String decodePassword(String productCode, String securityKey, String servicePass) {
+        String initVector = "PRJ_" + productCode.toUpperCase();
         initVector = StringUtils.rightPad(initVector, 16, '*');
         String decrypt = decrypt(securityKey, initVector, servicePass);
         return decrypt;
