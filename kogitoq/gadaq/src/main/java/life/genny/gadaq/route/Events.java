@@ -201,7 +201,7 @@ public class Events {
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
-		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
+		if ("ACT_EDIT".equals(code)) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()
