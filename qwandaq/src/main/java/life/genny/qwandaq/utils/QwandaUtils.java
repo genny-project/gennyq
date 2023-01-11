@@ -786,6 +786,9 @@ public class QwandaUtils {
 
 		// create a child ask for every valid atribute
 		definition.getBaseEntityAttributes().stream()
+				.peek(ea -> {
+					log.info("Attribute: " + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
+				})
 				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
 				.forEach((ea) -> {
 					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
@@ -802,8 +805,7 @@ public class QwandaUtils {
 				});
 
 		// set child asks
-		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
-
+		ask.setChildAsks(childAsks);
 		return ask;
 	}
 
