@@ -2,6 +2,8 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 
+import javax.json.bind.annotation.JsonbTransient;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class TaskExchange implements Serializable {
@@ -29,51 +31,61 @@ public class TaskExchange implements Serializable {
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public void setSubmit() {
 		setCompletion(ECompletion.SUBMIT);
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public void setCancel() {
 		setCompletion(ECompletion.CANCEL);
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public void setPrevious() {
 		setCompletion(ECompletion.PREVIOUS);
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public void setTimeout() {
 		setCompletion(ECompletion.TIMEOUT);
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public void setCustom() {
 		setCompletion(ECompletion.CUSTOM);
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public Boolean isSubmit() {
 		return this.completion == ECompletion.SUBMIT;
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public Boolean isCancel() {
 		return this.completion == ECompletion.CANCEL;
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public Boolean isPrevious() {
 		return this.completion == ECompletion.PREVIOUS;
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public Boolean isTimeout() {
 		return this.completion == ECompletion.TIMEOUT;
 	}
 
 	@JsonIgnore
+	@JsonbTransient
 	public Boolean isCustom() {
 		return this.completion == ECompletion.CUSTOM;
 	}
