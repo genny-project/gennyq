@@ -16,9 +16,8 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
-import life.genny.test.qwandaq.utils.BaseTestCase;
 
-public class QwandaUtilsTest extends BaseTestCase {
+public class QwandaUtilsTest extends BaseDefTest {
 
 	private static String PER_SOURCE = "PER_SOURCE";
 	private static String PER_TARGET = "PER_TARGET";
@@ -29,6 +28,11 @@ public class QwandaUtilsTest extends BaseTestCase {
 
 	@Inject
 	QwandaUtils qwandaUtils;
+
+	@Test
+	public void lnkIncludeCapabilityCheck() {
+		
+	}
 
     @Test
     public void testBasicAttributeCodeFilter() {

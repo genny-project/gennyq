@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import life.genny.qwandaq.utils.callbacks.testing.FITestCallback;
-import life.genny.qwandaq.utils.callbacks.testing.FITestVerificationCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FIAssertionCallback;
 
 public class JUnitTester<I, E> {
     public FITestCallback<Input<I>, Expected<E>> testCallback;
-    public FITestVerificationCallback<E> verificationCallback;
+    public FIAssertionCallback<E> verificationCallback;
 
     private final List<TestCase<I,E>> tests = new ArrayList<>();
 
@@ -16,8 +16,8 @@ public class JUnitTester<I, E> {
         this(JUnitTester::defaultAssertion);
     }
 
-    public JUnitTester(FITestVerificationCallback<E> verificationCallback) {
-        setVerification(verificationCallback != null ? verificationCallback : JUnitTester::defaultAssertion);
+    public JUnitTester(FIAssertionCallback<E> verificationCallback) {
+        setAssertion(verificationCallback != null ? verificationCallback : JUnitTester::defaultAssertion);
     }
 
     public JUnitTester<I, E> setTest(FITestCallback<Input<I>, Expected<E>> testCallback) {
@@ -25,7 +25,7 @@ public class JUnitTester<I, E> {
         return this;
     }
 
-    public JUnitTester<I, E> setVerification(FITestVerificationCallback<E> verificationCallback) {
+    public JUnitTester<I, E> setAssertion(FIAssertionCallback<E> verificationCallback) {
         this.verificationCallback = verificationCallback;
         return this;
     }

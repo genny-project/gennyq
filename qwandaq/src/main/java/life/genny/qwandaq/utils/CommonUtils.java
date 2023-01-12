@@ -350,14 +350,24 @@ public class CommonUtils {
 	}
 
 
-	// TODO: Going to elaborate on this more another time. Will allow for the extra _ character some constants have
 	public static String substitutePrefix(String code, String prefix) {
+        if(prefix.length() == 4) {
+            if(prefix.charAt(4) != '_') {
+                log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
+                return code;
+            }
+
+            // ensure 3 character length after underscore check
+            prefix = prefix.substring(0, 3);
+        }
+
 		if(prefix.length() != 3) {
-			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters");
+			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
 			return code;
 		}
-		code = prefix + code.substring(prefix.length());
-		return code;
+
+        // all prefixes are now 3 characters at this point. Yay
+		return prefix.concat(code.substring(3));
 	}
 
 	/**

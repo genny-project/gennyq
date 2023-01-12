@@ -5,19 +5,24 @@ import java.util.Map;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.utils.builder.BaseEntityDecorator;
-import life.genny.test.qwandaq.utils.BaseTestCase;
+import life.genny.test.qwandaq.utils.capabilities.requirements.BaseRequirementsTest;
 
-public abstract class BaseDefTest extends BaseTestCase {
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 
-    private static Map<String, BaseEntity> baseEntities = new HashMap<>();
+public abstract class BaseDefTest extends BaseRequirementsTest {
+
+    private static Map<String, Definition> baseEntities = new HashMap<>();
     static {
 
         // Setup Grandchild
         addBaseEntity(new BaseEntityDecorator("DEF_TEST", "Test Definition")
             .addEA()
                 .setAttribute("ATT_PRI_PREFIX", "Prefix Attribute", new DataType(String.class))
+                .addRequirement(new CapabilityBuilder("TEST CAP").add(ALL).buildCap())
                 .setValue("TST")
             .build()
             .addEA()
@@ -81,10 +86,10 @@ public abstract class BaseDefTest extends BaseTestCase {
     }
 
     protected static void addBaseEntity(BaseEntity be) {
-        baseEntities.put(be.getCode(), be);
+        baseEntities.put(be.getCode(), (Definition)be);
     }
 
-    public static BaseEntity getBaseEntity(String code) {
+    public static Definition getBaseEntity(String code) {
         return baseEntities.get(code);
     }
 }

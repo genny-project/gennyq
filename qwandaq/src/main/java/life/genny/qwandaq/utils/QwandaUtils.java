@@ -13,9 +13,7 @@ import java.util.Set;
 
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -33,11 +31,11 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.Delimiter;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
@@ -48,6 +46,7 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -94,16 +93,6 @@ public class QwandaUtils {
 	// private static DataType DTT_EVENT;
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
-
-	@PostConstruct
-	private void init() {
-		// Attribute submit = getAttribute("EVT_SUBMIT");
-		// if (submit == null) {
-		// log.error("Could not find Attribute: EVT_SUBMIT");
-		// return;
-		// }
-		// DTT_EVENT = submit.getDataType();
-	}
 
 	/**
 	 * Cache an ask for a processId and questionCode combination.
@@ -779,7 +768,7 @@ public class QwandaUtils {
 		// Is it better to get the name from PRI_NAME here?
 		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
-				"Edit " + targetCode + " : " + baseEntity.getName(),
+				"Edit " + targetCode + " : " + baseEntity.getName(), // TODO: Do we want to use PRI_NAME here?
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
 
@@ -788,7 +777,11 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
-
+		// Initial BaseEntity can edit check (CHECK CAP_<BASEENTITY>)
+		Optional<Capability> optReq = definition.getCapabilityRequirement(CommonUtils.substitutePrefix(definition.getCode(), Prefix.CAP));
+		if(optReq.isPresent()) {
+			// perform check (return empty ask here if fail)
+		}
 
 		// for an EntityAttribute ea in Definition
 		for(EntityAttribute ea : definition.getBaseEntityAttributes()) {
@@ -796,7 +789,7 @@ public class QwandaUtils {
 			if(!ea.getAttributeCode().startsWith(Prefix.ATT))
 				continue;
 
-			boolean locked = false;
+			boolean locked = checkCanEditEntityAttribute(userCapabilities, definition, ea);
 			// check the capability requirement BASE_ENTITY:~:ATTRIBUTE
 			// if they don't exist, keep locked false and move up the LNK_INCLUDE chain
 			// 
@@ -819,12 +812,6 @@ public class QwandaUtils {
 			childAsks.add(childAsk);
 		}
 
-
-
-
-
-
-
 		// create a child ask for every valid attribute
 		// capabilityFilteredStream(definition, userCapabilities)
 		// 		.forEach((ea) -> {
@@ -835,51 +822,43 @@ public class QwandaUtils {
 		return ask;
 	}
 
-	private boolean checkEAIsLocked(Definition definition, EntityAttribute ea) {
-		// check current EA requirement. If it is missing, do not return and move up LNK_INCLUDE 
-		Optional<Capability> optEditRequirement = ea.getCapabilityRequirement(
-										new StringBuilder(ea.getBaseEntityCode())
-											.append(Delimiter.CAPABILITY)
-											.append(ea.getAttributeCode())
-											.toString()
-									);
+	public static boolean checkCanEditEntityAttribute(CapabilitySet userCapabilities, Definition definition, EntityAttribute ea) {
+
+		return checkCanEditEntityAttribute(userCapabilities, definition, ea, false);
 	}
 
-	/**
-	 * Return an open stream of definition entity attributes with a filter operation applied, based on the
-	 * BASE_ENTITY:~:ATTRIBUTE capability requirement
-	 * 
-	 * @see <a href="https://gada.atlassian.net/wiki/spaces/GEN/pages/53248008/Edit+Flow+Filter+Logic">Edit flow logic Confluence</a>
-	 */
-	// private List<Capability> capabilityFilteredStream(Definition definition, CapabilitySet userCapabilities) {
-	// 	return definition.getBaseEntityAttributes().stream()
-	// 			.filter(ea -> {
-	// 			})
-	// 			.anyMatch(ea -> {
-	// 				// Only get requirements with edit
-	// 				// need to check only BASE_ENTITY:~:ATTRIBUTE with edit here
-	// 				// 1. find BASE_ENTITY:~:ATTRIBUTE, and only check the edit nodes
+	public static boolean checkCanEditEntityAttribute(CapabilitySet userCapabilities, Definition definition, EntityAttribute ea, boolean locked) {
+		// scale LNK_INCLUDE until you hit a true (requirements met), or all LNK_INCLUDE EAs are empty
 
-	// 				// TODO: Once bootq patch is in place, move up the inheritance tree!
+		// Check Entity Attribute cap req: BASEENTITY:~:ATTRIBUTE
+		Optional<Capability> optEditReq = ea.getCapabilityRequirement(ea.getBaseEntityCode() + ":~:" + ea.getAttributeCode());
+		if(!optEditReq.isPresent()) {
+			// Check base cases here
+		}
 
-	// 				
+		Capability editReq = optEditReq.get();
+		boolean eaPassCheck = ICapabilityFilterable.requirementsMetImpl(userCapabilities, ReqConfig.builder()
+					.allCaps(false)
+					.allNodes(false)
+					.cascadePermissions(false).build(), 
+					editReq.filterByModes(CapabilityMode.EDIT)); // Target only edit mode
+		
+		if(eaPassCheck)
+			return true;
 
-	// 				// Once bootq patch is in place we can move this outside of the loop to be put in place
-	// 				if(!optEditRequirement.isPresent())
-	// 					return false;
+		Optional<EntityAttribute> optLnkInclude = definition.findEntityAttribute(Attribute.LNK_INCLUDE);
+		if(!optLnkInclude.isPresent()) {
+			return locked;
+		}
 
-	// 				Capability editRequirement = optEditRequirement.get();
-					
-	// 				// 2. check em against BASE_ENTITY:~:ENTITY_ATTRIBUTE
-	// 				return ICapabilityFilterable.requirementsMetImpl(userCapabilities, 
-	// 					ReqConfig.builder()
-	// 				.allCaps(false)
-	// 				.allNodes(false)
-	// 				.cascadePermissions(false)
-	// 				.build(),
-	// 				editRequirement);
-	// 			});
-	// }
+		// 0: Base Case (Empty LNK_INCLUDE in defintion)
+		// 1: Base Case (Blank LNK_INCLUDE in definition)
+		
+		// 2: Recursive Case. LNK_INCLUDE has definition and locked = false
+
+
+		return locked;
+	}
 
 
 	/**

@@ -174,7 +174,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         .setTest((input) -> {
             return Expected(input.input.getLesserNodes());
         })
-        .setVerification((result, expected) -> {
+        .setAssertion((result, expected) -> {
             assertArrayEquals(expected, result);
         })
         .createTest("Lesser Nodes Test 1")

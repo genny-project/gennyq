@@ -2,7 +2,7 @@ package life.genny.qwandaq.utils.testsuite;
 
 
 import life.genny.qwandaq.utils.callbacks.testing.FITestCallback;
-import life.genny.qwandaq.utils.callbacks.testing.FITestVerificationCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FIAssertionCallback;
 
 public class TestBuilder<I, E> {
 
@@ -13,7 +13,7 @@ public class TestBuilder<I, E> {
 
     private String name;
     private FITestCallback<Input<I>, Expected<E>> testCallback;
-    private FITestVerificationCallback<E> verificationCallback;
+    private FIAssertionCallback<E> verificationCallback;
     
     public TestBuilder(JUnitTester<I, E> tester) {
         this.tester = tester;
@@ -28,7 +28,7 @@ public class TestBuilder<I, E> {
         return this;
     }
 
-    public TestBuilder<I, E> setVerification(FITestVerificationCallback<E> verificationCallback) {
+    public TestBuilder<I, E> setVerification(FIAssertionCallback<E> verificationCallback) {
         this.verificationCallback = verificationCallback;
         return this;
     }
@@ -75,7 +75,7 @@ public class TestBuilder<I, E> {
         if(expected == null) {
             throw new IllegalArgumentException("No Expected result set for test: " + name);
         }
-        FITestVerificationCallback<E> verifCallback = verificationCallback != null ? verificationCallback : tester.verificationCallback;
+        FIAssertionCallback<E> verifCallback = verificationCallback != null ? verificationCallback : tester.verificationCallback;
         return new TestCase<I, E>(name, input, expected, testCallback, verifCallback);
     }
 }

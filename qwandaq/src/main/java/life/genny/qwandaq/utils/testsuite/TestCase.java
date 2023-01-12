@@ -2,7 +2,7 @@ package life.genny.qwandaq.utils.testsuite;
 
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.callbacks.testing.FITestCallback;
-import life.genny.qwandaq.utils.callbacks.testing.FITestVerificationCallback;
+import life.genny.qwandaq.utils.callbacks.testing.FIAssertionCallback;
 
 /**
  * 
@@ -16,10 +16,10 @@ public class TestCase<I, E> {
     private final String name;
 
     private final FITestCallback<Input<I>, Expected<E>> testCallback;
-    private final FITestVerificationCallback<E> verificationCallback;
+    private final FIAssertionCallback<E> verificationCallback;
 
     public TestCase(String name, Input<I> input, Expected<E> expected, 
-            FITestCallback<Input<I>, Expected<E>> testCallback, FITestVerificationCallback<E> verificationCallback) {
+            FITestCallback<Input<I>, Expected<E>> testCallback, FIAssertionCallback<E> verificationCallback) {
         this.input = input;
         this.expected = expected;
         this.testCallback = testCallback;
