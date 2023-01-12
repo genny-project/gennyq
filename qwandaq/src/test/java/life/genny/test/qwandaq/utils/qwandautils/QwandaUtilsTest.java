@@ -1,4 +1,4 @@
-package life.genny.test.qwandaq.utils;
+package life.genny.test.qwandaq.utils.qwandautils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +16,7 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
+import life.genny.test.qwandaq.utils.BaseTestCase;
 
 public class QwandaUtilsTest extends BaseTestCase {
 

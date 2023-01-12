@@ -38,7 +38,6 @@ import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
-import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
@@ -49,7 +48,6 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
@@ -790,26 +788,61 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
+
+
+		// for an EntityAttribute ea in Definition
+		for(EntityAttribute ea : definition.getBaseEntityAttributes()) {
+			// Initial filter (merged for less overhead) We don't want to deal with non ATT attributes
+			if(!ea.getAttributeCode().startsWith(Prefix.ATT))
+				continue;
+
+			boolean locked = false;
+			// check the capability requirement BASE_ENTITY:~:ATTRIBUTE
+			// if they don't exist, keep locked false and move up the LNK_INCLUDE chain
+			// 
+
+
+			// if locked != false add the entity attribute to the ask
+			if(locked)
+				continue;
+			
+			String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
+			Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
+
+			String questionCode = Prefix.QUE
+					+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+							Prefix.PRI), Prefix.LNK);
+
+			Question childQues = new Question(questionCode, attribute.getName(), attribute);
+			Ask childAsk = new Ask(childQues, sourceCode, targetCode);
+
+			childAsks.add(childAsk);
+		}
+
+
+
+
+
+
+
 		// create a child ask for every valid attribute
-		capabilityFilteredStream(definition, userCapabilities)
-				.forEach((ea) -> {
-					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
-					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
-
-					String questionCode = Prefix.QUE
-							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-									Prefix.PRI), Prefix.LNK);
-
-					Question childQues = new Question(questionCode, attribute.getName(), attribute);
-					Ask childAsk = new Ask(childQues, sourceCode, targetCode);
-
-					childAsks.add(childAsk);
-				});
-
+		// capabilityFilteredStream(definition, userCapabilities)
+		// 		.forEach((ea) -> {
+		// 		});
 		// set child asks
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
 		return ask;
+	}
+
+	private boolean checkEAIsLocked(Definition definition, EntityAttribute ea) {
+		// check current EA requirement. If it is missing, do not return and move up LNK_INCLUDE 
+		Optional<Capability> optEditRequirement = ea.getCapabilityRequirement(
+										new StringBuilder(ea.getBaseEntityCode())
+											.append(Delimiter.CAPABILITY)
+											.append(ea.getAttributeCode())
+											.toString()
+									);
 	}
 
 	/**
@@ -818,42 +851,35 @@ public class QwandaUtils {
 	 * 
 	 * @see <a href="https://gada.atlassian.net/wiki/spaces/GEN/pages/53248008/Edit+Flow+Filter+Logic">Edit flow logic Confluence</a>
 	 */
-	private Stream<EntityAttribute> capabilityFilteredStream(Definition definition, CapabilitySet userCapabilities) {
-		return definition.getBaseEntityAttributes().stream()
-				.filter(ea -> {
-					// Initial filter (merged for less overhead)
-					if(!ea.getAttributeCode().startsWith(Prefix.ATT))
-						return false;
+	// private List<Capability> capabilityFilteredStream(Definition definition, CapabilitySet userCapabilities) {
+	// 	return definition.getBaseEntityAttributes().stream()
+	// 			.filter(ea -> {
+	// 			})
+	// 			.anyMatch(ea -> {
+	// 				// Only get requirements with edit
+	// 				// need to check only BASE_ENTITY:~:ATTRIBUTE with edit here
+	// 				// 1. find BASE_ENTITY:~:ATTRIBUTE, and only check the edit nodes
+
+	// 				// TODO: Once bootq patch is in place, move up the inheritance tree!
+
+	// 				
+
+	// 				// Once bootq patch is in place we can move this outside of the loop to be put in place
+	// 				if(!optEditRequirement.isPresent())
+	// 					return false;
+
+	// 				Capability editRequirement = optEditRequirement.get();
 					
-					// Only get requirements with edit
-					// need to check only BASE_ENTITY:~:ATTRIBUTE with edit here
-					// 1. find BASE_ENTITY:~:ATTRIBUTE, and only check the edit nodes
-
-					// TODO: Once bootq patch is in place, move up the inheritance tree!
-
-					Optional<Capability> optEditRequirement = ea.getCapabilityRequirement(
-								new StringBuilder(ea.getBaseEntityCode())
-									.append(Delimiter.CAPABILITY)
-									.append(ea.getAttributeCode())
-									.toString()
-							);
-
-					// Once bootq patch is in place we can move this outside of the loop to be put in place
-					if(!optEditRequirement.isPresent())
-						return false;
-
-					Capability editRequirement = optEditRequirement.get();
-					
-					// 2. check em against BASE_ENTITY:~:ENTITY_ATTRIBUTE
-					return ICapabilityFilterable.requirementsMetImpl(userCapabilities, 
-						ReqConfig.builder()
-					.allCaps(false)
-					.allNodes(false)
-					.cascadePermissions(false)
-					.build(),
-					editRequirement);
-				});
-	}
+	// 				// 2. check em against BASE_ENTITY:~:ENTITY_ATTRIBUTE
+	// 				return ICapabilityFilterable.requirementsMetImpl(userCapabilities, 
+	// 					ReqConfig.builder()
+	// 				.allCaps(false)
+	// 				.allNodes(false)
+	// 				.cascadePermissions(false)
+	// 				.build(),
+	// 				editRequirement);
+	// 			});
+	// }
 
 
 	/**
