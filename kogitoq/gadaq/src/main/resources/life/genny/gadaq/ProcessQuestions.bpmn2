@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_hDBcIHRWEDu8u_o6QI8eGQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_WIgPgHR7EDu8u_o6QI8eGQ" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -72,6 +72,7 @@
   </bpmn2:interface>
   <bpmn2:signal id="_3641717" name="wait"/>
   <bpmn2:signal id="_-1273775369" name="previous"/>
+  <bpmn2:signal id="_-1349088399" name="custom"/>
   <bpmn2:signal id="_3641717" name="wait"/>
   <bpmn2:interface id="_01BC1914-9CBF-4E4A-8C4A-28F572B02A06_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
     <bpmn2:operation id="_01BC1914-9CBF-4E4A-8C4A-28F572B02A06_ServiceOperation" name="doesTaskExist" implementationRef="doesTaskExist"/>
@@ -79,8 +80,8 @@
   <bpmn2:interface id="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
     <bpmn2:operation id="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceOperation" name="dispatchTask" implementationRef="dispatchTask"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_C1CE2AC4-5B6D-43E7-826A-F1F9CCC26F98" name="Default Collaboration">
-    <bpmn2:participant id="_BB9E4B62-39F8-462A-9EC1-AAF42C534DAF" name="Pool Participant" processRef="processQuestions"/>
+  <bpmn2:collaboration id="_DF844176-C7C5-4873-B39D-F3A76FFEA249" name="Default Collaboration">
+    <bpmn2:participant id="_C29CF806-47BF-480A-9B0B-AF3BB2F43427" name="Pool Participant" processRef="processQuestions"/>
   </bpmn2:collaboration>
   <bpmn2:process id="processQuestions" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Process Questions" isExecutable="true" processType="Public">
     <bpmn2:extensionElements>
@@ -348,6 +349,34 @@ taskExchange.setProductCode(productCode);
 kcontext.setVariable("taskExchange", taskExchange);
 </bpmn2:script>
     </bpmn2:scriptTask>
+    <bpmn2:subProcess id="_25362E49-D798-4179-9AB3-00F69175F0BA" triggeredByEvent="true">
+      <bpmn2:sequenceFlow id="_DD5B095C-5318-48EA-A85E-AB275A007411" sourceRef="_E0CE2E62-19AB-4EC3-AF84-F6A4D3FFBACD" targetRef="_3061EC9F-7F24-4B05-8199-948FAC07C941"/>
+      <bpmn2:sequenceFlow id="_81981B57-38AD-405C-856B-1AA251A3800D" sourceRef="_D3133C95-D730-41DA-A66B-738CCD1AFCFE" targetRef="_E0CE2E62-19AB-4EC3-AF84-F6A4D3FFBACD"/>
+      <bpmn2:scriptTask id="_E0CE2E62-19AB-4EC3-AF84-F6A4D3FFBACD" name="CUSTOM" scriptFormat="http://www.java.com/java">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[CUSTOM]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:incoming>_81981B57-38AD-405C-856B-1AA251A3800D</bpmn2:incoming>
+        <bpmn2:outgoing>_DD5B095C-5318-48EA-A85E-AB275A007411</bpmn2:outgoing>
+        <bpmn2:script>taskExchange.setCustom();
+kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
+      </bpmn2:scriptTask>
+      <bpmn2:endEvent id="_3061EC9F-7F24-4B05-8199-948FAC07C941">
+        <bpmn2:incoming>_DD5B095C-5318-48EA-A85E-AB275A007411</bpmn2:incoming>
+        <bpmn2:terminateEventDefinition/>
+      </bpmn2:endEvent>
+      <bpmn2:startEvent id="_D3133C95-D730-41DA-A66B-738CCD1AFCFE" name="Custom Event">
+        <bpmn2:extensionElements>
+          <drools:metaData name="elementname">
+            <drools:metaValue><![CDATA[Custom Event]]></drools:metaValue>
+          </drools:metaData>
+        </bpmn2:extensionElements>
+        <bpmn2:outgoing>_81981B57-38AD-405C-856B-1AA251A3800D</bpmn2:outgoing>
+        <bpmn2:signalEventDefinition signalRef="_-1349088399"/>
+      </bpmn2:startEvent>
+    </bpmn2:subProcess>
     <bpmn2:subProcess id="_CDA3FA3E-5FA7-476F-B6ED-7DB0DE0FCBBE" triggeredByEvent="true">
       <bpmn2:sequenceFlow id="_1A00D8FA-9341-4702-9E5E-B3D73F4F1562" sourceRef="_F1625CA6-500E-4544-8662-AE297DE89EBD" targetRef="_D027D69A-A87E-45D9-9EE4-6754775F9D12"/>
       <bpmn2:sequenceFlow id="_BEBCD7A5-EC52-4332-B0C1-0D636A4061A1" sourceRef="_70FCFD8F-8AE3-431D-A13D-A046ED751643" targetRef="_F1625CA6-500E-4544-8662-AE297DE89EBD"/>
@@ -359,7 +388,7 @@ kcontext.setVariable("taskExchange", taskExchange);
         </bpmn2:extensionElements>
         <bpmn2:incoming>_BEBCD7A5-EC52-4332-B0C1-0D636A4061A1</bpmn2:incoming>
         <bpmn2:outgoing>_1A00D8FA-9341-4702-9E5E-B3D73F4F1562</bpmn2:outgoing>
-        <bpmn2:script>taskExchange.previous();
+        <bpmn2:script>taskExchange.setPrevious();
 kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
       </bpmn2:scriptTask>
       <bpmn2:endEvent id="_D027D69A-A87E-45D9-9EE4-6754775F9D12">
@@ -677,7 +706,7 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
 System.out.println("Updating status to COMPLETE");
 kcontext.setVariable("status", "COMPLETE");
 
-taskExchange.submit();
+taskExchange.setSubmit();
 kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
       </bpmn2:scriptTask>
       <bpmn2:intermediateCatchEvent id="_2263263D-EE9A-4DC8-A336-E946D7338019" name="Wait Indefinitely">
@@ -756,7 +785,7 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
         </bpmn2:extensionElements>
         <bpmn2:incoming>_F0B3FE76-8AEC-4E25-945D-0E79095CD516</bpmn2:incoming>
         <bpmn2:outgoing>_0F9EA610-F330-42BC-A4F1-DA1EB2833135</bpmn2:outgoing>
-        <bpmn2:script>taskExchange.cancel();
+        <bpmn2:script>taskExchange.setCancel();
 kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
       </bpmn2:scriptTask>
       <bpmn2:endEvent id="_B974CC91-BB30-4C37-AF62-9B0871CDFBDF">
@@ -808,7 +837,7 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
         <dc:Bounds height="56" width="56" x="720" y="936.5396825396825"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="shape__CA46E27B-2B61-4ECF-80D1-349D1FDB36DC" bpmnElement="_CA46E27B-2B61-4ECF-80D1-349D1FDB36DC">
-        <dc:Bounds height="74" width="117" x="554.5" y="927"/>
+        <dc:Bounds height="74" width="117" x="553.5" y="927"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="edge_shape__CCFBDBFC-A2F1-4EC0-84AB-D2179B9AC3BE_to_shape__89E1736F-871A-4A79-927B-EDF27526C798" bpmnElement="_5F40D4D4-170E-4E1C-8C4C-F8AD1EE21AD7">
         <di:waypoint x="306.2606531843701" y="964"/>
@@ -816,10 +845,10 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__89E1736F-871A-4A79-927B-EDF27526C798_to_shape__CA46E27B-2B61-4ECF-80D1-349D1FDB36DC" bpmnElement="_F0B3FE76-8AEC-4E25-945D-0E79095CD516">
         <di:waypoint x="456.2606531843701" y="963.5"/>
-        <di:waypoint x="613" y="964"/>
+        <di:waypoint x="612" y="964"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="edge_shape__CA46E27B-2B61-4ECF-80D1-349D1FDB36DC_to_shape__B974CC91-BB30-4C37-AF62-9B0871CDFBDF" bpmnElement="_0F9EA610-F330-42BC-A4F1-DA1EB2833135">
-        <di:waypoint x="613" y="964"/>
+        <di:waypoint x="612" y="964"/>
         <di:waypoint x="720" y="964.5396825396825"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="shape__11A29A52-C9D0-4E65-BB61-661A380DF2EF" bpmnElement="_11A29A52-C9D0-4E65-BB61-661A380DF2EF" isExpanded="true">
@@ -971,6 +1000,26 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
         <di:waypoint x="463.5" y="1127.5"/>
         <di:waypoint x="588" y="1127.3763843028682"/>
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="shape__25362E49-D798-4179-9AB3-00F69175F0BA" bpmnElement="_25362E49-D798-4179-9AB3-00F69175F0BA" isExpanded="true">
+        <dc:Bounds height="142.83670176318583" width="487.2723444249109" x="228.36382778754458" y="1213.6734035263717"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__D3133C95-D730-41DA-A66B-738CCD1AFCFE" bpmnElement="_D3133C95-D730-41DA-A66B-738CCD1AFCFE">
+        <dc:Bounds height="56" width="56" x="278.2606531843701" y="1257.6734035263717"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__3061EC9F-7F24-4B05-8199-948FAC07C941" bpmnElement="_3061EC9F-7F24-4B05-8199-948FAC07C941">
+        <dc:Bounds height="56" width="56" x="588" y="1257.213086066054"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="shape__E0CE2E62-19AB-4EC3-AF84-F6A4D3FFBACD" bpmnElement="_E0CE2E62-19AB-4EC3-AF84-F6A4D3FFBACD">
+        <dc:Bounds height="75" width="131" x="398" y="1248"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="edge_shape__D3133C95-D730-41DA-A66B-738CCD1AFCFE_to_shape__E0CE2E62-19AB-4EC3-AF84-F6A4D3FFBACD" bpmnElement="_81981B57-38AD-405C-856B-1AA251A3800D">
+        <di:waypoint x="306.2606531843701" y="1285.6734035263717"/>
+        <di:waypoint x="463.5" y="1285.5"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="edge_shape__E0CE2E62-19AB-4EC3-AF84-F6A4D3FFBACD_to_shape__3061EC9F-7F24-4B05-8199-948FAC07C941" bpmnElement="_DD5B095C-5318-48EA-A85E-AB275A007411">
+        <di:waypoint x="463.5" y="1285.5"/>
+        <di:waypoint x="588" y="1285.213086066054"/>
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="shape__DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC" bpmnElement="_DA6AB090-7C32-42D5-9FF7-DB6FCBA0B1AC">
         <dc:Bounds height="87" width="142.75" x="343.25" y="119"/>
       </bpmndi:BPMNShape>
@@ -1100,7 +1149,7 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_hDBcIHRWEDu8u_o6QI8eGQ</bpmn2:source>
-    <bpmn2:target>_hDBcIHRWEDu8u_o6QI8eGQ</bpmn2:target>
+    <bpmn2:source>_WIgPgHR7EDu8u_o6QI8eGQ</bpmn2:source>
+    <bpmn2:target>_WIgPgHR7EDu8u_o6QI8eGQ</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
