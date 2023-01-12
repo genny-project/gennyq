@@ -2,15 +2,7 @@ package life.genny.kogito.common.models;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-public class S2SData implements Serializable {
-
-	public enum EAbortReason {
-		NONE,
-		CANCEL,
-		TIMEOUT,
-	}
+public class TaskExchange implements Serializable {
 
 	private String productCode;
 
@@ -25,56 +17,66 @@ public class S2SData implements Serializable {
 	private String buttonEvents;
 	private String token;
 
-	// NOTE: This is removed temporarily because it is messing with data-index
 	private TimerData timerData;
-	private EAbortReason abortReason = EAbortReason.NONE;
 
-	public S2SData() {
+	// completion information
+	private ECompletion completion;
+	private String completionCode;
+
+	public TaskExchange() {
 	}
 
-	@JsonIgnore
-	public Boolean isAborted() {
-		return !abortReason.equals(EAbortReason.NONE);
+	public void submit() {
+		setCompletion(ECompletion.SUBMIT);
 	}
 
-	@JsonIgnore
-	public Boolean isCanceled() {
-		return abortReason.equals(EAbortReason.CANCEL);
+	public void cancel() {
+		setCompletion(ECompletion.CANCEL);
 	}
 
-	@JsonIgnore
-	public Boolean isExpired() {
-		return abortReason.equals(EAbortReason.TIMEOUT);
+	public void previous() {
+		setCompletion(ECompletion.PREVIOUS);
 	}
 
-	public Boolean setCancel() {
-		// This method makes it easier within kogito to set a state to avoid enum
-		Boolean oldState = getAbortReason().equals(EAbortReason.CANCEL);
-		setAbortReason(EAbortReason.CANCEL);
-		return oldState;
+	public void timeout() {
+		setCompletion(ECompletion.TIMEOUT);
 	}
 
-	public Boolean setExpired() {
-		// This method makes it easier within kogito to set a state to avoid enum
-		Boolean oldState = getAbortReason().equals(EAbortReason.TIMEOUT);
-		setAbortReason(EAbortReason.TIMEOUT);
-		return oldState;
+	public void custom() {
+		setCompletion(ECompletion.CUSTOM);
 	}
 
-	public Boolean setNone() {
-		// This method makes it easier within kogito to set a state to avoid enum
-		Boolean oldState = getAbortReason().equals(EAbortReason.NONE);
-		setAbortReason(EAbortReason.NONE);
-		return oldState;
+	public Boolean isSubmit() {
+		return this.completion == ECompletion.SUBMIT;
+	}
+
+	public Boolean isCancel() {
+		return this.completion == ECompletion.CANCEL;
+	}
+
+	public Boolean isPrevious() {
+		return this.completion == ECompletion.PREVIOUS;
+	}
+
+	public Boolean isTimeout() {
+		return this.completion == ECompletion.TIMEOUT;
+	}
+
+	public Boolean isCustom() {
+		return this.completion == ECompletion.CUSTOM;
 	}
 
 	@Override
 	public String toString() {
-		return "S2SData (" + getProductCode() + ") [abortReason=" + abortReason + ", buttonEvents=" + buttonEvents
-				+ ", pcmCode="
-				+ pcmCode + ", questionCode="
-				+ questionCode + ", sourceCode=" + sourceCode + ", targetCode=" + targetCode + ", timerData="
-				+ timerData + "]";
+		return "TaskExchange (" + productCode + ") "
+			+ "[completion=" + completion 
+			+ ", completionCode=" + completionCode
+			+ ", buttonEvents=" + buttonEvents
+			+ ", pcmCode=" + pcmCode 
+			+ ", questionCode=" + questionCode 
+			+ ", sourceCode=" + sourceCode 
+			+ ", targetCode=" + targetCode 
+			+ ", timerData=" + timerData + "]";
 	}
 
 	public String getProductCode() {
@@ -157,12 +159,20 @@ public class S2SData implements Serializable {
 		this.timerData = timerData;
 	}
 
-	public EAbortReason getAbortReason() {
-		return abortReason;
+	public ECompletion getCompletion() {
+		return completion;
 	}
 
-	public void setAbortReason(EAbortReason abortReason) {
-		this.abortReason = abortReason;
+	public void setCompletion(ECompletion completion) {
+		this.completion = completion;
+	}
+
+	public String getCompletionCode() {
+		return completionCode;
+	}
+
+	public void setCompletionCode(String completionCode) {
+		this.completionCode = completionCode;
 	}
 
 }

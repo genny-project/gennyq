@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_fgdaAFvoEDuxMuG7fxmX9Q" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_J16eUXRAEDuUIqWmWwpy3w" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_userCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__A61603DF-A26D-4127-A9CC-19C1541C4CA2_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__A61603DF-A26D-4127-A9CC-19C1541C4CA2_targetCodeInputXItem" structureRef="String"/>
@@ -18,8 +18,8 @@
   <bpmn2:interface id="_F40C5589-1031-4985-8B75-38FDB9C6BF02_ServiceInterface" name="life.genny.kogito.common.service.NavigationService" implementationRef="life.genny.kogito.common.service.NavigationService">
     <bpmn2:operation id="_F40C5589-1031-4985-8B75-38FDB9C6BF02_ServiceOperation" name="redirect" implementationRef="redirect"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_16E9F843-4217-4455-A627-EAD67398D187" name="Default Collaboration">
-    <bpmn2:participant id="_2E9A48FA-53C4-4032-A0AB-4054736C79E6" name="Pool Participant" processRef="authInit"/>
+  <bpmn2:collaboration id="_2AF096B2-0310-436F-A0C8-203FE81F4A8C" name="Default Collaboration">
+    <bpmn2:participant id="_F308B0AF-3E87-4BDE-AB2C-001EA216E23E" name="Pool Participant" processRef="authInit"/>
   </bpmn2:collaboration>
   <bpmn2:process id="authInit" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Auth Init" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[The initialisation workflow. This is called whenever a user logs in or refreshes a page.]]></bpmn2:documentation>
@@ -330,7 +330,7 @@
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_fgdaAFvoEDuxMuG7fxmX9Q</bpmn2:source>
-    <bpmn2:target>_fgdaAFvoEDuxMuG7fxmX9Q</bpmn2:target>
+    <bpmn2:source>_J16eUXRAEDuUIqWmWwpy3w</bpmn2:source>
+    <bpmn2:target>_J16eUXRAEDuUIqWmWwpy3w</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

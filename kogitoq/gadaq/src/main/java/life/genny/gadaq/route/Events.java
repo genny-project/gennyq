@@ -96,33 +96,9 @@ public class Events {
 			return;
 		}
 
-		// submit
-		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code)) {
+		// submit, next and update
+		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
-			return;
-		}
-
-		// update
-		if (Question.QUE_UPDATE.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "update", "");
-			return;
-		}
-
-		// undo
-		if (Question.QUE_UNDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "undo", "");
-			return;
-		}
-
-		// redo
-		if (Question.QUE_REDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "redo", "");
-			return;
-		}
-
-		// undo
-		if (Question.QUE_PREVIOUS.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
 			return;
 		}
 
@@ -135,6 +111,24 @@ public class Events {
 		// reset
 		if (Question.QUE_RESET.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
+			return;
+		}
+
+		// previous
+		if (Question.QUE_PREVIOUS.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
+			return;
+		}
+
+		// undo
+		if (Question.QUE_UNDO.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "undo", "");
+			return;
+		}
+
+		// redo
+		if (Question.QUE_REDO.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "redo", "");
 			return;
 		}
 
@@ -177,18 +171,6 @@ public class Events {
 		if (code.startsWith(QUE_TABLE_)) {
 			filter.init(code);
 			search.sendTable(code);
-			return;
-		}
-
-		// test question
-		if (code.startsWith("TEST_QUE_.*")) {
-			JsonObject payload = Json.createObjectBuilder()
-					.add("questionCode", code.substring("TEST_".length()))
-					.add("userCode", userToken.getUserCode())
-					.add("sourceCode", userToken.getUserCode())
-					.add("targetCode", targetCode)
-					.build();
-			kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
 			return;
 		}
 
