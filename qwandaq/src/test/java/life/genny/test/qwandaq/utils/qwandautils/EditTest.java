@@ -29,35 +29,36 @@ public class EditTest extends BaseDefTest {
 
     // Reusable JUnitTester
     static JUnitTester<Definition, Map<String, Boolean>> unitTester = new JUnitTester<Definition, Map<String, Boolean>>()
-            .setTest((input) -> {
-                log("========= USER CAPS ==========");
-                CommonUtils.printCollection(USER_TEST_CAPS, BaseTestCase::log, (cap) -> "      " + cap);
-                log("==============================\n");
-                Map<String, Boolean> attributeResults = new HashMap<String, Boolean>();
-                log("Testing def: " + input.input);
-                for (EntityAttribute ea : input.input.getBaseEntityAttributes()) {
-                    log("Entity Attribute: " + ea.getAttributeCode());
-                    attributeResults.put(ea.getAttributeCode(),
-                            QwandaUtils.checkCanEditEntityAttribute(baseEntities, USER_TEST_CAPS, input.input, ea));
-                }
-                return Expected(attributeResults);
-            })
-            .setAssertion((result, expected) -> {
-                if (result.size() != expected.size()) {
-                    throw new AssertionError("Result size does not equal expected size");
-                }
+        .setTest((input) -> {
+            log("========= USER CAPS ==========");
+            CommonUtils.printCollection(USER_TEST_CAPS, BaseTestCase::log, (cap) -> "      " + cap);
+            log("==============================\n");
+            Map<String, Boolean> attributeResults = new HashMap<String, Boolean>();
+            log("Testing def: " + input.input);
+            for (EntityAttribute ea : input.input.getBaseEntityAttributes()) {
+                log("Entity Attribute: " + ea.getAttributeCode());
+                attributeResults.put(ea.getAttributeCode(),
+                        QwandaUtils.checkCanEditEntityAttribute(baseEntities, USER_TEST_CAPS, input.input, ea.getAttributeCode()));
+            }
+            return Expected(attributeResults);
+        })
+        .setAssertion((result, expected) -> {
+            if (result.size() != expected.size()) {
+                throw new AssertionError("Result size does not equal expected size");
+            }
 
-                // Map assert
-                for (Entry<String, Boolean> actualResult : result.entrySet()) {
-                    Boolean expectedBoolean = expected.get(actualResult.getKey());
-                    assertEquals(expectedBoolean, actualResult.getValue());
-                }
-            });
+            // Map assert
+            for (Entry<String, Boolean> actualResult : result.entrySet()) {
+                Boolean expectedBoolean = expected.get(actualResult.getKey());
+                assertEquals(expectedBoolean, actualResult.getValue());
+            }
+        });
 
     @Test
     public void testMultipleInheritancePassOnFather() {
         Definition child = addDefinition(DefinitionDecorator("DEF_CHILD", "Child")
-                                .addStringEA("ATT_PRI_PREFIX", "Prefix Attribute").setValue("CHD").build()
+                                .addStringEA("ATT_PRI_PREFIX", "Prefix Attribute").setValue("CHD")
+                                .build()
                             .getDefinition());
         
         Definition father = addDefinition(DefinitionDecorator("DEF_FATHER", "Father")
@@ -77,11 +78,13 @@ public class EditTest extends BaseDefTest {
                             .getDefinition());
 
         setTestUserCaps(
-            // new CapabilityBuilder("CAP_FATHER:~:ATT_PRI_PREFIX").edit(SELF).buildCap()
+            new CapabilityBuilder("CAP_FATHER:~:ATT_PRI_PREFIX").edit(SELF).buildCap()
         );
 
         linkEntities(child, father, mother);
         linkEntities(father, grandParent);
+
+        printDef(father);
 
         unitTester
                 .createTest("Test Multiple Inheritance and pass on child father")
@@ -96,8 +99,52 @@ public class EditTest extends BaseDefTest {
     }
 
     @Test
-    public void testMultipleInheritancePassAtTop() {
+    public void testMultipleInheritanceFail() {
+        Definition child = addDefinition(DefinitionDecorator("DEF_CHILD2", "Child")
+                                .addStringEA("ATT_PRI_PREFIX", "Prefix Attribute").setValue("CHD")
+                                .build()
+                            .getDefinition());
+        
+        Definition father = addDefinition(DefinitionDecorator("DEF_FATHER2", "Father")
+                                .addStringEA("ATT_PRI_PREFIX", "Prefix Attribute").setValue("FTH")
+                                .build()
+                            .getDefinition());
+        
+        Definition mother = addDefinition(DefinitionDecorator("DEF_MOTHER2", "Mother")
+                                .addStringEA("ATT_PRI_PREFIX", "Prefix Attribute").setValue("MTH")
+                                .addRequirement(new CapabilityBuilder("CAP_MOTHER2:~:ATT_PRI_PREFIX").edit(ALL).buildCap())
+                                .build()
+                            .getDefinition());
+        
+        Definition grandParent = addDefinition(DefinitionDecorator("DFE_GRANDPARENT2", "Grandparent")
+                                .addStringEA("ATT_PRI_PREFIX", "Prefix Attribute").setValue("GPT")
+                                .build()
+                            .getDefinition());
 
+        setTestUserCaps(
+            // new CapabilityBuilder("CAP_MOTHER2:~:ATT_PRI_PREFIX").edit(ALL).buildCap()
+        );
+
+        linkEntities(child, father, mother);
+        linkEntities(father, grandParent);
+
+        printDef(father);
+
+        unitTester
+                .createTest("Test Multiple Inheritance and pass on child father")
+                .setInput(child)
+                .setExpected(new MapDecorator<String, Boolean>()
+                        .put("ATT_PRI_PREFIX", false)
+                        .put("LNK_INCLUDE", true)
+                        .get())
+                .build()
+
+                .assertAll();
+    }
+
+    @Test
+    public void testMultipleInheritancePassAtTop() {
+        
     }
 
     @Test

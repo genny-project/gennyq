@@ -11,6 +11,7 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.builder.DefinitionDecorator;
+import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.test.qwandaq.utils.capabilities.requirements.BaseRequirementsTest;
 
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
@@ -86,6 +87,21 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
 
         linkEntities(grandFather, ancient1, ancient2);
         linkEntities(ancient1, ancient2);
+    }
+
+    protected static void printDef(Definition definition) {
+        log("============ " + definition.getCode() + " =================");
+        CommonUtils.printCollection(definition.getBaseEntityAttributes(),BaseTestCase::log,
+        (ea) -> {
+            StringBuilder sb = new StringBuilder(ea.getAttributeCode())
+                                .append(" = ");
+            // append all capability requirements comma separated
+            if(ea.getCapabilityRequirements().size() != 0)
+                sb.append(CommonUtils.getArrayString(ea.getCapabilityRequirements(),
+                    (requirement) -> ", " + requirement.toString()));
+            return sb.toString();
+        });
+        log("======================================");
     }
 
     protected static DefinitionDecorator DefinitionDecorator(String code, String name) {

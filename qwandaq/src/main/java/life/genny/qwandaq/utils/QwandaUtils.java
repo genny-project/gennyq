@@ -789,7 +789,7 @@ public class QwandaUtils {
 			if(!ea.getAttributeCode().startsWith(Prefix.ATT))
 				continue;
 
-			boolean locked = checkCanEditEntityAttribute(userCapabilities, definition, ea);
+			boolean locked = checkCanEditEntityAttribute(userCapabilities, definition, ea.getAttributeCode());
 			// check the capability requirement BASE_ENTITY:~:ATTRIBUTE
 			// if they don't exist, keep locked false and move up the LNK_INCLUDE chain
 			// 
@@ -822,29 +822,69 @@ public class QwandaUtils {
 		return ask;
 	}
 
-	public static boolean checkCanEditEntityAttribute(Map<String, Definition> defMap, CapabilitySet userCapabilities, Definition definition, EntityAttribute ea) {
-		return checkCanEditEntityAttribute(defMap, userCapabilities, definition, ea, false);
+	public static boolean checkCanEditEntityAttribute(Map<String, Definition> defMap, CapabilitySet userCapabilities, Definition definition, String attributeCode) {
+		return checkCanEditEntityAttribute(defMap, userCapabilities, definition, attributeCode, true);
 	}
 
-	public static boolean checkCanEditEntityAttribute(Map<String, Definition> defMap, CapabilitySet userCapabilities, Definition definition, EntityAttribute ea, boolean locked) {
+	/**
+	 * Return unlocked
+	 * @param defMap
+	 * @param userCapabilities
+	 * @param definition
+	 * @param ea
+	 * @param unlocked
+	 * @return
+	 */
+	public static boolean checkCanEditEntityAttribute(Map<String, Definition> defMap, CapabilitySet userCapabilities, Definition definition, String attributeCode, boolean unlocked) {
 		// scale LNK_INCLUDE until you hit a true (requirements met), or all LNK_INCLUDE EAs are empty
+		System.out.println("[!] checkCanEditEntityAttribute(xx,xx," + definition.getCode() + ", xx, unlocked: " + unlocked);
+		
 		String[] parentCodes = definition.getParentCodes();
 
-		// Check Entity Attribute cap req: CAP_BASEENTITY:~:ATTRIBUTE
-		Optional<Capability> optEditReq = ea.getCapabilityRequirement(CommonUtils.substitutePrefix(definition.getCode(), Prefix.CAP) + ":~:" + ea.getAttributeCode());
-		if(!optEditReq.isPresent()) {
-			// Check lnk include exists here. If not return locked
-			if(parentCodes.length == 0) {
-				return !locked; 
-			}
-			
-			for(String code : parentCodes) {
+		// Fetch the relevant EntityAttribute
+		Optional<EntityAttribute> optNewEa = definition.findEntityAttribute(attributeCode);
+		if(!optNewEa.isPresent()) {
+			System.out.println("Parent doesn't contain attribute: " + attributeCode);
+			// lnk include check
+			for(int i = 0; i < parentCodes.length; i++) {
+				String code = parentCodes[i];
 				Definition def = defMap.get(code);
-				if(checkCanEditEntityAttribute(defMap, userCapabilities, def, ea, locked)) {
+				unlocked = checkCanEditEntityAttribute(defMap, userCapabilities, def, attributeCode, unlocked);
+				if(unlocked && i == parentCodes.length - 1) {
+					System.out.println(definition.getCode() + " passed check");
 					return true;
 				}
 			}
 
+			return unlocked;
+		}
+
+		EntityAttribute ea = optNewEa.get();
+
+		// Check Entity Attribute cap req: CAP_BASEENTITY:~:ATTRIBUTE
+		String reqCode = CommonUtils.substitutePrefix(definition.getCode(), Prefix.CAP) + ":~:" + ea.getAttributeCode();
+		System.out.println("Looking through: " + CommonUtils.getArrayString(ea.getCapabilityRequirements(),(req) -> req.toString()));
+		Optional<Capability> optEditReq = ea.getCapabilityRequirement(reqCode);
+		if(!optEditReq.isPresent()) {
+			System.out.println("		Couldn't find requirement: " + reqCode);
+			// Check lnk include exists here. If not return locked
+			if(parentCodes.length == 0) {
+				System.out.println("		No more parents. Returning: " + unlocked);
+				return unlocked; 
+			}
+			
+			
+			for(int i = 0; i < parentCodes.length; i++) {
+				String code = parentCodes[i];
+				Definition def = defMap.get(code);
+				unlocked = checkCanEditEntityAttribute(defMap, userCapabilities, def, attributeCode, unlocked);
+				if(unlocked && i == parentCodes.length - 1) {
+					System.out.println(definition.getCode() + " passed check");
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		Capability editReq = optEditReq.get();
@@ -856,27 +896,30 @@ public class QwandaUtils {
 		
 		// 0: Base Case. Succeeded requirement check
 		if(eaPassCheck) {
+			System.out.println(definition.getCode() + " passed check");
 			return true;
 		}
-
-		// failed check. Now there are requirements on this EntityAttribute. 
-		// Time to check others
-		locked = true;
+		System.out.println("Failed check. Locking until parent unlocks");
 
 		// // 1: Base Case. No more parents to check
-		// if(parentCodes.length == 0) {
-		// 	return !locked;
-		// }
+		if(parentCodes.length == 0) {
+			System.out.println("returning false");
+			return false;
+		}
 		
 		// 2: Recursive Case. Definition has parents
-		for(String code : parentCodes) {
+		
+		for(int i = 0; i < parentCodes.length; i++) {
+			String code = parentCodes[i];
 			Definition def = defMap.get(code);
-			if(checkCanEditEntityAttribute(defMap, userCapabilities, def, ea, locked)) {
+			unlocked = checkCanEditEntityAttribute(defMap, userCapabilities, def, attributeCode, unlocked);
+			if(unlocked && i == parentCodes.length - 1) {
+				System.out.println(definition.getCode() + " passed check");
 				return true;
 			}
 		}
 
-		return !locked;
+		return false;
 	}
 
 
