@@ -6,6 +6,7 @@ import org.jboss.logging.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
+import life.genny.qwandaq.message.QBaseMSGMessageType;
 
 public class SendMessage extends MessageSendingStrategy {
 
@@ -14,6 +15,11 @@ public class SendMessage extends MessageSendingStrategy {
     private Map<String, String> ctxMap = null;
 
     static final Logger log = Logger.getLogger(SendMessage.class);
+
+    private QBaseMSGMessageType msgType;
+
+    public static final String SOURCE = "SOURCE_";
+    public static final String TARGET = "TARGET_";
 
     public SendMessage(String templateCode, String recipientBECode) {
         super();
@@ -45,6 +51,42 @@ public class SendMessage extends MessageSendingStrategy {
         this.ctxMap = (Map<String, String>) new HashMap<>().put("URL:ENCODE", url);
     }
 
+    public SendMessage(String templateCode,String recipientBECode,QBaseMSGMessageType msgType) {
+        super();
+        this.templateCode = templateCode;
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
+        this.msgType = msgType;
+        this.ctxMap = ctxMap;
+    }
+
+    public SendMessage(String templateCode,String recipientBECode,String entityCode,QBaseMSGMessageType msgType,Map<String, String> ctxMap) {
+        super();
+        this.templateCode = templateCode;
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
+        this.msgType = msgType;
+
+        // scan all attribute keys
+        for(String key : ctxMap.keySet()) {
+            if(key.startsWith(SOURCE)) {
+                String subKey = key.replaceFirst(SOURCE,"");
+                String att = this.beUtils.getBaseEntityValueAsString(recipientBECode, subKey);
+                if (att != null) {
+                    ctxMap.put(key, att);
+                }
+            }
+
+            if(key.startsWith(TARGET)) {
+                String subKey = key.replaceFirst(TARGET,"");
+                String att = this.beUtils.getBaseEntityValueAsString(entityCode, subKey);
+                if(att != null) {
+                    ctxMap.put(key, att);
+                }
+            }
+        }
+
+        this.ctxMap = ctxMap;
+    }
+
     @Override
     public void sendMessage() {
         log.info("templateCode : " + templateCode);
@@ -55,6 +97,10 @@ public class SendMessage extends MessageSendingStrategy {
 
         if (ctxMap != null) {
             msgBuilder.setMessageContextMap(ctxMap);
+        }
+
+        if (this.msgType != null) {
+            msgBuilder.addMessageType(this.msgType);
         }
 
         msgBuilder.addRecipient(recipientBE)
