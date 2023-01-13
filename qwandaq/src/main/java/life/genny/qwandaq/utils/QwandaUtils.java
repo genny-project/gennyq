@@ -837,6 +837,8 @@ public class QwandaUtils {
 	 * @param definition - definition to check
 	 * @param attributeCode - attributeCode of the entity attribute in question
 	 * @return - whether or not the entity attribute is unlocked for editing
+	 * 
+	 * @see <a href="https://gada.atlassian.net/wiki/spaces/GEN/pages/53248008/Edit+Flow+Filter+Logic">Edit Flow Filter Log Confluence</a>
 	 */
 	private boolean checkCanEditEntityAttribute(CapabilitySet userCapabilities, Definition definition, String attributeCode) {
 		return checkCanEditEntityAttribute(userCapabilities, definition, attributeCode, true);
@@ -851,6 +853,8 @@ public class QwandaUtils {
 	 * @param attributeCode - attributeCode of the entity attribute in question
 	 * @param unlocked - recursive value (the return value of this method gets passed passed into this field)
 	 * @return - whether or not the entity attribute is unlocked for editing
+	 * 
+	 * @see <a href="https://gada.atlassian.net/wiki/spaces/GEN/pages/53248008/Edit+Flow+Filter+Logic">Edit Flow Filter Log Confluence</a>
 	 */
 	private boolean checkCanEditEntityAttribute(CapabilitySet userCapabilities, Definition definition, String attributeCode, boolean unlocked) {
 		// scale LNK_INCLUDE until you hit a true (requirements met), or all LNK_INCLUDE EAs are empty
