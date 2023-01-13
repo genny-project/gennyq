@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_kkab0HTxEDu-ydCgO-A7CA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_Me4e4HT0EDu-ydCgO-A7CA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -16,6 +16,7 @@
   <bpmn2:itemDefinition id="_terminateItem" structureRef="Boolean"/>
   <bpmn2:itemDefinition id="_parentItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_locationItem" structureRef="String"/>
+  <bpmn2:itemDefinition id="_completionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__89E1736F-871A-4A79-927B-EDF27526C798_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
   <bpmn2:itemDefinition id="__F97B4D15-8AFC-4665-ADC9-142AB7C47A38_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
   <bpmn2:itemDefinition id="__F97B4D15-8AFC-4665-ADC9-142AB7C47A38_terminateOutputXItem" structureRef="Boolean"/>
@@ -35,6 +36,7 @@
   <bpmn2:itemDefinition id="__81C82A39-2DE9-4653-8BC1-AD9CFCAABE89_processDataOutputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
   <bpmn2:itemDefinition id="__5C1798EC-26DB-4820-9566-B808A76C8947_processDataInputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
   <bpmn2:itemDefinition id="__5C1798EC-26DB-4820-9566-B808A76C8947_processDataOutputXItem" structureRef="life.genny.qwandaq.graphql.ProcessData"/>
+  <bpmn2:itemDefinition id="__D3133C95-D730-41DA-A66B-738CCD1AFCFE_completionCodeOutputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__01BC1914-9CBF-4E4A-8C4A-28F572B02A06_sourceCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__01BC1914-9CBF-4E4A-8C4A-28F572B02A06_targetCodeInputXItem" structureRef="String"/>
   <bpmn2:itemDefinition id="__01BC1914-9CBF-4E4A-8C4A-28F572B02A06_questionCodeInputXItem" structureRef="String"/>
@@ -80,8 +82,8 @@
   <bpmn2:interface id="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceInterface" name="life.genny.kogito.common.service.TaskService" implementationRef="life.genny.kogito.common.service.TaskService">
     <bpmn2:operation id="_3EF74D32-E67F-4318-A5AA-FF66257D457B_ServiceOperation" name="dispatchTask" implementationRef="dispatchTask"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_499AAD3A-C74E-4A44-9A19-E1E0F8635061" name="Default Collaboration">
-    <bpmn2:participant id="_45B5FDD9-90AC-486D-B887-031AC0F236C9" name="Pool Participant" processRef="processQuestions"/>
+  <bpmn2:collaboration id="_B544737E-C2DB-48B4-848F-2C57A271753A" name="Default Collaboration">
+    <bpmn2:participant id="_9FB08EE1-94E4-44FA-9395-616DACC402EB" name="Pool Participant" processRef="processQuestions"/>
   </bpmn2:collaboration>
   <bpmn2:process id="processQuestions" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Process Questions" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[The primary workflow used in task processing. It functions as a visual representation of how task related events are handled, and will remain active until the submit requirements are met, and a subsequent submit action is received.]]></bpmn2:documentation>
@@ -166,6 +168,7 @@
         </drools:metaData>
       </bpmn2:extensionElements>
     </bpmn2:property>
+    <bpmn2:property id="completionCode" itemSubjectRef="_completionCodeItem" name="completionCode"/>
     <bpmn2:sequenceFlow id="_42813233-D107-4999-B90C-75308ED06094" sourceRef="_93471234-B925-44FC-B7F5-8F59DCE53F8F" targetRef="_DFB6426F-87D6-49D7-A9C7-C49B4DFB8BC8">
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return (processData.getAttributeCodes() != null 
     && processData.getAttributeCodes().isEmpty());]]></bpmn2:conditionExpression>
@@ -362,6 +365,7 @@ kcontext.setVariable("taskExchange", taskExchange);
         <bpmn2:incoming>_81981B57-38AD-405C-856B-1AA251A3800D</bpmn2:incoming>
         <bpmn2:outgoing>_DD5B095C-5318-48EA-A85E-AB275A007411</bpmn2:outgoing>
         <bpmn2:script>taskExchange.setCustom();
+taskExchange.setCompletionCode(completionCode);
 kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
       </bpmn2:scriptTask>
       <bpmn2:endEvent id="_3061EC9F-7F24-4B05-8199-948FAC07C941">
@@ -375,6 +379,14 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
           </drools:metaData>
         </bpmn2:extensionElements>
         <bpmn2:outgoing>_81981B57-38AD-405C-856B-1AA251A3800D</bpmn2:outgoing>
+        <bpmn2:dataOutput id="_D3133C95-D730-41DA-A66B-738CCD1AFCFE_completionCodeOutputX" drools:dtype="String" itemSubjectRef="__D3133C95-D730-41DA-A66B-738CCD1AFCFE_completionCodeOutputXItem" name="completionCode"/>
+        <bpmn2:dataOutputAssociation>
+          <bpmn2:sourceRef>_D3133C95-D730-41DA-A66B-738CCD1AFCFE_completionCodeOutputX</bpmn2:sourceRef>
+          <bpmn2:targetRef>completionCode</bpmn2:targetRef>
+        </bpmn2:dataOutputAssociation>
+        <bpmn2:outputSet>
+          <bpmn2:dataOutputRefs>_D3133C95-D730-41DA-A66B-738CCD1AFCFE_completionCodeOutputX</bpmn2:dataOutputRefs>
+        </bpmn2:outputSet>
         <bpmn2:signalEventDefinition signalRef="_-1349088399"/>
       </bpmn2:startEvent>
     </bpmn2:subProcess>
@@ -1150,7 +1162,7 @@ kcontext.setVariable("taskExchange", taskExchange);</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_kkab0HTxEDu-ydCgO-A7CA</bpmn2:source>
-    <bpmn2:target>_kkab0HTxEDu-ydCgO-A7CA</bpmn2:target>
+    <bpmn2:source>_Me4e4HT0EDu-ydCgO-A7CA</bpmn2:source>
+    <bpmn2:target>_Me4e4HT0EDu-ydCgO-A7CA</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>

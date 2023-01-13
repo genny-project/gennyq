@@ -98,37 +98,25 @@ public class Events {
 
 		// submit, next and update
 		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit");
 			return;
 		}
 
 		// cancel
 		if (Question.QUE_CANCEL.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel");
 			return;
 		}
 
 		// reset
 		if (Question.QUE_RESET.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset");
 			return;
 		}
 
 		// previous
 		if (Question.QUE_PREVIOUS.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
-			return;
-		}
-
-		// undo
-		if (Question.QUE_UNDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "undo", "");
-			return;
-		}
-
-		// redo
-		if (Question.QUE_REDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "redo", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous");
 			return;
 		}
 

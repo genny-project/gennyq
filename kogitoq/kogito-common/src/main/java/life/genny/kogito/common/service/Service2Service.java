@@ -9,8 +9,8 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
 import org.jboss.logging.Logger;
-
 import life.genny.kogito.common.models.TaskExchange;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.ServiceToken;
@@ -59,11 +59,8 @@ public class Service2Service {
 			// We need to fetch the latest token for the sourceUser
 			log.debug(taskExchange.getSourceCode() + " : No token found, fetching latest token");
 			BaseEntity userBE = beUtils.getBaseEntity(taskExchange.getSourceCode());
-			BaseEntity project = beUtils.getBaseEntity(userBE.getRealm());
-			log.debug("Fetching impersonated token for " + userBE.getCode() + " in " + project.getCode());
-
-			String userTokenStr = KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project);
-			userToken = new UserToken(userTokenStr);
+			BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ.concat("_".concat(userBE.getRealm().toUpperCase())));
+			userToken = new UserToken(KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project));
 		}
 		logToken();
 		taskExchange.setToken(userToken.getToken());

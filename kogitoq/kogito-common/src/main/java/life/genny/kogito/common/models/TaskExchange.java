@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Represents an exchange of information between services for Task processing.
- **/
+ */
 public class TaskExchange implements Serializable {
 
 	private String productCode;
