@@ -88,7 +88,7 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
         baseEntities.put(be.getCode(), be);
     }
 
-    protected static Definition getBaseEntity(String code) {
+    protected static Definition getDefinition(String code) {
         return baseEntities.get(code);
     }
 }

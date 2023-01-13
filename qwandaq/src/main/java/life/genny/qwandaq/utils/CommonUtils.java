@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -239,8 +240,46 @@ public class CommonUtils {
         return instance;
     }
 
-    public static <T> T[] getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        return (T[])getListFromString(arrayString, objectCallback).toArray();
+    /**
+     * Get an Array of T objects from a jsonified array of strings
+     * @param <T> object type to get an array of
+     * @param arrayString jsonified array
+     * @param type class type of T
+     * @param objectCallback callback to map each entry of the jsonified array to an object of type T
+     * @return an array of objects of type T from the jsonified array
+     * <p>
+     * 
+     * Note: This will trim the whitespace at the start and end of each entry
+     * </p>
+     * <pre>
+     * String codes = "[\"DEF_TEST\", \"DEF_TEST2\"]"; // codes will = ["DEF_TEST", "DEF_TEST2"]
+     *String productCode = "gada";
+     *BaseEntity[] baseEntities = CommonUtils.getArrayFromString(codes, BaseEntity.class, (code) -> {
+     *     Optional<BaseEntity> baseEntity = beUtils.getBaseEntity(productCode, code);
+     *     if(baseEntity.isPresent())
+     *         return baseEntity.get();
+     *     else
+     *         return null;
+     *});
+     * 
+     * // baseEntities is now an array of BaseEntities containing the BaseEntities corresponding to "DEF_TEST" and "DEF_TEST2"
+     * </pre>
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        
+        if(StringUtils.isBlank(arrayString))
+            return (T[])Array.newInstance(type, 0);
+        
+        String components[] = arrayString.split(",");
+        T[] array = (T[])Array.newInstance(type, components.length);
+
+        for(int i = 0; i < components.length; i++) {
+            array[i] = objectCallback.getObject(components[i].trim());
+        }
+
+        return array;
     }
 
     /**
@@ -260,7 +299,7 @@ public class CommonUtils {
         String components[] = arrayString.split(",");
         List<T> newList = new ArrayList<>(components.length);
         for(String component : components) {
-            newList.add(objectCallback.getObject(component));
+            newList.add(objectCallback.getObject(component.trim()));
         }
 
         return newList;

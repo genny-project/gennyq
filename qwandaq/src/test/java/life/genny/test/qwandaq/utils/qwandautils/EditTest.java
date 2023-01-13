@@ -44,7 +44,7 @@ public class EditTest extends BaseDefTest {
         })
 
         .createTest("DEF_TEST Edit Capability Check")
-        .setInput(getBaseEntity("DEF_TEST"))
+        .setInput(getDefinition("DEF_TEST"))
         .setExpected(new MapDecorator<String, Boolean>()
                 .put("ATT_PRI_PREFIX", false)
                 .get()

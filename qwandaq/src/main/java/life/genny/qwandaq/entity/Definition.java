@@ -2,6 +2,7 @@ package life.genny.qwandaq.entity;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -10,15 +11,16 @@ import javax.json.bind.annotation.JsonbTransient;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.utils.CommonUtils;
 
 /**
  * Definition
  */
 @RegisterForReflection
 public class Definition extends BaseEntity {
-
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -32,6 +34,20 @@ public class Definition extends BaseEntity {
 
 	public Definition(String code, String name) {
 		super(code, name);
+	}
+
+	/**
+	 * Get the parent codes of this definition through the {@link Attribute#LNK_INCLUDE}
+	 * @return an array containing the definition codes of this parent
+	 */
+	@JsonbTransient
+	public String[] getParentCodes() {
+		Optional<EntityAttribute> lnkIncludeOpt = findEntityAttribute(Attribute.LNK_INCLUDE);
+		if(!lnkIncludeOpt.isPresent())
+			return new String[] {};
+		
+		String parentArray = lnkIncludeOpt.get().getValueString();
+		return CommonUtils.getArrayFromString(parentArray, String.class, (str) -> str);
 	}
 
 	public static Definition from(BaseEntity entity) {
@@ -61,5 +77,4 @@ public class Definition extends BaseEntity {
 	public List<EntityAttribute> getDefaultValues() {
 		return findPrefixEntityAttributes(Prefix.DFT);
 	}
-
 }

@@ -20,7 +20,7 @@ public class BuilderTest extends BaseDefTest {
     public void verifyDefs() {
         new JUnitTester<String, String>()
         .setTest((input) -> {
-            BaseEntity be = getBaseEntity(input.input);
+            BaseEntity be = getDefinition(input.input);
             if(be == null)
                 return Expected("null be for ".concat(input.input));
 
@@ -76,10 +76,10 @@ public class BuilderTest extends BaseDefTest {
         .setTest((input) -> {
             // input be code
             // output array of parent codes if lnk include exists
-            BaseEntity be = getBaseEntity(input.input);
+            BaseEntity be = getDefinition(input.input);
             Optional<EntityAttribute> optLnk = be.findEntityAttribute(Attribute.LNK_INCLUDE);
             if(optLnk.isPresent()) {
-                return Expected(CommonUtils.getArrayFromString(optLnk.get().getValueString(), (str) -> str.toString()));
+                return Expected(CommonUtils.getArrayFromString(optLnk.get().getValueString(), String.class, (str) -> str));
             } else {
                 return Expected(new Object[] {"nolnk"});
             }
