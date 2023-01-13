@@ -829,30 +829,23 @@ public class QwandaUtils {
 	public static boolean checkCanEditEntityAttribute(Map<String, Definition> defMap, CapabilitySet userCapabilities, Definition definition, EntityAttribute ea, boolean locked) {
 		// scale LNK_INCLUDE until you hit a true (requirements met), or all LNK_INCLUDE EAs are empty
 		String[] parentCodes = definition.getParentCodes();
-		System.out.println("Locked: " + locked + "\nParent Codes: " + CommonUtils.getArrayString(parentCodes));
 
 		// Check Entity Attribute cap req: CAP_BASEENTITY:~:ATTRIBUTE
-		Optional<Capability> optEditReq = ea.getCapabilityRequirement(CommonUtils.substitutePrefix(ea.getBaseEntityCode(), Prefix.CAP) + ":~:" + ea.getAttributeCode());
+		Optional<Capability> optEditReq = ea.getCapabilityRequirement(CommonUtils.substitutePrefix(definition.getCode(), Prefix.CAP) + ":~:" + ea.getAttributeCode());
 		if(!optEditReq.isPresent()) {
 			// Check lnk include exists here. If not return locked
 			if(parentCodes.length == 0) {
-				System.out.println("No parents. Locked: " + locked);
 				return !locked; 
 			}
 			
 			for(String code : parentCodes) {
 				Definition def = defMap.get(code);
-				System.out.println("DEF: " + def.getCode()); 
 				if(checkCanEditEntityAttribute(defMap, userCapabilities, def, ea, locked)) {
 					return true;
-				} else {
-					System.out.println("DEF: " + def.getCode() + " failed check");
 				}
 			}
 
 		}
-
-		System.out.println("Found edit requirement");
 
 		Capability editReq = optEditReq.get();
 		boolean eaPassCheck = ICapabilityFilterable.requirementsMetImpl(userCapabilities, ReqConfig.builder()
@@ -863,29 +856,25 @@ public class QwandaUtils {
 		
 		// 0: Base Case. Succeeded requirement check
 		if(eaPassCheck) {
-			System.out.println("passed edit check");
 			return true;
 		}
 
-		System.out.println("Failed edit check. Checking parents");
+		// failed check. Now there are requirements on this EntityAttribute. 
+		// Time to check others
 		locked = true;
 
-		// 1: Base Case. No more parents to check
-		if(parentCodes.length == 0) {
-			return !locked;
-		}
+		// // 1: Base Case. No more parents to check
+		// if(parentCodes.length == 0) {
+		// 	return !locked;
+		// }
 		
 		// 2: Recursive Case. Definition has parents
 		for(String code : parentCodes) {
 			Definition def = defMap.get(code);
-			System.out.println("DEF: " + def.getCode());
 			if(checkCanEditEntityAttribute(defMap, userCapabilities, def, ea, locked)) {
 				return true;
-			} else {
-				System.out.println("DEF: " + def.getCode() + " failed check");
 			}
 		}
-
 
 		return !locked;
 	}

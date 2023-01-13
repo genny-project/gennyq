@@ -1,6 +1,7 @@
 package life.genny.qwandaq.utils.builder;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.Definition;
 
 public class DefinitionDecorator {
@@ -15,6 +16,9 @@ public class DefinitionDecorator {
         this.be = be;
     }
 
+    public DefEntityAttributeBuilder addStringEA(String code, String name) {
+        return addEA(new Attribute(code, name, new DataType(String.class)));
+    }
 
     public DefEntityAttributeBuilder addEA(Attribute attribute) {
         DefEntityAttributeBuilder eaBuilder = new DefEntityAttributeBuilder(this);

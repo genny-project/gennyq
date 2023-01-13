@@ -7,8 +7,8 @@ import java.util.Optional;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.entity.Definition;
+import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.builder.DefinitionDecorator;
 import life.genny.test.qwandaq.utils.capabilities.requirements.BaseRequirementsTest;
@@ -18,8 +18,8 @@ import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 public abstract class BaseDefTest extends BaseRequirementsTest {
 
     protected static Map<String, Definition> baseEntities = new HashMap<>();
-    static {
 
+    protected static void initDefaultDefs() {
         // Setup Grandchild
         addDefinition(new DefinitionDecorator("DEF_TEST", "Test Definition")
             .addEA()
@@ -55,10 +55,6 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
                 .setAttribute("ATT_PRI_PREFIX", "Prefix Attribute", new DataType(String.class))
                 .setValue("TST")
             .build()
-            // .addEA()
-            //     .setAttribute(Attribute.LNK_INCLUDE, "Include Attribute", new DataType(String.class))
-            //     .setValue("[\"DEF_TEST_ANCIENT1\",\"DEF_TEST_ANCIENT2\"]")
-            // .build()
 
             .getDefinition()
         );
@@ -90,6 +86,10 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
 
         linkEntities(grandFather, ancient1, ancient2);
         linkEntities(ancient1, ancient2);
+    }
+
+    protected static DefinitionDecorator DefinitionDecorator(String code, String name) {
+        return new DefinitionDecorator(code, name);
     }
 
     protected static Definition addDefinition(Definition be) {

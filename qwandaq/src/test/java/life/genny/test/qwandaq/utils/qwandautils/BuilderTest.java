@@ -16,6 +16,10 @@ import life.genny.test.qwandaq.utils.BaseTestCase;
 public class BuilderTest extends BaseDefTest {
     private static final String GAP = "        ";
 
+    static {
+        initDefaultDefs();
+    }
+
     @Test
     public void verifyDefs() {
         new JUnitTester<String, String>()
