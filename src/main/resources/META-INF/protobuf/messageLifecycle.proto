@@ -111,43 +111,43 @@ message MessageLifecycle {
  @VariableInfo(tags="") */ 
 	optional string buttonEvents = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="") */ 
-	optional S2SData data = 5; 
-	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
-	optional string definitionCode = 6; 
+	optional string definitionCode = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string entityCode = 7; 
+	optional string entityCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string existing_pid = 8; 
+	optional string existing_pid = 7; 
 	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
-	optional string id = 9; 
+	optional string id = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional bool mandatoryFieldsCompleted = 10; 
+	optional bool mandatoryFieldsCompleted = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string pcmCode = 11; 
+	optional string pcmCode = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional ProcessData processData = 12; 
+	optional ProcessData processData = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string processId = 13; 
+	optional string processId = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string questionCode = 14; 
+	optional string questionCode = 13; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string sourceCode = 15; 
+	optional string sourceCode = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string summary = 16; 
+	optional string summary = 15; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string targetCode = 17; 
+	optional string targetCode = 16; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional TaskExchange taskExchange = 17; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional org.kie.kogito.index.model.KogitoMetadata metadata = 18; 
 }
@@ -182,30 +182,32 @@ message ProcessData {
 	optional string processId = 13; 
 }
 /* @Indexed */ 
-message S2SData { 
+message TaskExchange { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional EAbortReason abortReason = 1; 
+	optional string buttonEvents = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string buttonEvents = 2; 
+	optional ECompletion completion = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string location = 3; 
+	optional string completionCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string parent = 4; 
+	optional string location = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string pcmCode = 5; 
+	optional string parent = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string productCode = 6; 
+	optional string pcmCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 7; 
+	optional string productCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 8; 
+	optional string questionCode = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 9; 
+	optional string sourceCode = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional TimerData timerData = 10; 
+	optional string targetCode = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 11; 
+	optional TimerData timerData = 11; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 12; 
 }
 /* @Indexed */ 
 message TimerData { 
@@ -269,11 +271,13 @@ message Validation {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional kogito.Serializable updated = 14[(kogito_java_class) = "java.time.LocalDateTime"]; 
 }
-enum EAbortReason { 
-	option java_package = "life.genny.kogito.common.models.S2SData";
+enum ECompletion { 
+	option java_package = "life.genny.kogito.common.models";
 	CANCEL = 1;
-	TIMEOUT = 2;
-	NONE = 0;
+	SUBMIT = 0;
+	CUSTOM = 4;
+	TIMEOUT = 3;
+	PREVIOUS = 2;
 }
 enum EEntityStatus { 
 	option java_package = "life.genny.qwandaq";
