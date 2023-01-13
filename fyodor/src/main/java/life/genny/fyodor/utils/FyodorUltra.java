@@ -739,6 +739,7 @@ public class FyodorUltra {
 		String[] array = code.split("__");
 		String attributeCode = array[0];
 		code = Stream.of(array).skip(1).collect(Collectors.joining("__"));
+		// log.info(code);
 
 		// recursion
 		if (array.length > 1) {
@@ -764,7 +765,6 @@ public class FyodorUltra {
 
 		// create answer
 		Answer answer = new Answer(entity.getCode(), entity.getCode(), attributeCode, value);
-		log.info(code);
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 		answer.setAttribute(attribute);
 

@@ -513,45 +513,41 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity addNonLiteralAttributes(BaseEntity entity) {
 
-		// Handle Created and Updated attributes
+		// created datetime
 		Attribute createdAttr = new Attribute(PRI_CREATED, "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
 
-		if (entity.getCreated() == null) {
-			log.error("NPE for PRI_CREATED. Generating created date");
-			entity.autocreateCreated();
-		}
-
-		// Ensure createdDate is not null
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
 
+		// created date
 		Attribute createdDateAttr = new Attribute(PRI_CREATED_DATE, "Created", new DataType(LocalDate.class));
 		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
 
-		// Ensure createdDate is not null
 		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
 
+		// last updated
 		Attribute updatedAttr = new Attribute(PRI_UPDATED, "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
-		try {
-			updated.setValueDateTime(entity.getUpdated());
-			entity.addAttribute(updated);
 
-			Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
-			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
-			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
-			entity.addAttribute(updatedDate);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_UPDATED");
-		}
+		updated.setValueDateTime(entity.getUpdated());
+		entity.addAttribute(updated);
 
+		// last updated date
+		Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
+		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
+
+		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
+		entity.addAttribute(updatedDate);
+
+		// code
 		Attribute codeAttr = new Attribute(PRI_CODE, "Code", new DataType(String.class));
 		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
 		code.setValueString(entity.getCode());
 		entity.addAttribute(code);
 
+		// name
 		Attribute nameAttr = new Attribute(PRI_NAME, "Name", new DataType(String.class));
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
