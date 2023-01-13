@@ -24,6 +24,8 @@ public class SendMessageService {
 	UserToken userToken;
 
 	public static final String RECIPIENT = "RECIPIENT";
+	public static final String SOURCE = "SOURCE";
+	public static final String TARGET = "TARGET";
 
 	/**
 	 * Send a genny message.
@@ -70,25 +72,29 @@ public class SendMessageService {
 	 * @param msgType The message type might be TOAST,SLACK,SMS,EMAIL,SENDGRID,VOICE
 	 * @param ctxMap The context map
 	 */
-	public void sendMessage(String templateCode,String recipientBECode,String entityCode,String msgType,Map<String, String> ctxMap) {
+	public void sendMessage(String templateCode,String recipientBECode,String entityCode,String msgType) {
+		Map<String, String> ctxMap = new HashMap<>();
+
 		if(msgType.contains(QBaseMSGMessageType.TOAST.name())) {
-			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.TOAST, ctxMap).sendMessage();
+			ctxMap.put(SOURCE,recipientBECode);
+			ctxMap.put(TARGET,entityCode);
+			new SendMessage(templateCode, recipientBECode, QBaseMSGMessageType.TOAST, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.SLACK.name())) {
 			ctxMap.put(RECIPIENT,templateCode);
-			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.SLACK, ctxMap).sendMessage();
+			new SendMessage(templateCode, recipientBECode, QBaseMSGMessageType.SLACK, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.SMS.name())) {
-			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.SMS, ctxMap).sendMessage();
+			new SendMessage(templateCode, recipientBECode, QBaseMSGMessageType.SMS, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.EMAIL.name())) {
-			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.EMAIL, ctxMap).sendMessage();
+			new SendMessage(templateCode, recipientBECode, QBaseMSGMessageType.EMAIL, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.SENDGRID.name())) {
-			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.SENDGRID, ctxMap).sendMessage();
+			new SendMessage(templateCode, recipientBECode, QBaseMSGMessageType.SENDGRID, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.VOICE.name())) {
-			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.VOICE, ctxMap).sendMessage();
+			new SendMessage(templateCode, recipientBECode, QBaseMSGMessageType.VOICE, ctxMap).sendMessage();
 		}
 	}
 
