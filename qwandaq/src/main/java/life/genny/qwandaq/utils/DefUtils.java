@@ -1,12 +1,9 @@
 package life.genny.qwandaq.utils;
 
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -28,7 +25,6 @@ import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DefinitionException;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.AttributeCodeValueString;
@@ -54,10 +50,10 @@ public class DefUtils {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	public QwandaUtils qwandaUtils;
 
 	@Inject
-	BaseEntityUtils beUtils;
+	public BaseEntityUtils beUtils;
 
 	@Inject
 	SearchUtils searchUtils;

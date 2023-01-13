@@ -2,6 +2,7 @@ package life.genny.qwandaq.utils;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
+import life.genny.qwandaq.utils.callbacks.FIMapCallback;
 
 /**
  * A few Common Utils to use throughout Genny.
@@ -61,6 +63,20 @@ public class CommonUtils {
     public static Object logAndReturn(Logger log, Object msg) {
         log.info(msg);
         return msg;
+    }
+
+    public static <T> void printArray(T[] array) {
+        printArray(array, log::info);
+    }
+
+    public static <T> void printArray(T[] array, FILogCallback logCallback) {
+        printArray(array, logCallback, (obj) -> obj.toString());
+    }
+
+    public static <T> void printArray(T[] array, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+        for(T item : array) {
+            logCallback.log(logLine.getString(item));
+        }
     }
 
     public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
@@ -276,7 +292,7 @@ public class CommonUtils {
         T[] array = (T[])Array.newInstance(type, components.length);
 
         for(int i = 0; i < components.length; i++) {
-            array[i] = objectCallback.getObject(components[i].trim());
+            array[i] = objectCallback.getObject(components[i]);
         }
 
         return array;
@@ -303,6 +319,33 @@ public class CommonUtils {
         }
 
         return newList;
+    }
+
+
+
+    /**
+     * A lightweight way to map one array type to another without streams. Suitable for arrays with small objects
+     * @param <I> I - input type
+     * @param <O> O - output type
+     * @param input input array (array to map)
+     * @param outputType component type of the output (what each object of the output should be)
+     * @param mapCallback the mapping callback/lamda
+     * @return the mapped array
+     * 
+     * <pre>
+     * String[] numbers = {"0", "1", "2", "3"};
+     * Integer[] numbersTransformed = mapArray(numbers, Integer.class, (string) -> Integer.parseInt(string)); // {0, 1, 2, 3}
+     * Integer[] numbersTransformed = mapArray(numbers, Integer.class, Integer::parseInt); // {0, 1, 2, 3}
+     * </pre>
+     */
+    @SuppressWarnings("unchecked")
+    public static <I, O> O[] mapArray(I[] input, Class<O> outputType, FIMapCallback<I,O> mapCallback) {
+        O[] output = (O[])Array.newInstance(outputType, input.length);
+        for(int i = 0; i < input.length; i++) {
+            output[i] = mapCallback.map(input[i]);
+        }
+
+        return output;
     }
 
 
@@ -391,7 +434,7 @@ public class CommonUtils {
 
 	public static String substitutePrefix(String code, String prefix) {
         if(prefix.length() == 4) {
-            if(prefix.charAt(4) != '_') {
+            if(prefix.charAt(3) != '_') {
                 log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
                 return code;
             }
@@ -488,8 +531,17 @@ public class CommonUtils {
      */
     public static String addToStringArray(String array, String... entries) {
         // no entries array == no entries to add
-        if(entries == null)
-            return StringUtils.isBlank(array) ? "[]" : array;
+        if(entries == null || entries.length == 0) {
+            if(StringUtils.isBlank(array))
+                return "[]";
+
+            // Bracket correction
+            if(array.charAt(0) != '[')
+                array = "[".concat(array);
+            if(array.charAt(array.length() - 1) != ']')
+                array = array.concat("]");
+            return array;
+        }
 
         // return the entries as an array if there is no array
         if(StringUtils.isBlank(array)) {

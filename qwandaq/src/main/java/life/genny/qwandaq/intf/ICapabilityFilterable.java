@@ -65,7 +65,9 @@ public interface ICapabilityFilterable {
      * @return an optional containing the capability if it exists, empty otherwise
      */
     public default Optional<Capability> getCapabilityRequirement(String capCode) {
+        System.out.println("Looking for requirement: " + capCode);
         for(Capability requirement : getCapabilityRequirements()) {
+            System.out.println("Found: " + requirement.code);
             if(capCode.equals(requirement.code)) {
                 return Optional.of(requirement);
             }

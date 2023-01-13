@@ -103,7 +103,7 @@ public class BuilderTest extends BaseDefTest {
 
         .createTest("Test DEF_TEST_ANCIENT1 Parents")
         .setInput("DEF_TEST_ANCIENT1")
-        .setExpected(new Object[] {})
+        .setExpected(new Object[] {"DEF_TEST_ANCIENT2"})
         .build()
 
         .createTest("Test DEF_TEST_ANCIENT2 Parents")

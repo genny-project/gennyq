@@ -28,7 +28,7 @@ public class TestCase<I, E> {
         this.name = name;
     }
 
-    public E test() {
+    public E run() {
         System.out.println(CommonUtils.equalsBreak(EQUALS_LENGTH) + "\n[!] Running test: " + this);
         E result = testCallback.test(input).expected;
         printData("Input", input.input);
@@ -46,8 +46,8 @@ public class TestCase<I, E> {
         }
     }
 
-    public void verify() {
-        E result = test();
+    public void test() {
+        E result = run();
         verificationCallback.assertFunction(result, expected.expected);
     }
 

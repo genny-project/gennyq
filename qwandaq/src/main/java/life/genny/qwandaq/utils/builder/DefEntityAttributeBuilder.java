@@ -62,15 +62,15 @@ public class DefEntityAttributeBuilder {
 
     public EntityAttribute buildEA() {
         if(def == null)
-            throw new NullParameterException("BaseEntity in EntityAttributeBuilder");
+            throw new NullParameterException("BaseEntity in DefEntityAttributeBuilder");
         return buildEA(def);
     }
 
     public EntityAttribute buildEA(Definition be) {
         if(attribute == null)
-            throw new NullParameterException("Attribute in EntityAttributeBuilder");
+            throw new NullParameterException("Attribute in DefEntityAttributeBuilder");
         if(value == null)
-            throw new NullParameterException("value assigned to EntityAttribute in EntityAttributeBuilder");
+            throw new NullParameterException("value assigned to EntityAttribute in DefEntityAttributeBuilder");
 
         // Conforming to answer mechanism
         Answer answer = new Answer(TESTING_BASE_ENTITY, be, attribute, (String)value);
@@ -85,7 +85,7 @@ public class DefEntityAttributeBuilder {
 
     public DefinitionDecorator build() {
         if(defDecorator == null) {
-            log.error("Not inside a DefinitionDecoratora. call DefEntityAttributeBuilder.buildEA() here instead");
+            log.error("Not inside a DefinitionDecorator. call DefEntityAttributeBuilder.buildEA() here instead");
             throw new NullParameterException("DefinitionDecoratora");
         }
 

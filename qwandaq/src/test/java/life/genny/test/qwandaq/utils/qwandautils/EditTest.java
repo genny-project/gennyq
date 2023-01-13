@@ -15,7 +15,6 @@ import life.genny.qwandaq.utils.collections.MapDecorator;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 public class EditTest extends BaseDefTest {
-    
 
     @Test
     public void testCanEdit() {
@@ -26,8 +25,10 @@ public class EditTest extends BaseDefTest {
         new JUnitTester<Definition, Map<String, Boolean>>()
         .setTest((input) -> {
             Map<String, Boolean> attributeResults = new HashMap<String,Boolean>();
+            log("Testing def: " + input.input);
             for(EntityAttribute ea : input.input.getBaseEntityAttributes()) {
-                attributeResults.put(ea.getAttributeCode(), QwandaUtils.checkCanEditEntityAttribute(USER_TEST_CAPS, input.input, ea));
+                log("Entity Attribute: " + ea.getAttributeCode());
+                attributeResults.put(ea.getAttributeCode(), QwandaUtils.checkCanEditEntityAttribute(baseEntities, USER_TEST_CAPS, input.input, ea));
             }
             return Expected(attributeResults);
         })
@@ -47,6 +48,7 @@ public class EditTest extends BaseDefTest {
         .setInput(getDefinition("DEF_TEST"))
         .setExpected(new MapDecorator<String, Boolean>()
                 .put("ATT_PRI_PREFIX", false)
+                .put("LNK_INCLUDE", true)
                 .get()
         )
         .build()

@@ -42,7 +42,7 @@ public class JUnitTester<I, E> {
 
     public JUnitTester<I, E> assertAll() {
         for(TestCase<I, E> test : tests) {
-            test.verify();
+            test.test();
         }
         tests.clear();
         return this;
