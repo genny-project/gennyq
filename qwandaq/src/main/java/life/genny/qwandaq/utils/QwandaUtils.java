@@ -781,6 +781,18 @@ public class QwandaUtils {
 		Optional<Capability> optReq = definition.getCapabilityRequirement(CommonUtils.substitutePrefix(definition.getCode(), Prefix.CAP));
 		if(optReq.isPresent()) {
 			// perform check (return empty ask here if fail)
+			Capability baseEntityRequirement = optReq.get();
+			
+			boolean baseEntityPass = ICapabilityFilterable.requirementsMetImpl(userCapabilities, ReqConfig.builder()
+			.allCaps(false)
+			.allNodes(false)
+			.cascadePermissions(false).build(), 
+			baseEntityRequirement.filterByModes(CapabilityMode.EDIT)); // Target only edit mode
+
+			if(!baseEntityPass) {
+				log.info("[!] Failed check for base entity edit permissions: " + baseEntityRequirement.code);
+				return ask;
+			}
 		}
 
 		// for an EntityAttribute ea in Definition
