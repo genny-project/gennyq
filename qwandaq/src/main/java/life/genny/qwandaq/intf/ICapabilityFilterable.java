@@ -140,7 +140,7 @@ public interface ICapabilityFilterable {
     }
 
     public static boolean requirementsMetImpl(CapabilitySet userCapabilities, ReqConfig requirementsConfig, Set<Capability> capabilityRequirements) {
-        return requirementsMetImpl(userCapabilities, requirementsConfig, capabilityRequirements.toArray(new Capability[0]));
+        return requirementsMetImpl(userCapabilities, requirementsConfig, (capabilityRequirements != null ? capabilityRequirements.toArray(new Capability[0]) : new Capability[0]));
     }
 
 }
