@@ -5,10 +5,14 @@ import life.genny.qwandaq.entity.BaseEntity;
 
 public class BaseEntityDecorator {
     
-    private BaseEntity be;
+    protected BaseEntity be;
 
     public BaseEntityDecorator(String code, String name) {
-        be = new BaseEntity(code, name);
+        this(new BaseEntity(code, name));
+    }
+
+    public BaseEntityDecorator(BaseEntity be) {
+        this.be = be;
     }
 
     public EntityAttributeBuilder addEA(Attribute attribute) {

@@ -6,9 +6,8 @@ import java.util.Map;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
-import life.genny.qwandaq.utils.builder.BaseEntityDecorator;
+import life.genny.qwandaq.utils.builder.DefinitionDecorator;
 import life.genny.test.qwandaq.utils.capabilities.requirements.BaseRequirementsTest;
 
 import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
@@ -19,7 +18,7 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
     static {
 
         // Setup Grandchild
-        addBaseEntity(new BaseEntityDecorator("DEF_TEST", "Test Definition")
+        addDefinition(new DefinitionDecorator("DEF_TEST", "Test Definition")
             .addEA()
                 .setAttribute("ATT_PRI_PREFIX", "Prefix Attribute", new DataType(String.class))
                 .addRequirement(new CapabilityBuilder("TEST CAP").add(ALL).buildCap())
@@ -30,11 +29,11 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
                 .setValue("[\"DEF_TEST_FATHER\"]")
             .build()
 
-            .getBaseEntity()
+            .getDefinition()
         );
 
         // Setup Father
-        addBaseEntity(new BaseEntityDecorator("DEF_TEST_FATHER", "Test Father Def")
+        addDefinition(new DefinitionDecorator("DEF_TEST_FATHER", "Test Father Def")
             .addEA()
                 .setAttribute("ATT_PRI_PREFIX", "Prefix Attribute", new DataType(String.class))
                 .setValue("TST")
@@ -44,11 +43,11 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
                 .setValue("[\"DEF_TEST_GRANDFATHER\"]")
             .build()
 
-            .getBaseEntity()
+            .getDefinition()
         );
 
         // Setup Grandfather
-        addBaseEntity(new BaseEntityDecorator("DEF_TEST_GRANDFATHER", "Test Grandfather Def")
+        addDefinition(new DefinitionDecorator("DEF_TEST_GRANDFATHER", "Test Grandfather Def")
             .addEA()
                 .setAttribute("ATT_PRI_PREFIX", "Prefix Attribute", new DataType(String.class))
                 .setValue("TST")
@@ -58,11 +57,11 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
                 .setValue("[\"DEF_TEST_ANCIENT1\",\"DEF_TEST_ANCIENT2\"]")
             .build()
 
-            .getBaseEntity()
+            .getDefinition()
         );
 
         // Setup Ancient Parents
-        addBaseEntity(new BaseEntityDecorator("DEF_TEST_ANCIENT1", "Test Ancient 1 Def")
+        addDefinition(new DefinitionDecorator("DEF_TEST_ANCIENT1", "Test Ancient 1 Def")
             .addEA()
                 .setAttribute("ATT_PRI_PREFIX", "Prefix Attribute", new DataType(String.class))
                 .setValue("TST")
@@ -72,24 +71,24 @@ public abstract class BaseDefTest extends BaseRequirementsTest {
                 .setValue("[]")
             .build()
 
-            .getBaseEntity()
+            .getDefinition()
         );
 
-        addBaseEntity(new BaseEntityDecorator("DEF_TEST_ANCIENT2", "Test Ancient 2 Def")
+        addDefinition(new DefinitionDecorator("DEF_TEST_ANCIENT2", "Test Ancient 2 Def")
             .addEA()
                 .setAttribute("ATT_PRI_PREFIX", "Prefix Attribute", new DataType(String.class))
                 .setValue("TST")
             .build()
 
-            .getBaseEntity()
+            .getDefinition()
         );
     }
 
-    protected static void addBaseEntity(BaseEntity be) {
-        baseEntities.put(be.getCode(), (Definition)be);
+    protected static void addDefinition(Definition be) {
+        baseEntities.put(be.getCode(), be);
     }
 
-    public static Definition getBaseEntity(String code) {
+    protected static Definition getBaseEntity(String code) {
         return baseEntities.get(code);
     }
 }

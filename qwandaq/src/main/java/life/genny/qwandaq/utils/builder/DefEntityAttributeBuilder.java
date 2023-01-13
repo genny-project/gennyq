@@ -11,65 +11,62 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 
-/**
- * Class to assist with testing
- * 
- * @author Bryn Meachem
- */
-public class EntityAttributeBuilder {
-    private static final Logger log = Logger.getLogger(EntityAttributeBuilder.class);
+public class DefEntityAttributeBuilder {
+    private static final Logger log = Logger.getLogger(DefEntityAttributeBuilder.class);
+
     private static final BaseEntity TESTING_BASE_ENTITY = new BaseEntity("TST_UNIT", "Unit Test BE");
 
-    private BaseEntityDecorator beBuilder;
-    private BaseEntity be;
+    private DefinitionDecorator defDecorator;
+    private Definition def;
     private String value;
     private Attribute attribute;
 
     private Set<Capability> capabilityRequirements = new HashSet<Capability>();
 
-    public EntityAttributeBuilder(BaseEntity be) {
-        this.be = be;
+    public DefEntityAttributeBuilder(Definition be) {
+        this.def = be;
     }
 
-    public EntityAttributeBuilder(BaseEntityDecorator beBuilder) {
-        this(beBuilder.getBaseEntity());
-        this.beBuilder = beBuilder;
+    public DefEntityAttributeBuilder(DefinitionDecorator defDecorator) {
+        this(defDecorator.getDefinition());
+        this.defDecorator = defDecorator;
     }
 
-    public EntityAttributeBuilder setValue(String value) {
+    public DefEntityAttributeBuilder setValue(String value) {
         this.value = value;
         return this;
     }
 
-    public EntityAttributeBuilder setBaseEntity(BaseEntity be) {
-        this.be = be;
+    public DefEntityAttributeBuilder setDefinition(Definition be) {
+        this.def = be;
         return this;
     }
 
-    public EntityAttributeBuilder setAttribute(Attribute attribute) {
+    public DefEntityAttributeBuilder setAttribute(Attribute attribute) {
         this.attribute = attribute;
         return this;
     }
 
-    public EntityAttributeBuilder addRequirement(Capability capability) {
+    public DefEntityAttributeBuilder addRequirement(Capability capability) {
         this.capabilityRequirements.add(capability);
         return this;
     }
 
-    public EntityAttributeBuilder setAttribute(String code, String name, DataType dataType) {
+    public DefEntityAttributeBuilder setAttribute(String code, String name, DataType dataType) {
         this.attribute = new Attribute(code, name, dataType);
         return this;
     }
 
     public EntityAttribute buildEA() {
-        if(be == null)
+        if(def == null)
             throw new NullParameterException("BaseEntity in EntityAttributeBuilder");
-        return buildEA(be);
+        return buildEA(def);
     }
 
-    public EntityAttribute buildEA(BaseEntity be) {
+    public EntityAttribute buildEA(Definition be) {
         if(attribute == null)
             throw new NullParameterException("Attribute in EntityAttributeBuilder");
         if(value == null)
@@ -85,20 +82,22 @@ public class EntityAttributeBuilder {
         return ea;
     }
 
-    public BaseEntityDecorator build() {
-        if(beBuilder == null) {
-            log.error("Not inside a BaseEntityBuilder. call EntityAttributeBuilder.buildEA() here instead");
-            throw new NullParameterException("BaseEntityBuilder");
+
+    public DefinitionDecorator build() {
+        if(defDecorator == null) {
+            log.error("Not inside a DefinitionDecoratora. call DefEntityAttributeBuilder.buildEA() here instead");
+            throw new NullParameterException("DefinitionDecoratora");
         }
 
-        if(beBuilder.getBaseEntity() == null)
-            throw new NullParameterException("BaseEntity in BaseEntityBuilder");
+        if(defDecorator.getDefinition() == null)
+            throw new NullParameterException("BaseEntity in DefinitionDecoratora");
         if(attribute == null)
-            throw new NullParameterException("Attribute in EntityAttributeBuilder");
+            throw new NullParameterException("Attribute in DefEntityAttributeBuilder");
         if(value == null)
-            throw new NullParameterException("value assigned to EntityAttribute in EntityAttributeBuilder");
+            throw new NullParameterException("value assigned to EntityAttribute in DefEntityAttributeBuilder");
 
-        buildEA(beBuilder.getBaseEntity());
-        return beBuilder;
+        buildEA(defDecorator.getDefinition());
+        return defDecorator;
     }
+    
 }

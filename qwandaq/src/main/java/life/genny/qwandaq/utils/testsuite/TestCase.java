@@ -48,11 +48,7 @@ public class TestCase<I, E> {
 
     public void verify() {
         E result = test();
-        try { 
-            verificationCallback.assertFunction(result, expected.expected);
-        } catch(AssertionError e) {
-            assert(false);
-        }
+        verificationCallback.assertFunction(result, expected.expected);
     }
 
     public E getExpected() {
