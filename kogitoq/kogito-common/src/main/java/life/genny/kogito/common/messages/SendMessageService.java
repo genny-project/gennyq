@@ -23,6 +23,8 @@ public class SendMessageService {
 	@Inject
 	UserToken userToken;
 
+	public static final String RECIPIENT = "RECIPIENT";
+
 	/**
 	 * Send a genny message.
 	 *
@@ -73,7 +75,7 @@ public class SendMessageService {
 			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.TOAST, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.SLACK.name())) {
-			ctxMap.put("RECIPIENT",templateCode);
+			ctxMap.put(RECIPIENT,templateCode);
 			new SendMessage(templateCode, recipientBECode, entityCode, QBaseMSGMessageType.SLACK, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.SMS.name())) {

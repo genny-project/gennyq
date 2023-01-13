@@ -18,6 +18,9 @@ public class SendMessage extends MessageSendingStrategy {
 
     private QBaseMSGMessageType msgType;
 
+    public static final String SOURCE = "SOURCE_";
+    public static final String TARGET = "TARGET_";
+
     public SendMessage(String templateCode, String recipientBECode) {
         super();
         this.templateCode = templateCode;
@@ -64,16 +67,16 @@ public class SendMessage extends MessageSendingStrategy {
 
         // scan all attribute keys
         for(String key : ctxMap.keySet()) {
-            if(key.startsWith("SOURCE_")) {
-                String subKey = key.replaceFirst("SOURCE_","");
+            if(key.startsWith(SOURCE)) {
+                String subKey = key.replaceFirst(SOURCE,"");
                 String att = this.beUtils.getBaseEntityValueAsString(recipientBECode, subKey);
                 if (att != null) {
                     ctxMap.put(key, att);
                 }
             }
 
-            if(key.startsWith("TARGET_")) {
-                String subKey = key.replaceFirst("TARGET_","");
+            if(key.startsWith(TARGET)) {
+                String subKey = key.replaceFirst(TARGET,"");
                 String att = this.beUtils.getBaseEntityValueAsString(entityCode, subKey);
                 if(att != null) {
                     ctxMap.put(key, att);
