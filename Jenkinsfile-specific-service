@@ -37,9 +37,7 @@ pipeline {
         }
         stage("Build Service") {
             steps {
-                "Build Service" : {
-                    sh "./build-docker-branch.sh ${TAG} ${MICROSERVICE}"
-                }
+                sh "./build-docker-branch.sh ${TAG} ${MICROSERVICE}"
             }
         }
         stage("Push Docker Images") {
