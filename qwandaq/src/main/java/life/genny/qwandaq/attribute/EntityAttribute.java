@@ -1284,4 +1284,16 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
 	}
+
+	/**
+	 * Return the full code (BASEENTITY_CODE:ATTRIBUTE_CODE)
+	 * @return the full EntityAttribute code according to the pattern above
+	 */
+	@JsonbTransient
+	public String getFullCode() {
+		return new StringBuilder(baseEntityCode)
+		.append(":")
+		.append(attributeCode)
+		.toString();
+	}
 }

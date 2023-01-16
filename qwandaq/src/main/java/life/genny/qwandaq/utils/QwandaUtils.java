@@ -31,6 +31,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Delimiter;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.Capability;
@@ -868,14 +869,14 @@ public class QwandaUtils {
 	 */
 	private boolean checkCanEditEntityAttribute(CapabilitySet userCapabilities, Definition definition, String attributeCode, boolean unlocked) {
 		// scale LNK_INCLUDE until you hit a true (requirements met), or all LNK_INCLUDE EAs are empty
-		log.debug("[!] checkCanEditEntityAttribute(userCaps," + definition.getCode() + ", attrCode:" + attributeCode + ", unlocked: " + unlocked);
-		
+		log.debug("[!] checkCanEditEntityAttribute(userCaps," + definition.getCode() + ", attrCode:" + attributeCode + ", unlocked: " + unlocked + ")");
+		log.debug("	- Capability requirement: " + getDefReqCode(definition.getCode(), attributeCode));
 		String[] parentCodes = definition.getParentCodes();
 
 		// Fetch the relevant EntityAttribute
 		Optional<EntityAttribute> optNewEa = definition.findEntityAttribute(attributeCode);
 		if(!optNewEa.isPresent()) {
-			
+			log.debug("	- could not find EA: " + attributeCode + " in definition: " + definition.getCode() + ". Checking for parents");
 			// lnk include check
 			for(int i = 0; i < parentCodes.length; i++) {
 				String code = parentCodes[i];
@@ -884,6 +885,7 @@ public class QwandaUtils {
 
 				// Need to ensure all parents are checked, so that there isn't a premature return
 				if(unlocked && i == parentCodes.length - 1) {
+					log.debug("	- No more parents to check, not locked. Returning true");
 					return true;
 				}
 			}
@@ -891,32 +893,39 @@ public class QwandaUtils {
 			return unlocked;
 		}
 
+		log.debug("	- found relevant EntityAttribute in definition");
 		EntityAttribute ea = optNewEa.get();
 
 		// Check Entity Attribute cap req: CAP_BASEENTITY:~:ATTRIBUTE
-		String reqCode = CommonUtils.substitutePrefix(definition.getCode(), Prefix.CAP) + ":~:" + ea.getAttributeCode();
+		String reqCode = getDefReqCode(definition.getCode(), attributeCode);
 		Optional<Capability> optEditReq = ea.getCapabilityRequirement(reqCode);
 
 		if(!optEditReq.isPresent()) {
-			// Check lnk include exists here. If not return locked
+			log.debug("	- Could not find capability requirement: " + reqCode);
+			// no parents - return locked status
 			if(parentCodes.length == 0) {
+				log.debug("	- No further parents. Returning unlocked: " + unlocked);
 				return unlocked; 
 			}
 			
-			
+			log.debug("	- Checking parents");
 			for(int i = 0; i < parentCodes.length; i++) {
 				String code = parentCodes[i];
 				Definition def = beUtils.getDefinition(code);
 				unlocked = checkCanEditEntityAttribute(userCapabilities, def, attributeCode, unlocked);
 				if(unlocked && i == parentCodes.length - 1) {
+					log.debug("	- recursively checked all parents. Managed to unlock, returning true");
 					return true;
 				}
 			}
 
+			log.debug("	- recursively checked all parents. Could not unlock EA for editing. Returning false");
 			return false;
 		}
 
 		Capability editReq = optEditReq.get();
+
+		log.debug("	- found edit requirement: " + editReq.code);
 		boolean eaPassCheck = ICapabilityFilterable.requirementsMetImpl(userCapabilities, ReqConfig.builder()
 					.allCaps(false)
 					.allNodes(false)
@@ -925,16 +934,19 @@ public class QwandaUtils {
 		
 		// 0: Base Case. Succeeded requirement check
 		if(eaPassCheck) {
+			log.debug("	- Matched edit requirement to user requirements. Unlocking EA");
 			return true;
 		}
 
-		// // 1: Base Case. No more parents to check
+		log.debug("	- Failed edit requirement check for EntityAttribute: " + ea.getFullCode());
+		// 1: Base Case. No more parents to check
 		if(parentCodes.length == 0) {
+			log.debug("	- No futher parents. Returning false");
 			return false;
 		}
 		
+		log.debug("	- More parents. Checking each of them");
 		// 2: Recursive Case. Definition has parents
-		
 		for(int i = 0; i < parentCodes.length; i++) {
 			String code = parentCodes[i];
 			Definition def = beUtils.getDefinition(code);
@@ -944,7 +956,15 @@ public class QwandaUtils {
 			}
 		}
 
+		log.debug("	- Parents could not unlock entity attribute. " + ea.getFullCode() + " is not editable for this user");
 		return false;
+	}
+
+	private String getDefReqCode(String defCode, String attrCode) {
+		return new StringBuilder(CommonUtils.substitutePrefix(defCode, Prefix.CAP))
+					.append(Delimiter.CAPABILITY)
+					.append(attrCode)
+					.toString();
 	}
 
 
