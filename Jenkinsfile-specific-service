@@ -36,7 +36,8 @@ pipeline {
             steps {
               script {
                 if(env.BUILD_DEPENDENCIES) {
-                  echo "BUILDING DEPS"
+                  echo "Building qwandaq"
+                  sh "./build.sh qwandaq serviceq kogito-common"
                 }
               }
             }
