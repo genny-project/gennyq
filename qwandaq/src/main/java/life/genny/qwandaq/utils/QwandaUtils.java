@@ -764,11 +764,21 @@ public class QwandaUtils {
 		String sourceCode = userToken.getUserCode();
 		String targetCode = baseEntity.getCode();
 
+		// attain a name somehow
+		Optional<EntityAttribute> targetName = baseEntity.findEntityAttribute(Attribute.PRI_NAME);
+		String name = baseEntity.getName();
+		if(targetName.isPresent()) {
+			EntityAttribute nameEA = targetName.get();
+			if(!StringUtils.isBlank(nameEA.getValueString())) {
+				name = nameEA.getValueString();
+			}
+		}
+
 		// create GRP ask
 		// Is it better to get the name from PRI_NAME here?
 		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
-				"Edit " + targetCode + " : " + baseEntity.getName(), // TODO: Do we want to use PRI_NAME here?
+				"Editting " + baseEntity.getName() + " : " + name,
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
 
