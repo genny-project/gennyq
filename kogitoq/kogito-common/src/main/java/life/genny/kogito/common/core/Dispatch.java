@@ -199,12 +199,11 @@ public class Dispatch {
 	/**
 	 * Fetch a PCM to traverse, looking for a non-readonly question.
 	 *
-	 * @param code
-	 * @param source
-	 * @param target
-	 * @param map
-	 * @param msg
-	 * @param processData
+	 * @param code The PCM code to begin traversing
+	 * @param source The source baseEntity
+	 * @param target The target baseEntity
+	 * @param msg The bulk message to store data
+	 * @param processData The ProcessData used to init the task
 	 */
 	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
@@ -216,16 +215,16 @@ public class Dispatch {
 	/**
 	 * Traverse a PCM looking for a non-readonly question.
 	 * 
-	 * @param pcm
-	 * @param source
-	 * @param target
-	 * @return
+	 * @param pcm The PCM to Traverse
+	 * @param source The source baseEntity
+	 * @param target The target baseEntity
+	 * @param msg The bulk message to store data
+	 * @param processData The ProcessData used to init the task
 	 */
 	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 		// check capability requirements are met
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
-		log.info("userCaps = " + userCapabilities);
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;

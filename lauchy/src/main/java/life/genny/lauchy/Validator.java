@@ -170,7 +170,7 @@ public class Validator {
 
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-		if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+		if (definition.findEntityAttribute(Prefix.UNQ + attributeCode).isPresent()) {
 			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
 				String feedback = "Error: This value already exists and must be unique.";
