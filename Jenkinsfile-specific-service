@@ -49,6 +49,7 @@ pipeline {
         }
         stage("Push Docker Images") {
             steps {
+                echo "Tagging as ${TAG}"
                 sh "docker push gennyproject/${MICROSERVICE}:${TAG}"  
                 sh "docker push gennyproject/${MICROSERVICE}:latest"  
             }
