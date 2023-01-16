@@ -34,9 +34,11 @@ pipeline {
         }
         stage("Build Dependencies") {
             steps {
+              script {
                 if(env.BUILD_DEPENDENCIES) {
                   echo "BUILDING DEPS"
                 }
+              }
             }
         }
         stage("Build Service") {
