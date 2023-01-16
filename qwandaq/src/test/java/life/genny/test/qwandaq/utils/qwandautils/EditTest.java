@@ -55,6 +55,28 @@ public class EditTest extends BaseDefTest {
         });
 
     @Test
+    public void blockSurfaceLevelTest() {
+        Definition testDef = addDefinition(DefinitionDecorator("DEF_TEST_ENTITY", "Test Entity")
+                                    .addStringEA("ATT_PRI_UNIQUE_ID", "ID Attr").setValue("SOMETHING")
+                                    .addRequirement(new CapabilityBuilder("CAP_TEST_ENTITY:~:ATT_PRI_UNIQUE_ID").edit(ALL).buildCap())
+                                    .build()
+                                .getDefinition());
+        // Clear user caps
+        setTestUserCaps();
+
+        printDef(testDef);
+
+        unitTester
+        .createTest("Test surface level fail")
+        .setInput(testDef)
+        .setExpected(new MapDecorator<String, Boolean>()
+                    .put("ATT_PRI_UNIQUE_ID", false)
+                    .get())
+        .build()
+        .assertAll();
+    }
+    
+    @Test
     public void testMultipleInheritancePassOnFather() {
         Definition child = addDefinition(DefinitionDecorator("DEF_CHILD", "Child")
                                 .addStringEA("ATT_PRI_PREFIX", "Prefix Attribute").setValue("CHD")
