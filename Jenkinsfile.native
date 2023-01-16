@@ -35,23 +35,27 @@ pipeline {
                     },
                     "Build Bridge" : {
                         sh "./build-docker-native.sh bridge"
-                    },
+                    }
+                ),
+                parallel (
                     "Build Fyodor" : {
                         sh "./build-docker-native.sh fyodor"
                     },
                     "Build Dropkick" : {
                         sh "./build-docker-native.sh dropkick"
-                    },
+                    }
+                ),
+                parallel (
                     "Build Lauchy" : {
                         sh "./build-docker-native.sh lauchy"
                     },
                     "Build Messages" : {
                         sh "./build-docker-native.sh messages"
-                    },
-                    "Build Shleemy" : {
-                        sh "./build-docker-native.sh shleemy"
                     }
-                )
+                ),
+                "Build Shleemy" : {
+                    sh "./build-docker-native.sh shleemy"
+                }
             }
         }
         stage("Push Docker Images") {
