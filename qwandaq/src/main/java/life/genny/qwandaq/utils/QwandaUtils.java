@@ -815,7 +815,7 @@ public class QwandaUtils {
 			boolean unlocked = checkCanEditEntityAttribute(userCapabilities, definition, ea.getAttributeCode());
 
 			if(!unlocked) {
-				log.info("[ ] " + ea.getAttributeCode() + " is not editable");
+				log.warn("[ ] " + ea.getAttributeCode() + " is not editable");
 				continue;
 			}
 
@@ -868,7 +868,7 @@ public class QwandaUtils {
 	 */
 	private boolean checkCanEditEntityAttribute(CapabilitySet userCapabilities, Definition definition, String attributeCode, boolean unlocked) {
 		// scale LNK_INCLUDE until you hit a true (requirements met), or all LNK_INCLUDE EAs are empty
-		System.out.println("[!] checkCanEditEntityAttribute(xx,xx," + definition.getCode() + ", xx, unlocked: " + unlocked);
+		log.debug("[!] checkCanEditEntityAttribute(userCaps," + definition.getCode() + ", attrCode:" + attributeCode + ", unlocked: " + unlocked);
 		
 		String[] parentCodes = definition.getParentCodes();
 
