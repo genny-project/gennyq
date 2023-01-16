@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -179,16 +180,14 @@ public class BaseEntityService {
 		return prefix.get();
 	}
 
-	public String getBaseEntityQuestionGroup(String targetCode) {
+	public String prepEdit(String sourceCode, String targetCode) {
+		String questionCode = qwandaUtils.getEditQuestionGroups(targetCode)[0]; // TODO: Make this multipage
 
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		BaseEntity definition = defUtils.getDEF(target);
-
-		if (definition == null) {
-			throw new NullParameterException("DEF:" + targetCode);
-		}
-
-		return CommonUtils.replacePrefix(definition.getCode(), "QUE");
+		return Json.createObjectBuilder()
+			.add("questionCode", questionCode)
+			.add("sourceCode", sourceCode)
+			.add("targetCode",targetCode)
+			.build().toString();
 	}
 
 	/**
@@ -202,7 +201,7 @@ public class BaseEntityService {
 		String lastName = user.getValue("PRI_LASTNAME", null);
 
 		// update user fields
-		// NOTE: this could be turned into a single http request
+		// TODO: this could be turned into a single http request
 		// Could make it a builder pattern to make it a single http request?
 		KeycloakUtils.updateUserEmail(serviceToken, user, email);
 		KeycloakUtils.updateUserField(serviceToken, user, "username", email);

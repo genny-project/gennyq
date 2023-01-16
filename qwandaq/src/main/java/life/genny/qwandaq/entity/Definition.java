@@ -38,7 +38,6 @@ public class Definition extends BaseEntity {
 
 		Definition definition = new Definition(entity.getCode(), entity.getName());
 		definition.setRealm(entity.getRealm());
-		definition.setRealm(entity.getRealm());
 		definition.setBaseEntityAttributes(entity.getBaseEntityAttributes());
 
 		return definition;

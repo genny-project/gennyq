@@ -88,20 +88,8 @@ public class QwandaUtils {
 	public QwandaUtils() {
 	}
 
-	// private static DataType DTT_EVENT;
-
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
-
-	@PostConstruct
-	private void init() {
-		// Attribute submit = getAttribute("EVT_SUBMIT");
-		// if (submit == null) {
-		// log.error("Could not find Attribute: EVT_SUBMIT");
-		// return;
-		// }
-		// DTT_EVENT = submit.getDataType();
-	}
-
+	
 	/**
 	 * Cache an ask for a processId and questionCode combination.
 	 * 
@@ -652,7 +640,6 @@ public class QwandaUtils {
 
 		// add an entityAttribute to process entity for each attribute
 		for (String code : attributeCodes) {
-
 			// check for existing attribute in target
 			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
 				// otherwise create new attribute
@@ -772,10 +759,16 @@ public class QwandaUtils {
 		String sourceCode = userToken.getUserCode();
 		String targetCode = baseEntity.getCode();
 
+		String name = baseEntity.getName();
+		Optional<EntityAttribute> optName = baseEntity.findEntityAttribute(Attribute.PRI_NAME);
+		if(optName.isPresent() && !StringUtils.isBlank(optName.get().getValueString())) {
+			name = optName.get().getValueString();
+		}
+
 		// create GRP ask
 		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
-				"Edit " + targetCode + " : " + baseEntity.getName(),
+				"Edit " + baseEntity.getName() + " : " + name,
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
 
@@ -805,6 +798,54 @@ public class QwandaUtils {
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
 		return ask;
+	}
+
+	/**
+	 * Get the edit question groups for a {@link BaseEntity}
+	 * <p> will default to <b>QUE_BASEENTITY_GRP</b> if no {@link Attribute#LNK_EDIT_QUES} attribute exists in the {@link Definition}
+	 *     or if the value is blank
+	 * </p>
+	 * @param baseEntity a BaseEntity or definition of a BaseEntity 
+	 * @return array of question group codes in order of appearance for editing
+	 */
+	public String[] getEditQuestionGroups(BaseEntity baseEntity) {
+		if(baseEntity == null)
+			throw new NullParameterException("baseEntity");
+		
+		// Convert to DEF
+		if(!baseEntity.getCode().startsWith(Prefix.DEF)) {
+			baseEntity = defUtils.getDEF(baseEntity);
+		}
+
+		// Look for attached edit ques. If none then default to QUE_BASEENTITY_GRP
+		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_QUES);
+		if(!editQuesLnk.isPresent())
+			return new String[] {Question.QUE_BASEENTITY_GRP};
+		
+		String editQues = editQuesLnk.get().getValueString();
+		if(!StringUtils.isBlank(editQues))
+			return CommonUtils.getArrayFromString(editQues, (str) -> str);
+		
+		return new String[] {Question.QUE_BASEENTITY_GRP};
+	}
+
+
+	/**
+	 * Get the edit question groups for a {@link BaseEntity}
+	 * <p> will default to <b>QUE_BASEENTITY_GRP</b> if no {@link Attribute#LNK_EDIT_QUES} attribute exists in the {@link Definition}
+	 *     or if the value is blank
+	 * </p>
+	 * @param baseEntityCode a BaseEntity or Definition code 
+	 * @return array of question group codes in order of appearance for editing the BaseEntity
+	 */
+	public String[] getEditQuestionGroups(String baseEntityCode) {
+		if(baseEntityCode == null)
+			throw new NullParameterException("baseEntityCode");
+		// ensure def
+		baseEntityCode = CommonUtils.substitutePrefix(baseEntityCode, Prefix.DEF);
+		BaseEntity baseEntity = beUtils.getDefinition(baseEntityCode);
+
+		return getEditQuestionGroups(baseEntity);
 	}
 
 	/**

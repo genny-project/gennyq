@@ -162,6 +162,9 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_CREATED_DATE="PRI_CREATED_DATE";
 	public static final String LNK_SAVED_SEARCH = "LNK_SAVED_SEARCH";
 
+	// editing
+	public static final String LNK_EDIT_QUES = "LNK_EDIT_QUES";
+
 	@Embedded
 	@NotNull
 	public DataType dataType;
