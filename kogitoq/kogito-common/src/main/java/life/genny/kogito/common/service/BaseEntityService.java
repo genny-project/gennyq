@@ -24,7 +24,6 @@ import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -174,6 +173,7 @@ public class BaseEntityService {
 		if(StringUtils.isBlank(questionCode))
 			throw new NullParameterException("questionCode");
 
+		log.info("Setting questionCode of PCM: " + PCMCode + " to " + questionCode);
 		PCM pcm = beUtils.getPCM(PCM.PCM_FORM_EDIT);
 		pcm.setQuestionCode(questionCode);
 		
