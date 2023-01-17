@@ -178,6 +178,7 @@ public class BaseEntityService {
 		log.info("Setting questionCode of PCM: " + PCMCode + " to " + questionCode);
 		PCM pcm = beUtils.getPCM(questionCode);
 		pcm.setQuestionCode(PCMCode);
+		beUtils.updateBaseEntity(pcm);
 		
 		return pcm.getQuestionCode();
 	}
