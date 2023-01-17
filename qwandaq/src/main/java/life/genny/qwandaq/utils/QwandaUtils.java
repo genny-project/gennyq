@@ -886,7 +886,7 @@ public class QwandaUtils {
 		
 		String editQues = editQuesLnk.get().getValueString();
 		if(!StringUtils.isBlank(editQues))
-			return CommonUtils.getArrayFromString(editQues, (str) -> str);
+			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
 		
 		return new String[] {Question.QUE_BASEENTITY_GRP};
 	}

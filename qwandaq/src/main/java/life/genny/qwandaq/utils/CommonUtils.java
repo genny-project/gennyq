@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -239,8 +240,23 @@ public class CommonUtils {
         return instance;
     }
 
-    public static <T> T[] getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        return (T[])getListFromString(arrayString, objectCallback).toArray();
+    @SuppressWarnings("unchecked")
+    public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        
+
+		if(StringUtils.isBlank(arrayString))
+            return (T[])Array.newInstance(type, 0);
+
+        String components[] = arrayString.split(",");
+        T[] array = (T[])Array.newInstance(type, components.length);
+                
+        for(int i = 0; i < components.length; i++) {
+            String component = components[i];
+            array[i] = objectCallback.getObject(component);
+        }
+
+        return array;
     }
 
     /**
