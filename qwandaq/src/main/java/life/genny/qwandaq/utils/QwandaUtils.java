@@ -847,6 +847,7 @@ public class QwandaUtils {
 			throw new NullParameterException("baseEntityCode");
 		// ensure def
 		baseEntityCode = CommonUtils.substitutePrefix(baseEntityCode, Prefix.DEF);
+		log.info("[!] Attempting to retrieve edit question groups from base entity: " + baseEntityCode);
 		BaseEntity baseEntity = beUtils.getDefinition(baseEntityCode);
 
 		return getEditQuestionGroups(baseEntity);
@@ -871,8 +872,10 @@ public class QwandaUtils {
 
 		// Look for attached edit ques. If none then default to QUE_BASEENTITY_GRP
 		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_QUES);
-		if(!editQuesLnk.isPresent())
+		if(!editQuesLnk.isPresent()) {
+			log.warn("Could not find LNK_EDIT_QUES in " + baseEntity.getCode() + ". Defaulting to QUE_BASEENTITY_GRP");
 			return new String[] {Question.QUE_BASEENTITY_GRP};
+		}
 		
 		String editQues = editQuesLnk.get().getValueString();
 		if(!StringUtils.isBlank(editQues))

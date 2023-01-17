@@ -204,7 +204,7 @@ public class Events {
 						.add("sourceCode", userToken.getUserCode())
 						.add("targetCode", msg.getData().getTargetCode())
 						.build();
-				kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
+				kogitoUtils.triggerWorkflow(SELF, "edit", payload);
 				return;
 			}
 		}

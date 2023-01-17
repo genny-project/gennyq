@@ -180,15 +180,15 @@ public class BaseEntityService {
 	}
 
 	public String getBaseEntityQuestionGroup(String targetCode) {
+		return qwandaUtils.getEditQuestionGroups(targetCode)[0];
+		// BaseEntity target = beUtils.getBaseEntity(targetCode);
+		// BaseEntity definition = defUtils.getDEF(target);
 
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		BaseEntity definition = defUtils.getDEF(target);
+		// if (definition == null) {
+		// 	throw new NullParameterException("DEF:" + targetCode);
+		// }
 
-		if (definition == null) {
-			throw new NullParameterException("DEF:" + targetCode);
-		}
-
-		return CommonUtils.replacePrefix(definition.getCode(), "QUE");
+		// return CommonUtils.replacePrefix(definition.getCode(), "QUE");
 	}
 
 	/**
