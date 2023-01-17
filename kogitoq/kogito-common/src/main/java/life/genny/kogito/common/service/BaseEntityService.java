@@ -17,6 +17,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -167,6 +168,18 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 	}
 
+	public String setPcmQuestionCode(String PCMCode, String questionCode) {
+		if(StringUtils.isBlank(PCMCode))
+			throw new NullParameterException("PCMCode");
+		if(StringUtils.isBlank(questionCode))
+			throw new NullParameterException("questionCode");
+
+		PCM pcm = beUtils.getPCM(PCM.PCM_FORM_EDIT);
+		pcm.setQuestionCode(questionCode);
+		
+		return pcm.getQuestionCode();
+	}
+
 	public String getDEFPrefix(String definitionCode) {
 
 		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
@@ -181,14 +194,6 @@ public class BaseEntityService {
 
 	public String getBaseEntityQuestionGroup(String targetCode) {
 		return qwandaUtils.getEditQuestionGroups(targetCode)[0];
-		// BaseEntity target = beUtils.getBaseEntity(targetCode);
-		// BaseEntity definition = defUtils.getDEF(target);
-
-		// if (definition == null) {
-		// 	throw new NullParameterException("DEF:" + targetCode);
-		// }
-
-		// return CommonUtils.replacePrefix(definition.getCode(), "QUE");
 	}
 
 	/**

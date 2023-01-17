@@ -39,6 +39,11 @@ public class PCM extends BaseEntity {
 	public static final String PCM_SBE_ADD_SEARCH = "PCM_SBE_ADD_SEARCH";
 	public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
 
+
+	// edit
+	public static final String PCM_FORM_EDIT = "PCM_FORM_EDIT";
+	public static final String PCM_EDIT = "PCM_EDIT";
+
 	public PCM(String code, String name) {
 		super(code, name);
 	}
