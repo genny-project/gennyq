@@ -11,6 +11,9 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
@@ -23,11 +26,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class TaskService {
@@ -278,6 +276,12 @@ public class TaskService {
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 
+		//check duplicate records
+		if (!processAnswers.checkUniqueness(processData)) {
+			disableButtons(processData);
+			return processData;
+		}
+
 		// send data to FE
 		dispatch.sendData(msg);
 
@@ -339,4 +343,20 @@ public class TaskService {
 		navigationService.redirect();
 	}
 
+	public void disableButtons(ProcessData processData) {
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+
+		for (String event : Dispatch.BUTTON_EVENTS) {
+			Ask evt = flatMapOfAsks.get(event);
+			if (evt != null)
+				evt.setDisabled(true);
+		}
+
+		QDataAskMessage msg = new QDataAskMessage(asks);
+		msg.setReplace(true);
+		msg.setToken(userToken.getToken());
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
 }
