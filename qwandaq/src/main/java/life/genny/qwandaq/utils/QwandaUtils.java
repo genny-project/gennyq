@@ -786,7 +786,7 @@ public class QwandaUtils {
 	 * @return Ask
 	 */
 	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
-
+		new Exception("watch").printStackTrace();
 		// grab def entity
 		Definition definition = defUtils.getDEF(baseEntity);
 
