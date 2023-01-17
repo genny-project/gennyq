@@ -172,6 +172,19 @@ public class DefUtils {
 	}
 
 	/**
+	 * Find the corresponding definition for a given {@link BaseEntity} code.
+	 *
+	 * @param baseEntityCode The {@link BaseEntity} code to check
+	 * @return BaseEntity The corresponding definition {@link BaseEntity}
+	 */
+	public Definition getDEF(final String baseEntityCode) {
+		if(baseEntityCode == null)
+			throw new NullParameterException(baseEntityCode);
+		BaseEntity target = beUtils.getBaseEntity(baseEntityCode);
+		return getDEF(target);
+	}
+
+	/**
 	 * A function to determine the whether or not an attribute is allowed to be
 	 * saved to a {@link BaseEntity}.
 	 *
