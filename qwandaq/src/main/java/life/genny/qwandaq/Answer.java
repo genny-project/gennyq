@@ -452,7 +452,7 @@ public class Answer {
 	 */
 	public Answer(final Ask aAsk, final String value) throws BadDataException {
 		this.askId = aAsk.getId();
-		this.attributeCode = aAsk.getQuestion().getAttribute().getCode();
+		this.attributeCode = aAsk.getQuestion().getAttributeCode();
 		this.hAttribute = aAsk.getQuestion().getAttribute().toHAttribute();
 		this.attribute = aAsk.getQuestion().getAttribute();
 		this.sourceCode = aAsk.getSourceCode();

@@ -272,7 +272,7 @@ public class SearchUtils {
 		// setup dropdown message and assign data
 		QEventDropdownMessage msg = new QEventDropdownMessage();
 		msg.setData(messageData);
-		msg.setAttributeCode(ask.getQuestion().getAttribute().getCode());
+		msg.setAttributeCode(ask.getQuestion().getAttributeCode());
 
 		// publish to events for dropkick
 		msg.setToken(userToken.getToken());

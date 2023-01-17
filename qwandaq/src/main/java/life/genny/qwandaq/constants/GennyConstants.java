@@ -43,5 +43,24 @@ public final class GennyConstants {
 
     public static final String ERROR_FALLBACK_MSG = "Error Occurred!";
 
+	// ================================== DATA TYPES =============================================
+	public static final String JAVA_LANG_INTEGER = "java.lang.Integer";
+	public static final String INTEGER = "Integer";
+	public static final String JAVA_TIME_LOCAL_DATE_TIME = "java.time.LocalDateTime";
+	public static final String LOCAL_DATE_TIME = "LocalDateTime";
+	public static final String JAVA_TIME_LOCAL_TIME = "java.time.LocalTime";
+	public static final String LOCAL_TIME = "LocalTime";
+	public static final String JAVA_LANG_LONG = "java.lang.Long";
+	public static final String LONG = "Long";
+	public static final String JAVA_LANG_DOUBLE = "java.lang.Double";
+	public static final String DOUBLE = "Double";
+	public static final String JAVA_LANG_BOOLEAN = "java.lang.Boolean";
+	public static final String BOOLEAN = "Boolean";
+	public static final String JAVA_TIME_LOCAL_DATE = "java.time.LocalDate";
+	public static final String LOCAL_DATE = "LocalDate";
+	public static final String ORG_JAVAMONEY_MONETA_MONEY = "org.javamoney.moneta.Money";
+	public static final String MONEY = "Money";
+	public static final String JAVA_LANG_STRING = "java.lang.String";
+	// =====================================================================================================
 }
 

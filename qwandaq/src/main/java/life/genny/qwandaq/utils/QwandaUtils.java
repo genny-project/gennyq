@@ -87,6 +87,9 @@ public class QwandaUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	QuestionUtils questionUtils;
+
+	@Inject
 	CacheManager cm;
 
 	@Inject
@@ -254,7 +257,8 @@ public class QwandaUtils {
 		// find the question in the database
 		Question question;
 		try {
-			question = databaseUtils.findQuestionByCode(productCode, code);
+			BaseEntity questionBE = beUtils.getBaseEntity(productCode, code);
+			question = questionUtils.getQuestionFromBaseEntity(questionBE, questionBE.getBaseEntityAttributes());
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);
 		}
@@ -296,7 +300,7 @@ public class QwandaUtils {
 		}
 
 		// check if it is a question group
-		if (question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
+		if (StringUtils.isNotEmpty(question.getAttributeCode()) && question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
 
 			log.info("[*] Parent Question: " + question.getCode());
 			// groups always readonly
@@ -396,7 +400,7 @@ public class QwandaUtils {
 			if (ask.hasChildren())
 				buildAskFlatMap(map, ask.getChildAsks());
 			else
-				map.put(ask.getQuestion().getAttribute().getCode(), ask);
+				map.put(ask.getQuestion().getAttributeCode(), ask);
 		}
 
 		return map;
@@ -458,7 +462,7 @@ public class QwandaUtils {
 		// iterate asks to see if mandatorys are answered
 		for (Ask ask : map.values()) {
 
-			String attributeCode = ask.getQuestion().getAttribute().getCode();
+			String attributeCode = ask.getQuestion().getAttributeCode();
 			if (!attributeCodeMeetsBasicRequirements(attributeCode)) {
 				continue;
 			}
@@ -491,7 +495,7 @@ public class QwandaUtils {
 	public Map<String, Boolean> recursivelyFillMandatoryMap(Map<String, Boolean> map, Ask ask) {
 
 		// add current ask attribute code to map
-		map.put(ask.getQuestion().getAttribute().getCode(), ask.getMandatory());
+		map.put(ask.getQuestion().getAttributeCode(), ask.getMandatory());
 		// ensure child asks is not null
 		if (ask.getChildAsks() == null)
 			return map;
@@ -511,7 +515,7 @@ public class QwandaUtils {
 	 */
 	public Set<Ask> recursivelyFillFlatSet(Set<Ask> set, Ask ask) {
 
-		String code = ask.getQuestion().getAttribute().getCode();
+		String code = ask.getQuestion().getAttributeCode();
 		// add current ask attribute code to map
 		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
 			log.debugf("Prefix %s not in accepted list", code.substring(0, 4));

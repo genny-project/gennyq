@@ -97,14 +97,32 @@ public class BaseEntityAttributeUtils {
 	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
 	 */
     public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-        List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
-        cm.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).parallelStream()
-                .map((baseEntityAttribute) -> (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity())
-                .forEach((ea) -> {
-					Attribute attribute = cm.getAttribute(productCode, ea.getAttributeCode());
-					ea.setAttribute(attribute);
+        return getAllEntityAttributesForBaseEntity(productCode, baseEntityCode, true);
+    }
+
+	/**
+	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
+	 *
+	 * @param productCode The productCode to use
+	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttributes to fetch
+	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
+	 */
+	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode, boolean embedAttribute) {
+		List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
+		cm.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).stream()
+				.map((baseEntityAttribute) -> (EntityAttribute) baseEntityAttribute.toPersistableCoreEntity())
+				.forEach((ea) -> {
+					if(embedAttribute) {
+						Attribute attribute = cm.getAttribute(productCode, ea.getAttributeCode());
+						if (attribute == null) {
+							log.debugf("Attribute not found for BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
+							throw new ItemNotFoundException(productCode, ea.getAttributeCode());
+						}
+						log.debugf("Attribute embedded into BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
+						ea.setAttribute(attribute);
+					}
 					baseEntityAttributes.add(ea);
 				});
-        return baseEntityAttributes;
-    }
+		return baseEntityAttributes;
+	}
 }

@@ -355,11 +355,11 @@ public class Dispatch {
 		}
 
 		// check for dropdown attribute
-		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
+		if (ask.getQuestion().getAttributeCode().startsWith(Prefix.LNK)) {
 
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
-					ask.getQuestion().getAttribute().getCode());
+					ask.getQuestion().getAttributeCode());
 
 			if (codes == null || codes.isEmpty())
 				sendDropdownItems(ask, target, parentCode);

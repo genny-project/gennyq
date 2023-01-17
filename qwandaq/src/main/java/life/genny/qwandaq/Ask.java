@@ -189,7 +189,7 @@ public class Ask extends CoreEntity {
 	public void setQuestion(Question question) {
 		this.question = question;
 		this.questionCode = question.getCode();
-		this.attributeCode = question.getAttribute().getCode();
+		this.attributeCode = question.getAttributeCode();
 	}
 
 	public String getQuestionCode() {

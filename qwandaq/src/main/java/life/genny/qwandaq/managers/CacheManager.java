@@ -15,6 +15,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.entity.search.SearchEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
@@ -380,8 +381,7 @@ public class CacheManager {
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(productCode, questionCode);
 		log.info("Question BaseEntity Code = " + baseEntity.getCode());
 		// fetch attributes and convert to question
-		Set<BaseEntityAttribute> attributes = new HashSet<>(getAllBaseEntityAttributesForBaseEntity(productCode, questionCode));
-		Question question = questionUtils.getQuestionFromBaseEntity(baseEntity, attributes);
+		Question question = questionUtils.getQuestionFromBaseEntity(baseEntity, baseEntity.getBaseEntityAttributes());
 		log.info("Question Code = " + question.getCode());
 		// ensure attribute field is non null
 		Attribute attribute = getAttribute(productCode, question.getAttributeCode());
@@ -409,8 +409,11 @@ public class CacheManager {
 		// begin building QQ objects
 		List<QuestionQuestion> questionQuestions = new LinkedList<>();
 		for (BaseEntityAttribute entityAttribute : queryResult.list()) {
-			log.info("Fetching QuesQues -> " + entityAttribute.getBaseEntityCode());
-			String childCode = entityAttribute.getBaseEntityCode().split("|")[1];
+			String baseEntityCode = entityAttribute.getBaseEntityCode();
+			log.debug("Fetching QuesQues -> " + baseEntityCode);
+			String[] codes = StringUtils.split(baseEntityCode, '|');
+			String childCode = codes[1];
+			log.debug("Fetching question for child code -> " + childCode);
 			Question child = getQuestion(productCode, childCode);
 			QuestionQuestion questionQuestion = new QuestionQuestion(parent, child);
 			questionQuestions.add(questionQuestion);
@@ -444,6 +447,5 @@ public class CacheManager {
 			cache.putEntityIntoCache(CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
 		});
 	}
-
 }
 

@@ -8,6 +8,7 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.session.bridge.BridgeSwitch;
 import life.genny.serviceq.live.data.InternalProducer;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
@@ -43,7 +44,7 @@ public class KafkaBean implements KafkaInterface {
 
 		if (topic == null)
 			throw new NullParameterException("channel");
-		if (payload == null)
+		if (StringUtils.isEmpty(payload))
 			throw new NullParameterException("payload");
 
 		// find GennyToken from payload contents

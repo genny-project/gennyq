@@ -82,7 +82,7 @@ public class RoleManager extends Manager {
 		BaseEntity role = null;
 		roleCode = cleanRoleCode(roleCode);
 		try {
-			role = dbUtils.findBaseEntityByCode(productCode, roleCode);
+			role = beUtils.getBaseEntity(productCode, roleCode);
 		} catch(NoResultException e) {
 			role = new BaseEntity(roleCode, roleName);
 			role.setRealm(productCode);

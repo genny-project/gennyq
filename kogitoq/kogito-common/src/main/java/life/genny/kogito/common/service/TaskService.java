@@ -154,7 +154,7 @@ public class TaskService {
 		processData.setAttributeCodes(
 			flatMapOfAsks.values().stream()
 					.filter(ask -> !ask.getReadonly())
-					.map(ask -> ask.getQuestion().getAttribute().getCode())
+					.map(ask -> ask.getQuestion().getAttributeCode())
 					.filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
 					.collect(Collectors.toList())
 		);

@@ -155,10 +155,18 @@ public class BaseEntityUtils {
 		}
 		// fetch entity attributes
 		if (bundleAttributes) {
-			beaUtils.getAllEntityAttributesForBaseEntity(productCode, code).parallelStream() .forEach(bea -> {
-				baseEntity.getBaseEntityAttributes().add(bea);
-			});
-			log.debugf("Added %s BaseEntityAttributes to BE.", baseEntity.getBaseEntityAttributes().size());
+			List<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code);
+			if(entityAttributesForBaseEntity.isEmpty()) {
+				log.errorf("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
+				throw new ItemNotFoundException();
+			} else {
+				log.debugf("%s BaseEntityAttributes found for base entity [%s:%s]. Setting them to BE...", entityAttributesForBaseEntity.size(), productCode, code);
+			}
+			baseEntity.setBaseEntityAttributes(entityAttributesForBaseEntity);
+			for(EntityAttribute entityAttribute : baseEntity.getBaseEntityAttributes()) {
+				log.debugf("BaseEntityAttribute found in base entity [%s:%s:%s].", entityAttribute.getRealm(), entityAttribute.getBaseEntityCode(), entityAttribute.getAttributeCode());
+			}
+			log.debugf("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributes().size(), baseEntity.getRealm(), baseEntity.getCode());
 		}
 		return baseEntity;
 	}

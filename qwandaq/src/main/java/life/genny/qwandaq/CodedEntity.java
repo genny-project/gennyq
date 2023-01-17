@@ -115,7 +115,7 @@ public abstract class CodedEntity extends CoreEntity {
 		if (code == null) {
 			log.error("Null Code passed. Will result in error if saved");
 		} else {
-			this.code = code.toUpperCase();
+			this.code = code;//.toUpperCase();
 		}
 	}
 
