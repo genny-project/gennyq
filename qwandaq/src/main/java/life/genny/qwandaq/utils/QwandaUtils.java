@@ -878,6 +878,9 @@ public class QwandaUtils {
 		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_QUES);
 		if(!editQuesLnk.isPresent()) {
 			log.warn("Could not find LNK_EDIT_QUES in " + baseEntity.getCode() + ". Defaulting to QUE_BASEENTITY_GRP");
+			CommonUtils.printCollection(baseEntity.getBaseEntityAttributes(), log::debug, (ea) -> {
+				return "	" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode() + " = " + ea.getValueString();
+			});
 			return new String[] {Question.QUE_BASEENTITY_GRP};
 		}
 		
