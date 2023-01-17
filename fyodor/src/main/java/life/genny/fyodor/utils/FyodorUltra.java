@@ -148,6 +148,7 @@ public class FyodorUltra {
 		if (!CapHandler.hasSecureToken(userToken)) {
 			Map<String, Object> ctxMap = new HashMap<>();
 			ctxMap.put("SOURCE", beUtils.getUserBaseEntity());
+			ctxMap.put("USER", beUtils.getUserBaseEntity());
 			List<ClauseContainer> filters = searchEntity.getClauseContainers();
 			filters.stream()
 				.filter(f -> f.getFilter() != null && f.getFilter().getC() == String.class)
