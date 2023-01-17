@@ -164,6 +164,9 @@ public class Attribute extends CodedEntity {
 	public static final String LNK_QUICK_SEARCH = "LNK_QUICK_SEARCH";
 	public static final String LNK_SAVED_SEARCH = "LNK_SAVED_SEARCH";
 
+	// edit
+	public static final String LNK_EDIT_QUES = "LNK_EDIT_QUES";
+
 	@Embedded
 	@NotNull
 	public DataType dataType;

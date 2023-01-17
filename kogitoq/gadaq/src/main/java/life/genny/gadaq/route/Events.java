@@ -29,6 +29,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.gadaq.search.FilterGroupService;
 
 /**
@@ -54,8 +55,12 @@ public class Events {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
 	@Inject
 	GraphQLUtils gqlUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	NavigationService navigation;
@@ -187,11 +192,14 @@ public class Events {
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
-		if (ACT_EDIT.equals(code) && parentCode.startsWith(Prefix.SBE)) {
+		
+		if (ACT_EDIT.equals(code)) {
 
 			if (parentCode.startsWith("SBE_")) {
+				String[] questionCodes = qwandaUtils.getEditQuestionGroups(msg.getData().getTargetCode());
+				
 				JsonObject payload = Json.createObjectBuilder()
-						.add("questionCode", "QUE_BASEENTITY_GRP")
+						.add("questionCode", questionCodes[0])
 						.add("userCode", userToken.getUserCode())
 						.add("sourceCode", userToken.getUserCode())
 						.add("targetCode", msg.getData().getTargetCode())
@@ -199,9 +207,6 @@ public class Events {
 				kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
 				return;
 			}
-
-			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
-			return;
 		}
 
 		/**
