@@ -167,6 +167,8 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 	}
 
+	 // Honestly Kogito got me good on this one
+	 // TODO: Figure out why these need to be swapped
 	public String setPcmQuestionCode(String PCMCode, String questionCode) {
 		if(StringUtils.isBlank(PCMCode))
 			throw new NullParameterException("PCMCode");
@@ -174,8 +176,8 @@ public class BaseEntityService {
 			throw new NullParameterException("questionCode");
 
 		log.info("Setting questionCode of PCM: " + PCMCode + " to " + questionCode);
-		PCM pcm = beUtils.getPCM(PCM.PCM_FORM_EDIT);
-		pcm.setQuestionCode(questionCode);
+		PCM pcm = beUtils.getPCM(questionCode);
+		pcm.setQuestionCode(PCMCode);
 		
 		return pcm.getQuestionCode();
 	}
