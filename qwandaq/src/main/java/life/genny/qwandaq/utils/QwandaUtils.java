@@ -884,10 +884,13 @@ public class QwandaUtils {
 			return new String[] {Question.QUE_BASEENTITY_GRP};
 		}
 		
+		log.debug("FOUND LNK_EDIT_QUES");
+
 		String editQues = editQuesLnk.get().getValueString();
 		if(!StringUtils.isBlank(editQues))
 			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
 		
+		log.warn("Edit ques was blank. Defaulting to QUE_BASEENTITY_GRP");
 		return new String[] {Question.QUE_BASEENTITY_GRP};
 	}
 
