@@ -146,18 +146,15 @@ public class FyodorUltra {
 		capHandler.refineSearchFromCapabilities(searchEntity);
 
 		if (!CapHandler.hasSecureToken(userToken)) {
-			log.info("Mail merging!");
 			Map<String, Object> ctxMap = new HashMap<>();
-			ctxMap.put("USER_CODE", beUtils.getUserBaseEntity().getCode());
+			ctxMap.put("SOURCE", beUtils.getUserBaseEntity());
 			List<ClauseContainer> filters = searchEntity.getClauseContainers();
 			filters.stream()
 				.filter(f -> f.getFilter() != null && f.getFilter().getC() == String.class)
 				.peek(f -> log.info(f.getFilter().getValue()))
 				.forEach(f -> {
-					log.info("Attempting to merge on " + f.getFilter().getValue());
-					// TODO: Make MergeUtils better
-					if("USER_CODE".equals(f.getFilter().getValue()))
-						f.getFilter().setValue(ctxMap.get("USER_CODE"));
+					String value = MergeUtils.merge((String) f.getFilter().getValue(), ctxMap);
+					f.getFilter().setValue(value);
 			});
 		}
 
