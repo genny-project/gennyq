@@ -846,9 +846,13 @@ public class QwandaUtils {
 		if(baseEntityCode == null)
 			throw new NullParameterException("baseEntityCode");
 		// ensure def
-		baseEntityCode = CommonUtils.substitutePrefix(baseEntityCode, Prefix.DEF);
 		log.info("[!] Attempting to retrieve edit question groups from base entity: " + baseEntityCode);
-		BaseEntity baseEntity = beUtils.getDefinition(baseEntityCode);
+		Definition baseEntity = beUtils.getDefinition(baseEntityCode);
+		if(baseEntity == null) {
+			log.error("Could not find Definition of be: " + baseEntityCode);
+		} else {
+			log.info("Found: " + baseEntity.getCode());
+		}
 
 		return getEditQuestionGroups(baseEntity);
 	}
