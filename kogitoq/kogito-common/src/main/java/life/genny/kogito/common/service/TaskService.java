@@ -205,11 +205,21 @@ public class TaskService {
 
 		// remove previous answers for this attribute
 		List<Answer> answers = processData.getAnswers();
+		for (int i = 0; i < answers.size();) {
+			Answer a = answers.get(i);
+			if (a.getAttributeCode().equals(answer.getAttributeCode())) {
+				log.info("Found duplicate : " + a.getAttributeCode());
+				answers.remove(i);
+			} else {
+				i++;
+			}
+		}
 		answers = answers.stream()
 				.filter(a -> !a.getAttributeCode().equals(answer.getAttributeCode()))
 				.collect(Collectors.toList());
 		// add new answer
 		answers.add(answer);
+		processData.setAnswers(answers);
 
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
