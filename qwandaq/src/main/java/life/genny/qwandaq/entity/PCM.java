@@ -50,7 +50,6 @@ public class PCM extends BaseEntity {
 		// pcm.setRealm(entity.getRealm());
 		// pcm.setBaseEntityAttributes(entity.getBaseEntityAttributes());
 		entity.decorate(pcm);
-		new Exception("watch").printStackTrace();
 		System.out.println("DECORATED: " + pcm.getCode() + " with entity: " + entity.getCode());
 		entity.printRequirements(System.out::println);
 		return pcm;
