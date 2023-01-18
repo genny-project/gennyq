@@ -282,7 +282,7 @@ public class Dispatch {
 		// ensure these don't go out to frontend
 		for(EntityAttribute badlocation : filteredLocations) {
 			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
-			locations.removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
+			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
 		}
 		// locations.removeAll(filteredLocations);
 
