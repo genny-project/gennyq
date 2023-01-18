@@ -207,7 +207,8 @@ public class TaskService {
 		List<Answer> answers = processData.getAnswers();
 		for (int i = 0; i < answers.size();) {
 			Answer a = answers.get(i);
-			if (a.getAttributeCode().equals(answer.getAttributeCode())) {
+			if (a.getAttributeCode().equals(answer.getAttributeCode()) 
+				&& a.getTargetCode().equals(answer.getTargetCode())) {
 				log.info("Found duplicate : " + a.getAttributeCode());
 				answers.remove(i);
 			} else {
