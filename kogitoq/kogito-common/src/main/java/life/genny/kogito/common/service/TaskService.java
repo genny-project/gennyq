@@ -28,6 +28,9 @@ import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
 public class TaskService {
@@ -278,6 +281,12 @@ public class TaskService {
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 
+		//check duplicate records
+		if (!processAnswers.checkUniqueness(processData)) {
+			disableButtons(processData);
+			return processData;
+		}
+
 		// send data to FE
 		dispatch.sendData(msg);
 
@@ -339,4 +348,24 @@ public class TaskService {
 		navigationService.redirect();
 	}
 
+	/**
+	 * Disable buttons if it is not valid data
+	 * @param processData Process Data
+	 */
+	public void disableButtons(ProcessData processData) {
+		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+
+		for (String event : Dispatch.BUTTON_EVENTS) {
+			Ask evt = flatMapOfAsks.get(event);
+			if (evt != null)
+				evt.setDisabled(true);
+		}
+
+		QDataAskMessage msg = new QDataAskMessage(asks);
+		msg.setReplace(true);
+		msg.setToken(userToken.getToken());
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
 }
