@@ -11,9 +11,6 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
@@ -26,6 +23,14 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
 public class TaskService {
@@ -143,7 +148,7 @@ public class TaskService {
 	 * @return
 	 */
 	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
-			String pcmCode, String parent, String location, String buttonEvents) {
+									String pcmCode, String parent, String location, String buttonEvents) {
 
 		log.info("Dispatching...");
 
@@ -220,10 +225,10 @@ public class TaskService {
 
 		// perform basic checks on attribute codes
 		processData.setAttributeCodes(
-			flatMapOfAsks.values().stream()
-					.map(ask -> ask.getQuestion().getAttribute().getCode())
-					.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
-					.collect(Collectors.toList())
+				flatMapOfAsks.values().stream()
+						.map(ask -> ask.getQuestion().getAttribute().getCode())
+						.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
+						.collect(Collectors.toList())
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 

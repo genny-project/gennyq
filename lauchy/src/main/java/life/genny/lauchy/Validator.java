@@ -180,18 +180,6 @@ public class Validator {
 			Definition definition = beUtils.getDefinition(code);
 			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
-//			if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
-//				if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
-//					log.error("Duplicate answer detected for target " + answer.getTargetCode());
-//					String feedback = "Error: This value already exists and must be unique.";
-//
-//					String parentCode = processData.getQuestionCode();
-//					String questionCode = answer.getCode();
-//
-//					qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-//					return false;
-//				}
-//			}
 			// check attribute code is allowed by target DEF
 			if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {
 				log.warn("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
