@@ -18,6 +18,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -276,7 +277,7 @@ public class Dispatch {
 			}
 		}
 		
-		if (!Question.QUE_EVENTS.equals(questionCode) && questionCode != null) {
+		if (!Question.QUE_EVENTS.equals(questionCode) && !StringUtils.isBlank(questionCode)) {
 			// add ask to bulk message
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
