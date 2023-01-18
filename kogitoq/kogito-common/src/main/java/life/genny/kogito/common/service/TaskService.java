@@ -203,7 +203,13 @@ public class TaskService {
 		if (!processAnswers.isValid(answer, processData))
 			return processData;
 
-		processData.getAnswers().add(answer);
+		// remove previous answers for this attribute
+		List<Answer> answers = processData.getAnswers();
+		answers = answers.stream()
+				.filter(a -> a.getAttributeCode() != answer.getAttributeCode())
+				.collect(Collectors.toList());
+		// add new answer
+		answers.add(answer);
 
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
