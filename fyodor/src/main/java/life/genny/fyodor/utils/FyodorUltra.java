@@ -755,10 +755,10 @@ public class FyodorUltra {
 			value = entity.getCode();
 		} else {
 			Optional<EntityAttribute> ea = entity.findEntityAttribute(attributeCode);
-			if (ea.isPresent())
-				value = ea.get().getAsString();
-			else
+			if (ea.isEmpty()) {
 				return null;
+			}
+			value = ea.get().getAsString();
 		}
 
 		// create answer
