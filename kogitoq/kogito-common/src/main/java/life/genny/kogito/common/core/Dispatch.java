@@ -90,6 +90,8 @@ public class Dispatch {
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
 		PCM pcm = beUtils.getPCM(processData.getPcmCode());
+		log.debug("[!] ======================= requirements for: " + pcm.getCode() + " =======================");
+		pcm.printRequirements();
 		// ensure target codes match
 		pcm.setTargetCode(targetCode);
 		QBulkMessage msg = new QBulkMessage();
@@ -226,6 +228,8 @@ public class Dispatch {
 			QBulkMessage msg, ProcessData processData) {
 		// check capability requirements are met
 		log.debug("Traversing " + pcm.getCode());
+		log.debug("[!] ======================= requirements for: " + pcm.getCode() + " =======================");
+		pcm.printRequirements();
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
