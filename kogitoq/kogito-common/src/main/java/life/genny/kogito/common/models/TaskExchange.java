@@ -8,6 +8,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * Represents an exchange of information between services for Task processing.
+ * <p>
+ * The state of the completion enum will depend on the nature of the 
+ * task completion in ProcessQuestions. If the value is CUSTOM, then 
+ * a completionCode is provided to assist in further narrowing down 
+ * the kind of event that triggered completion.
+ *
+ * @author Adam Crow
+ * @author Jasper Robison
  */
 public class TaskExchange implements Serializable {
 
