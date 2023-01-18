@@ -737,7 +737,6 @@ public class FyodorUltra {
 		String[] array = code.split("__");
 		String attributeCode = array[0];
 		code = Stream.of(array).skip(1).collect(Collectors.joining("__"));
-		log.info(code);
 
 		// recursion
 		if (array.length > 1) {
@@ -750,12 +749,11 @@ public class FyodorUltra {
 
 		// find value
 		String value;
-		if (Attribute.PRI_NAME.equals(attributeCode))
-			log.info("Entity name = " + entity.getName());
+		if (Attribute.PRI_NAME.equals(attributeCode)) {
 			value = entity.getName();
-		if (Attribute.PRI_CODE.equals(attributeCode))
+		} else if (Attribute.PRI_CODE.equals(attributeCode)) {
 			value = entity.getCode();
-		else {
+		} else {
 			Optional<EntityAttribute> ea = entity.findEntityAttribute(attributeCode);
 			if (ea.isPresent())
 				value = ea.get().getAsString();
