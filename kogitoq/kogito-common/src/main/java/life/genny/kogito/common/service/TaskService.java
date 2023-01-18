@@ -206,7 +206,7 @@ public class TaskService {
 		processData.getAnswers().add(answer);
 
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
@@ -227,11 +227,11 @@ public class TaskService {
 	public Boolean submit(ProcessData processData) {
 		// construct bulk message
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
+		if (!QwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
 			return false;
 
 		// check uniqueness in answers

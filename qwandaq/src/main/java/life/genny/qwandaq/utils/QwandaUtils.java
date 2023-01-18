@@ -620,19 +620,19 @@ public class QwandaUtils {
 		// add an entityAttribute to process entity for each attribute
 		for (String code : attributeCodes) {
 
-			// check for existing attribute in target
-			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
-				// otherwise create new attribute
-				Attribute attribute = getAttribute(code);
-				return new EntityAttribute(processEntity, attribute, 1.0, null);
-			});
-
-			Attribute attribute = ea.getAttribute();
-			String className = attribute.getDataType().getClassName();
-			Object value = ea.getValue();
-
-			if (value == null && className.contains("Boolean") || className.contains("bool")) 
-				ea.setValue(false);
+			// TODO: Find a better way to ensure PRI_NAME is never created as an actual EntityAttribute
+			EntityAttribute ea;
+			if (Attribute.PRI_NAME.equals(code)) {
+				Attribute priName = getAttribute(Attribute.PRI_NAME);
+				ea = new EntityAttribute(processEntity, priName, 1.0, target.getName());
+			} else {
+				// check for existing attribute in target
+				ea = target.findEntityAttribute(code).orElseGet(() -> {
+					// otherwise create new attribute
+					Attribute attribute = getAttribute(code);
+					return new EntityAttribute(processEntity, attribute, 1.0, null);
+				});
+			}
 
 			processEntity.addAttribute(ea);
 		}
