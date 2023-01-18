@@ -118,5 +118,4 @@ public class PCM extends BaseEntity {
 	public String getTargetCode() {
 		return getValueAsString(Attribute.PRI_TARGET_CODE);
 	}
-
 }

@@ -258,14 +258,13 @@ public class Dispatch {
 			return;
 		}
 
-		// add pcm for sending
-		msg.add(pcm);
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
+		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
 			if(!entityAttribute.requirementsMet(userCapabilities)) {
 				log.warn("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
-				continue;
+				filteredLocations.add(entityAttribute);
 			}
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 			// recursively check PCM fields
@@ -278,6 +277,12 @@ public class Dispatch {
 				continue;
 			}
 		}
+
+		// ensure these don't go out to frontend
+		locations.removeAll(filteredLocations);
+
+		// add pcm for sending
+		msg.add(pcm);
 
 		// check for a question code
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
