@@ -63,6 +63,11 @@ public class CommonUtils {
     }
 
     public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+        if(collection == null) {
+            logCallback.log("Could not find collection");
+            new Exception("stack trace exception").getCause().printStackTrace();
+            return;
+        }
         for(T item : collection) {
             logCallback.log(logLine.getString(item));
         }

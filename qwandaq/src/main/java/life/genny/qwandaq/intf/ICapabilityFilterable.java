@@ -99,6 +99,7 @@ public interface ICapabilityFilterable {
     public default void printRequirements(FILogCallback logLevel) {
         if(getCapabilityRequirements() == null || getCapabilityRequirements().size() == 0) {
             logLevel.log("No requirements found to print!");
+            return;
         }
         CommonUtils.printCollection(getCapabilityRequirements(), logLevel, (req) -> {
             return new StringBuilder("  - ")
