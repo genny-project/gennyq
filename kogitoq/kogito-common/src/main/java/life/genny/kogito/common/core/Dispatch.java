@@ -265,8 +265,8 @@ public class Dispatch {
 			if(!entityAttribute.requirementsMet(userCapabilities)) {
 				log.warn("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
 				filteredLocations.add(entityAttribute);
-			}
-			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
+			} else
+				log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
@@ -279,7 +279,11 @@ public class Dispatch {
 		}
 
 		// ensure these don't go out to frontend
-		locations.removeAll(filteredLocations);
+		for(EntityAttribute badlocation : filteredLocations) {
+			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
+			locations.remove(badlocation);
+		}
+		// locations.removeAll(filteredLocations);
 
 		// add pcm for sending
 		msg.add(pcm);
