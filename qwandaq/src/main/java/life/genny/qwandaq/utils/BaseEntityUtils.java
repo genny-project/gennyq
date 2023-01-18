@@ -574,7 +574,7 @@ public class BaseEntityUtils {
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity create(final Definition definition, String name) {
-		return create(definition, name, null);
+		return create(definition, "", null);
 	}
 
 	/**
