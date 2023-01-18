@@ -595,19 +595,18 @@ public class BaseEntityUtils {
 		BaseEntity item = null;
 		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 
-		if (uuidEA.isPresent())
+		if (uuidEA.isPresent()) {
 			item = createUser(definition);
-		else {
+		} else {
 			String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
-			if (StringUtils.isBlank(prefix))
+			if (StringUtils.isBlank(prefix)) {
 				throw new DefinitionException("No prefix set for the def: " + definition.getCode());
-
-			if (StringUtils.isBlank(code))
+			}
+			if (StringUtils.isBlank(code)) {
 				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
-			if (StringUtils.isBlank(name))
-				name = definition.getName();
+			}
 
-			item = new BaseEntity(code.toUpperCase(), name);
+			item = new BaseEntity(code.toUpperCase(), null);
 			item.setRealm(definition.getRealm());
 		}
 
@@ -682,9 +681,8 @@ public class BaseEntityUtils {
 		if (optCode.isEmpty())
 			throw new DebugException("Prefix not provided" + definition.getCode());
 
-		String name = definition.getName();
 		String code = optCode.get() + "_" + uuid.toUpperCase();
-		BaseEntity item = new BaseEntity(code, name);
+		BaseEntity item = new BaseEntity(code, null);
 		item.setRealm(userToken.getProductCode());
 
 		// add email and username
