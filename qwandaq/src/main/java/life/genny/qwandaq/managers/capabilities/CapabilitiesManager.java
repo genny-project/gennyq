@@ -234,6 +234,12 @@ public class CapabilitiesManager extends Manager {
 		return targetBe;
 	}
 
+	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, String capabilityCode) {
+		capabilityCode = cleanCapabilityCode(capabilityCode);
+		Attribute attr = qwandaUtils.getAttribute(productCode, capabilityCode);
+		return removeCapabilityFromBaseEntity(productCode, targetBe, attr);
+	}
+
 	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
 		if (capabilityAttribute == null) {
 			throw new ItemNotFoundException(productCode, "Capability Attribute");
