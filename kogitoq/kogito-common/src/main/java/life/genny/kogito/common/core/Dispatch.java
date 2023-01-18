@@ -266,16 +266,16 @@ public class Dispatch {
 				log.warn("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
 				filteredLocations.add(entityAttribute);
 				continue;
-			} else
-				log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
+			}
+			
+			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
+			
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
 				traversePCM(userCapabilities, value, source, target, msg, processData);
-				continue;
 			} else if (value.startsWith(Prefix.SBE)) {
 				processData.getSearches().add(value);
-				continue;
 			}
 		}
 
@@ -287,6 +287,9 @@ public class Dispatch {
 		// locations.removeAll(filteredLocations);
 
 		// add pcm for sending
+		CommonUtils.printCollection(pcm.getBaseEntityAttributes(), (ea) -> {
+			return "	 - " + ea.getBaseEntityCode() + ":" + ea.getAttributeCode() + " = " + ea.getValueString();
+		});
 		msg.add(pcm);
 
 		// check for a question code
