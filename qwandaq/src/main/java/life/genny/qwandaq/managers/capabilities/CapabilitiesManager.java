@@ -14,8 +14,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.jboss.logging.Logger;
-
+import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
@@ -36,13 +35,11 @@ import life.genny.qwandaq.utils.CommonUtils;
 /*
  * A non-static utility class for managing roles and capabilities.
  * 
- * @author Adam Crow
  * @author Jasper Robison
  * @author Bryn Meachem
  */
 @ApplicationScoped
 public class CapabilitiesManager extends Manager {
-	protected static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
 	@Inject
 	private RoleManager roleMan;
@@ -70,13 +67,13 @@ public class CapabilitiesManager extends Manager {
 // this is a necessary log, since we are trying to minimize how often this
 		// function is called
 		// it is good to see how often it comes up
-		debug("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
+		log.debug("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		List<BaseEntity> roles = roleMan.getRoles(target);
 		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
-			debug("User Roles:");
+			log.debug("User Roles:");
 			
 			BaseEntity role = roles.get(0);
 			capabilities = getEntityCapabilities(role);
@@ -134,14 +131,14 @@ public class CapabilitiesManager extends Manager {
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
-		debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
+		log.debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
 		}
 		CapabilitySet cSet = new CapabilitySet(target);
 		cSet.addAll(capabilities.stream()
 			.map((EntityAttribute ea) -> {
-				trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
+				log.trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
 				return Capability.getFromEA(ea);
 			})
 			.collect(Collectors.toSet()));
@@ -234,6 +231,16 @@ public class CapabilitiesManager extends Manager {
 		// }
 
 		updateCapability(productCode, targetBe, capabilityAttribute, modes);
+		return targetBe;
+	}
+
+	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
+		if (capabilityAttribute == null) {
+			throw new ItemNotFoundException(productCode, "Capability Attribute");
+		}
+
+		Answer answer = new Answer(targetBe, targetBe, capabilityAttribute, "[]");
+		qwandaUtils.saveAnswer(answer);
 		return targetBe;
 	}
 
