@@ -276,7 +276,7 @@ public class Dispatch {
 			}
 		}
 		
-		if (!Question.QUE_EVENTS.equals(questionCode)) {
+		if (!Question.QUE_EVENTS.equals(questionCode) && questionCode != null) {
 			// add ask to bulk message
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
