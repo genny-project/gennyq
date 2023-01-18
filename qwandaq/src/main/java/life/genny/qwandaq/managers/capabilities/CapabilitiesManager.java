@@ -216,11 +216,11 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// Check the user token has required capabilities
-		if (!shouldOverride()) {
-			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
-					+ " TO BASE ENTITITY: " + targetBe.getCode());
-			return targetBe;
-		}
+		// if (!shouldOverride()) {
+		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
+		// 	return targetBe;
+		// }
 
 		// ===== Old capability check ===
 		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
