@@ -596,6 +596,7 @@ public class BaseEntityUtils {
 		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 
 		if (uuidEA.isPresent()) {
+			log.debug("Creating user base entity");
 			item = createUser(definition);
 		} else {
 			String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
@@ -671,11 +672,11 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity createUser(final Definition definition) {
 
-		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
-
 		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 		if (opt.isEmpty())
 			throw new DefinitionException("Definition is not a User definition: " + definition.getCode());
+
+		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
 
 		// generate keycloak id
 		String uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
