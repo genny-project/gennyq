@@ -257,6 +257,8 @@ public class Dispatch {
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
 		for (EntityAttribute entityAttribute : locations) {
+			if(!entityAttribute.requirementsMet(userCapabilities))
+				continue;
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
