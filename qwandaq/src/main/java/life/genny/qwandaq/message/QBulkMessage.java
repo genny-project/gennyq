@@ -27,6 +27,10 @@ public class QBulkMessage extends QMessage {
 	}
 
 	public void add(BaseEntity baseEntity) {
+		// clear cap reqs
+		baseEntity.getCapabilityRequirements().clear();
+		baseEntity.getBaseEntityAttributes().forEach(ea -> ea.getCapabilityRequirements().clear());
+		
 		this.entities.add(baseEntity);
 	}
 
