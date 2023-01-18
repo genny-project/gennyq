@@ -92,8 +92,7 @@ public class Dispatch {
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
 		PCM pcm = beUtils.getPCM(processData.getPcmCode());
-		log.debug("[!] ======================= requirements for: " + pcm.getCode() + " =======================");
-		CommonUtils.printCollection(pcm.getCapabilityRequirements() != null ? pcm.getCapabilityRequirements() : new HashSet<>());
+
 		// ensure target codes match
 		pcm.setTargetCode(targetCode);
 		QBulkMessage msg = new QBulkMessage();
@@ -106,12 +105,14 @@ public class Dispatch {
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
+
 		// generate events if specified
 		String buttonEvents = processData.getButtonEvents();
 		if (buttonEvents != null) {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
 		}
+		
 		// init if null to stop null pointers
 		if (processData.getAttributeCodes() == null) {
 			processData.setAttributeCodes(new ArrayList<String>());
