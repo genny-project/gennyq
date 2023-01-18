@@ -46,6 +46,7 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
     }
 
     public static Set<Capability> convertToEA(String dbData) {
+        System.out.println("Converting: " + dbData);
         if(StringUtils.isBlank(dbData))
             return new HashSet<>();
         Set<Capability> capSet = new HashSet<>();
