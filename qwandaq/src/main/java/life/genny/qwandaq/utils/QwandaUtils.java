@@ -631,9 +631,6 @@ public class QwandaUtils {
 			String className = attribute.getDataType().getClassName();
 			Object value = ea.getValue();
 
-			if (value == null && className.contains("Boolean") || className.contains("bool")) 
-				ea.setValue(false);
-
 			processEntity.addAttribute(ea);
 		}
 
