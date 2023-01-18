@@ -141,7 +141,6 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntity(String code) {
 		BaseEntity be = getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
-		if(be != null) be.printRequirements(log::debug);
 		return be;
 	}
 

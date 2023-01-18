@@ -261,8 +261,11 @@ public class Dispatch {
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
 		for (EntityAttribute entityAttribute : locations) {
-			if(!entityAttribute.requirementsMet(userCapabilities))
+			if(!entityAttribute.requirementsMet(userCapabilities)) {
+				log.warn("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
 				continue;
+			}
+			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
