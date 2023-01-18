@@ -606,7 +606,8 @@ public class BaseEntityUtils {
 				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
 			}
 
-			item = new BaseEntity(code.toUpperCase(), null);
+			log.info("Creating BE with code=" + code + ", name=" + name);
+			item = new BaseEntity(code.toUpperCase(), name);
 			item.setRealm(definition.getRealm());
 		}
 
