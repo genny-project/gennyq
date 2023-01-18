@@ -603,11 +603,14 @@ public class BaseEntityUtils {
 				throw new DefinitionException("No prefix set for the def: " + definition.getCode());
 			}
 			if (StringUtils.isBlank(code)) {
-				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
+				code = (prefix + "_" + UUID.randomUUID().toString().substring(0, 32)).toUpperCase();
 			}
 
 			log.info("Creating BE with code=" + code + ", name=" + name);
-			item = new BaseEntity(code.toUpperCase(), name);
+			if(StringUtils.isBlank(name)) {
+				name = code;
+			}
+			item = new BaseEntity(code, name);
 			item.setRealm(definition.getRealm());
 		}
 
