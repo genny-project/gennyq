@@ -215,9 +215,6 @@ public class TaskService {
 				i++;
 			}
 		}
-		answers = answers.stream()
-				.filter(a -> !a.getAttributeCode().equals(answer.getAttributeCode()))
-				.collect(Collectors.toList());
 		// add new answer
 		answers.add(answer);
 		processData.setAnswers(answers);
