@@ -456,7 +456,7 @@ public class DatabaseUtils {
 		}
 
 		if (existingEntity == null) {
-			log.debug("New BaseEntity being saved to DB -> " + entity.getCode());
+			log.debug("New BaseEntity being saved to DB -> " + entity.getCode() + " : " + entity.getName());
 			entityManager.persist(entity);
 		} else {
 			if (entity.getId() == null)
