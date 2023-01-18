@@ -206,7 +206,7 @@ public class TaskService {
 		// remove previous answers for this attribute
 		List<Answer> answers = processData.getAnswers();
 		answers = answers.stream()
-				.filter(a -> a.getAttributeCode() != answer.getAttributeCode())
+				.filter(a -> !a.getAttributeCode().equals(answer.getAttributeCode()))
 				.collect(Collectors.toList());
 		// add new answer
 		answers.add(answer);
