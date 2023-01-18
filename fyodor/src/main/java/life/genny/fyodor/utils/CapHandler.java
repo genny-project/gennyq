@@ -88,7 +88,7 @@ public class CapHandler extends Manager {
 					if(container.getFilter() == null)
 						return true;
 					
-					info("Filtering " + container.getFilter().getCode());
+					log.info("Filtering " + container.getFilter().getCode());
 					return container.requirementsMet(userCapabilities);
 				})
 				.collect(Collectors.toList());
