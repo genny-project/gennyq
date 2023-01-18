@@ -70,7 +70,7 @@ public abstract class CoreEntity implements Comparable<Object> {
 	private static final Logger log = Logger.getLogger(CoreEntity.class);
 
 	static public final String REGEX_NAME = "[\\pL0-9/\\:\\ \\_\\.\\,\\?\\>\\<\\%\\$\\&\\!\\*" + ""
-			+ "\\[\\]\\'\\-\\@\\(\\)]+.?";
+			+ "\\[\\]\\'\\-\\@\\(\\)].?";
 	static public final String REGEX_REALM = "[a-zA-Z0-9]+";
 	static public final String DEFAULT_REALM = "genny";
 

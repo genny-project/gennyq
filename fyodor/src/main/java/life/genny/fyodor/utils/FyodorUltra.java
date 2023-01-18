@@ -737,19 +737,21 @@ public class FyodorUltra {
 		String[] array = code.split("__");
 		String attributeCode = array[0];
 		code = Stream.of(array).skip(1).collect(Collectors.joining("__"));
-		// log.info(code);
+		log.info(code);
 
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			if(entity != null) {
-				return getRecursiveColumnLink(entity, code);
-			} else return null;
+			if (entity == null) {
+				return null;
+			}
+			return getRecursiveColumnLink(entity, code);
 		}
 
 		// find value
 		String value;
 		if (Attribute.PRI_NAME.equals(attributeCode))
+			log.info("Entity name = " + entity.getName());
 			value = entity.getName();
 		if (Attribute.PRI_CODE.equals(attributeCode))
 			value = entity.getCode();
