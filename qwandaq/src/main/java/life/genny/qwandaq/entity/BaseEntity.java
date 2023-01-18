@@ -203,15 +203,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 
-    @JsonbTransient
-    @JsonIgnore
+	@Override
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
 	}
 
 	@Override
-    @JsonbTransient
-    @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
 	}
