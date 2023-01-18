@@ -97,7 +97,9 @@ public interface ICapabilityFilterable {
      * @param logLevel - log level / function to use (e.g log::debug or System.out::println)
      */
     public default void printRequirements(FILogCallback logLevel) {
-        
+        if(getCapabilityRequirements() == null || getCapabilityRequirements().size() == 0) {
+            logLevel.log("No requirements found to print!");
+        }
         CommonUtils.printCollection(getCapabilityRequirements(), logLevel, (req) -> {
             return new StringBuilder("  - ")
                 .append(req.code)
