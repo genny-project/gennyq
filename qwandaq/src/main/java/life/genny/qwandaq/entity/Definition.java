@@ -37,10 +37,11 @@ public class Definition extends BaseEntity {
 	public static Definition from(BaseEntity entity) {
 
 		Definition definition = new Definition(entity.getCode(), entity.getName());
-		definition.setRealm(entity.getRealm());
-		definition.setRealm(entity.getRealm());
-		definition.setBaseEntityAttributes(entity.getBaseEntityAttributes());
-
+		// definition.setCapabilityRequirements(definition.getCapabilityRequirements());
+		// definition.setRealm(entity.getRealm());
+		// definition.setRealm(entity.getRealm());
+		// definition.setBaseEntityAttributes(entity.getBaseEntityAttributes());
+		entity.decorate(definition);
 		return definition;
 	}
 

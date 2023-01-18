@@ -1191,4 +1191,15 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	public boolean isPerson() {
 		return getCode().startsWith(Prefix.PER);
 	}
+
+	/**
+	 * Copy across all metadata about this base entity to another base entity of variable type
+	 * @param other
+	 */
+	public void decorate(BaseEntity other) {
+		other.setCapabilityRequirements(getCapabilityRequirements());
+		other.setRealm(getRealm());
+		other.setRealm(getRealm());
+		other.setBaseEntityAttributes(getBaseEntityAttributes());
+	}
 }
