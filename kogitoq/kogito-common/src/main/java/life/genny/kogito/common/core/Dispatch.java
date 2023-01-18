@@ -115,8 +115,9 @@ public class Dispatch {
 		if (processData.getSearches() == null) {
 			processData.setSearches(new ArrayList<String>());
 		}
+
 		// traverse pcm to build data
-		traversePCM(pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, msg, processData);
 		// update questionCode after traversing
 		if (questionCode != null)
 			pcm.setQuestionCode(questionCode);
@@ -205,11 +206,11 @@ public class Dispatch {
 	 * @param msg The bulk message to store data
 	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
+	public void traversePCM(CapabilitySet userCapabilities, String code, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 		// add pcm to bulk message
 		PCM pcm = beUtils.getPCM(code);
-		traversePCM(pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, msg, processData);
 	}
 
 	/**
@@ -221,15 +222,16 @@ public class Dispatch {
 	 * @param msg The bulk message to store data
 	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
+	public void traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 		// check capability requirements are met
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
+		log.debug("Traversing " + pcm.getCode());
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
-		log.debug("Traversing " + pcm.getCode());
+		
+		log.debug("Passed capabilities check");
 
 		// use pcm target if one is specified
 		String targetCode = pcm.getTargetCode();
@@ -258,7 +260,7 @@ public class Dispatch {
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
-				traversePCM(value, source, target, msg, processData);
+				traversePCM(userCapabilities, value, source, target, msg, processData);
 				continue;
 			} else if (value.startsWith(Prefix.SBE)) {
 				processData.getSearches().add(value);
