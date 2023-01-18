@@ -245,8 +245,10 @@ public class CapabilitiesManager extends Manager {
 			throw new ItemNotFoundException(productCode, "Capability Attribute");
 		}
 
-		Answer answer = new Answer(targetBe, targetBe, capabilityAttribute, "[]");
-		qwandaUtils.saveAnswer(answer);
+
+		targetBe.addAttribute(capabilityAttribute, 0.0, "[]");
+		CacheUtils.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
+		beUtils.updateBaseEntity(targetBe);
 		return targetBe;
 	}
 
