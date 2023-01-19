@@ -179,7 +179,7 @@ public class BaseEntityService {
 		final String buttonEvents = "SUBMIT,CANCEL,RESET"; // TODO: Multipage edits
 		final String parent = "PCM_CONTENT";
 		final String location = "PRI_LOC1";
-
+		log.debug("Sending edit with form code: " + pcmCode);
 	JsonObject payload = Json.createObjectBuilder()
 						.add("targetCode", targetCode)
 						.add("sourceCode", sourceCode)
