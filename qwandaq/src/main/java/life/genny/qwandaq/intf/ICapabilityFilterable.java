@@ -11,7 +11,6 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
-import life.genny.qwandaq.utils.CommonUtils;
 
 public interface ICapabilityFilterable {
 
