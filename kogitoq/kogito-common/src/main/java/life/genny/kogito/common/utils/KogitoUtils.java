@@ -74,8 +74,18 @@ public class KogitoUtils {
 	BaseEntityService baseEntityService;
 
 	public static enum UseService {
-		SELF,
-		GADAQ,
+		SELF(GennySettings.kogitoServiceUrl()),
+		GADAQ(GennySettings.gadaqServiceUrl());
+
+		private final String uri;
+
+		private UseService(String uri) {
+			this.uri = uri;
+		}
+
+		public String getServiceUrl() {
+			return uri;
+		}
 	}
 
 	/**
@@ -261,14 +271,7 @@ public class KogitoUtils {
 	 * @param useService The Service enum
 	 */
 	public String selectServiceURI(final UseService useService) {
-
-		switch (useService) {
-			case GADAQ:
-				return GennySettings.gadaqServiceUrl();
-			case SELF:
-			default:
-				return GennySettings.kogitoServiceUrl();
-		}
+		return useService.getServiceUrl();
 	}
 
 	/**

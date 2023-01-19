@@ -19,6 +19,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -294,8 +295,14 @@ public class Dispatch {
 		// check for a question code
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
 		if (questionCode == null) {
-			log.warn("Question Code is null for " + pcm.getCode());
-		} else if (!Question.QUE_EVENTS.equals(questionCode)) {
+			log.warn("Question Code is null for " + pcm.getCode() + ". Checking ProcessData");
+			questionCode = processData.getQuestionCode();
+			if(questionCode == null) {
+				log.warn("Question Code not set in ProcessData either");
+			}
+		}
+		
+		if (!Question.QUE_EVENTS.equals(questionCode) && !StringUtils.isBlank(questionCode)) {
 			// add ask to bulk message
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
