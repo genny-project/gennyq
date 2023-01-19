@@ -108,15 +108,19 @@ public class ProcessAnswers {
 		Answer answer = answers.get(answers.size() - 1);
 		String attributeCode = answer.getAttributeCode();
 
-		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
-			String feedback = "Error: This value already exists and must be unique.";
+		for(Definition definition : definitions){
+			if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+				if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
+					String feedback = "Error: This value already exists and must be unique.";
 
-			String questionCode = answer.getCode();
-			PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
-			PCM subPcm =  beUtils.getPCM(mainPcm.getLocation(1));
+					String questionCode = answer.getCode();
+					PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
+					PCM subPcm = beUtils.getPCM(mainPcm.getLocation(1));
 
-			qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
-			acceptSubmission = false;
+					qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
+					acceptSubmission = false;
+				}
+			}
 		}
 
 		return acceptSubmission;
