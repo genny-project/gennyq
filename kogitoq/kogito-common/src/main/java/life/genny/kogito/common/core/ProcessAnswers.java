@@ -24,6 +24,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.entity.PCM;
 
 /**
  * ProcessAnswers
@@ -110,10 +111,11 @@ public class ProcessAnswers {
 		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
-			String parentCode = processData.getQuestionCode();
 			String questionCode = answer.getCode();
+			PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
+			PCM subPcm =  beUtils.getPCM(mainPcm.getLocation(1));
 
-			qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
+			qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
 			acceptSubmission = false;
 		}
 
