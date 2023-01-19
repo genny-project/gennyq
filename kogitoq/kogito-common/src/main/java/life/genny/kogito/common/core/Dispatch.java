@@ -238,8 +238,6 @@ public class Dispatch {
 			return;
 		}
 		
-		log.debug("Passed capabilities check");
-
 		// use pcm target if one is specified
 		String targetCode = pcm.getTargetCode();
 		if (targetCode != null && !targetCode.equals(target.getCode())) {
