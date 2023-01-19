@@ -65,7 +65,8 @@ import life.genny.qwandaq.validation.Validation;
 public class QwandaUtils {
 
 	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
-	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT, Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
+	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT,
+			Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
@@ -219,7 +220,7 @@ public class QwandaUtils {
 				// NOTE: Warning, this may cause OOM errors.
 				msg.add(attributeList);
 
-				if (attributeList.size() > 0) {
+				if (!attributeList.isEmpty()) {
 					log.debug("Start AttributeID:"
 							+ attributeList.get(0).getId() + ", End AttributeID:"
 							+ attributeList.get(attributeList.size() - 1).getId());
@@ -290,7 +291,7 @@ public class QwandaUtils {
 	 * source and the target. This operation is recursive if the
 	 * question is a group.
 	 *
-	 * @param question The question to generate from
+	 * @param code   The code of the question
 	 * @param source The source entity
 	 * @param target The target entity
 	 * @return The generated Ask
@@ -462,14 +463,14 @@ public class QwandaUtils {
 			targetAsk.setDisabled(!depsAnswered);
 			targetAsk.setHidden(!depsAnswered);
 		}
-		
+
 		return flatMapAsks;
 	}
 
 	/**
 	 * Check if all Ask mandatory fields are answered for a BaseEntity.
 	 *
-	 * @param asks        The ask to check
+	 * @param asks       The ask to check
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
@@ -586,7 +587,7 @@ public class QwandaUtils {
 
 	/**
 	 * Fetch process data from cache.
-	 * 
+	 *
 	 * @param processId The id of the data to fetch
 	 * @return The saved data
 	 */
@@ -638,7 +639,7 @@ public class QwandaUtils {
 		}
 
 		// now apply all incoming answers
-		processData.getAnswers().stream().forEach(answer -> {
+		processData.getAnswers().forEach(answer -> {
 			// ensure the attribute is set
 			String attributeCode = answer.getAttributeCode();
 			Attribute attribute = getAttribute(attributeCode);
@@ -848,6 +849,24 @@ public class QwandaUtils {
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
 	 * 
+	 * @param definition The definitions to check against
+	 * @param answer     An incoming answer
+	 * @param targets    The target entities to check, usually processEntity and
+	 *                   original target
+	 * @return Boolean
+	 */
+	public Boolean isDuplicate(List<Definition> definitions, Answer answer, BaseEntity... targets) {
+		for (Definition definition : definitions) {
+			if (isDuplicate(definition, answer, targets)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * 
 	 * @param definition The definition to check against
 	 * @param answer     An incoming answer
 	 * @param targets    The target entities to check, usually processEntity and
@@ -953,7 +972,7 @@ public class QwandaUtils {
 
 		// send to commands topic
 		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, json.toString());
-		log.info("Sent error message to frontend : " + json.toString());
+		log.info("Sent error message to frontend : " + json);
 	}
 
 	/**

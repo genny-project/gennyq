@@ -3,7 +3,10 @@ package life.genny.qwandaq.utils;
 import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
 import java.lang.invoke.MethodHandles;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -20,6 +23,11 @@ import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.search.trait.*;
 import life.genny.qwandaq.models.SavedSearch;
+import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Column;
+import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.entity.search.trait.Ord;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -111,9 +119,13 @@ public class FilterUtils {
         String fieldName = "";
         int priIndex = -1;
         int fieldIndex = value.lastIndexOf(Prefix.FIELD);
+        int lnkIndex = value.lastIndexOf(Prefix.LNK);
         if(fieldIndex > -1) {
             priIndex = value.indexOf(Prefix.PRI) + Prefix.PRI.length();
             fieldName = value.substring(priIndex,fieldIndex - 1);
+            return fieldName;
+        }else if(lnkIndex > -1) {
+            fieldName = value.substring(lnkIndex);
             return fieldName;
         } else {
             priIndex = value.lastIndexOf(Prefix.PRI) + Prefix.PRI.length();
@@ -211,10 +223,11 @@ public class FilterUtils {
     /**
      * Return ask with filter option
      *
-     * @param value Value
+     * @param queCode Value
+     * @param value Selected Value
      * @return Ask
      */
-    public QDataBaseEntityMessage getFilterOptionByCode(String value) {
+    public QDataBaseEntityMessage getFilterOptionByCode(String queCode,String value) {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
         base.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
@@ -222,7 +235,7 @@ public class FilterUtils {
         base.setLinkValue(Attribute.LNK_ITEMS);
         base.setQuestionCode(Question.QUE_FILTER_OPTION);
 
-        if (value.contains(FilterConst.DATETIME)){
+        if (queCode.contains(FilterConst.DATETIME)){
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN));
@@ -230,9 +243,12 @@ public class FilterUtils {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
-        } else if (value.contains(FilterConst.SELECT)) {
+        } else if (queCode.contains(FilterConst.SELECT)) {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
+            return base;
+        } else if (value.contains(FilterConst.YES_NO)) {
+            base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             return base;
         } else {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
@@ -270,7 +286,7 @@ public class FilterUtils {
 
         List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(searchBE);
         List<BaseEntity> basesSorted =  baseEntities.stream()
-                .sorted(Comparator.comparing(BaseEntity::getName))
+                .sorted(Comparator.comparing(BaseEntity::getIndex))
                 .collect(Collectors.toList());
 
         base.setItems(basesSorted);
@@ -337,10 +353,16 @@ public class FilterUtils {
      * @param lnkCode link code
      * @param lnkValue Link value
      * @param typing Typing value
+     * @param defs List of definition
      * @return Search entity
      */
-    public SearchEntity getListQuickSearches(String sbeCode,String lnkCode,String lnkValue,String typing) {
+    public SearchEntity getListQuickSearches(String sbeCode,String lnkCode,String lnkValue,String typing,List<String> defs) {
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
+        for(int i=0;i< defs.size(); i++){
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, defs.get(i)));
+            } else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.STARTS_WITH, defs.get(i))));
+        }
         searchBE.add(new Filter(Attribute.PRI_NAME, Operator.LIKE, typing+ "_%"))
                 .add(new Column(lnkCode, lnkValue));
 

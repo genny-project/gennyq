@@ -1,6 +1,5 @@
 package life.genny.messages.managers.SMTP.SendGrid;
 
-import life.genny.messages.managers.QEmailMessageManager;
 import life.genny.qwandaq.utils.HttpUtils;
 import org.jboss.logging.Logger;
 
@@ -8,11 +7,11 @@ import javax.json.JsonObject;
 import java.net.http.HttpResponse;
 
 public class SendEmailWithSendGridAPI {
-    private JsonObject mail;
-    private String apiKey;
-    private String path;
+    private final JsonObject mail;
+    private final String apiKey;
+    private final String path;
 
-    private static final Logger log = Logger.getLogger(QEmailMessageManager.class);
+    private static final Logger log = Logger.getLogger(SendEmailWithSendGridAPI.class);
 
     public SendEmailWithSendGridAPI(JsonObject mail, String apiKey, String path) {
         this.mail = mail;
@@ -32,13 +31,13 @@ public class SendEmailWithSendGridAPI {
             HttpResponse<String> httpResponse = HttpUtils.post(path, requestBody, apiKey);
             if (httpResponse != null) {
                 int statusCode = httpResponse.statusCode();
-                System.out.println("####### response: " + httpResponse.body());
-                System.out.println("####### statusCode: " + statusCode);
+                log.info("####### response: " + httpResponse.body());
+                log.info("####### statusCode: " + statusCode);
             } else {
-                System.out.println("####### Sendgrid NULL!");
+                log.info("####### Sendgrid NULL!");
             }
         } catch (Exception ex) {
-            System.out.println("Exception: " + ex.getMessage());
+            log.info("Exception: " + ex.getMessage());
         }
     }
 }

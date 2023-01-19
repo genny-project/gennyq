@@ -339,51 +339,34 @@ public class FyodorUltra {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
-		switch (operator) {
+		return switch (operator) {
 			// use locate to find the expression within the value
 			// if locate returns 0, expression is not found
-			case IN:
-				// we want to check in, so check locate does not equal 0
-				return cb.notEqual(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
-			case NOT_IN:
-				// we want to check not in, so check locate equals 0
-				return cb.equal(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
-			case LIKE:
-				return cb.like((Expression<String>) expression, String.class.cast(value));
-			case NOT_LIKE:
-				return cb.notLike((Expression<String>) expression, String.class.cast(value));
-			case CONTAINS:
-				return cb.like((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case NOT_CONTAINS:
-				return cb.notLike((Expression<String>) expression, "%\"" + String.class.cast(value) + "\"%");
-			case STARTS_WITH:
-				return cb.like((Expression<String>) expression, String.class.cast(value) + "%");
-			case NOT_STARTS_WITH:
-				return cb.notLike((Expression<String>) expression, String.class.cast(value) + "%");
-			case EQUALS:
-				return cb.equal(expression, value);
-			case NOT_EQUALS:
-				return cb.notEqual(expression, value);
-			case GREATER_THAN:
-				return cb.gt((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN:
-				return cb.lt((Expression<Number>) expression, Number.class.cast(value));
-			case GREATER_THAN_OR_EQUAL:
-				return cb.ge((Expression<Number>) expression, Number.class.cast(value));
-			case LESS_THAN_OR_EQUAL:
-				return cb.le((Expression<Number>) expression, Number.class.cast(value));
-			default:
-				throw new QueryBuilderException("Invalid Operator: " + operator);
-		}
+			case IN -> return cb.notEqual(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
+			case NOT_IN -> cb.equal(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
+			case LIKE -> cb.like((Expression<String>) expression, (String) value);
+			case NOT_LIKE -> cb.notLike((Expression<String>) expression, (String) value);
+			case CONTAINS -> cb.like((Expression<String>) expression, "%\"" + (String) value + "\"%");
+			case NOT_CONTAINS -> cb.notLike((Expression<String>) expression, "%\"" + (String) value + "\"%");
+			case STARTS_WITH -> cb.like((Expression<String>) expression, (String) value + "%");
+			case NOT_STARTS_WITH -> cb.notLike((Expression<String>) expression, (String) value + "%");
+			case EQUALS -> cb.equal(expression, value);
+			case NOT_EQUALS -> cb.notEqual(expression, value);
+			case GREATER_THAN -> cb.gt((Expression<Number>) expression, (Number) value);
+			case LESS_THAN -> cb.lt((Expression<Number>) expression, (Number) value);
+			case GREATER_THAN_OR_EQUAL -> cb.ge((Expression<Number>) expression, (Number) value);
+			case LESS_THAN_OR_EQUAL -> cb.le((Expression<Number>) expression, (Number) value);
+			default -> throw new QueryBuilderException("Invalid Operator: " + operator);
+		};
 	}
 
 	/**
 	 * Find a predicate of a DateTime type filter.
 	 * <br>
-	 * This method requires that the the incoming stringified 
-	 * chrono unit is in the most standard format, effectively 
+	 * This method requires that the the incoming stringified
+	 * chrono unit is in the most standard format, effectively
 	 * toString.
-	 * 
+	 *
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param filter
@@ -691,7 +674,7 @@ public class FyodorUltra {
 		Set<String> columns = searchEntity.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith(Column.PREFIX))
 				.map(ea -> ea.getAttributeCode())
-				.map(code -> (String) StringUtils.removeStart(code, Column.PREFIX))
+				.map(code -> StringUtils.removeStart(code, Column.PREFIX))
 				.collect(Collectors.toSet());
 
 		return columns;

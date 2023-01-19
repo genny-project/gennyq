@@ -75,7 +75,7 @@ public class TestBuilder<I, E> {
         if(expected == null) {
             throw new IllegalArgumentException("No Expected result set for test: " + name);
         }
-
-        return new TestCase<I, E>(name, input, expected, testCallback, verificationCallback != null ? verificationCallback : tester.verificationCallback);
+        FITestVerificationCallback<E> verifCallback = verificationCallback != null ? verificationCallback : tester.verificationCallback;
+        return new TestCase<I, E>(name, input, expected, testCallback, verifCallback);
     }
 }

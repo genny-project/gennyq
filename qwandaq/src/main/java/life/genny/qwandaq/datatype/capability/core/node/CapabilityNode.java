@@ -37,7 +37,7 @@ public class CapabilityNode {
 
 	/**
 	 * Create a new capability with the given mode and permissions
-	 * @param capMode the {@link CapabilityNode} to assign 
+	 * @param capMode the {@link CapabilityNode} to assign
 	 * @param permMode the {@link PermissionMode} to assign
 	 * <p>
 	 * <pre>

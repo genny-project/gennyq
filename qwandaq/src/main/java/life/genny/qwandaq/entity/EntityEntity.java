@@ -420,8 +420,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@Transient
 	@JsonbTransient
 	public Date getCreatedDate() {
-		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
-		return out;
+		return Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 	/** 
@@ -431,8 +430,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@JsonbTransient
 	public Date getUpdatedDate() {
 		if (updated!=null) {
-			final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
-			return out;
+			return Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
 		} else {
 			return null;
 		}
@@ -444,6 +442,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	 */
  @Override
 	public int compareTo(Object o) {
+
 		EntityEntity myClass = (EntityEntity) o;
 		return new CompareToBuilder()
 			//	       .appendSuper(super.compareTo(o)
@@ -472,10 +471,9 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		if (obj == null) {
 			return false;
 		}
-		if (!(obj instanceof EntityEntity)) {
+		if (!(obj instanceof EntityEntity other)) {
 			return false;
 		}
-		EntityEntity other = (EntityEntity) obj;
 		return  Objects.equals(link, other.link)
 			&& Objects.equals(realm, other.realm) && Objects.equals(valueBoolean, other.valueBoolean)
 			&& Objects.equals(valueDate, other.valueDate) && Objects.equals(valueDateTime, other.valueDateTime)
@@ -496,26 +494,18 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@XmlTransient
 	public <T> T getValue() {
 		final String dataType = getPk().getAttribute().getDataType().getClassName();
-		switch (dataType) {
-			case "java.lang.Integer":
-				return (T) getValueInteger();
-			case "java.time.LocalDateTime":
-				return (T) getValueDateTime();
-			case "java.time.LocalTime":
-				return (T) getValueTime();
-			case "java.lang.Long":
-				return (T) getValueLong();
-			case "java.lang.Double":
-				return (T) getValueDouble();
-			case "java.lang.Boolean":
-				return (T) getValueBoolean();
-			case "java.time.LocalDate":
-				return (T) getValueDate();
+		return switch (dataType) {
+			case "java.lang.Integer" -> (T) getValueInteger();
+			case "java.time.LocalDateTime" -> (T) getValueDateTime();
+			case "java.time.LocalTime" -> (T) getValueTime();
+			case "java.lang.Long" -> (T) getValueLong();
+			case "java.lang.Double" -> (T) getValueDouble();
+			case "java.lang.Boolean" -> (T) getValueBoolean();
+			case "java.time.LocalDate" -> (T) getValueDate();
 
-			case "java.lang.String":
-			default:
-				return (T) getValueString();
-		}
+//			case "java.lang.String" ->
+			default -> (T) getValueString();
+		};
 
 	}
 
@@ -565,8 +555,7 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@XmlTransient
 	public <T> void setValue(final Object value) {
 
-		if (value instanceof String) {
-			String result = (String) value;
+		if (value instanceof String result) {
 			try {
 				if (getPk().getAttribute().getDataType().getClassName().equalsIgnoreCase(String.class.getCanonicalName())) {
 					setValueString(result);
@@ -640,43 +629,16 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 		} else {
 
 			switch (this.getPk().getAttribute().getDataType().getClassName()) {
-				case "java.lang.Integer":
-				case "Integer":
-					setValueInteger((Integer) value);
-					break;
-				case "java.time.LocalDateTime":
-				case "LocalDateTime":
-					setValueDateTime((LocalDateTime) value);
-					break;
-				case "java.time.LocalDate":
-				case "LocalDate":
-					setValueDate((LocalDate) value);
-					break;
-				case "java.lang.Long":
-				case "Long":
-					setValueLong((Long) value);
-					break;
-				case "java.time.LocalTime":
-				case "LocalTime":
-					setValueTime((LocalTime) value);
-					break;
-				case "org.javamoney.moneta.Money":
-				case "Money":
-					setValueMoney((Money) value);
-					break;
-				case "java.lang.Double":
-				case "Double":
-					setValueDouble((Double) value);
-					break;
-				case "java.lang.Boolean":
-				case "Boolean":
-					setValueBoolean((Boolean) value);
-					break;
-
-				case "java.lang.String":
-				default:
-					setValueString((String) value);
-					break;
+				case "java.lang.Integer", "Integer" -> setValueInteger((Integer) value);
+				case "java.time.LocalDateTime", "LocalDateTime" -> setValueDateTime((LocalDateTime) value);
+				case "java.time.LocalDate", "LocalDate" -> setValueDate((LocalDate) value);
+				case "java.lang.Long", "Long" -> setValueLong((Long) value);
+				case "java.time.LocalTime", "LocalTime" -> setValueTime((LocalTime) value);
+				case "org.javamoney.moneta.Money", "Money" -> setValueMoney((Money) value);
+				case "java.lang.Double", "Double" -> setValueDouble((Double) value);
+				case "java.lang.Boolean", "Boolean" -> setValueBoolean((Boolean) value);
+//				case "java.lang.String" ->
+				default -> setValueString((String) value);
 			}
 		}
 
@@ -696,36 +658,26 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 			dataType = getPk().getAttribute().getDataType().getClassName();
 		} catch (Exception e) {
 		}
-		switch (dataType) {
-			case "java.lang.Integer":
-				return "" + getValueInteger();
-			case "java.time.LocalDateTime":
+		return switch (dataType) {
+			case "java.lang.Integer" -> "" + getValueInteger();
+			case "java.time.LocalDateTime" -> {
 				DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 				Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-				String dout = df.format(datetime);
-				return dout;
-			case "java.lang.Long":
-				return "" + getValueLong();
-			case "java.time.LocalTime":
-				return getValueTime().toString();
-			case "org.javamoney.moneta.Money":
-				return getValueMoney().toString();
-
-			case "java.lang.Double":
-				return getValueDouble().toString();
-			case "java.lang.Boolean":
-				return getValueBoolean() ? "TRUE" : "FALSE";
-			case "java.time.LocalDate":
+				yield df.format(datetime);
+			}
+			case "java.lang.Long" -> "" + getValueLong();
+			case "java.time.LocalTime" -> getValueTime().toString();
+			case "org.javamoney.moneta.Money" -> getValueMoney().toString();
+			case "java.lang.Double" -> getValueDouble().toString();
+			case "java.lang.Boolean" -> Boolean.TRUE.equals(getValueBoolean()) ? "TRUE" : "FALSE";
+			case "java.time.LocalDate" -> {
 				DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 				Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-				String dout2 = df2.format(date);
-				return dout2;
-
-			case "java.lang.String":
-			default:
-				return getValueString();
-		}
-
+				yield df2.format(date);
+			}
+//			case "java.lang.String" ->
+			default -> getValueString();
+		};
 	}
 
 	/** 
@@ -738,44 +690,33 @@ public class EntityEntity implements java.io.Serializable, Comparable<Object> {
 	@XmlTransient
 	public String getObjectAsString(Object value) {
 		if (value instanceof Integer)
-			return ""+value;
-		if (value instanceof LocalDateTime) {
-			LocalDateTime val = (LocalDateTime)value;
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS"); 
+			return "" + value;
+		if (value instanceof LocalDateTime val) {
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 			Date datetime = Date.from(val.atZone(ZoneId.systemDefault()).toInstant());
-			String dout = df.format(datetime);
-			return dout;
+			return df.format(datetime);
 		}
 		if (value instanceof Long)
-			return ""+value;
-		if (value instanceof Double) {
-			Double val = (Double) value;
+			return "" + value;
+		if (value instanceof Double val) {
 			return val.toString();
 		}
-		if (value instanceof Boolean) {
-			Boolean val = (Boolean)value;
-			return val?"TRUE":"FALSE";
+		if (value instanceof Boolean val) {
+			return Boolean.TRUE.equals(val) ? "TRUE" : "FALSE";
 		}
-		if (value instanceof LocalDate) {
-			LocalDate val = (LocalDate)value;
-			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd"); 
+		if (value instanceof LocalDate val) {
+			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 			Date date = Date.from(val.atStartOfDay(ZoneId.systemDefault()).toInstant());
-			String dout2 = df2.format(date);
-			return dout2;
+			return df2.format(date);
 		}
 
-		if (value instanceof Money) {
-			Money val = (Money)value;
-			String dout2 = val.toString();
-			return dout2;
+		if (value instanceof Money val) {
+			return val.toString();
 		}
-		if (value instanceof LocalTime) {
-			LocalTime val = (LocalTime)value;
-			String dout2 = val.toString();
-			return dout2;
+		if (value instanceof LocalTime val) {
+			return val.toString();
 		}
-		String val = (String)value;
-		return val;
+		return (String) value;
 	}
 
 	/**

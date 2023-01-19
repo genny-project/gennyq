@@ -1,13 +1,12 @@
 package life.genny.qwandaq.serialization.baseentity;
 
+import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.entity.BaseEntity;
+import org.infinispan.protostream.MessageMarshaller;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-
-import org.infinispan.protostream.MessageMarshaller;
-
-import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.entity.BaseEntity;
 
 public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity> {
 
@@ -32,7 +31,7 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		}
 		be.setName(reader.readString("name"));
 		be.setRealm(reader.readString("realm"));
-		Integer statusInt = reader.readInt("status");
+//		Integer statusInt = reader.readInt("status");
 		be.setStatus(EEntityStatus.valueOf(reader.readInt("status")));
 		Long updatedLong = reader.readLong("updated");
 		if (updatedLong != null) {

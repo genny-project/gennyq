@@ -1,7 +1,15 @@
 package life.genny.qwandaq.utils;
 
-import java.lang.invoke.MethodHandles;
-import java.util.List;
+import life.genny.qwandaq.*;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.validation.Validation;
+import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -12,22 +20,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.transaction.Transactional;
-
-import org.jboss.logging.Logger;
-
-import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Link;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.QuestionQuestionId;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
-import life.genny.qwandaq.validation.Validation;
+import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 /*
  * A utility class used for standard read and write 
@@ -46,7 +40,7 @@ public class DatabaseUtils {
 
 	@Inject
 	EntityManager entityManager;
-	
+
 	@Inject
 	BaseEntityUtils beUtils;
 
@@ -472,7 +466,7 @@ public class DatabaseUtils {
 	 * @param question A {@link Question} object to save
 	 */
 	@Transactional
-	public void saveQuestion(Question question) {
+	public Question saveQuestion(Question question) {
 
 		log.info("Saving Question " + question.getCode());
 
@@ -486,9 +480,10 @@ public class DatabaseUtils {
 		if (existingQuestion == null) {
 			entityManager.persist(question);
 		} else {
-			entityManager.merge(question);
+			question = entityManager.merge(question);
 		}
 		log.info("Successfully saved Question " + question.getCode());
+		return question;
 	}
 
 	/**
@@ -497,7 +492,7 @@ public class DatabaseUtils {
 	 * @param questionQuestion A {@link QuestionQuestion} object to save
 	 */
 	@Transactional
-	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
+	public QuestionQuestion saveQuestionQuestion(QuestionQuestion questionQuestion) {
 
 		QuestionQuestionId pk = questionQuestion.getPk();
 		log.info("Saving QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
@@ -516,10 +511,11 @@ public class DatabaseUtils {
 		if (existingQuestionQuestion == null) {
 			entityManager.persist(questionQuestion);
 		} else {
-			entityManager.merge(questionQuestion);
+			questionQuestion = entityManager.merge(questionQuestion);
 		}
 
 		log.info("Successfully saved QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
+		return questionQuestion;
 	}
 
 	/**
@@ -655,21 +651,21 @@ public class DatabaseUtils {
 			saveQuestionQuestion(qq);
 			return true;
 		}
-		
+
 		if(filterable instanceof Question) {
 			Question q = (Question)filterable;
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
 			saveQuestion(q);
 			return true;
 		}
-		
+
 		if(filterable instanceof EntityAttribute) {
 			EntityAttribute ea = (EntityAttribute)filterable;
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
 			BaseEntity be = ea.getBaseEntity();
 			saveBaseEntity(be);
 			return true;
-			
+
 		}
 
 		return false;

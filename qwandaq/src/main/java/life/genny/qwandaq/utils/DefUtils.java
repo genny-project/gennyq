@@ -92,7 +92,7 @@ public class DefUtils {
 		}
 
 		log.info("DEF code search returned " + codes.size() + " results for product " + productCode);
-		defPrefixMap.put(productCode, new ConcurrentHashMap<String, String>());
+		defPrefixMap.put(productCode, new ConcurrentHashMap<>());
 
 		for (String code : codes) {
 
@@ -193,8 +193,8 @@ public class DefUtils {
 	 * A function to determine the whether or not an attribute is allowed to be
 	 * saved to a {@link BaseEntity}
 	 *
-	 * @param definition  the defBE to check with
-	 * @param answer the answer to check
+	 * @param definition the defBE to check with
+	 * @param answer     the answer to check
 	 * @return Boolean
 	 */
 	public Boolean answerValidForDEF(Definition definition, Answer answer) {
@@ -210,8 +210,8 @@ public class DefUtils {
 		// allow if it is Capability saved to a Role
 		if (targetCode.startsWith(Prefix.ROL) && attributeCode.startsWith(Prefix.PRM)) {
 			return true;
-		} else if (targetCode.startsWith(Prefix.SBE) && (attributeCode.startsWith(Prefix.COL) 
-						|| attributeCode.startsWith(Prefix.SRT) || attributeCode.startsWith(Prefix.ACT))) {
+		} else if (targetCode.startsWith(Prefix.SBE) && (attributeCode.startsWith(Prefix.COL)
+				|| attributeCode.startsWith(Prefix.SRT) || attributeCode.startsWith(Prefix.ACT))) {
 			return true;
 		}
 

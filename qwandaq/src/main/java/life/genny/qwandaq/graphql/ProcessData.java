@@ -3,6 +3,9 @@ package life.genny.qwandaq.graphql;
 import java.util.List;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import javax.json.bind.annotation.JsonbTransient;
+import java.util.ArrayList;
+import java.util.Arrays;
 import life.genny.qwandaq.Answer;
 
 /**
@@ -127,6 +130,22 @@ public class ProcessData extends ProcessInstanceVariables {
 
 	public void setAnswers(List<Answer> answers) {
 		this.answers = answers;
+	}
+
+	// TODO: There is a danger here that the initial defCodes set in this object may
+	// not reflect the current defCodes state.
+	@JsonbTransient
+	public List<String> getDefCodes() {
+		// split the definition code into all the defCodes for this baseEntity
+		String defCodesStr = definitionCode;
+		if (defCodesStr.startsWith("DEF_DEF_")) { // TODO: Hack to fix prefix bug
+			defCodesStr = defCodesStr.substring("DEF_".length());
+		}
+		defCodesStr = defCodesStr.replace("[", "");
+		defCodesStr = defCodesStr.replace("]", "");
+		defCodesStr = defCodesStr.replace("\"", "");
+		defCodesStr = defCodesStr.replace("_DEF_", ",DEF_");
+		return Arrays.asList(defCodesStr.split(","));
 	}
 
 }

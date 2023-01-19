@@ -1,5 +1,6 @@
 package life.genny.fyodor.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,7 +77,7 @@ public class CapHandler extends Manager {
 				log.info("Filtered down to " + sorts.size() + " sorts");
 		searchEntity.setTraits(Sort.class, sorts);
 	}
-	
+
 	/**
 	 * @param searchEntity
 	 */
@@ -93,7 +94,6 @@ public class CapHandler extends Manager {
 					return container.requirementsMet(userCapabilities);
 				})
 				.collect(Collectors.toList());
-
 				log.info("Filtered down to " + containers.size() + " filters");
 		searchEntity.setClauseContainers(containers);
 	}
@@ -144,6 +144,7 @@ public class CapHandler extends Manager {
 		} else {
 			log.info("Service token. Bypassing requirements");
 		}
+		// TODO: implement capabilities
 		return true;
 	}
 

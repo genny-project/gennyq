@@ -217,7 +217,6 @@ public class SearchUtils {
 		// package and send search message to fyodor
 		QSearchMessage searchBeMsg = new QSearchMessage(searchEntity);
 		searchBeMsg.setToken(userToken.getToken());
-		searchBeMsg.setDestination(GennyConstants.EVENT_WEBCMDS);
 		KafkaUtils.writeMsg(KafkaTopic.SEARCH_EVENTS, searchBeMsg);
 	}
 
@@ -263,7 +262,6 @@ public class SearchUtils {
 		log.error("Function not complete!");
 	}
 
-
 	/**
 	 * Perform a dropdown search through dropkick.
 	 *
@@ -287,4 +285,5 @@ public class SearchUtils {
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
 	}
+
 }

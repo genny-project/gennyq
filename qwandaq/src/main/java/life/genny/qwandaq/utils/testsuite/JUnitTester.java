@@ -17,7 +17,7 @@ public class JUnitTester<I, E> {
     }
 
     public JUnitTester(FITestVerificationCallback<E> verificationCallback) {
-        setVerification(verificationCallback);
+        setVerification(verificationCallback != null ? verificationCallback : JUnitTester::defaultAssertion);
     }
 
     public JUnitTester<I, E> setTest(FITestCallback<Input<I>, Expected<E>> testCallback) {

@@ -78,7 +78,7 @@ public class GithubUtils {
         String retJson = "";
 
         final Git git = Git.cloneRepository().setURI("https://github.com/" + project + "/" + repositoryName + ".git")
-                .setDirectory(new File(".")).setBranchesToClone(Arrays.asList("refs/heads/" + branch))
+                .setDirectory(new File(".")).setBranchesToClone(List.of("refs/heads/" + branch))
                 .setBranch("refs/heads/" + branch).call();
 
         try (Repository repository = git.getRepository()) {
@@ -144,8 +144,8 @@ public class GithubUtils {
     public List<BaseEntity> getLayoutBaseEntitys(BaseEntityUtils beUtils, final String remoteUrl, final String branch,
             final String realm,
             final String gitrealm, boolean recursive)
-            throws InvalidRemoteException, TransportException, GitAPIException,
-            RevisionSyntaxException, AmbiguousObjectException, IncorrectObjectTypeException, IOException {
+            throws GitAPIException,
+            RevisionSyntaxException, IOException {
 
         List<BaseEntity> layouts = new ArrayList<>();
 

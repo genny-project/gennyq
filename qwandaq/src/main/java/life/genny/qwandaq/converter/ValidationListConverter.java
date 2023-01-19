@@ -1,18 +1,16 @@
 package life.genny.qwandaq.converter;
 
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.validation.Validation;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.validation.Validation;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Converter
 public class ValidationListConverter implements AttributeConverter<List<Validation>, String> {
@@ -27,29 +25,27 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 */
 	@Override
 	public String convertToDatabaseColumn(final List<Validation> list) {
-		String ret = "";
+        StringBuilder ret = new StringBuilder();
 		for (final Validation validation : list) {
 			String validationGroupStr = "";
 			if (validation != null) {
 			if (validation.getSelectionBaseEntityGroupList() != null) {
-				validationGroupStr += "\"" + convertToString(validation.getSelectionBaseEntityGroupList()) + "\"";
-				validationGroupStr += ",\"" + (validation.getMultiAllowed() ? "TRUE" : "FALSE") + "\"";
-				validationGroupStr += ",\"" + (validation.getRecursiveGroup() ? "TRUE" : "FALSE") + "\",";
-				ret += "\"" + validation.getCode() + "\",\"" + validation.getName() + "\",\"" + validation.getRegex()
-				+ "\"," + validationGroupStr;
-			} else {
-				ret += "\"" + validation.getCode() + "\",\"" + validation.getName() + "\",\"" + validation.getRegex()+"\",";
-
+                validationGroupStr += "\"" + convertToString(validation.getSelectionBaseEntityGroupList()) + "\"";
+                validationGroupStr += ",\"" + (Boolean.TRUE.equals(validation.getMultiAllowed()) ? "TRUE" : "FALSE") + "\"";
+                validationGroupStr += ",\"" + (Boolean.TRUE.equals(validation.getRecursiveGroup()) ? "TRUE" : "FALSE") + "\",";
+                ret.append("\"").append(validation.getCode()).append("\",\"").append(validation.getName()).append("\",\"").append(validation.getRegex()).append("\",").append(validationGroupStr);
+            } else {
+                ret.append("\"").append(validation.getCode()).append("\",\"").append(validation.getName()).append("\",\"").append(validation.getRegex()).append("\",");
 			}
 			}
 		
 		}
-		ret = StringUtils.removeEnd(ret, ",");
+        ret = new StringBuilder(StringUtils.removeEnd(ret.toString(), ","));
 		if (ret.length() >= 512) {
 			log.error("Error -> field > 512 " + ret + ":" + ret.length());
 		}
 
-		return ret;
+        return ret.toString();
 
 	}
 
@@ -65,7 +61,7 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 		final List<Validation> validations = new CopyOnWriteArrayList<Validation>();
 		if(StringUtils.isBlank(joined))
 			return validations;
-		
+
 			//	log.info("ValidationStr=" + joined);
 		joined = joined.substring(1); // remove leading quotes
 		joined = StringUtils.chomp(joined, "\""); // remove last char
@@ -91,7 +87,7 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 				validations.add(validation);
 			}
 		}
-		
+
 		return validations;
 	}
 
@@ -113,8 +109,8 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 * @return List&lt;String&gt;
 	 */
 	public String[] convertFromString(final String joined) {
-		if (joined.startsWith("[") || joined.startsWith("{")) {			
-			return CommonUtils.getListFromString(joined, (String obj) -> obj.toString()).toArray(new String[0]);
+		if (joined.startsWith("[") || joined.startsWith("{")) {
+			return CommonUtils.getListFromString(joined, (String obj) -> obj).toArray(new String[0]);
 		} else {
 			return new String[] {joined};
 		}

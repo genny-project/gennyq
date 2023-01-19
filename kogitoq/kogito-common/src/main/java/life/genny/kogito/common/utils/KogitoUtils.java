@@ -227,8 +227,15 @@ public class KogitoUtils {
 		// add token to JsonObject
 		JsonObjectBuilder builder = Json.createObjectBuilder();
 		json.forEach(builder::add);
-		builder.add("token", userToken.getToken());
-		builder.add("userToken", jsonb.toJson(userToken));
+
+		if (userToken != null) {
+			if (userToken.getToken() != null) {
+				builder.add("token", userToken.getToken()); // userToken not always there
+			}
+			builder.add("userToken", jsonb.toJson(userToken));
+		} else {
+			log.warn("No userToken available");
+		}
 		json = builder.build();
 
 		// select uri
@@ -262,13 +269,11 @@ public class KogitoUtils {
 	 */
 	public String selectServiceURI(final UseService useService) {
 
-		switch (useService) {
-			case GADAQ:
-				return GennySettings.gadaqServiceUrl();
-			case SELF:
-			default:
-				return GennySettings.kogitoServiceUrl();
-		}
+		return switch (useService) {
+			case GADAQ -> GennySettings.gadaqServiceUrl();
+			case SELF -> GennySettings.kogitoServiceUrl();
+			default -> GennySettings.kogitoServiceUrl();
+		};
 	}
 
 	/**

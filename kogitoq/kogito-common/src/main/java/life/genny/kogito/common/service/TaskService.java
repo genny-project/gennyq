@@ -124,12 +124,12 @@ public class TaskService {
 
 		processData.setButtonEvents(buttonEvents);
 		processData.setProcessId(processId);
-		processData.setAnswers(new ArrayList<Answer>());
+		processData.setAnswers(new ArrayList<>());
 
 		String processEntityCode = Prefix.QBE.concat(targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
-		String userCode = userToken.getUserCode();
+		String userCode = userToken != null ? userToken.getUserCode() : null;
 
 		// find target and target definition
 		BaseEntity target = beUtils.getBaseEntity(targetCode);

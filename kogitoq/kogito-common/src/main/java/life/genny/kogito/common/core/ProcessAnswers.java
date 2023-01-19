@@ -35,11 +35,15 @@ public class ProcessAnswers {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	@Inject UserToken userToken;
+	@Inject
+	UserToken userToken;
 
-	@Inject QwandaUtils qwandaUtils;
-	@Inject BaseEntityUtils beUtils;
-	@Inject DefUtils defUtils;
+	@Inject
+	QwandaUtils qwandaUtils;
+	@Inject
+	BaseEntityUtils beUtils;
+	@Inject
+	DefUtils defUtils;
 
 	@Inject TaskService taskService;
 
@@ -57,26 +61,35 @@ public class ProcessAnswers {
 		}
 
 		// check if the answer is valid for the target
-		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-		if (!defUtils.answerValidForDEF(definition, answer)) {
-			log.error("Bad incoming answer... Not saving!");
-			return false;
+		for (String defCode : processData.getDefCodes()) {
+			Definition definition = beUtils.getDefinition(defCode);
+			if (!defUtils.answerValidForDEF(definition, answer)) {
+				log.error("Bad incoming answer... Not saving!");
+				return false;
+			}
 		}
 
 		return true;
 	}
 
 	/**
-	 * Check that uniqueness of BE  (if required) is satisifed .
+	 * Check that uniqueness of BE (if required) is satisifed .
 	 *
-	 * @param processBE. The target BE containing the answer data
-	 * @param defCode. The baseentity type code of the processBE
-	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
+	 * @param processBE.        The target BE containing the answer data
+	 * @param defCode.          The baseentity type code of the processBE
+	 * @param acceptSubmission. This is modified to reflect whether the submission
+	 *                          is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
 	public Boolean checkUniqueness(ProcessData processData) {
 
-		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
+		List<Definition> definitions = new ArrayList<>();
+		List<String> defCodes = processData.getDefCodes();
+		for (String defCode : defCodes) {
+			Definition definition = beUtils.getDefinition(defCode);
+			definitions.add(definition);
+		}
+
 		List<Answer> answers = processData.getAnswers();
 
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -88,10 +101,10 @@ public class ProcessAnswers {
 		if (answers.isEmpty())
 			return acceptSubmission;
 
-		Answer answer = answers.get(answers.size()-1);
+		Answer answer = answers.get(answers.size() - 1);
 		String attributeCode = answer.getAttributeCode();
 
-		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
+		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
 			String parentCode = processData.getQuestionCode();
@@ -106,7 +119,8 @@ public class ProcessAnswers {
 
 	/**
 	 * Save all answers gathered in the processBE.
-	 * @param targetCode The target of the answers
+	 * 
+	 * @param targetCode    The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
 	public void saveAllAnswers(ProcessData processData) {
@@ -125,13 +139,13 @@ public class ProcessAnswers {
 	/**
 	 * Clear completed or canceled process Cache Entries.
 	 *
-	 * @param productCode 
+	 * @param productCode
 	 * @param processBEcode
 	 * @return Boolean existed
 	 */
 	public Boolean clearProcessCacheEntries(String processId, String targetCode) {
 		qwandaUtils.clearProcessData(processId);
-		log.infof("Cleared caches for %s",processId);
+		log.infof("Cleared caches for %s", processId);
 		return true;
 	}
 

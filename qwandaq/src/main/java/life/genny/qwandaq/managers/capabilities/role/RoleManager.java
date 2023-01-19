@@ -281,7 +281,7 @@ public class RoleManager extends Manager {
 			}
 		}
 
-		throw new RoleException(String.format("No redirect in roles %s", roles.toString()));
+		throw new RoleException(String.format("No redirect in roles %s", roles));
 	}
 
 	/**

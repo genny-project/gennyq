@@ -42,7 +42,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         .setInput("oWn_ApplE")
         .setExpected("CAP_OWN_APPLE")
         .build()
-        
+
         .assertAll();
 
     }
@@ -55,12 +55,12 @@ public class CapabilityUtilsTest extends BaseTestCase {
                 caps.add(new CapabilityNode(mode, permMode));
             }
         }
-        
+
         List<String> expected = caps.stream()
             .map((CapabilityNode cap) -> cap.capMode.getIdentifier() + CapabilityNode.DELIMITER + cap.permMode.getIdentifier())
             .collect(Collectors.toList());
 
-        
+
         JUnitTester<CapabilityNode, String> unitTester = new JUnitTester<CapabilityNode, String>()
         .setTest((input) -> {
             return Expected(input.input.toString());
@@ -104,7 +104,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
             node.negate = negate;
             return node;
         }).collect(Collectors.toList());
-        
+
         // Create tester
         JUnitTester<String, CapabilityNode> unitTester = new JUnitTester<String, CapabilityNode>()
         .setTest((input) -> {
@@ -117,7 +117,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
             .setExpected(expected.get(i))
             .build();
         }
-        
+
         unitTester.assertAll();
     }
 
@@ -130,7 +130,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
     @Test
     public void mergeTest() {
         JUnitTester<Capability, Capability> tester = new JUnitTester<Capability, Capability>();
-        
+
         Capability capability1 = new CapabilityBuilder("CAP_ADMIN").add(SELF).buildCap();
         Capability capability2 = new CapabilityBuilder("CAP_ADMIN").edit(SELF).buildCap();
         Capability capability3 = new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap();
@@ -138,17 +138,17 @@ public class CapabilityUtilsTest extends BaseTestCase {
         tester.setTest((input) -> {
             return Expected(capability1.merge(input.input, true)); // most permissive test
         })
-        
+
         .createTest(mergeTestName(capability1, capability2, true))
         .setInput(capability2)
         .setExpected(new CapabilityBuilder("CAP_ADMIN").add(SELF).edit(SELF).buildCap())
         .build()
-        
+
         .createTest(mergeTestName(capability1, capability3, true))
         .setInput(capability3)
         .setExpected(new CapabilityBuilder("CAP_ADMIN").add(ALL).buildCap())
         .build()
-        
+
         .assertAll()
 
         .setTest((input) -> {
@@ -169,7 +169,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
     }
 
     @Test
-    public void getLesserNodesTest() { 
+    public void getLesserNodesTest() {
         new JUnitTester<CapabilityNode, CapabilityNode[]>()
         .setTest((input) -> {
             return Expected(input.input.getLesserNodes());

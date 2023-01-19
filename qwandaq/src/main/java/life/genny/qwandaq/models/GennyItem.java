@@ -30,9 +30,7 @@ public class GennyItem {
 		}
 		final String cleanAttributeCode = attributeCode.trim().toUpperCase();
 		Optional<AttributeCodeValueString> existing = get(cleanAttributeCode);
-		if (existing.isPresent()) {
-			b2bdata.remove(existing.get());
-		} 
+		existing.ifPresent(attributeCodeValueString -> b2bdata.remove(attributeCodeValueString));
 	}
 	
 	/**
@@ -57,10 +55,9 @@ public class GennyItem {
 		final String cleanAttributeCode = attributeCode.trim().toUpperCase();
 		// TODo optimise
 		Optional<AttributeCodeValueString> matchingObject = b2bdata.stream().
-			    filter(p -> p.getAttributeCode().equals(cleanAttributeCode)).
-			    findFirst();
-		return matchingObject; 
-		
+                filter(p -> p.getAttributeCode().equals(cleanAttributeCode)).
+                findFirst();
+		return matchingObject;
 	}
 
 }
