@@ -193,6 +193,7 @@ public class Events {
 		if (ACT_EDIT.equals(code)) {
 
 			if (parentCode.startsWith("SBE_")) {
+				log.debug("[!] Retrieving edit question groups for target code: " + msg.getData().getTargetCode());
 				String[] questionCodes = qwandaUtils.getEditQuestionGroups(msg.getData().getTargetCode());
 				
 				JsonObject payload = Json.createObjectBuilder()
