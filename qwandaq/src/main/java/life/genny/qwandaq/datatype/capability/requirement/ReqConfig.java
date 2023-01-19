@@ -18,7 +18,7 @@ public class ReqConfig {
     // More synchronization of methods that instantiate a ReqConfig
     public static final boolean DEFAULT_ALL_CAPS = true;
     public static final boolean DEFAULT_ALL_NODES = true;
-    public static final boolean DEFAULT_CASCADE_PERMS = true;
+    public static final boolean DEFAULT_CASCADE_PERMS = false;
     
 	/**
 	 * Whether or not all Capabilities are required to pass the check (for multiple capability requirements)

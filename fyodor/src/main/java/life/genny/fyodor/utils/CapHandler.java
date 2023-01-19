@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
@@ -112,12 +113,21 @@ public class CapHandler extends Manager {
 		log.info("Filtered down to " + actions.size() + " actions");
 		searchEntity.setTraits(Action.class, actions);
 	}
+	
+	/**
+	 * @param trait
+	 * @param userCapabilities
+	 * @return
+	 */
+	public boolean traitCapabilitiesMet(Trait trait, CapabilitySet userCapabilities) {
+		return traitCapabilitiesMet(trait, userCapabilities, ReqConfig.builder().build());
+	}
 
 	/**
 	 * @param trait
 	 * @return
 	 */
-	public boolean traitCapabilitiesMet(Trait trait, CapabilitySet userCapabilities) {
+	public boolean traitCapabilitiesMet(Trait trait, CapabilitySet userCapabilities, ReqConfig reqConfig) {
 
 		if(userToken == null) {
 			log.error("[!] No UserToken, cannot verify capabilities");
@@ -130,7 +140,7 @@ public class CapHandler extends Manager {
 		if(!isService) {
 			log.info("Checking: " + trait);
 			log.info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
-			return trait.requirementsMet(userCapabilities);
+			return trait.requirementsMet(userCapabilities, reqConfig);
 		} else {
 			log.info("Service token. Bypassing requirements");
 		}
