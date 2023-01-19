@@ -153,16 +153,17 @@ public class TaskService {
 		// perform basic checks on attribute codes
 		processData.setAttributeCodes(
 			flatMapOfAsks.values().stream()
-					.filter(ask -> !ask.getReadonly())
 					.map(ask -> ask.getQuestion().getAttribute().getCode())
 					.filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
 					.collect(Collectors.toList())
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
+		boolean isReadonly = flatMapOfAsks.values().stream().allMatch(ask -> ask.getReadonly());
+
 		// handle non-readonly if necessary
 		// use dispatch.containsNonReadonly(flatMapOfAsks) if this does not work
-		if (!processData.getAttributeCodes().isEmpty()) {
+		if (!isReadonly) {
 			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 			msg.add(processEntity);
 

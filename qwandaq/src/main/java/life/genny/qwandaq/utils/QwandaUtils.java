@@ -491,6 +491,10 @@ public class QwandaUtils {
 			Boolean mandatory = ask.getMandatory();
 			Boolean readonly = ask.getReadonly();
 
+			if (readonly) {
+				continue;
+			}
+
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
