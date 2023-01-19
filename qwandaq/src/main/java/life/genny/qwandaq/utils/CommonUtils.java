@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -244,8 +245,23 @@ public class CommonUtils {
         return instance;
     }
 
-    public static <T> T[] getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        return (T[])getListFromString(arrayString, objectCallback).toArray();
+    @SuppressWarnings("unchecked")
+    public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        
+
+		if(StringUtils.isBlank(arrayString))
+            return (T[])Array.newInstance(type, 0);
+
+        String components[] = arrayString.split(",");
+        T[] array = (T[])Array.newInstance(type, components.length);
+                
+        for(int i = 0; i < components.length; i++) {
+            String component = components[i];
+            array[i] = objectCallback.getObject(component);
+        }
+
+        return array;
     }
 
     /**
@@ -354,15 +370,24 @@ public class CommonUtils {
 		return str.substring(str.indexOf("_")+1);
 	}
 
+    public static String substitutePrefix(String code, String prefix) {
+        if(prefix.length() == 4) {
+            if(prefix.charAt(3) != '_') {
+                log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
+                return code;
+            }
 
-	// TODO: Going to elaborate on this more another time. Will allow for the extra _ character some constants have
-	public static String substitutePrefix(String code, String prefix) {
+            // ensure 3 character length after underscore check
+            prefix = prefix.substring(0, 3);
+        }
+
 		if(prefix.length() != 3) {
-			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters");
+			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
 			return code;
 		}
-		code = prefix + code.substring(prefix.length());
-		return code;
+
+        // all prefixes are now 3 characters at this point. Yay
+		return prefix.concat(code.substring(3));
 	}
 
 	/**

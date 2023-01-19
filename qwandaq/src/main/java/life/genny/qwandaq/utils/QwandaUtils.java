@@ -794,17 +794,22 @@ public class QwandaUtils {
 	 * @return Ask
 	 */
 	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
-
 		// grab def entity
 		Definition definition = defUtils.getDEF(baseEntity);
 
 		String sourceCode = userToken.getUserCode();
 		String targetCode = baseEntity.getCode();
 
+		String name = baseEntity.getName();
+		Optional<EntityAttribute> optName = baseEntity.findEntityAttribute(Attribute.PRI_NAME);
+		if(optName.isPresent() && !StringUtils.isBlank(optName.get().getValueString())) {
+			name = optName.get().getValueString();
+		}
+
 		// create GRP ask
 		Attribute questionAttribute = getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
-				"Edit " + targetCode + " : " + baseEntity.getName(),
+				"Edit " + baseEntity.getName() + " : " + name,
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
 
@@ -834,6 +839,108 @@ public class QwandaUtils {
 		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
 
 		return ask;
+	}
+	
+	/**
+	 * Get the edit question groups for a {@link BaseEntity}
+	 * <p> will default to <b>QUE_BASEENTITY_GRP</b> if no {@link Attribute#LNK_EDIT_QUES} attribute exists in the {@link Definition}
+	 *     or if the value is blank
+	 * </p>
+	 * @param baseEntityCode a BaseEntity or Definition code 
+	 * @return array of question group codes in order of appearance for editing the BaseEntity
+	 */
+	public String[] getEditQuestionGroups(String baseEntityCode) {
+		if(baseEntityCode == null)
+			throw new NullParameterException("baseEntityCode");
+		// ensure def
+		log.info("[!] Attempting to retrieve edit question groups from base entity: " + baseEntityCode);
+		Definition baseEntity = defUtils.getDEF(baseEntityCode);
+		if(baseEntity == null) {
+			log.error("Could not find Definition of be: " + baseEntityCode);
+		} else {
+			log.info("Found: " + baseEntity.getCode());
+		}
+
+		return getEditQuestionGroups(baseEntity);
+	}
+
+	public String[] getEditPcmCodes(String targetCode) {
+		if(targetCode == null)
+			throw new NullParameterException("targetCode");
+		// ensure def
+		log.info("[!] Attempting to retrieve edit pcms from base entity: " + targetCode);
+		Definition baseEntity = defUtils.getDEF(targetCode);
+		if(baseEntity == null) {
+			log.error("Could not find Definition of be: " + targetCode);
+		} else {
+			log.info("Found: " + baseEntity.getCode());
+		}
+
+		return getEditPcmCodes(baseEntity);
+	}
+
+	public String[] getEditPcmCodes(BaseEntity baseEntity) {
+		if(baseEntity == null)
+			throw new NullParameterException("baseEntity");
+		
+		// Convert to DEF
+		if(!baseEntity.getCode().startsWith(Prefix.DEF)) {
+			baseEntity = defUtils.getDEF(baseEntity);
+		}
+
+		// Look for attached edit ques. If none then default to QUE_BASEENTITY_GRP
+		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_PCMS);
+		if(!editQuesLnk.isPresent()) {
+			log.warn("Could not find LNK_EDIT_PCMS in " + baseEntity.getCode() + ". Defaulting to PCM_FORM_EDIT");
+			return new String[] {"PCM_FORM_EDIT"};
+		}
+		
+		log.debug("FOUND LNK_EDIT_PCMS");
+
+		String editQues = editQuesLnk.get().getValueString();
+		if(!StringUtils.isBlank(editQues)) {
+			log.info("Found edit questions: " + editQues);
+			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
+		}
+		
+		log.warn("Edit ques was blank. Defaulting to PCM_FORM_EDIT");
+		return new String[] {"PCM_FORM_EDIT"};
+	}
+
+	/**
+	 * Get the edit question groups for a {@link BaseEntity}
+	 * <p> will default to <b>QUE_BASEENTITY_GRP</b> if no {@link Attribute#LNK_EDIT_QUES} attribute exists in the {@link Definition}
+	 *     or if the value is blank
+	 * </p>
+	 * @param baseEntity a BaseEntity or definition of a BaseEntity 
+	 * @return array of question group codes in order of appearance for editing
+	 */
+	public String[] getEditQuestionGroups(BaseEntity baseEntity) {
+		if(baseEntity == null)
+			throw new NullParameterException("baseEntity");
+		
+		// Convert to DEF
+		if(!baseEntity.getCode().startsWith(Prefix.DEF)) {
+			baseEntity = defUtils.getDEF(baseEntity);
+		}
+
+		// Look for attached edit ques. If none then default to QUE_BASEENTITY_GRP
+		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_QUES);
+		if(!editQuesLnk.isPresent()) {
+			log.warn("Could not find LNK_EDIT_QUES in " + baseEntity.getCode() + ". Defaulting to QUE_BASEENTITY_GRP");
+			return new String[] {Question.QUE_BASEENTITY_GRP};
+		}
+		
+		log.debug("FOUND LNK_EDIT_QUES");
+
+		String editQues = editQuesLnk.get().getValueString();
+		if(!StringUtils.isBlank(editQues)) {
+			log.info("Found edit questions: " + editQues);
+			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
+		}
+		
+		log.warn("Edit ques was blank. Defaulting to QUE_BASEENTITY_GRP");
+		return new String[] {Question.QUE_BASEENTITY_GRP};
 	}
 
 	/**
