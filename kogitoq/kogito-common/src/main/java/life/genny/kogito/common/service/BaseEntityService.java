@@ -189,7 +189,7 @@ public class BaseEntityService {
 						.add("buttonEvents", buttonEvents)
 						.build();
 
-		kogitoUtils.triggerWorkflow(UseService.SELF, "edit", payload);
+		kogitoUtils.triggerWorkflow(UseService.SELF, "processQuestions", payload);
 	}
 
 	public String getDEFPrefix(String definitionCode) {
