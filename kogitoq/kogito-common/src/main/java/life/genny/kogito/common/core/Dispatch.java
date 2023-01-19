@@ -89,7 +89,7 @@ public class Dispatch {
 		String targetCode = processData.getTargetCode();
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 
 		PCM pcm = beUtils.getPCM(processData.getPcmCode());
 
