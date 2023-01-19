@@ -860,7 +860,7 @@ public class QwandaUtils {
 		if(targetCode == null)
 			throw new NullParameterException("targetCode");
 		// ensure def
-		log.info("[!] Attempting to retrieve edit question groups from base entity: " + targetCode);
+		log.info("[!] Attempting to retrieve edit pcms from base entity: " + targetCode);
 		Definition baseEntity = defUtils.getDEF(targetCode);
 		if(baseEntity == null) {
 			log.error("Could not find Definition of be: " + targetCode);
