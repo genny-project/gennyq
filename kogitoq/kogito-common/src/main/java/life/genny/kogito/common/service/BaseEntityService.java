@@ -4,12 +4,16 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.kogito.common.utils.KogitoUtils.UseService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
@@ -43,6 +47,9 @@ public class BaseEntityService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	KogitoUtils kogitoUtils;
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -167,19 +174,22 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 	}
 
-	 // Honestly Kogito got me good on this one
-	 // TODO: Figure out why these need to be swapped
-	public String setPcmQuestionCode(String PCMCode, String questionCode) {
-		if(StringUtils.isBlank(PCMCode))
-			throw new NullParameterException("PCMCode");
-		if(StringUtils.isBlank(questionCode))
-			throw new NullParameterException("questionCode");
+	public void edit(String questionCode, String sourceCode, String targetCode) {
+		final String pcmCode = "PCM_EDIT";
+		final String buttonEvents = "SUBMIT,CANCEL,RESET";
+		final String parent = "PCM_CONTENT";
+		final String location = "PRI_LOC1";
 
-		log.info("Setting questionCode of PCM: " + PCMCode + " to " + questionCode);
-		PCM pcm = beUtils.getPCM(questionCode);
-		pcm.setQuestionCode(PCMCode);
-		
-		return pcm.getQuestionCode();
+	JsonObject payload = Json.createObjectBuilder()
+						.add("targetCode", targetCode)
+						.add("sourceCode", sourceCode)
+						.add("pcmCode", pcmCode)
+						.add("parent", parent)
+						.add("location", location)
+						.add("buttonEvents", buttonEvents)
+						.build();
+
+		kogitoUtils.triggerWorkflow(UseService.SELF, "messageLifecycle", payload);
 	}
 
 	public String getDEFPrefix(String definitionCode) {
