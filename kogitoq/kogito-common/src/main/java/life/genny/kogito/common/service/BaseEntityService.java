@@ -4,8 +4,6 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
@@ -13,7 +11,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
-import life.genny.kogito.common.utils.KogitoUtils.UseService;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
@@ -21,7 +18,6 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
-import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -174,23 +170,25 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 	}
 
-	public void edit(String questionCode, String sourceCode, String targetCode) {
-		final String pcmCode = qwandaUtils.getEditPcmCodes(targetCode)[0];
-		final String buttonEvents = "SUBMIT,CANCEL,RESET"; // TODO: Multipage edits
-		final String parent = "PCM_CONTENT";
-		final String location = "PRI_LOC1";
-		log.debug("Sending edit with form code: " + pcmCode);
-	JsonObject payload = Json.createObjectBuilder()
-						.add("targetCode", targetCode)
-						.add("sourceCode", sourceCode)
-						.add("pcmCode", pcmCode)
-						.add("parent", parent)
-						.add("location", location)
-						.add("buttonEvents", buttonEvents)
-						.build();
-
-		kogitoUtils.triggerWorkflow(UseService.SELF, "processQuestions", payload);
+	public String getEditPcmCode(String targetCode) {
+		return qwandaUtils.getEditPcmCodes(targetCode)[0];
 	}
+
+	// public void edit(String sourceCode, String targetCode) {
+	// 	final String pcmCode = qwandaUtils.getEditPcmCodes(targetCode)[0];
+	// 	final String buttonEvents = "SUBMIT,CANCEL,RESET"; // TODO: Multipage edits
+	// 	final String parent = "PCM_CONTENT";
+	// 	final String location = "PRI_LOC1";
+	// 	log.debug("Sending edit with form code: " + pcmCode);
+	// JsonObject payload = Json.createObjectBuilder()
+	// 					.add("targetCode", targetCode)
+	// 					.add("sourceCode", sourceCode)
+	// 					.add("pcmCode", pcmCode)
+	// 					.add("parent", parent)
+	// 					.add("location", location)
+	// 					.add("buttonEvents", buttonEvents)
+	// 					.build();
+	// }
 
 	public String getDEFPrefix(String definitionCode) {
 
