@@ -203,7 +203,21 @@ public class TaskService {
 		if (!processAnswers.isValid(answer, processData))
 			return processData;
 
-		processData.getAnswers().add(answer);
+		// remove previous answers for this attribute
+		List<Answer> answers = processData.getAnswers();
+		for (int i = 0; i < answers.size();) {
+			Answer a = answers.get(i);
+			if (a.getAttributeCode().equals(answer.getAttributeCode()) 
+				&& a.getTargetCode().equals(answer.getTargetCode())) {
+				log.info("Found duplicate : " + a.getAttributeCode());
+				answers.remove(i);
+			} else {
+				i++;
+			}
+		}
+		// add new answer
+		answers.add(answer);
+		processData.setAnswers(answers);
 
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);

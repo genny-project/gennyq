@@ -2,7 +2,6 @@ package life.genny.qwandaq.managers;
 
 import java.lang.invoke.MethodHandles;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -15,13 +14,13 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 @ApplicationScoped
 public abstract class Manager {
-	private Logger log;
-
 	protected static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	protected Logger log;
 
 	@Inject
 	protected UserToken userToken;
@@ -37,46 +36,11 @@ public abstract class Manager {
 
 	@Inject
 	protected DatabaseUtils dbUtils;
-
-	@PostConstruct
-    protected void init() {
-		log = Logger.getLogger(className());
-        log.info("[!] Initialized " + this.className());
-    }
-    
     protected String className() {
 		String str = this.getClass().getSimpleName();
 		int index = str.indexOf('_');
 		if(index != -1)
 			str = str.substring(0, index);
 		return str != null ? str : MethodHandles.lookup().lookupClass().getCanonicalName();
-	}
-    
-	protected Logger getLogger() {
-		return log;
-	}
-
-	protected void log(Object o, FILogCallback level) {
-		level.log(o);
-	}
-
-	protected void info(Object o) {
-		log(o, log::info);
-	}
-
-	protected void debug(Object o) {
-		log(o, log::debug);
-	}
-
-	protected void warn(Object o) {
-		log(o, log::warn);
-	}
-
-	protected void error(Object o) {
-		log(o, log::error);
-	}
-	
-	protected void trace(Object o) {
-		log(o, log::trace);
 	}
 }

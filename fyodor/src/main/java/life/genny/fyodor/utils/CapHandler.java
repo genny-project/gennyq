@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
@@ -53,12 +54,12 @@ public class CapHandler extends Manager {
 	public void refineColumnsFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 
 		List<Column> columns = searchEntity.getTraits(Column.class);
-		info("Filtering " + columns.size() + " columns");
+		log.info("Filtering " + columns.size() + " columns");
 		columns = columns.stream()
 				.filter(column -> traitCapabilitiesMet(column, userCapabilities))
 				.collect(Collectors.toList());
 
-		info("Filtered down to " + columns.size() + " columns");
+				log.info("Filtered down to " + columns.size() + " columns");
 		searchEntity.setTraits(Column.class, columns);
 	}
 
@@ -67,12 +68,12 @@ public class CapHandler extends Manager {
 	 */
 	public void refineSortsFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<Sort> sorts = searchEntity.getTraits(Sort.class);
-		info("Filtering " + sorts.size() + " sorts");
+		log.info("Filtering " + sorts.size() + " sorts");
 
 		sorts = sorts.stream()
 				.filter(sort -> traitCapabilitiesMet(sort, userCapabilities))
 				.collect(Collectors.toList());
-		info("Filtered down to " + sorts.size() + " sorts");
+				log.info("Filtered down to " + sorts.size() + " sorts");
 		searchEntity.setTraits(Sort.class, sorts);
 	}
 	
@@ -81,19 +82,19 @@ public class CapHandler extends Manager {
 	 */
 	public void refineFiltersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
-		info("Filtering " + containers.size() + " filters"); 
+		log.info("Filtering " + containers.size() + " filters"); 
 		containers = containers.stream()
 				.filter(container -> {
 					// no filter => no capability requirements => let it through
 					if(container.getFilter() == null)
 						return true;
 					
-					info("Filtering " + container.getFilter().getCode());
+					log.info("Filtering " + container.getFilter().getCode());
 					return container.requirementsMet(userCapabilities);
 				})
 				.collect(Collectors.toList());
 
-		info("Filtered down to " + containers.size() + " filters");
+				log.info("Filtered down to " + containers.size() + " filters");
 		searchEntity.setClauseContainers(containers);
 	}
 
@@ -103,24 +104,33 @@ public class CapHandler extends Manager {
 	public void refineActionsFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 
 		List<Action> actions = searchEntity.getTraits(Action.class);
-		info("Filtering " + actions.size() + " actions");
+		log.info("Filtering " + actions.size() + " actions");
 		
 		actions = actions.stream()
 				.filter(action -> traitCapabilitiesMet(action, userCapabilities))
 				.collect(Collectors.toList());
 
-		info("Filtered down to " + actions.size() + " actions");
+		log.info("Filtered down to " + actions.size() + " actions");
 		searchEntity.setTraits(Action.class, actions);
+	}
+	
+	/**
+	 * @param trait
+	 * @param userCapabilities
+	 * @return
+	 */
+	public boolean traitCapabilitiesMet(Trait trait, CapabilitySet userCapabilities) {
+		return traitCapabilitiesMet(trait, userCapabilities, ReqConfig.builder().build());
 	}
 
 	/**
 	 * @param trait
 	 * @return
 	 */
-	public boolean traitCapabilitiesMet(Trait trait, CapabilitySet userCapabilities) {
+	public boolean traitCapabilitiesMet(Trait trait, CapabilitySet userCapabilities, ReqConfig reqConfig) {
 
 		if(userToken == null) {
-			error("[!] No UserToken, cannot verify capabilities");
+			log.error("[!] No UserToken, cannot verify capabilities");
 			return false;
 		}
 
@@ -128,11 +138,11 @@ public class CapHandler extends Manager {
 		// TODO: We also need to consolidate what it means to be a service user
 		boolean isService = hasSecureToken(userToken);
 		if(!isService) {
-			getLogger().info("Checking: " + trait);
-			getLogger().info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
-			return trait.requirementsMet(userCapabilities);
+			log.info("Checking: " + trait);
+			log.info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
+			return trait.requirementsMet(userCapabilities, reqConfig);
 		} else {
-			getLogger().info("Service token. Bypassing requirements");
+			log.info("Service token. Bypassing requirements");
 		}
 		return true;
 	}

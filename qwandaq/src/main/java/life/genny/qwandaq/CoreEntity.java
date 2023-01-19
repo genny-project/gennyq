@@ -101,7 +101,6 @@ public abstract class CoreEntity implements Comparable<Object> {
 	 * A field that stores the human readable summary name of the attribute.
 	 * Note that this field is in English.
 	 */
-	@NotNull
 	@Size(max = 128)
 	@Pattern(regexp = REGEX_NAME, message = "Must contain valid characters for name")
 	@Column(name = "name", updatable = true, nullable = true)

@@ -140,7 +140,8 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+		BaseEntity be = getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+		return be;
 	}
 
 	/**
@@ -574,7 +575,7 @@ public class BaseEntityUtils {
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity create(final Definition definition, String name) {
-		return create(definition, name, null);
+		return create(definition, null, null);
 	}
 
 	/**

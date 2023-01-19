@@ -737,28 +737,28 @@ public class FyodorUltra {
 		String[] array = code.split("__");
 		String attributeCode = array[0];
 		code = Stream.of(array).skip(1).collect(Collectors.joining("__"));
-		// log.info(code);
 
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			if(entity != null) {
-				return getRecursiveColumnLink(entity, code);
-			} else return null;
+			if (entity == null) {
+				return null;
+			}
+			return getRecursiveColumnLink(entity, code);
 		}
 
 		// find value
 		String value;
-		if (Attribute.PRI_NAME.equals(attributeCode))
+		if (Attribute.PRI_NAME.equals(attributeCode)) {
 			value = entity.getName();
-		if (Attribute.PRI_CODE.equals(attributeCode))
+		} else if (Attribute.PRI_CODE.equals(attributeCode)) {
 			value = entity.getCode();
-		else {
+		} else {
 			Optional<EntityAttribute> ea = entity.findEntityAttribute(attributeCode);
-			if (ea.isPresent())
-				value = ea.get().getAsString();
-			else
+			if (ea.isEmpty()) {
 				return null;
+			}
+			value = ea.get().getAsString();
 		}
 
 		// create answer

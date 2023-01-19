@@ -12,10 +12,14 @@ import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
+
 public interface ICapabilityFilterable {
+    static Logger log = Logger.getLogger(ICapabilityFilterable.class);
 
     public static Logger getLogger() {
-        return Logger.getLogger(ICapabilityFilterable.class);
+        return log;
     }
     
     public Set<Capability> getCapabilityRequirements();
@@ -41,7 +45,6 @@ public interface ICapabilityFilterable {
         }
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
-        boolean requiresAllModes = requirementsConfig.needsAllNodes();
 
         getLogger().debug("Testing Capability Config: " + requirementsConfig);
 
@@ -80,6 +83,31 @@ public interface ICapabilityFilterable {
         }
 
         return requiresAllCaps;
+    }
+
+    /**
+     * Print capability requirements (one per line) using log.debug
+     */
+    public default void printRequirements() {
+        printRequirements(log::debug);
+    }
+
+    /**
+     * Print capability requirements (one per line) using a given log function
+     * @param logLevel - log level / function to use (e.g log::debug or System.out::println)
+     */
+    public default void printRequirements(FILogCallback logLevel) {
+        if(getCapabilityRequirements() == null || getCapabilityRequirements().size() == 0) {
+            logLevel.log("No requirements found to print!");
+            return;
+        }
+        CommonUtils.printCollection(getCapabilityRequirements(), logLevel, (req) -> {
+            return new StringBuilder("  - ")
+                .append(req.code)
+                .append(" = ")
+                .append(CommonUtils.getArrayString(req.nodes))
+                .toString();
+        });
     }
 
 }

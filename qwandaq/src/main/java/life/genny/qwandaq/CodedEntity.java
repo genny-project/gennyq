@@ -126,11 +126,7 @@ public abstract class CodedEntity extends CoreEntity {
 	 * @param code the unique code of the coded entity
 	 */
 	public void setCode(String code) {
-		if (code == null) {
-			log.error("Null Code passed. Will result in error if saved");
-		} else {
-			this.code = code.toUpperCase();
-		}
+		this.code = code.toUpperCase();
 	}
 
 	/**

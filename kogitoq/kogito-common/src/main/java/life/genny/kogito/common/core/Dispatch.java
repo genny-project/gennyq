@@ -5,6 +5,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,6 +43,7 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -88,9 +90,10 @@ public class Dispatch {
 		String targetCode = processData.getTargetCode();
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 
 		PCM pcm = beUtils.getPCM(processData.getPcmCode());
+
 		// ensure target codes match
 		pcm.setTargetCode(targetCode);
 		QBulkMessage msg = new QBulkMessage();
@@ -103,12 +106,14 @@ public class Dispatch {
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
+
 		// generate events if specified
 		String buttonEvents = processData.getButtonEvents();
 		if (buttonEvents != null) {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
 		}
+		
 		// init if null to stop null pointers
 		if (processData.getAttributeCodes() == null) {
 			processData.setAttributeCodes(new ArrayList<String>());
@@ -116,8 +121,9 @@ public class Dispatch {
 		if (processData.getSearches() == null) {
 			processData.setSearches(new ArrayList<String>());
 		}
+
 		// traverse pcm to build data
-		traversePCM(pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, msg, processData);
 		// update questionCode after traversing
 		if (questionCode != null)
 			pcm.setQuestionCode(questionCode);
@@ -206,11 +212,11 @@ public class Dispatch {
 	 * @param msg The bulk message to store data
 	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target, 
+	public void traversePCM(CapabilitySet userCapabilities, String code, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 		// add pcm to bulk message
 		PCM pcm = beUtils.getPCM(code);
-		traversePCM(pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, msg, processData);
 	}
 
 	/**
@@ -222,15 +228,18 @@ public class Dispatch {
 	 * @param msg The bulk message to store data
 	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target, 
+	public void traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target, 
 			QBulkMessage msg, ProcessData processData) {
 		// check capability requirements are met
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
+		log.debug("Traversing " + pcm.getCode());
+		log.debug("[!] ======================= requirements for: " + pcm.getCode() + " =======================");
+		pcm.printRequirements();
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
 		}
-		log.debug("Traversing " + pcm.getCode());
+		
+		log.debug("Passed capabilities check");
 
 		// use pcm target if one is specified
 		String targetCode = pcm.getTargetCode();
@@ -251,21 +260,39 @@ public class Dispatch {
 			return;
 		}
 
-		// add pcm for sending
-		msg.add(pcm);
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
+		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
+			if(!entityAttribute.requirementsMet(userCapabilities)) {
+				log.warn("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
+				filteredLocations.add(entityAttribute);
+				continue;
+			}
+			
+			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
+			
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
-				traversePCM(value, source, target, msg, processData);
-				continue;
+				traversePCM(userCapabilities, value, source, target, msg, processData);
 			} else if (value.startsWith(Prefix.SBE)) {
 				processData.getSearches().add(value);
-				continue;
 			}
 		}
+
+		// ensure these don't go out to frontend
+		for(EntityAttribute badlocation : filteredLocations) {
+			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
+			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
+		}
+		// locations.removeAll(filteredLocations);
+
+		// add pcm for sending
+		CommonUtils.printCollection(pcm.getBaseEntityAttributes(), (ea) -> {
+			return "	 - " + ea.getBaseEntityCode() + ":" + ea.getAttributeCode() + " = " + ea.getValueString();
+		});
+		msg.add(pcm);
 
 		// check for a question code
 		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
@@ -448,9 +475,7 @@ public class Dispatch {
 		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 
 		baseEntities.stream().forEach(entity -> {
-			if (entity.findEntityAttribute(Attribute.PRI_NAME).isEmpty())
-				entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
-
+			entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
 			MergeUtils.mergeBaseEntity(entity, contexts);
 		});
 
