@@ -160,7 +160,7 @@ public class RoleManager extends Manager {
 		
 		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(Attribute.LNK_CHILDREN);
 		if(!optChildren.isPresent()) {
-			warn("No editable children found for: " + targetRole.getCode());
+			log.warn("No editable children found for: " + targetRole.getCode());
 			return new ArrayList<String>();
 		}
 		String roleCodes = optChildren.get().getValueString();
@@ -181,7 +181,7 @@ public class RoleManager extends Manager {
 		return getChildrenCodes(targetRole).stream().map((String beCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(beCode);
 			if(be == null) {
-				error("Could not find Role: " + beCode);
+				log.error("Could not find Role: " + beCode);
 			}
 
 			return be;
@@ -277,7 +277,7 @@ public class RoleManager extends Manager {
 				// return first found redirect
 				return getRoleRedirectCode(role);
 			} catch (RoleException e) {
-				debug(e.getMessage());
+				log.debug(e.getMessage());
 			}
 		}
 
@@ -359,7 +359,7 @@ public class RoleManager extends Manager {
 		return roles.stream().map((String roleCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(roleCode);
 			if(be == null) {
-				error("Could not find role: " + roleCode);
+				log.error("Could not find role: " + roleCode);
 			}
 			return be;
 		}).filter((BaseEntity roleBe) -> (roleBe != null)).collect(Collectors.toList());

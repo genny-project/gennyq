@@ -140,7 +140,8 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+		BaseEntity be = getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+		return be;
 	}
 
 	/**

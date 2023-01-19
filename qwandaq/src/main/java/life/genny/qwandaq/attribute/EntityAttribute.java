@@ -56,7 +56,7 @@ import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
@@ -72,7 +72,7 @@ import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
+public class EntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
 
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
@@ -246,8 +246,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		setReadonly(false);
 	}
 
-    @JsonbTransient
-    @JsonIgnore
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
 	}
@@ -1347,8 +1345,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	}
 
 	@Override
-    @JsonbTransient
-    @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;		
 	}
