@@ -857,6 +857,52 @@ public class QwandaUtils {
 		return getEditQuestionGroups(baseEntity);
 	}
 
+	public String[] getEditPcmCodes(String targetCode) {
+		if(targetCode == null)
+			throw new NullParameterException("targetCode");
+		// ensure def
+		log.info("[!] Attempting to retrieve edit question groups from base entity: " + targetCode);
+		Definition baseEntity = defUtils.getDEF(targetCode);
+		if(baseEntity == null) {
+			log.error("Could not find Definition of be: " + targetCode);
+		} else {
+			log.info("Found: " + baseEntity.getCode());
+		}
+
+		return getEditPcmCodes(baseEntity);
+	}
+
+	public String[] getEditPcmCodes(BaseEntity baseEntity) {
+		if(baseEntity == null)
+			throw new NullParameterException("baseEntity");
+		
+		// Convert to DEF
+		if(!baseEntity.getCode().startsWith(Prefix.DEF)) {
+			baseEntity = defUtils.getDEF(baseEntity);
+		}
+
+		// Look for attached edit ques. If none then default to QUE_BASEENTITY_GRP
+		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_PCMS);
+		if(!editQuesLnk.isPresent()) {
+			log.warn("Could not find LNK_EDIT_PCMS in " + baseEntity.getCode() + ". Defaulting to PCM_FORM_EDIT");
+			CommonUtils.printCollection(baseEntity.getBaseEntityAttributes(), log::debug, (ea) -> {
+				return "	" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode() + " = " + ea.getValueString();
+			});
+			return new String[] {"PCM_FORM_EDIT"};
+		}
+		
+		log.debug("FOUND LNK_EDIT_PCMS");
+
+		String editQues = editQuesLnk.get().getValueString();
+		if(!StringUtils.isBlank(editQues)) {
+			log.info("Found edit questions: " + editQues);
+			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
+		}
+		
+		log.warn("Edit ques was blank. Defaulting to PCM_FORM_EDIT");
+		return new String[] {"PCM_FORM_EDIT"};
+	}
+
 	/**
 	 * Get the edit question groups for a {@link BaseEntity}
 	 * <p> will default to <b>QUE_BASEENTITY_GRP</b> if no {@link Attribute#LNK_EDIT_QUES} attribute exists in the {@link Definition}

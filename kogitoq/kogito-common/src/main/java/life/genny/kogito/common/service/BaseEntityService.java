@@ -175,8 +175,8 @@ public class BaseEntityService {
 	}
 
 	public void edit(String questionCode, String sourceCode, String targetCode) {
-		final String pcmCode = "PCM_EDIT";
-		final String buttonEvents = "SUBMIT,CANCEL,RESET";
+		final String pcmCode = qwandaUtils.getEditPcmCodes(targetCode)[0];
+		final String buttonEvents = "SUBMIT,CANCEL,RESET"; // TODO: Multipage edits
 		final String parent = "PCM_CONTENT";
 		final String location = "PRI_LOC1";
 

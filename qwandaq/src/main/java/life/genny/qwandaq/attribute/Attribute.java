@@ -166,6 +166,7 @@ public class Attribute extends CodedEntity {
 
 	// edit
 	public static final String LNK_EDIT_QUES = "LNK_EDIT_QUES";
+	public static final String LNK_EDIT_PCMS = "LNK_EDIT_PCMS";
 
 	@Embedded
 	@NotNull
