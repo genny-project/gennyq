@@ -159,11 +159,13 @@ public class TaskService {
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
-		boolean isReadonly = flatMapOfAsks.values().stream().allMatch(ask -> ask.getReadonly());
+		boolean notReadonly = flatMapOfAsks.values().stream()
+			.peek(ask -> log.info(ask.getAttributeCode() + " = " + ask.getReadonly()))
+			.anyMatch(ask -> !ask.getReadonly());
 
 		// handle non-readonly if necessary
 		// use dispatch.containsNonReadonly(flatMapOfAsks) if this does not work
-		if (!isReadonly) {
+		if (notReadonly) {
 			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 			msg.add(processEntity);
 
