@@ -602,7 +602,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = definition.findPrefixEntityAttributes(Prefix.ATT);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT.length());
-			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			Attribute attribute = qwandaUtils.getAttribute(ea.getBaseEntity().getRealm() ,attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
