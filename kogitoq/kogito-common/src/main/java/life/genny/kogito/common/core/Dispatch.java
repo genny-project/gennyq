@@ -122,8 +122,11 @@ public class Dispatch {
 			processData.setSearches(new ArrayList<String>());
 		}
 
+		String parent = processData.getParent();
+		String location = processData.getLocation();
+
 		// traverse pcm to build data
-		traversePCM(userCapabilities, pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
 		// update questionCode after traversing
 		if (questionCode != null)
 			pcm.setQuestionCode(questionCode);
@@ -135,12 +138,11 @@ public class Dispatch {
 		 * This occurs when triggering dispatch for a pcm
 		 * that requires a different target code.
 		 */
-		String parent = processData.getParent();
 		if (parent != null && !PCM_TREE.equals(parent)) {
 			PCM parentPCM = beUtils.getPCM(parent);
-			Integer location = PCM.findLocation(processData.getLocation());
-			log.debug("Updating " + parentPCM.getCode() + " : Location " + location + " -> " + processData.getPcmCode());
-			parentPCM.setLocation(location, processData.getPcmCode());
+			Integer loc = PCM.findLocation(location);
+			log.debug("Updating " + parentPCM.getCode() + " : Location " + loc + " -> " + processData.getPcmCode());
+			parentPCM.setLocation(loc, processData.getPcmCode());
 			msg.add(parentPCM);
 		}
 
@@ -213,10 +215,10 @@ public class Dispatch {
 	 * @param processData The ProcessData used to init the task
 	 */
 	public void traversePCM(CapabilitySet userCapabilities, String code, BaseEntity source, BaseEntity target, 
-			QBulkMessage msg, ProcessData processData) {
+			String parent, String location, QBulkMessage msg, ProcessData processData) {
 		// add pcm to bulk message
 		PCM pcm = beUtils.getPCM(code);
-		traversePCM(userCapabilities, pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
 	}
 
 	/**
@@ -229,7 +231,9 @@ public class Dispatch {
 	 * @param processData The ProcessData used to init the task
 	 */
 	public void traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target, 
-			QBulkMessage msg, ProcessData processData) {
+			String parent, String location, QBulkMessage msg, ProcessData processData) {
+		// TODO: This is too many arguments
+
 		// check capability requirements are met
 		log.debug("Traversing " + pcm.getCode());
 		log.debug("[!] ======================= requirements for: " + pcm.getCode() + " =======================");
@@ -253,6 +257,8 @@ public class Dispatch {
 					.add("sourceCode", source.getCode())
 					.add("targetCode", targetCode)
 					.add("pcmCode", pcm.getCode())
+					.add("parentCode", parent)
+					.add("location", location)
 					.build();
 			kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
 			return;
@@ -273,7 +279,7 @@ public class Dispatch {
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
-				traversePCM(userCapabilities, value, source, target, msg, processData);
+				traversePCM(userCapabilities, value, source, target, parent, location, msg, processData);
 			} else if (value.startsWith(Prefix.SBE)) {
 				processData.getSearches().add(value);
 			}
