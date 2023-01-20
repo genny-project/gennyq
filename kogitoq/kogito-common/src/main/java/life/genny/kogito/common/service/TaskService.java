@@ -167,7 +167,7 @@ public class TaskService {
 
 		// handle non-readonly if necessary
 		// use dispatch.containsNonReadonly(flatMapOfAsks) if this does not work
-		if (readonly) {
+		if (!readonly) {
 			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 			msg.add(processEntity);
 
