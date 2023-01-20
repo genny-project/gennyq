@@ -279,6 +279,8 @@ public class Dispatch {
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM)) {
+				parent = pcm.getCode();
+				location = entityAttribute.getAttributeCode();
 				traversePCM(userCapabilities, value, source, target, parent, location, msg, processData);
 			} else if (value.startsWith(Prefix.SBE)) {
 				processData.getSearches().add(value);
