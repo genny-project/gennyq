@@ -252,12 +252,12 @@ public class Dispatch {
 			targetCode = MergeUtils.merge(targetCode, ctxMap);
 			// update targetCode so it does not re-trigger merging
 			pcm.setTargetCode(targetCode);
-			// providing a null parent & location since it is already set in the parent
+			log.debug("Parent = " + parent + ", location = " + location);
 			JsonObject payload = Json.createObjectBuilder()
 					.add("sourceCode", source.getCode())
 					.add("targetCode", targetCode)
 					.add("pcmCode", pcm.getCode())
-					.add("parentCode", parent)
+					.add("parent", parent)
 					.add("location", location)
 					.build();
 			kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);

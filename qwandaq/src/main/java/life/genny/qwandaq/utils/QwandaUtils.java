@@ -350,8 +350,6 @@ public class QwandaUtils {
 				child.setDisabled(questionQuestion.getDisabled());
 				child.setReadonly(questionQuestion.getReadonly());
 
-				log.info("Child " + child.getAttributeCode() + " readonly = " + child.getReadonly());
-
 				// override with QuestionQuestion icon if exists
 				if (questionQuestion.getIcon() != null) {
 					child.getQuestion().setIcon(questionQuestion.getIcon());
