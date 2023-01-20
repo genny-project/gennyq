@@ -29,13 +29,7 @@ public class ProcessData extends ProcessInstanceVariables {
 	private List<String> searches;
 	private List<Answer> answers;
 
-	public List<String> getSearches() {
-		return searches;
-	}
-
-	public void setSearches(List<String> searches) {
-		this.searches = searches;
-	}
+	private boolean readonly;
 
 	public ProcessData() {
 		super();
@@ -121,12 +115,28 @@ public class ProcessData extends ProcessInstanceVariables {
 		this.attributeCodes = attributeCodes;
 	}
 
+	public List<String> getSearches() {
+		return searches;
+	}
+
+	public void setSearches(List<String> searches) {
+		this.searches = searches;
+	}
+
 	public List<Answer> getAnswers() {
 		return answers;
 	}
 
 	public void setAnswers(List<Answer> answers) {
 		this.answers = answers;
+	}
+
+	public boolean isReadonly() {
+		return readonly;
+	}
+
+	public void setReadonly(boolean readonly) {
+		this.readonly = readonly;
 	}
 
 }
