@@ -173,13 +173,15 @@ message ProcessData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string questionCode = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated string searches = 10; 
+	optional bool readonly = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 11; 
+	repeated string searches = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 12; 
+	optional string sourceCode = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string processId = 13; 
+	optional string targetCode = 13; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string processId = 14; 
 }
 /* @Indexed */ 
 message TaskExchange { 
