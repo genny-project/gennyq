@@ -189,9 +189,9 @@ public class Events {
 
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
-			}else if ("MSG".equals(prefix)){
+			}else if ("COMMUNICATION".equals(code)){
 				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
+						.add("definitionCode", "DEF_".concat("MESSAGE"))
 						.add("sourceCode", userToken.getUserCode())
 						.build();
 
@@ -199,10 +199,8 @@ public class Events {
 				return;
 			}
 		}
-
 		// edit item (TODO This needs to be moved into a timer based bpmn)
-		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
-
+		if (("ACT_EDIT".equals(code) || "ACT_PRI_EVENT_EDIT".startsWith(code)) && parentCode.startsWith("SBE_")) {
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()
 						.add("questionCode", "QUE_BASEENTITY_GRP")
