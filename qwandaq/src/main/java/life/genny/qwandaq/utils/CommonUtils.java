@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
@@ -65,9 +66,7 @@ public class CommonUtils {
 
     public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
         if(collection == null) {
-            logCallback.log("Could not find collection");
-            new Exception("stack trace exception").printStackTrace();
-            return;
+            throw new NullParameterException("collection");
         }
         for(T item : collection) {
             logCallback.log(logLine.getString(item));
@@ -86,20 +85,42 @@ public class CommonUtils {
      * Prints a map over multiple lines
      * works well assuming that the toString methods of the keys and values are well defined
      * @param map map to print
+     * @param logLevel - log function to use (e.g log::debug)
      */
-    public static void printMap(Map<?, ?> map) {
+    public static void printMap(Map<?, ?> map, FILogCallback logLevel) {
         for(Object key : map.keySet()) {
-            log.info(key + "=" + map.get(key));
+            logLevel.log(key + "=" + map.get(key));
         }
     }
 
-    public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
+    /**
+     * Prints a map over multiple lines
+     * works well assuming that the toString methods of the keys and values are well defined
+     * @param map map to print
+     */
+    public static void printMap(Map<?, ?> map) {
+        printMap(map, log::info);
+    }
+
+    /**
+     * Print a map of K -> V with a given log function, keyCallback and valueCallback
+     * <pre>
+     *  CommonUtils.printMap(map, log::info, key -> key.toString(), value -> value.toString());
+     * </pre>
+     * @param <K>
+     * @param <V>
+     * @param map
+     * @param logLevel
+     * @param keyCallback
+     * @param valueCallback
+     */
+    public static <K, V> void printMap(Map<K, V> map, FILogCallback logLevel, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
         for(K key : map.keySet()) {
             String msg = new StringBuilder(keyCallback.getString(key))
                             .append(" = ")
                             .append(valueCallback.getString(map.get(key)))
                             .toString();
-            log.info(msg);
+            logLevel.log(msg);
         }
     }
 

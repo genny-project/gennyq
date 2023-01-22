@@ -39,6 +39,7 @@ import org.keycloak.util.JsonSerialization;
 
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.KeycloakException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
@@ -254,6 +255,11 @@ public class KeycloakUtils {
 
         String str = executeEncodedPostRequest(uri, params);
         // log.info("encodedPostRequest:[" + str + "]");
+        if(StringUtils.isBlank(str)) {
+            log.error("Bad request to uri: " + uri + "! Params:");
+            CommonUtils.printMap(params, log::error);
+            throw new BadDataException("Response from uri");
+        }
         JsonObject json = jsonb.fromJson(str, JsonObject.class);
         String token = json.getString("access_token");
 
