@@ -635,6 +635,8 @@ public class QwandaUtils {
 			EntityAttribute ea;
 			if (Attribute.PRI_NAME.equals(code)) {
 				Attribute priName = getAttribute(Attribute.PRI_NAME);
+				log.info("Target Name = " + target.getName());
+				log.info("Name is code = " + target.getName().equals(target.getCode()));
 				String name = (target.getName().equals(target.getCode()) || target.getName().isEmpty()) ? null : target.getName();
 				ea = new EntityAttribute(processEntity, priName, 1.0, name);
 			} else {
