@@ -24,6 +24,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.entity.PCM;
 
 /**
  * ProcessAnswers
@@ -104,17 +105,25 @@ public class ProcessAnswers {
 		if (answers.isEmpty())
 			return acceptSubmission;
 
-		Answer answer = answers.get(answers.size() - 1);
-		String attributeCode = answer.getAttributeCode();
-
+		// TODO: Might review below in the future
 		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
-			String parentCode = processData.getQuestionCode();
-			String questionCode = answer.getCode();
+			for(Definition definition : definitions){
+				for(Answer answer : answers) {
+					String attributeCode = answer.getAttributeCode();
 
-			qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-			acceptSubmission = false;
+					if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+						String questionCode = answer.getCode();
+						PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
+						PCM subPcm = beUtils.getPCM(mainPcm.getLocation(1));
+
+						qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
+						acceptSubmission = false;
+						return acceptSubmission;
+					}
+				}
+			}
 		}
 
 		return acceptSubmission;

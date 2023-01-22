@@ -1,5 +1,5 @@
 package life.genny.lauchy;
- 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +36,8 @@ import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class Validator {
-    @Inject
-    private Logger log;
+	@Inject
+	private Logger log;
 
 	private Jsonb jsonb = JsonbBuilder.create();
 
@@ -56,7 +56,7 @@ public class Validator {
 	@Inject
 	FilterUtils filter;
 
-    /**
+	/**
 	 * @param data
 	 * @return
 	 */
@@ -94,7 +94,7 @@ public class Validator {
 
 	/**
 	 * Function for validating a data message.
-	 * 
+	 *
 	 * @param data the data to validate
 	 * @return Boolean representing whether the msg is valid
 	 */
@@ -122,7 +122,7 @@ public class Validator {
 
 	/**
 	 * Function for validating an asnwer.
-	 * 
+	 *
 	 * @param answer the answer to validate
 	 * @return Boolean representing whether the answer is valid
 	 */
@@ -301,7 +301,7 @@ public class Validator {
 
 	/**
 	 * A Temporary handler for the bucket quick search.
-	 * 
+	 *
 	 * @param answer    The Answer to handle
 	 * @param target    The target entity
 	 * @param attribute The attribute used

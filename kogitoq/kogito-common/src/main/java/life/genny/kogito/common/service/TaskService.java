@@ -148,7 +148,7 @@ public class TaskService {
 	 * @return
 	 */
 	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
-			String pcmCode, String parent, String location, String buttonEvents) {
+									String pcmCode, String parent, String location, String buttonEvents) {
 
 		log.info("Dispatching...");
 
@@ -225,10 +225,10 @@ public class TaskService {
 
 		// perform basic checks on attribute codes
 		processData.setAttributeCodes(
-			flatMapOfAsks.values().stream()
-					.map(ask -> ask.getQuestion().getAttribute().getCode())
-					.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
-					.collect(Collectors.toList())
+				flatMapOfAsks.values().stream()
+						.map(ask -> ask.getQuestion().getAttribute().getCode())
+						.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
+						.collect(Collectors.toList())
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
@@ -284,6 +284,7 @@ public class TaskService {
 		//check duplicate records
 		if (!processAnswers.checkUniqueness(processData)) {
 			disableButtons(processData);
+
 			return processData;
 		}
 

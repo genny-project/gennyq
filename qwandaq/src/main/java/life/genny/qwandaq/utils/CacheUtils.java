@@ -2,8 +2,10 @@ package life.genny.qwandaq.utils;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import org.apache.commons.lang3.StringUtils;
@@ -160,6 +162,28 @@ public class CacheUtils {
 	}
 
 	/**
+	 * Get a CoreEntity object from the cache using a CoreEntityKey.
+	 *
+	 * @param cacheName The cache to read from
+	 * @param key The key they item is saved against
+	 * @return The CoreEntity returned
+	 */
+	public static CoreEntitySerializable getSerializableEntity(String cacheName, CoreEntityKey key) {
+		return cache.getSerializableEntityFromCache(cacheName, key);
+	}
+
+	/**
+	 * Get a CoreEntity object from the cache using a CoreEntityKey.
+	 *
+	 * @param cacheName The cache to read from
+	 * @param key The key they item is saved against
+	 * @return The CoreEntity returned
+	 */
+	public static CoreEntityPersistable getPersistableEntity(String cacheName, CoreEntityKey key) {
+		return cache.getPersistableEntityFromCache(cacheName, key);
+	}
+
+	/**
 	* Save a {@link CoreEntity} to the cache using a CoreEntityKey.
 	*
 	* @param cacheName The cache to save to
@@ -168,6 +192,18 @@ public class CacheUtils {
 	* @return The CoreEntity being saved
 	 */
 	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
+		return cache.putEntityIntoCache(cacheName, key, entity);
+	}
+
+	/**
+	 * Save a {@link CoreEntity} to the cache using a CoreEntityKey.
+	 *
+	 * @param cacheName The cache to save to
+	 * @param key The key to save against
+	 * @param entity The CoreEntity to save
+	 * @return The CoreEntity being saved
+	 */
+	public static boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntityPersistable entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 
