@@ -480,7 +480,9 @@ public class Dispatch {
 
 		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 
-		baseEntities.stream().forEach(entity -> {
+		baseEntities.stream()
+			.filter(b -> !b.getCode().startsWith(Prefix.QBE))
+			.forEach(entity -> {
 			entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
 			MergeUtils.mergeBaseEntity(entity, contexts);
 		});
