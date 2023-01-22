@@ -487,20 +487,12 @@ public class QwandaUtils {
 			}
 
 			Boolean readonly = ask.getReadonly();
-			log.info("===== " + attributeCode);
-			log.info(jsonb.toJson(ask));
-			log.info(readonly);
 			if (readonly) {
 				continue;
 			}
 
 			Boolean mandatory = ask.getMandatory();
-			String value;
-			if (Attribute.PRI_NAME.equals(attributeCode)) {
-				value = baseEntity.getName();
-			} else {
-				value = baseEntity.getValueAsString(attributeCode);
-			}
+			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
 			if ((mandatory && !readonly) && StringUtils.isBlank(value))
