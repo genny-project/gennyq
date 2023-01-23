@@ -717,7 +717,7 @@ public class FilterService {
             ea.setValue(valBuild.toString());
             ea.setValueString(valBuild.toString());
 
-            base.getBaseEntityAttributes().add(ea);
+            base.addAttribute(ea);
         }
 
         sendBaseEntity(base,parentCode,queCode,false);

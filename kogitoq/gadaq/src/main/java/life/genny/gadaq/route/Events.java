@@ -12,6 +12,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.utils.SecurityUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -77,6 +78,13 @@ public class Events {
 		MessageData data = msg.getData();
 
 		String code = data.getCode();
+
+		if (StringUtils.isEmpty(code)) {
+			log.errorf("'code' is missing from the QEventMessage %s . Sending the event to dead letter queue...", jsonb.toJson(msg, QEventMessage.class));
+			KafkaUtils.writeMsg(KafkaTopic.DEAD_LETTER_QUEUE, msg);
+			return;
+		}
+
 		String processId = data.getProcessId();
 
 		String parentCode = data.getParentCode();

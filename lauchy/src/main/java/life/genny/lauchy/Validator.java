@@ -1,9 +1,6 @@
 package life.genny.lauchy;
  
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -12,6 +9,8 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -56,6 +55,9 @@ public class Validator {
 	@Inject
 	BaseEntityUtils beUtils;
 
+	@Inject
+	EntityAttributeUtils beaUtils;
+
     /**
 	 * @param data
 	 * @return
@@ -63,7 +65,7 @@ public class Validator {
 	public String handleDependentDropdowns(String data) {
 
 		QDataAnswerMessage answers = jsonb.fromJson(data, QDataAnswerMessage.class);
-		List<Ask> asksToSend = new ArrayList<>();
+		Set<Ask> asksToSend = new HashSet<>();
 
 		Arrays.stream(answers.getItems())
 				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
@@ -71,7 +73,7 @@ public class Validator {
 					String processId = answer.getProcessId();
 					// TODO: Wondering if we can just get the processData from the first processId we get
 					ProcessData processData = qwandaUtils.fetchProcessData(processId);
-					List<Ask> asks = qwandaUtils.fetchAsks(processData);
+					Set<Ask> asks = qwandaUtils.fetchAsks(processData);
 
 					Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -174,7 +176,8 @@ public class Validator {
 
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-		if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+		EntityAttribute baseEntityAttribute = (EntityAttribute) beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), "UNQ_" + attributeCode).toSerializableCoreEntity();
+		if (baseEntityAttribute != null) {
 			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
 				String feedback = "Error: This value already exists and must be unique.";

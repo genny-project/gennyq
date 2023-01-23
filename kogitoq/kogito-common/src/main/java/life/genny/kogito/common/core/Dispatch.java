@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -80,6 +79,9 @@ public class Dispatch {
 
 	@Inject
 	TaskService tasks;
+
+	@Inject
+	MergeUtils mergeUtils;
 
 	/**
 	 * Send Asks, PCMs and Searches
@@ -168,7 +170,7 @@ public class Dispatch {
 	 * @param flatMapOfAsks
 	 * @param msg
 	 */
-	public BaseEntity handleNonReadonly(ProcessData processData, List<Ask> asks, Map<String, Ask> flatMapOfAsks,
+	public BaseEntity handleNonReadonly(ProcessData processData, Set<Ask> asks, Map<String, Ask> flatMapOfAsks,
 			QBulkMessage msg) {
 		// update all asks target and processId
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -194,9 +196,10 @@ public class Dispatch {
 				evt.setDisabled(!answered);
 		}
 		// this is ok since flatmap is referencing asks
-		msg.getAsks().addAll(asks);
+		//msg.getAsks().addAll(asks);
+		msg.setAsks(asks);
 		// filter unwanted attributes
-		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributes().size() + " attributes");
+		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributesMap().size() + " attributes");
 
 		return processEntity;
 	}
@@ -243,7 +246,7 @@ public class Dispatch {
 			// merge targetCode
 			Map<String, Object> ctxMap = new HashMap<>();
 			ctxMap.put("TARGET", target);
-			targetCode = MergeUtils.merge(targetCode, ctxMap);
+			targetCode = mergeUtils.merge(targetCode, ctxMap);
 			// update targetCode so it does not re-trigger merging
 			pcm.setTargetCode(targetCode);
 			// providing a null parent & location since it is already set in the parent
@@ -312,26 +315,6 @@ public class Dispatch {
 		}
 
 		return ask;
-	}
-
-	/**
-	 * @param baseEntity
-	 * @param codes
-	 */
-	public void privacyFilter(BaseEntity baseEntity, List<String> codes) {
-
-		// grab all entityAttributes from the entity
-		Set<EntityAttribute> entityAttributes = ConcurrentHashMap
-				.newKeySet(baseEntity.getBaseEntityAttributes().size());
-		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
-			entityAttributes.add(ea);
-		}
-
-		for (EntityAttribute ea : entityAttributes) {
-			if (!codes.contains(ea.getAttributeCode())) {
-				baseEntity.removeAttribute(ea.getAttributeCode());
-			}
-		}
 	}
 
 	/**
@@ -481,10 +464,10 @@ public class Dispatch {
 		Attribute priName = cm.getAttribute(Attribute.PRI_NAME);
 
 		baseEntities.stream().forEach(entity -> {
-			if (entity.findEntityAttribute(Attribute.PRI_NAME).isEmpty())
+			if (!entity.getBaseEntityAttributesMap().containsKey(Attribute.PRI_NAME))
 				entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
 
-			MergeUtils.mergeBaseEntity(entity, contexts);
+			mergeUtils.mergeBaseEntity(entity, contexts);
 		});
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntities);
@@ -497,7 +480,7 @@ public class Dispatch {
 	/**
 	 * @param asks
 	 */
-	public void sendAsks(List<Ask> asks) {
+	public void sendAsks(Set<Ask> asks) {
 
 		QDataAskMessage msg = new QDataAskMessage(asks);
 		msg.setReplace(true);

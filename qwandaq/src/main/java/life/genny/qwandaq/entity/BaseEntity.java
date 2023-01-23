@@ -16,12 +16,7 @@
 
 package life.genny.qwandaq.entity;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Transient;
@@ -77,7 +72,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	public static final String PRI_ADDRESS_FULL = "PRI_ADDRESS_FULL";
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
-	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
+	private Map<String, EntityAttribute> baseEntityAttributes = new HashMap<>(0);
 
 	private Set<EntityEntity> links = new LinkedHashSet<>();
 
@@ -132,17 +127,28 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		this.answers.addAll(answers);
 	}
 
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityAttribute> getBaseEntityAttributes() {
+	public Collection<EntityAttribute> getBaseEntityAttributes() {
+		return baseEntityAttributes.values();
+	}
+
+	@JsonbTransient
+	public Map<String, EntityAttribute> getBaseEntityAttributesMap() {
 		return baseEntityAttributes;
 	}
 
-	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
-		this.baseEntityAttributes = baseEntityAttributes;
+	@JsonbTransient
+	public void setBaseEntityAttributes(final Map<String, EntityAttribute> baseEntityAttributesMap) {
+		this.baseEntityAttributes = baseEntityAttributesMap;
 	}
 
-	public void setBaseEntityAttributes(final List<EntityAttribute> baseEntityAttributes) {
-		this.baseEntityAttributes.addAll(baseEntityAttributes);
+	@JsonbTransient
+	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
+		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
+	}
+
+	@JsonbTransient
+	public void setBaseEntityAttributes(final Collection<EntityAttribute> baseEntityAttributes) {
+		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -227,12 +233,9 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @param attributeCode the attributeCode to find with
 	 * @return Optional
 	 */
+	@Deprecated
 	public Optional<EntityAttribute> findEntityAttribute(final String attributeCode) {
-		Optional<EntityAttribute> ea = Optional.empty();
-		ea = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().equals(attributeCode)))
-				.findFirst();
-		return ea;
+		return Optional.ofNullable(this.baseEntityAttributes.get(attributeCode));
 	}
 
 	/**
@@ -326,14 +329,13 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 
 		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		entityAttribute.setRealm(getRealm());
-		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
-		if (existing.isPresent()) {
+		EntityAttribute existing = this.baseEntityAttributes.get(attribute.getCode());
+		if (existing != null) {
 			if (value != null)
-				existing.get().setValue(value);
-			existing.get().setWeight(weight);
-			// removeAttribute(existing.get().getAttributeCode());
+				existing.setValue(value);
+			existing.setWeight(weight);
 		} else {
-			this.getBaseEntityAttributes().add(entityAttribute);
+			this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
 		}
 		return entityAttribute;
 	}
@@ -360,7 +362,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		entityAttribute.setRealm(getRealm());
 		entityAttribute.setBaseEntityCode(getCode());
 		entityAttribute.setAttribute(attribute);
-		getBaseEntityAttributes().add(entityAttribute);
+		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
 
 		return entityAttribute;
 	}
@@ -373,17 +375,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @return Boolean
 	 */
 	public Boolean removeAttribute(final String attributeCode) {
-		Boolean removed = false;
-		Iterator<EntityAttribute> i = this.baseEntityAttributes.iterator();
-		while (i.hasNext()) {
-			EntityAttribute ea = i.next();
-			if (ea.getAttributeCode().equals(attributeCode)) {
-				i.remove();
-				removed = true;
-				break;
-			}
-		}
-		return removed;
+		return this.getBaseEntityAttributesMap().remove(attributeCode) != null ? true : false;
 	}
 
 	/**
@@ -501,7 +493,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 			newEA.setBaseEntityCode(getCode());
 			newEA.setAttributeCode(answerLink.getAttributeCode());
 			newEA.setInferred(answerLink.getInferred());
-			this.baseEntityAttributes.add(newEA);
+			this.baseEntityAttributes.put(answerLink.getAttributeCode(), newEA);
 		}
 
 		return answerLink;
@@ -516,12 +508,9 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	@JsonbTransient
 	@Transient
 	private <T> T getValue(final Attribute attribute) {
-		// TODO Dumb find for attribute. needs a hashMap
-
-		for (final EntityAttribute ea : this.getBaseEntityAttributes()) {
-			if (ea.getAttribute().getCode().equalsIgnoreCase(attribute.getCode())) {
-				return getValue(ea);
-			}
+		EntityAttribute entityAttribute = this.baseEntityAttributes.get(attribute.getCode());
+		if (entityAttribute != null) {
+			return getValue(entityAttribute);
 		}
 		return null;
 	}
@@ -878,5 +867,24 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		hBaseEntity.setStatus(getStatus());
 		hBaseEntity.setUpdated(getUpdated());
 		return hBaseEntity;
+	}
+
+	public BaseEntity clone(boolean includeAttributes) {
+		BaseEntity clone = new BaseEntity();
+		clone.setCode(getCode());
+		clone.setCreated(getCreated());
+		clone.setName(getName());
+		clone.setRealm(getRealm());
+		clone.setStatus(getStatus());
+		clone.setUpdated(getUpdated());
+		if(includeAttributes) {
+			Map<String, EntityAttribute> baseEntityAttributesMap = getBaseEntityAttributesMap();
+			Map<String, EntityAttribute> clonedBaseEntityAttributesMap = new HashMap<>(baseEntityAttributesMap.size());
+			clone.setBaseEntityAttributes(clonedBaseEntityAttributesMap);
+			for(Map.Entry<String, EntityAttribute> entry : baseEntityAttributesMap.entrySet()) {
+				clonedBaseEntityAttributesMap.put(entry.getKey(), entry.getValue().clone());
+			}
+		}
+		return clone;
 	}
 }

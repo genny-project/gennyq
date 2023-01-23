@@ -1,18 +1,5 @@
 package life.genny.kogito.common.service;
 
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.jboss.logging.Logger;
-
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.qwandaq.Answer;
@@ -24,11 +11,19 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.*;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class TaskService {
@@ -147,7 +142,7 @@ public class TaskService {
 
 		// build data
 		QBulkMessage msg = dispatch.build(processData);
-		List<Ask> asks = msg.getAsks();
+		Set<Ask> asks = msg.getAsks();
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		// perform basic checks on attribute codes
@@ -205,7 +200,7 @@ public class TaskService {
 
 		processData.getAnswers().add(answer);
 
-		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
 
 		QBulkMessage msg = new QBulkMessage();
@@ -226,7 +221,7 @@ public class TaskService {
 	 */
 	public Boolean submit(ProcessData processData) {
 		// construct bulk message
-		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
 
 		// check mandatory fields

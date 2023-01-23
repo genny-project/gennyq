@@ -43,6 +43,9 @@ public class MessageProcessor {
 	@Inject
 	CacheManager cm;
 
+    @Inject
+    MergeUtils mergeUtils;
+
     public void processGenericMessage(QMessageGennyMSG message) {
         executor.supplyAsync(() -> {
             Object result = "";
@@ -124,7 +127,7 @@ public class MessageProcessor {
             // Handle any default context associations
             String contextAssociations = templateBe.getValue("PRI_CONTEXT_ASSOCIATIONS", null);
             if (contextAssociations != null) {
-                MergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
+                mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
             }
 
             // Check for Default Message

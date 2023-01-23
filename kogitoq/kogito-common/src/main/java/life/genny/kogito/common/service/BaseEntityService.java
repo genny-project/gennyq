@@ -1,19 +1,8 @@
 package life.genny.kogito.common.service;
 
-import java.util.Optional;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
@@ -23,11 +12,16 @@ import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.Optional;
 
 @ApplicationScoped
 public class BaseEntityService {
@@ -44,6 +38,9 @@ public class BaseEntityService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -271,8 +268,9 @@ public class BaseEntityService {
 		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
 		BaseEntity defBe = defUtils.getDEF(be);
 
-		Optional<EntityAttribute> defEAttribute = defBe.findEntityAttribute("ATT_" + attributeCode);
-		if (defEAttribute.isPresent()) {
+		//Optional<EntityAttribute> defEAttribute = defBe.findEntityAttribute("ATT_" + attributeCode);
+		EntityAttribute defEAttribute = beaUtils.getEntityAttribute(be.getRealm(), baseEntityCode, attributeCode);
+		if (defEAttribute != null) {
 
 			if (attributeCode.startsWith("LNK_")) {
 				// Check if value is in JsonArray format , otherwise wrap it..

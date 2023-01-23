@@ -8,7 +8,6 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
@@ -23,15 +22,8 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Set;
-import java.util.Optional;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.UUID;
-import java.util.Comparator;
 import javax.inject.Inject;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.Question;
@@ -690,7 +682,7 @@ public class FilterGroupService {
     public String getValueStringByAttCode(BaseEntity base, String attCode) {
         String value = "";
 
-        Set<EntityAttribute> attributeSet =  base.getBaseEntityAttributes();
+        Collection<EntityAttribute> attributeSet =  base.getBaseEntityAttributes();
         Optional<EntityAttribute> ea = attributeSet.stream().filter(e -> e.getAttributeCode().equalsIgnoreCase(attCode))
                 .findFirst();
         if(ea.isPresent()) {

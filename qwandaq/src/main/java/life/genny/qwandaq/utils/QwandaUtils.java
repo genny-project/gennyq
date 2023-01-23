@@ -2,15 +2,7 @@ package life.genny.qwandaq.utils;
 
 import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -23,6 +15,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.NoResultException;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -31,7 +24,6 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
@@ -87,6 +79,9 @@ public class QwandaUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
 	QuestionUtils questionUtils;
 
 	@Inject
@@ -104,7 +99,7 @@ public class QwandaUtils {
 	 * @param processData The processData to cache for
 	 * @param asks        ask to cache
 	 */
-	public void cacheAsks(ProcessData processData, List<Ask> asks) {
+	public void cacheAsks(ProcessData processData, Set<Ask> asks) {
 
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
 		cm.putObject(userToken.getProductCode(), key, asks.toArray());
@@ -117,11 +112,11 @@ public class QwandaUtils {
 	 * @param processData The processData to fetch for
 	 * @return
 	 */
-	public List<Ask> fetchAsks(ProcessData processData) {
-
+	public Set<Ask> fetchAsks(ProcessData processData) {
+		Set<Ask> asks = new HashSet<>();
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
-		Ask[] asks = cm.getObject(userToken.getProductCode(), key, Ask[].class);
-		return Arrays.asList(asks);
+		Ask[] asksArr = cm.getObject(userToken.getProductCode(), key, Ask[].class);
+		return Arrays.stream(asksArr).collect(Collectors.toSet());
 	}
 
 	public Attribute saveAttribute(final Attribute attribute) {
@@ -383,7 +378,7 @@ public class QwandaUtils {
 	/**
 	 * @param asks
 	 */
-	public static Map<String, Ask> buildAskFlatMap(List<Ask> asks) {
+	public static Map<String, Ask> buildAskFlatMap(Set<Ask> asks) {
 		return buildAskFlatMap(new HashMap<String, Ask>(), asks);
 	}
 
@@ -391,7 +386,7 @@ public class QwandaUtils {
 	 * @param map
 	 * @param asks
 	 */
-	public static Map<String, Ask> buildAskFlatMap(Map<String, Ask> map, List<Ask> asks) {
+	public static Map<String, Ask> buildAskFlatMap(Map<String, Ask> map, Set<Ask> asks) {
 
 		if (asks == null)
 			return map;
@@ -429,9 +424,9 @@ public class QwandaUtils {
 	 */
 	public Map<String, Ask> updateDependentAsks(BaseEntity target, Definition definition, Map<String, Ask> flatMapAsks) {
 
-		List<EntityAttribute> dependentAsks = definition.findPrefixEntityAttributes(Prefix.DEP);
+		List<life.genny.qwandaq.attribute.EntityAttribute> dependentAsks = definition.findPrefixEntityAttributes(Prefix.DEP);
 
-		for (EntityAttribute dep : dependentAsks) {
+		for (life.genny.qwandaq.attribute.EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
 			Ask targetAsk = flatMapAsks.get(attributeCode);
 			if (targetAsk == null)
@@ -593,7 +588,8 @@ public class QwandaUtils {
 		// init entity and force the realm
 		log.debug("Creating Process Entity " + processData.getProcessEntityCode() + "...");
 		BaseEntity processEntity = new BaseEntity(processData.getProcessEntityCode(), target.getName());
-		processEntity.setRealm(userToken.getProductCode());
+		String productCode = userToken.getProductCode();
+		processEntity.setRealm(productCode);
 
 		List<String> attributeCodes = processData.getAttributeCodes();
 		log.debug("Found " + attributeCodes.size() + " active attributes in asks");
@@ -602,20 +598,24 @@ public class QwandaUtils {
 		for (String code : attributeCodes) {
 
 			// check for existing attribute in target
-			EntityAttribute ea = target.findEntityAttribute(code).orElseGet(() -> {
+			EntityAttribute ea = beaUtils.getEntityAttribute(productCode, targetCode, code);
+			if(ea == null) {
 				// otherwise create new attribute
-				Attribute attribute = cm.getAttribute(code);
-				return new EntityAttribute(processEntity, attribute, 1.0, null);
-			});
+				Attribute attribute = cm.getAttribute(productCode, code);
+				ea = new EntityAttribute(processEntity, attribute, 1.0, null);
+			}
 
 			Attribute attribute = ea.getAttribute();
+			if (attribute == null) {
+				throw new ItemNotFoundException("Embedded Attribute not found in EntityAttribute: " + productCode + "," + targetCode + "," + code);
+			}
 			String className = attribute.getDataType().getClassName();
 			Object value = ea.getValue();
 
 			if (value == null && className.contains("Boolean") || className.contains("bool")) 
 				ea.setValue(false);
 
-			processEntity.addAttribute(ea);
+			processEntity.addAttribute(ea.getAttribute(), ea.getWeight(), ea.getValue());
 		}
 
 		// now apply all incoming answers
@@ -628,7 +628,7 @@ public class QwandaUtils {
 			processEntity.addAnswer(answer);
 		});
 
-		log.debug("ProcessBE contains " + processEntity.getBaseEntityAttributes().size() + " entity attributes");
+		log.debug("ProcessBE contains " + processEntity.getBaseEntityAttributesMap().size() + " entity attributes");
 
 		return processEntity;
 	}
@@ -781,12 +781,12 @@ public class QwandaUtils {
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
 
-		List<Ask> childAsks = new ArrayList<>();
+		Set<Ask> childAsks = new HashSet<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
-		// create a child ask for every valid atribute
+		// create a child ask for every valid attribute
 		definition.getBaseEntityAttributes().stream()
 				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
 				.forEach((ea) -> {
@@ -804,7 +804,7 @@ public class QwandaUtils {
 			});
 
 		// set child asks
-		ask.setChildAsks(childAsks.toArray(new Ask[childAsks.size()]));
+		ask.setChildAsks(childAsks);
 
 		return ask;
 	}
@@ -836,12 +836,12 @@ public class QwandaUtils {
 	public Boolean isDuplicate(Definition definition, Answer answer, BaseEntity... targets) {
 
 		// Check if attribute code exists as a UNQ for the DEF
-		List<EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
+		List<life.genny.qwandaq.attribute.EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
 		String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
 
-		for (EntityAttribute entityAttribute : uniques) {
+		for (life.genny.qwandaq.attribute.EntityAttribute entityAttribute : uniques) {
 			// fetch list of unique code combo
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,
 					entityAttribute.getAttribute().getCode());
@@ -943,9 +943,9 @@ public class QwandaUtils {
 	 * @return Return attribute object
 	 */
 	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode) {
-		Optional<EntityAttribute> baseEA = baseEntity.findEntityAttribute(attributeCode);
-		if (baseEA.isPresent()) {
-			return baseEA.get().getAttribute();
+		EntityAttribute baseEA = (EntityAttribute) beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode).toSerializableCoreEntity();
+		if (baseEA != null) {
+			return baseEA.getAttribute();
 		}
 		Attribute attribute = cm.getAttribute(attributeCode);
 		return attribute;

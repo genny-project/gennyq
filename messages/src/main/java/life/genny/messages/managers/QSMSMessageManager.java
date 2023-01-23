@@ -9,6 +9,7 @@ import life.genny.qwandaq.utils.MergeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Map;
 
 @ApplicationScoped
@@ -17,6 +18,9 @@ public final class QSMSMessageManager extends QMessageProvider {
     public static final String MESSAGE_BOTH_DRIVER_OWNER = "BOTH";
 
     private static final Logger log = Logger.getLogger(QSMSMessageManager.class);
+
+    @Inject
+    MergeUtils mergeUtils;
 
     @Override
     public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
@@ -53,7 +57,7 @@ public final class QSMSMessageManager extends QMessageProvider {
         }
 
         // Mail Merging Data
-        body = MergeUtils.merge(body, contextMap);
+        body = mergeUtils.merge(body, contextMap);
 
         //target is toPhoneNumber, Source is the fromPhoneNumber
         String accountSID = projectBe.getValue("ENV_TWILIO_ACCOUNT_SID", null);

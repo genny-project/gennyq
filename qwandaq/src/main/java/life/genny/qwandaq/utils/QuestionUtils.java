@@ -2,19 +2,17 @@ package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
+import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -43,9 +41,9 @@ public class QuestionUtils {
 
     public life.genny.qwandaq.entity.BaseEntity getPersistableBaseEntityFromQuestion(Question question) {
         life.genny.qwandaq.entity.BaseEntity baseEntity = (life.genny.qwandaq.entity.BaseEntity) getSerializableBaseEntityFromQuestion(question).toPersistableCoreEntity();
-        List<EntityAttribute> persistableBaseEntityAttributes = new LinkedList<>();
-        List<BaseEntityAttribute> serializableBaseEntityAttributes = getSerializableBaseEntityAttributesFromQuestion(question);
-        serializableBaseEntityAttributes.forEach(baseEntityAttribute -> persistableBaseEntityAttributes.add((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
+        List<life.genny.qwandaq.attribute.EntityAttribute> persistableBaseEntityAttributes = new LinkedList<>();
+        List<EntityAttribute> serializableBaseEntityAttributes = getSerializableBaseEntityAttributesFromQuestion(question);
+        serializableBaseEntityAttributes.forEach(baseEntityAttribute -> persistableBaseEntityAttributes.add((life.genny.qwandaq.attribute.EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
         baseEntity.setBaseEntityAttributes(persistableBaseEntityAttributes);
         return baseEntity;
     }
@@ -61,8 +59,8 @@ public class QuestionUtils {
         return baseEntity;
     }
 
-    public List<BaseEntityAttribute> getSerializableBaseEntityAttributesFromQuestion(Question question) {
-        List<BaseEntityAttribute> attributes = new LinkedList<>();
+    public List<EntityAttribute> getSerializableBaseEntityAttributesFromQuestion(Question question) {
+        List<EntityAttribute> attributes = new LinkedList<>();
         attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, ATTRIBUTE_CODE, question.getAttributeCode()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, DIRECTIONS, question.getDirections()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestion(question, HELPER, question.getHelper()));
@@ -75,8 +73,8 @@ public class QuestionUtils {
         return attributes;
     }
 
-    public BaseEntityAttribute createSerializableBaseEntityAttributeFromQuestion(Question question, String attributeCode, Object value) {
-        BaseEntityAttribute attribute = new BaseEntityAttribute();
+    public EntityAttribute createSerializableBaseEntityAttributeFromQuestion(Question question, String attributeCode, Object value) {
+        EntityAttribute attribute = new EntityAttribute();
         attribute.setRealm(question.getRealm());
         attribute.setBaseEntityCode(question.getCode());
         attribute.setAttributeCode(attributeCode);
@@ -106,9 +104,9 @@ public class QuestionUtils {
 
     public life.genny.qwandaq.entity.BaseEntity getPersistableBaseEntityFromQuestionQuestion(QuestionQuestion questionQuestion) {
         life.genny.qwandaq.entity.BaseEntity baseEntity = (life.genny.qwandaq.entity.BaseEntity) getSerializableBaseEntityFromQuestionQuestion(questionQuestion).toPersistableCoreEntity();
-        List<EntityAttribute> persistableBaseEntityAttributes = new LinkedList<>();
-        List<BaseEntityAttribute> serializableBaseEntityAttributes = getSerializableBaseEntityAttributesFromQuestionQuestion(questionQuestion);
-        serializableBaseEntityAttributes.forEach(baseEntityAttribute -> persistableBaseEntityAttributes.add((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
+        List<life.genny.qwandaq.attribute.EntityAttribute> persistableBaseEntityAttributes = new LinkedList<>();
+        List<EntityAttribute> serializableBaseEntityAttributes = getSerializableBaseEntityAttributesFromQuestionQuestion(questionQuestion);
+        serializableBaseEntityAttributes.forEach(baseEntityAttribute -> persistableBaseEntityAttributes.add((life.genny.qwandaq.attribute.EntityAttribute) baseEntityAttribute.toPersistableCoreEntity()));
         baseEntity.setBaseEntityAttributes(persistableBaseEntityAttributes);
         return baseEntity;
     }
@@ -122,8 +120,8 @@ public class QuestionUtils {
         return baseEntity;
     }
 
-    public List<BaseEntityAttribute> getSerializableBaseEntityAttributesFromQuestionQuestion(QuestionQuestion questionQuestion) {
-        List<BaseEntityAttribute> attributes = new LinkedList<>();
+    public List<EntityAttribute> getSerializableBaseEntityAttributesFromQuestionQuestion(QuestionQuestion questionQuestion) {
+        List<EntityAttribute> attributes = new LinkedList<>();
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, PARENT_CODE, questionQuestion.getParentCode()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, CHILD_CODE, questionQuestion.getChildCode()));
         attributes.add(createSerializableBaseEntityAttributeFromQuestionQuestion(questionQuestion, DISABLED, questionQuestion.getDisabled()));
@@ -136,8 +134,8 @@ public class QuestionUtils {
         return attributes;
     }
 
-    public BaseEntityAttribute createSerializableBaseEntityAttributeFromQuestionQuestion(QuestionQuestion questionQuestion, String attributeCode, Object value) {
-        BaseEntityAttribute attribute = new BaseEntityAttribute();
+    public EntityAttribute createSerializableBaseEntityAttributeFromQuestionQuestion(QuestionQuestion questionQuestion, String attributeCode, Object value) {
+        EntityAttribute attribute = new EntityAttribute();
         attribute.setRealm(questionQuestion.getRealm());
         attribute.setBaseEntityCode(questionQuestion.getParentCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getChildCode());
         attribute.setAttributeCode(attributeCode);
@@ -165,7 +163,7 @@ public class QuestionUtils {
         return attribute;
     }
 
-    public Question getQuestionFromBaseEntity(life.genny.qwandaq.entity.BaseEntity baseEntity, Set<EntityAttribute> attributes) {
+    public Question getQuestionFromBaseEntity(life.genny.qwandaq.entity.BaseEntity baseEntity, Collection<life.genny.qwandaq.attribute.EntityAttribute> attributes) {
         Question question = new Question();
 		log.info("Question Code From BaseEntity = " + baseEntity.getCode());
         question.setCode(baseEntity.getCode());
@@ -182,7 +180,7 @@ public class QuestionUtils {
         return question;
     }
 
-    public void updateAttributesInQuestion(Question question, Set<EntityAttribute> entityAttributes) {
+    public void updateAttributesInQuestion(Question question, Collection<life.genny.qwandaq.attribute.EntityAttribute> entityAttributes) {
         entityAttributes.stream().forEach(entityAttribute -> {
             String columnName = entityAttribute.getAttributeCode();
             log.debugf("Processing attribute %s for question %s", columnName, question.getCode());
@@ -206,7 +204,7 @@ public class QuestionUtils {
         });
     }
 
-    public QuestionQuestion getQuestionQuestionFromBaseEntityBaseEntityAttributes(life.genny.qwandaq.entity.BaseEntity baseEntity, Set<EntityAttribute> attributes) {
+    public QuestionQuestion getQuestionQuestionFromBaseEntityBaseEntityAttributes(life.genny.qwandaq.entity.BaseEntity baseEntity, Set<life.genny.qwandaq.attribute.EntityAttribute> attributes) {
         QuestionQuestion questionQuestion = new QuestionQuestion();
         String beCode = baseEntity.getCode();
         String[] sourceTargetCodes = beCode.split(BaseEntityKey.BE_KEY_DELIMITER);
@@ -219,7 +217,7 @@ public class QuestionUtils {
         return questionQuestion;
     }
 
-    public void updateAttributesInQuestionQuestion(QuestionQuestion questionQuestion, Set<EntityAttribute> attributes) {
+    public void updateAttributesInQuestionQuestion(QuestionQuestion questionQuestion, Set<life.genny.qwandaq.attribute.EntityAttribute> attributes) {
         attributes.parallelStream().forEach(attribute -> {
             switch (attribute.getAttributeCode()) {
                 case SOURCE_CODE -> questionQuestion.setParentCode(attribute.getValueString());

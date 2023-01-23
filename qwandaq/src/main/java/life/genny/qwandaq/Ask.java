@@ -16,42 +16,12 @@
 
 package life.genny.qwandaq;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Index;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-import javax.validation.Valid;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-import java.util.List;
-
-import javax.json.bind.annotation.JsonbProperty;
-
 import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
-import life.genny.qwandaq.exception.runtime.BadDataException;
+import javax.xml.bind.annotation.XmlTransient;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
@@ -102,7 +72,7 @@ public class Ask extends CoreEntity {
 
 	private Double weight = 0.0;
 
-	private List<Ask> childAsks;
+	private Set<Ask> childAsks;
 
 	/**
 	 * Default Constructor.
@@ -154,10 +124,31 @@ public class Ask extends CoreEntity {
 	public int compareTo(Object o) {
 		Ask myClass = (Ask) o;
 		return new CompareToBuilder()
+				.append(question.getRealm(), myClass.getRealm())
 				.append(question.getCode(), myClass.getQuestion().getCode())
 				.append(sourceCode, myClass.getSourceCode())
 				.append(targetCode, myClass.getTargetCode())
+				.append(weight, myClass.getWeight())
 				.toComparison();
+	}
+
+	@Override
+	public int hashCode() {
+		return (question.getRealm() + questionCode + sourceCode + targetCode).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null || !(obj instanceof Ask)) {
+			return false;
+		}
+		Ask otherAsk = (Ask) obj;
+		EqualsBuilder equalsBuilder = new EqualsBuilder();
+		equalsBuilder.append(this.question.getRealm(), otherAsk.question.getRealm());
+		equalsBuilder.append(this.questionCode, otherAsk.questionCode);
+		equalsBuilder.append(this.sourceCode, otherAsk.sourceCode);
+		equalsBuilder.append(this.targetCode, otherAsk.targetCode);
+		return equalsBuilder.isEquals();
 	}
 
 	/**
@@ -174,7 +165,7 @@ public class Ask extends CoreEntity {
 	 */
 	public void add(Ask child) {
 		if (this.childAsks == null)
-			this.childAsks = new ArrayList<Ask>();
+			this.childAsks = new HashSet<Ask>();
 		this.childAsks.add(child);
 	}
 
@@ -280,15 +271,11 @@ public class Ask extends CoreEntity {
 		this.weight = weight;
 	}
 
-	public List<Ask> getChildAsks() {
+	public Set<Ask> getChildAsks() {
 		return childAsks;
 	}
 
-	public void setChildAsks(Ask[] children) {
-		this.setChildAsks(Arrays.asList(children));
-	}
-
-	public void setChildAsks(List<Ask> children) {
+	public void setChildAsks(Set<Ask> children) {
 		this.childAsks = children;
 	}
 }

@@ -1,7 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-
 import java.lang.invoke.MethodHandles;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,7 +17,6 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.search.trait.*;
-import life.genny.qwandaq.models.SavedSearch;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;

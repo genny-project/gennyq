@@ -1,8 +1,6 @@
 package life.genny.test.qwandaq.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.inject.Inject;
 
@@ -83,10 +81,10 @@ public class QwandaUtilsTest extends BaseTestCase {
 	@Test
 	public void testAskFlatMapBuilder() {
 
-		List<Ask> asks = new ArrayList<>();
+		Set<Ask> asks = new HashSet<>();
 		asks.add(buildAskGroup());
 
-		new JUnitTester<List<Ask>, Boolean>()
+		new JUnitTester<Set<Ask>, Boolean>()
 				.setTest((input) -> {
 					boolean found = true;
 					Map<String, Ask> flatMap = QwandaUtils.buildAskFlatMap(input.input);
@@ -108,7 +106,7 @@ public class QwandaUtilsTest extends BaseTestCase {
 	@Test
 	public void testMandatoryFieldCheck() {
 
-		List<Ask> asks = new ArrayList<>();
+		Set<Ask> asks = new HashSet<>();
 		asks.add(buildAskGroup());
 		Map<String, Ask> map = QwandaUtils.buildAskFlatMap(asks);
 

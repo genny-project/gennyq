@@ -1,31 +1,7 @@
 package life.genny.qwandaq.utils;
 
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED;
-import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED_DATE;
-import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
-import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED;
-import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED_DATE;
-import java.lang.invoke.MethodHandles;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -40,6 +16,23 @@ import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.invoke.MethodHandles;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static life.genny.qwandaq.attribute.Attribute.*;
 
 /**
  * A non-static utility class used for standard
@@ -69,7 +62,7 @@ public class BaseEntityUtils {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	BaseEntityAttributeUtils beaUtils;
+	EntityAttributeUtils beaUtils;
 
 	public BaseEntityUtils() {
 	}
@@ -166,7 +159,7 @@ public class BaseEntityUtils {
 			for(EntityAttribute entityAttribute : baseEntity.getBaseEntityAttributes()) {
 				log.debugf("BaseEntityAttribute found in base entity [%s:%s:%s].", entityAttribute.getRealm(), entityAttribute.getBaseEntityCode(), entityAttribute.getAttributeCode());
 			}
-			log.debugf("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributes().size(), baseEntity.getRealm(), baseEntity.getCode());
+			log.debugf("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributesMap().size(), baseEntity.getRealm(), baseEntity.getCode());
 		}
 		return baseEntity;
 	}
@@ -174,21 +167,21 @@ public class BaseEntityUtils {
 	/**
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
-	 * @param baseEntity The BaseEntity to update
+	 * @param baseEntity  The BaseEntity to update
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
-		return updateBaseEntity(baseEntity.getRealm(), baseEntity);
+		return updateBaseEntity(baseEntity, true);
 	}
 
 	/**
 	 * Update a {@link BaseEntity} in the database and the cache.
 	 *
-	 * @param productCode The productCode to cache into
-	 * @param baseEntity  The BaseEntity to update
+	 * @param baseEntity The BaseEntity to update
+	 * @param updateBaseEntityAttributes  Defines whether the BaseEntityAttributes need to be updated
 	 * @return the newly cached BaseEntity
 	 */
-	public BaseEntity updateBaseEntity(String productCode, BaseEntity baseEntity) {
+	public BaseEntity updateBaseEntity(BaseEntity baseEntity, boolean updateBaseEntityAttributes) {
 		// ensure for all entityAttribute that baseentity and attribute are not null
 		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
 			if (ea.getRealm() == null) {
@@ -208,6 +201,9 @@ public class BaseEntityUtils {
 
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
 		boolean savedSuccssfully = cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntity);
+		if (updateBaseEntityAttributes) {
+			baseEntity.getBaseEntityAttributes().forEach(bea -> beaUtils.updateEntityAttribute(bea));
+		}
 		return savedSuccssfully ? baseEntity : null;
 	}
 
@@ -372,9 +368,9 @@ public class BaseEntityUtils {
 	public LocalDateTime getBaseEntityValueAsLocalDateTime(final String baseEntityCode, final String attributeCode) {
 
 		BaseEntity be = getBaseEntity(baseEntityCode);
-		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
-		if (ea.isPresent()) {
-			return ea.get().getValueDateTime();
+		EntityAttribute ea = (EntityAttribute) beaUtils.getEntityAttribute(be.getRealm(), baseEntityCode, attributeCode).toSerializableCoreEntity();
+		if (ea != null) {
+			return ea.getValueDateTime();
 		}
 		return null;
 	}
@@ -438,15 +434,16 @@ public class BaseEntityUtils {
 	 * @return The filtered BaseEntity
 	 */
 	public BaseEntity privacyFilter(BaseEntity entity, Set<String> allowed) {
-
 		// Filter out unwanted attributes
-		entity.setBaseEntityAttributes(
-				entity.getBaseEntityAttributes()
-						.stream()
-						.filter(x -> allowed.contains(x.getAttributeCode()))
-						.collect(Collectors.toSet()));
-
-		return entity;
+		BaseEntity clonedBE = entity.clone(true);
+		Iterator<Map.Entry<String, EntityAttribute>> entityAttributesIterator = clonedBE.getBaseEntityAttributesMap().entrySet().iterator();
+		while (entityAttributesIterator.hasNext()) {
+			Map.Entry<String, EntityAttribute> entry = entityAttributesIterator.next();
+			if (!allowed.contains(entry.getValue().getAttributeCode())) {
+				entityAttributesIterator.remove();
+			}
+		}
+		return clonedBE;
 	}
 
 	// We can parameterise this but there is no point if we aren't going to have any

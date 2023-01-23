@@ -42,7 +42,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.handler.AttributeMinIOHandler;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import life.genny.qwandaq.serialization.baseentityattribute.BaseEntityAttribute;
 
 public class EntityAttribute implements CoreEntityPersistable, ICapabilityHiddenFilterable, Comparable<Object> {
 
@@ -1189,7 +1188,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 	@Override
 	public CoreEntitySerializable toSerializableCoreEntity() {
-		BaseEntityAttribute bea = new BaseEntityAttribute();
+		life.genny.qwandaq.serialization.entityattribute.EntityAttribute bea = new life.genny.qwandaq.serialization.entityattribute.EntityAttribute();
 		bea.setRealm(getRealm());
 		bea.setBaseEntityCode(getBaseEntityCode());
 		bea.setAttributeCode(getAttributeCode());
@@ -1223,5 +1222,54 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
     @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
+	}
+
+	@Override
+	public EntityAttribute clone() {
+		EntityAttribute clone = new EntityAttribute();
+		clone.setRealm(getRealm());
+		clone.setBaseEntityCode(getBaseEntityCode());
+		clone.setAttributeCode(getAttributeCode());
+		clone.setCreated(getCreated());
+		clone.setInferred(getInferred());
+		clone.setPrivacyFlag(getPrivacyFlag());
+		clone.setReadonly(getReadonly());
+		clone.setUpdated(getUpdated());
+		clone.setValueBoolean(getValueBoolean());
+		clone.setValueDate(getValueDate());
+		clone.setValueDateTime(getValueDateTime());
+		clone.setValueDouble(getValueDouble());
+		clone.setValueInteger(getValueInteger());
+		clone.setValueLong(getValueLong());
+		clone.setValueMoney(getValueMoney());
+		clone.setValueString(getValueString());
+		clone.setUpdated(getUpdated());
+		clone.setWeight(getWeight());
+		clone.setConfirmationFlag(getConfirmationFlag());
+		return clone;
+	}
+
+	public HEntityAttribute toHEntityAttribute() {
+		HEntityAttribute hEntityAttribute = new HEntityAttribute();
+		hEntityAttribute.setRealm(getRealm());
+		hEntityAttribute.setBaseEntityCode(getBaseEntityCode());
+		hEntityAttribute.setAttributeCode(getAttributeCode());
+		hEntityAttribute.setCreated(getCreated());
+		hEntityAttribute.setReadonly(getReadonly());
+		hEntityAttribute.setUpdated(getUpdated());
+		hEntityAttribute.setValueBoolean(getValueBoolean());
+		hEntityAttribute.setValueDate(getValueDate());
+		hEntityAttribute.setValueDateTime(getValueDateTime());
+		hEntityAttribute.setValueDouble(getValueDouble());
+		hEntityAttribute.setValueInteger(getValueInteger());
+		hEntityAttribute.setValueLong(getValueLong());
+		hEntityAttribute.setValueMoney(getValueMoney());
+		hEntityAttribute.setValueString(getValueString());
+		hEntityAttribute.setUpdated(getUpdated());
+		hEntityAttribute.setWeight(getWeight());
+		hEntityAttribute.setInferred(getInferred());
+		hEntityAttribute.setPrivacyFlag(getPrivacyFlag());
+		hEntityAttribute.setConfirmationFlag(getConfirmationFlag());
+		return hEntityAttribute;
 	}
 }

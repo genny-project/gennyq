@@ -219,6 +219,8 @@ public class AnswerLink implements java.io.Serializable {
 
 		switch (className) {
 			// TODO: remove the qwanda version once db's are clear of it
+			case "life.genny.qwandaq.entity.BaseEntity":
+			case "life.genny.qwanda.entity.BaseEntity":
 			case "life.genny.qwandaq.entity.HBaseEntity":
 			case "life.genny.qwanda.entity.HBaseEntity":
 				setValueString(result);

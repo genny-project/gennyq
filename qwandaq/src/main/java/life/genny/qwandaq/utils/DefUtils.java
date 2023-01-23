@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -18,11 +17,8 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DefinitionException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -63,6 +59,9 @@ public class DefUtils {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	MergeUtils mergeUtils;
 
 	public DefUtils() {
 	}
@@ -255,7 +254,7 @@ public class DefUtils {
 					String attrValStr = attributeFilterValue.toString();
 
 					// first check if merge is required
-					Boolean requiresMerging = MergeUtils.requiresMerging(attrValStr);
+					Boolean requiresMerging = mergeUtils.requiresMerging(attrValStr);
 
 					if (requiresMerging != null && requiresMerging) {
 						// update Map with latest baseentity
@@ -271,10 +270,10 @@ public class DefUtils {
 						});
 
 						// check if contexts are present
-						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
+						if (mergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper
 							// (6/08/2021)
-							Object mergedObj = MergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
+							Object mergedObj = mergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
 									ctxMap);
 							// Ensure Datatype is Correct, then set Value
 							ea.setValue(mergedObj);

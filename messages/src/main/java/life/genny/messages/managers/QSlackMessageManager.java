@@ -6,6 +6,7 @@ import life.genny.qwandaq.utils.MergeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,6 +18,9 @@ import java.util.Map;
 public final class QSlackMessageManager extends QMessageProvider {
 
     private static final Logger log = Logger.getLogger(QSlackMessageManager.class);
+
+    @Inject
+    MergeUtils mergeUtils;
 
     @Override
     public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
@@ -56,7 +60,7 @@ public final class QSlackMessageManager extends QMessageProvider {
         log.info("Body is " + body);
 
         // Mail Merging Data
-        body = MergeUtils.merge(body, contextMap);
+        body = mergeUtils.merge(body, contextMap);
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()

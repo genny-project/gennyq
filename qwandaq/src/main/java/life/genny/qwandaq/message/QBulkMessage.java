@@ -1,12 +1,13 @@
 package life.genny.qwandaq.message;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.entity.BaseEntity;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @RegisterForReflection
 public class QBulkMessage extends QMessage {
@@ -14,13 +15,13 @@ public class QBulkMessage extends QMessage {
 	private static final long serialVersionUID = 1L;
 
 	private List<BaseEntity> entities = new ArrayList<>();
-	private List<Ask> asks = new ArrayList<>();
+	private Set<Ask> asks = new HashSet<>();
 
 	public QBulkMessage() {
 		super();
 	}
 
-	public QBulkMessage(List<BaseEntity> entities, List<Ask> asks) {
+	public QBulkMessage(List<BaseEntity> entities, Set<Ask> asks) {
 		super();
 		this.entities = entities;
 		this.asks = asks;
@@ -42,11 +43,11 @@ public class QBulkMessage extends QMessage {
 		this.entities = entities;
 	}
 
-	public List<Ask> getAsks() {
+	public Set<Ask> getAsks() {
 		return asks;
 	}
 
-	public void setAsks(List<Ask> asks) {
+	public void setAsks(Set<Ask> asks) {
 		this.asks = asks;
 	}
 

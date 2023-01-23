@@ -2,29 +2,27 @@ package life.genny.qwandaq.utils;
 
 import java.io.StringReader;
 import java.text.DecimalFormat;
-import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 import org.jboss.logging.Logger;
-import org.javamoney.moneta.Money;
 
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
 
 /**
  * A utiltity used in the MailMerge feature of Genny.
  * 
  * @author Jasper Robison
  */
+@ApplicationScoped
 public class MergeUtils {
 	
 	private static final Logger log = Logger.getLogger(MergeUtils.class);
@@ -54,9 +52,12 @@ public class MergeUtils {
     /* this is for formatting data such as dates or strings */
     public static final String FORMAT_VARIABLE_REGEX_START = "((";
     public static final String FORMAT_VARIABLE_REGEX_END = "))";
-    public static final Pattern FORMAT_PATTERN_VARIABLE = Pattern.compile(Pattern.quote(FORMAT_VARIABLE_REGEX_START) + "(.*)" + Pattern.quote(FORMAT_VARIABLE_REGEX_END));  
+    public static final Pattern FORMAT_PATTERN_VARIABLE = Pattern.compile(Pattern.quote(FORMAT_VARIABLE_REGEX_START) + "(.*)" + Pattern.quote(FORMAT_VARIABLE_REGEX_END));
 
-	public static void mergeBaseEntity(BaseEntity baseEntity, Map<String, Object> contexts) {
+	@Inject
+	EntityAttributeUtils beaUtils;
+
+	public void mergeBaseEntity(BaseEntity baseEntity, Map<String, Object> contexts) {
 
 		baseEntity.getBaseEntityAttributes().stream().forEach(ea -> {
 			if (ea.getValueString() == null)
@@ -72,7 +73,7 @@ public class MergeUtils {
 	 * @param templateEntityMap the templateEntityMap to merge with
 	 * @return String
 	 */
-	public static String merge(String mergeStr, Map<String, Object> templateEntityMap) { 
+	public String merge(String mergeStr, Map<String, Object> templateEntityMap) {
 		
 		if (mergeStr != null) {
 
@@ -113,7 +114,7 @@ public class MergeUtils {
 	 * @param entitymap the entitymap to merge with
 	 * @return Object
 	 */
-	public static Object wordMerge(String mergeText, Map<String, Object> entitymap) {
+	public Object wordMerge(String mergeText, Map<String, Object> entitymap) {
 
 		if (mergeText == null || mergeText.isEmpty())
 			return DEFAULT;
@@ -195,7 +196,7 @@ public class MergeUtils {
 					result = getFormattedString(sValue, matchFormat.group(1));
 					log.debug("String attribute " + attributeCode + " needs formatting. Format is " + entityArr[2] + ", Result is " + result);
 				} else {
-					result = be.findEntityAttribute(attributeCode).get().getValueString();
+					result = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode).getValueString();
 					log.debug("String attribute " + attributeCode + " does NOT need formatting. Result is " + result);
 				}
 				return result;
@@ -226,7 +227,7 @@ public class MergeUtils {
 	* @param templateEntityMap the mergeStr to check contexts with
 	* @return Boolean
 	 */
-	public static Boolean contextsArePresent(String mergeStr, Map<String, Object> templateEntityMap) { 
+	public Boolean contextsArePresent(String mergeStr, Map<String, Object> templateEntityMap) {
 		
 		if (mergeStr != null) {
 
@@ -263,7 +264,7 @@ public class MergeUtils {
 	 * @param mergeStr the mergeStr to check
 	 * @return Boolean
 	 */
-	public static Boolean requiresMerging(String mergeStr) {
+	public Boolean requiresMerging(String mergeStr) {
 
 		if (mergeStr == null) {
 			log.warn("mergeStr is NULL");
@@ -287,7 +288,7 @@ public class MergeUtils {
 	 *
 	 * @return String The formatted string.
 	 */
-	public static String getFormattedString(String stringToBeFormatted, String format) {
+	public String getFormattedString(String stringToBeFormatted, String format) {
 
 		if (stringToBeFormatted != null && format != null) {
 			String[] formatCommands = format.split("\\.");
@@ -327,7 +328,7 @@ public class MergeUtils {
 	 * @param	contextAssociationJson	the json instructions for fetching associations.
 	 * @param	overwrite				should the function overwrite any already existing contexts
 	 */
-	public static void addAssociatedContexts(BaseEntityUtils beUtils, Map<String, Object> ctxMap, String contextAssociationJson, boolean overwrite) {
+	public void addAssociatedContexts(BaseEntityUtils beUtils, Map<String, Object> ctxMap, String contextAssociationJson, boolean overwrite) {
 
 		// Enter Try-Catch for better error logging
 		try {

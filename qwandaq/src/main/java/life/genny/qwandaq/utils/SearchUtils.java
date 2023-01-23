@@ -76,7 +76,8 @@ public class SearchUtils {
 		Integer status = response.statusCode();
 
 		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Bad response status " + status + " from " + uri);
+			log.errorf("Bad response status %s from %s.\nResponse body: %s", status, uri, response.body());
+			return null;
 		}
 
 		try {
@@ -86,9 +87,8 @@ public class SearchUtils {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
+			return null;
 		}
-
-		return null;
 	}
 
 	/**

@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,9 +28,10 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.*;
 import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -40,8 +40,6 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.HEntityAttribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.And;
 import life.genny.qwandaq.entity.search.clause.Clause;
@@ -58,10 +56,6 @@ import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.MergeUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class FyodorUltra {
@@ -80,6 +74,9 @@ public class FyodorUltra {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	CapHandler capHandler;
@@ -736,9 +733,9 @@ public class FyodorUltra {
 		if (Attribute.PRI_CODE.equals(attributeCode))
 			value = entity.getCode();
 		else {
-			Optional<EntityAttribute> ea = entity.findEntityAttribute(attributeCode);
-			if (ea.isPresent())
-				value = ea.get().getAsString();
+			EntityAttribute entityAttribute = (EntityAttribute) beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), attributeCode).toSerializableCoreEntity();
+			if (entityAttribute != null)
+				value = entityAttribute.getValueString();
 			else
 				return null;
 		}
