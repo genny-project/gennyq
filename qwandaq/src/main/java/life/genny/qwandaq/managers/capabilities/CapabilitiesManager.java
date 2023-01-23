@@ -195,7 +195,7 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addEntityAttribute(capability, 0.0, false, getModeString(nodes));
+		target.addEntityAttribute(capability, 0.0, false, getModeString(modeList));
 		// target.addAttribute(capability, 0.0, getModeString(nodes));
 		// CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
