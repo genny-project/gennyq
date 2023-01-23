@@ -1,9 +1,13 @@
 package life.genny.qwandaq.data;
 
 import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
+import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -91,6 +95,10 @@ public class GennyCache {
 		serCtxInitList.add(baseEntitySCI);
 		SerializationContextInitializer baseEntityKeySCI = new BaseEntityKeyInitializerImpl();
 		serCtxInitList.add(baseEntityKeySCI);
+		SerializationContextInitializer userStoreSCI = new UserStoreInitializerImpl();
+		serCtxInitList.add(userStoreSCI);
+		SerializationContextInitializer userStoreKeySCI = new UserStoreKeyInitializerImpl();
+		serCtxInitList.add(userStoreKeySCI);
 
 		return serCtxInitList;
 	}
@@ -134,6 +142,21 @@ public class GennyCache {
 	}
 
 	/**
+	 * Return a remote cache for the given entity.
+	 *
+	 * @param entityName
+	 * 		the name of the associated entity the desired cache
+	 * @return RemoteCache&lt;String, String&gt;
+	 * 		the remote cache associated with the entity
+	 */
+	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+		return remoteCacheManager.getCache(entityName);
+	}
+
+	/**
 	 * Get a CoreEntity from the cache.
 	 *
 	 * @param cacheName The cache to get from
@@ -149,6 +172,41 @@ public class GennyCache {
 		RemoteCache<CoreEntityKey, CoreEntity> cache = remoteCacheManager.getCache(cacheName);
 		if (cache == null) {
 			log.error("Could not find a cache called " + cacheName);
+		}
+
+		return cache.get(key);
+	}
+
+	/**
+	 * Get a CoreEntity from the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key       The key to the entity to fetch
+	 * @return The entity
+	 */
+	public CoreEntitySerializable getSerializableEntityFromCache(String cacheName, CoreEntityKey key) {
+		CoreEntityPersistable persistableCoreEntity = getPersistableEntityFromCache(cacheName, key);
+		if (persistableCoreEntity == null) {
+			return null;
+		}
+		return persistableCoreEntity.toSerializableCoreEntity();
+	}
+
+	/**
+	 * Get a CoreEntity from the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key The key to the entity to fetch
+	 * @return The persistable core entity
+	 */
+	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
+		if (cache == null) {
+			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
 
 		return cache.get(key);
@@ -183,5 +241,48 @@ public class GennyCache {
 			e.printStackTrace();
 		}
 		return cache.get(key);
+	}
+
+	/**
+	 * Put a CoreEntity into the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key       The key to put the entity under
+	 * @param value     The entity
+	 * @return The Entity
+	 */
+	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
+		return putEntityIntoCache(cacheName, key, value.toSerializableCoreEntity());
+	}
+
+	/**
+	 * Put a CoreEntity into the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key The key to put the entity under
+	 * @param value The serializable entity
+	 * @return True if the entity is successfully inserted into cache, False otherwise
+	 */
+	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntitySerializable value) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheName);
+		if (cache == null) {
+			throw new NullPointerException("Cache not found: " + cacheName);
+		}
+		try {
+			if(value != null) {
+				cache.put(key, value.toPersistableCoreEntity());
+			} else {
+				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
+			}
+		} catch (Exception e) {
+			log.error("Exception when inserting entity into cache: " + e.getMessage());
+			log.error(e.getStackTrace());
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 }
