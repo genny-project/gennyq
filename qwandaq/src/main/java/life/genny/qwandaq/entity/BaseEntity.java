@@ -662,6 +662,16 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		return answerLink;
 	}
 
+	/**
+	 * Add or update an EntityAttribute for this base entity
+	 * @param attribute - attribute to attach to base entity
+	 * @param weight - weight of the entity attribute
+	 * @param inferred - whether or not the value of this EntityAttribute is inferred
+	 * @param value - the value of this EntityAttribute
+	 * @return - the new (or existing) EntityAttribute
+	 * 
+	 * @see {@link EntityAttribute}
+	 */
 	public EntityAttribute addEntityAttribute(Attribute attribute, double weight, boolean inferred, Object value) {
 
 		Optional<EntityAttribute> eaOpt = findEntityAttribute(attribute);
