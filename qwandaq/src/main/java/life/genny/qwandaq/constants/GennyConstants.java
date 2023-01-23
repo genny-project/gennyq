@@ -4,6 +4,8 @@ public final class GennyConstants {
 
     public static final String CACHE_NAME_BASEENTITY = "baseentity";
     public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
+	public static final String CACHE_NAME_USERSTORE = "userstore";
+	public static final String PATH_TO_PROTOS = "/life/genny/qwandaq/serialization/protos/";
     public static final String PACKAGE_PREFIX = "life.genny";
 
     public static final String PAGINATION_NEXT="QUE_TABLE_NEXT_BTN";
