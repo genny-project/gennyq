@@ -459,8 +459,10 @@ public class DatabaseUtils {
 			log.debug("New BaseEntity being saved to DB -> " + entity.getCode() + " : " + entity.getName());
 			entityManager.persist(entity);
 		} else {
-			if (entity.getId() == null)
+			if (entity.getId() == null) {
+				log.warn("New entity did not have id. Assigning id of new entity as existing entity's id (" + existingEntity.getId() + ")");
 				entity.setId(existingEntity.getId());
+			}
 			entityManager.merge(entity);
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
