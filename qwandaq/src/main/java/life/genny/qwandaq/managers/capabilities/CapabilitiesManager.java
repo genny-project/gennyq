@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -29,6 +30,7 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -44,9 +46,21 @@ public class CapabilitiesManager extends Manager {
 	@Inject
 	private RoleManager roleMan;
 
+	@Inject
+	BaseEntityUtils beUtils;
+
 	public CapabilitiesManager() {
 		super();
 	}
+
+	// private BaseEntity perService;
+	// @PostConstruct
+	// void getPerService() {
+	// 	perService = beUtils.getBaseEntity("PER_SERVICE");
+	// 	if(perService == null) {
+
+	// 	}
+	// }
 
 	// == TODO LIST
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy
@@ -164,8 +178,9 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(nodes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
+		target.addEntityAttribute(capability, 0.0, false, getModeString(nodes));
+		// target.addAttribute(capability, 0.0, getModeString(nodes));
+		// CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -180,9 +195,9 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(modeList));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(),
-				modeList.toArray(new CapabilityNode[0]));
+		target.addEntityAttribute(capability, 0.0, false, getModeString(nodes));
+		// target.addAttribute(capability, 0.0, getModeString(nodes));
+		// CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 

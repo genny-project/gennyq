@@ -657,20 +657,29 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		}
 
 		// Update the EntityAttribute
-		Optional<EntityAttribute> ea = findEntityAttribute(answer.getAttributeCode());
-		if (ea.isPresent()) {
-			// modify
-			ea.get().setValue(answerLink.getValue());
-			ea.get().setInferred(answer.getInferred());
-			ea.get().setWeight(answer.getWeight());
-			ea.get().setBaseEntity(this);
-		} else {
-			EntityAttribute newEA = new EntityAttribute(this, answerLink.getAttribute(), weight, answerLink.getValue());
-			newEA.setInferred(answerLink.getInferred());
-			this.baseEntityAttributes.add(newEA);
-		}
+		addEntityAttribute(answerLink.getAttribute(), weight, answer.getInferred(), answerLink.getValue());
 
 		return answerLink;
+	}
+
+	public EntityAttribute addEntityAttribute(Attribute attribute, double weight, boolean inferred, Object value) {
+
+		Optional<EntityAttribute> eaOpt = findEntityAttribute(attribute);
+		EntityAttribute ea;
+		if (eaOpt.isPresent()) {
+			ea = eaOpt.get();
+			// modify
+			ea.setValue(value);
+			ea.setInferred(inferred);
+			ea.setWeight(weight);
+			ea.setBaseEntity(this);
+		} else {
+			ea = new EntityAttribute(this, attribute, weight, value);
+			ea.setInferred(inferred);
+			this.baseEntityAttributes.add(ea);
+		}
+
+		return ea;
 	}
 
 	/**
