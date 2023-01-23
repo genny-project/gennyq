@@ -603,6 +603,7 @@ public class BaseEntityUtils {
 		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 
 		if (uuidEA.isPresent()) {
+			log.debug("Creating user base entity");
 			item = createUser(definition);
 		} else {
 			String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
@@ -610,11 +611,14 @@ public class BaseEntityUtils {
 				throw new DefinitionException("No prefix set for the def: " + definition.getCode());
 			}
 			if (StringUtils.isBlank(code)) {
-				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
+				code = (prefix + "_" + UUID.randomUUID().toString().substring(0, 32)).toUpperCase();
 			}
 
 			log.info("Creating BE with code=" + code + ", name=" + name);
-			item = new BaseEntity(code.toUpperCase(), name);
+			if(StringUtils.isBlank(name)) {
+				name = code;
+			}
+			item = new BaseEntity(code, name);
 			item.setRealm(definition.getRealm());
 		}
 
@@ -675,11 +679,11 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity createUser(final Definition definition) {
 
-		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
-
 		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 		if (opt.isEmpty())
 			throw new DefinitionException("Definition is not a User definition: " + definition.getCode());
+
+		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
 
 		// generate keycloak id
 		String uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());

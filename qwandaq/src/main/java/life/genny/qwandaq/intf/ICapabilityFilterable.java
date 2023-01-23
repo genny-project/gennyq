@@ -11,6 +11,7 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
@@ -44,7 +45,6 @@ public interface ICapabilityFilterable {
         }
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
-        boolean requiresAllModes = requirementsConfig.needsAllNodes();
 
         getLogger().debug("Testing Capability Config: " + requirementsConfig);
 

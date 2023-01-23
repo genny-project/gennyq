@@ -192,6 +192,7 @@ public class Validator {
 
 					qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
 					return false;
+			}
 
 			// check attribute code is allowed by target DEF
 			if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {

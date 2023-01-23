@@ -28,7 +28,6 @@ import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.intf.KafkaBean;
 import life.genny.serviceq.live.data.InternalProducer;
 
-@RegisterForReflection
 @ApplicationScoped
 public class Service {
 

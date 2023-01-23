@@ -246,7 +246,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		setReadonly(false);
 	}
 
-    public Set<Capability> getCapabilityRequirements() {
 	@JsonbTransient
 	@JsonIgnore
 	public Set<Capability> getCapabilityRequirements() {

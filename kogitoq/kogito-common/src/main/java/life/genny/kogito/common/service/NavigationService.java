@@ -81,6 +81,7 @@ public class NavigationService {
 	 * @param code
 	 */
 	public void redirect(String code) {
+		log.info("^^^^^ Running redirect");
 		// route using code if specified
 		if (code != null) {
 			log.infof("Performing redirect with code %s", code);

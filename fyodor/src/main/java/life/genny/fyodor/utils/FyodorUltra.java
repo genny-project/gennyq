@@ -342,7 +342,7 @@ public class FyodorUltra {
 		return switch (operator) {
 			// use locate to find the expression within the value
 			// if locate returns 0, expression is not found
-			case IN -> return cb.notEqual(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
+			case IN -> cb.notEqual(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
 			case NOT_IN -> cb.equal(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
 			case LIKE -> cb.like((Expression<String>) expression, (String) value);
 			case NOT_LIKE -> cb.notLike((Expression<String>) expression, (String) value);

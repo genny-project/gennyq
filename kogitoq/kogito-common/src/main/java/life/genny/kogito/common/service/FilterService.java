@@ -974,4 +974,62 @@ public class FilterService {
             searchUtils.searchTable(code);
         }
     }
+
+    /**
+     * Return the list of base entity code
+     * @param sbeCode Search base entity code
+     * @return List of base entity code
+     */
+    public List<String> getListDefinitionCodes(String sbeCode) {
+        List<String> definitions = new ArrayList<>();
+
+        // bucket page
+        if (SearchEntity.SBE_PROCESS.equals(sbeCode)) {
+            addDefinitionCodeByBucket(definitions);
+            // Table
+        } else {
+            String defCode = getDefinitionCode(sbeCode);
+            if(!defCode.isEmpty()) {
+                definitions.add(defCode);
+            }
+        }
+
+        return definitions;
+    }
+
+    /**
+     * Return definition code
+     * @param sbeCode search base entity code
+     * @return definition code
+     */
+    public String getDefinitionCode(String sbeCode) {
+        SearchEntity search = CacheUtils.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
+        List<ClauseContainer> clauses = search.getClauseContainers();
+        for (ClauseContainer clause : clauses) {
+            if (clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
+                return clause.getFilter().getValue().toString();
+            }
+        }
+        return "";
+    }
+
+	/**
+     * Add definition to the list of definition codes
+     * @param definitions List of definition codes
+     */
+    public void addDefinitionCodeByBucket(List<String> definitions) {
+        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
+
+        List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
+        for (EntityAttribute entityAttribute : locations) {
+            String value = entityAttribute.getAsString();
+            if (value.startsWith(Prefix.SBE)) {
+                String defCode = getDefinitionCode(value);
+                if(!defCode.isEmpty()) {
+                    definitions.add(defCode);
+                }
+            }
+        }
+    }
+
 }

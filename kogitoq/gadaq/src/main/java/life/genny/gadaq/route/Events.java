@@ -29,6 +29,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.gadaq.search.FilterGroupService;
 
 /**
@@ -54,8 +55,12 @@ public class Events {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
 	@Inject
 	GraphQLUtils gqlUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	NavigationService navigation;
@@ -167,41 +172,35 @@ public class Events {
 			code = StringUtils.removeStart(code, QUE_ADD_);
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF + code + ":PREFIX", String.class);
 
-			if ("PER".equals(prefix)) {
-				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
-						.add("sourceCode", userToken.getUserCode())
-						.build();
+			JsonObject json = Json.createObjectBuilder()
+			.add("definitionCode", "DEF_".concat(code))
+			.add("sourceCode", userToken.getUserCode())
+			.build();
 
+			if ("PER".equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
-			}else if ("MSG".equals(prefix)){
-				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
-						.add("sourceCode", userToken.getUserCode())
-						.build();
-
+			}
+			
+			if ("MSG".equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
 				return;
 			}
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
-		if (ACT_EDIT.equals(code) && parentCode.startsWith(Prefix.SBE)) {
+		
+		if (ACT_EDIT.equals(code)) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()
-						.add("questionCode", "QUE_BASEENTITY_GRP")
 						.add("userCode", userToken.getUserCode())
 						.add("sourceCode", userToken.getUserCode())
 						.add("targetCode", msg.getData().getTargetCode())
 						.build();
-				kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
+				kogitoUtils.triggerWorkflow(SELF, "edit", payload);
 				return;
 			}
-
-			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
-			return;
 		}
 
 		/**

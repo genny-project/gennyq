@@ -38,9 +38,10 @@ import life.genny.serviceq.Service;
 @ApplicationScoped
 public class ExternalConsumer {
 
-	private static final Logger log = Logger.getLogger(ExternalConsumer.class);
-
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	Logger log;
 
 	@Inject
 	RoleBasedPermission permissions;
