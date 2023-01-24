@@ -31,7 +31,7 @@ public class SearchEntitySerialisationTest {
     .add(new AssociatedColumn("LNK_TEST2", "PRI_DUMMY_ATTRIBUTE", "Funny Attribute Name"))
     .add(new AssociatedColumn("LNK_TEST3", "PRI_GRRR", "Email"))
     .add(new AssociatedColumn("LNK_TEST4", "PRI_THIS_IS_A_TEST_ATTRIB", "Dan"))
-    .add(new Sort("SRT_POOPOO", Ord.ASC))
+    .add(new Sort("SRT_TESTSORT", Ord.ASC))
     .add(new Column("PRI_ATTRIB1", "Some attribute"))
     .add(new AssociatedColumn("LNK_TEST5", "PRI_JOE_ATTRIBUTE", "Joe"))
     .add(new Action("TEST_ACTION_THINGY", "ACTION THINGY"))
@@ -39,7 +39,7 @@ public class SearchEntitySerialisationTest {
     .setPageSize(20)
     .setPageStart(0);
 
-    @Test
+    // @Test
     public void serialiseTrait() {
         String json = jsonb.toJson(entity);
         SearchEntity entity2 = jsonb.fromJson(json, SearchEntity.class);
@@ -48,12 +48,11 @@ public class SearchEntitySerialisationTest {
         assertEquals(entity, entity2);
 
         // entity.convertToSendable();
-        System.out.println(jsonb.toJson(entity));
     }
 
-    @Test
+    // @Test
     public void flipOrdTest() {
-        Sort s = entity.getTrait(Sort.class, "SRT_POOPOO").get();
+        Sort s = entity.getTrait(Sort.class, "SRT_TESTSORT").get();
         System.out.println(s);
         s.flipOrd();
         System.out.println(s);

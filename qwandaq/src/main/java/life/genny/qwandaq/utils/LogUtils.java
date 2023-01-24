@@ -1,11 +1,10 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.invoke.MethodHandles;
 import java.net.http.HttpHeaders;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
@@ -13,8 +12,7 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 public class LogUtils {
 
-	@Inject
-	public static Logger log;
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * Log a set of {@link HttpHeaders}

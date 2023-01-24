@@ -57,6 +57,7 @@ import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
@@ -142,19 +143,19 @@ public class FyodorUltra {
 		log.debug("Applying capabilities...");
 		log.debug("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
-		capHandler.refineFiltersFromCapabilities(searchEntity);
-		capHandler.refineSortsFromCapabilities(searchEntity);
-		capHandler.refineColumnsFromCapabilities(searchEntity);
-		capHandler.refineActionsFromCapabilities(searchEntity);
+		capHandler.refineSearchFromCapabilities(searchEntity);
 
-		if (!GennyConstants.PER_SERVICE.equals(userToken.getUserCode())) {
+		if (!CapHandler.hasSecureToken(userToken)) {
 			Map<String, Object> ctxMap = new HashMap<>();
+			ctxMap.put("SOURCE", beUtils.getUserBaseEntity());
 			ctxMap.put("USER", beUtils.getUserBaseEntity());
-
-			searchEntity.getTraits(Filter.class).stream()
-				.filter(f -> f.getC() == String.class)
+			List<ClauseContainer> filters = searchEntity.getClauseContainers();
+			filters.stream()
+				.filter(f -> f.getFilter() != null && f.getFilter().getC() == String.class)
+				.peek(f -> log.info(f.getFilter().getValue()))
 				.forEach(f -> {
-					f.setValue(MergeUtils.wordMerge((String) f.getValue(), ctxMap));
+					String value = MergeUtils.merge((String) f.getFilter().getValue(), ctxMap);
+					f.getFilter().setValue(value);
 			});
 		}
 
@@ -339,6 +340,10 @@ public class FyodorUltra {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		return switch (operator) {
+			// use locate to find the expression within the value
+			// if locate returns 0, expression is not found
+			case IN -> cb.notEqual(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
+			case NOT_IN -> cb.equal(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
 			case LIKE -> cb.like((Expression<String>) expression, (String) value);
 			case NOT_LIKE -> cb.notLike((Expression<String>) expression, (String) value);
 			case CONTAINS -> cb.like((Expression<String>) expression, "%\"" + (String) value + "\"%");
@@ -719,28 +724,28 @@ public class FyodorUltra {
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			if(entity != null) {
-				return getRecursiveColumnLink(entity, code);
-			} else return null;
+			if (entity == null) {
+				return null;
+			}
+			return getRecursiveColumnLink(entity, code);
 		}
 
 		// find value
 		String value;
-		if (Attribute.PRI_NAME.equals(attributeCode))
+		if (Attribute.PRI_NAME.equals(attributeCode)) {
 			value = entity.getName();
-		if (Attribute.PRI_CODE.equals(attributeCode))
+		} else if (Attribute.PRI_CODE.equals(attributeCode)) {
 			value = entity.getCode();
-		else {
+		} else {
 			Optional<EntityAttribute> ea = entity.findEntityAttribute(attributeCode);
-			if (ea.isPresent())
-				value = ea.get().getAsString();
-			else
+			if (ea.isEmpty()) {
 				return null;
+			}
+			value = ea.get().getAsString();
 		}
 
 		// create answer
 		Answer answer = new Answer(entity.getCode(), entity.getCode(), attributeCode, value);
-		log.info(code);
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 		answer.setAttribute(attribute);
 

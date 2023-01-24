@@ -1,6 +1,34 @@
 package life.genny.qwandaq.utils;
 
-import io.quarkus.arc.Arc;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED_DATE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED;
+import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED_DATE;
+
+import java.lang.invoke.MethodHandles;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -45,8 +73,9 @@ import java.util.stream.Collectors;
 @ActivateRequestContext
 public class BaseEntityUtils {
 
-	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
 	Jsonb jsonb = JsonbBuilder.create();
+
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
 	ServiceToken serviceToken;
@@ -62,10 +91,6 @@ public class BaseEntityUtils {
 
 	@Inject
 	EntityManagerFactory emf;
-
-	@Inject
-	// @PersistenceUnit("genny")
-	EntityManager entityManager;
 
 	public BaseEntityUtils() {
 	}
@@ -132,7 +157,8 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+		BaseEntity be = getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+		return be;
 	}
 
 	/**
@@ -494,46 +520,42 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity addNonLiteralAttributes(BaseEntity entity) {
 
-		// Handle Created and Updated attributes
-		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
+		// created datetime
+		Attribute createdAttr = new Attribute(PRI_CREATED, "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
 
-		if (entity.getCreated() == null) {
-			log.error("NPE for PRI_CREATED. Generating created date");
-			entity.autocreateCreated();
-		}
-
-		// Ensure createdDate is not null
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
 
-		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
+		// created date
+		Attribute createdDateAttr = new Attribute(PRI_CREATED_DATE, "Created", new DataType(LocalDate.class));
 		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
 
-		// Ensure createdDate is not null
 		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
 
-		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
+		// last updated
+		Attribute updatedAttr = new Attribute(PRI_UPDATED, "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
-		try {
-			updated.setValueDateTime(entity.getUpdated());
-			entity.addAttribute(updated);
 
-			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
-			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
-			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
-			entity.addAttribute(updatedDate);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_UPDATED");
-		}
+		updated.setValueDateTime(entity.getUpdated());
+		entity.addAttribute(updated);
 
-		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
+		// last updated date
+		Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
+		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
+
+		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
+		entity.addAttribute(updatedDate);
+
+		// code
+		Attribute codeAttr = new Attribute(PRI_CODE, "Code", new DataType(String.class));
 		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
 		code.setValueString(entity.getCode());
 		entity.addAttribute(code);
 
-		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
+		// name
+		Attribute nameAttr = new Attribute(PRI_NAME, "Name", new DataType(String.class));
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
@@ -559,7 +581,7 @@ public class BaseEntityUtils {
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity create(final Definition definition, String name) {
-		return create(definition, name, null);
+		return create(definition, null, null);
 	}
 
 	/**
@@ -580,19 +602,23 @@ public class BaseEntityUtils {
 		BaseEntity item = null;
 		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 
-		if (uuidEA.isPresent())
+		if (uuidEA.isPresent()) {
+			log.debug("Creating user base entity");
 			item = createUser(definition);
-		else {
+		} else {
 			String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
-			if (StringUtils.isBlank(prefix))
+			if (StringUtils.isBlank(prefix)) {
 				throw new DefinitionException("No prefix set for the def: " + definition.getCode());
+			}
+			if (StringUtils.isBlank(code)) {
+				code = (prefix + "_" + UUID.randomUUID().toString().substring(0, 32)).toUpperCase();
+			}
 
-			if (StringUtils.isBlank(code))
-				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
-			if (StringUtils.isBlank(name))
-				name = definition.getName();
-
-			item = new BaseEntity(code.toUpperCase(), name);
+			log.info("Creating BE with code=" + code + ", name=" + name);
+			if(StringUtils.isBlank(name)) {
+				name = code;
+			}
+			item = new BaseEntity(code, name);
 			item.setRealm(definition.getRealm());
 		}
 
@@ -614,7 +640,7 @@ public class BaseEntityUtils {
 			}
 
 			// Find any default val for this Attr
-			String defaultDefValueAttr = "DFT_" + attrCode;
+			String defaultDefValueAttr = Prefix.DFT.concat(attrCode);
 			Object defaultVal = definition.getValue(defaultDefValueAttr, attribute.getDefaultValue());
 
 			// Only process mandatory attributes, or defaults
@@ -653,11 +679,11 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity createUser(final Definition definition) {
 
-		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
-
 		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
 		if (opt.isEmpty())
 			throw new DefinitionException("Definition is not a User definition: " + definition.getCode());
+
+		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
 
 		// generate keycloak id
 		String uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
@@ -667,9 +693,8 @@ public class BaseEntityUtils {
 		if (optCode.isEmpty())
 			throw new DebugException("Prefix not provided" + definition.getCode());
 
-		String name = definition.getName();
 		String code = optCode.get() + "_" + uuid.toUpperCase();
-		BaseEntity item = new BaseEntity(code, name);
+		BaseEntity item = new BaseEntity(code, null);
 		item.setRealm(userToken.getProductCode());
 
 		// add email and username
@@ -700,12 +725,12 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity addValue(final BaseEntity be, final String attributeCode, final String value) {
 
-		if (be == null)
+		if (be == null) {
 			throw new NullParameterException("be");
-		if (attributeCode == null)
+		}
+		if (attributeCode == null) {
 			throw new NullParameterException("attributeCode");
-		// if (value == null)
-		// throw new NullParameterException("value");
+		}
 
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 

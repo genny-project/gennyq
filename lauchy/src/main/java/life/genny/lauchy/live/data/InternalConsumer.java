@@ -33,9 +33,10 @@ public class InternalConsumer {
 
 	void onStart(@Observes StartupEvent ev) {
 
-		if (service.showValues())
+		if (service.showValues()) {
 			log.info("Blacklist        :" + (enableBlacklist ? "ON" : "OFF"));
-		service.fullServiceInit(false);
+		}
+		service.fullServiceInit();
 		log.info("[*] Finished Lauchy Startup!");
 	}
     
@@ -54,23 +55,5 @@ public class InternalConsumer {
         log.info("Forwarding valid message");
         KafkaUtils.writeMsg(KafkaTopic.VALID_DATA, data);
 	}
-	// @Produces
-	// public Topology buildTopology() {
 
-	// 	// Read the input Kafka topic into a KStream instance.
-	// 	StreamsBuilder builder = new StreamsBuilder();
-	// 	builder
-	// 			.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
-	// 			.peek((k, v) -> scope.init(v))
-	// 			.peek((k, v) -> log.info("Received message: " + stripToken(v)))
-	// 			.filter((k, v) -> (v != null))
-	// 			.filter((k, v) -> validateData(v))
-	// 			.mapValues((k, v) -> handleDependentDropdowns(v))
-	// 			.peek((k, v) -> log.info("Forwarding valid message"))
-	// 			.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
-
-	// 	Topology top = builder.build();
-	// 	log.info("Constructed topology");
-	// 	return top;
-	// }
 }

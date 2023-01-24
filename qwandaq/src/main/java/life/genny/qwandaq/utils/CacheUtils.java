@@ -1,5 +1,17 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.infinispan.client.hotrod.RemoteCache;
+import org.jboss.logging.Logger;
+
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CoreEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
@@ -29,11 +41,12 @@ import java.util.stream.Collectors;
 @RegisterForReflection
 public class CacheUtils {
 
-	static final Logger log = Logger.getLogger(CacheUtils.class);
-
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	private static GennyCache cache = null;
+
+	@Inject
+	private static final Logger log = Logger.getLogger(CacheUtils.class);
 
 	/** 
 	 * @param gennyCache the gennyCache to set
@@ -48,7 +61,6 @@ public class CacheUtils {
 	* @param realm The realm of the cache to clear
 	 */
 	public static void clear(String realm) {
-
 		cache.getRemoteCache(realm).clear();
 	}
 
@@ -60,7 +72,6 @@ public class CacheUtils {
 	 * @return Object
 	 */
 	public static Object readCache(String realm, String key) {
-
 		Object ret = cache.getRemoteCache(realm).get(key);
 		return ret;
 	}
@@ -75,7 +86,6 @@ public class CacheUtils {
 	 * @return returns the newly written value
 	 */
 	public static String writeCache(String realm, String key, String value) {
-
 		log.debugf("realm: %s, key: %s", realm, key);
 		RemoteCache<String, String> remoteCache = cache.getRemoteCache(realm);
 		remoteCache.put(key, value);
@@ -90,7 +100,6 @@ public class CacheUtils {
 	* @param key The key of the entry to remove.
 	 */
 	public static void removeEntry(String realm, String key) {
-		
 		cache.getRemoteCache(realm).remove(key);
 	}
 
@@ -104,7 +113,6 @@ public class CacheUtils {
 	 * @return T
 	 */
 	public static <T> T getObject(String realm, String key, Class<T> c) {
-
 		log.tracef("realm: %s, key: %s", realm, key);
 		String data = (String) readCache(realm, key);
 		log.tracef("key: %s, value: %s", key, data);
@@ -127,7 +135,6 @@ public class CacheUtils {
 	 * @return T
 	 */
 	public static <T> T getObject(String realm, String key, Type t) {
-
 		String data = (String) readCache(realm, key);
 		if (data == null) {
 			return null;
@@ -144,7 +151,6 @@ public class CacheUtils {
 	 * @param obj the obj to put
 	 */
 	public static void putObject(String realm, String key, Object obj) {
-
 		String json = jsonb.toJson(obj);
 		cache.getRemoteCache(realm).put(key, json);
 		log.tracef("Caching: [%s:%s]=%s", realm , key, json);

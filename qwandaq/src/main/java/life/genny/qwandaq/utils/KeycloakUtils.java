@@ -52,7 +52,8 @@ import life.genny.qwandaq.exception.runtime.KeycloakException;
  */
 public class KeycloakUtils {
 
-    static final Logger log = Logger.getLogger(KeycloakUtils.class);
+	private static Logger log = Logger.getLogger(KeycloakUtils.class);
+
     static Jsonb jsonb = JsonbBuilder.create();
 
     /**
