@@ -83,7 +83,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             log.info("messages : " + messageCodes.size());
             messageCodes.parallelStream().forEach((messageCode) -> {
                 log.info("messageCode : " + messageCode);
-                BaseEntity message = beUtils.getBaseEntityByCode(messageCode);
+                BaseEntity message = beUtils.getBaseEntity(messageCode);
 
                 // Determine the recipientBECode
                 String recipientLnkValue = message.getValueAsString(PRI_RECIPIENT_LNK);
@@ -94,7 +94,7 @@ public class SendAllMessages extends MessageSendingStrategy {
                 }
 
                 // Extract all the contexts from the core baseEntity LNKs
-                List<EntityAttribute> lnkEAs = coreBE.findPrefixEntityAttributes("LNK");
+                List<EntityAttribute> lnkEAs = coreBE.findPrefixEntityAttributes(Prefix.LNK_);
                 StringBuilder contextMapStr = new StringBuilder();
 
                 lnkEAs.parallelStream().forEach((ea) -> {
@@ -131,7 +131,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             if (recipientLnkValue.startsWith(SELF)) { // The coreBE is the recipient
                 ctxMap.put(RECIPIENT, coreBE.getCode());
                 recipientBECode = coreBE.getCode();
-            } else if (recipientLnkValue.startsWith(Prefix.PER)) {
+            } else if (recipientLnkValue.startsWith(Prefix.PER_)) {
                 ctxMap.put(RECIPIENT, recipientLnkValue);
                 recipientBECode = recipientLnkValue;
             } else {
@@ -154,7 +154,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             // check the various formats to get the senderBECode
             if (senderLnkValue.startsWith(USER)) { // The user is the sender
                 ctxMap.put(SENDER, userToken.getUserCode());
-            } else if (senderLnkValue.startsWith(Prefix.PER)) {
+            } else if (senderLnkValue.startsWith(Prefix.PER_)) {
                 ctxMap.put(SENDER, senderLnkValue);
             } else {
                 // check if it is a LNK path (of the coreBE)

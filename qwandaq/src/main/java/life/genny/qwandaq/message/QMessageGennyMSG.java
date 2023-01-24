@@ -261,7 +261,7 @@ public class QMessageGennyMSG extends QMessage {
 				log.warn("Message does not contain a Template Code!!");
 			} else {
 				// Make sure template exists
-				BaseEntity templateBE = beUtils.getBaseEntityByCode(this.msg.getTemplateCode());
+				BaseEntity templateBE = beUtils.getBaseEntity(this.msg.getTemplateCode());
 
 				if (templateBE == null) {
 					log.error("Message template " + this.msg.getTemplateCode() + " does not exist!!");

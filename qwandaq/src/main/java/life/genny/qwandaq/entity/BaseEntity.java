@@ -1187,7 +1187,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(Prefix.PER);
+		return getCode().startsWith(Prefix.PER_);
 	}
 
 	/**

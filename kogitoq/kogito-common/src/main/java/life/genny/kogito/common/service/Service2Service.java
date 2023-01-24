@@ -59,7 +59,7 @@ public class Service2Service {
 			// We need to fetch the latest token for the sourceUser
 			log.debug(taskExchange.getSourceCode() + " : No token found, fetching latest token");
 			BaseEntity userBE = beUtils.getBaseEntity(taskExchange.getSourceCode());
-			BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ.concat("_".concat(userBE.getRealm().toUpperCase())));
+			BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ_.concat("_".concat(userBE.getRealm().toUpperCase())));
 			userToken = new UserToken(KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project));
 		}
 		logToken();

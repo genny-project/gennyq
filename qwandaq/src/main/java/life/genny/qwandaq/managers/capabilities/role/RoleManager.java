@@ -246,7 +246,7 @@ public class RoleManager extends Manager {
 	 */
 	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
-		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP);
+		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP_);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
 			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
@@ -367,8 +367,8 @@ public class RoleManager extends Manager {
 
 	public static String cleanRoleCode(final String rawRoleCode) {
 		String cleanRoleCode = rawRoleCode.toUpperCase();
-		if (!cleanRoleCode.startsWith(Prefix.ROL)) {
-			cleanRoleCode = Prefix.ROL + cleanRoleCode;
+		if (!cleanRoleCode.startsWith(Prefix.ROL_)) {
+			cleanRoleCode = Prefix.ROL_ + cleanRoleCode;
 		}
 
 		return cleanRoleCode;

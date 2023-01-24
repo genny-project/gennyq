@@ -130,7 +130,7 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
-		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
+		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP_));
 		log.debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
@@ -335,8 +335,8 @@ public class CapabilitiesManager extends Manager {
 	 */
 	public static String cleanCapabilityCode(final String rawCapabilityCode) {
 		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
-		if (!cleanCapabilityCode.startsWith(Prefix.CAP)) {
-			cleanCapabilityCode = Prefix.CAP + cleanCapabilityCode;
+		if (!cleanCapabilityCode.startsWith(Prefix.CAP_)) {
+			cleanCapabilityCode = Prefix.CAP_ + cleanCapabilityCode;
 		}
 
 		return cleanCapabilityCode;

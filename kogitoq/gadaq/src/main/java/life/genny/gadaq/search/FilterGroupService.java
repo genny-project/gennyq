@@ -105,7 +105,7 @@ public class FilterGroupService {
      */
     public  boolean isValidTable(String code) {
         boolean result = false;
-        if(code!=null &&  code.startsWith(Prefix.QUE_TABLE_PREF)) return true;
+        if(code!=null &&  code.startsWith(Prefix.QUE_TABLE_)) return true;
         return result;
     }
 
@@ -208,7 +208,7 @@ public class FilterGroupService {
      */
     public String getColumnName(String value) {
         String lastSuffix = "";
-        int lastIndex = value.lastIndexOf(Prefix.PRI) + Prefix.PRI.length();
+        int lastIndex = value.lastIndexOf(Prefix.PRI_) + Prefix.PRI_.length();
         if(lastIndex > -1) {
             lastSuffix = value.substring(lastIndex, value.length());
             lastSuffix = lastSuffix.replaceFirst("\"]","");
@@ -488,7 +488,7 @@ public class FilterGroupService {
             // create the main base entity
             String attCode = Attribute.LNK_SAVED_SEARCHES;
             Attribute attr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
-            defBE.addAttribute(attr, 1.0, Prefix.SBE);
+            defBE.addAttribute(attr, 1.0, Prefix.SBE_);
             if(nameOrCode.startsWith(SearchEntity.SBE_SAVED_SEARCH)) {
                 baseEntity = beUtils.getBaseEntity(userToken.getProductCode(), nameOrCode);
             } else {

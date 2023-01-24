@@ -86,7 +86,7 @@ public class SearchService {
 	 */
 	public void sendTable(String code) {
 
-		code = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.PCM);
+		code = StringUtils.replaceOnce(code, Prefix.QUE_, Prefix.PCM_);
 		log.info("Sending Table :: " + code);
 
 		String userCode = userToken.getUserCode();
@@ -111,10 +111,10 @@ public class SearchService {
 		// fetch target and find it's definition
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
-		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF);
+		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF_);
 
 		// construct template and question codes from type
-		String pcmCode = new StringBuilder(Prefix.PCM).append(type).append("_DETAIL_VIEW").toString();
+		String pcmCode = new StringBuilder(Prefix.PCM_).append(type).append("_DETAIL_VIEW").toString();
 
 		// send pcm with correct info
 		String userCode = userToken.getUserCode();
