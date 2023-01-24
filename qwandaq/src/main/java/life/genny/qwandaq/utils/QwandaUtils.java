@@ -509,7 +509,7 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+	public static boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
 		Boolean answered = true;
@@ -525,8 +525,8 @@ public class QwandaUtils {
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
-			if ((mandatory && !readonly) && StringUtils.isBlank(value))
-				answered = false;
+			if ((mandatory && !readonly))
+				answered = acceptableAnswer(value);
 
 			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
 			log.debug("===> " + resultLine);
@@ -535,6 +535,19 @@ public class QwandaUtils {
 		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
 
 		return answered;
+	}
+
+	private static boolean acceptableAnswer(String value) {
+		// block whitespace only
+		value = value.trim();
+		if(value == null)
+			return false;
+
+		if(StringUtils.isBlank(value))
+			return false;
+		
+		if("null".equalsIgnoreCase(value))
+			return false;
 	}
 
 	/**
