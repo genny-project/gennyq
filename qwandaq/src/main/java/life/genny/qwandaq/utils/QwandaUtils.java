@@ -481,6 +481,9 @@ public class QwandaUtils {
 
 		// iterate asks to see if mandatorys are answered
 		for (Ask ask : map.values()) {
+			// We found a dodgy answer so why continue ????
+			if(!answered)
+				break;
 
 			String attributeCode = ask.getQuestion().getAttribute().getCode();
 			if (!attributeCodeMeetsBasicRequirements(attributeCode)) {
@@ -518,8 +521,10 @@ public class QwandaUtils {
 		if(StringUtils.isBlank(value))
 			return false;
 		
-		if("null".equalsIgnoreCase(value))
+		if("null".equalsIgnoreCase(value)) {
 			return false;
+		}
+
 		log.debug("	- letting through value: " + value);
 		return true;
 	}
