@@ -6,49 +6,49 @@ package life.genny.qwandaq.constants;
 public class Prefix {
 
 	// core
-	public static final String QUE = "QUE_";
-	public static final String QBE = "QBE_";
-	public static final String PCM = "PCM_";
-	public static final String ROL = "ROL_";
-	public static final String PRJ = "PRJ_";
-	public static final String EVT = "EVT_";
-	public static final String SEL = "SEL_";
+	public static final String QUE_ = "QUE_";
+	public static final String QBE_ = "QBE_";
+	public static final String PCM_ = "PCM_";
+	public static final String ROL_ = "ROL_";
+	public static final String PRJ_ = "PRJ_";
+	public static final String EVT_ = "EVT_";
+	public static final String SEL_ = "SEL_";
 
 	// baseentity
-	public static final String PER = "PER_";
-	public static final String CPY = "CPY_";
-	public static final String MSG = "MSG_";
+	public static final String PER_ = "PER_";
+	public static final String CPY_ = "CPY_";
+	public static final String MSG_ = "MSG_";
 
 	// attribute
-	public static final String PRI = "PRI_";
-	public static final String LNK = "LNK_";
-	public static final String LOCATION = "PRI_LOC";
+	public static final String PRI_ = "PRI_";
+	public static final String LNK_ = "LNK_";
+	public static final String PRI_LOC = "PRI_LOC";
 
 	// definition
-	public static final String DEF = "DEF_";
-	public static final String ATT = "ATT_";
-	public static final String DFT = "DFT_";
-	public static final String SER = "SER_";
-	public static final String DEP = "DEP_";
-	public static final String UNQ = "UNQ_";
+	public static final String DEF_ = "DEF_";
+	public static final String ATT_ = "ATT_";
+	public static final String DFT_ = "DFT_";
+	public static final String SER_ = "SER_";
+	public static final String DEP_ = "DEP_";
+	public static final String UNQ_ = "UNQ_";
 
 	// pcm
-	public static final String TPL = "TPL_";
+	public static final String TPL_ = "TPL_";
 
 	// capability
-	public static final String CAP = "CAP_";
-	public static final String PRM = "PRM_";
+	public static final String CAP_ = "CAP_";
+	public static final String PRM_ = "PRM_";
 
 	// search entity
-	public static final String SBE = "SBE_";
-	public static final String FLC = "FLC_";
-	public static final String COL = "COL_";
-	public static final String ACT = "ACT_";
-	public static final String SRT = "SRT_";
+	public static final String SBE_ = "SBE_";
+	public static final String FLC_ = "FLC_";
+	public static final String COL_ = "COL_";
+	public static final String ACT_ = "ACT_";
+	public static final String SRT_ = "SRT_";
 
 	// Table
-	public static final String QUE_TABLE_PREF = "QUE_TABLE_";
-	public static final String FIELD="FIELD_";
+	public static final String QUE_TABLE_ = "QUE_TABLE_";
+	public static final String FIELD_ = "FIELD_";
 
 }
 

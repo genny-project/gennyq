@@ -21,7 +21,7 @@ public class SendMessage extends MessageSendingStrategy {
     public SendMessage(String templateCode, String recipientBECode) {
         super();
         this.templateCode = templateCode;
-        this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
     }
 
     public SendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
@@ -30,7 +30,7 @@ public class SendMessage extends MessageSendingStrategy {
         if (beUtils == null) {
             log.warn("beUtils is NULL --> no userToken");
         }
-        this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
         this.ctxMap = ctxMap;
     }
 

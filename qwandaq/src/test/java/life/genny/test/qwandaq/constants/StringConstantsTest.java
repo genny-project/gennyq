@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.BaseTestCase;
@@ -32,6 +33,11 @@ public class StringConstantsTest extends BaseTestCase {
 
             .createTest("PCM Code Constants")
             .setInput(PCM.class)
+            .setExpected(true)
+            .build()
+
+            .createTest("Prefix Constants")
+            .setInput(Prefix.class)
             .setExpected(true)
             .build()
 

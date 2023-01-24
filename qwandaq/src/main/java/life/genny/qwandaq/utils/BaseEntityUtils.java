@@ -44,23 +44,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * A non-static utility class used for standard
@@ -115,7 +98,7 @@ public class BaseEntityUtils {
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-		return getBaseEntity(Prefix.PRJ.concat(userToken.getProductCode().toUpperCase()));
+		return getBaseEntity(Prefix.PRJ_.concat(userToken.getProductCode().toUpperCase()));
 	}
 
 	/**
@@ -157,8 +140,8 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-		BaseEntity be = getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
-		return be;
+		BaseEntity baseEntity = getBaseEntity(userToken.getProductCode(), code);
+		return baseEntity;
 	}
 
 	/**
@@ -170,79 +153,15 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
-		BaseEntity baseEntity = getBaseEntityOrNull(productCode, code);
-		if (baseEntity == null)
-			throw new ItemNotFoundException(code);
-		return baseEntity;
-	}
-
-	/**
-	 * Get a base entity using the code, or return null if not found.
-	 * 
-	 * @param code The code of the entity to fetch
-	 * @return The BaseEntity, or null if not found
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityOrNull(String code) {
-		return getBaseEntityOrNull(userToken.getProductCode(), code);
-	}
-
-	/**
-	 * Get a base entity using the code, or return null if not found.
-	 * 
-	 * @param productCode The product to search in
-	 * @param code        The code of the entity to fetch
-	 * @return The BaseEntity, or null if not found
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
-		return getBaseEntityByCode(productCode, code);
-	}
-
-	/**
-	 * Fetch A {@link BaseEntity} from the cache using a code.
-	 *
-	 * @param code The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityByCode(String code) {
-		if (userToken == null)
-			throw new NullParameterException("User Token");
-		return getBaseEntityByCode(serviceToken.getProductCode(), code);
-	}
-
-	/**
-	 * Fetch A {@link BaseEntity} from the cache using a code.
-	 *
-	 * @param productCode The productCode to use
-	 * @param code        The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityByCode(String productCode, String code) {
-
 		if (StringUtils.isBlank(productCode))
 			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(code))
 			throw new NullParameterException("code");
-
-		// check for entity in the cache
-		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-
-		// check in database if not in cache
-		if (entity == null) {
-			try {
-				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode + " but "
-						+ (entity == null ? "not found in db" : "found in db"));
-				CacheUtils.putObject(productCode, code, entity);
-			} catch (NoResultException e) {
-				throw new ItemNotFoundException(productCode, code);
-			}
+		try {
+			return databaseUtils.findBaseEntityByCode(productCode, code);
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException(productCode, code);
 		}
-
-		return entity;
 	}
 
 	/**
@@ -291,7 +210,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityFromLinkAttribute(be, attributeCode);
 	}
 
@@ -309,7 +228,7 @@ public class BaseEntityUtils {
 		if (StringUtils.isEmpty(newBaseEntityCode))
 			return null;
 		try {
-			BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
+			BaseEntity newBe = getBaseEntity(newBaseEntityCode);
 			return newBe;
 		} catch (ItemNotFoundException e) {
 			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
@@ -325,7 +244,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity code stored in the attribute
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(String baseEntityCode, String attributeCode) {
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityCodeFromLinkAttribute(be, attributeCode);
 	}
 
@@ -357,7 +276,7 @@ public class BaseEntityUtils {
 	 */
 	public List<String> getBaseEntityCodeArrayFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityCodeArrayFromLinkAttribute(be, attributeCode);
 	}
 
@@ -389,7 +308,7 @@ public class BaseEntityUtils {
 	 * @return The value as an Object
 	 */
 	public Object getBaseEntityValue(final String baseEntityCode, final String attributeCode) {
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		if (be != null) {
 			Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 			if (ea.isPresent())
@@ -421,7 +340,7 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityValueAsString(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityAttrValueAsString(be, attributeCode);
 	}
 
@@ -434,7 +353,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalDateTime getBaseEntityValueAsLocalDateTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDateTime();
@@ -450,7 +369,7 @@ public class BaseEntityUtils {
 	 * @return The value as a LocalDate
 	 */
 	public LocalDate getBaseEntityValueAsLocalDate(final String baseEntityCode, final String attributeCode) {
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDate();
@@ -467,7 +386,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalTime getBaseEntityValueAsLocalTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueTime();
@@ -487,7 +406,7 @@ public class BaseEntityUtils {
 		String[] arr = strArr.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "").split(",");
 		return Arrays.stream(arr)
 				.filter(item -> !item.isEmpty())
-				.map(item -> getBaseEntityOrNull(item))
+				.map(item -> getBaseEntity(item))
 				.toList();
 	}
 
@@ -600,7 +519,7 @@ public class BaseEntityUtils {
 			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
 		BaseEntity item = null;
-		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
+		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT_.concat(Attribute.PRI_UUID));
 
 		if (uuidEA.isPresent()) {
 			log.debug("Creating user base entity");
@@ -625,9 +544,9 @@ public class BaseEntityUtils {
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		List<EntityAttribute> atts = definition.findPrefixEntityAttributes(Prefix.ATT);
+		List<EntityAttribute> atts = definition.findPrefixEntityAttributes(Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
-			String attrCode = ea.getAttributeCode().substring(Prefix.ATT.length());
+			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
 			Attribute attribute = qwandaUtils.getAttribute(attrCode);
 
 			if (attribute == null) {
@@ -640,7 +559,7 @@ public class BaseEntityUtils {
 			}
 
 			// Find any default val for this Attr
-			String defaultDefValueAttr = Prefix.DFT.concat(attrCode);
+			String defaultDefValueAttr = Prefix.DFT_.concat(attrCode);
 			Object defaultVal = definition.getValue(defaultDefValueAttr, attribute.getDefaultValue());
 
 			// Only process mandatory attributes, or defaults
@@ -679,7 +598,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity createUser(final Definition definition) {
 
-		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
+		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT_.concat(Attribute.PRI_UUID));
 		if (opt.isEmpty())
 			throw new DefinitionException("Definition is not a User definition: " + definition.getCode());
 

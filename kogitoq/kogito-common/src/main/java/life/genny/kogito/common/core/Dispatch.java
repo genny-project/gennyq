@@ -265,7 +265,7 @@ public class Dispatch {
 		}
 
 		// iterate locations
-		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
+		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.PRI_LOC);
 		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
 			if(!entityAttribute.requirementsMet(userCapabilities)) {
@@ -278,11 +278,11 @@ public class Dispatch {
 			
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
-			if (value.startsWith(Prefix.PCM)) {
+			if (value.startsWith(Prefix.PCM_)) {
 				parent = pcm.getCode();
 				location = entityAttribute.getAttributeCode();
 				traversePCM(userCapabilities, value, source, target, parent, location, msg, processData);
-			} else if (value.startsWith(Prefix.SBE)) {
+			} else if (value.startsWith(Prefix.SBE_)) {
 				processData.getSearches().add(value);
 			}
 		}
@@ -340,7 +340,7 @@ public class Dispatch {
 			String code = name.toUpperCase().replaceAll(" ", "_");
 			// create child and add to ask
 			Attribute attribute = qwandaUtils.createButtonEvent(code, name);
-			Question question = new Question(Prefix.QUE + code, name, attribute);
+			Question question = new Question(Prefix.QUE_ + code, name, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.add(child);
 		}
@@ -389,7 +389,7 @@ public class Dispatch {
 		}
 
 		// check for dropdown attribute
-		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK)) {
+		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK_)) {
 
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
@@ -437,7 +437,7 @@ public class Dispatch {
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
 
-		if (attribute.getCode().startsWith(Prefix.LNK)) {
+		if (attribute.getCode().startsWith(Prefix.LNK_)) {
 
 			// check for already selected items
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
@@ -515,7 +515,7 @@ public class Dispatch {
 		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 
 		baseEntities.stream()
-			.filter(b -> !b.getCode().startsWith(Prefix.QBE))
+			.filter(b -> !b.getCode().startsWith(Prefix.QBE_))
 			.forEach(entity -> {
 			entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
 			MergeUtils.mergeBaseEntity(entity, contexts);
