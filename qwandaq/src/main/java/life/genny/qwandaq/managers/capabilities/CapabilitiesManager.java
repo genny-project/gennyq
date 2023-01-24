@@ -196,7 +196,6 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		target.addEntityAttribute(capability, 0.0, false, getModeString(modeList));
-		// target.addAttribute(capability, 0.0, getModeString(nodes));
 		// CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
@@ -237,14 +236,6 @@ public class CapabilitiesManager extends Manager {
 		// 	return targetBe;
 		// }
 
-		// ===== Old capability check ===
-		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
-		// log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " +
-		// cleanCapabilityCode
-		// + " TO BASE ENTITITY: " + targetBe.getCode());
-		// return targetBe;
-		// }
-
 		updateCapability(productCode, targetBe, capabilityAttribute, modes);
 		return targetBe;
 	}
@@ -278,14 +269,6 @@ public class CapabilitiesManager extends Manager {
 		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
 		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
 		// 	return targetBe;
-		// }
-
-		// ===== Old capability check ===
-		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
-		// log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " +
-		// cleanCapabilityCode
-		// + " TO BASE ENTITITY: " + targetBe.getCode());
-		// return targetBe;
 		// }
 
 		updateCapability(productCode, targetBe, capabilityAttribute, modes);

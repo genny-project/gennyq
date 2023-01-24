@@ -158,7 +158,7 @@ public class Validator {
 			return blacklist("AttributeCodes null");
 
 		if (!processData.getAttributeCodes().contains(attributeCode))
-			return blacklist("AttributeCode " + attributeCode + " does not existing");
+			return blacklist("AttributeCode " + attributeCode + " does not exist");
 
 		// check target is same
 		BaseEntity target = qwandaUtils.generateProcessEntity(processData);
@@ -206,7 +206,7 @@ public class Validator {
 		}
 
 		// check if answer is null
-		if (answer.getValue() == null) {
+		if (isNull(answer.getValue())) {
 			log.warnf("Received a null answer value from: %s, for: %s", userToken.getUserCode(),
 					attributeCode);
 			return true;
@@ -220,6 +220,10 @@ public class Validator {
 		return true;
 	}
 
+	private boolean isNull(String value) {
+		return StringUtils.isBlank(value) || "null".equalsIgnoreCase(value);
+	}
+
 	/**
 	 * Blacklist the user if blacklists are enabled, and return
 	 * a Boolean representing whether or not the messsage
@@ -227,7 +231,7 @@ public class Validator {
 	 *
 	 * @return Boolean
 	 */
-	public Boolean blacklist(String err) {
+	private Boolean blacklist(String err) {
 		String uuid = userToken.getUuid();
 		log.error(err);
 		log.info("BLACKLIST " + (enableBlacklist ? "ON" : "OFF") + " " + userToken.getEmail() + ":" + uuid);
@@ -302,7 +306,7 @@ public class Validator {
 	 * @param target    The target entity
 	 * @param attribute The attribute used
 	 */
-	// NOTE: This should be removed soon and rethought
+	// TODO: This should be removed soon and rethought
 	public void temporaryBucketSearchHandler(Answer answer, BaseEntity target, Attribute attribute) {
 
 		if (("LNK_PERSON".equals(answer.getAttributeCode()))
