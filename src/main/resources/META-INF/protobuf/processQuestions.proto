@@ -117,13 +117,15 @@ message ProcessData {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional string questionCode = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	repeated string searches = 10; 
+	optional bool readonly = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 11; 
+	repeated string searches = 11; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 12; 
+	optional string sourceCode = 12; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string processId = 13; 
+	optional string targetCode = 13; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string processId = 14; 
 }
 /* @Indexed */ 
 message ProcessQuestions { 
@@ -135,8 +137,8 @@ message ProcessQuestions {
  @VariableInfo(tags="input") */ 
 	optional string buttonEvents = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="input") */ 
-	optional S2SData data = 3; 
+ @VariableInfo(tags="") */ 
+	optional string completionCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
 	optional bool expectingAnswers = 4; 
@@ -170,39 +172,44 @@ message ProcessQuestions {
  @VariableInfo(tags="input") */ 
 	optional string targetCode = 14; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
- @VariableInfo(tags="") */ 
-	optional bool terminate = 15; 
+ @VariableInfo(tags="input") */ 
+	optional TaskExchange taskExchange = 15; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="") */ 
-	optional string userCode = 16; 
+	optional bool terminate = 16; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional string userCode = 17; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 17; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 18; 
 }
 /* @Indexed */ 
-message S2SData { 
+message TaskExchange { 
 	option java_package = "life.genny.kogito.common.models";
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional EAbortReason abortReason = 1; 
+	optional string buttonEvents = 1; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string buttonEvents = 2; 
+	optional ECompletion completion = 2; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string location = 3; 
+	optional string completionCode = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string parent = 4; 
+	optional string location = 4; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string pcmCode = 5; 
+	optional string parent = 5; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string productCode = 6; 
+	optional string pcmCode = 6; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string questionCode = 7; 
+	optional string productCode = 7; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string sourceCode = 8; 
+	optional string questionCode = 8; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string targetCode = 9; 
+	optional string sourceCode = 9; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional TimerData timerData = 10; 
+	optional string targetCode = 10; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional string token = 11; 
+	optional TimerData timerData = 11; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 12; 
 }
 /* @Indexed */ 
 message TimerData { 
@@ -266,11 +273,13 @@ message Validation {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
 	optional kogito.Serializable updated = 14[(kogito_java_class) = "java.time.LocalDateTime"]; 
 }
-enum EAbortReason { 
-	option java_package = "life.genny.kogito.common.models.S2SData";
+enum ECompletion { 
+	option java_package = "life.genny.kogito.common.models";
 	CANCEL = 1;
-	TIMEOUT = 2;
-	NONE = 0;
+	SUBMIT = 0;
+	CUSTOM = 4;
+	TIMEOUT = 3;
+	PREVIOUS = 2;
 }
 enum EEntityStatus { 
 	option java_package = "life.genny.qwandaq";

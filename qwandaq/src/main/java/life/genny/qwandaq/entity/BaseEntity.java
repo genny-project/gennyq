@@ -61,6 +61,7 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -110,7 +111,7 @@ import org.jboss.logging.Logger;
 @Cacheable
 @RegisterForReflection
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabilityHiddenFilterable {
+public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabilityFilterable {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -133,6 +134,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
 			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
 	})
+	// TODO: Make this a Hashmap as with Line 736 TODO
 	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
 
 	@XmlTransient
@@ -201,15 +203,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 
-    @JsonbTransient
-    @JsonIgnore
+	@Override
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
 	}
 
 	@Override
-    @JsonbTransient
-    @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
 	}
@@ -1189,5 +1188,16 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonbTransient
 	public boolean isPerson() {
 		return getCode().startsWith(Prefix.PER);
+	}
+
+	/**
+	 * Copy across all metadata about this base entity to another base entity of variable type
+	 * @param other
+	 */
+	public void decorate(BaseEntity other) {
+		other.setCapabilityRequirements(getCapabilityRequirements());
+		other.setRealm(getRealm());
+		other.setRealm(getRealm());
+		other.setBaseEntityAttributes(getBaseEntityAttributes());
 	}
 }

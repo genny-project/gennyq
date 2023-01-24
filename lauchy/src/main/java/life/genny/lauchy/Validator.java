@@ -133,6 +133,11 @@ public class Validator {
 
 		String attributeCode = answer.getAttributeCode();
 
+		// name search
+		if (Attribute.PRI_SEARCH_TEXT.equals(attributeCode)) {
+			return true;
+		}
+
 		// check that user is the source of message
 		if (!(userToken.getUserCode()).equals(answer.getSourceCode()))
 			return blacklist(String.format("UserCode %s does not match answer source %s", userToken.getUserCode(), answer.getSourceCode()));
@@ -172,8 +177,6 @@ public class Validator {
 		BaseEntity target = qwandaUtils.generateProcessEntity(processData);
 		if (!target.getCode().equals(answer.getTargetCode()))
 			return blacklist("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
-
-		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
 		boolean notValidForAnyDefinition = false;
 		for (String code : processData.getDefCodes()) {

@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
-import life.genny.kogito.common.models.S2SData;
+import life.genny.kogito.common.models.TaskExchange;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -50,7 +50,7 @@ public class KogitoScopeInit {
 	 *
 	 * @param data The consumed message from kafka
 	 **/
-	public void init(S2SData data) {
+	public void init(TaskExchange data) {
 		log.info("KogitoScopeInit init! " + data);
 		if (data == null) {
 			log.error("Null data received at Kogito Scope Init");
