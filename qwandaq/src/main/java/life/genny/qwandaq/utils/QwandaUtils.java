@@ -481,9 +481,6 @@ public class QwandaUtils {
 
 		// iterate asks to see if mandatorys are answered
 		for (Ask ask : map.values()) {
-			// We found a dodgy answer so why continue ????
-			if(!answered)
-				break;
 
 			String attributeCode = ask.getQuestion().getAttribute().getCode();
 			if (!attributeCodeMeetsBasicRequirements(attributeCode)) {
@@ -503,8 +500,13 @@ public class QwandaUtils {
 			if ((mandatory && !readonly))
 				answered = acceptableAnswer(value);
 
+			if(!answered) {
+				log.debug("Found unanswered mandatory: " + attributeCode);
+				break;
+			}
+
 			String resultLine = (readonly ? "[R]" : "") + (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
-			log.debug("===> " + resultLine);
+			log.debug("===> " + resultLine + " (" + answered + ")");
 		}
 
 		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
