@@ -53,15 +53,6 @@ public class CapabilitiesManager extends Manager {
 		super();
 	}
 
-	// private BaseEntity perService;
-	// @PostConstruct
-	// void getPerService() {
-	// 	perService = beUtils.getBaseEntity("PER_SERVICE");
-	// 	if(perService == null) {
-
-	// 	}
-	// }
-
 	// == TODO LIST
 	// 1. I want to get rid of the productCode chain here. When we have multitenancy
 	// properly established this should be possible
@@ -196,8 +187,6 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		target.addEntityAttribute(capability, 0.0, false, getModeString(modeList));
-		// target.addAttribute(capability, 0.0, getModeString(nodes));
-		// CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 
