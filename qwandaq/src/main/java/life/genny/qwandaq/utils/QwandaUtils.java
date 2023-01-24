@@ -538,10 +538,10 @@ public class QwandaUtils {
 	}
 
 	private static boolean acceptableAnswer(String value) {
-		// block whitespace only
-		value = value.trim();
 		if(value == null)
 			return false;
+		// block whitespace only
+		value = value.trim();
 
 		if(StringUtils.isBlank(value))
 			return false;
