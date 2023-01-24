@@ -210,16 +210,20 @@ public class TaskService {
 
 		// remove previous answers for this attribute
 		List<Answer> answers = processData.getAnswers();
+		// TODO: Need to change this so there is no concurrent modification
 		for (int i = 0; i < answers.size();) {
 			Answer a = answers.get(i);
 			if (a.getAttributeCode().equals(answer.getAttributeCode()) 
 				&& a.getTargetCode().equals(answer.getTargetCode())) {
 				log.info("Found duplicate : " + a.getAttributeCode());
-				answers.remove(i);
+				log.info("New Answer: " + answer.getAttributeCode() + " = " + answer.getValue());
+				Answer removed = answers.remove(i);
+				log.info("Removed: " + removed.getAttributeCode() + " = " + removed.getValue());
 			} else {
 				i++;
 			}
 		}
+
 		// add new answer
 		answers.add(answer);
 		processData.setAnswers(answers);
