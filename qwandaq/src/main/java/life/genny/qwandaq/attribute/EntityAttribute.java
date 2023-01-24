@@ -246,9 +246,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		setReadonly(false);
 	}
 
-	@JsonbTransient
-	@JsonIgnore
-	public Set<Capability> getCapabilityRequirements() {
+    public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
 	}
 
@@ -1279,8 +1277,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	}
 
 	@Override
-	@JsonbTransient
-	@JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
 	}

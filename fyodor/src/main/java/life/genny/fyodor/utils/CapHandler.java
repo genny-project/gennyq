@@ -94,7 +94,8 @@ public class CapHandler extends Manager {
 					return container.requirementsMet(userCapabilities);
 				})
 				.collect(Collectors.toList());
-				log.info("Filtered down to " + containers.size() + " filters");
+
+		log.info("Filtered down to " + containers.size() + " filters");
 		searchEntity.setClauseContainers(containers);
 	}
 
