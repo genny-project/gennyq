@@ -548,6 +548,8 @@ public class QwandaUtils {
 		
 		if("null".equalsIgnoreCase(value))
 			return false;
+		
+		return true;
 	}
 
 	/**
