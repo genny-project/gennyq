@@ -7,6 +7,7 @@ public class Prefix {
 
 	// core
 	public static final String QUE = "QUE_";
+	public static final String QBE = "QBE_";
 	public static final String PCM = "PCM_";
 	public static final String ROL = "ROL_";
 	public static final String PRJ = "PRJ_";
@@ -29,6 +30,7 @@ public class Prefix {
 	public static final String DFT = "DFT_";
 	public static final String SER = "SER_";
 	public static final String DEP = "DEP_";
+	public static final String UNQ = "UNQ_";
 
 	// pcm
 	public static final String TPL = "TPL_";

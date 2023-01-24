@@ -876,7 +876,6 @@ public class FilterService {
      * @return Process data
      */
     public ProcessData  buildProcessData() {
-        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
 
         // construct
         ProcessData processData = new ProcessData();
@@ -892,7 +891,7 @@ public class FilterService {
         BaseEntity target = beUtils.getBaseEntity(userToken.getUserCode());
 
         // build and send data
-        QBulkMessage msg = dispatch.build(processData, pcm);
+        QBulkMessage msg = dispatch.build(processData);
         msg.add(target);
         dispatch.sendData(msg);
 
@@ -985,7 +984,7 @@ public class FilterService {
         List<String> definitions = new ArrayList<>();
 
         // bucket page
-        if(SearchEntity.SBE_PROCESS.equals(sbeCode)) {
+        if (SearchEntity.SBE_PROCESS.equals(sbeCode)) {
             addDefinitionCodeByBucket(definitions);
             // Table
         } else {
@@ -1006,15 +1005,15 @@ public class FilterService {
     public String getDefinitionCode(String sbeCode) {
         SearchEntity search = CacheUtils.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
         List<ClauseContainer> clauses = search.getClauseContainers();
-        for(ClauseContainer clause : clauses) {
-            if(clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
+        for (ClauseContainer clause : clauses) {
+            if (clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
                 return clause.getFilter().getValue().toString();
             }
         }
         return "";
     }
 
-    /**
+	/**
      * Add definition to the list of definition codes
      * @param definitions List of definition codes
      */
