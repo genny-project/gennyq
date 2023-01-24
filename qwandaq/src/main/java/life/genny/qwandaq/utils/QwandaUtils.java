@@ -496,11 +496,11 @@ public class QwandaUtils {
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
-			log.debug("Checking attrib: " + attributeCode);
+			log.debug("Checking attrib: " + attributeCode + ": readonly: " + readonly);
 			if ((mandatory && !readonly))
 				answered = acceptableAnswer(value);
 
-			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
+			String resultLine = (readonly ? "[R]" : "") + (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
 			log.debug("===> " + resultLine);
 		}
 
