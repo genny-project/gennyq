@@ -511,7 +511,7 @@ public class QwandaUtils {
 	private static boolean acceptableAnswer(String value) {
 		if(value == null)
 			return false;
-		// block whitespace only
+		// block whitespace
 		value = value.trim();
 
 		if(StringUtils.isBlank(value))
@@ -519,7 +519,7 @@ public class QwandaUtils {
 		
 		if("null".equalsIgnoreCase(value))
 			return false;
-		
+		log.debug("	- letting through value: " + value);
 		return true;
 	}
 
