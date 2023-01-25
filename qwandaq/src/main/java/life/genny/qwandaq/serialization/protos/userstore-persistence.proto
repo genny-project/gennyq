@@ -1,0 +1,16 @@
+package life.genny.qwandaq.persistence.userstore;
+
+message UserStoreKey {
+  optional string realm = 1;
+  optional string usercode = 2;
+}
+
+/* @Indexed */
+message UserStore {
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
+  optional string realm = 1;
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
+  optional string usercode = 2;
+  optional string jti_access = 3;
+  optional int64 last_active = 4;
+}

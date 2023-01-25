@@ -102,8 +102,7 @@ public class MergeUtils {
 
 		return mergeStr;
 	}
-	
-	
+
 	/** 
 	 * @param mergeText the mergeText to merge
 	 * @param entitymap the entitymap to merge with

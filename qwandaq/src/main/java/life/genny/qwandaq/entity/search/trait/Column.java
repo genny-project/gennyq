@@ -9,7 +9,7 @@ import life.genny.qwandaq.constants.Prefix;
 @RegisterForReflection
 public class Column extends Trait {
 
-	public static final String PREFIX = Prefix.COL;
+	public static final String PREFIX = Prefix.COL_;
 
 	public Column() {
 		super();

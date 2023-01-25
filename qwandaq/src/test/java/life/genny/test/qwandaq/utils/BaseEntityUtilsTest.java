@@ -36,7 +36,7 @@ public class BaseEntityUtilsTest extends BaseTestCase {
 	@InjectMocks
 	DatabaseUtils dbUtils;
 
-	@Test
+	// @Test
 	public void nullInputTest() {
 		// TODO
 	}

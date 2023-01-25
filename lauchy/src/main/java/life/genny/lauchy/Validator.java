@@ -1,5 +1,5 @@
 package life.genny.lauchy;
- 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +36,8 @@ import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class Validator {
-    @Inject
-    private Logger log;
+	@Inject
+	private Logger log;
 
 	private Jsonb jsonb = JsonbBuilder.create();
 
@@ -56,7 +56,7 @@ public class Validator {
 	@Inject
 	FilterUtils filter;
 
-    /**
+	/**
 	 * @param data
 	 * @return
 	 */
@@ -66,7 +66,7 @@ public class Validator {
 		List<Ask> asksToSend = new ArrayList<>();
 
 		Arrays.stream(answers.getItems())
-				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
+				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK_))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
 					// TODO: Wondering if we can just get the processData from the first processId
@@ -94,7 +94,7 @@ public class Validator {
 
 	/**
 	 * Function for validating a data message.
-	 * 
+	 *
 	 * @param data the data to validate
 	 * @return Boolean representing whether the msg is valid
 	 */
@@ -122,7 +122,7 @@ public class Validator {
 
 	/**
 	 * Function for validating an asnwer.
-	 * 
+	 *
 	 * @param answer the answer to validate
 	 * @return Boolean representing whether the answer is valid
 	 */
@@ -132,6 +132,11 @@ public class Validator {
 		// TODO: check askID by fetching from Tasks
 
 		String attributeCode = answer.getAttributeCode();
+
+		// name search
+		if (Attribute.PRI_SEARCH_TEXT.equals(attributeCode)) {
+			return true;
+		}
 
 		// check that user is the source of message
 		if (!(userToken.getUserCode()).equals(answer.getSourceCode()))
@@ -173,27 +178,13 @@ public class Validator {
 		if (!target.getCode().equals(answer.getTargetCode()))
 			return blacklist("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
 
-		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
-
 		boolean notValidForAnyDefinition = false;
 		for (String code : processData.getDefCodes()) {
 			Definition definition = beUtils.getDefinition(code);
 			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
-			if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
-				if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
-					log.error("Duplicate answer detected for target " + answer.getTargetCode());
-					String feedback = "Error: This value already exists and must be unique.";
-
-					String parentCode = processData.getQuestionCode();
-					String questionCode = answer.getCode();
-
-					qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-					return false;
-				}
-			}
 			// check attribute code is allowed by target DEF
-			if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {
+			if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
 				log.warn("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
 				notValidForAnyDefinition = true;
 			}
@@ -313,7 +304,7 @@ public class Validator {
 
 	/**
 	 * A Temporary handler for the bucket quick search.
-	 * 
+	 *
 	 * @param answer    The Answer to handle
 	 * @param target    The target entity
 	 * @param attribute The attribute used

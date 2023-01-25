@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.jboss.logging.Logger;
-
+import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
@@ -30,22 +30,24 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
 /*
  * A non-static utility class for managing roles and capabilities.
  * 
- * @author Adam Crow
  * @author Jasper Robison
  * @author Bryn Meachem
  */
 @ApplicationScoped
 public class CapabilitiesManager extends Manager {
-	protected static final Logger log = Logger.getLogger(CapabilitiesManager.class);
 
 	@Inject
 	private RoleManager roleMan;
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	public CapabilitiesManager() {
 		super();
@@ -70,13 +72,13 @@ public class CapabilitiesManager extends Manager {
 // this is a necessary log, since we are trying to minimize how often this
 		// function is called
 		// it is good to see how often it comes up
-		debug("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
+		log.debug("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		List<BaseEntity> roles = roleMan.getRoles(target);
 		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
-			debug("User Roles:");
+			log.debug("User Roles:");
 			
 			BaseEntity role = roles.get(0);
 			capabilities = getEntityCapabilities(role);
@@ -133,15 +135,15 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
-		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
-		debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
+		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP_));
+		log.debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
 		}
 		CapabilitySet cSet = new CapabilitySet(target);
 		cSet.addAll(capabilities.stream()
 			.map((EntityAttribute ea) -> {
-				trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
+				log.trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
 				return Capability.getFromEA(ea);
 			})
 			.collect(Collectors.toSet()));
@@ -167,8 +169,9 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(nodes));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
+		target.addEntityAttribute(capability, 0.0, false, getModeString(nodes));
+		// target.addAttribute(capability, 0.0, getModeString(nodes));
+		// CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -183,9 +186,7 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(modeList));
-		CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(),
-				modeList.toArray(new CapabilityNode[0]));
+		target.addEntityAttribute(capability, 0.0, false, getModeString(modeList));
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -219,11 +220,11 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// Check the user token has required capabilities
-		if (!shouldOverride()) {
-			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
-					+ " TO BASE ENTITITY: " + targetBe.getCode());
-			return targetBe;
-		}
+		// if (!shouldOverride()) {
+		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
+		// 	return targetBe;
+		// }
 
 		// ===== Old capability check ===
 		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
@@ -237,6 +238,24 @@ public class CapabilitiesManager extends Manager {
 		return targetBe;
 	}
 
+	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, String capabilityCode) {
+		capabilityCode = cleanCapabilityCode(capabilityCode);
+		Attribute attr = qwandaUtils.getAttribute(productCode, capabilityCode);
+		return removeCapabilityFromBaseEntity(productCode, targetBe, attr);
+	}
+
+	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
+		if (capabilityAttribute == null) {
+			throw new ItemNotFoundException(productCode, "Capability Attribute");
+		}
+
+
+		targetBe.addAttribute(capabilityAttribute, 0.0, "[]");
+		CacheUtils.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
+		beUtils.updateBaseEntity(targetBe);
+		return targetBe;
+	}
+
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
 			final List<CapabilityNode> modes) {
 		if (capabilityAttribute == null) {
@@ -244,11 +263,11 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// Check the user token has required capabilities
-		if (!shouldOverride()) {
-			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
-					+ " TO BASE ENTITITY: " + targetBe.getCode());
-			return targetBe;
-		}
+		// if (!shouldOverride()) {
+		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
+		// 	return targetBe;
+		// }
 
 		// ===== Old capability check ===
 		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
@@ -320,8 +339,8 @@ public class CapabilitiesManager extends Manager {
 	 */
 	public static String cleanCapabilityCode(final String rawCapabilityCode) {
 		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
-		if (!cleanCapabilityCode.startsWith(Prefix.CAP)) {
-			cleanCapabilityCode = Prefix.CAP + cleanCapabilityCode;
+		if (!cleanCapabilityCode.startsWith(Prefix.CAP_)) {
+			cleanCapabilityCode = Prefix.CAP_ + cleanCapabilityCode;
 		}
 
 		return cleanCapabilityCode;

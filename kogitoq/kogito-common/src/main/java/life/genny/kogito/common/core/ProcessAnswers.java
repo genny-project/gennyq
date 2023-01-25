@@ -24,6 +24,7 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.entity.PCM;
 
 /**
  * ProcessAnswers
@@ -45,10 +46,7 @@ public class ProcessAnswers {
 	@Inject
 	DefUtils defUtils;
 
-	@Inject
-	Dispatch dispatch;
-	@Inject
-	TaskService taskService;
+	@Inject TaskService taskService;
 
 	/**
 	 * @param answer
@@ -104,17 +102,25 @@ public class ProcessAnswers {
 		if (answers.isEmpty())
 			return acceptSubmission;
 
-		Answer answer = answers.get(answers.size() - 1);
-		String attributeCode = answer.getAttributeCode();
-
+		// TODO: Might review below in the future
 		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
-			String parentCode = processData.getQuestionCode();
-			String questionCode = answer.getCode();
+			for(Definition definition : definitions){
+				for(Answer answer : answers) {
+					String attributeCode = answer.getAttributeCode();
 
-			qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-			acceptSubmission = false;
+					if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+						String questionCode = answer.getCode();
+						PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
+						PCM subPcm = beUtils.getPCM(mainPcm.getLocation(1));
+
+						qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
+						acceptSubmission = false;
+						return acceptSubmission;
+					}
+				}
+			}
 		}
 
 		return acceptSubmission;
@@ -127,44 +133,15 @@ public class ProcessAnswers {
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
 	public void saveAllAnswers(ProcessData processData) {
-
+		// save answers
 		String targetCode = processData.getTargetCode();
+		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		// iterate our stored process updates and create an answer
-		for (Answer answer : processData.getAnswers()) {
-
-			// find the attribute
-			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-			answer.setAttribute(attribute);
-
-			// debug log the value before saving
-			String currentValue = target.getValueAsString(attributeCode);
-			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
-
-			// check if name needs updating
-			if (Attribute.PRI_NAME.equals(attributeCode)) {
-				String name = answer.getValue();
-				log.debug("Updating BaseEntity Name Value -> " + name);
-				target.setName(name);
-				continue;
-			}
-
-			// update the baseentity
-			target.addAnswer(answer);
-			String value = target.getValueAsString(answer.getAttributeCode());
-			log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
-		}
-
-		// save these answrs to db and cache
-		beUtils.updateBaseEntity(target);
-		log.info("Saved answers for target " + targetCode);
-
+		qwandaUtils.saveAnswers(processData.getAnswers(), target);
+		// send target to FE
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(target);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);
-
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
@@ -176,7 +153,6 @@ public class ProcessAnswers {
 	 * @return Boolean existed
 	 */
 	public Boolean clearProcessCacheEntries(String processId, String targetCode) {
-
 		qwandaUtils.clearProcessData(processId);
 		log.infof("Cleared caches for %s", processId);
 		return true;
@@ -187,9 +163,7 @@ public class ProcessAnswers {
 	 * @return
 	 */
 	public ProcessData deleteStoredAnswers(ProcessData processData) {
-
 		processData.setAnswers(new ArrayList<>());
-
 		return processData;
 	}
 }

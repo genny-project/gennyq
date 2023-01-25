@@ -37,29 +37,26 @@ public class Definition extends BaseEntity {
 	public static Definition from(BaseEntity entity) {
 
 		Definition definition = new Definition(entity.getCode(), entity.getName());
-		definition.setRealm(entity.getRealm());
-		definition.setRealm(entity.getRealm());
-		definition.setBaseEntityAttributes(entity.getBaseEntityAttributes());
-
+		entity.decorate(definition);
 		return definition;
 	}
 
 	public void setAllowedAttribute(String attributeCode, Boolean mandatory) {
-		setValue(Prefix.ATT.concat(attributeCode), mandatory);
+		setValue(Prefix.ATT_.concat(attributeCode), mandatory);
 	}
 
 	@JsonbTransient
 	public List<EntityAttribute> getAllowedAttributes() {
-		return findPrefixEntityAttributes(Prefix.ATT);
+		return findPrefixEntityAttributes(Prefix.ATT_);
 	}
 
 	public void setDefaultValue(String attributeCode, Object value) {
-		setValue(Prefix.DFT.concat(attributeCode), value);
+		setValue(Prefix.DFT_.concat(attributeCode), value);
 	}
 
 	@JsonbTransient
 	public List<EntityAttribute> getDefaultValues() {
-		return findPrefixEntityAttributes(Prefix.DFT);
+		return findPrefixEntityAttributes(Prefix.DFT_);
 	}
 
 }

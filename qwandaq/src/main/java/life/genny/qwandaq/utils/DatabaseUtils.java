@@ -33,14 +33,17 @@ import java.util.List;
 @ApplicationScoped
 public class DatabaseUtils {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	Logger log;
 
 	@Inject
 	EntityManager entityManager;
 
 	@Inject
 	BaseEntityUtils beUtils;
+
 	/**
 	 * Get all attributes with a specific Prefix
 	 * 
@@ -447,11 +450,13 @@ public class DatabaseUtils {
 		}
 
 		if (existingEntity == null) {
-			log.debug("New BaseEntity being saved to DB -> " + entity.getCode());
+			log.debug("New BaseEntity being saved to DB -> " + entity.getCode() + " : " + entity.getName());
 			entityManager.persist(entity);
 		} else {
-			if (entity.getId() == null)
+			if (entity.getId() == null) {
+				log.warn("New entity did not have id. Assigning id of new entity as existing entity's id (" + existingEntity.getId() + ")");
 				entity.setId(existingEntity.getId());
+			}
 			entityManager.merge(entity);
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
