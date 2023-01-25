@@ -86,7 +86,7 @@ public class Attributes {
 
 		List<Attribute> attributeList = databaseUtils.findAttributes(realm, 0, 10000, "");
 
-		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList.toArray(new Attribute[0]));
+		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList);
 		return Response.ok(attributeMsg).build();
 	}
 

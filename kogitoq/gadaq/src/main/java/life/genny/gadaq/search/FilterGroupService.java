@@ -15,6 +15,7 @@ import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -680,16 +681,8 @@ public class FilterGroupService {
      * @return String value of base entity by attribute code
      */
     public String getValueStringByAttCode(BaseEntity base, String attCode) {
-        String value = "";
-
-        Collection<EntityAttribute> attributeSet =  base.getBaseEntityAttributes();
-        Optional<EntityAttribute> ea = attributeSet.stream().filter(e -> e.getAttributeCode().equalsIgnoreCase(attCode))
-                .findFirst();
-        if(ea.isPresent()) {
-            return ea.get().getValueString();
-        }
-
-        return value;
+        EntityAttribute ea = base.getBaseEntityAttributesMap().get(attCode);
+        return ea != null ? ea.getValueString() : StringUtils.EMPTY;
     }
 
     /**

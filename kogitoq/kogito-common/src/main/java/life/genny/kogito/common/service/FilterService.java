@@ -670,25 +670,21 @@ public class FilterService {
      */
     public void sendPartialPCM(String pcmCode,String loc,String queValCode) {
         BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
-        for(EntityAttribute ea : pcm.getBaseEntityAttributes()) {
-            if(ea.getAttributeCode().equalsIgnoreCase(loc)) {
-                ea.setValue(queValCode);
-                ea.setValueString(queValCode);
-            }
+        EntityAttribute ea = pcm.getBaseEntityAttributesMap().get(loc);
+        if (ea != null) {
+            ea.setValue(queValCode);
+            ea.setValueString(queValCode);
         }
         sendBaseEntity(pcm);
     }
 
     public void sendFilterDetailsByPcm(String pcmCode,String queCode,String attCode,String value) {
         BaseEntity base = beUtils.getBaseEntity(pcmCode);
-
-        for(EntityAttribute ea : base.getBaseEntityAttributes()) {
-            if(ea.getAttributeCode().equalsIgnoreCase(PCM.location(1))) {
-                ea.setValue(attCode);
-                ea.setValueString(attCode);
-            }
+        EntityAttribute ea = base.getBaseEntityAttributesMap().get(PCM.location(1));
+        if (ea != null) {
+            ea.setValue(attCode);
+            ea.setValueString(attCode);
         }
-
         sendBaseEntity(base);
     }
 

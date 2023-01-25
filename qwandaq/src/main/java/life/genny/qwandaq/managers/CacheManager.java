@@ -1,17 +1,22 @@
 package life.genny.qwandaq.managers;
 
-import java.lang.reflect.Type;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
+import life.genny.qwandaq.CoreEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.data.GennyCache;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.serialization.attribute.AttributeKey;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.QuestionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
@@ -20,23 +25,13 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.dsl.QueryResult;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.CoreEntity;
-import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.Question;
-import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.data.GennyCache;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import life.genny.qwandaq.serialization.attribute.AttributeKey;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.QuestionUtils;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
  * A utility class used for standard read and write 
@@ -283,24 +278,10 @@ public class CacheManager {
 	 * @param productCode
 	 * @return
 	 */
-	public List<Attribute> getAllAttributes(String productCode) {
+	public Collection<Attribute> getAllAttributes(String productCode) {
 		// get attribute cache
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_ATTRIBUTE);
-		// init query
-		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
-		Query<Attribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode + "'");
-		// perform search
-		QueryResult<Attribute> queryResult = query.execute();
-		List<Attribute> attributes = queryResult.list();
-
-		int pageSize = query.getMaxResults();
-		while (queryResult.hitCount().getAsLong() > attributes.size()) {
-			query.startOffset(query.getStartOffset()+pageSize);
-			queryResult = query.execute();
-			attributes.addAll(queryResult.list());
-		}
-		return attributes;
+		return (Collection) remoteCache.values();
 	}
 
 	/**
@@ -376,6 +357,7 @@ public class CacheManager {
 		// ensure attribute field is non null
 		Attribute attribute = getAttribute(productCode, question.getAttributeCode());
 		question.setAttribute(attribute);
+		log.info("question = " + jsonb.toJson(question));
 		return question;
 	}
 

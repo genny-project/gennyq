@@ -234,22 +234,24 @@ public class DefUtils {
 	@Deprecated
 	public SearchEntity mergeFilterValueVariables(SearchEntity searchBE, Map<String, Object> ctxMap) {
 
-		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
+		for (Map.Entry<String, EntityAttribute> entry : searchBE.getBaseEntityAttributesMap().entrySet()) {
 			// iterate all Filters
-			if (ea.getAttributeCode().startsWith("PRI_") || ea.getAttributeCode().startsWith("LNK_")) {
+			String attributeCode = entry.getKey();
+			EntityAttribute ea = entry.getValue();
+			if (attributeCode.startsWith("PRI_") || attributeCode.startsWith("LNK_")) {
 
 				// grab the Attribute for this Code, using array in case this is an associated
 				// filter
-				String[] attributeCodeArray = ea.getAttributeCode().split("\\.");
-				String attributeCode = attributeCodeArray[attributeCodeArray.length - 1];
+				String[] attributeCodeArray = attributeCode.split("\\.");
+				String attributeCodeLast = attributeCodeArray[attributeCodeArray.length - 1];
 				// fetch the corresponding attribute
-				Attribute att = cm.getAttribute(attributeCode);
+				Attribute att = cm.getAttribute(attributeCodeLast);
 				DataType dataType = att.getDataType();
 
 				Object attributeFilterValue = ea.getValue();
 				if (attributeFilterValue != null) {
 					// ensure EntityAttribute Dataype is Correct for Filter
-					Attribute searchAtt = new Attribute(ea.getAttributeCode(), ea.getAttributeName(), dataType);
+					Attribute searchAtt = new Attribute(attributeCode, ea.getAttributeName(), dataType);
 					ea.setAttribute(searchAtt);
 					String attrValStr = attributeFilterValue.toString();
 

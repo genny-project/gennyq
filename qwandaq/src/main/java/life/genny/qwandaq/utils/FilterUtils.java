@@ -171,29 +171,32 @@ public class FilterUtils {
 
         List<BaseEntity> baseEntities = new ArrayList<>();
 
-        searchBE.getBaseEntityAttributes().stream()
-                .filter(e -> e.getAttributeCode().startsWith(Prefix.FLC))
-                .forEach(e -> {
-                    BaseEntity baseEntity = new BaseEntity();
-                    List<EntityAttribute> entityAttributes = new ArrayList<>();
+        for (Map.Entry<String, EntityAttribute> entry : searchBE.getBaseEntityAttributesMap().entrySet()) {
+            String key = entry.getKey();
+            EntityAttribute value = entry.getValue();
+            if (!key.startsWith(Prefix.FLC)) {
+                continue;
+            }
+            BaseEntity baseEntity = new BaseEntity();
+            List<EntityAttribute> entityAttributes = new ArrayList<>();
 
-                    EntityAttribute ea = new EntityAttribute();
-                    String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC, "");
-                    ea.setAttributeName(e.getAttributeName());
-                    ea.setAttributeCode(attrCode);
+            EntityAttribute ea = new EntityAttribute();
+            String attrCode = value.getAttributeCode().replaceFirst(Prefix.FLC, "");
+            ea.setAttributeName(value.getAttributeName());
+            ea.setAttributeCode(attrCode);
 
-                    String baseCode = FilterConst.FILTER_SEL + Prefix.FLC + attrCode;
-                    ea.setBaseEntityCode(baseCode);
-                    ea.setValueString(e.getAttributeName());
+            String baseCode = FilterConst.FILTER_SEL + Prefix.FLC + attrCode;
+            ea.setBaseEntityCode(baseCode);
+            ea.setValueString(value.getAttributeName());
 
-                    entityAttributes.add(ea);
+            entityAttributes.add(ea);
 
-                    baseEntity.setCode(baseCode);
-                    baseEntity.setName(e.getAttributeName());
+            baseEntity.setCode(baseCode);
+            baseEntity.setName(value.getAttributeName());
 
-                    baseEntity.setBaseEntityAttributes(entityAttributes);
-                    baseEntities.add(baseEntity);
-                });
+            baseEntity.setBaseEntityAttributes(entityAttributes);
+            baseEntities.add(baseEntity);
+        }
 
         List<BaseEntity> basesSorted =  baseEntities.stream()
                 .sorted(Comparator.comparing(BaseEntity::getName))

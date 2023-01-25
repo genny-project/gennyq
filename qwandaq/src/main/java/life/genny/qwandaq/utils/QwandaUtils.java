@@ -787,21 +787,23 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid attribute
-		definition.getBaseEntityAttributes().stream()
-				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
-				.forEach((ea) -> {
-					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
-					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
+		for (Map.Entry<String, EntityAttribute> entry : definition.getBaseEntityAttributesMap().entrySet()) {
+			String key = entry.getKey();
+			if (!key.startsWith(Prefix.ATT)) {
+				continue;
+			}
+			String attributeCode = StringUtils.removeStart(key, Prefix.ATT);
+			Attribute attribute = cm.getAttribute(baseEntity.getRealm(), attributeCode);
 
-					String questionCode = Prefix.QUE
-							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-									Prefix.PRI), Prefix.LNK);
+			String questionCode = Prefix.QUE
+					+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+					Prefix.PRI), Prefix.LNK);
 
-				Question childQues = new Question(questionCode, attribute.getName(), attribute);
-				Ask childAsk = new Ask(childQues, sourceCode, targetCode);
+			Question childQues = new Question(questionCode, attribute.getName(), attribute);
+			Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
-				childAsks.add(childAsk);
-			});
+			childAsks.add(childAsk);
+		}
 
 		// set child asks
 		ask.setChildAsks(childAsks);

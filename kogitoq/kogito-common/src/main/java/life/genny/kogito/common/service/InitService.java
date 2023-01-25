@@ -1,27 +1,11 @@
 package life.genny.kogito.common.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
@@ -30,10 +14,16 @@ import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * A Service class used for Auth Init operations.
@@ -104,13 +94,13 @@ public class InitService {
 		String productCode = userToken.getProductCode();
 
 		QDataAttributeMessage msg = new QDataAttributeMessage();
-		List<Attribute> allAttributes = cm.getAllAttributes(productCode);
-		Attribute[] attributes = allAttributes.stream()
+		Collection<Attribute> allAttributes = cm.getAllAttributes(productCode);
+		log.infof("$$$$$$$$$$ Hoping to have read ALL attributes... here's the size: %s", allAttributes.size());
+		Collection<Attribute> attributes = allAttributes.stream()
 			// Filter capability attributes
 			.filter((attribute) -> !attribute.getCode().startsWith(Prefix.CAP))
-			.collect(Collectors.toList())
-			.toArray(new Attribute[0]);
-
+			.collect(Collectors.toList());
+		log.infof("$$$$$$$$$$ Here's the size of filtered attributes: %s", attributes.size());
 		msg.setItems(attributes);
 		// set token and send
 		msg.setToken(userToken.getToken());

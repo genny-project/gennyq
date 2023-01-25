@@ -185,12 +185,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @return boolean
 	 */
 	public boolean containsEntityAttribute(final String attributeCode) {
-		boolean ret = false;
-		// Check if this code exists in the baseEntityAttributes
-		if (getBaseEntityAttributes().parallelStream().anyMatch(ti -> ti.getAttributeCode().equals(attributeCode))) {
-			ret = true;
-		}
-		return ret;
+		return getBaseEntityAttributesMap().containsKey(attributeCode);
 	}
 
 	/**
@@ -259,10 +254,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 * @return EntityAttribute
 	 */
 	public Optional<EntityAttribute> findEntityAttribute(final Attribute attribute) {
-		final Optional<EntityAttribute> foundEntityOpt = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst();
-
-		return foundEntityOpt;
+		return Optional.ofNullable(getBaseEntityAttributesMap().get(attribute.getCode()));
 	}
 
 	/**

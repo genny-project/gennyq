@@ -2,6 +2,7 @@ package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
@@ -9,6 +10,7 @@ import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -38,6 +40,9 @@ public class QuestionUtils {
     public static final String WEIGHT = "weight";
     public static final String PARENT_CODE = "parentCode";
     public static final String CHILD_CODE = "childCode";
+
+    @Inject
+    CacheManager cacheManager;
 
     public life.genny.qwandaq.entity.BaseEntity getPersistableBaseEntityFromQuestion(Question question) {
         life.genny.qwandaq.entity.BaseEntity baseEntity = (life.genny.qwandaq.entity.BaseEntity) getSerializableBaseEntityFromQuestion(question).toPersistableCoreEntity();
@@ -184,19 +189,20 @@ public class QuestionUtils {
         entityAttributes.stream().forEach(entityAttribute -> {
             String columnName = entityAttribute.getAttributeCode();
             log.debugf("Processing attribute %s for question %s", columnName, question.getCode());
+            final String attributeValueString = entityAttribute.getValueString();
             switch (columnName) {
                 case ATTRIBUTE_CODE -> {
-                    log.debugf("Setting attribute for question %s with value %s", question.getCode(), entityAttribute.getValueString());
-                    question.setAttribute(entityAttribute.getAttribute());
-                    question.setAttributeCode(entityAttribute.getValueString());
+                    log.debugf("Setting attribute for question %s with value %s", question.getCode(), attributeValueString);
+                    question.setAttribute(cacheManager.getAttribute(question.getRealm(), attributeValueString));
+                    question.setAttributeCode(attributeValueString);
                 }
-                case DIRECTIONS -> question.setDirections(entityAttribute.getValueString());
-                case HELPER -> question.setHelper(entityAttribute.getValueString());
-                case HTML -> question.setHtml(entityAttribute.getValueString());
-                case ICON -> question.setIcon(entityAttribute.getValueString());
+                case DIRECTIONS -> question.setDirections(attributeValueString);
+                case HELPER -> question.setHelper(attributeValueString);
+                case HTML -> question.setHtml(attributeValueString);
+                case ICON -> question.setIcon(attributeValueString);
                 case MANDATORY -> question.setMandatory(entityAttribute.getValueBoolean());
                 case ONESHOT -> question.setOneshot(entityAttribute.getValueBoolean());
-                case PLACEHOLDER -> question.setPlaceholder(entityAttribute.getValueString());
+                case PLACEHOLDER -> question.setPlaceholder(attributeValueString);
                 case READONLY -> question.setReadonly(entityAttribute.getValueBoolean());
                 default ->
                         log.debugf("Attribute %s not related to 'Question' %s, ignored.", columnName, question.getCode());
