@@ -492,7 +492,7 @@ public class QwandaUtils {
 				continue;
 			}
 
-			Boolean mandatory = ask.getMandatory();
+			boolean mandatory = ask.getMandatory();
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
@@ -501,11 +501,10 @@ public class QwandaUtils {
 				answered = acceptableAnswer(value);
 
 			if(!answered) {
-				log.debug("Found unanswered mandatory: " + attributeCode);
 				break;
 			}
 
-			String resultLine = (readonly ? "[R]" : "") + (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
+			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
 			log.debug("===> " + resultLine + " (" + answered + ")");
 		}
 
