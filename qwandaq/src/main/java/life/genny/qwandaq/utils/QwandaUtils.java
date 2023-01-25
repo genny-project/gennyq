@@ -474,7 +474,7 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+	public static boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
 		Boolean answered = true;
@@ -487,25 +487,46 @@ public class QwandaUtils {
 				continue;
 			}
 
-			Boolean readonly = ask.getReadonly();
+			boolean readonly = ask.getReadonly();
 			if (readonly) {
 				continue;
 			}
 
-			Boolean mandatory = ask.getMandatory();
+			boolean mandatory = ask.getMandatory();
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
-			if ((mandatory && !readonly) && StringUtils.isBlank(value))
-				answered = false;
+			if ((mandatory && !readonly))
+				answered = acceptableAnswer(value);
+
+			if(!answered) {
+				break;
+			}
 
 			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
-			log.debug("===> " + resultLine);
+			log.debug("===> " + resultLine + " (" + answered + ")");
 		}
 
 		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
 
 		return answered;
+	}
+
+	private static boolean acceptableAnswer(String value) {
+		if(value == null)
+			return false;
+		// block whitespace
+		value = value.trim();
+
+		if(StringUtils.isBlank(value))
+			return false;
+		
+		if("null".equalsIgnoreCase(value)) {
+			return false;
+		}
+
+		log.debug("	- letting through value: " + value);
+		return true;
 	}
 
 	/**
