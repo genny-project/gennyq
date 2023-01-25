@@ -202,10 +202,6 @@ public class BaseEntityService {
 		return prefix.get();
 	}
 
-	public String getBaseEntityQuestionGroup(String targetCode) {
-		return qwandaUtils.getEditQuestionGroups(targetCode)[0];
-	}
-
 	/**
 	 * Update the email, firstname and lastname in keycloak
 	 */
