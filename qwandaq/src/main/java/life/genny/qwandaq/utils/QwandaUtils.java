@@ -487,7 +487,7 @@ public class QwandaUtils {
 				continue;
 			}
 
-			Boolean readonly = ask.getReadonly();
+			boolean readonly = ask.getReadonly();
 			if (readonly) {
 				continue;
 			}
