@@ -174,22 +174,6 @@ public class BaseEntityService {
 		return qwandaUtils.getEditPcmCodes(targetCode)[0];
 	}
 
-	// public void edit(String sourceCode, String targetCode) {
-	// 	final String pcmCode = qwandaUtils.getEditPcmCodes(targetCode)[0];
-	// 	final String buttonEvents = "SUBMIT,CANCEL,RESET"; // TODO: Multipage edits
-	// 	final String parent = "PCM_CONTENT";
-	// 	final String location = "PRI_LOC1";
-	// 	log.debug("Sending edit with form code: " + pcmCode);
-	// JsonObject payload = Json.createObjectBuilder()
-	// 					.add("targetCode", targetCode)
-	// 					.add("sourceCode", sourceCode)
-	// 					.add("pcmCode", pcmCode)
-	// 					.add("parent", parent)
-	// 					.add("location", location)
-	// 					.add("buttonEvents", buttonEvents)
-	// 					.build();
-	// }
-
 	public String getDEFPrefix(String definitionCode) {
 
 		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
