@@ -29,6 +29,9 @@ import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.attribute.Attribute;
 
 @ApplicationScoped
 public class SearchService {
@@ -55,6 +58,9 @@ public class SearchService {
 	@Inject
 	TaskService tasks;
 
+	@Inject
+	DatabaseUtils databaseUtils;
+
 	/**
 	 * Perform a Bucket search.
 	 */
@@ -77,7 +83,18 @@ public class SearchService {
 
 		// send pcm with correct template code
 		String userCode = userToken.getUserCode();
-		PCM pcm = beUtils.getPCM(PCM.PCM_TABLE);
+		
+		// get pcm code
+		String pcmCode = PCM.PCM_TABLE;
+		Question question = databaseUtils.findQuestionByCode(userToken.getProductCode(), code);
+		if(question != null) {
+			Attribute attr = databaseUtils.findAttributeByCode(userToken.getProductCode(),question.getAttributeCode());
+			if(attr != null) {
+				pcmCode = attr.getDefaultValue() == null ? PCM.PCM_TABLE : attr.getDefaultValue();
+			}
+		}
+
+		PCM pcm = beUtils.getPCM(pcmCode);
 		pcm.setLocation(1, searchCode);
 		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, PCM.location(1));
 	}
