@@ -35,8 +35,8 @@ public class SavedSearch {
         this.value = "";
 
         if(splitted.length == 2) {
-            this.operator = splitted[0].replaceFirst(Prefix.SEL,"");
-            this.value = splitted[1].replaceFirst(Prefix.SEL,"");
+            this.operator = splitted[0].replaceFirst(Prefix.SEL_,"");
+            this.value = splitted[1].replaceFirst(Prefix.SEL_,"");
         }
         this.column = getColumnName(attributeCode);
         this.valueCode = value;
@@ -149,17 +149,17 @@ public class SavedSearch {
     public String getColumnName(String value) {
         String fieldName = "";
         int priIndex = -1;
-        int fieldIndex = value.lastIndexOf(Prefix.FIELD);
-        int lnkIndex = value.lastIndexOf(Prefix.LNK);
+        int fieldIndex = value.lastIndexOf(Prefix.FIELD_);
+        int lnkIndex = value.lastIndexOf(Prefix.LNK_);
         if(fieldIndex > -1) {
-            priIndex = value.indexOf(Prefix.FIELD) + Prefix.FIELD.length();
+            priIndex = value.indexOf(Prefix.FIELD_) + Prefix.FIELD_.length();
             fieldName = value.substring(priIndex);
             return fieldName;
         }else if(lnkIndex > -1) {
             fieldName = value.substring(lnkIndex);
             return fieldName;
         } else {
-            priIndex = value.lastIndexOf(Prefix.PRI);
+            priIndex = value.lastIndexOf(Prefix.PRI_);
         }
         if(priIndex > -1) {
             fieldName = value.substring(priIndex);

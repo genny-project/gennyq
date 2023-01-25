@@ -160,7 +160,7 @@ public class RoleManager extends Manager {
 		
 		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(Attribute.LNK_CHILDREN);
 		if(!optChildren.isPresent()) {
-			warn("No editable children found for: " + targetRole.getCode());
+			log.warn("No editable children found for: " + targetRole.getCode());
 			return new ArrayList<String>();
 		}
 		String roleCodes = optChildren.get().getValueString();
@@ -181,7 +181,7 @@ public class RoleManager extends Manager {
 		return getChildrenCodes(targetRole).stream().map((String beCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(beCode);
 			if(be == null) {
-				error("Could not find Role: " + beCode);
+				log.error("Could not find Role: " + beCode);
 			}
 
 			return be;
@@ -246,7 +246,7 @@ public class RoleManager extends Manager {
 	 */
 	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
-		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP);
+		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP_);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
 			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
@@ -277,7 +277,7 @@ public class RoleManager extends Manager {
 				// return first found redirect
 				return getRoleRedirectCode(role);
 			} catch (RoleException e) {
-				debug(e.getMessage());
+				log.debug(e.getMessage());
 			}
 		}
 
@@ -359,7 +359,7 @@ public class RoleManager extends Manager {
 		return roles.stream().map((String roleCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(roleCode);
 			if(be == null) {
-				error("Could not find role: " + roleCode);
+				log.error("Could not find role: " + roleCode);
 			}
 			return be;
 		}).filter((BaseEntity roleBe) -> (roleBe != null)).collect(Collectors.toList());
@@ -367,8 +367,8 @@ public class RoleManager extends Manager {
 
 	public static String cleanRoleCode(final String rawRoleCode) {
 		String cleanRoleCode = rawRoleCode.toUpperCase();
-		if (!cleanRoleCode.startsWith(Prefix.ROL)) {
-			cleanRoleCode = Prefix.ROL + cleanRoleCode;
+		if (!cleanRoleCode.startsWith(Prefix.ROL_)) {
+			cleanRoleCode = Prefix.ROL_ + cleanRoleCode;
 		}
 
 		return cleanRoleCode;

@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
  */
 public class TimeUtils {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/** 
 	 * Format a LocalTime object to a string

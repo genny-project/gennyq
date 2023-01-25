@@ -1,12 +1,9 @@
 package life.genny.qwandaq.utils;
 
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -28,7 +25,6 @@ import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DefinitionException;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.AttributeCodeValueString;
@@ -79,7 +75,7 @@ public class DefUtils {
 
 		SearchEntity searchEntity = new SearchEntity(SBE_DEF, "DEF check")
 				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
-				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF))
+				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF_))
 				.setPageStart(0)
 				.setPageSize(10000);
 
@@ -127,13 +123,13 @@ public class DefUtils {
 			throw new NullParameterException("entity");
 
 		// save processing time on particular entities
-		if (entity.getCode().startsWith(Prefix.DEF))
+		if (entity.getCode().startsWith(Prefix.DEF_))
 			return Definition.from(entity);
 
 		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 
 		// if no defs specified, go by prefix
-		if ((codes == null) || codes.isEmpty()) {
+		if (codes == null || codes.isEmpty()) {
 			String prefix = entity.getCode().substring(0, 3);
 			SearchEntity prefixSearch = new SearchEntity(SBE_DEFINITION_PREFIX, "Definition Prefix Search")
 					.add(new Filter(Attribute.PRI_PREFIX, Operator.EQUALS, prefix))
@@ -176,6 +172,19 @@ public class DefUtils {
 	}
 
 	/**
+	 * Find the corresponding definition for a given {@link BaseEntity} code.
+	 *
+	 * @param baseEntityCode The {@link BaseEntity} code to check
+	 * @return BaseEntity The corresponding definition {@link BaseEntity}
+	 */
+	public Definition getDEF(final String baseEntityCode) {
+		if(baseEntityCode == null)
+			throw new NullParameterException(baseEntityCode);
+		BaseEntity target = beUtils.getBaseEntity(baseEntityCode);
+		return getDEF(target);
+	}
+
+	/**
 	 * A function to determine the whether or not an attribute is allowed to be
 	 * saved to a {@link BaseEntity}.
 	 *
@@ -212,15 +221,15 @@ public class DefUtils {
 		String attributeCode = answer.getAttributeCode();
 
 		// allow if it is Capability saved to a Role
-		if (targetCode.startsWith(Prefix.ROL) && attributeCode.startsWith(Prefix.PRM)) {
+		if (targetCode.startsWith(Prefix.ROL_) && attributeCode.startsWith(Prefix.PRM_)) {
 			return true;
-		} else if (targetCode.startsWith(Prefix.SBE) && (attributeCode.startsWith(Prefix.COL)
-				|| attributeCode.startsWith(Prefix.SRT) || attributeCode.startsWith(Prefix.ACT))) {
+		} else if (targetCode.startsWith(Prefix.SBE_) && (attributeCode.startsWith(Prefix.COL_)
+				|| attributeCode.startsWith(Prefix.SRT_) || attributeCode.startsWith(Prefix.ACT_))) {
 			return true;
 		}
 
 		// just make use of the faster attribute lookup
-		if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {
+		if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
 			log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
 					+ " with def= " + definition.getCode() + ANSIColour.RESET);
 			return false;
@@ -240,11 +249,12 @@ public class DefUtils {
 	 */
 	public Boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
 
-		if (defBE == null)
+		if (defBE == null) {
 			throw new NullParameterException("defBE");
-
-		if (acvs == null)
+		}
+		if (acvs == null) {
 			throw new NullParameterException("acvs");
+		}
 
 		Attribute attribute = qwandaUtils.getAttribute(acvs.getAttributeCode());
 
@@ -252,16 +262,16 @@ public class DefUtils {
 			throw new NullParameterException("attribute");
 
 		// allow if it is Capability saved to a Role
-		if (defBE.getCode().equals("DEF_ROLE") && attribute.getCode().startsWith("PRM_")) {
+		if (defBE.getCode().equals("DEF_ROLE") && attribute.getCode().startsWith(Prefix.PRM_)) {
 			return true;
 		} else if (defBE.getCode().equals("DEF_SEARCH")
-				&& (attribute.getCode().startsWith("COL_") || attribute.getCode().startsWith("CAL_")
-						|| attribute.getCode().startsWith("SRT_") || attribute.getCode().startsWith("ACT_"))) {
+				&& (attribute.getCode().startsWith(Prefix.COL_) 
+				|| attribute.getCode().startsWith(Prefix.SRT_) || attribute.getCode().startsWith(Prefix.ACT_))) {
 			return true;
 		}
 
 		// just make use of the faster attribute lookup
-		if (!defBE.containsEntityAttribute("ATT_" + attribute.getCode())) {
+		if (!defBE.containsEntityAttribute(Prefix.ATT_.concat(attribute.getCode()))) {
 			log.error(ANSIColour.RED + "Invalid attribute " + attribute.getCode() + " for "
 					+ defBE.getCode() + ANSIColour.RESET);
 			return false;
@@ -279,6 +289,7 @@ public class DefUtils {
 	 * @param ctxMap   Map of merge contexts
 	 * @return SearchEntity The updated {@link SearchEntity}
 	 */
+	@Deprecated
 	public SearchEntity mergeFilterValueVariables(SearchEntity searchBE, Map<String, Object> ctxMap) {
 
 		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
@@ -309,7 +320,7 @@ public class DefUtils {
 							Object value = ctxMap.get(key);
 							if (value.getClass().equals(BaseEntity.class)) {
 								BaseEntity baseEntity = (BaseEntity) value;
-								BaseEntity savedEntity = beUtils.getBaseEntityByCode(baseEntity.getCode());
+								BaseEntity savedEntity = beUtils.getBaseEntity(baseEntity.getCode());
 								if (savedEntity != null)
 									baseEntity = savedEntity;
 								ctxMap.put(key, baseEntity);

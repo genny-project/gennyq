@@ -32,16 +32,26 @@ public class ProcessData extends ProcessInstanceVariables {
 	private List<String> searches;
 	private List<Answer> answers;
 
-	public List<String> getSearches() {
-		return searches;
-	}
-
-	public void setSearches(List<String> searches) {
-		this.searches = searches;
-	}
+	private boolean readonly;
 
 	public ProcessData() {
 		super();
+	}
+
+	// TODO: There is a danger here that the initial defCodes set in this object may
+	// not reflect the current defCodes state.
+	@JsonbTransient
+	public List<String> getDefCodes() {
+		// split the definition code into all the defCodes for this baseEntity
+		String defCodesStr = definitionCode;
+		if (defCodesStr.startsWith("DEF_DEF_")) { // TODO: Hack to fix prefix bug
+			defCodesStr = defCodesStr.substring("DEF_".length());
+		}
+		defCodesStr = defCodesStr.replace("[", "");
+		defCodesStr = defCodesStr.replace("]", "");
+		defCodesStr = defCodesStr.replace("\"", "");
+		defCodesStr = defCodesStr.replace("_DEF_", ",DEF_");
+		return Arrays.asList(defCodesStr.split(","));
 	}
 
 	public String getSourceCode() {
@@ -124,6 +134,14 @@ public class ProcessData extends ProcessInstanceVariables {
 		this.attributeCodes = attributeCodes;
 	}
 
+	public List<String> getSearches() {
+		return searches;
+	}
+
+	public void setSearches(List<String> searches) {
+		this.searches = searches;
+	}
+
 	public List<Answer> getAnswers() {
 		return answers;
 	}
@@ -132,20 +150,12 @@ public class ProcessData extends ProcessInstanceVariables {
 		this.answers = answers;
 	}
 
-	// TODO: There is a danger here that the initial defCodes set in this object may
-	// not reflect the current defCodes state.
-	@JsonbTransient
-	public List<String> getDefCodes() {
-		// split the definition code into all the defCodes for this baseEntity
-		String defCodesStr = definitionCode;
-		if (defCodesStr.startsWith("DEF_DEF_")) { // TODO: Hack to fix prefix bug
-			defCodesStr = defCodesStr.substring("DEF_".length());
-		}
-		defCodesStr = defCodesStr.replace("[", "");
-		defCodesStr = defCodesStr.replace("]", "");
-		defCodesStr = defCodesStr.replace("\"", "");
-		defCodesStr = defCodesStr.replace("_DEF_", ",DEF_");
-		return Arrays.asList(defCodesStr.split(","));
+	public boolean isReadonly() {
+		return readonly;
+	}
+
+	public void setReadonly(boolean readonly) {
+		this.readonly = readonly;
 	}
 
 }

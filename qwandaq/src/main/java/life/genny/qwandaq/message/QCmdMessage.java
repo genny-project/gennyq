@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import javax.persistence.Embedded;
 import javax.validation.Valid;
 
-import life.genny.qwandaq.ContextList;
-
 public class QCmdMessage extends QMessage {
 
 	private static final String MESSAGE_TYPE = "CMD_MSG";
@@ -19,11 +17,6 @@ public class QCmdMessage extends QMessage {
 	private Boolean send;
 	
 	private String cache;
-
-	@Embedded
-	@Valid
-	@JsonInclude(Include.NON_NULL)
-	private ContextList contextList;
 
 	public QCmdMessage(String cmd_type, String code) {
 
@@ -106,20 +99,6 @@ public class QCmdMessage extends QMessage {
 	 */
 	public void setCache(String cache) {
 		this.cache = cache;
-	}
-
-	/**
-	 * @return ContextList
-	 */
-	public ContextList getContextList() {
-		return contextList;
-	}
-
-	/**
-	 * @param contextList the contextList to set
-	 */
-	public void setContextList(final ContextList contextList) {
-		this.contextList = contextList;
 	}
 
 }

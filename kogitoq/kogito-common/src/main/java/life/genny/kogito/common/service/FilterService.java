@@ -196,7 +196,7 @@ public class FilterService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
+        String queCode =  targetCode.replaceFirst(Prefix.SBE_,Prefix.QUE_);
         search.sendTable(queCode);
 
     }
@@ -235,7 +235,7 @@ public class FilterService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
+        String queCode =  targetCode.replaceFirst(Prefix.SBE_,Prefix.QUE_);
         search.sendTable(queCode);
     }
 
@@ -389,7 +389,7 @@ public class FilterService {
 
         CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  sbeCode.replaceFirst(Prefix.SBE,Prefix.QUE);
+        String queCode =  sbeCode.replaceFirst(Prefix.SBE_,Prefix.QUE_);
         search.sendTable(queCode);
     }
 
@@ -537,28 +537,28 @@ public class FilterService {
      * @return Get Search filter by filter value
      */
     public Operator getOperatorByVal(String filterVal){
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN.replaceFirst(Prefix.SEL_,""))){
             return Operator.GREATER_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.GREATER_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN.replaceFirst(Prefix.SEL_,""))){
             return Operator.LESS_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.LESS_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.NOT_EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE.replaceFirst(Prefix.SEL_,""))){
             return Operator.LIKE;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE.replaceFirst(Prefix.SEL_,""))){
             return Operator.NOT_LIKE;
         }
 
@@ -711,8 +711,8 @@ public class FilterService {
             valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
 
             StringBuilder lblBuild = new StringBuilder(att.getName() + FilterConst.SEPARATOR);
-            lblBuild.append(ss.getOperator().replaceFirst(Prefix.SEL, "").replaceAll("_"," "));
-            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(Prefix.SEL, ""));
+            lblBuild.append(ss.getOperator().replaceFirst(Prefix.SEL_, "").replaceAll("_"," "));
+            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(Prefix.SEL_, ""));
 
             EntityAttribute ea = new EntityAttribute(base, att, 1.0);
             ea.setAttributeName(lblBuild.toString());
@@ -826,7 +826,7 @@ public class FilterService {
      */
     public void init(String queCode) {
         clearParamsInCache();
-        String sbe = queCode.replaceFirst(Prefix.QUE,Prefix.SBE);
+        String sbe = queCode.replaceFirst(Prefix.QUE_,Prefix.SBE_);
         sendFilterColumns(sbe);
         CacheUtils.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
 
@@ -876,7 +876,6 @@ public class FilterService {
      * @return Process data
      */
     public ProcessData  buildProcessData() {
-        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
 
         // construct
         ProcessData processData = new ProcessData();
@@ -892,7 +891,7 @@ public class FilterService {
         BaseEntity target = beUtils.getBaseEntity(userToken.getUserCode());
 
         // build and send data
-        QBulkMessage msg = dispatch.build(processData, pcm);
+        QBulkMessage msg = dispatch.build(processData);
         msg.add(target);
         dispatch.sendData(msg);
 
@@ -985,7 +984,7 @@ public class FilterService {
         List<String> definitions = new ArrayList<>();
 
         // bucket page
-        if(SearchEntity.SBE_PROCESS.equals(sbeCode)) {
+        if (SearchEntity.SBE_PROCESS.equals(sbeCode)) {
             addDefinitionCodeByBucket(definitions);
             // Table
         } else {
@@ -1006,25 +1005,25 @@ public class FilterService {
     public String getDefinitionCode(String sbeCode) {
         SearchEntity search = CacheUtils.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
         List<ClauseContainer> clauses = search.getClauseContainers();
-        for(ClauseContainer clause : clauses) {
-            if(clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
+        for (ClauseContainer clause : clauses) {
+            if (clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
                 return clause.getFilter().getValue().toString();
             }
         }
         return "";
     }
 
-    /**
+	/**
      * Add definition to the list of definition codes
      * @param definitions List of definition codes
      */
     public void addDefinitionCodeByBucket(List<String> definitions) {
         PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
 
-        List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
+        List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.PRI_LOC);
         for (EntityAttribute entityAttribute : locations) {
             String value = entityAttribute.getAsString();
-            if (value.startsWith(Prefix.SBE)) {
+            if (value.startsWith(Prefix.SBE_)) {
                 String defCode = getDefinitionCode(value);
                 if(!defCode.isEmpty()) {
                     definitions.add(defCode);

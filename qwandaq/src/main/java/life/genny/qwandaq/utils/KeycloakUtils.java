@@ -52,7 +52,8 @@ import life.genny.qwandaq.exception.runtime.KeycloakException;
  */
 public class KeycloakUtils {
 
-    static final Logger log = Logger.getLogger(KeycloakUtils.class);
+	private static Logger log = Logger.getLogger(KeycloakUtils.class);
+
     static Jsonb jsonb = JsonbBuilder.create();
 
     /**
@@ -219,7 +220,7 @@ public class KeycloakUtils {
         String keycloakUrl = serviceToken.getKeycloakUrl().replace(":-1", "");
 
         // grab uuid to fetch token
-        String uuid = userCode.substring(Prefix.PER.length()).toLowerCase();
+        String uuid = userCode.substring(Prefix.PER_.length()).toLowerCase();
 
         // setup param map
         HashMap<String, String> params = new HashMap<>();

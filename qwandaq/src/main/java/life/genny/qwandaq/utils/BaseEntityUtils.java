@@ -1,6 +1,34 @@
 package life.genny.qwandaq.utils;
 
-import io.quarkus.arc.Arc;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED_DATE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED;
+import static life.genny.qwandaq.attribute.Attribute.PRI_UPDATED_DATE;
+
+import java.lang.invoke.MethodHandles;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.control.ActivateRequestContext;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -16,23 +44,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.NoResultException;
-import javax.persistence.Persistence;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * A non-static utility class used for standard
@@ -45,8 +56,9 @@ import java.util.stream.Collectors;
 @ActivateRequestContext
 public class BaseEntityUtils {
 
-	static final Logger log = Logger.getLogger(BaseEntityUtils.class);
 	Jsonb jsonb = JsonbBuilder.create();
+
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
 	ServiceToken serviceToken;
@@ -62,10 +74,6 @@ public class BaseEntityUtils {
 
 	@Inject
 	EntityManagerFactory emf;
-
-	@Inject
-	// @PersistenceUnit("genny")
-	EntityManager entityManager;
 
 	public BaseEntityUtils() {
 	}
@@ -90,7 +98,7 @@ public class BaseEntityUtils {
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-		return getBaseEntity(Prefix.PRJ.concat(userToken.getProductCode().toUpperCase()));
+		return getBaseEntity(Prefix.PRJ_.concat(userToken.getProductCode().toUpperCase()));
 	}
 
 	/**
@@ -132,7 +140,8 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+		BaseEntity baseEntity = getBaseEntity(userToken.getProductCode(), code);
+		return baseEntity;
 	}
 
 	/**
@@ -144,79 +153,15 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
-		BaseEntity baseEntity = getBaseEntityOrNull(productCode, code);
-		if (baseEntity == null)
-			throw new ItemNotFoundException(code);
-		return baseEntity;
-	}
-
-	/**
-	 * Get a base entity using the code, or return null if not found.
-	 * 
-	 * @param code The code of the entity to fetch
-	 * @return The BaseEntity, or null if not found
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityOrNull(String code) {
-		return getBaseEntityOrNull(userToken.getProductCode(), code);
-	}
-
-	/**
-	 * Get a base entity using the code, or return null if not found.
-	 * 
-	 * @param productCode The product to search in
-	 * @param code        The code of the entity to fetch
-	 * @return The BaseEntity, or null if not found
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityOrNull(String productCode, String code) {
-		return getBaseEntityByCode(productCode, code);
-	}
-
-	/**
-	 * Fetch A {@link BaseEntity} from the cache using a code.
-	 *
-	 * @param code The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityByCode(String code) {
-		if (userToken == null)
-			throw new NullParameterException("User Token");
-		return getBaseEntityByCode(serviceToken.getProductCode(), code);
-	}
-
-	/**
-	 * Fetch A {@link BaseEntity} from the cache using a code.
-	 *
-	 * @param productCode The productCode to use
-	 * @param code        The code of the BaseEntity to fetch
-	 * @return The corresponding BaseEntity, or null if not found.
-	 */
-	@Deprecated
-	public BaseEntity getBaseEntityByCode(String productCode, String code) {
-
 		if (StringUtils.isBlank(productCode))
 			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(code))
 			throw new NullParameterException("code");
-
-		// check for entity in the cache
-		BaseEntity entity = CacheUtils.getObject(productCode, code, BaseEntity.class);
-
-		// check in database if not in cache
-		if (entity == null) {
-			try {
-				entity = databaseUtils.findBaseEntityByCode(productCode, code);
-				log.debug(code + " not in cache for product " + productCode + " but "
-						+ (entity == null ? "not found in db" : "found in db"));
-				CacheUtils.putObject(productCode, code, entity);
-			} catch (NoResultException e) {
-				throw new ItemNotFoundException(productCode, code);
-			}
+		try {
+			return databaseUtils.findBaseEntityByCode(productCode, code);
+		} catch (NoResultException e) {
+			throw new ItemNotFoundException(productCode, code);
 		}
-
-		return entity;
 	}
 
 	/**
@@ -265,7 +210,7 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityFromLinkAttribute(be, attributeCode);
 	}
 
@@ -283,7 +228,7 @@ public class BaseEntityUtils {
 		if (StringUtils.isEmpty(newBaseEntityCode))
 			return null;
 		try {
-			BaseEntity newBe = getBaseEntityOrNull(newBaseEntityCode);
+			BaseEntity newBe = getBaseEntity(newBaseEntityCode);
 			return newBe;
 		} catch (ItemNotFoundException e) {
 			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
@@ -299,7 +244,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity code stored in the attribute
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(String baseEntityCode, String attributeCode) {
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityCodeFromLinkAttribute(be, attributeCode);
 	}
 
@@ -331,7 +276,7 @@ public class BaseEntityUtils {
 	 */
 	public List<String> getBaseEntityCodeArrayFromLinkAttribute(String baseEntityCode, String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityCodeArrayFromLinkAttribute(be, attributeCode);
 	}
 
@@ -363,7 +308,7 @@ public class BaseEntityUtils {
 	 * @return The value as an Object
 	 */
 	public Object getBaseEntityValue(final String baseEntityCode, final String attributeCode) {
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		if (be != null) {
 			Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 			if (ea.isPresent())
@@ -395,7 +340,7 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityValueAsString(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		return getBaseEntityAttrValueAsString(be, attributeCode);
 	}
 
@@ -408,7 +353,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalDateTime getBaseEntityValueAsLocalDateTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDateTime();
@@ -424,7 +369,7 @@ public class BaseEntityUtils {
 	 * @return The value as a LocalDate
 	 */
 	public LocalDate getBaseEntityValueAsLocalDate(final String baseEntityCode, final String attributeCode) {
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueDate();
@@ -441,7 +386,7 @@ public class BaseEntityUtils {
 	 */
 	public LocalTime getBaseEntityValueAsLocalTime(final String baseEntityCode, final String attributeCode) {
 
-		BaseEntity be = getBaseEntityOrNull(baseEntityCode);
+		BaseEntity be = getBaseEntity(baseEntityCode);
 		Optional<EntityAttribute> ea = be.findEntityAttribute(attributeCode);
 		if (ea.isPresent()) {
 			return ea.get().getValueTime();
@@ -461,7 +406,7 @@ public class BaseEntityUtils {
 		String[] arr = strArr.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "").split(",");
 		return Arrays.stream(arr)
 				.filter(item -> !item.isEmpty())
-				.map(item -> getBaseEntityOrNull(item))
+				.map(item -> getBaseEntity(item))
 				.toList();
 	}
 
@@ -494,46 +439,42 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity addNonLiteralAttributes(BaseEntity entity) {
 
-		// Handle Created and Updated attributes
-		Attribute createdAttr = new Attribute("PRI_CREATED", "Created", new DataType(LocalDateTime.class));
+		// created datetime
+		Attribute createdAttr = new Attribute(PRI_CREATED, "Created", new DataType(LocalDateTime.class));
 		EntityAttribute created = new EntityAttribute(entity, createdAttr, 1.0);
 
-		if (entity.getCreated() == null) {
-			log.error("NPE for PRI_CREATED. Generating created date");
-			entity.autocreateCreated();
-		}
-
-		// Ensure createdDate is not null
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
 
-		Attribute createdDateAttr = new Attribute("PRI_CREATED_DATE", "Created", new DataType(LocalDate.class));
+		// created date
+		Attribute createdDateAttr = new Attribute(PRI_CREATED_DATE, "Created", new DataType(LocalDate.class));
 		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0);
 
-		// Ensure createdDate is not null
 		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
 
-		Attribute updatedAttr = new Attribute("PRI_UPDATED", "Updated", new DataType(LocalDateTime.class));
+		// last updated
+		Attribute updatedAttr = new Attribute(PRI_UPDATED, "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0);
-		try {
-			updated.setValueDateTime(entity.getUpdated());
-			entity.addAttribute(updated);
 
-			Attribute updatedDateAttr = new Attribute("PRI_UPDATED_DATE", "Updated", new DataType(LocalDate.class));
-			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
-			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
-			entity.addAttribute(updatedDate);
-		} catch (NullPointerException e) {
-			log.error("NPE for PRI_UPDATED");
-		}
+		updated.setValueDateTime(entity.getUpdated());
+		entity.addAttribute(updated);
 
-		Attribute codeAttr = new Attribute("PRI_CODE", "Code", new DataType(String.class));
+		// last updated date
+		Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
+		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0);
+
+		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
+		entity.addAttribute(updatedDate);
+
+		// code
+		Attribute codeAttr = new Attribute(PRI_CODE, "Code", new DataType(String.class));
 		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0);
 		code.setValueString(entity.getCode());
 		entity.addAttribute(code);
 
-		Attribute nameAttr = new Attribute("PRI_NAME", "Name", new DataType(String.class));
+		// name
+		Attribute nameAttr = new Attribute(PRI_NAME, "Name", new DataType(String.class));
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
@@ -559,7 +500,7 @@ public class BaseEntityUtils {
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity create(final Definition definition, String name) {
-		return create(definition, name, null);
+		return create(definition, null, null);
 	}
 
 	/**
@@ -578,30 +519,34 @@ public class BaseEntityUtils {
 			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
 		BaseEntity item = null;
-		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
+		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT_.concat(Attribute.PRI_UUID));
 
-		if (uuidEA.isPresent())
+		if (uuidEA.isPresent()) {
+			log.debug("Creating user base entity");
 			item = createUser(definition);
-		else {
+		} else {
 			String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
-			if (StringUtils.isBlank(prefix))
+			if (StringUtils.isBlank(prefix)) {
 				throw new DefinitionException("No prefix set for the def: " + definition.getCode());
+			}
+			if (StringUtils.isBlank(code)) {
+				code = (prefix + "_" + UUID.randomUUID().toString().substring(0, 32)).toUpperCase();
+			}
 
-			if (StringUtils.isBlank(code))
-				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
-			if (StringUtils.isBlank(name))
-				name = definition.getName();
-
-			item = new BaseEntity(code.toUpperCase(), name);
+			log.info("Creating BE with code=" + code + ", name=" + name);
+			if(StringUtils.isBlank(name)) {
+				name = code;
+			}
+			item = new BaseEntity(code, name);
 			item.setRealm(definition.getRealm());
 		}
 
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		List<EntityAttribute> atts = definition.findPrefixEntityAttributes(Prefix.ATT);
+		List<EntityAttribute> atts = definition.findPrefixEntityAttributes(Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
-			String attrCode = ea.getAttributeCode().substring(Prefix.ATT.length());
+			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
 			Attribute attribute = qwandaUtils.getAttribute(attrCode);
 
 			if (attribute == null) {
@@ -614,7 +559,7 @@ public class BaseEntityUtils {
 			}
 
 			// Find any default val for this Attr
-			String defaultDefValueAttr = "DFT_" + attrCode;
+			String defaultDefValueAttr = Prefix.DFT_.concat(attrCode);
 			Object defaultVal = definition.getValue(defaultDefValueAttr, attribute.getDefaultValue());
 
 			// Only process mandatory attributes, or defaults
@@ -653,11 +598,11 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity createUser(final Definition definition) {
 
-		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
-
-		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
+		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT_.concat(Attribute.PRI_UUID));
 		if (opt.isEmpty())
 			throw new DefinitionException("Definition is not a User definition: " + definition.getCode());
+
+		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
 
 		// generate keycloak id
 		String uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
@@ -667,9 +612,8 @@ public class BaseEntityUtils {
 		if (optCode.isEmpty())
 			throw new DebugException("Prefix not provided" + definition.getCode());
 
-		String name = definition.getName();
 		String code = optCode.get() + "_" + uuid.toUpperCase();
-		BaseEntity item = new BaseEntity(code, name);
+		BaseEntity item = new BaseEntity(code, null);
 		item.setRealm(userToken.getProductCode());
 
 		// add email and username
@@ -700,12 +644,12 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity addValue(final BaseEntity be, final String attributeCode, final String value) {
 
-		if (be == null)
+		if (be == null) {
 			throw new NullParameterException("be");
-		if (attributeCode == null)
+		}
+		if (attributeCode == null) {
 			throw new NullParameterException("attributeCode");
-		// if (value == null)
-		// throw new NullParameterException("value");
+		}
 
 		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 

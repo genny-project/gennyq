@@ -6,6 +6,7 @@ import org.jboss.logging.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
+import life.genny.qwandaq.message.QBaseMSGMessageType;
 
 public class SendMessage extends MessageSendingStrategy {
 
@@ -15,10 +16,12 @@ public class SendMessage extends MessageSendingStrategy {
 
     static final Logger log = Logger.getLogger(SendMessage.class);
 
+    private QBaseMSGMessageType msgType;
+
     public SendMessage(String templateCode, String recipientBECode) {
         super();
         this.templateCode = templateCode;
-        this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
     }
 
     public SendMessage(String templateCode, String recipientBECode, Map<String, String> ctxMap) {
@@ -27,7 +30,7 @@ public class SendMessage extends MessageSendingStrategy {
         if (beUtils == null) {
             log.warn("beUtils is NULL --> no userToken");
         }
-        this.recipientBE = beUtils.getBaseEntityByCode(recipientBECode);
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
         this.ctxMap = ctxMap;
     }
 
@@ -45,6 +48,22 @@ public class SendMessage extends MessageSendingStrategy {
         this.ctxMap = (Map<String, String>) new HashMap<>().put("URL:ENCODE", url);
     }
 
+    public SendMessage(String templateCode,String recipientBECode,QBaseMSGMessageType msgType) {
+        super();
+        this.templateCode = templateCode;
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
+        this.msgType = msgType;
+        this.ctxMap = ctxMap;
+    }
+
+    public SendMessage(String templateCode,String recipientBECode,QBaseMSGMessageType msgType,Map<String, String> ctxMap) {
+        super();
+        this.templateCode = templateCode;
+        this.recipientBE = beUtils.getBaseEntity(recipientBECode);
+        this.msgType = msgType;
+        this.ctxMap = ctxMap;
+    }
+
     @Override
     public void sendMessage() {
         log.info("templateCode : " + templateCode);
@@ -55,6 +74,10 @@ public class SendMessage extends MessageSendingStrategy {
 
         if (ctxMap != null) {
             msgBuilder.setMessageContextMap(ctxMap);
+        }
+
+        if (this.msgType != null) {
+            msgBuilder.addMessageType(this.msgType);
         }
 
         msgBuilder.addRecipient(recipientBE)

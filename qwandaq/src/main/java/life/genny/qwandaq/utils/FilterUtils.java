@@ -19,6 +19,10 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+import life.genny.qwandaq.entity.search.trait.*;
+import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -114,17 +118,17 @@ public class FilterUtils {
     public String getLinkValueCode(String value) {
         String fieldName = "";
         int priIndex = -1;
-        int fieldIndex = value.lastIndexOf(Prefix.FIELD);
-        int lnkIndex = value.lastIndexOf(Prefix.LNK);
+        int fieldIndex = value.lastIndexOf(Prefix.FIELD_);
+        int lnkIndex = value.lastIndexOf(Prefix.LNK_);
         if(fieldIndex > -1) {
-            priIndex = value.indexOf(Prefix.PRI) + Prefix.PRI.length();
+            priIndex = value.indexOf(Prefix.PRI_) + Prefix.PRI_.length();
             fieldName = value.substring(priIndex,fieldIndex - 1);
             return fieldName;
         }else if(lnkIndex > -1) {
             fieldName = value.substring(lnkIndex);
             return fieldName;
         } else {
-            priIndex = value.lastIndexOf(Prefix.PRI) + Prefix.PRI.length();
+            priIndex = value.lastIndexOf(Prefix.PRI_) + Prefix.PRI_.length();
         }
         if(priIndex > -1) {
             fieldName = value.substring(priIndex);
@@ -144,7 +148,7 @@ public class FilterUtils {
         BaseEntity source = beUtils.getBaseEntity(sourceCode);
         BaseEntity target = beUtils.getBaseEntity(sourceCode);
 
-        Ask ask = qwandaUtils.generateAskFromQuestionCode(Question.QUE_ADD_FILTER_SBE_GRP, source, target);
+        Ask ask = qwandaUtils.generateAskFromQuestionCode(Question.QUE_ADD_FILTER_SBE_GRP, source, target, new CapabilitySet(target), new ReqConfig());
         ask.getChildAsks().stream().forEach(e -> {
             if (e.getQuestionCode().equalsIgnoreCase(Question.QUE_FILTER_COLUMN)
                     || e.getQuestionCode().equalsIgnoreCase(Question.QUE_FILTER_OPTION)
@@ -159,7 +163,7 @@ public class FilterUtils {
             e.setTargetCode(sourceCode);
         });
 
-        Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(Question.QUE_SUBMIT, source, target);
+        Ask askSubmit = qwandaUtils.generateAskFromQuestionCode(Question.QUE_SUBMIT, source, target, new CapabilitySet(target), new ReqConfig());
 
         ask.setTargetCode(sourceCode);
         ask.add(askSubmit);
@@ -184,17 +188,17 @@ public class FilterUtils {
         List<BaseEntity> baseEntities = new ArrayList<>();
 
         searchBE.getBaseEntityAttributes().stream()
-                .filter(e -> e.getAttributeCode().startsWith(Prefix.FLC))
+                .filter(e -> e.getAttributeCode().startsWith(Prefix.FLC_))
                 .forEach(e -> {
                     BaseEntity baseEntity = new BaseEntity();
                     List<EntityAttribute> entityAttributes = new ArrayList<>();
 
                     EntityAttribute ea = new EntityAttribute();
-                    String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC, "");
+                    String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC_, "");
                     ea.setAttributeName(e.getAttributeName());
                     ea.setAttributeCode(attrCode);
 
-                    String baseCode = FilterConst.FILTER_SEL + Prefix.FLC + attrCode;
+                    String baseCode = FilterConst.FILTER_SEL + Prefix.FLC_ + attrCode;
                     ea.setBaseEntityCode(baseCode);
                     ea.setValueString(e.getAttributeName());
 
@@ -299,8 +303,8 @@ public class FilterUtils {
      */
     public SearchEntity getQuickOptions(String sbeCode,String lnkCode, String lnkValue) {
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
-        searchBE.add(new Or(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.CPY)
-                        ,new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.PER)))
+        searchBE.add(new Or(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.CPY_)
+                        ,new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.PER_)))
                 .add(new Column(lnkCode, lnkCode));
 
         if(!lnkValue.isEmpty()) {
@@ -377,7 +381,7 @@ public class FilterUtils {
         if(attCode.equalsIgnoreCase(Attribute.LNK_FILTER_COLUMN) ||
                 attCode.equalsIgnoreCase(Attribute.LNK_SAVED_SEARCH) ||
                 attCode.equalsIgnoreCase(Attribute.LNK_QUICK_SEARCH) ||
-                attCode.startsWith(Prefix.FLC)){
+                attCode.startsWith(Prefix.FLC_)){
             return true;
         }
 

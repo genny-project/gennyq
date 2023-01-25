@@ -21,6 +21,7 @@ import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
@@ -28,6 +29,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.gadaq.search.FilterGroupService;
 
 /**
@@ -35,6 +37,15 @@ import life.genny.gadaq.search.FilterGroupService;
  */
 @ApplicationScoped
 public class Events {
+
+	public static final String AUTH_INIT = "AUTH_INIT";
+
+	public static final String ACT_VIEW = "ACT_VIEW";
+	public static final String ACT_EDIT = "ACT_EDIT";
+
+	public static final String QUE_TABLE_ = "QUE_TABLE_";
+	public static final String QUE_EXPLORE_ = "QUE_EXPLORE_";
+	public static final String QUE_ADD_ = "QUE_ADD_";
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -44,8 +55,12 @@ public class Events {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
 	@Inject
 	GraphQLUtils gqlUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	NavigationService navigation;
@@ -81,44 +96,32 @@ public class Events {
 			return;
 
 		// auth init
-		if ("AUTH_INIT".equals(code)) {
+		if (AUTH_INIT.equals(code)) {
 			kogitoUtils.triggerWorkflow(SELF, "authInit", "userCode", userToken.getUserCode());
 			return;
 		}
 
-		// submit, next or update
+		// submit, next and update
 		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit");
 			return;
 		}
 
 		// cancel
 		if (Question.QUE_CANCEL.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel");
 			return;
 		}
 
 		// reset
 		if (Question.QUE_RESET.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
-			return;
-		}
-
-		// undo
-		if (Question.QUE_UNDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "undo", "");
-			return;
-		}
-
-		// redo
-		if (Question.QUE_REDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "redo", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset");
 			return;
 		}
 
 		// previous
 		if (Question.QUE_PREVIOUS.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous");
 			return;
 		}
 
@@ -136,7 +139,7 @@ public class Events {
 		}
 
 		// detail view
-		if ("ACT_VIEW".equals(code)) {
+		if (ACT_VIEW.equals(code)) {
 			search.sendDetailView(targetCode);
 			return;
 		}
@@ -157,65 +160,47 @@ public class Events {
 		}
 
 		// table view (Default View Mode)
-		code = code.replace("QUE_EXPLORE_", "QUE_TABLE_");
-		if (code.startsWith("QUE_TABLE_")) {
+		code = code.replace(QUE_EXPLORE_, QUE_TABLE_);
+		if (code.startsWith(QUE_TABLE_)) {
 			filter.init(code);
 			search.sendTable(code);
 			return;
 		}
 
-		// test question
-		if (code.startsWith("TEST_QUE_")) {
-			JsonObject payload = Json.createObjectBuilder()
-					.add("questionCode", code.substring("TEST_".length()))
-					.add("userCode", userToken.getUserCode())
-					.add("sourceCode", userToken.getUserCode())
-					.add("targetCode", targetCode)
-					.build();
-			kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
-			return;
-		}
-
 		// add item
-		if (code.startsWith("QUE_ADD_")) {
-			code = StringUtils.removeStart(code, "QUE_ADD_");
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), "DEF_" + code + ":PREFIX", String.class);
+		if (code.startsWith(QUE_ADD_)) {
+			code = StringUtils.removeStart(code, QUE_ADD_);
+			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF_ + code + ":PREFIX", String.class);
+
+			JsonObject json = Json.createObjectBuilder()
+			.add("definitionCode", "DEF_".concat(code))
+			.add("sourceCode", userToken.getUserCode())
+			.build();
 
 			if ("PER".equals(prefix)) {
-				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
-						.add("sourceCode", userToken.getUserCode())
-						.build();
-
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
 				return;
-			}else if ("MSG".equals(prefix)){
-				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
-						.add("sourceCode", userToken.getUserCode())
-						.build();
-
+			}
+			
+			if ("MSG".equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
 				return;
 			}
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
-		if ("ACT_EDIT".equals(code) && parentCode.startsWith("SBE_.*")) {
+		
+		if (ACT_EDIT.equals(code)) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()
-						.add("questionCode", "QUE_BASEENTITY_GRP")
 						.add("userCode", userToken.getUserCode())
 						.add("sourceCode", userToken.getUserCode())
 						.add("targetCode", msg.getData().getTargetCode())
 						.build();
-				kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
+				kogitoUtils.triggerWorkflow(SELF, "edit", payload);
 				return;
 			}
-
-			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
-			return;
 		}
 
 		/**

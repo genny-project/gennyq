@@ -4,6 +4,8 @@ public final class GennyConstants {
 
     public static final String CACHE_NAME_BASEENTITY = "baseentity";
     public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
+	public static final String CACHE_NAME_USERSTORE = "userstore";
+	public static final String PATH_TO_PROTOS = "/life/genny/qwandaq/serialization/protos/";
     public static final String PACKAGE_PREFIX = "life.genny";
 
     public static final String PAGINATION_NEXT="QUE_TABLE_NEXT_BTN";
@@ -12,7 +14,7 @@ public final class GennyConstants {
     // ================================== CAPABILITY CONSTANTS =============================================
 	// Capability Attribute Prefix
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
-	public static final String[] ACCEPTED_CAP_PREFIXES = { Prefix.ROL, Prefix.PER, Prefix.DEF };
+	public static final String[] ACCEPTED_CAP_PREFIXES = { Prefix.ROL_, Prefix.PER_, Prefix.DEF_ };
 	public static final String DEF_ROLE_CODE = "DEF_ROLE";
 	
 	// =====================================================================================================

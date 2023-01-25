@@ -151,10 +151,6 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 
-	@Embedded
-	@Valid
-	private ContextList contextList;
-
 	private String attributeCode;
 
 	private Boolean mandatory = false;
@@ -354,28 +350,6 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	}
 
 	/**
-	 * @return the contextList
-	 */
-	public ContextList getContextList() {
-		return contextList;
-	}
-
-	/**
-	 * @param contextList the contextList to set
-	 */
-	public void setContextList(final ContextList contextList) {
-		this.contextList = contextList;
-	}
-
-	// /**
-	// * @return the childQuestions
-	// */
-	// public Set<QuestionQuestion> getChildQuestions() {
-	// return childQuestions;
-	// }
-	//
-
-	/**
 	 * @return the attributeCode
 	 */
 	public String getAttributeCode() {
@@ -395,7 +369,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 * @return the default Code prefix for this class.
 	 */
 	static public String getDefaultCodePrefix() {
-		return Prefix.QUE;
+		return Prefix.QUE_;
 	}
 
 	/**

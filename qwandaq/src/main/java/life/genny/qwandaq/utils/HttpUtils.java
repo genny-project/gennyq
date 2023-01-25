@@ -1,6 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -28,7 +29,6 @@ import life.genny.qwandaq.models.GennyToken;
  */
 public class HttpUtils {
 
-	static final Logger log = Logger.getLogger(HttpUtils.class);
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	public static final String PUT = "PUT";
@@ -37,6 +37,8 @@ public class HttpUtils {
 	public static final String DELETE = "DELETE";
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
+
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**
 	 * Create and send a PUT request.

@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -63,6 +64,11 @@ public class CommonUtils {
     }
 
     public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+        if(collection == null) {
+            logCallback.log("Could not find collection");
+            new Exception("stack trace exception").printStackTrace();
+            return;
+        }
         for(T item : collection) {
             logCallback.log(logLine.getString(item));
         }
@@ -165,7 +171,7 @@ public class CommonUtils {
      */
     public static <T> String getArrayString(T[] arr) {
         return getArrayString(arr, (item) -> {
-            return item.toString();
+            return item != null ? item.toString() : "null";
         });
     }
 
@@ -239,8 +245,23 @@ public class CommonUtils {
         return instance;
     }
 
-    public static <T> T[] getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        return (T[])getListFromString(arrayString, objectCallback).toArray();
+    @SuppressWarnings("unchecked")
+    public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        
+
+		if(StringUtils.isBlank(arrayString))
+            return (T[])Array.newInstance(type, 0);
+
+        String components[] = arrayString.split(",");
+        T[] array = (T[])Array.newInstance(type, components.length);
+                
+        for(int i = 0; i < components.length; i++) {
+            String component = components[i];
+            array[i] = objectCallback.getObject(component);
+        }
+
+        return array;
     }
 
     /**
@@ -349,15 +370,24 @@ public class CommonUtils {
 		return str.substring(str.indexOf("_")+1);
 	}
 
+    public static String substitutePrefix(String code, String prefix) {
+        if(prefix.length() == 4) {
+            if(prefix.charAt(3) != '_') {
+                log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
+                return code;
+            }
 
-	// TODO: Going to elaborate on this more another time. Will allow for the extra _ character some constants have
-	public static String substitutePrefix(String code, String prefix) {
+            // ensure 3 character length after underscore check
+            prefix = prefix.substring(0, 3);
+        }
+
 		if(prefix.length() != 3) {
-			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters");
+			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
 			return code;
 		}
-		code = prefix + code.substring(prefix.length());
-		return code;
+
+        // all prefixes are now 3 characters at this point. Yay
+		return prefix.concat(code.substring(3));
 	}
 
 	/**
@@ -377,4 +407,98 @@ public class CommonUtils {
 			return code.substring(4);
 		}
 	}
+
+    /**
+     * Remove an entry or entries from a jsonified string array
+     * @param array
+     * @param entries
+     * @return the new array (an empty array if array is null)
+     */
+    public static String removeFromStringArray(String array, String... entries) {
+        // no entries array == no entries to remove
+        if(entries == null)
+            return StringUtils.isBlank(array) ? "[]" : array;
+
+        // return new array if there is no array
+        if(StringUtils.isBlank(array)) {
+            return "[]";
+        }
+        
+        StringBuilder sb = new StringBuilder(array);
+        for(String entry : entries) {
+            // ensure we're not trying to remove from empty array
+            if(sb.charAt(0) == '[') {
+                if(sb.charAt(1) == ']')
+                    return "[]";
+            }
+
+            if(StringUtils.isBlank(entry))
+                continue;
+            int start = sb.indexOf(entry);
+            if(start == -1)
+                continue;
+
+            // Deal with quotes
+            int end = start + entry.length() + 1;
+            start -= 1;
+            // deal with start/end
+            if(start == 1) {
+                if(sb.length() - end != 1)
+                    end += 1;
+            }
+            else
+                start -= 1;
+            sb.delete(start, end);
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Add an entry or entries to a jsonified String array. This assumes the String array
+     * is not malformed, but it can be null or empty
+     * 
+     * If the set of entries is null, the array will be returned
+     * @param array - array to append to
+     * @param entries - entries to append
+     * @return the array with the entry appended to it or the preexisting array if
+     *  the entries param is null. If the array is null, a new stringified array containing the entries
+     * will be created
+     */
+    public static String addToStringArray(String array, String... entries) {
+        // no entries array == no entries to add
+        if(entries == null)
+            return StringUtils.isBlank(array) ? "[]" : array;
+
+        // return the entries as an array if there is no array
+        if(StringUtils.isBlank(array)) {
+            return CommonUtils.getArrayString(entries);
+        }
+        
+        // chop off the ending "]"
+        array = array.substring(0, array.length() - 1);
+        StringBuilder sb = new StringBuilder(array);
+        
+
+        // add all entries such that each entry is "entry",
+        // with the exception of the last one, which should not have a comma
+        if(entries.length > 0) {
+            // check if we're adding to a preexisting array
+            if(!array.equals("["))
+                sb.append(",");
+
+            for(int i = 0; i < entries.length - 1; i++) {
+                sb.append("\"")
+                    .append(entries[i])
+                    .append("\",");
+            }
+
+            sb.append("\"")
+            .append(entries[entries.length - 1])
+            .append("\"");
+        }
+
+        // reattach our missing "]" in all cases
+        return sb.append("]").toString();
+    }
 }

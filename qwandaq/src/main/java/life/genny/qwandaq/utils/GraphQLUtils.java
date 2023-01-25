@@ -28,8 +28,9 @@ import life.genny.qwandaq.graphql.ProcessData;
 @ApplicationScoped
 public class GraphQLUtils {
 
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 	private static Jsonb jsonb = JsonbBuilder.create();
+
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	@Inject
 	UserToken userToken;

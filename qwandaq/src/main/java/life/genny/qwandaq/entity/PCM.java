@@ -38,6 +38,11 @@ public class PCM extends BaseEntity {
 	public static final String PCM_SBE_ADD_SEARCH = "PCM_SBE_ADD_SEARCH";
 	public static final String PCM_SBE_DETAIL_VIEW = "PCM_SBE_DETAIL_VIEW";
 
+
+	// edit
+	public static final String PCM_FORM_EDIT = "PCM_FORM_EDIT";
+	public static final String PCM_EDIT = "PCM_EDIT";
+
 	public PCM(String code, String name) {
 		super(code, name);
 	}
@@ -45,10 +50,7 @@ public class PCM extends BaseEntity {
 	public static PCM from(BaseEntity entity) {
 
 		PCM pcm = new PCM(entity.getCode(), entity.getName());
-		pcm.setRealm(entity.getRealm());
-		pcm.setRealm(entity.getRealm());
-		pcm.setBaseEntityAttributes(entity.getBaseEntityAttributes());
-
+		entity.decorate(pcm);
 		return pcm;
 	}
 
@@ -115,5 +117,4 @@ public class PCM extends BaseEntity {
 	public String getTargetCode() {
 		return getValueAsString(Attribute.PRI_TARGET_CODE);
 	}
-
 }

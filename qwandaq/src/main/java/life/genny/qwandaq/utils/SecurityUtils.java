@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.invoke.MethodHandles;
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
@@ -28,9 +29,10 @@ import life.genny.qwandaq.models.GennyToken;
  */
 public class SecurityUtils {
 
-	static final Logger log = Logger.getLogger(SecurityUtils.class);
 	static Jsonb jsonb = JsonbBuilder.create();
 	public static final String SERVICE_USERNAME = "service";
+
+	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	/**
 	* Function to validate the authority for a given token string
