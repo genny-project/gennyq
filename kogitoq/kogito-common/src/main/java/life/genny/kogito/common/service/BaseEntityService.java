@@ -4,13 +4,10 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
@@ -21,37 +18,10 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
-public class BaseEntityService {
-
-	private static final Logger log = Logger.getLogger(BaseEntityService.class);
-
-	Jsonb jsonb = JsonbBuilder.create();
-
-	@Inject
-	ServiceToken serviceToken;
-
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	KogitoUtils kogitoUtils;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	DefUtils defUtils;
+public class BaseEntityService extends KogitoService {
 
 	/**
 	 * Send a message to perform an update of a persons summary

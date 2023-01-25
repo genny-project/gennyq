@@ -1,71 +1,92 @@
 package life.genny.kogito.common.service;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.concurrent.TimeUnit;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.ws.rs.core.Response;
+import javax.persistence.EntityManager;
 
 import org.jboss.logging.Logger;
 
+import life.genny.kogito.common.core.Dispatch;
+import life.genny.kogito.common.core.ProcessAnswers;
+import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.FilterUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
+import life.genny.serviceq.intf.GennyScopeInit;
 
+
+/**
+ * Class to hold bare essentials for bringing up classes that contain service task methods for Kogito Workflows
+ */
 @ApplicationScoped
-public class KogitoService {
+public abstract class KogitoService {
 
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+	@Inject
+	Logger log;
 
-	Jsonb jsonb = JsonbBuilder.create();
+	// one instance for all classes
+	protected static Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
 	ServiceToken serviceToken;
 
-	/**
-	 * Call a kogito api to delete a process.
-	 * 
-	 * @param workflowCode
-	 * @param processId
-	 */
-	public void deleteProcess(final String workflowCode, final String processId) {
-		log.info(
-				"Pretending to delete the process, but really allowing the workflow to go through to a terminating end");
+	@Inject
+	UserToken userToken;
 
-		try {
-			TimeUnit.MINUTES.sleep(1);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // wait a minute to let workflow finish
+	@Inject
+	BaseEntityUtils beUtils;
 
-		// final String url = "http://localhost:8080/" + workflowCode + "/" + processId;
-		// log.debug("Deleting process " + url);
-		// log.debug("token=" + serviceToken.getToken());
+	@Inject
+	KogitoUtils kogitoUtils;
 
-		// HttpClient client = HttpClient.newHttpClient();
-		// HttpRequest request = HttpRequest.newBuilder()
-		// .uri(URI.create(url))
-		// .header("Authorization", "Bearer " + serviceToken.getToken())
-		// .DELETE()
-		// .build();
+	@Inject
+	QwandaUtils qwandaUtils;
 
-		// HttpResponse<String> response = null;
-		// try {
-		// response = client.send(request,
-		// HttpResponse.BodyHandlers.ofString());
-		// log.debug(response.statusCode() + ":" + response.body());
-		// } catch (IOException | InterruptedException e) {
-		// log.error(e.getLocalizedMessage());
-		// }
-		// return response.statusCode() == 200 ? Response.ok().build() :
-		// Response.serverError().build();
-	}
+	@Inject
+	DefUtils defUtils;
+
+    @Inject
+    FilterUtils filterUtils;
+
+    @Inject
+    SearchService search;
+	
+    @Inject
+    SearchUtils searchUtils;
+
+    @Inject
+    Dispatch dispatch;
+
+	@Inject
+	DatabaseUtils databaseUtils;
+
+	@Inject
+	RoleManager roleManager;
+
+	@Inject
+	TaskService tasks;
+
+	@Inject
+	SearchService searchService;
+
+	@Inject
+	GennyScopeInit scope;
+
+	@Inject
+	ProcessAnswers processAnswers;
+
+	@Inject
+	NavigationService navigationService;
+
+	@Inject
+	EntityManager entityManager;
 
 }
