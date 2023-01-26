@@ -61,6 +61,12 @@ public class TaskExchange implements Serializable {
 
 	@JsonIgnore
 	@JsonbTransient
+	public void setNext() {
+		setCompletion(ECompletion.NEXT);
+	}
+
+	@JsonIgnore
+	@JsonbTransient
 	public void setTimeout() {
 		setCompletion(ECompletion.TIMEOUT);
 	}
@@ -87,6 +93,12 @@ public class TaskExchange implements Serializable {
 	@JsonbTransient
 	public Boolean isPrevious() {
 		return this.completion == ECompletion.PREVIOUS;
+	}
+
+	@JsonIgnore
+	@JsonbTransient
+	public Boolean isNext() {
+		return this.completion == ECompletion.NEXT;
 	}
 
 	@JsonIgnore
