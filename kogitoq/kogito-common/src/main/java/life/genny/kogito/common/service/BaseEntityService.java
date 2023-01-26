@@ -208,6 +208,7 @@ public class BaseEntityService {
 
 	/**
 	 * Update the email, firstname and lastname in keycloak
+	 * @param userCode the UserCode
 	 */
 	public void updateKeycloak(String userCode) {
 

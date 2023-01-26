@@ -173,18 +173,13 @@ public class Events {
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF_ + code + ":PREFIX", String.class);
 
 			JsonObject json = Json.createObjectBuilder()
-			.add("definitionCode", "DEF_".concat(code))
-			.add("sourceCode", userToken.getUserCode())
-			.build();
+				.add("definitionCode", "DEF_".concat(code))
+				.add("sourceCode", userToken.getUserCode())
+				.build();
 
-			if ("PER".equals(prefix)) {
-				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
-				return;
-			}
-			
-			if ("MSG".equals(prefix)) {
-				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
-				return;
+			// TODO: determine if DEF depends on DEF_USER
+			if (Prefix.PER_.equals(prefix)) {
+				kogitoUtils.triggerWorkflow(SELF, "userLifecycle", json);
 			}
 		}
 
