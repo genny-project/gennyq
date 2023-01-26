@@ -23,6 +23,12 @@ public class EditService extends KogitoService  {
 	public String getEditPcmCodes(String targetCode) {
 		String editCodes = qwandaUtils.getEditPcmCodes(targetCode);
 		log.info("Got edit codes for target: " + targetCode);
+
+        if("[]".equals(editCodes)) {
+            log.warn("No PCM Codes present for target: " + targetCode + ". Defaulting to PCM_EDIT and QUE_BASEENITY_GRP");
+            return "[PCM_EDIT]";
+        }
+
 		log.info("	- Edit Codes: " + editCodes);
 		return editCodes;
 	}
