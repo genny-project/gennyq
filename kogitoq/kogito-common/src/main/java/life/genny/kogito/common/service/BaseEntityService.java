@@ -86,35 +86,17 @@ public class BaseEntityService {
 		return entity.getCode();
 	}
 
-	public String commission(String definitionCode, String processId) {
+	public void decommission(String code) {
 
-		return commission(definitionCode, processId, EEntityStatus.PENDING);
-	}
+		if (code == null)
+			throw new NullParameterException("code");
 
-	public String commission(String definitionCode, String processId, EEntityStatus status) {
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Decommissioning entity " + baseEntity.getCode());
 
-		if (definitionCode == null)
-			throw new NullParameterException("definitionCode");
-		if (processId == null)
-			throw new NullParameterException("processId");
-		if (status == null)
-			throw new NullParameterException("status");
-		if (!definitionCode.startsWith("DEF_"))
-			throw new DebugException("Invalid definitionCode: " + definitionCode);
-
-		// fetch the def baseentity
-		Definition definition = beUtils.getDefinition(definitionCode);
-
-		// use entity create function and save to db
-		String defaultName = StringUtils.capitalize(definition.getCode().substring(4));
-		BaseEntity entity = beUtils.create(definition, defaultName,
-				definition.getValueAsString("PRI_PREFIX") + "_" + processId.toUpperCase());
-		log.info("BaseEntity Created: " + entity.getCode());
-
-		entity.setStatus(status);
-		beUtils.updateBaseEntity(entity);
-
-		return entity.getCode();
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.ARCHIVED);
+		beUtils.updateBaseEntity(baseEntity);
 	}
 
 	public void delete(String code) {
@@ -140,19 +122,6 @@ public class BaseEntityService {
 
 		// archive the entity
 		baseEntity.setStatus(EEntityStatus.PENDING_DELETE);
-		beUtils.updateBaseEntity(baseEntity);
-	}
-
-	public void decommission(String code) {
-
-		if (code == null)
-			throw new NullParameterException("code");
-
-		BaseEntity baseEntity = beUtils.getBaseEntity(code);
-		log.info("Decommissioning entity " + baseEntity.getCode());
-
-		// archive the entity
-		baseEntity.setStatus(EEntityStatus.ARCHIVED);
 		beUtils.updateBaseEntity(baseEntity);
 	}
 
