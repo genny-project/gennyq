@@ -17,6 +17,13 @@ public class EditService extends KogitoService  {
             return pcmCodesArray[pcmCodesArray.length - 1];
         if(currentIndex < 0)
             return pcmCodesArray[0];
-        return pcmCodesArray[currentIndex];
+        return pcmCodesArray[currentIndex].strip();
     }
+
+	public String getEditPcmCodes(String targetCode) {
+		String editCodes = qwandaUtils.getEditPcmCodes(targetCode);
+		log.info("Got edit codes for target: " + targetCode);
+		log.info("	- Edit Codes: " + editCodes);
+		return editCodes;
+	}
 }
