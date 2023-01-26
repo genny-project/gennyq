@@ -292,12 +292,7 @@ public class Dispatch {
 			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
 			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
 		}
-		// locations.removeAll(filteredLocations);
-
-		// add pcm for sending
-		CommonUtils.printCollection(pcm.getBaseEntityAttributes(), (ea) -> {
-			return "	 - " + ea.getBaseEntityCode() + ":" + ea.getAttributeCode() + " = " + ea.getValueString();
-		});
+		
 		msg.add(pcm);
 
 		// check for a question code

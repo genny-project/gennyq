@@ -22,6 +22,7 @@ import life.genny.qwandaq.utils.KeycloakUtils;
 
 @ApplicationScoped
 public class BaseEntityService extends KogitoService {
+
 	@Inject
 	Logger log;
 
