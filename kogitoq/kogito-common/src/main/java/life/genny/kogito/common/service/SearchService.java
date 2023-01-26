@@ -8,6 +8,9 @@ import static life.genny.qwandaq.entity.PCM.PCM_PROCESS;
 import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 
@@ -25,6 +28,9 @@ import life.genny.qwandaq.utils.CacheUtils;
 
 @ApplicationScoped
 public class SearchService extends KogitoService {
+
+	@Inject
+	Logger log;
 
 	/**
 	 * Perform a Bucket search.

@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
 
@@ -30,6 +33,9 @@ import life.genny.qwandaq.utils.KafkaUtils;
  */
 @ApplicationScoped
 public class InitService extends KogitoService {
+
+	@Inject
+	Logger log;
 
 	/**
 	 * Send the Project BaseEntity.

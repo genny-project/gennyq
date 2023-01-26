@@ -9,9 +9,16 @@ import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.*;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
@@ -34,6 +41,9 @@ import life.genny.qwandaq.constants.Prefix;
 
 @ApplicationScoped
 public class FilterService extends KogitoService {
+
+	@Inject
+	Logger log;
     /**
      * Get the list of bucket codes with session id
      * @param originBucketCodes List of bucket codes

@@ -29,9 +29,6 @@ import life.genny.serviceq.intf.GennyScopeInit;
 @ApplicationScoped
 public abstract class KogitoService {
 
-	@Inject
-	Logger log;
-
 	// one instance for all classes
 	protected static Jsonb jsonb = JsonbBuilder.create();
 

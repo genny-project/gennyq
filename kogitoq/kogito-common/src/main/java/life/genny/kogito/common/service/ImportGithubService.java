@@ -9,12 +9,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.utils.GithubUtils;
 
 @ApplicationScoped
 public class ImportGithubService extends KogitoService {
+
+	@Inject
+	Logger log;
 
 	/**
 	 * Import github files

@@ -1,6 +1,9 @@
 package life.genny.kogito.common.service;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
 
@@ -19,6 +22,9 @@ import life.genny.qwandaq.utils.KeycloakUtils;
  */
 @ApplicationScoped
 public class Service2Service extends KogitoService {
+
+	@Inject
+	Logger log;
 
 	/**
 	 * Add a token to a TaskExchange message for sending.

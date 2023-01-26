@@ -1,12 +1,18 @@
 package life.genny.kogito.common.service;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.utils.CommonUtils;
 
 @ApplicationScoped
 public class EditService extends KogitoService  {
+
+	@Inject
+	Logger log;
     
     public String getCurrentPcm(String pcmCodes, Integer currentIndex) {
         String[] pcmCodesArray = CommonUtils.getArrayFromString(pcmCodes, String.class, (str) -> str);

@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.qwandaq.Answer;
@@ -23,6 +26,9 @@ import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
 public class TaskService extends KogitoService {
+
+	@Inject
+	Logger log;
 
 	/**
 	 * @param processData

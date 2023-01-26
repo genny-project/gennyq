@@ -3,6 +3,9 @@ package life.genny.kogito.common.service;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.TimerData;
 import life.genny.kogito.common.models.TimerEvent;
@@ -15,6 +18,9 @@ import life.genny.qwandaq.entity.search.trait.Operator;
 
 @ApplicationScoped
 public class TimerEventService extends KogitoService {
+
+	@Inject
+	Logger log;
 
 	/**
 	 * Fetch the TimerData for a questionCode.
