@@ -847,7 +847,7 @@ public class QwandaUtils {
 	 * @param baseEntityCode a BaseEntity or Definition code 
 	 * @return array of question group codes in order of appearance for editing the BaseEntity
 	 */
-	public String[] getEditPcmCodes(String targetCode) {
+	public String getEditPcmCodes(String targetCode) {
 		if(targetCode == null)
 			throw new NullParameterException("targetCode");
 		
@@ -871,7 +871,7 @@ public class QwandaUtils {
 	 * @param baseEntityCode a BaseEntity or Definition code 
 	 * @return array of question group codes in order of appearance for editing the BaseEntity
 	 */
-	public String[] getEditPcmCodes(BaseEntity baseEntity) {
+	public String getEditPcmCodes(BaseEntity baseEntity) {
 		if(baseEntity == null)
 			throw new NullParameterException("baseEntity");
 		
@@ -884,7 +884,7 @@ public class QwandaUtils {
 		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_PCMS);
 		if(!editQuesLnk.isPresent()) {
 			log.warn("Could not find LNK_EDIT_PCMS in " + baseEntity.getCode() + ". Defaulting to PCM_FORM_EDIT");
-			return new String[] {"PCM_FORM_EDIT"};
+			return "[PCM_FORM_EDIT]";
 		}
 		
 		log.debug("FOUND LNK_EDIT_PCMS in BaseEntity: " + baseEntity);
@@ -892,11 +892,11 @@ public class QwandaUtils {
 		String editQues = editQuesLnk.get().getValueString();
 		if(!StringUtils.isBlank(editQues)) {
 			log.debug("Found edit questions: " + editQues);
-			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
+			return editQues;
 		}
 		
 		log.warn("Edit pcm was blank. Defaulting to PCM_FORM_EDIT");
-		return new String[] {"PCM_FORM_EDIT"};
+		return "[PCM_FORM_EDIT]";
 	}
 
 	/**
