@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="__62IkH9REDuM3cBasrluaw" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_H3kcoH9UEDu2WNskh0Z0OA" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -27,8 +27,8 @@
   <bpmn2:interface id="_5999CB97-2BE8-4093-A097-498AD19E202B_ServiceInterface" name="life.genny.kogito.common.service.EditService" implementationRef="life.genny.kogito.common.service.EditService">
     <bpmn2:operation id="_5999CB97-2BE8-4093-A097-498AD19E202B_ServiceOperation" name="getCurrentPcm" implementationRef="getCurrentPcm"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_C90BED96-394C-4690-A513-2822732FDF1A" name="Default Collaboration">
-    <bpmn2:participant id="_525FF3E0-C467-4CF9-97F9-60BCC6E2483D" name="Pool Participant" processRef="edit"/>
+  <bpmn2:collaboration id="_D6CF8DEB-1EA3-4EEA-9E17-6D91932FACBA" name="Default Collaboration">
+    <bpmn2:participant id="_859CA3EA-F9DF-496C-981B-63EA8CA3A9B0" name="Pool Participant" processRef="edit"/>
   </bpmn2:collaboration>
   <bpmn2:process id="edit" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Edit" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[Edit an Item]]></bpmn2:documentation>
@@ -244,14 +244,27 @@ if at start -&gt; Cancel,Next,Submit
 if at end -&gt; Cancel,Previous,Submit
 if in middle -&gt; Cancel,Previous,Next,Submit
 */
-if((Integer)kcontext.getVariable("numPages") &lt;= 1)
+
+System.out.println("[EDIT FLOW] Setting buttonEvents");
+if((Integer)kcontext.getVariable("numPages") &lt;= 1) {
+    System.out.println("[EDIT FLOW] Single Page Edit. Setting to Cancel,Submit");
     kcontext.setVariable("buttonEvents", "Cancel,Submit");
-else if(current == 0)
+    return;
+}
+
+if(current == 0) {
+    System.out.println("[EDIT FLOW] First (0) Page of Multi-page Edit. Setting to Cancel,Next,Submit");
     kcontext.setVariable("buttonEvents", "Cancel,Next,Submit");
-else if(current == ((Integer)kcontext.getVariable("numPages") - 1))
+    return;
+}
+if(current == ((Integer)kcontext.getVariable("numPages") - 1)) {
+    System.out.println("[EDIT FLOW] Last (" + current + ") Page of Multi-page Edit. Setting to Cancel,Previous,Submit");
     kcontext.setVariable("buttonEvents", "Cancel,Previous,Submit");
-else
-    kcontext.setVariable("buttonEvents", "Cancel,Previous,Next,Submit");</bpmn2:script>
+    return;
+}
+
+System.out.println("[EDIT FLOW] Page (" + current + ") of Multi-page Edit. Setting to Cancel,Previous,Next,Submit");
+kcontext.setVariable("buttonEvents", "Cancel,Previous,Next,Submit");</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:startEvent id="_321CE5F6-80DE-48BD-93F4-41E832A810FF">
       <bpmn2:outgoing>_9EAFFC1E-9D1F-449C-90C5-1E1E545291F2</bpmn2:outgoing>
@@ -471,7 +484,7 @@ else
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>__62IkH9REDuM3cBasrluaw</bpmn2:source>
-    <bpmn2:target>__62IkH9REDuM3cBasrluaw</bpmn2:target>
+    <bpmn2:source>_H3kcoH9UEDu2WNskh0Z0OA</bpmn2:source>
+    <bpmn2:target>_H3kcoH9UEDu2WNskh0Z0OA</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
