@@ -141,7 +141,10 @@ public class BaseEntityService extends KogitoService {
 	}
 
 	public String getEditPcmCodes(String targetCode) {
-		return qwandaUtils.getEditPcmCodes(targetCode);
+		String editCodes = qwandaUtils.getEditPcmCodes(targetCode);
+		log.info("Got edit codes for target: " + targetCode);
+		log.info("	- Edit Codes: " + editCodes);
+		return editCodes;
 	}
 
 	public String getDEFPrefix(String definitionCode) {
