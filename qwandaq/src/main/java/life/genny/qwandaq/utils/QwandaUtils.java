@@ -1077,8 +1077,8 @@ public class QwandaUtils {
 
 		// check each validation against value
 		for (Validation validation : dataType.getValidationList()) {
-
 			String regex = validation.getRegex();
+			log.debug("Checking Validation: " + validation.getCode() + " = " + regex);
 			boolean regexOk = Pattern.compile(regex).matcher(value).matches();
 
 			if (!regexOk) {
@@ -1086,7 +1086,7 @@ public class QwandaUtils {
 						+ validation.getErrormsg());
 				return false;
 			}
-
+			log.debug("	- regex passed");
 		}
 		return true;
 	}
