@@ -1070,7 +1070,7 @@ public class QwandaUtils {
 	 * @param value     The value to check
 	 * @return Boolean representing whether the validation conditions have been met
 	 */
-	public Boolean validationsAreMet(Attribute attribute, String value) {
+	public static Boolean validationsAreMet(Attribute attribute, String value) {
 
 		DataType dataType = attribute.getDataType();
 
