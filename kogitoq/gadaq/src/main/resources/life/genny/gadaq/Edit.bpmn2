@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_MNePYIAkEDuYEN7N87u_Kg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:bpsim="http://www.bpsim.org/schemas/1.0" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:drools="http://www.jboss.org/drools" id="_a3jowIAlEDuYEN7N87u_Kg" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd http://www.omg.org/spec/DD/20100524/DC DC.xsd http://www.omg.org/spec/DD/20100524/DI DI.xsd " exporter="jBPM Process Modeler" exporterVersion="2.0" targetNamespace="http://www.omg.org/bpmn20">
   <bpmn2:itemDefinition id="_questionCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_sourceCodeItem" structureRef="String"/>
   <bpmn2:itemDefinition id="_targetCodeItem" structureRef="String"/>
@@ -31,8 +31,8 @@
   <bpmn2:interface id="_3C7C8C09-2277-44DE-8601-70672DE9D0FC_ServiceInterface" name="life.genny.kogito.common.service.NavigationService" implementationRef="life.genny.kogito.common.service.NavigationService">
     <bpmn2:operation id="_3C7C8C09-2277-44DE-8601-70672DE9D0FC_ServiceOperation" name="redirect" implementationRef="redirect"/>
   </bpmn2:interface>
-  <bpmn2:collaboration id="_3BC23490-6CB1-44F6-9BDD-4F498E4A34D0" name="Default Collaboration">
-    <bpmn2:participant id="_CEFC5906-F1F7-4438-AFEF-24E7F4660403" name="Pool Participant" processRef="edit"/>
+  <bpmn2:collaboration id="_FDDE58FF-F079-4F48-B1D0-A16569C00324" name="Default Collaboration">
+    <bpmn2:participant id="_4FCDE1F1-6B32-4A3C-B997-BE4BF7C288EA" name="Pool Participant" processRef="edit"/>
   </bpmn2:collaboration>
   <bpmn2:process id="edit" drools:packageName="life.genny.gadaq" drools:version="1.0" drools:adHoc="false" name="Edit" isExecutable="true" processType="Public">
     <bpmn2:documentation><![CDATA[Edit an Item]]></bpmn2:documentation>
@@ -56,7 +56,9 @@
     <bpmn2:sequenceFlow id="_E052879F-5B02-4BA2-A996-405333D0F6B2" sourceRef="_718B369D-74D8-44C0-86F9-FBAC4E142B09" targetRef="_221EE1F5-73BA-4EEF-A54B-AE4223A5BAFF"/>
     <bpmn2:sequenceFlow id="_4F23B444-FCFE-4B8E-877D-494FDC15AE28" sourceRef="_221EE1F5-73BA-4EEF-A54B-AE4223A5BAFF" targetRef="_5999CB97-2BE8-4093-A097-498AD19E202B"/>
     <bpmn2:sequenceFlow id="_08B246BF-4C44-4F5B-8461-34D7AE490D9F" sourceRef="_36C272A6-1534-42A3-97F4-1AA2F118809C" targetRef="_49A1ECC5-2F04-4A38-9E0B-C4453F69E223">
-      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return (taskExchange.isSubmit() && currentIndex == (numPages - 1)) || taskExchange.isCancel();]]></bpmn2:conditionExpression>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[System.out.println("ATTEMPTING TO FINISH: Current:" + currentIndex);
+System.out.println("    - NUM PAGES:" + numPages);
+return (taskExchange.isSubmit() && currentIndex >= (numPages - 2)) || taskExchange.isCancel();]]></bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="_DBD9320B-414A-460E-B224-57C093ACF8CA" sourceRef="_36C272A6-1534-42A3-97F4-1AA2F118809C" targetRef="_460777FC-0D6A-4703-A45A-2B095106F028">
       <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" language="http://www.java.com/java"><![CDATA[return taskExchange.isPrevious() || (
@@ -724,7 +726,7 @@ kcontext.setVariable("buttonEvents", "Cancel,Previous,Next");</bpmn2:script>
         </bpsim:Scenario>
       </bpsim:BPSimData>
     </bpmn2:extensionElements>
-    <bpmn2:source>_MNePYIAkEDuYEN7N87u_Kg</bpmn2:source>
-    <bpmn2:target>_MNePYIAkEDuYEN7N87u_Kg</bpmn2:target>
+    <bpmn2:source>_a3jowIAlEDuYEN7N87u_Kg</bpmn2:source>
+    <bpmn2:target>_a3jowIAlEDuYEN7N87u_Kg</bpmn2:target>
   </bpmn2:relationship>
 </bpmn2:definitions>
