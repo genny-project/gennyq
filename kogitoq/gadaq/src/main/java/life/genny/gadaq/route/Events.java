@@ -102,13 +102,8 @@ public class Events {
 		}
 
 		// submit, next and update
-		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_UPDATE.equals(code)) {
+		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)) {
 			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit");
-			return;
-		}
-		
-		if (Question.QUE_NEXT.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "next");
 			return;
 		}
 

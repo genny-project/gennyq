@@ -4,7 +4,6 @@ public enum ECompletion {
 	SUBMIT,
 	CANCEL,
 	PREVIOUS,
-	NEXT,
 	TIMEOUT,
 	CUSTOM,
 }
