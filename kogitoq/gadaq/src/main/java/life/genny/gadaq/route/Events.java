@@ -179,13 +179,14 @@ public class Events {
 
 			if ("PER".equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
+				return;
 			}
 			
 			if ("MSG".equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
+				return;
 			}
 			
-			return;
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
