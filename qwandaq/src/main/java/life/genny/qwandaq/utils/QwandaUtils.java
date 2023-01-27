@@ -41,6 +41,7 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -856,8 +857,7 @@ public class QwandaUtils {
 		Definition baseEntity = defUtils.getDEF(targetCode);
 		if(baseEntity == null) {
 			log.error("Could not find Definition of be: " + targetCode);
-		} else {
-			log.debug("Found: " + baseEntity.getCode());
+			throw new BadDataException("No definition of BaseEntity: " + targetCode);
 		}
 
 		return getEditPcmCodes(baseEntity);
@@ -887,11 +887,10 @@ public class QwandaUtils {
 			return "[PCM_FORM_EDIT]";
 		}
 		
-		log.debug("FOUND LNK_EDIT_PCMS in BaseEntity: " + baseEntity);
-
 		String editQues = editQuesLnk.get().getValueString();
+		log.debug("FOUND LNK_EDIT_PCMS in BaseEntity: " + baseEntity + ". Edit PCM Codes: " + editQues);
+
 		if(!StringUtils.isBlank(editQues)) {
-			log.debug("Found edit questions: " + editQues);
 			return editQues;
 		}
 		

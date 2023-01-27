@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -32,6 +33,9 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class RoleManager extends Manager {
+
+	@Inject
+	Logger log;
 
 	private final static AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
 		new Attribute(Attribute.LNK_ROLE, "Role Link", new DataType(String.class))
