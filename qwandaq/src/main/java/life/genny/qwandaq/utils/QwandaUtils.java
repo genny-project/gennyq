@@ -474,7 +474,7 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+	public static boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
 		Boolean answered = true;
@@ -487,25 +487,46 @@ public class QwandaUtils {
 				continue;
 			}
 
-			Boolean readonly = ask.getReadonly();
+			boolean readonly = ask.getReadonly();
 			if (readonly) {
 				continue;
 			}
 
-			Boolean mandatory = ask.getMandatory();
+			boolean mandatory = ask.getMandatory();
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
-			if ((mandatory && !readonly) && StringUtils.isBlank(value))
-				answered = false;
+			if ((mandatory && !readonly))
+				answered = acceptableAnswer(value);
+
+			if(!answered) {
+				break;
+			}
 
 			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
-			log.debug("===> " + resultLine);
+			log.debug("===> " + resultLine + " (" + answered + ")");
 		}
 
 		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
 
 		return answered;
+	}
+
+	private static boolean acceptableAnswer(String value) {
+		if(value == null)
+			return false;
+		// block whitespace
+		value = value.trim();
+
+		if(StringUtils.isBlank(value))
+			return false;
+		
+		if("null".equalsIgnoreCase(value)) {
+			return false;
+		}
+
+		log.debug("	- letting through value: " + value);
+		return true;
 	}
 
 	/**
@@ -839,108 +860,6 @@ public class QwandaUtils {
 
 		return ask;
 	}
-	
-	/**
-	 * Get the edit question groups for a {@link BaseEntity}
-	 * <p> will default to <b>QUE_BASEENTITY_GRP</b> if no {@link Attribute#LNK_EDIT_QUES} attribute exists in the {@link Definition}
-	 *     or if the value is blank
-	 * </p>
-	 * @param baseEntityCode a BaseEntity or Definition code 
-	 * @return array of question group codes in order of appearance for editing the BaseEntity
-	 */
-	public String[] getEditQuestionGroups(String baseEntityCode) {
-		if(baseEntityCode == null)
-			throw new NullParameterException("baseEntityCode");
-		// ensure def
-		log.info("[!] Attempting to retrieve edit question groups from base entity: " + baseEntityCode);
-		Definition baseEntity = defUtils.getDEF(baseEntityCode);
-		if(baseEntity == null) {
-			log.error("Could not find Definition of be: " + baseEntityCode);
-		} else {
-			log.info("Found: " + baseEntity.getCode());
-		}
-
-		return getEditQuestionGroups(baseEntity);
-	}
-
-	public String[] getEditPcmCodes(String targetCode) {
-		if(targetCode == null)
-			throw new NullParameterException("targetCode");
-		// ensure def
-		log.info("[!] Attempting to retrieve edit pcms from base entity: " + targetCode);
-		Definition baseEntity = defUtils.getDEF(targetCode);
-		if(baseEntity == null) {
-			log.error("Could not find Definition of be: " + targetCode);
-		} else {
-			log.info("Found: " + baseEntity.getCode());
-		}
-
-		return getEditPcmCodes(baseEntity);
-	}
-
-	public String[] getEditPcmCodes(BaseEntity baseEntity) {
-		if(baseEntity == null)
-			throw new NullParameterException("baseEntity");
-		
-		// Convert to DEF
-		if(!baseEntity.getCode().startsWith(Prefix.DEF_)) {
-			baseEntity = defUtils.getDEF(baseEntity);
-		}
-
-		// Look for attached edit ques. If none then default to QUE_BASEENTITY_GRP
-		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_PCMS);
-		if(!editQuesLnk.isPresent()) {
-			log.warn("Could not find LNK_EDIT_PCMS in " + baseEntity.getCode() + ". Defaulting to PCM_FORM_EDIT");
-			return new String[] {"PCM_FORM_EDIT"};
-		}
-		
-		log.debug("FOUND LNK_EDIT_PCMS");
-
-		String editQues = editQuesLnk.get().getValueString();
-		if(!StringUtils.isBlank(editQues)) {
-			log.info("Found edit questions: " + editQues);
-			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
-		}
-		
-		log.warn("Edit ques was blank. Defaulting to PCM_FORM_EDIT");
-		return new String[] {"PCM_FORM_EDIT"};
-	}
-
-	/**
-	 * Get the edit question groups for a {@link BaseEntity}
-	 * <p> will default to <b>QUE_BASEENTITY_GRP</b> if no {@link Attribute#LNK_EDIT_QUES} attribute exists in the {@link Definition}
-	 *     or if the value is blank
-	 * </p>
-	 * @param baseEntity a BaseEntity or definition of a BaseEntity 
-	 * @return array of question group codes in order of appearance for editing
-	 */
-	public String[] getEditQuestionGroups(BaseEntity baseEntity) {
-		if(baseEntity == null)
-			throw new NullParameterException("baseEntity");
-		
-		// Convert to DEF
-		if(!baseEntity.getCode().startsWith(Prefix.DEF_)) {
-			baseEntity = defUtils.getDEF(baseEntity);
-		}
-
-		// Look for attached edit ques. If none then default to QUE_BASEENTITY_GRP
-		Optional<EntityAttribute> editQuesLnk = baseEntity.findEntityAttribute(Attribute.LNK_EDIT_QUES);
-		if(!editQuesLnk.isPresent()) {
-			log.warn("Could not find LNK_EDIT_QUES in " + baseEntity.getCode() + ". Defaulting to QUE_BASEENTITY_GRP");
-			return new String[] {Question.QUE_BASEENTITY_GRP};
-		}
-		
-		log.debug("FOUND LNK_EDIT_QUES");
-
-		String editQues = editQuesLnk.get().getValueString();
-		if(!StringUtils.isBlank(editQues)) {
-			log.info("Found edit questions: " + editQues);
-			return CommonUtils.getArrayFromString(editQues, String.class, (str) -> str);
-		}
-		
-		log.warn("Edit ques was blank. Defaulting to QUE_BASEENTITY_GRP");
-		return new String[] {Question.QUE_BASEENTITY_GRP};
-	}
 
 	/**
 	 * Update the status of the disabled field for an Ask on the web.
@@ -1114,14 +1033,14 @@ public class QwandaUtils {
 	 * @param value     The value to check
 	 * @return Boolean representing whether the validation conditions have been met
 	 */
-	public Boolean validationsAreMet(Attribute attribute, String value) {
+	public static Boolean validationsAreMet(Attribute attribute, String value) {
 
 		DataType dataType = attribute.getDataType();
 
 		// check each validation against value
 		for (Validation validation : dataType.getValidationList()) {
-
 			String regex = validation.getRegex();
+			log.debug("Checking Validation: " + validation.getCode() + " = " + regex);
 			boolean regexOk = Pattern.compile(regex).matcher(value).matches();
 
 			if (!regexOk) {
@@ -1129,7 +1048,7 @@ public class QwandaUtils {
 						+ validation.getErrormsg());
 				return false;
 			}
-
+			log.debug("	- regex passed");
 		}
 		return true;
 	}

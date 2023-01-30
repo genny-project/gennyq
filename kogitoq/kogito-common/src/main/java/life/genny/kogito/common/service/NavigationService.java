@@ -7,7 +7,6 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -16,7 +15,6 @@ import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -26,45 +24,16 @@ import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QEventMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
-public class NavigationService {
+public class NavigationService extends KogitoService {
 
 	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	Jsonb jsonb = JsonbBuilder.create();
-
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	SearchService searchService;
-
-	@Inject
-	KogitoUtils kogitoUtils;
-
-	@Inject
-	SearchUtils searchUtils;
-
-	@Inject
-	RoleManager roleManager;
-
-	@Inject
-	TaskService tasks;
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 

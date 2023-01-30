@@ -220,7 +220,7 @@ public class Validator {
 		}
 
 		// blacklist if none of the regex match
-		if (!qwandaUtils.validationsAreMet(attribute, answer.getValue()))
+		if (!QwandaUtils.validationsAreMet(attribute, answer.getValue()))
 			return blacklist("Answer Value is bad: " + answer.getValue());
 		log.info("Answer Value is good: " + answer.getValue());
 

@@ -181,6 +181,7 @@ public class Events {
 			if (Prefix.PER_.equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "userLifecycle", json);
 			}
+			
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)

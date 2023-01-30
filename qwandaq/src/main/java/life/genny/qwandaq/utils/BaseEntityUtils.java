@@ -135,6 +135,9 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
+		// Ensure data correctness
+		productCode = productCode.strip();
+		code = code.strip();
 		if (StringUtils.isBlank(productCode))
 			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(code))

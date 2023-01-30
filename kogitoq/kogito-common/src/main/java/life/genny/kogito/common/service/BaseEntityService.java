@@ -4,13 +4,10 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
@@ -21,37 +18,13 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
-public class BaseEntityService {
-
-	private static final Logger log = Logger.getLogger(BaseEntityService.class);
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class BaseEntityService extends KogitoService {
 
 	@Inject
-	ServiceToken serviceToken;
-
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	KogitoUtils kogitoUtils;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	DefUtils defUtils;
+	Logger log;
 
 	/**
 	 * Send a message to perform an update of a persons summary
@@ -139,26 +112,6 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 	}
 
-	public String getEditPcmCode(String targetCode) {
-		return qwandaUtils.getEditPcmCodes(targetCode)[0];
-	}
-
-	// public void edit(String sourceCode, String targetCode) {
-	// 	final String pcmCode = qwandaUtils.getEditPcmCodes(targetCode)[0];
-	// 	final String buttonEvents = "SUBMIT,CANCEL,RESET"; // TODO: Multipage edits
-	// 	final String parent = "PCM_CONTENT";
-	// 	final String location = "PRI_LOC1";
-	// 	log.debug("Sending edit with form code: " + pcmCode);
-	// JsonObject payload = Json.createObjectBuilder()
-	// 					.add("targetCode", targetCode)
-	// 					.add("sourceCode", sourceCode)
-	// 					.add("pcmCode", pcmCode)
-	// 					.add("parent", parent)
-	// 					.add("location", location)
-	// 					.add("buttonEvents", buttonEvents)
-	// 					.build();
-	// }
-
 	public String getDEFPrefix(String definitionCode) {
 
 		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
@@ -169,10 +122,6 @@ public class BaseEntityService {
 		}
 
 		return prefix.get();
-	}
-
-	public String getBaseEntityQuestionGroup(String targetCode) {
-		return qwandaUtils.getEditQuestionGroups(targetCode)[0];
 	}
 
 	/**
