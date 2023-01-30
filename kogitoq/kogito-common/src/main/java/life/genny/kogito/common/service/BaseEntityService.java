@@ -70,7 +70,7 @@ public class BaseEntityService {
 
 		if (definitionCode == null)
 			throw new NullParameterException("definitionCode");
-		if (!definitionCode.startsWith(Prefix.DEF))
+		if (!definitionCode.startsWith(Prefix.DEF_))
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity

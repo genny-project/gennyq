@@ -164,7 +164,7 @@ public class GennyToken implements Serializable {
 		this.adecodedTokenMap.put("realm", this.realm);
 
 		String username = getString("preferred_username");
-		this.userUUID = Prefix.PER + this.getUuid().toUpperCase();
+		this.userUUID = Prefix.PER_ + this.getUuid().toUpperCase();
 
 		if ("service".equals(username)) {
 			this.userCode = "PER_SERVICE";
@@ -538,7 +538,7 @@ public class GennyToken implements Serializable {
 	public String getEmailUserCode() {
 		String username = (String) adecodedTokenMap.get("preferred_username");
 		String normalisedUsername = getNormalisedUsername(username);
-		return Prefix.PER + normalisedUsername.toUpperCase();
+		return Prefix.PER_ + normalisedUsername.toUpperCase();
 
 	}
 

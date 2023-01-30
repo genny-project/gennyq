@@ -55,7 +55,7 @@ public class GennyService {
 
 		CommonUtils.getArcInstance(BaseEntityUtils.class);
 
-		BaseEntity be = beUtils.getBaseEntityOrNull(code);
+		BaseEntity be = beUtils.getBaseEntity(code);
 
 		if (be == null) {
 			log.error("BaseEntity not found");
@@ -81,7 +81,7 @@ public class GennyService {
 		log.info("Source Code = " + userToken.getUserCode());
 		log.info("BaseEntity Code = " + code);
 
-		BaseEntity be = beUtils.getBaseEntityOrNull(code);
+		BaseEntity be = beUtils.getBaseEntity(code);
 
 		if (be == null) {
 			log.error("BaseEntity not found");
@@ -110,7 +110,7 @@ public class GennyService {
 		log.info("BaseEntity Code = " + code);
 
 		beUtils = new BaseEntityUtils(serviceToken); // assume userToken dead.
-		BaseEntity be = beUtils.getBaseEntityOrNull(code);
+		BaseEntity be = beUtils.getBaseEntity(code);
 
 		if (be == null) {
 			log.error("BaseEntity not found");
@@ -136,7 +136,7 @@ public class GennyService {
 		log.info("BaseEntity Code = " + code);
 
 		beUtils = new BaseEntityUtils(serviceToken); // assume userToken dead.
-		BaseEntity be = beUtils.getBaseEntityOrNull(code);
+		BaseEntity be = beUtils.getBaseEntity(code);
 
 		if (be == null) {
 			log.error("BaseEntity not found");
@@ -160,7 +160,7 @@ public class GennyService {
 		log.info("BaseEntity Code = " + code);
 
 		beUtils = new BaseEntityUtils(serviceToken); // assume userToken dead.
-		BaseEntity baseEntity = beUtils.getBaseEntityOrNull(code);
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
 
 		if (baseEntity == null) {
 			log.error("BaseEntity not found");

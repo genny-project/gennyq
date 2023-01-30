@@ -179,7 +179,7 @@ public class SearchUtils {
 	 */
 	public void searchTable(String code) {
 
-		if (!code.startsWith(Prefix.SBE))
+		if (!code.startsWith(Prefix.SBE_))
 			throw new DebugException("Code " + code + " does not represent a SearchEntity");
 
 		log.debug("Performing Table Search: " + code);

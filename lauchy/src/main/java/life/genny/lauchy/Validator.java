@@ -66,7 +66,7 @@ public class Validator {
 		List<Ask> asksToSend = new ArrayList<>();
 
 		Arrays.stream(answers.getItems())
-				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
+				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK_))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
 					// TODO: Wondering if we can just get the processData from the first processId
@@ -184,7 +184,7 @@ public class Validator {
 			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
 			// check attribute code is allowed by target DEF
-			if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {
+			if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
 				log.warn("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
 				notValidForAnyDefinition = true;
 			}

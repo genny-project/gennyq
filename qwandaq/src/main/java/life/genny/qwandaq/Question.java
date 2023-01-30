@@ -369,7 +369,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 * @return the default Code prefix for this class.
 	 */
 	static public String getDefaultCodePrefix() {
-		return Prefix.QUE;
+		return Prefix.QUE_;
 	}
 
 	/**

@@ -64,7 +64,7 @@ import life.genny.qwandaq.validation.Validation;
 @ApplicationScoped
 public class QwandaUtils {
 
-	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
+	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI_, Prefix.LNK_ };
 	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT,
 			Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
@@ -244,8 +244,8 @@ public class QwandaUtils {
 	 * @return
 	 */
 	public Attribute createButtonEvent(String code, final String name) {
-		if (!code.startsWith(Prefix.EVT))
-			code = Prefix.EVT.concat(code);
+		if (!code.startsWith(Prefix.EVT_))
+			code = Prefix.EVT_.concat(code);
 		code = code.toUpperCase();
 		DataType DTT_EVENT = getAttribute(userToken.getProductCode(), Attribute.EVT_SUBMIT).getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
@@ -449,10 +449,10 @@ public class QwandaUtils {
 	 */
 	public Map<String, Ask> updateDependentAsks(BaseEntity target, Definition definition, Map<String, Ask> flatMapAsks) {
 
-		List<EntityAttribute> dependentAsks = definition.findPrefixEntityAttributes(Prefix.DEP);
+		List<EntityAttribute> dependentAsks = definition.findPrefixEntityAttributes(Prefix.DEP_);
 
 		for (EntityAttribute dep : dependentAsks) {
-			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
+			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP_);
 			Ask targetAsk = flatMapAsks.get(attributeCode);
 			if (targetAsk == null)
 				continue;
@@ -474,7 +474,7 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+	public static boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
 		Boolean answered = true;
@@ -487,25 +487,46 @@ public class QwandaUtils {
 				continue;
 			}
 
-			Boolean readonly = ask.getReadonly();
+			boolean readonly = ask.getReadonly();
 			if (readonly) {
 				continue;
 			}
 
-			Boolean mandatory = ask.getMandatory();
+			boolean mandatory = ask.getMandatory();
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
-			if ((mandatory && !readonly) && StringUtils.isBlank(value))
-				answered = false;
+			if ((mandatory && !readonly))
+				answered = acceptableAnswer(value);
+
+			if(!answered) {
+				break;
+			}
 
 			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
-			log.debug("===> " + resultLine);
+			log.debug("===> " + resultLine + " (" + answered + ")");
 		}
 
 		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
 
 		return answered;
+	}
+
+	private static boolean acceptableAnswer(String value) {
+		if(value == null)
+			return false;
+		// block whitespace
+		value = value.trim();
+
+		if(StringUtils.isBlank(value))
+			return false;
+		
+		if("null".equalsIgnoreCase(value)) {
+			return false;
+		}
+
+		log.debug("	- letting through value: " + value);
+		return true;
 	}
 
 	/**
@@ -819,14 +840,14 @@ public class QwandaUtils {
 
 		// create a child ask for every valid atribute
 		definition.getBaseEntityAttributes().stream()
-				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT))
+				.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT_))
 				.forEach((ea) -> {
-					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT);
+					String attributeCode = StringUtils.removeStart(ea.getAttributeCode(), Prefix.ATT_);
 					Attribute attribute = getAttributeByBaseEntityAndCode(baseEntity, attributeCode);
 
-					String questionCode = Prefix.QUE
+					String questionCode = Prefix.QUE_
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-									Prefix.PRI), Prefix.LNK);
+									Prefix.PRI_), Prefix.LNK_);
 
 					Question childQues = new Question(questionCode, attribute.getName(), attribute);
 					Ask childAsk = new Ask(childQues, sourceCode, targetCode);
@@ -883,7 +904,7 @@ public class QwandaUtils {
 			throw new NullParameterException("baseEntity");
 		
 		// Convert to DEF
-		if(!baseEntity.getCode().startsWith(Prefix.DEF)) {
+		if(!baseEntity.getCode().startsWith(Prefix.DEF_)) {
 			baseEntity = defUtils.getDEF(baseEntity);
 		}
 
@@ -919,7 +940,7 @@ public class QwandaUtils {
 			throw new NullParameterException("baseEntity");
 		
 		// Convert to DEF
-		if(!baseEntity.getCode().startsWith(Prefix.DEF)) {
+		if(!baseEntity.getCode().startsWith(Prefix.DEF_)) {
 			baseEntity = defUtils.getDEF(baseEntity);
 		}
 

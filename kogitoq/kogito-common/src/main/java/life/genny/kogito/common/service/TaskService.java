@@ -129,7 +129,7 @@ public class TaskService {
 		processData.setProcessId(processId);
 		processData.setAnswers(new ArrayList<>());
 
-		String processEntityCode = Prefix.QBE.concat(targetCode.substring(4));
+		String processEntityCode = Prefix.QBE_.concat(targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
 		String userCode = userToken != null ? userToken.getUserCode() : null;
