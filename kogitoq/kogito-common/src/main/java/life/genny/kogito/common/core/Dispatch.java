@@ -3,13 +3,7 @@ package life.genny.kogito.common.core;
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -266,6 +260,7 @@ public class Dispatch {
 
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.PRI_LOC);
+
 		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
 			if(!entityAttribute.requirementsMet(userCapabilities)) {
@@ -419,8 +414,11 @@ public class Dispatch {
 			if (existing.contains(code)) {
 				continue;
 			}
-			BaseEntity be = beUtils.getBaseEntity(code);
-			msg.add(be);
+
+			if(!code.isEmpty()) {
+				BaseEntity be = beUtils.getBaseEntity(code);
+				msg.add(be);
+			}
 		}
 	}
 
