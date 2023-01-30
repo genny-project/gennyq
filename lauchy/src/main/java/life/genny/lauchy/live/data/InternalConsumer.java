@@ -1,5 +1,6 @@
 package life.genny.lauchy.live.data;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -15,7 +16,9 @@ import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
+@ApplicationScoped
 public class InternalConsumer {
+
     @Inject
     Logger log;
 

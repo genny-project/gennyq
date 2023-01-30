@@ -53,7 +53,6 @@ import life.genny.qwandaq.models.UserToken;
  * @author Jasper Robison
  */
 @ApplicationScoped
-@ActivateRequestContext
 public class BaseEntityUtils {
 
 	Jsonb jsonb = JsonbBuilder.create();
