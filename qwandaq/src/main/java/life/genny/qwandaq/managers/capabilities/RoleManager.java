@@ -72,6 +72,34 @@ public class RoleManager extends Manager {
 		return attachRole(target, role);
 	}
 
+	public BaseEntity attachRole(BaseEntity target, BaseEntity role) {
+		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(Attribute.LNK_ROLE);
+
+		// Create it
+		if(!eaOpt.isPresent()) {
+			target.addAttribute(lnkRoleAttribute.get(target.getRealm()), 1.0, "[\"" + role.getCode() + "\"]");
+			beUtils.updateBaseEntity(target);
+			return target;
+		}
+
+		EntityAttribute lnkRoleEA = eaOpt.get();
+		String value = lnkRoleEA.getValueString();
+		value = CommonUtils.addToStringArray(value, role.getCode());
+
+		lnkRoleEA.setValue(value);
+
+		beUtils.updateBaseEntity(target);
+		return target;
+	}
+	
+	public BaseEntity removeRole(BaseEntity target, BaseEntity role) {
+		
+	}
+
+	public BaseEntity removeRole(BaseEntity target, String roleCode) {
+
+	}
+
 	/**
 	 * Create a new role under a given product code
 	 * @param productCode
@@ -110,13 +138,12 @@ public class RoleManager extends Manager {
 
 		// add/edit LNK_CHILDREN
 		if(!optChildren.isPresent()) {
-			targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0, codeString);
+			targetRole.addEntityAttribute(lnkChildAttribute.get(productCode), 0.0, false, codeString);
 		} else {
 			EntityAttribute childrenEA = optChildren.get();
 			childrenEA.setValue(codeString);
 		}
 
-		// TODO: Keep an eye on this becasue it may have just broken
 		beUtils.updateBaseEntity(targetRole);
 		return targetRole;
 	}
@@ -134,19 +161,16 @@ public class RoleManager extends Manager {
 		
 		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(Attribute.LNK_CHILDREN);
 
-		EntityAttribute childrenEA;
-		List<String> childrenCodeList = Arrays.asList(childrenCodes);
 		// add/edit LNK_CHILDREN
 		if(!optChildren.isPresent()) {
-			childrenEA = targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0);
+			String children = CommonUtils.addToStringArray(CommonUtils.STR_ARRAY_EMPTY, childrenCodes);
+			targetRole.addEntityAttribute(lnkChildAttribute.get(productCode), 1.0, false, children);
 		} else {
-			childrenEA = optChildren.get();
+			EntityAttribute childrenEA = optChildren.get();
+			String children = childrenEA.getValueString();
 			String[] preexistingChildren = CommonUtils.cleanUpAttributeValue(childrenEA.getValueString()).split(",");
 			childrenCodeList.addAll(Arrays.asList(preexistingChildren));
 		}
-
-		String codeString = CommonUtils.getArrayString(childrenCodeList);
-		childrenEA.setValue(codeString);
 
 		// TODO: Keep an eye on this becasue it may have just broken
 		beUtils.updateBaseEntity(targetRole);
@@ -309,32 +333,6 @@ public class RoleManager extends Manager {
 			throw new RoleException("No redirect found in role ".concat(roleCode));
 
 		return redirectCode;
-	}
-
-	public BaseEntity attachRole(BaseEntity target, BaseEntity role) {
-		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(Attribute.LNK_ROLE);
-
-		// Create it
-		if(!eaOpt.isPresent()) {
-			target.addAttribute(lnkRoleAttribute.get(target.getRealm()), 1.0, "[" + role.getCode() + "]");
-			beUtils.updateBaseEntity(target);
-			return target;
-		}
-
-		EntityAttribute lnkRoleEA = eaOpt.get();
-		String value = lnkRoleEA.getValueString();
-		if(!StringUtils.isBlank(value)) {
-			Set<String> values = Arrays.asList(CommonUtils.cleanUpAttributeValue(value).split(",")).stream().collect(Collectors.toSet());
-			values.add(role.getCode());
-			value = CommonUtils.getArrayString(values, (String v) -> v);			
-		} else {
-			value = "[\"" + role.getCode() + "\"]";
-		}
-
-		lnkRoleEA.setValue(value);
-
-		beUtils.updateBaseEntity(target);
-		return target;
 	}
 
 	/**

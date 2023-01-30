@@ -30,7 +30,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -49,12 +48,6 @@ class CapEngine extends Manager {
 
 	@Inject
 	BaseEntityUtils beUtils;
-
-	// == TODO LIST
-	// 1. I want to get rid of the productCode chain here. When we have multitenancy
-	// properly established this should be possible
-	// but until then this is my best bet for getting this working reliably (don't
-	// trust the tokens just yet, as service token has productCode improperly set)
 
 	/**
 	 * Return a Set of Capabilities based on a BaseEntity's LNK_ROLE and its own set
@@ -202,32 +195,6 @@ class CapEngine extends Manager {
 		CacheUtils.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
 		beUtils.updateBaseEntity(targetBe);
 		return targetBe;
-	}
-
-	/**
-	 * Generate a capability map from a 2D string of attributes
-	 * 
-	 * @param productCode - product code to create capability attributes from
-	 * @param attribData  - 2D array of Strings (each entry in the first array is an
-	 *                    array of 2 strings, one for name and one for code)
-	 *                    - e.g [ ["CAP_ADMIN", "Manipulate Admin"], ["CAP_STAFF",
-	 *                    "Manipulate Staff"]]
-	 * @return a map going from attribute code (capability code) to attribute
-	 *         (capability)
-	 */
-	Map<String, Attribute> getCapabilityAttributeMap(String productCode, String[][] attribData) {
-		Map<String, Attribute> capabilityMap = new HashMap<String, Attribute>();
-
-		Arrays.asList(attribData).stream()
-				// Map data to capability. If capability name/tag is missing then use the code
-				// with standard capitalisation
-				.map((String[] item) -> createCapability(productCode, item[0],
-						(item[1] != null ? item[1] : CommonUtils.normalizeString(item[0])), false))
-				// add each capability attribute to the capability map, stripping the CAP_
-				// prefix to be used with the constants
-				.forEach((Attribute attr) -> capabilityMap.put(attr.getCode(), attr));
-
-		return capabilityMap;
 	}
 
 	boolean shouldOverride() {

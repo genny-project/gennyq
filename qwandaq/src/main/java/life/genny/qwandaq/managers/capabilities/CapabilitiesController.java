@@ -1,7 +1,10 @@
 package life.genny.qwandaq.managers.capabilities;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -93,6 +96,33 @@ public class CapabilitiesController {
     // update capability
 
     // getters
+
+	/**
+	 * Generate a capability map from a 2D string of attributes
+	 * 
+	 * @param productCode - product code to create capability attributes from
+	 * @param attribData  - 2D array of Strings (each entry in the first array is an
+	 *                    array of 2 strings, one for name and one for code)
+	 *                    - e.g [ ["CAP_ADMIN", "Manipulate Admin"], ["CAP_STAFF",
+	 *                    "Manipulate Staff"]]
+	 * @return a map going from attribute code (capability code) to attribute
+	 *         (capability)
+	 */
+	Map<String, Attribute> getCapabilityAttributeMap(String productCode, String[][] attribData) {
+		Map<String, Attribute> capabilityMap = new HashMap<String, Attribute>();
+
+		Arrays.asList(attribData).stream()
+				// Map data to capability. If capability name/tag is missing then use the code
+				// with standard capitalisation
+				.map((String[] item) -> createCapability(productCode, item[0],
+						((item.length == 2 && item[1] != null) ? item[1] : "Manipulate ".concat(CommonUtils.normalizeString(item[0]))), false))
+				// add each capability attribute to the capability map, stripping the CAP_
+				// prefix to be used with the constants
+				.forEach((Attribute attr) -> capabilityMap.put(attr.getCode(), attr));
+
+		return capabilityMap;
+	}
+    
     CapEngine getEngine() {
         return engine;
     }
@@ -141,7 +171,7 @@ public class CapabilitiesController {
     public static String cleanCapabilityCode(final String rawCapabilityCode) {
         String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
         if (!cleanCapabilityCode.startsWith(Prefix.CAP_)) {
-            cleanCapabilityCode = Prefix.CAP_ + cleanCapabilityCode;
+            cleanCapabilityCode = Prefix.CAP_.concat(cleanCapabilityCode);
         }
 
         return cleanCapabilityCode;

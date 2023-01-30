@@ -22,7 +22,6 @@ public class RoleBuilder {
     
     private final CapabilitiesController controller;
     private final RoleManager roleMan;
-    private final CapEngine engine;
 
     private final BaseEntity targetRole;
     
@@ -44,34 +43,12 @@ public class RoleBuilder {
 
     private String redirectCode;
 
-    // TODO: Again I want to get rid of product code chains like this
-    // TODO: Hopefully we can firm up how product codes are assigned to tokens
     public RoleBuilder(String roleCode, String roleName, String productCode) {
         this.controller = CommonUtils.getArcInstance(CapabilitiesController.class); //Arc.container().select(CapEngine.class).get();
         this.roleMan = controller.getRoleManager();
-        this.engine = controller.getEngine();
 
         this.productCode = productCode;
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
-    }
-
-    /**
-     * Set the {@link RoleBuilder#capabilityMap}
-     * @param capData a 2D String array, where each element of the first array is of the form {Code, Name}
-     * Example:
-     * <pre>
-     *{
-     *  {"CAP_ADMIN", "Manipulate Admin"},
-     *  {"CAP_TENANT", "Manipulate Tenant"}
-     *}
-     * </pre>
-     * @return this RoleBuilder
-     * 
-     * @see {@link CapEngine#getCapabilityAttributeMap(String, String[][])}
-     */
-    public RoleBuilder setCapabilityMap(String[][] capData) {
-        this.capabilityMap = engine.getCapabilityAttributeMap(productCode, capData);
-        return this;
     }
 
     /**
@@ -148,7 +125,7 @@ public class RoleBuilder {
         attrCode = CapabilitiesController.cleanCapabilityCode(attrCode);
 		Attribute attribute = capabilityMap.get(attrCode);
 		if(attribute == null) {
-			log.error("Could not find capability in map: " + attrCode);
+			log.warn("Could not find capability in map: " + attrCode + ". Add to it to the map to create it.");
 			throw new ItemNotFoundException("capability map", attrCode);
 		}
 		return attribute;
