@@ -71,7 +71,8 @@ public class BaseEntityUtils {
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	public BaseEntityUtils() { }
+	public BaseEntityUtils() { 
+	}
 
 	/**
 	 * Fetch the user base entity of the {@link UserToken}.
