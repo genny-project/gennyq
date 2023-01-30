@@ -107,6 +107,29 @@ public class CapabilitiesController {
 	 *                    "Manipulate Staff"]]
 	 * @return a map going from attribute code (capability code) to attribute
 	 *         (capability)
+     * 
+     * <pre>
+     * CapabilitiesController controller; // get an instance, probably from CDI
+     * 
+     * String[][] capabilityData = {
+     *  {"CAP_TEST_1", "Test capability"},
+     *  {"CAP_TEST_2"},
+     *  {"TEST_3", "Test Capability 3"}
+     * };
+     * 
+     * // this will create these 3 capability attributes and persist them in the database
+     * Map<String, Attribute> capabilityMap = controller.getCapabilityAttributeMap("gada", capabilityData);
+     * 
+     * new RoleBuilder("TEST_ROLE", "Test Role", "gada")
+     * .setCapabilityMap(capabilityMap)
+     * .addCapability("CAP_TEST_1").view(ALL).build()
+     * 
+     * .build()
+     * 
+     * // now we have a test role with code:TEST_ROLE and a single capability for CAP_TEST_1. This capability is available
+     * // throughout the system as a standard Attribute, this implementation is just a bit of syntactic sugar and less database calls
+     * // on startup
+     * </pre>
 	 */
 	Map<String, Attribute> getCapabilityAttributeMap(String productCode, String[][] attribData) {
 		Map<String, Attribute> capabilityMap = new HashMap<String, Attribute>();
