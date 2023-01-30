@@ -6,6 +6,7 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
+import org.apache.commons.lang3.StringUtils;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
@@ -40,6 +41,8 @@ public class QuestionUtils {
     public static final String WEIGHT = "weight";
     public static final String PARENT_CODE = "parentCode";
     public static final String CHILD_CODE = "childCode";
+
+    public static Map<BaseEntityKey, Question> questionsLocalCache = new HashMap<>();
 
     @Inject
     CacheManager cacheManager;
@@ -169,7 +172,13 @@ public class QuestionUtils {
     }
 
     public Question getQuestionFromBaseEntity(life.genny.qwandaq.entity.BaseEntity baseEntity, Collection<life.genny.qwandaq.attribute.EntityAttribute> attributes) {
-        Question question = new Question();
+        //BaseEntityKey baseEntityKey = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+        Question question;/* = questionsLocalCache.get(baseEntityKey);
+        if (question != null && !question.getUpdated().isBefore(baseEntity.getUpdated())) {
+            return question;
+        }*/
+        question = new Question();
+        //questionsLocalCache.put(baseEntityKey, question);
 		log.info("Question Code From BaseEntity = " + baseEntity.getCode());
         question.setCode(baseEntity.getCode());
         question.setCreated(baseEntity.getCreated());
@@ -210,10 +219,25 @@ public class QuestionUtils {
         });
     }
 
+    public List<QuestionQuestion> createQuestionQuestionsForParentQuestion(Question parent, Collection<life.genny.qwandaq.attribute.EntityAttribute> entityAttributes) {
+        List<QuestionQuestion> questionQuestions = new LinkedList<>();
+        entityAttributes.parallelStream().forEach(entityAttribute -> {
+            String baseEntityCode = entityAttribute.getBaseEntityCode();
+            log.debug("Fetching QuesQues -> " + baseEntityCode);
+            String[] codes = StringUtils.split(baseEntityCode, '|');
+            String childCode = codes[1];
+            log.debug("Fetching question for child code -> " + childCode);
+            Question child = cacheManager.getQuestion(parent.getRealm(), childCode);
+            QuestionQuestion questionQuestion = new QuestionQuestion(parent, child);
+            questionQuestions.add(questionQuestion);
+        });
+        return questionQuestions;
+    }
+
     public QuestionQuestion getQuestionQuestionFromBaseEntityBaseEntityAttributes(life.genny.qwandaq.entity.BaseEntity baseEntity, Set<life.genny.qwandaq.attribute.EntityAttribute> attributes) {
         QuestionQuestion questionQuestion = new QuestionQuestion();
         String beCode = baseEntity.getCode();
-        String[] sourceTargetCodes = beCode.split(BaseEntityKey.BE_KEY_DELIMITER);
+        String[] sourceTargetCodes = StringUtils.split(beCode, BaseEntityKey.BE_KEY_DELIMITER);
         questionQuestion.setParentCode(sourceTargetCodes[0]);
         questionQuestion.setChildCode(sourceTargetCodes[1]);
         questionQuestion.setCreated(baseEntity.getCreated());
