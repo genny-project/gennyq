@@ -1,4 +1,4 @@
-package life.genny.qwandaq.managers.capabilities;
+package life.genny.qwandaq.capabilities;
 
 import java.util.Arrays;
 import java.util.Collection;

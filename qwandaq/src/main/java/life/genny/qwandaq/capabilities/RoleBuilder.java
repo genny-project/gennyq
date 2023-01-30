@@ -1,4 +1,4 @@
-package life.genny.qwandaq.managers.capabilities;
+package life.genny.qwandaq.capabilities;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;

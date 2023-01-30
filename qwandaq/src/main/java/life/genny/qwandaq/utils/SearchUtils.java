@@ -12,13 +12,13 @@ import javax.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.capabilities.CapabilitiesController;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventDropdownMessage;
 import life.genny.qwandaq.message.QSearchMessage;

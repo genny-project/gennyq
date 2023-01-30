@@ -693,6 +693,16 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	}
 
 	/**
+	 * Add or update an EntityAttribute for this base entity, with a new value
+	 * @param ea
+	 * @param value
+	 * @return
+	 */
+	public EntityAttribute addEntityAttribute(EntityAttribute ea, Object value) {
+		return addEntityAttribute(ea.getAttribute(), ea.getWeight(), ea.getInferred(), value);
+	}
+
+	/**
 	 * Merge a BaseEntity.
 	 *
 	 * @param entity the entity to merge

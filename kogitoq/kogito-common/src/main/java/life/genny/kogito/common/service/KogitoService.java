@@ -9,7 +9,7 @@ import javax.persistence.EntityManager;
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.kogito.common.utils.KogitoUtils;
-import life.genny.qwandaq.managers.capabilities.RoleManager;
+import life.genny.qwandaq.capabilities.RoleManager;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;

@@ -6,13 +6,12 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import life.genny.qwandaq.capabilities.CapabilitiesController;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
-
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 

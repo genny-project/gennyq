@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.capabilities.CapabilitiesController;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
@@ -17,8 +18,6 @@ import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
-import life.genny.qwandaq.managers.Manager;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -26,7 +25,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * CapHandler
  */
 @ApplicationScoped
-public class CapHandler extends Manager {
+public class CapHandler {
 
 	@Inject
 	Logger log;

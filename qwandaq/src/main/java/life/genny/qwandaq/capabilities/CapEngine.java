@@ -1,4 +1,4 @@
-package life.genny.qwandaq.managers.capabilities;
+package life.genny.qwandaq.capabilities;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,9 +27,10 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.managers.Manager;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -38,13 +39,19 @@ import life.genny.qwandaq.utils.CacheUtils;
  * @author Bryn Meachem
  */
 @ApplicationScoped
-class CapEngine extends Manager {
+class CapEngine {
+
+	@Inject
+	UserToken userToken;
 
 	@Inject
 	Logger log;
 
 	@Inject
 	RoleManager roleMan;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;

@@ -1,8 +1,7 @@
-package life.genny.qwandaq.managers.capabilities;
+package life.genny.qwandaq.capabilities;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -16,8 +15,10 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.managers.Manager;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -31,7 +32,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class RoleManager extends Manager {
+public class RoleManager {
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	@Inject
 	Logger log;
@@ -85,19 +92,30 @@ public class RoleManager extends Manager {
 		EntityAttribute lnkRoleEA = eaOpt.get();
 		String value = lnkRoleEA.getValueString();
 		value = CommonUtils.addToStringArray(value, role.getCode());
-
-		lnkRoleEA.setValue(value);
-
+		target.addEntityAttribute(lnkRoleEA.getAttribute(), lnkRoleEA.getWeight(), false, value);
 		beUtils.updateBaseEntity(target);
 		return target;
 	}
 	
 	public BaseEntity removeRole(BaseEntity target, BaseEntity role) {
-		
+		return removeRole(target, role.getCode());
 	}
 
 	public BaseEntity removeRole(BaseEntity target, String roleCode) {
+		Optional<EntityAttribute> eaOpt = target.findEntityAttribute(Attribute.LNK_ROLE);
 
+		// Create it
+		if(!eaOpt.isPresent()) {
+			log.warn("No roles found for target: " + target + " (Checked in " + Attribute.LNK_ROLE + ")");
+			return target;
+		}
+
+		EntityAttribute lnkRoleEA = eaOpt.get();
+		String value = lnkRoleEA.getValueString();
+		value = CommonUtils.removeFromStringArray(value, roleCode);
+		target.addEntityAttribute(lnkRoleEA.getAttribute(), lnkRoleEA.getWeight(), false, value);
+		beUtils.updateBaseEntity(target);
+		return target;
 	}
 
 	/**
@@ -112,8 +130,8 @@ public class RoleManager extends Manager {
 		BaseEntity role = null;
 		roleCode = cleanRoleCode(roleCode);
 		try {
-			role = dbUtils.findBaseEntityByCode(productCode, roleCode);
-		} catch(NoResultException e) {
+			role = beUtils.getBaseEntity(productCode, roleCode);
+		} catch(ItemNotFoundException e) {
 			role = new BaseEntity(roleCode, roleName);
 			role.setRealm(productCode);
 			beUtils.updateBaseEntity(role);
@@ -168,11 +186,10 @@ public class RoleManager extends Manager {
 		} else {
 			EntityAttribute childrenEA = optChildren.get();
 			String children = childrenEA.getValueString();
-			String[] preexistingChildren = CommonUtils.cleanUpAttributeValue(childrenEA.getValueString()).split(",");
-			childrenCodeList.addAll(Arrays.asList(preexistingChildren));
+			children = CommonUtils.addToStringArray(children, childrenCodes);
+			targetRole.addEntityAttribute(childrenEA, children);
 		}
 
-		// TODO: Keep an eye on this becasue it may have just broken
 		beUtils.updateBaseEntity(targetRole);
 		return targetRole;
 	}
@@ -311,6 +328,10 @@ public class RoleManager extends Manager {
 		throw new RoleException(String.format("No redirect in roles %s", roles));
 	}
 
+	public String getRoleRedirectCode(String roleCode) throws RoleException {
+		return getRoleRedirectCode(userToken.getProductCode(), roleCode);
+	}
+
 	/**
 	 * Get the redirect code for a role.
 	 * 
@@ -318,16 +339,15 @@ public class RoleManager extends Manager {
 	 * @return The redirect code
 	 * @throws RoleException If no redirect is found for the role
 	 */
-	public String getRoleRedirectCode(String roleCode) throws RoleException {
+	public String getRoleRedirectCode(String productCode, String roleCode) throws RoleException {
 
 		if (roleCode == null)
 			throw new NullParameterException(roleCode);
 
-		String product = userToken.getProductCode();
 		String key = roleCode.concat(":REDIRECT");
 
 		// TODO: grab redirect for role
-		String redirectCode = CacheUtils.getObject(product, key, String.class);
+		String redirectCode = CacheUtils.getObject(productCode, key, String.class);
 
 		if (redirectCode == null)
 			throw new RoleException("No redirect found in role ".concat(roleCode));
