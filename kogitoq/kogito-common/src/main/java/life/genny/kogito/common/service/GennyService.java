@@ -7,6 +7,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
@@ -21,6 +22,9 @@ public class GennyService extends KogitoService {
 	// TODO: We need to get rid of this. This breaks multitenancy. Should not be decided once on startup.
 	@ConfigProperty(name = "quarkus.application.name")
 	String productCode;
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	/**
 	 * setup the BaseEntity with initial data.
@@ -89,7 +93,6 @@ public class GennyService extends KogitoService {
 		log.info("Source Code = " + userToken.getUserCode());
 		log.info("BaseEntity Code = " + code);
 
-		beUtils = new BaseEntityUtils(serviceToken); // assume userToken dead.
 		BaseEntity be = beUtils.getBaseEntity(code);
 
 		if (be == null) {
@@ -115,7 +118,6 @@ public class GennyService extends KogitoService {
 		log.info("Source Code = " + userToken.getUserCode());
 		log.info("BaseEntity Code = " + code);
 
-		beUtils = new BaseEntityUtils(serviceToken); // assume userToken dead.
 		BaseEntity be = beUtils.getBaseEntity(code);
 
 		if (be == null) {
@@ -139,7 +141,6 @@ public class GennyService extends KogitoService {
 		log.info("Source Code = " + userToken.getUserCode());
 		log.info("BaseEntity Code = " + code);
 
-		beUtils = new BaseEntityUtils(serviceToken); // assume userToken dead.
 		BaseEntity baseEntity = beUtils.getBaseEntity(code);
 
 		if (baseEntity == null) {
@@ -162,7 +163,6 @@ public class GennyService extends KogitoService {
 		log.info("=========================Abort BaseEntity=========================");
 		log.info("Source Code = " + userToken.getUserCode());
 		log.info("BaseEntity Code = " + code);
-		beUtils = new BaseEntityUtils(serviceToken); // assume userToken dead.
 
 		// activate request scope and fetch UserToken
 		// Arc.container().requestContext().activate();
