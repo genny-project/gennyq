@@ -68,14 +68,7 @@ public class KogitoScopeInit {
 		data.setToken(userTokenStr);
 		try {
 
-			// init GennyToken from token string
-			// userToken = Arc.container().instance(UserToken.class);
 			userToken.init(userTokenStr);
-
-			// userToken.setProductCode(productCode);
-
-			// beUtils = Arc.container().instance(BaseEntityUtils.class);
-			beUtils = new BaseEntityUtils(serviceToken, userToken);
 
 			log.debug("Token Initialized: " + userToken);
 
