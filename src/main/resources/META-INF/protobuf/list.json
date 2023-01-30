@@ -1,1 +1,1 @@
-["testQuestion.proto","personLifecycle.proto","messageLifecycle.proto","processQuestions.proto","authInit.proto","receiveQuestionRequest.proto","edit.proto"]
+["processQuestions.proto","authInit.proto","receiveQuestionRequest.proto","edit.proto","personLifecycle.proto","messageLifecycle.proto"]
