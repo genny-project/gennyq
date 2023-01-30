@@ -262,6 +262,7 @@ public class Dispatch {
 
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.PRI_LOC);
+
 		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
 			if(!entityAttribute.requirementsMet(userCapabilities)) {
@@ -410,8 +411,11 @@ public class Dispatch {
 			if (existing.contains(code)) {
 				continue;
 			}
-			BaseEntity be = beUtils.getBaseEntity(code);
-			msg.add(be);
+
+			if(!code.isEmpty()) {
+				BaseEntity be = beUtils.getBaseEntity(code);
+				msg.add(be);
+			}
 		}
 	}
 
