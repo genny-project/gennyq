@@ -3,7 +3,6 @@ package life.genny.qwandaq.utils;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -20,17 +19,8 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
-import org.apache.commons.lang3.StringUtils;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.jboss.logging.Logger;
 
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /*
  * A static utility class used for standard read and write 

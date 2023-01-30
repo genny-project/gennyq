@@ -1,6 +1,5 @@
 package life.genny.kogito.common.service;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,13 +7,10 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
-import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.Prefix;
@@ -23,44 +19,16 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
-public class TaskService {
-
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class TaskService extends KogitoService {
 
 	@Inject
-	UserToken userToken;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-	@Inject
-	DatabaseUtils databaseUtils;
-	@Inject
-	BaseEntityUtils beUtils;
-	@Inject
-	DefUtils defUtils;
-	@Inject
-	SearchUtils search;
-
-	@Inject
-	NavigationService navigationService;
-
-	@Inject
-	Dispatch dispatch;
-	@Inject
-	ProcessAnswers processAnswers;
+	Logger log;
 
 	/**
 	 * @param processData
@@ -192,7 +160,7 @@ public class TaskService {
 		// send searches
 		for (String code : processData.getSearches()) {
 			log.debug("Sending search: " + code);
-			search.searchTable(code);
+			searchUtils.searchTable(code);
 		}
 
 		return processData;
@@ -307,7 +275,7 @@ public class TaskService {
 	 */
 	public void disableButtons(ProcessData processData) {
 		List<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		for (String event : Dispatch.BUTTON_EVENTS) {
 			Ask evt = flatMapOfAsks.get(event);

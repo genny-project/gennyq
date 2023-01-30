@@ -5,20 +5,17 @@ import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 import static life.genny.qwandaq.entity.PCM.PCM_PROCESS;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
@@ -27,40 +24,13 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
-public class SearchService {
-
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class SearchService extends KogitoService {
 
 	@Inject
-	UserToken userToken;
-
-	@Inject
-	SearchUtils searchUtils;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	DefUtils defUtils;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	KogitoUtils kogitoUtils;
-
-	@Inject
-	TaskService tasks;
+	Logger log;
 
 	/**
 	 * Perform a Bucket search.

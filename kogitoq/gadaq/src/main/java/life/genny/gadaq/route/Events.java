@@ -186,6 +186,7 @@ public class Events {
 				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
 				return;
 			}
+			
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
