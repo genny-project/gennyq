@@ -36,7 +36,7 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
@@ -64,7 +64,7 @@ public class Dispatch {
 	UserToken userToken;
 
 	@Inject
-	CapabilitiesManager capMan;
+	CapabilitiesController capabilities;
 
 	@Inject
 	QwandaUtils qwandaUtils;
@@ -89,7 +89,7 @@ public class Dispatch {
 		String targetCode = processData.getTargetCode();
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		CapabilitySet userCapabilities = capMan.getUserCapabilities();
+		CapabilitySet userCapabilities = capabilities.getUserCapabilities();
 
 		PCM pcm = beUtils.getPCM(processData.getPcmCode());
 

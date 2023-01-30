@@ -1,4 +1,4 @@
-package life.genny.qwandaq.managers.capabilities.role;
+package life.genny.qwandaq.managers.capabilities;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -18,7 +18,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -46,7 +45,7 @@ public class RoleManager extends Manager {
 	);
 
 	@Inject
-	CapabilitiesManager capManager;
+	Engine capManager;
 
 	public RoleManager() {}
     
@@ -253,7 +252,7 @@ public class RoleManager extends Manager {
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP_);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
-			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
+			List<CapabilityNode> capabilities = CapabilitiesController.deserializeCapArray(permissionEA.getValue());
 			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);

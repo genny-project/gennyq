@@ -6,12 +6,10 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
-import org.jboss.logging.Logger;
-
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.kogito.common.utils.KogitoUtils;
-import life.genny.qwandaq.managers.capabilities.role.RoleManager;
+import life.genny.qwandaq.managers.capabilities.RoleManager;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;

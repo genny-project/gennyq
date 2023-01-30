@@ -18,7 +18,7 @@ import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.managers.Manager;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -35,8 +35,8 @@ public class CapHandler extends Manager {
 	UserToken userToken;
 
 	@Inject
-	CapabilitiesManager capMan;
-
+	CapabilitiesController capabilities;
+	
 	/**
 	 * 
 	 * @param searchEntity
@@ -45,7 +45,7 @@ public class CapHandler extends Manager {
 		// NOTE: This line may be a double up, but there are issues otherwise.
 		if (hasSecureToken(userToken))
 			return;
-		CapabilitySet userCapabilities = capMan.getUserCapabilities();
+		CapabilitySet userCapabilities = capabilities.getUserCapabilities();
 		refineColumnsFromCapabilities(searchEntity, userCapabilities);
 		refineActionsFromCapabilities(searchEntity, userCapabilities);
 		refineFiltersFromCapabilities(searchEntity, userCapabilities);

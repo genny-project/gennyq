@@ -5,14 +5,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
 
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
@@ -24,15 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 // @RunWith(MockitoJUnitRunner.class)
 public class CapabilityUtilsTest extends BaseTestCase {
 
-    @InjectMocks
-    CapabilitiesManager capManager;
-
     @Test
     public void cleanCapabilityCodeTest() {
         
          new JUnitTester<String, String>()
         .setTest((input) -> {
-            return Expected(CapabilitiesManager.cleanCapabilityCode(input.input));
+            return Expected(CapabilitiesController.cleanCapabilityCode(input.input));
         }).createTest("Clean Cap 1")
         .setInput("OWN_APPLE")
         .setExpected("CAP_OWN_APPLE")

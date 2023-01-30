@@ -29,14 +29,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -45,9 +42,6 @@ public class GennyToken implements Serializable {
 
 	@Inject
 	protected BaseEntityUtils beUtils;
-
-	@Inject
-	protected CapabilitiesManager capMan;
 
 	private static final long serialVersionUID = 1L;
 	static final Logger log = Logger.getLogger(GennyToken.class);

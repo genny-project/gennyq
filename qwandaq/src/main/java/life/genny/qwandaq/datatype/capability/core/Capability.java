@@ -14,7 +14,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
 import life.genny.qwandaq.serialization.adapters.capabilities.CapabilityAdapter;
 import life.genny.qwandaq.utils.CommonUtils;
 
@@ -38,12 +38,12 @@ public class Capability implements Serializable {
     }
 
     public Capability(String capabilityCode, Set<CapabilityNode> nodes) {
-        this.code = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
+        this.code = CapabilitiesController.cleanCapabilityCode(capabilityCode);
         this.nodes = nodes;
     }
 
     public Capability(String capabilityCode, String capNodes) {
-        this(capabilityCode, CapabilitiesManager.deserializeCapArray(capNodes));
+        this(capabilityCode, CapabilitiesController.deserializeCapArray(capNodes));
     }
 
     public Capability(String capabilityCode, CapabilityNode... nodes) {
@@ -109,7 +109,7 @@ public class Capability implements Serializable {
 
     public static Capability getFromEA(EntityAttribute ea) {
         String capCode = ea.getAttributeCode();
-        List<CapabilityNode> caps = CapabilitiesManager.deserializeCapArray(ea.getValueString());
+        List<CapabilityNode> caps = CapabilitiesController.deserializeCapArray(ea.getValueString());
         return new Capability(capCode, caps);
     }
 

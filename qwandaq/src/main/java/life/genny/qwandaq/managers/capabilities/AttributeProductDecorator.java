@@ -1,4 +1,4 @@
-package life.genny.qwandaq.managers.capabilities.role;
+package life.genny.qwandaq.managers.capabilities;
 
 import life.genny.qwandaq.attribute.Attribute;
 

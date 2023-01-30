@@ -8,8 +8,8 @@ import java.util.List;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.managers.capabilities.role.RoleBuilder;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesController;
+import life.genny.qwandaq.managers.capabilities.RoleBuilder;
 
 /**
  * Builder class to make adding capability nodes to Capabilities easier
@@ -38,18 +38,18 @@ public class CapabilityBuilder {
 
     /**
      * <p>Create a new Capability Builder for the given capabilityCode and link this to a given RoleBuilder</p>
-     * <p>this constructor cleans the capability code as per {@link CapabilitiesManager#cleanCapabilityCode(String)}</p>
+     * <p>this constructor cleans the capability code as per {@link Engine#cleanCapabilityCode(String)}</p>
      * @param rb - parent {@link RoleBuilder}
      * @param capabilityCode - Capability Code of capability to create
      */
     public CapabilityBuilder(RoleBuilder rb, String capabilityCode) {
         this.roleBuilder = rb;
-        this.capabilityCode = CapabilitiesManager.cleanCapabilityCode(capabilityCode);
+        this.capabilityCode = CapabilitiesController.cleanCapabilityCode(capabilityCode);
     }
 
     /**
      * <p>Create a new Capability Builder for the given capabilityCode and link this to a given RoleBuilder</p>
-     * <p>this constructor cleans the capability code as per {@link CapabilitiesManager#cleanCapabilityCode(String)}</p>
+     * <p>this constructor cleans the capability code as per {@link Engine#cleanCapabilityCode(String)}</p>
      * @param rb - parent {@link RoleBuilder}
      * @param capabilityCode - Capability Code of capability to create
      */
