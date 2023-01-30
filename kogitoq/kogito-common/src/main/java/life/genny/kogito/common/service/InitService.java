@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
 
@@ -20,18 +18,12 @@ import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 /**
  * A Service class used for Auth Init operations.
@@ -40,29 +32,10 @@ import life.genny.qwandaq.utils.SearchUtils;
  * @author Jasper Robison
  */
 @ApplicationScoped
-public class InitService {
-
-	private static final Logger log = Logger.getLogger(InitService.class);
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class InitService extends KogitoService {
 
 	@Inject
-	private DatabaseUtils databaseUtils;
-
-	@Inject
-	private BaseEntityUtils beUtils;
-
-	@Inject
-	private UserToken userToken;
-
-	@Inject
-	private QwandaUtils qwandaUtils;
-
-	@Inject
-	private SearchUtils searchUtils;
-
-	@Inject
-	private CapabilitiesManager capMan;
+	Logger log;
 
 	/**
 	 * Send the Project BaseEntity.

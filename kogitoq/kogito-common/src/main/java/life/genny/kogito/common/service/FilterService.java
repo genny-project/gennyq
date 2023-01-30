@@ -4,66 +4,46 @@ import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.message.*;
 import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.utils.FilterUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import org.jboss.logging.Logger;
 
-import javax.inject.Inject;
 import javax.enterprise.context.ApplicationScoped;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
-import java.util.*;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QBulkMessage;
+import life.genny.qwandaq.message.QCmdMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
+import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.kogito.common.core.Dispatch;
 
 @ApplicationScoped
-public class FilterService {
-    private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-    static Jsonb jsonb = JsonbBuilder.create();
+public class FilterService extends KogitoService {
 
-    @Inject
-    UserToken userToken;
-
-    @Inject
-    FilterUtils filterUtils;
-
-    @Inject
-    BaseEntityUtils beUtils;
-
-    @Inject
-    QwandaUtils qwandaUtils;
-
-    @Inject
-    SearchService search;
-    @Inject
-    SearchUtils searchUtils;
-
-    @Inject
-    Dispatch dispatch;
-
+	@Inject
+	Logger log;
     /**
      * Get the list of bucket codes with session id
      * @param originBucketCodes List of bucket codes
@@ -157,7 +137,7 @@ public class FilterService {
     public void handleBucketSearch(String code, String name,String value, List<String> targetCodes) {
         for(String targetCode : targetCodes) {
             SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
-            EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
+            createEntityAttributeBySortAndSearch(code, name, value);
 
             //remove searching text and filter
             Filter searchText = new Filter(code, Operator.LIKE, value);
@@ -244,7 +224,7 @@ public class FilterService {
      * @param searchBE Search base entity
      */
     public void clearFilters(SearchEntity searchBE) {
-        List<ClauseContainer> cloneList = new ArrayList(searchBE.getClauseContainers());
+        List<ClauseContainer> cloneList = new ArrayList<ClauseContainer>(searchBE.getClauseContainers());
 
         for(ClauseContainer cc : cloneList) {
             searchBE.remove(cc.getFilter());

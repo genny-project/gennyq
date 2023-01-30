@@ -40,13 +40,13 @@ public interface ICapabilityFilterable {
 
     public static boolean requirementsMetImpl(CapabilitySet userCapabilities, Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
         if(capabilityRequirements == null || capabilityRequirements.isEmpty()) {
-            getLogger().debug("No capabilityRequirements found!");
+            log.debug("No capabilityRequirements found!");
             return true;
         }
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
 
-        getLogger().debug("Testing Capability Config: " + requirementsConfig);
+        log.debug("Testing Capability Config: " + requirementsConfig);
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks
@@ -54,7 +54,7 @@ public interface ICapabilityFilterable {
             Optional<Capability> optCap = userCapabilities.parallelStream()
                 .filter(cap -> cap.code.equals(reqCap.code)).findFirst();
             if(!optCap.isPresent()) {
-                getLogger().warn("Could not find cap in user caps: " + reqCap.code);
+                log.warn("Could not find cap in user caps: " + reqCap.code);
                 return false;
             }
 
@@ -71,9 +71,9 @@ public interface ICapabilityFilterable {
 
             if(!passesCheck) {
                 if(requiresAllCaps) {
-                    getLogger().warn("Missing cap permissions " + reqCap);
-                    getLogger().info("User perms: " + cap);
-                    getLogger().info("ReqConfig: " + requirementsConfig);
+                    log.warn("Missing cap permissions " + reqCap);
+                    log.debug("User perms: " + cap);
+                    log.debug("ReqConfig: " + requirementsConfig);
                     return false;
                 }
             } else {
