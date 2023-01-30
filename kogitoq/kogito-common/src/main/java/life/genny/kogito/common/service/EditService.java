@@ -11,6 +11,8 @@ import life.genny.qwandaq.utils.CommonUtils;
 @ApplicationScoped
 public class EditService extends KogitoService  {
 
+    private static final String EDIT_DEFAULT = "[PCM_EDIT]";
+
 	@Inject
 	Logger log;
     
@@ -30,9 +32,9 @@ public class EditService extends KogitoService  {
 		String editCodes = qwandaUtils.getEditPcmCodes(targetCode);
 		log.debug("Got edit codes for target: " + targetCode);
 
-        if("[]".equals(editCodes)) {
+        if(CommonUtils.STR_ARRAY_EMPTY.equals(editCodes)) {
             log.warn("No PCM Codes present for target: " + targetCode + ". Defaulting to PCM_EDIT and QUE_BASEENITY_GRP");
-            return "[PCM_EDIT]";
+            return EDIT_DEFAULT;
         }
 
         return editCodes;
