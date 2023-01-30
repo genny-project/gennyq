@@ -301,7 +301,7 @@ public class QwandaUtils {
 			// groups always readonly
 			ask.setReadonly(true);
 			// fetch questionQuestions from the cache
-			List<QuestionQuestion> questionQuestions = cm.getQuestionQuestions(productCode, question.getCode());
+			List<QuestionQuestion> questionQuestions = cm.getQuestionQuestionsForParentQuestion(question);
 
 			// recursively operate on child questions
 			for (QuestionQuestion questionQuestion : questionQuestions) {

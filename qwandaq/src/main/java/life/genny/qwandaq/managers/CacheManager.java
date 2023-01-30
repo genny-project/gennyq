@@ -45,6 +45,7 @@ public class CacheManager {
     public static final String CACHE_NAME_BASEENTITY = "baseentity";
     public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
     public static final String CACHE_NAME_ATTRIBUTE = "attribute";
+	public static final String CACHE_NAME_QUESTION = "question";
 
 	Jsonb jsonb = JsonbBuilder.create();
 
@@ -344,7 +345,6 @@ public class CacheManager {
 	/**
 	 * @param productCode
 	 * @param questionCode
-	 * @param fetchChildQuestions
 	 * @return
 	 */
 	public Question getQuestion(String productCode, String questionCode) {
@@ -362,35 +362,24 @@ public class CacheManager {
 	}
 
 	/**
-	 * @param productCode
-	 * @param parentCode
+	 * @param parent The question for which children questions need to be fetched
 	 * @return
 	 */
-	public List<QuestionQuestion> getQuestionQuestions(String productCode, String parentCode) {
+	public List<QuestionQuestion> getQuestionQuestionsForParentQuestion(Question parent) {
 		// get bea remote cache for querying
+		String productCode = parent.getRealm();
+		String parentCode = parent.getCode();
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
-		log.info("QuestionQuestion -> productCode = " + productCode + ", questionCode = " + parentCode);
+		log.debug("QuestionQuestion -> productCode = " + productCode + ", questionCode = " + parentCode);
 		// init query
 		Query<EntityAttribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where baseEntityCode like '"+parentCode+"|%'"
 					 + "and realm = '"+productCode+"'");
 		// execute query
-		QueryResult<EntityAttribute> queryResult = query.execute();
-		Question parent = getQuestion(productCode, parentCode);
+		QueryResult<EntityAttribute> queryResult = query.maxResults(-1).execute();
 		// begin building QQ objects
-		List<QuestionQuestion> questionQuestions = new LinkedList<>();
-		for (EntityAttribute entityAttribute : queryResult.list()) {
-			String baseEntityCode = entityAttribute.getBaseEntityCode();
-			log.debug("Fetching QuesQues -> " + baseEntityCode);
-			String[] codes = StringUtils.split(baseEntityCode, '|');
-			String childCode = codes[1];
-			log.debug("Fetching question for child code -> " + childCode);
-			Question child = getQuestion(productCode, childCode);
-			QuestionQuestion questionQuestion = new QuestionQuestion(parent, child);
-			questionQuestions.add(questionQuestion);
-		}
-		return questionQuestions;
+		return questionUtils.createQuestionQuestionsForParentQuestion(parent, queryResult.list());
 	}
 
 	/**
