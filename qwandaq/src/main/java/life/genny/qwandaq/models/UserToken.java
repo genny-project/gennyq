@@ -2,7 +2,6 @@ package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.entity.BaseEntity;
 
 import java.util.Set;
 

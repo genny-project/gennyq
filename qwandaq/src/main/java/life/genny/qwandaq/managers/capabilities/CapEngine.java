@@ -39,7 +39,7 @@ import life.genny.qwandaq.utils.CommonUtils;
  * @author Bryn Meachem
  */
 @ApplicationScoped
-class Engine extends Manager {
+class CapEngine extends Manager {
 
 	@Inject
 	Logger log;
@@ -233,10 +233,5 @@ class Engine extends Manager {
 	boolean shouldOverride() {
 		// allow keycloak admin and devcs to do anything
 		return (userToken.hasRole("service", "admin", "dev") || ("service".equals(userToken.getUsername())));
-	}
-
-	// For use in builder patterns
-	RoleManager getRoleManager() {
-		return roleMan;
 	}
 }

@@ -38,7 +38,7 @@ public class CapabilityBuilder {
 
     /**
      * <p>Create a new Capability Builder for the given capabilityCode and link this to a given RoleBuilder</p>
-     * <p>this constructor cleans the capability code as per {@link Engine#cleanCapabilityCode(String)}</p>
+     * <p>this constructor cleans the capability code as per {@link CapEngine#cleanCapabilityCode(String)}</p>
      * @param rb - parent {@link RoleBuilder}
      * @param capabilityCode - Capability Code of capability to create
      */
@@ -49,7 +49,7 @@ public class CapabilityBuilder {
 
     /**
      * <p>Create a new Capability Builder for the given capabilityCode and link this to a given RoleBuilder</p>
-     * <p>this constructor cleans the capability code as per {@link Engine#cleanCapabilityCode(String)}</p>
+     * <p>this constructor cleans the capability code as per {@link CapEngine#cleanCapabilityCode(String)}</p>
      * @param rb - parent {@link RoleBuilder}
      * @param capabilityCode - Capability Code of capability to create
      */

@@ -45,7 +45,7 @@ public class RoleManager extends Manager {
 	);
 
 	@Inject
-	Engine capManager;
+	CapabilitiesController controller;
 
 	public RoleManager() {}
     
@@ -253,7 +253,7 @@ public class RoleManager extends Manager {
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
 			List<CapabilityNode> capabilities = CapabilitiesController.deserializeCapArray(permissionEA.getValue());
-			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
+			ret = controller.addCapability(productCode, ret, permission.getCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);
 		}

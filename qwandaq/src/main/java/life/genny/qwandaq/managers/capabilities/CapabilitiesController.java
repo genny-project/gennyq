@@ -22,10 +22,13 @@ import life.genny.qwandaq.utils.QwandaUtils;
 public class CapabilitiesController {
 
     @Inject
-    Engine engine;
+    CapEngine engine;
 
     @Inject
     BaseEntityUtils beUtils;
+
+	@Inject
+	RoleManager roleMan;
 
     @Inject
     QwandaUtils qwandaUtils;
@@ -63,6 +66,13 @@ public class CapabilitiesController {
         return targetBe;
     }
 
+    public BaseEntity addCapability(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
+            final List<CapabilityNode> modes) {
+
+        engine.addCapability(productCode, targetBe, capabilityAttribute, modes.toArray(new CapabilityNode[0]));
+        return targetBe;
+    }
+
     public BaseEntity addCapability(String productCode, BaseEntity targetBe, String rawCapabilityCode,
             final CapabilityNode... modes) {
         // Ensure the capability is well defined
@@ -71,15 +81,26 @@ public class CapabilitiesController {
         return addCapability(productCode, targetBe, attribute, modes);
     }
 
-    public BaseEntity addCapability(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
+    public BaseEntity addCapability(String productCode, BaseEntity targetBe, String rawCapabilityCode,
             final List<CapabilityNode> modes) {
-
-        engine.addCapability(productCode, targetBe, capabilityAttribute, modes.toArray(new CapabilityNode[0]));
-        return targetBe;
+        // Ensure the capability is well defined
+        String cleanCapabilityCode = CapabilitiesController.cleanCapabilityCode(rawCapabilityCode);
+        Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+        return addCapability(productCode, targetBe, attribute, modes);
     }
 
     // remove capability
     // update capability
+
+    // getters
+    CapEngine getEngine() {
+        return engine;
+    }
+
+	// For use in builder patterns
+	RoleManager getRoleManager() {
+		return roleMan;
+	}
 
     // statics
     public static Capability deserializeCapability(String capabilityCode, String modeString) {
