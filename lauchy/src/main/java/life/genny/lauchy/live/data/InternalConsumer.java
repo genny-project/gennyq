@@ -45,7 +45,6 @@ public class InternalConsumer {
 	}
     
 	// TODO: Test async filtering of data. (running beUtils.getBaseEntity(processData.getTargetCode()) in a threaded ctx
-	@Blocking
 	@Incoming("data")
 	@Blocking
 	public void getData(String data) {
