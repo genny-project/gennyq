@@ -951,7 +951,7 @@ public class QwandaUtils {
 
 						if (target.containsEntityAttribute(code)) {
 							value = target.getValueAsString(code);
-							if (value == null || value.isEmpty()) {
+							if (StringUtils.isBlank(value)) {
 								value = null;
 							} else if (value != null) {
 								break;
