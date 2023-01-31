@@ -41,6 +41,7 @@ public class InternalConsumer {
 		log.info("[*] Finished Lauchy Startup!");
 	}
     
+	// TODO: Test async filtering of data. (running beUtils.getBaseEntity(processData.getTargetCode()) in a threaded ctx
 	@Blocking
 	@Incoming("data")
 	public void filter(String data) {
