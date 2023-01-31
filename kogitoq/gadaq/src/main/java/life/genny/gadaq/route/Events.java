@@ -173,7 +173,7 @@ public class Events {
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF_ + code + ":PREFIX", String.class);
 
 			JsonObject json = Json.createObjectBuilder()
-				.add("definitionCode", "DEF_".concat(code))
+				.add("definitionCode", Prefix.DEF_.concat(code))
 				.add("sourceCode", userToken.getUserCode())
 				.build();
 
