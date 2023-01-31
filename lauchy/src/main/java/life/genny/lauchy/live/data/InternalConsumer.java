@@ -8,7 +8,6 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
-import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.lauchy.Validator;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -41,7 +40,6 @@ public class InternalConsumer {
 		log.info("[*] Finished Lauchy Startup!");
 	}
     
-	@Blocking
 	@Incoming("data")
 	public void filter(String data) {
         scope.init(data);

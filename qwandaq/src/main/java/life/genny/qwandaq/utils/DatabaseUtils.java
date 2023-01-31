@@ -23,6 +23,8 @@ import javax.transaction.Transactional;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
+import io.smallrye.reactive.messaging.annotations.Blocking;
+
 /*
  * A utility class used for standard read and write 
  * operations to the database.
@@ -269,6 +271,7 @@ public class DatabaseUtils {
 	 * @param code  The code of the {@link BaseEntity} to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
+	@Blocking
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 		return entityManager
 				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
