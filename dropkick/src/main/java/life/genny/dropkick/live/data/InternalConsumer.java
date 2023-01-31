@@ -86,7 +86,7 @@ public class InternalConsumer {
 	 */
 	@Incoming("events")
 	@Blocking
-	public void getData(String event) {
+	public void getEvent(String event) {
 
 		Instant start = Instant.now();
 

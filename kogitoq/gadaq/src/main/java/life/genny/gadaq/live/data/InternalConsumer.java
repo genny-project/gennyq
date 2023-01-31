@@ -38,9 +38,10 @@ import life.genny.gadaq.search.FilterGroupService;
 @ApplicationScoped
 public class InternalConsumer {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-
 	static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	Logger log;
 
 	@Inject
 	GennyScopeInit scope;
