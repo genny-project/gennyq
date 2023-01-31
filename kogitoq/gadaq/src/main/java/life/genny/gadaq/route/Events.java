@@ -177,29 +177,17 @@ public class Events {
                     .add("sourceCode", userToken.getUserCode())
                     .build();
 
-            if ("PER".equals(prefix)) {
-                kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
-                return;
-            } else if ("COMMUNICATION".equals(code)) {
-                json = Json.createObjectBuilder()
-                        .add("definitionCode", "DEF_".concat("MESSAGE"))
-                        .add("sourceCode", userToken.getUserCode())
-                        .build();
-                kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
-                return;
-            }
-        }
-        if (ACT_EDIT.equals(code)) {
-            if (parentCode.startsWith("SBE_")) {
-                JsonObject payload = Json.createObjectBuilder()
-                        .add("userCode", userToken.getUserCode())
-                        .add("sourceCode", userToken.getUserCode())
-                        .add("targetCode", msg.getData().getTargetCode())
-                        .build();
-                kogitoUtils.triggerWorkflow(SELF, "edit", payload);
-                return;
-            }
-        }
+			if ("PER".equals(prefix)) {
+				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
+				return;
+			}
+			
+			if ("MSG".equals(prefix)) {
+				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
+				return;
+			}
+			
+		}
 
         /**
          * If no route exists within gadaq, the message should be

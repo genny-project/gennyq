@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.gadaq.cache.SearchCaching;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
@@ -55,6 +56,9 @@ public class InternalConsumer {
 	SearchService search;
 
 	@Inject
+	SearchCaching searchCaching;
+
+	@Inject
 	SearchUtils searchUtils;
 
 	@Inject
@@ -72,7 +76,9 @@ public class InternalConsumer {
 	 * @param ev The startup event
 	 */
 	void onStart(@Observes StartupEvent ev) {
+
 		service.fullServiceInit();
+		searchCaching.saveToCache();
 	}
 
 	/**

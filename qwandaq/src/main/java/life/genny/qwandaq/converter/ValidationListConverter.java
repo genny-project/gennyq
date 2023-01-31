@@ -110,7 +110,7 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 */
 	public String[] convertFromString(final String joined) {
 		if (joined.startsWith("[") || joined.startsWith("{")) {
-			return CommonUtils.getListFromString(joined, (String obj) -> obj).toArray(new String[0]);
+			return CommonUtils.getArrayFromString(joined, String.class, (str) -> str);
 		} else {
 			return new String[] {joined};
 		}

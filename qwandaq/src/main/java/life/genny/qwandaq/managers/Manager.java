@@ -7,8 +7,6 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -18,9 +16,6 @@ import life.genny.qwandaq.utils.QwandaUtils;
 @ApplicationScoped
 public abstract class Manager {
 	protected static Jsonb jsonb = JsonbBuilder.create();
-
-	@Inject
-	protected Logger log;
 
 	@Inject
 	protected UserToken userToken;

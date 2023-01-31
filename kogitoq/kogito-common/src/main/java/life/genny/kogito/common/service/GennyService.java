@@ -2,45 +2,25 @@ package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
 
 @ApplicationScoped
-public class GennyService {
+public class GennyService extends KogitoService {
 
 	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
+	// TODO: We need to get rid of this. This breaks multitenancy. Should not be decided once on startup.
 	@ConfigProperty(name = "quarkus.application.name")
 	String productCode;
-
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	SearchUtils searchUtils;
-
-	@Inject
-	ServiceToken serviceToken;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	/**
 	 * setup the BaseEntity with initial data.
