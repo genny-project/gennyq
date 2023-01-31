@@ -1,7 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-
+import static life.genny.qwandaq.entity.search.SearchEntity.SBE_COUNT_UNIQUE_PAIRS;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -927,7 +927,7 @@ public class QwandaUtils {
 			if (codes == null)
 				continue;
 
-			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
+			SearchEntity searchEntity = new SearchEntity(SBE_COUNT_UNIQUE_PAIRS, "Count Unique Pairs")
 					.add(new Filter(PRI_CODE, Operator.LIKE, prefix + "_%"))
 					.setPageStart(0)
 					.setPageSize(1);
