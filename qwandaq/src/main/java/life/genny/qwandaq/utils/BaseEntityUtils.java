@@ -19,7 +19,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -53,7 +52,6 @@ import life.genny.qwandaq.models.UserToken;
  * @author Jasper Robison
  */
 @ApplicationScoped
-@ActivateRequestContext
 public class BaseEntityUtils {
 
 	Jsonb jsonb = JsonbBuilder.create();
