@@ -1,6 +1,10 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.*;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Link;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.Capability;
@@ -11,7 +15,6 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
-import io.smallrye.common.annotation.Blocking;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -22,7 +25,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.transaction.Transactional;
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 
@@ -272,7 +274,6 @@ public class DatabaseUtils {
 	 * @param code  The code of the {@link BaseEntity} to fetch
 	 * @return The corresponding BaseEntity, or null if not found.
 	 */
-	@Blocking
 	public BaseEntity findBaseEntityByCode(String realm, String code) {
 		return entityManager
 				.createQuery("FROM BaseEntity WHERE realm=:realmStr AND code=:code", BaseEntity.class)
