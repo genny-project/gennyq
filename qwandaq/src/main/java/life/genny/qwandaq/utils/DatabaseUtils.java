@@ -11,6 +11,8 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
+import io.smallrye.common.annotation.Blocking;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -23,7 +25,6 @@ import javax.transaction.Transactional;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 
-import io.smallrye.reactive.messaging.annotations.Blocking;
 
 /*
  * A utility class used for standard read and write 
