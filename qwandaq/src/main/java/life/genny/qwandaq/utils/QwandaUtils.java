@@ -477,7 +477,7 @@ public class QwandaUtils {
 	public static boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
-		Boolean answered = true;
+		Boolean complete = true;
 
 		// iterate asks to see if mandatorys are answered
 		for (Ask ask : map.values()) {
@@ -496,36 +496,43 @@ public class QwandaUtils {
 			String value = baseEntity.getValueAsString(attributeCode);
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
-			if ((mandatory && !readonly))
+			Boolean answered = false;
+			if ((mandatory && !readonly)) {
 				answered = acceptableAnswer(value);
 
-			if(!answered) {
-				break;
+				// not complete if any mandatories are not answered
+				if (!answered) {
+					complete = false;
+				}
 			}
 
 			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
 			log.debug("===> " + resultLine + " (" + answered + ")");
 		}
 
-		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
+		log.debug("Mandatory fields are " + (complete ? "ALL" : "not") + " complete");
 
-		return answered;
+		return complete;
 	}
 
+	/**
+	 * Is an acceptable answer.
+	 * @param value
+	 * @return
+	 */
 	private static boolean acceptableAnswer(String value) {
-		if(value == null)
+		if(value == null) {
 			return false;
+		}
 		// block whitespace
 		value = value.trim();
-
-		if(StringUtils.isBlank(value))
+		if(StringUtils.isBlank(value)) {
 			return false;
-		
+		}
 		if("null".equalsIgnoreCase(value)) {
 			return false;
 		}
 
-		log.debug("	- letting through value: " + value);
 		return true;
 	}
 
@@ -649,8 +656,6 @@ public class QwandaUtils {
 			EntityAttribute ea;
 			if (Attribute.PRI_NAME.equals(code)) {
 				Attribute priName = getAttribute(Attribute.PRI_NAME);
-				log.info("Target Name = " + target.getName());
-				log.info("Name is code = " + target.getName().equals(target.getCode()));
 				String name = (target.getName().equals(target.getCode()) || target.getName().isEmpty()) ? null : target.getName();
 				ea = new EntityAttribute(processEntity, priName, 1.0, name);
 			} else {
@@ -944,14 +949,13 @@ public class QwandaUtils {
 					// get the first value in array of target
 					for (BaseEntity target : targets) {
 
-						log.info("TARGET = " + target.getCode() + ", EMAIL = " + target.getValueAsString(Attribute.PRI_EMAIL));
-
 						if (target.containsEntityAttribute(code)) {
 							value = target.getValueAsString(code);
-							if (value.isEmpty())
+							if (StringUtils.isBlank(value)) {
 								value = null;
-							if (value != null)
+							} else if (value != null) {
 								break;
+							}
 						}
 					}
 				}

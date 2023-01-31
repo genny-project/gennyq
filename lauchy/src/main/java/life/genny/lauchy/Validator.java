@@ -15,7 +15,6 @@ import javax.json.bind.JsonbBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
@@ -36,13 +35,14 @@ import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class Validator {
-	@Inject
-	private Logger log;
 
 	private Jsonb jsonb = JsonbBuilder.create();
 
 	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
 	private Boolean enableBlacklist;
+
+	@Inject
+	Logger log;
 
 	@Inject
 	UserToken userToken;

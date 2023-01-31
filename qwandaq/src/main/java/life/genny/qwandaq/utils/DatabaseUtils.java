@@ -1,6 +1,10 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.*;
+import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.Link;
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.Capability;
@@ -11,6 +15,7 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -20,8 +25,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.transaction.Transactional;
-import java.lang.invoke.MethodHandles;
 import java.util.List;
+
 
 /*
  * A utility class used for standard read and write 

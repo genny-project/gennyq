@@ -177,7 +177,7 @@ public class Dispatch {
 		String code = processEntity.getCode();
 		String processId = processData.getProcessId();
 
-		log.info("Target will be: " + code);
+		log.debug("Target will be: " + code);
 
 		// TODO: This should be done with the flat map, but it was causing issues
 		for (Ask ask : asks) {
@@ -293,7 +293,7 @@ public class Dispatch {
 		msg.add(pcm);
 
 		// check for a question code
-		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
+		String questionCode = pcm.getQuestionCode();
 		if (questionCode == null) {
 			log.warn("Question Code is null for " + pcm.getCode() + ". Checking ProcessData");
 			questionCode = processData.getQuestionCode();
@@ -304,6 +304,7 @@ public class Dispatch {
 		
 		if (!Question.QUE_EVENTS.equals(questionCode) && !StringUtils.isBlank(questionCode)) {
 			// add ask to bulk message
+			log.info("PCM code = " + pcm.getCode() + ", questionCode = " + pcm.getQuestionCode());
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
