@@ -1,5 +1,6 @@
 package life.genny.lauchy.live.data;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -16,7 +17,12 @@ import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
+@ApplicationScoped
 public class InternalConsumer {
+
+	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
+	Boolean enableBlacklist;
+
     @Inject
     Logger log;
 
@@ -25,9 +31,6 @@ public class InternalConsumer {
     
 	@Inject
 	Service service;
-    
-	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
-	Boolean enableBlacklist;
 
     @Inject
     Validator validator;
@@ -44,9 +47,11 @@ public class InternalConsumer {
 	// TODO: Test async filtering of data. (running beUtils.getBaseEntity(processData.getTargetCode()) in a threaded ctx
 	@Blocking
 	@Incoming("data")
-	public void filter(String data) {
-        scope.init(data);
+	@Blocking
+	public void getData(String data) {
+
         log.info("Received Message: ".concat(SecurityUtils.obfuscate(data)));
+        scope.init(data);
 
         if(!validator.validateData(data)) {
             log.error("Received message not valid!");

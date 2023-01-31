@@ -70,24 +70,7 @@ public class BaseEntityUtils {
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	@Inject
-	EntityManagerFactory emf;
-
-	public BaseEntityUtils() {
-	}
-
-	public BaseEntityUtils(ServiceToken serviceToken, UserToken userToken) {
-		this.serviceToken = serviceToken;
-		this.userToken = userToken;
-	}
-
-	public BaseEntityUtils(ServiceToken serviceToken) {
-		this.serviceToken = serviceToken;
-		this.userToken = new UserToken(serviceToken.getToken());
-	}
-
-	public void setUserToken(UserToken userToken) {
-		this.userToken = userToken;
+	public BaseEntityUtils() { 
 	}
 
 	/**

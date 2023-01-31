@@ -40,6 +40,7 @@ import life.genny.qwandaq.models.UserToken;
 
 @ApplicationScoped
 public class FilterUtils {
+
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
     static Jsonb jsonb = JsonbBuilder.create();
 
