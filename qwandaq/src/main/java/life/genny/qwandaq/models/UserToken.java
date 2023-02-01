@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.json.bind.annotation.JsonbTransient;
 
@@ -21,7 +22,9 @@ import org.jboss.logging.Logger;
  * kafka consumption flow is active.
  **/
 @RegisterForReflection
-@RequestScoped
+// @RequestScoped
+// TODO: REMOVE THIS AFTER DONE!!!
+@ApplicationScoped
 public class UserToken extends GennyToken {
 
 	private static final long serialVersionUID = 1L;
