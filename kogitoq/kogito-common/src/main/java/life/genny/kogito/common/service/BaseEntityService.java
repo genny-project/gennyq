@@ -4,13 +4,10 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
@@ -21,37 +18,13 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
-public class BaseEntityService {
-
-	private static final Logger log = Logger.getLogger(BaseEntityService.class);
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class BaseEntityService extends KogitoService {
 
 	@Inject
-	ServiceToken serviceToken;
-
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	KogitoUtils kogitoUtils;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	DefUtils defUtils;
+	Logger log;
 
 	/**
 	 * Send a message to perform an update of a persons summary
@@ -86,35 +59,17 @@ public class BaseEntityService {
 		return entity.getCode();
 	}
 
-	public String commission(String definitionCode, String processId) {
+	public void decommission(String code) {
 
-		return commission(definitionCode, processId, EEntityStatus.PENDING);
-	}
+		if (code == null)
+			throw new NullParameterException("code");
 
-	public String commission(String definitionCode, String processId, EEntityStatus status) {
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Decommissioning entity " + baseEntity.getCode());
 
-		if (definitionCode == null)
-			throw new NullParameterException("definitionCode");
-		if (processId == null)
-			throw new NullParameterException("processId");
-		if (status == null)
-			throw new NullParameterException("status");
-		if (!definitionCode.startsWith("DEF_"))
-			throw new DebugException("Invalid definitionCode: " + definitionCode);
-
-		// fetch the def baseentity
-		Definition definition = beUtils.getDefinition(definitionCode);
-
-		// use entity create function and save to db
-		String defaultName = StringUtils.capitalize(definition.getCode().substring(4));
-		BaseEntity entity = beUtils.create(definition, defaultName,
-				definition.getValueAsString("PRI_PREFIX") + "_" + processId.toUpperCase());
-		log.info("BaseEntity Created: " + entity.getCode());
-
-		entity.setStatus(status);
-		beUtils.updateBaseEntity(entity);
-
-		return entity.getCode();
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.ARCHIVED);
+		beUtils.updateBaseEntity(baseEntity);
 	}
 
 	public void delete(String code) {
@@ -143,19 +98,6 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(baseEntity);
 	}
 
-	public void decommission(String code) {
-
-		if (code == null)
-			throw new NullParameterException("code");
-
-		BaseEntity baseEntity = beUtils.getBaseEntity(code);
-		log.info("Decommissioning entity " + baseEntity.getCode());
-
-		// archive the entity
-		baseEntity.setStatus(EEntityStatus.ARCHIVED);
-		beUtils.updateBaseEntity(baseEntity);
-	}
-
 	public void setActive(String entityCode) {
 
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
@@ -170,26 +112,6 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(entity);
 	}
 
-	public String getEditPcmCode(String targetCode) {
-		return qwandaUtils.getEditPcmCodes(targetCode)[0];
-	}
-
-	// public void edit(String sourceCode, String targetCode) {
-	// 	final String pcmCode = qwandaUtils.getEditPcmCodes(targetCode)[0];
-	// 	final String buttonEvents = "SUBMIT,CANCEL,RESET"; // TODO: Multipage edits
-	// 	final String parent = "PCM_CONTENT";
-	// 	final String location = "PRI_LOC1";
-	// 	log.debug("Sending edit with form code: " + pcmCode);
-	// JsonObject payload = Json.createObjectBuilder()
-	// 					.add("targetCode", targetCode)
-	// 					.add("sourceCode", sourceCode)
-	// 					.add("pcmCode", pcmCode)
-	// 					.add("parent", parent)
-	// 					.add("location", location)
-	// 					.add("buttonEvents", buttonEvents)
-	// 					.build();
-	// }
-
 	public String getDEFPrefix(String definitionCode) {
 
 		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
@@ -202,12 +124,9 @@ public class BaseEntityService {
 		return prefix.get();
 	}
 
-	public String getBaseEntityQuestionGroup(String targetCode) {
-		return qwandaUtils.getEditQuestionGroups(targetCode)[0];
-	}
-
 	/**
 	 * Update the email, firstname and lastname in keycloak
+	 * @param userCode the UserCode
 	 */
 	public void updateKeycloak(String userCode) {
 

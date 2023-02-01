@@ -6,7 +6,6 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +43,6 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.MergeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -179,7 +177,7 @@ public class Dispatch {
 		String code = processEntity.getCode();
 		String processId = processData.getProcessId();
 
-		log.info("Target will be: " + code);
+		log.debug("Target will be: " + code);
 
 		// TODO: This should be done with the flat map, but it was causing issues
 		for (Ask ask : asks) {
@@ -236,8 +234,6 @@ public class Dispatch {
 
 		// check capability requirements are met
 		log.debug("Traversing " + pcm.getCode());
-		log.debug("[!] ======================= requirements for: " + pcm.getCode() + " =======================");
-		pcm.printRequirements();
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
 			return;
@@ -266,6 +262,7 @@ public class Dispatch {
 
 		// iterate locations
 		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.PRI_LOC);
+
 		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
 			if(!entityAttribute.requirementsMet(userCapabilities)) {
@@ -292,16 +289,11 @@ public class Dispatch {
 			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
 			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
 		}
-		// locations.removeAll(filteredLocations);
-
-		// add pcm for sending
-		CommonUtils.printCollection(pcm.getBaseEntityAttributes(), (ea) -> {
-			return "	 - " + ea.getBaseEntityCode() + ":" + ea.getAttributeCode() + " = " + ea.getValueString();
-		});
+		
 		msg.add(pcm);
 
 		// check for a question code
-		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
+		String questionCode = pcm.getQuestionCode();
 		if (questionCode == null) {
 			log.warn("Question Code is null for " + pcm.getCode() + ". Checking ProcessData");
 			questionCode = processData.getQuestionCode();
@@ -312,6 +304,7 @@ public class Dispatch {
 		
 		if (!Question.QUE_EVENTS.equals(questionCode) && !StringUtils.isBlank(questionCode)) {
 			// add ask to bulk message
+			log.info("PCM code = " + pcm.getCode() + ", questionCode = " + pcm.getQuestionCode());
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
@@ -419,8 +412,11 @@ public class Dispatch {
 			if (existing.contains(code)) {
 				continue;
 			}
-			BaseEntity be = beUtils.getBaseEntity(code);
-			msg.add(be);
+
+			if(!code.isEmpty()) {
+				BaseEntity be = beUtils.getBaseEntity(code);
+				msg.add(be);
+			}
 		}
 	}
 

@@ -19,7 +19,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.control.ActivateRequestContext;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -53,7 +52,6 @@ import life.genny.qwandaq.models.UserToken;
  * @author Jasper Robison
  */
 @ApplicationScoped
-@ActivateRequestContext
 public class BaseEntityUtils {
 
 	Jsonb jsonb = JsonbBuilder.create();
@@ -72,24 +70,7 @@ public class BaseEntityUtils {
 	@Inject
 	QwandaUtils qwandaUtils;
 
-	@Inject
-	EntityManagerFactory emf;
-
-	public BaseEntityUtils() {
-	}
-
-	public BaseEntityUtils(ServiceToken serviceToken, UserToken userToken) {
-		this.serviceToken = serviceToken;
-		this.userToken = userToken;
-	}
-
-	public BaseEntityUtils(ServiceToken serviceToken) {
-		this.serviceToken = serviceToken;
-		this.userToken = new UserToken(serviceToken.getToken());
-	}
-
-	public void setUserToken(UserToken userToken) {
-		this.userToken = userToken;
+	public BaseEntityUtils() { 
 	}
 
 	/**
@@ -153,6 +134,9 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
+		// Ensure data correctness
+		productCode = productCode.strip();
+		code = code.strip();
 		if (StringUtils.isBlank(productCode))
 			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(code))

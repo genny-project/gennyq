@@ -27,6 +27,8 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
 
+    public static final String STR_ARRAY_EMPTY = "[]";
+
     /**
      * Normalize a String by forcing uppercase on first character and lowercase on the rest
      * e.g: 
@@ -212,8 +214,8 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
-        if(array == null) return "null";
-        if(array.length == 0) return "[]";
+        if(array == null) return null;
+        if(array.length == 0) return STR_ARRAY_EMPTY;
         
         StringBuilder result = new StringBuilder("[");
         int i;
@@ -417,11 +419,11 @@ public class CommonUtils {
     public static String removeFromStringArray(String array, String... entries) {
         // no entries array == no entries to remove
         if(entries == null)
-            return StringUtils.isBlank(array) ? "[]" : array;
+            return StringUtils.isBlank(array) ? STR_ARRAY_EMPTY : array;
 
         // return new array if there is no array
         if(StringUtils.isBlank(array)) {
-            return "[]";
+            return STR_ARRAY_EMPTY;
         }
         
         StringBuilder sb = new StringBuilder(array);
@@ -429,7 +431,7 @@ public class CommonUtils {
             // ensure we're not trying to remove from empty array
             if(sb.charAt(0) == '[') {
                 if(sb.charAt(1) == ']')
-                    return "[]";
+                    return STR_ARRAY_EMPTY;
             }
 
             if(StringUtils.isBlank(entry))
@@ -468,7 +470,7 @@ public class CommonUtils {
     public static String addToStringArray(String array, String... entries) {
         // no entries array == no entries to add
         if(entries == null)
-            return StringUtils.isBlank(array) ? "[]" : array;
+            return StringUtils.isBlank(array) ? STR_ARRAY_EMPTY : array;
 
         // return the entries as an array if there is no array
         if(StringUtils.isBlank(array)) {

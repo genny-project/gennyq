@@ -1,11 +1,12 @@
 package life.genny.fyodor.utils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
@@ -26,6 +27,9 @@ import life.genny.qwandaq.utils.CommonUtils;
  */
 @ApplicationScoped
 public class CapHandler extends Manager {
+
+	@Inject
+	Logger log;
 
 	@Inject
 	UserToken userToken;

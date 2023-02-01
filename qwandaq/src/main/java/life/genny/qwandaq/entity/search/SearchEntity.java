@@ -52,6 +52,7 @@ public class SearchEntity extends BaseEntity {
 	public static final String SBE_QUICK_SEARCH = "SBE_QUICK_SEARCH";
 	public static final String SBE_DROPDOWN = "SBE_DROPDOWN";
 	public static final String SBE_PROCESS = "SBE_PROCESS";
+	public static final String SBE_COUNT_UNIQUE_PAIRS = "SBE_COUNT_UNIQUE_PAIRS";
 
 	private static final Logger log = Logger.getLogger(SearchEntity.class);
 	static Jsonb jsonb = JsonbBuilder.create();
