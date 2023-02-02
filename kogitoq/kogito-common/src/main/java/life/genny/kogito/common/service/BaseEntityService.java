@@ -5,7 +5,6 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Answer;
@@ -99,17 +98,22 @@ public class BaseEntityService extends KogitoService {
 	}
 
 	public void setActive(String entityCode) {
-
+		log.debug("Setting " + entityCode + " to active");
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		log.debug("Successfully fetched base entity for: " + entity.getCode());
 		entity.setStatus(EEntityStatus.ACTIVE);
 		beUtils.updateBaseEntity(entity);
+		log.debug("Updated status");
 	}
 
 	public void setDisabled(String entityCode) {
+		log.debug("Setting " + entityCode + " to active");
 
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		log.debug("Successfully fetched base entity for: " + entity.getCode());
 		entity.setStatus(EEntityStatus.DISABLED);
 		beUtils.updateBaseEntity(entity);
+		log.debug("Updated status");
 	}
 
 	public String getDEFPrefix(String definitionCode) {
