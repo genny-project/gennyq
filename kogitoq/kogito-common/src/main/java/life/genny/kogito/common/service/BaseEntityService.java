@@ -97,23 +97,22 @@ public class BaseEntityService extends KogitoService {
 		beUtils.updateBaseEntity(baseEntity);
 	}
 
-	public void setActive(String entityCode) {
-		log.debug("Setting " + entityCode + " to active");
+	public void setStatus(String entityCode, EEntityStatus status) {
+		log.debug("Setting " + entityCode + " to " + status.name());
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 		log.debug("Successfully fetched base entity for: " + entity.getCode());
-		entity.setStatus(EEntityStatus.ACTIVE);
+		entity.setStatus(status);
 		beUtils.updateBaseEntity(entity);
 		log.debug("Updated status");
+		
+	}
+
+	public void setActive(String entityCode) {
+		setStatus(entityCode, EEntityStatus.ACTIVE);
 	}
 
 	public void setDisabled(String entityCode) {
-		log.debug("Setting " + entityCode + " to active");
-
-		BaseEntity entity = beUtils.getBaseEntity(entityCode);
-		log.debug("Successfully fetched base entity for: " + entity.getCode());
-		entity.setStatus(EEntityStatus.DISABLED);
-		beUtils.updateBaseEntity(entity);
-		log.debug("Updated status");
+		setStatus(entityCode, EEntityStatus.DISABLED);
 	}
 
 	public String getDEFPrefix(String definitionCode) {
