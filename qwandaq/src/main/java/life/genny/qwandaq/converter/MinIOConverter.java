@@ -23,7 +23,6 @@ public class MinIOConverter implements AttributeConverter<String, String> {
     public String convertToEntityAttribute(String dbData) {
         if (dbData != null && dbData.startsWith(QwandaQConstant.MINIO_LAZY_PREFIX)) {
             log.info("Fetching from MinIO");
-
             byte[] data = Arc.container().instance(MinIOUtils.class).get().fetchFromStorePublicDirectory(dbData);
             if (data.length > 0) {
                 return new String(data);

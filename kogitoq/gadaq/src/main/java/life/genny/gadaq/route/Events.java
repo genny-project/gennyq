@@ -169,8 +169,10 @@ public class Events {
 
 		// add item
 		if (code.startsWith(QUE_ADD_)) {
+            log.debug("QUE_ADD Triggered");
 			code = StringUtils.removeStart(code, QUE_ADD_);
 			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF_ + code + ":PREFIX", String.class);
+            log.debug("prefix: "+ prefix);
 
 			JsonObject json = Json.createObjectBuilder()
 				.add("definitionCode", Prefix.DEF_.concat(code))
@@ -180,20 +182,37 @@ public class Events {
 			// TODO: determine if DEF depends on DEF_USER
 			if (Prefix.PER_.equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "userLifecycle", json);
+                return;
 			}
 
-			if (Prefix.MSG_.equals(prefix)) {
-				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
+			if (Prefix.MSG_.equals(prefix+"_")) {
+                kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", "userCode", userToken.getUserCode());
+                return;
 			}
 			
 		}
 
-        /**
-         * If no route exists within gadaq, the message should be
-         * sent to the project specific service.
-         */
-        log.info("Forwarding Event Message...");
-        KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
+        		// edit item (TODO This needs to be moved into a timer based bpmn)
+		
+		if (ACT_EDIT.equals(code)) {
+
+			if (parentCode.startsWith("SBE_")) {
+				JsonObject payload = Json.createObjectBuilder()
+						.add("userCode", userToken.getUserCode())
+						.add("sourceCode", userToken.getUserCode())
+						.add("targetCode", msg.getData().getTargetCode())
+						.build();
+				kogitoUtils.triggerWorkflow(SELF, "edit", payload);
+				return;
+			}
+		}
+
+		/**
+		 * If no route exists within gadaq, the message should be
+		 * sent to the project specific service.
+		 */
+		log.info("Forwarding Event Message...");
+		KafkaUtils.writeMsg(KafkaTopic.GENNY_EVENTS, msg);
     }
 
     /**
