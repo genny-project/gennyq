@@ -8,6 +8,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 
 import life.genny.kogito.common.models.TaskExchange;
+import life.genny.kogito.common.models.UserExchange;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -47,13 +48,33 @@ public class Service2Service extends KogitoService {
 	}
 
 	/**
+	 * Add a token to a UserExchange message for sending.
+	 *
+	 * @param userExchange
+	 * @return
+	 */
+	public UserExchange addToken(UserExchange userExchange) {
+		userExchange.setToken(userToken.getToken());
+		return userExchange;
+	}
+
+	/**
 	 * Initialise the RequestScope.
 	 *
 	 * @param taskExchange The TaskExchange object
 	 */
 	public void initialiseScope(TaskExchange taskExchange) {
-		log.debug(taskExchange);
 		scope.init(jsonb.toJson(taskExchange));
+		logToken();
+	}
+
+	/**
+	 * Initialise the RequestScope.
+	 *
+	 * @param userExchange
+	 */
+	public void initialiseScope(UserExchange userExchange) {
+		scope.init(jsonb.toJson(userExchange));
 		logToken();
 	}
 
@@ -61,7 +82,7 @@ public class Service2Service extends KogitoService {
 	 * log token
 	 */
 	public void logToken() {
-		log.infof("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+		log.debugf("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 	}
 
 	/**

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import javax.json.bind.annotation.JsonbTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * Represents an exchange of information between services for Task processing.
@@ -17,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @author Adam Crow
  * @author Jasper Robison
  */
+@RegisterForReflection
 public class TaskExchange implements Serializable {
 
 	private String productCode;

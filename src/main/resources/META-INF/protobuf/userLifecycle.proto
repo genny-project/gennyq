@@ -6,6 +6,14 @@ option kogito_model = "UserLifecycle";
 option kogito_id = "userLifecycle";
 
 /* @Indexed */ 
+message UserExchange { 
+	option java_package = "life.genny.kogito.common.models";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string userCode = 2; 
+}
+/* @Indexed */ 
 message UserLifecycle { 
 	option java_package = "life.genny.gadaq";
 	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
@@ -13,6 +21,9 @@ message UserLifecycle {
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField
  @VariableInfo(tags="input") */ 
 	optional string userCode = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional UserExchange userExchange = 3; 
 	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
-	optional org.kie.kogito.index.model.KogitoMetadata metadata = 3; 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 4; 
 }
