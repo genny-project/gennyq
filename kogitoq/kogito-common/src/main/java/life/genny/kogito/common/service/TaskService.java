@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.utils.FilterUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
@@ -29,6 +30,9 @@ public class TaskService extends KogitoService {
 
 	@Inject
 	Logger log;
+
+	@Inject
+	FilterUtils filter;
 
 	/**
 	 * @param processData
@@ -173,6 +177,11 @@ public class TaskService extends KogitoService {
 	 * @return The updated process baseentity
 	 */
 	public ProcessData answer(Answer answer, ProcessData processData) {
+//		// filter valid
+//		if(filter.validFilter(answer.getAttributeCode())) {
+//			log.info("Filter Attribute !!!");
+//			return processData;
+//		}
 
 		// validate answer
 		if (!processAnswers.isValid(answer, processData))

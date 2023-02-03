@@ -73,6 +73,9 @@ public class InternalConsumer {
 	@Inject
 	SearchUtils searchUtils;
 
+	@Inject
+	FilterUtils filter;
+
 	Jsonb jsonb = JsonbBuilder.create();
 
 	void onStart(@Observes StartupEvent ev) {
@@ -117,6 +120,10 @@ public class InternalConsumer {
 		String processId = dataJson.getString("processId");
 
 		log.info(attrCode + "::[" + searchText + "]");
+
+		if(filter.validFilter(attrCode)) {
+			return;
+		}
 
 		BaseEntity source = beUtils.getBaseEntity(sourceCode);
 

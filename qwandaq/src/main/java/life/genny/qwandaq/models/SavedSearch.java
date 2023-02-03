@@ -26,8 +26,9 @@ public class SavedSearch {
      * Constructor
      * @param attributeCode Attribute code
      * @param value Value
+     * @param dataType Data type
      */
-    public SavedSearch(String attributeCode,String value) {
+    public SavedSearch(String attributeCode,String value,String dataType) {
         this.code = attributeCode;
 
         String[] splitted = value.split(FilterConst.SEPARATOR);
@@ -40,14 +41,7 @@ public class SavedSearch {
         }
         this.column = getColumnName(attributeCode);
         this.valueCode = value;
-
-        if(this.code.contains(FilterConst.DATETIME)) {
-            this.dataType = FilterConst.DATETIME;
-        }
-
-        if(this.code.contains(FilterConst.YES_NO)) {
-            this.dataType = FilterConst.YES_NO;
-        }
+        this.dataType = dataType;
     }
 
     /**

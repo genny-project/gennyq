@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -20,10 +21,6 @@ import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.entity.PCM;
 
 /**
@@ -48,12 +45,20 @@ public class ProcessAnswers {
 
 	@Inject TaskService taskService;
 
+	@Inject
+	FilterUtils filter;
+
 	/**
 	 * @param answer
 	 * @param processData
 	 * @return
 	 */
 	public Boolean isValid(Answer answer, ProcessData processData) {
+		// filter valid
+		if(filter.validFilter(answer.getAttributeCode())) {
+			log.info("Filter Attribute !!!");
+			return false;
+		}
 
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processData.getProcessEntityCode())) {
