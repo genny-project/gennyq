@@ -259,7 +259,7 @@ public class FilterUtils {
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
         searchBE.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, SearchEntity.SBE_SAVED_SEARCH + "_%"))
                 .add(new Column(lnkCode, lnkValue))
-                .add(new Sort(Attribute.PRI_NAME, Ord.ASC));
+                .add(new Sort(Attribute.PRI_CREATED, Ord.DESC));
 
         String startWith = "[\"" + SearchEntity.SBE_SAVED_SEARCH;
         searchBE.add(new Filter(Attribute.LNK_SAVED_SEARCHES,Operator.STARTS_WITH,startWith));

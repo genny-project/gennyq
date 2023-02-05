@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import life.genny.qwandaq.utils.FilterUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
@@ -30,9 +29,6 @@ public class TaskService extends KogitoService {
 
 	@Inject
 	Logger log;
-
-	@Inject
-	FilterUtils filter;
 
 	/**
 	 * @param processData
@@ -59,7 +55,7 @@ public class TaskService extends KogitoService {
 	 * @return
 	 */
 	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
-			String pcmCode, String parent, String location, String buttonEvents) {
+									String pcmCode, String parent, String location, String buttonEvents) {
 		if (sourceCode == null) {
 			throw new NullParameterException("sourceCode");
 		}
@@ -127,15 +123,15 @@ public class TaskService extends KogitoService {
 
 		// perform basic checks on attribute codes
 		processData.setAttributeCodes(
-			flatMapOfAsks.values().stream()
-					.map(ask -> ask.getQuestion().getAttribute().getCode())
-					.filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
-					.collect(Collectors.toList())
+				flatMapOfAsks.values().stream()
+						.map(ask -> ask.getQuestion().getAttribute().getCode())
+						.filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
+						.collect(Collectors.toList())
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
 		boolean readonly = flatMapOfAsks.values().stream()
-			.allMatch(ask -> ask.getReadonly());
+				.allMatch(ask -> ask.getReadonly());
 
 		processData.setReadonly(readonly);
 
@@ -177,11 +173,6 @@ public class TaskService extends KogitoService {
 	 * @return The updated process baseentity
 	 */
 	public ProcessData answer(Answer answer, ProcessData processData) {
-//		// filter valid
-//		if(filter.validFilter(answer.getAttributeCode())) {
-//			log.info("Filter Attribute !!!");
-//			return processData;
-//		}
 
 		// validate answer
 		if (!processAnswers.isValid(answer, processData))
@@ -191,8 +182,8 @@ public class TaskService extends KogitoService {
 		List<Answer> answers = processData.getAnswers();
 		for (int i = 0; i < answers.size();) {
 			Answer a = answers.get(i);
-			if (a.getAttributeCode().equals(answer.getAttributeCode()) 
-				&& a.getTargetCode().equals(answer.getTargetCode())) {
+			if (a.getAttributeCode().equals(answer.getAttributeCode())
+					&& a.getTargetCode().equals(answer.getTargetCode())) {
 				log.info("Found duplicate : " + a.getAttributeCode());
 				answers.remove(i);
 			} else {
