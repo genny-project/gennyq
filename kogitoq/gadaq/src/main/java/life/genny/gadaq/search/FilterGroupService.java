@@ -65,9 +65,10 @@ public class FilterGroupService {
      * @return Being filter option
      */
     public  boolean isSelectBox(String value) {
-        boolean result = false;
-        if(value.contains(FilterConst.SELECT)) return true;
-        return result;
+        if(value.contains(FilterConst.SELECT)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -76,9 +77,10 @@ public class FilterGroupService {
      * @return Being filter value
      */
     public  boolean isValueSelected(String code) {
-        boolean result = false;
-        if(code != null && code.startsWith(FilterConst.QUE_FILTER_VALUE_PREF)) return true;
-        return result;
+        if(code != null && code.startsWith(FilterConst.QUE_FILTER_VALUE_PREF)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -87,9 +89,7 @@ public class FilterGroupService {
      * @return Being filter submit
      */
     public  boolean isApply(String code) {
-        boolean result = false;
-        if(Question.QUE_SAVED_SEARCH_APPLY.equalsIgnoreCase(code)) return true;
-        return result;
+        return Question.QUE_SAVED_SEARCH_APPLY.equalsIgnoreCase(code);
     }
 
     /**
@@ -99,11 +99,13 @@ public class FilterGroupService {
      * @return filter option selected
      */
     public boolean isColumnSelected(String code,String attCode) {
-        boolean result = false;
-        if(Question.QUE_FILTER_COLUMN.equalsIgnoreCase(code)) return true;
-        if(Attribute.LNK_FILTER_COLUMN.equalsIgnoreCase(attCode)) return true;
-
-        return result;
+        if(Question.QUE_FILTER_COLUMN.equalsIgnoreCase(code)) {
+            return true;
+        }
+        if(Attribute.LNK_FILTER_COLUMN.equalsIgnoreCase(attCode)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -113,11 +115,13 @@ public class FilterGroupService {
      * @return filter option selected
      */
     public boolean isOptionSelected(String code, String attCode) {
-        boolean result = false;
-        if(Question.QUE_FILTER_OPTION.equalsIgnoreCase(code)) return true;
-        if(Attribute.LNK_FILTER_OPTION.equalsIgnoreCase(attCode)) return true;
-
-        return result;
+        if(Question.QUE_FILTER_OPTION.equalsIgnoreCase(code)) {
+            return true;
+        }
+        if(Attribute.LNK_FILTER_OPTION.equalsIgnoreCase(attCode)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -126,9 +130,7 @@ public class FilterGroupService {
      * @return filter option selected
      */
     public boolean isSearchSelected(String code) {
-        boolean result = false;
-        if(Question.QUE_SAVED_SEARCH_SELECT.equalsIgnoreCase(code)) return true;
-        return result;
+        return Question.QUE_SAVED_SEARCH_SELECT.equalsIgnoreCase(code);
     }
 
 
@@ -201,9 +203,7 @@ public class FilterGroupService {
      * @return Being whether add search button or not
      */
     public  boolean isBtnSearchAdd(String code) {
-        boolean result = false;
-        if(Question.QUE_ADD_SEARCH.equalsIgnoreCase(code)) return true;
-        return result;
+        return Question.QUE_ADD_SEARCH.equalsIgnoreCase(code);
     }
 
 
@@ -244,9 +244,7 @@ public class FilterGroupService {
      * @return Being whether save button  or not
      */
     public boolean isBtnSearchSave(String code) {
-        boolean result = false;
-        if(Question.QUE_SAVED_SEARCH_SAVE.equalsIgnoreCase(code)) return true;
-        return result;
+        return Question.QUE_SAVED_SEARCH_SAVE.equalsIgnoreCase(code);
     }
 
     /**
@@ -255,9 +253,7 @@ public class FilterGroupService {
      * @return Being whether delete button  or not
      */
     public boolean isBtnSearchDelete(String code) {
-        boolean result = false;
-        if(Question.QUE_SAVED_SEARCH_DELETE.equalsIgnoreCase(code)) return true;
-        return result;
+        return Question.QUE_SAVED_SEARCH_DELETE.equalsIgnoreCase(code);
     }
 
     /**
@@ -266,9 +262,7 @@ public class FilterGroupService {
      * @return Being whether detail delete button  or not
      */
     public boolean isDetailDelete(String code) {
-        boolean result = false;
-        if(Question.QUE_SBE_DETAIL_VIEW_DELETE.equalsIgnoreCase(code)) return true;
-        return result;
+        return Question.QUE_SBE_DETAIL_VIEW_DELETE.equalsIgnoreCase(code);
     }
 
     /**
@@ -613,7 +607,9 @@ public class FilterGroupService {
      */
     public String getDropdownValue(String value) {
         JsonObject json = jsonb.fromJson(value, JsonObject.class);
-        if(json.containsKey(FilterConst.VALUE)) return json.getString(FilterConst.VALUE);
+        if(json.containsKey(FilterConst.VALUE)) {
+            return json.getString(FilterConst.VALUE);
+        }
         return "";
     }
 
@@ -636,7 +632,9 @@ public class FilterGroupService {
 
     public boolean isQuickSearchDropdown(QEventMessage msg) {
         String code = getQuestionCode(msg);
-        if(Question.QUE_QUICK_SEARCH.equalsIgnoreCase(code)) return true;
+        if(Question.QUE_QUICK_SEARCH.equalsIgnoreCase(code)) {
+            return true;
+        }
         return false;
     }
 
@@ -647,7 +645,9 @@ public class FilterGroupService {
      */
 
     public boolean isQuickSearchDropdown(String code) {
-        if(Question.QUE_QUICK_SEARCH.equalsIgnoreCase(code)) return true;
+        if(Question.QUE_QUICK_SEARCH.equalsIgnoreCase(code)) {
+            return true;
+        }
         return false;
     }
 

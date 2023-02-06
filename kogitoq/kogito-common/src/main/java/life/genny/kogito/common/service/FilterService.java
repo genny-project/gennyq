@@ -55,16 +55,22 @@ public class FilterService extends KogitoService {
 
         // add definitions
         for(int i=0;i< definitions.size(); i++){
-            if(i== 0) searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
-            else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+            } else {
+                searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+            }
         }
 
         // searching by text or search by code
         Filter filter = null;
         String newValue = value.replaceFirst("!","");
 
-        if(coded) filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
-        else filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+        if(coded) {
+            filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
+        } else {
+            filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+        }
 
         searchBE.remove(filter);
         searchBE.add(filter);
@@ -187,8 +193,11 @@ public class FilterService extends KogitoService {
         List<String> definitions = getListDefinitionCodes(sbeCode);
 
         for(int i=0;i< definitions.size(); i++){
-            if(i== 0) searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
-            else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+            } else {
+                searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+            }
         }
 
         // add conditions by filter parameters
@@ -522,8 +531,11 @@ public class FilterService extends KogitoService {
             List<String> definitions = getListDefinitionCodes(code);
 
             for(int i=0;i< definitions.size(); i++){
-                if(i== 0) searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
-                else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+                if(i== 0) {
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+                } else {
+                    searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+                }
             }
 
             // add conditions by filter parameters
@@ -556,16 +568,22 @@ public class FilterService extends KogitoService {
             List<String> definitions = getListDefinitionCodes(code);
 
             for(int i=0;i< definitions.size(); i++){
-                if(i== 0) searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
-                else searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+                if(i== 0) {
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+                } else {
+                    searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+                }
             }
 
             // searching by text or search by code
             Filter filter = null;
             String newValue = value.replaceFirst("!", "");
 
-            if (coded) filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
-            else filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+            if (coded) {
+                filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
+            } else {
+                filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
+            }
 
             searchBE.remove(filter);
             searchBE.add(filter);
@@ -590,7 +608,9 @@ public class FilterService extends KogitoService {
         // Table
         } else {
             String defCode = getDefinitionCode(sbeCode);
-            if(!defCode.isEmpty()) definitions.add(defCode);
+            if(!defCode.isEmpty()) {
+                definitions.add(defCode);
+            }
         }
 
         return definitions;
@@ -605,7 +625,9 @@ public class FilterService extends KogitoService {
         SearchEntity search = CacheUtils.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
         List<ClauseContainer> clauses = search.getClauseContainers();
         for (ClauseContainer clause : clauses) {
-            if (clause.getFilter().getCode().equals(Attribute.LNK_DEF)) return clause.getFilter().getValue().toString();
+            if (clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
+                return clause.getFilter().getValue().toString();
+            }
         }
         return "";
     }
@@ -622,7 +644,9 @@ public class FilterService extends KogitoService {
             String value = entityAttribute.getAsString();
             if (value.startsWith(Prefix.SBE_)) {
                 String defCode = getDefinitionCode(value);
-                if(!defCode.isEmpty()) definitions.add(defCode);
+                if(!defCode.isEmpty()) {
+                    definitions.add(defCode);
+                }
             }
         }
     }
