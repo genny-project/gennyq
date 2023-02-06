@@ -9,19 +9,22 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.utils.FilterUtils;
 
 /**
  * ProcessAnswers
