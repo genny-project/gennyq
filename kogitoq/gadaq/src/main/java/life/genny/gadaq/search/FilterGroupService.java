@@ -833,10 +833,15 @@ public class FilterGroupService {
      * @return Attribute code
      */
     public String getAttributeCodeByValue(String value) {
-        String attCode = value.replace("[","").replace("]", "")
-                .replaceFirst(FilterConst.SEL_FILTER_COLUMN_FLC,"")
-                .replaceAll("\"","");
-
+        String attCode= "";
+        int index = 0;
+        if(value.contains(Prefix.PRI_)) {
+            index = value.lastIndexOf(Prefix.PRI_);
+            attCode = value.substring(index).replace("\"]","");
+        } else if(value.contains(Prefix.LNK_)) {
+            index = value.lastIndexOf(Prefix.LNK_);
+            attCode = value.substring(index).replace("\"]","");
+        }
         return attCode;
     }
 

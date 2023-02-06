@@ -240,10 +240,10 @@ public class FilterService extends KogitoService {
             }
 
             Filter filter = null;
-            if (ss.getDataType().equalsIgnoreCase(FilterConst.DATETIME)) {
+            if (ss.getDataType().contains(FilterConst.DATETIME)) {
                 LocalDateTime dateTime = parseStringToDate(value);
                 filter = new Filter(ss.getColumn(),operator, dateTime);
-            } else if (ss.getDataType().equalsIgnoreCase(FilterConst.YES_NO)) {
+            } else if (ss.getDataType().contains(FilterConst.YES_NO) || ss.getDataType().contains(FilterConst.BOOLEAN)) {
                 filter = new Filter(ss.getColumn(),Boolean.valueOf(value.equalsIgnoreCase("YES")?true:false));
             } else {
                 filter = new Filter(ss.getColumn(),operator, value);

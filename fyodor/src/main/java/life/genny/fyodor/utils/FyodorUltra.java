@@ -258,7 +258,7 @@ public class FyodorUltra {
 		// find orders
 		List<Order> orders = new ArrayList<>();
 		searchEntity.getTraits(Sort.class).stream().forEach(sort -> {
-			orders.add(findSortPredicate(cauldron, sort));
+			cauldron.add(findSortPredicate(cauldron, sort));
 		});
 
 		// ensure realms are correct
