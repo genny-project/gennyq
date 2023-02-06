@@ -256,14 +256,13 @@ public class FilterUtils {
      * @return Search entity
      */
     public SearchEntity getListSavedSearch(String sbeCode,String lnkCode, String lnkValue) {
+        String startWith = "[\"" + SearchEntity.SBE_SAVED_SEARCH;
         SearchEntity searchBE = new SearchEntity(sbeCode,sbeCode);
         searchBE.add(new Filter(Attribute.PRI_CODE, Operator.LIKE, SearchEntity.SBE_SAVED_SEARCH + "_%"))
-                .add(new Column(lnkCode, lnkValue))
-                .add(new Sort(Attribute.PRI_CREATED, Ord.DESC));
-
-        String startWith = "[\"" + SearchEntity.SBE_SAVED_SEARCH;
-        searchBE.add(new Filter(Attribute.LNK_SAVED_SEARCHES,Operator.STARTS_WITH,startWith));
-        searchBE.add(new Filter(Attribute.LNK_AUTHOR,Operator.CONTAINS,userToken.getUserCode()));
+                .add(new Filter(Attribute.LNK_SAVED_SEARCHES,Operator.STARTS_WITH,startWith))
+                .add(new Filter(Attribute.LNK_AUTHOR,Operator.CONTAINS,userToken.getUserCode()))
+                .add(new Sort(Attribute.PRI_CREATED, Ord.DESC))
+                .add(new Column(lnkCode, lnkValue));
 
         searchBE.setRealm(userToken.getProductCode());
         searchBE.setPageStart(0).setPageSize(100);
