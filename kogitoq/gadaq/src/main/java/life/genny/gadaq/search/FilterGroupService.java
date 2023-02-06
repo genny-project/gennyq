@@ -193,7 +193,9 @@ public class FilterGroupService {
         boolean result =  isColumnSelected(code,attCode) || isOptionSelected(code,attCode)
                 || isValueSelected(code) || isFilterBtn(code) || isQuickSearchDropdown(code);
 
-        if(isSearchSelected(code)) return true;
+        if(isSearchSelected(code)) {
+            return true;
+        }
         return result;
     }
 
@@ -556,7 +558,9 @@ public class FilterGroupService {
      * @return Question code
      */
     public String getQuestionCode(QEventMessage msg) {
-        if(msg.getData() !=null) return msg.getData().getCode();
+        if(msg.getData() != null) {
+            return msg.getData().getCode();
+        }
         return "";
     }
 
@@ -566,7 +570,9 @@ public class FilterGroupService {
      * @return Question code
      */
     public String getQuestionCode(QDataAnswerMessage msg) {
-        if(msg != null &&  msg.getItems().length > 0) return msg.getItems()[0].getCode();
+        if(msg != null &&  msg.getItems().length > 0) {
+            return msg.getItems()[0].getCode();
+        }
         return "";
     }
 
@@ -576,7 +582,9 @@ public class FilterGroupService {
      * @return Attribute code
      */
     public String getAttributeCode(QDataAnswerMessage msg) {
-        if(msg.getItems().length > 0) return msg.getItems()[0].getAttributeCode();
+        if(msg.getItems().length > 0) {
+            return msg.getItems()[0].getAttributeCode();
+        }
         return "";
     }
 
@@ -586,7 +594,9 @@ public class FilterGroupService {
      * @return target code
      */
     public String getTargetCode(QDataAnswerMessage msg) {
-        if(msg.getItems().length > 0) return msg.getItems()[0].getTargetCode();
+        if(msg.getItems().length > 0) {
+            return msg.getItems()[0].getTargetCode();
+        }
         return "";
     }
 
@@ -596,7 +606,9 @@ public class FilterGroupService {
      * @return value
      */
     public String getValue(QDataAnswerMessage msg) {
-        if(msg.getItems().length > 0) return msg.getItems()[0].getValue();
+        if(msg.getItems().length > 0) {
+            return msg.getItems()[0].getValue();
+        }
         return "";
     }
 
@@ -620,7 +632,9 @@ public class FilterGroupService {
      */
     public boolean isCode(String value) {
         JsonObject json = jsonb.fromJson(value, JsonObject.class);
-        if(json.containsKey(FilterConst.ISCODE)) return json.getBoolean(FilterConst.ISCODE);
+        if(json.containsKey(FilterConst.ISCODE)) {
+            return json.getBoolean(FilterConst.ISCODE);
+        }
         return false;
     }
 

@@ -462,7 +462,9 @@ public class FilterService extends KogitoService {
      */
     public String getSbeTableFromCache() {
         String sbe = CacheUtils.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
-        if(sbe == null) return "";
+        if(sbe == null) {
+            return "";
+        }
         return sbe;
     }
 
