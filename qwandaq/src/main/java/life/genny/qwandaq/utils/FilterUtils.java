@@ -177,11 +177,10 @@ public class FilterUtils {
     /**
      * Return ask with filter option
      *
-     * @param queCode Value
-     * @param value Selected Value
+     * @param dataType Data Type
      * @return Ask
      */
-    public QDataBaseEntityMessage getFilterOptionByCode(String queCode,String value) {
+    public QDataBaseEntityMessage getFilterOptionByCode(String dataType) {
         QDataBaseEntityMessage base = new QDataBaseEntityMessage();
 
         base.setParentCode(Question.QUE_ADD_FILTER_SBE_GRP);
@@ -189,7 +188,7 @@ public class FilterUtils {
         base.setLinkValue(Attribute.LNK_ITEMS);
         base.setQuestionCode(Question.QUE_FILTER_OPTION);
 
-        if (queCode.contains(FilterConst.DATETIME)){
+        if (dataType.contains(FilterConst.DATETIME)){
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN));
@@ -197,11 +196,11 @@ public class FilterUtils {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
-        } else if (queCode.contains(FilterConst.SELECT)) {
+        } else if (dataType.contains(FilterConst.SELECT)) {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_NOT_EQUAL_TO));
             return base;
-        } else if (value.contains(FilterConst.YES_NO)) {
+        } else if (dataType.contains(FilterConst.YES_NO) || dataType.contains(FilterConst.BOOLEAN)) {
             base.add(beUtils.getBaseEntity(FilterConst.SEL_EQUAL_TO));
             return base;
         } else {

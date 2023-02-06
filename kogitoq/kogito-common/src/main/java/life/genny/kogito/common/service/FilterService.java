@@ -138,12 +138,11 @@ public class FilterService extends KogitoService {
 
     /**
      * Send filter option
-     * @param questionCode Question Code
      * @param sbeCode Search Base Entiy Code
-     * @param value Selected value
+     * @param dataType Data type
      */
-    public void sendFilterOption(String questionCode, String sbeCode,String value) {
-        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(questionCode,value);
+    public void sendFilterOption(String sbeCode,String dataType) {
+        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(dataType);
         String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());

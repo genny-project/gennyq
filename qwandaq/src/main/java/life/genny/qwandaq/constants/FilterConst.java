@@ -43,5 +43,6 @@ public class FilterConst {
     public static final String SEPARATOR = ";";
 
     public static final String ISCODE = "isCode";
+    public static final String BOOLEAN = "BOOLEAN";
 
 }

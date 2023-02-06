@@ -224,7 +224,7 @@ public class FilterGroupService {
         Map<String, Map<String, String>> params = new HashMap<>();
 
         // show list of filter options
-        filterService.sendFilterOption(filterQue, sbeCode,dataType);
+        filterService.sendFilterOption(sbeCode,dataType);
 
         // show filter value in the add form
         filterService.sendAddFilterGroup(filterQue);
