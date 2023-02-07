@@ -91,6 +91,7 @@ public class Events {
 			return;
 		}
 
+
 		// If the event is a Dropdown then leave it for DropKick
 		if ("DD".equals(msg.getEvent_type()))
 			return;
