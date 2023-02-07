@@ -140,9 +140,9 @@ public class FilterGroupService {
      * @return Return question code by filter code
      */
     public String getQuestionCodeByValue(String dataType,String attCode){
-        if(dataType.contains(FilterConst.DATETIME)) return Question.QUE_FILTER_VALUE_DATETIME;
+        if(dataType.contains(FilterConst.DTT_DATE)) return Question.QUE_FILTER_VALUE_DATE;
         if(dataType.contains(FilterConst.COUNTRY)) return Question.QUE_FILTER_VALUE_COUNTRY;
-        if(dataType.contains(FilterConst.YES_NO)) return Question.QUE_FILTER_VALUE_TEXT;
+        if(dataType.contains(FilterConst.BOOLEAN)) return Question.QUE_FILTER_VALUE_BOOLEAN;
         if(!isSelectBox(dataType)) return Question.QUE_FILTER_VALUE_TEXT;
 
         String questionCode = FilterConst.QUE_FILTER_VALUE_PREF + attCode.replaceFirst(Prefix.LNK_,"");
@@ -219,9 +219,6 @@ public class FilterGroupService {
         String attCode = getAttributeCodeByValue(value);
         String dataType = getAttributeDataType(attCode);
         String filterQue = getQuestionCodeByValue(dataType,attCode);
-
-        String filterCode = "";
-        Map<String, Map<String, String>> params = new HashMap<>();
 
         // show list of filter options
         filterService.sendFilterOption(sbeCode,dataType);

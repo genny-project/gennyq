@@ -11,6 +11,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -240,11 +242,11 @@ public class FilterService extends KogitoService {
             }
 
             Filter filter = null;
-            if (ss.getDataType().contains(FilterConst.DATETIME)) {
-                LocalDateTime dateTime = parseStringToDate(value);
+            if (ss.getDataType().contains(FilterConst.DTT_DATE)) {
+                LocalDate dateTime = parseStringToDate(value);
                 filter = new Filter(ss.getColumn(),operator, dateTime);
-            } else if (ss.getDataType().contains(FilterConst.YES_NO) || ss.getDataType().contains(FilterConst.BOOLEAN)) {
-                filter = new Filter(ss.getColumn(),Boolean.valueOf(value.equalsIgnoreCase("YES")?true:false));
+            } else if (ss.getDataType().contains(FilterConst.BOOLEAN)) {
+                filter = new Filter(ss.getColumn(),Boolean.valueOf(value));
             } else {
                 filter = new Filter(ss.getColumn(),operator, value);
             }
@@ -293,11 +295,11 @@ public class FilterService extends KogitoService {
      * @param strDate Date String
      * @return Return local date time
      */
-    public LocalDateTime parseStringToDate(String strDate){
-        LocalDateTime localDateTime = null;
+    public LocalDate parseStringToDate(String strDate){
+        LocalDate localDateTime = null;
         try {
             ZonedDateTime zdt = ZonedDateTime.parse(strDate);
-            localDateTime = zdt.toLocalDateTime();
+            localDateTime = zdt.toLocalDate();
         }catch(Exception ex) {
             log.info(ex);
         }
