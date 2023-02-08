@@ -54,9 +54,17 @@ public class GennySettings {
 	 * This is likely due to an issue with the environment variables not being present at initialisation.
 	 * Because of this, we are have to opt for doing it as seen below.
 	 */
+	
+	/**
+	 * Return the dummy user password (contact dev team 1 if missing)
+	 * @return dummy user password as a string
+	 */
+	public static String dummyUserPassword() {
+		return getConfig("GENNY_DUMMY_PASSWORD", null, true);
+	}
 
 	/* ############ URL Methods ############## */
-	
+
 	/** 
 	 * Return the project URL
 	 *
