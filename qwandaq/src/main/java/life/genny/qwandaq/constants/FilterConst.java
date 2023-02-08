@@ -36,6 +36,7 @@ public class FilterConst {
     public static final String ACTIVE="ACTIVE";
 
     /** Filter Category **/
+    public static final String DTT_DATETIME = "DTT_DATETIME";
     public static final String DTT_DATE = "DTT_DATE";
     public static final String SELECT = "SELECT";
     public static final String COUNTRY = "COUNTRY";

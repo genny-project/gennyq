@@ -242,8 +242,11 @@ public class FilterService extends KogitoService {
             }
 
             Filter filter = null;
-            if (ss.getDataType().contains(FilterConst.DTT_DATE)) {
-                LocalDate dateTime = parseStringToDate(value);
+            if (ss.getDataType().equalsIgnoreCase(FilterConst.DTT_DATE)) {
+                LocalDate date = parseStringToDate(value);
+                filter = new Filter(ss.getColumn(),operator, date);
+            } else if (ss.getDataType().equalsIgnoreCase(FilterConst.DTT_DATETIME)) {
+                LocalDateTime dateTime = parseStringToDateTime(value);
                 filter = new Filter(ss.getColumn(),operator, dateTime);
             } else if (ss.getDataType().contains(FilterConst.BOOLEAN)) {
                 filter = new Filter(ss.getColumn(),Boolean.valueOf(value));
@@ -295,16 +298,32 @@ public class FilterService extends KogitoService {
      * @param strDate Date String
      * @return Return local date time
      */
-    public LocalDate parseStringToDate(String strDate){
-        LocalDate localDateTime = null;
+    public LocalDateTime parseStringToDateTime(String strDate){
+        LocalDateTime localDateTime = null;
         try {
             ZonedDateTime zdt = ZonedDateTime.parse(strDate);
-            localDateTime = zdt.toLocalDate();
+            localDateTime = zdt.toLocalDateTime();
         }catch(Exception ex) {
             log.info(ex);
         }
 
         return localDateTime;
+    }
+
+    /**
+     * Parse string to local date time
+     * @param strDate Date String
+     * @return Return local date time
+     */
+    public LocalDate parseStringToDate(String strDate){
+        LocalDate localDate = null;
+        try {
+            ZonedDateTime zdt = ZonedDateTime.parse(strDate);
+            localDate = zdt.toLocalDate();
+        }catch(Exception ex) {
+            log.info(ex);
+        }
+        return localDate;
     }
 
     /**

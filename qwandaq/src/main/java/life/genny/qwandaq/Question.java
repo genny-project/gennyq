@@ -115,6 +115,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
 	public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
 	public static final String QUE_FILTER_VALUE_DATE = "QUE_FILTER_VALUE_DATE";
+	public static final String QUE_FILTER_VALUE_DATETIME = "QUE_FILTER_VALUE_DATETIME";
 	public static final String QUE_ADD_FILTER_SBE_GRP = "QUE_ADD_FILTER_SBE_GRP";
 	public static final String QUE_SAVED_SEARCH_SELECT_GRP = "QUE_SAVED_SEARCH_SELECT_GRP";
 	public static final String QUE_SAVED_SEARCH_SAVE = "QUE_SAVED_SEARCH_SAVE";

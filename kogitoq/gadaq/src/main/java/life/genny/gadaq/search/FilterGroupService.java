@@ -140,7 +140,8 @@ public class FilterGroupService {
      * @return Return question code by filter code
      */
     public String getQuestionCodeByValue(String dataType,String attCode){
-        if(dataType.contains(FilterConst.DTT_DATE)) return Question.QUE_FILTER_VALUE_DATE;
+        if(dataType.equalsIgnoreCase(FilterConst.DTT_DATETIME)) return Question.QUE_FILTER_VALUE_DATETIME;
+        if(dataType.equalsIgnoreCase(FilterConst.DTT_DATE)) return Question.QUE_FILTER_VALUE_DATE;
         if(dataType.contains(FilterConst.COUNTRY)) return Question.QUE_FILTER_VALUE_COUNTRY;
         if(dataType.contains(FilterConst.BOOLEAN)) return Question.QUE_FILTER_VALUE_BOOLEAN;
         if(!isSelectBox(dataType)) return Question.QUE_FILTER_VALUE_TEXT;

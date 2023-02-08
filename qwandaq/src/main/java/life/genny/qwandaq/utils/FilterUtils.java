@@ -188,7 +188,7 @@ public class FilterUtils {
         base.setLinkValue(Attribute.LNK_ITEMS);
         base.setQuestionCode(Question.QUE_FILTER_OPTION);
 
-        if (dataType.contains(FilterConst.DTT_DATE)){
+        if (dataType.equalsIgnoreCase(FilterConst.DTT_DATETIME) || dataType.equalsIgnoreCase(FilterConst.DTT_DATE)){
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO));
             base.add(beUtils.getBaseEntity(FilterConst.SEL_LESS_THAN));
