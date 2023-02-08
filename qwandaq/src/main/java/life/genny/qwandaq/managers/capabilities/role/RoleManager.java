@@ -118,7 +118,7 @@ public class RoleManager extends Manager {
 		}
 
 		// TODO: Keep an eye on this becasue it may have just broken
-		// beUtils.updateBaseEntity(targetRole);
+		beUtils.updateBaseEntity(targetRole);
 		return targetRole;
 	}
 
