@@ -11,6 +11,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -240,11 +242,14 @@ public class FilterService extends KogitoService {
             }
 
             Filter filter = null;
-            if (ss.getDataType().contains(FilterConst.DATETIME)) {
-                LocalDateTime dateTime = parseStringToDate(value);
+            if (ss.getDataType().equalsIgnoreCase(FilterConst.DTT_DATE)) {
+                LocalDate date = parseStringToDate(value);
+                filter = new Filter(ss.getColumn(),operator, date);
+            } else if (ss.getDataType().equalsIgnoreCase(FilterConst.DTT_DATETIME)) {
+                LocalDateTime dateTime = parseStringToDateTime(value);
                 filter = new Filter(ss.getColumn(),operator, dateTime);
-            } else if (ss.getDataType().contains(FilterConst.YES_NO) || ss.getDataType().contains(FilterConst.BOOLEAN)) {
-                filter = new Filter(ss.getColumn(),Boolean.valueOf(value.equalsIgnoreCase("YES")?true:false));
+            } else if (ss.getDataType().contains(FilterConst.BOOLEAN)) {
+                filter = new Filter(ss.getColumn(),Boolean.valueOf(value));
             } else {
                 filter = new Filter(ss.getColumn(),operator, value);
             }
@@ -293,7 +298,7 @@ public class FilterService extends KogitoService {
      * @param strDate Date String
      * @return Return local date time
      */
-    public LocalDateTime parseStringToDate(String strDate){
+    public LocalDateTime parseStringToDateTime(String strDate){
         LocalDateTime localDateTime = null;
         try {
             ZonedDateTime zdt = ZonedDateTime.parse(strDate);
@@ -303,6 +308,22 @@ public class FilterService extends KogitoService {
         }
 
         return localDateTime;
+    }
+
+    /**
+     * Parse string to local date time
+     * @param strDate Date String
+     * @return Return local date time
+     */
+    public LocalDate parseStringToDate(String strDate){
+        LocalDate localDate = null;
+        try {
+            ZonedDateTime zdt = ZonedDateTime.parse(strDate);
+            localDate = zdt.toLocalDate();
+        }catch(Exception ex) {
+            log.info(ex);
+        }
+        return localDate;
     }
 
     /**
